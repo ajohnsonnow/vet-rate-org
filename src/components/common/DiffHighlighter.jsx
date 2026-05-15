@@ -126,7 +126,6 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
       <span
         key={key}
         className={`${colors.bg} ${colors.text} ${colors.border} px-0.5 rounded cursor-help transition-all hover:opacity-80`}
-        title={tooltipText}
         role="mark"
         aria-label={`Issue: ${issue.type}`}
       >

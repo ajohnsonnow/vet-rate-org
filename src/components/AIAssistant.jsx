@@ -429,7 +429,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         onMouseDown={handleMouseDown}
         style={{ left: `${position.x}px`, top: `${position.y}px` }}
         className="fixed z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group cursor-move"
-        title={t("aiAssistant", "minimizedTooltip")}
+        aria-label={t("aiAssistant", "minimizedTooltip")}
       >
         <div className="relative pointer-events-none">
           <span className="text-2xl">🧭</span>
@@ -477,7 +477,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
               <button
                 onClick={() => setIsExpanded(false)}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                title={t("aiAssistant", "shrinkTooltip")}
+                aria-label={t("aiAssistant", "shrinkTooltip")}
               >
                 <svg
                   className="w-5 h-5"
@@ -497,7 +497,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                 <button
                   onClick={onClose}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  title={t("common", "close")}
+                  aria-label={t("common", "close")}
                 >
                   <svg
                     className="w-5 h-5"
@@ -577,7 +577,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                         <button
                           onClick={() => handleCopyMessage(msg.content, idx)}
                           className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
-                          title="Copy for Reddit (with eCFR links & privacy redaction)"
+                          aria-label="Copy for Reddit (with eCFR links & privacy redaction)"
                         >
                           {copiedMessageIdx === idx ? (
                             <>
@@ -625,7 +625,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                             onClick={() => handleSummarize(msg.content, idx)}
                             disabled={summaryStates[idx]?.isSummarizing}
                             className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
-                            title="Generate BLUF summary for Reddit"
+                            aria-label="Generate BLUF summary for Reddit"
                           >
                             {summaryStates[idx]?.isSummarizing ? (
                               <>
@@ -708,7 +708,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                             )
                           }
                           className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
-                          title="Copy summary for Reddit"
+                          aria-label="Copy summary for Reddit"
                         >
                           {copiedMessageIdx === `summary-${idx}` ? "✓" : "📋"}
                         </button>
@@ -869,7 +869,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsExpanded(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title={t("aiAssistant", "expandTooltip")}
+            aria-label={t("aiAssistant", "expandTooltip")}
           >
             <svg
               className="w-5 h-5"
@@ -888,7 +888,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title={t("aiAssistant", "minimizeTooltip")}
+            aria-label={t("aiAssistant", "minimizeTooltip")}
           >
             <svg
               className="w-5 h-5"
@@ -908,7 +908,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-white/20 rounded transition-colors"
-              title={t("common", "close")}
+              aria-label={t("common", "close")}
             >
               <svg
                 className="w-5 h-5"
@@ -988,7 +988,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                     <button
                       onClick={() => handleCopyMessage(msg.content, idx)}
                       className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
-                      title="Copy for Reddit (with eCFR links & privacy redaction)"
+                      aria-label="Copy for Reddit (with eCFR links & privacy redaction)"
                     >
                       {copiedMessageIdx === idx ? (
                         <>
@@ -1036,7 +1036,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                         onClick={() => handleSummarize(msg.content, idx)}
                         disabled={summaryStates[idx]?.isSummarizing}
                         className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
-                        title="Generate BLUF summary for Reddit"
+                        aria-label="Generate BLUF summary for Reddit"
                       >
                         {summaryStates[idx]?.isSummarizing ? (
                           <>
@@ -1119,7 +1119,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                         )
                       }
                       className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
-                      title="Copy summary for Reddit"
+                      aria-label="Copy summary for Reddit"
                     >
                       {copiedMessageIdx === `summary-${idx}` ? "✓" : "📋"}
                     </button>

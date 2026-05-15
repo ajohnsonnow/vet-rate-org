@@ -56,11 +56,6 @@ const QuickExitButton = ({
             border border-slate-700 rounded-md transition-all hover:border-slate-600
             ${className}`}
           aria-label="Quick exit - immediately leave this page"
-          title={
-            showTooltip
-              ? "Click to quickly exit (or press Esc 3 times)"
-              : undefined
-          }
         >
           {isHovered ? "✕ Exit Now" : "Quick Exit"}
         </button>

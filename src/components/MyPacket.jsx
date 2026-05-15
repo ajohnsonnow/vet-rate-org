@@ -2537,7 +2537,7 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          title="DD214 Analyzer - Coming Soon"
+                          aria-label="DD214 Analyzer - Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
@@ -2643,14 +2643,14 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          title="DD214 Analyzer - Coming Soon"
+                          aria-label="DD214 Analyzer - Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
                         <button
                           onClick={onOpenAISettings}
                           className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                          title="Open Faraday Cage - AI Settings"
+                          aria-label="Open Faraday Cage - AI Settings"
                         >
                           ⚙️ {t("myPacketSection.aiSettings")}
                         </button>
@@ -2755,7 +2755,7 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                          title="Coming Soon"
+                          aria-label="Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
@@ -3159,7 +3159,7 @@ Return ONLY the JSON object, no explanation.`,
                           <button
                             onClick={() => handleRemoveAward(award.id)}
                             className="text-red-400 hover:text-red-600 text-sm"
-                            title={`Remove ${award.name}`}
+                            aria-label={`Remove ${award.name}`}
                           >
                             ×
                           </button>
@@ -3333,7 +3333,7 @@ Return ONLY the JSON object, no explanation.`,
                                       )
                                     }
                                     disabled={!isCertified}
-                                    title={
+                                    aria-label={
                                       !isCertified
                                         ? t(
                                             "myPacketSection.certifyBeforeDownload",
@@ -3614,7 +3614,7 @@ Return ONLY the JSON object, no explanation.`,
                                       );
                                     }}
                                     className="text-red-400 hover:text-red-600 transition-colors p-1"
-                                    title="Remove event"
+                                    aria-label="Remove event"
                                   >
                                     <svg
                                       className="w-4 h-4"

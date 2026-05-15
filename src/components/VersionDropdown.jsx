@@ -97,7 +97,7 @@ const VersionDropdown = () => {
     return (
       <button
         className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded border border-white/40 transition-colors"
-        title="Loading version information..."
+        aria-label="Loading version information..."
       >
         v1.0.0
       </button>
@@ -111,7 +111,7 @@ const VersionDropdown = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded border border-white/40 transition-colors flex items-center gap-1"
-        title="View version changelog"
+        aria-label="View version changelog"
       >
         v{version}
         <ChevronDown

@@ -130,7 +130,7 @@ export const AIStatusBadge = ({
           <span className="text-base">{status.cloudModelName}</span>
           <span
             className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium"
-            title="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
+            aria-label="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
           >
             💎 DKB*
           </span>
@@ -166,7 +166,7 @@ export const AIStatusBadge = ({
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${getBadgeStyle()} ${className}`}
-      title={getTooltip()}
+      aria-label={getTooltip()}
     >
       {getDisplayContent()}
     </button>
@@ -227,7 +227,7 @@ export const AIToggle = ({
         className={`relative w-12 h-6 rounded-full transition-colors ${
           isLocal ? "bg-green-600" : "bg-blue-600"
         }`}
-        title={
+        aria-label={
           isLocal
             ? "Using Local AI (click for Cloud)"
             : "Using Cloud AI (click for Local)"

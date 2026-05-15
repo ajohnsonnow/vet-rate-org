@@ -100,7 +100,7 @@ const VersionDropUp = () => {
     return (
       <button
         className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors"
-        title="Loading version information..."
+        aria-label="Loading version information..."
       >
         v1.0.0
       </button>
@@ -114,7 +114,7 @@ const VersionDropUp = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors flex items-center gap-1"
-        title="View version changelog"
+        aria-label="View version changelog"
       >
         v{version}
         <ChevronUp
@@ -1062,7 +1062,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <button
                 onClick={handleZonk}
                 className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-sm"
-                title="Zonk! (Click me)"
+                aria-label="Zonk! (Click me)"
               >
                 {t("about", "dismissed")}
               </button>

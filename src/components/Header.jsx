@@ -239,11 +239,6 @@ function Header({
                     ? t("header", "switchToLight")
                     : t("header", "switchToDark")
                 }
-                title={
-                  isDark
-                    ? t("header", "switchToLight")
-                    : t("header", "switchToDark")
-                }
               >
                 {isDark ? (
                   <>
@@ -263,7 +258,6 @@ function Header({
                 onClick={onLegislativeWatchdogClick}
                 className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium relative"
                 aria-label={t("tools", "legislativeWatchdog")}
-                title={t("header", "legislativeWatchdogTooltip")}
               >
                 <span>📡</span>
                 <span>Watch</span>
@@ -275,7 +269,6 @@ function Header({
                 id="tour-help-btn"
                 onClick={onUserManualClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm whitespace-nowrap"
-                title={t("common", "help")}
                 aria-label={t("common", "help")}
               >
                 ❓{" "}
@@ -287,7 +280,6 @@ function Header({
                 id="tour-workflow-guide-btn"
                 onClick={onWorkflowGuideClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm flex items-center gap-1 whitespace-nowrap"
-                title={t("tools", "missions")}
                 aria-label={t("tools", "missions")}
               >
                 🗺️{" "}
@@ -307,7 +299,6 @@ function Header({
                 id="tour-my-packet-btn"
                 onClick={onMyPacketClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
-                title={t("tools", "myPacket")}
                 aria-label={t("tools", "myPacket")}
               >
                 📁{" "}
@@ -322,7 +313,7 @@ function Header({
                   onClick={() => setShowToolsMenu(!showToolsMenu)}
                   onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-                  title={t("common", "tools")}
+                  aria-label={t("common", "tools")}
                   aria-expanded={showToolsMenu}
                   aria-haspopup="true"
                 >
@@ -1084,7 +1075,7 @@ function Header({
                     setTimeout(() => setShowResourcesMenu(false), 200)
                   }
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-                  title={t("header", "veteranResources")}
+                  aria-label={t("header", "veteranResources")}
                   aria-expanded={showResourcesMenu}
                   aria-haspopup="true"
                 >
@@ -1278,7 +1269,6 @@ function Header({
           <button
             onClick={onCommunityRoadmapClick}
             className="inline-flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
-            title="View community roadmap and vote on features"
             aria-label="Community Roadmap"
           >
             <svg
@@ -1302,7 +1292,6 @@ function Header({
           <button
             onClick={onFeatureRequestClick}
             className="inline-flex items-center justify-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
-            title={t("header", "featureRequestTooltip")}
             aria-label={t("buttons", "featureRequest")}
           >
             <svg

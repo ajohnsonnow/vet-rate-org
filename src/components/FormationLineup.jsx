@@ -109,7 +109,7 @@ const FormationEntry = ({
         <button
           onClick={() => onRemove(entry.id)}
           className="absolute -right-2 -top-2 w-6 h-6 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
-          title="Remove from formation"
+          aria-label="Remove from formation"
         >
           ×
         </button>
@@ -363,7 +363,7 @@ export default function FormationLineup({
                   ? "bg-gray-400 cursor-not-allowed text-white"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
-              title={
+              aria-label={
                 hasRestoredDocs
                   ? "Cannot process restored documents - please re-upload files"
                   : !aiReady && aiInitializing

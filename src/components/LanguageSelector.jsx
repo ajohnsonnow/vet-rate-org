@@ -118,7 +118,6 @@ const LanguageSelector = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600/80 to-blue-600/80 hover:from-cyan-500 hover:to-blue-500 
                      border border-cyan-400/50 hover:border-cyan-300 transition-all shadow-md hover:shadow-lg group"
           aria-label={t("language", "selectLanguage")}
-          title={`Language: ${currentLang.nativeName} (Click to change)`}
         >
           {showFlag && (
             <FlagIcon
@@ -187,7 +186,7 @@ const LanguageSelector = ({
                             onClick={() => handleLanguageChange(lang.code)}
                             className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                      transition-colors ${language === lang.code ? "bg-cyan-900/30 text-cyan-400" : "text-gray-300"}`}
-                            title={lang.note || `Switch to ${lang.name}`}
+                            aria-label={lang.note || `Switch to ${lang.name}`}
                           >
                             <span className="w-6 flex items-center justify-center">
                               <FlagIcon
@@ -239,7 +238,7 @@ const LanguageSelector = ({
                       onClick={() => handleLanguageChange(lang.code)}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                transition-colors ${language === lang.code ? "bg-cyan-900/30 text-cyan-400" : "text-gray-300"}`}
-                      title={lang.note || `Switch to ${lang.name}`}
+                      aria-label={lang.note || `Switch to ${lang.name}`}
                     >
                       <FlagIcon
                         langCode={lang.code}

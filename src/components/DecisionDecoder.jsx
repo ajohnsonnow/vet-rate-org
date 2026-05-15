@@ -736,7 +736,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                             <button
                               onClick={() => handleRemoveFile(fileEntry.id)}
                               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
-                              title="Remove file"
+                              aria-label="Remove file"
                             >
                               <svg
                                 className="w-4 h-4"
@@ -1200,7 +1200,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                             ? "bg-teal-600 text-white ring-4 ring-teal-300 dark:ring-teal-700 scale-110"
                             : "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 border-2 border-teal-300 dark:border-teal-600 hover:bg-teal-100 dark:hover:bg-teal-900"
                         }`}
-                        title={phase.name}
+                        aria-label={phase.name}
                       >
                         {phase.phase}
                       </button>

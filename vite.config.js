@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
 import { fileURLToPath, URL } from "node:url";
+
+const ANALYZE = process.env.ANALYZE === "true";
 
 // Brand configurations for build-time HTML transformation
 const BRAND_CONFIGS = {
@@ -54,7 +57,18 @@ function brandingPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), brandingPlugin()],
+  plugins: [
+    react(),
+    brandingPlugin(),
+    ANALYZE &&
+      visualizer({
+        filename: "dist/bundle-report.html",
+        template: "treemap",
+        gzipSize: true,
+        brotliSize: true,
+        open: false,
+      }),
+  ].filter(Boolean),
 
   // Resolve dompurify to a no-op stub. This is intentional — see
   // packages/dompurify-noop/README.md for the full design rationale.

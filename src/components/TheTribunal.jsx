@@ -1105,7 +1105,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                         ? "bg-blue-600"
                         : "bg-gray-300 dark:bg-gray-600"
                     }`}
-                    title={
+                    aria-label={
                       speechEnabled
                         ? "Disable judge audio"
                         : "Enable judge audio"

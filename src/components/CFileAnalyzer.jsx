@@ -1040,7 +1040,7 @@ export default function CFileAnalyzer({
               </span>
               <span
                 className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
-                title="VA also uses AI for document classification in claims processing"
+                aria-label="VA also uses AI for document classification in claims processing"
               >
                 🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
               </span>

@@ -349,7 +349,7 @@ export function VaApiStatusPanel() {
               onClick={handleRefresh}
               disabled={isRefreshing || loading}
               className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-              title="Refresh status"
+              aria-label="Refresh status"
             >
               <svg
                 className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}

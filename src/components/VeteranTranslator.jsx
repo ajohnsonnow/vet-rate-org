@@ -546,7 +546,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
             <button
               onClick={swapLanguages}
               className="mt-5 p-2 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-800/30 rounded-full transition-colors"
-              title="Swap languages"
+              aria-label="Swap languages"
             >
               <svg
                 className="w-6 h-6 text-amber-600 dark:text-amber-400"
@@ -725,7 +725,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                             speak(msg.translatedText, msg.toLangCode)
                           }
                           className="p-1 hover:bg-white/50 rounded transition-colors"
-                          title="Play translated text"
+                          aria-label="Play translated text"
                         >
                           🔊
                         </button>

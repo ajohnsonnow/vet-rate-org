@@ -110,7 +110,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
         <button
           onClick={scanSystem}
           className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-          title="Rescan for GPUs"
+          aria-label="Rescan for GPUs"
         >
           <RefreshCw className="w-4 h-4" />
           Rescan

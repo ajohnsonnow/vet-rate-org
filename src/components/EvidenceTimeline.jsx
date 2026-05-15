@@ -439,7 +439,7 @@ const EvidenceTimeline = ({
                     >
                       <div
                         className="text-2xl flex-shrink-0"
-                        title={EVENT_TYPES[event.type]?.label}
+                        aria-label={EVENT_TYPES[event.type]?.label}
                       >
                         {EVENT_TYPES[event.type]?.icon || "📌"}
                       </div>
@@ -508,7 +508,7 @@ const EvidenceTimeline = ({
                           ? "border-blue-500 bg-blue-900/30"
                           : "border-gray-700 bg-gray-700 hover:border-gray-600"
                       }`}
-                      title={info.description}
+                      aria-label={info.description}
                     >
                       <div className="text-lg mb-1">{info.icon}</div>
                       <div className="text-xs text-white font-semibold">

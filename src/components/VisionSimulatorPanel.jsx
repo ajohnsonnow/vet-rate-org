@@ -336,7 +336,7 @@ const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
           onClick={handleQuickCheck}
           disabled={isAnalyzing || !selectedImage}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
-          title="Quick check if this is a DD214"
+          aria-label="Quick check if this is a DD214"
         >
           🎖️ DD214?
         </button>

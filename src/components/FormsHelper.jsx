@@ -5994,7 +5994,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             {isSpeechRecognitionSupported() && (
               <div
                 className="absolute right-2 top-2"
-                title="Click to dictate using voice"
+                aria-label="Click to dictate using voice"
               >
                 <VoiceInputButton
                   onTranscript={(text) => {

@@ -487,7 +487,7 @@ export default function WhatIfSandbox({ onClose }) {
                         <button
                           onClick={() => removeCondition(condition.id)}
                           className="bg-white/20 hover:bg-white/30 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-                          title="Remove condition"
+                          aria-label="Remove condition"
                         >
                           ×
                         </button>

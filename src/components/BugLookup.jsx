@@ -321,7 +321,7 @@ export default function BugLookup({ onClose }) {
             <button
               onClick={handleExport}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title={t("bugLookup", "exportAllReports")}
+              aria-label={t("bugLookup", "exportAllReports")}
             >
               <Download className="w-5 h-5" />
             </button>
@@ -329,7 +329,7 @@ export default function BugLookup({ onClose }) {
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              title={t("common", "close")}
+              aria-label={t("common", "close")}
             >
               <X className="w-5 h-5" />
             </button>

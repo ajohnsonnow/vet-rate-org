@@ -1697,7 +1697,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                 <div className="mt-2">
                   <span
                     className="px-2 py-0.5 bg-blue-500/90 text-white text-xs font-semibold rounded-full"
-                    title="VA employees use VA GPT, a secure AI tool"
+                    aria-label="VA employees use VA GPT, a secure AI tool"
                   >
                     ℹ️ VA Staff Use VA GPT (100K+ Users)
                   </span>
@@ -2518,7 +2518,6 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                             }}
                             className="text-purple-400/60 hover:text-purple-300 transition-colors"
                             aria-label="Dismiss Luna's message"
-                            title="Close"
                           >
                             <svg
                               className="w-4 h-4"
@@ -2547,7 +2546,6 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                             }}
                             className="text-purple-400/60 hover:text-purple-300 transition-colors text-xs px-2 py-1 rounded border border-purple-500/30 hover:border-purple-400/50"
                             aria-label="Don't show Luna messages again"
-                            title="Don't show again"
                           >
                             🚫
                           </button>

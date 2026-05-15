@@ -25,6 +25,7 @@ import {
   checkSystemCapabilities,
   renderBrowserWarning,
 } from "./utils/systemCapabilityCheck";
+import { initWebVitals } from "./utils/webVitals";
 import "./index.css";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -92,6 +93,8 @@ if (!capabilityResults.passed) {
       </ThemeProvider>
     </React.StrictMode>,
   );
+
+  initWebVitals();
 
   // Register the service worker for offline shell (Sprint 5 / pwa-privacy).
   // Production-only — dev mode bypasses the SW so HMR works correctly. The

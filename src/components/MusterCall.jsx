@@ -745,7 +745,7 @@ export default function MusterCall({
                 <div
                   className="absolute -top-6 transform -translate-x-1/2 transition-all duration-500 text-2xl"
                   style={{ left: `${initProgress}%` }}
-                  title="Warrant Council loading progress"
+                  aria-label="Warrant Council loading progress"
                 >
                   🚩
                 </div>
@@ -1075,7 +1075,7 @@ export default function MusterCall({
                     <button
                       onClick={handleStopProcessing}
                       className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                      title="Stop processing"
+                      aria-label="Stop processing"
                     >
                       <svg
                         className="w-4 h-4"

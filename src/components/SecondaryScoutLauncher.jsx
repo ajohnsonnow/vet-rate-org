@@ -1477,7 +1477,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                       <button
                         onClick={handleRemovePdf}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        title="Remove file"
+                        aria-label="Remove file"
                       >
                         <svg
                           className="w-5 h-5"
