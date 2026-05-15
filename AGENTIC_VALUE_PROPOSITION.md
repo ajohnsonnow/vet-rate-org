@@ -13,7 +13,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | Metric | Traditional Development | Agentic Development | Advantage |
 |--------|------------------------|---------------------|-----------|
 | **Timeline** | 13.9 years (solo) / 18-24 months (team) | 20 days | **190x faster** |
-| **Cost** | $3,905,280 | $63,000 | **98.0% savings** |
+| **Cost** | $3,906,765 | $63,000 | **98.0% savings** |
 | **Hourly Rate** | $135/hr (blended) | $420/hr | Higher rate, lower total |
 | **LOC/Hour** | 9.77 (team average) | 1,292 | **132x more productive** |
 | **Risk** | High (scope creep, turnover) | Low (single point of expertise) | Reduced complexity |
@@ -26,8 +26,8 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| **Lines of Code** | 236,646 | Production React/JavaScript |
-| **Total Files** | 1,752 | Organized codebase |
+| **Lines of Code** | 236,739 | Production React/JavaScript |
+| **Total Files** | 1,767 | Organized codebase |
 | **React Components** | 159 | 42 major tools + 117 supporting |
 | **Utility Modules** | 100 | Reusable helper functions |
 | **Disabilities Database** | 748 | Validated against 38 CFR |
@@ -117,7 +117,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | **Billable Hours** | 150 hours |
 | **Hourly Rate** | $420/hr |
 | **Total Cost** | $63,000 |
-| **Lines of Code** | 236,646 |
+| **Lines of Code** | 236,739 |
 | **Effective LOC/Hour** | 1,292 |
 | **Commits** | 241 |
 | **Commits per Day** | 11 average |
@@ -323,6 +323,6 @@ find src -name '*.js' -o -name '*.jsx' | xargs wc -l
 
 ---
 
-*Document generated: April 24, 2026*
+*Document generated: May 14, 2026*
 *Version: 1.20.0*
 *Project: VetRate.org*
