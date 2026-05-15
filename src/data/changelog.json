@@ -1,6 +1,6 @@
 {
   "version": "1.20.0",
-  "lastUpdated": "2026-03-21",
+  "lastUpdated": "2026-05-15",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
