@@ -419,12 +419,14 @@ export const getFeatureStatistics = async () => {
 
   allRequests.forEach((request) => {
     // Count by status
-    if (stats.byStatus.hasOwnProperty(request.status)) {
+    if (Object.prototype.hasOwnProperty.call(stats.byStatus, request.status)) {
       stats.byStatus[request.status]++;
     }
 
     // Count by priority
-    if (stats.byPriority.hasOwnProperty(request.priority)) {
+    if (
+      Object.prototype.hasOwnProperty.call(stats.byPriority, request.priority)
+    ) {
       stats.byPriority[request.priority]++;
     }
 

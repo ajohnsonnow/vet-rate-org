@@ -777,7 +777,9 @@ html.font-xlarge {
 }
 
 /* ============================================
-   REDUCED MOTION
+   REDUCED MOTION — in-app override
+   System-preference variant lives at the top of this file (Sprint 5 / WCAG 2.3.3);
+   this class is applied by ThemeContext when the user toggles the in-app setting.
    ============================================ */
 
 html.reduce-motion *,
@@ -787,18 +789,6 @@ html.reduce-motion *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
-}
-
-/* Respect system preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }
 
 /* ============================================

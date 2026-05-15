@@ -10,12 +10,24 @@
  *
  * Security Features:
  * - AES-256-GCM encryption (NIST approved, same as military classified systems)
- * - PBKDF2 key derivation with 100,000 iterations (OWASP recommended)
+ * - PBKDF2-SHA256 key derivation with 600,000 iterations (OWASP 2023)
  * - Random 96-bit IV for each encryption (prevents pattern analysis)
  * - Optional passphrase for extra protection
+ *
+ * See docs/CRYPTO_AUDIT.md for the full Web Crypto audit. If you bump
+ * PBKDF2_ITERATIONS again, also update CRYPTO_AUDIT.md.
  */
 
-const ENCRYPTION_VERSION = "VR_ENC_V1"; // Version tag for future compatibility
+// VR_ENC_V2 = PBKDF2 with 600,000 iterations (OWASP 2023). VR_ENC_V1 = 100,000.
+// Decrypt path selects iteration count based on package.version so older
+// backups still open.
+const ENCRYPTION_VERSION = "VR_ENC_V2";
+const PBKDF2_ITERATIONS = 600_000;
+const PBKDF2_LEGACY_ITERATIONS = 100_000;
+
+function iterationsForVersion(version) {
+  return version === "VR_ENC_V1" ? PBKDF2_LEGACY_ITERATIONS : PBKDF2_ITERATIONS;
+}
 
 /**
  * Check if Web Crypto API is available
@@ -36,14 +48,14 @@ export const generateEncryptionKey = async () => {
   return key;
 };
 
-/**
- * Derive encryption key from passphrase using PBKDF2
- */
-const deriveKeyFromPassphrase = async (passphrase, salt) => {
+const deriveKeyFromPassphrase = async (
+  passphrase,
+  salt,
+  iterations = PBKDF2_ITERATIONS,
+) => {
   const encoder = new TextEncoder();
   const passphraseBuffer = encoder.encode(passphrase);
 
-  // Import passphrase as key material
   const keyMaterial = await window.crypto.subtle.importKey(
     "raw",
     passphraseBuffer,
@@ -52,12 +64,11 @@ const deriveKeyFromPassphrase = async (passphrase, salt) => {
     ["deriveBits", "deriveKey"],
   );
 
-  // Derive AES-GCM key with 100,000 iterations
   const key = await window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: salt,
-      iterations: 100000,
+      iterations,
       hash: "SHA-256",
     },
     keyMaterial,
@@ -182,8 +193,11 @@ export const decryptFromCloud = async (
   let key;
 
   if (isPassphrase || encryptedPackage.hasPassphrase) {
-    // Derive key from passphrase
-    key = await deriveKeyFromPassphrase(passphraseOrKey, salt);
+    key = await deriveKeyFromPassphrase(
+      passphraseOrKey,
+      salt,
+      iterationsForVersion(encryptedPackage.version),
+    );
   } else {
     // Import the raw key
     const keyBuffer = base64ToArrayBuffer(passphraseOrKey);

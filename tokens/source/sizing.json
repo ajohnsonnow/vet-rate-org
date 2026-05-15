@@ -1,0 +1,17 @@
+{
+  "size": {
+    "touch-target": {
+      "comment": "WCAG 2.2 AAA — 44x44 px minimum target for motor accessibility (Success Criterion 2.5.5)",
+      "min": { "value": "44px" }
+    },
+    "ring": {
+      "thick": { "value": "3px", "comment": "AAA focus ring — 3px stroke + 3px offset" }
+    },
+    "font": {
+      "base-lg": {
+        "value": "18px",
+        "comment": "AAA body text — pairs with line-height 1.6"
+      }
+    }
+  }
+}

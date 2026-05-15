@@ -48,12 +48,22 @@
     "va-data:bva": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --condition",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:red-team": "vitest run src/__tests__/red-team",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
     "preflight:fast": "node scripts/preflight.js --fast",
     "preflight:full": "node scripts/preflight.js --report",
     "preflight:push": "node scripts/preflight.js --push",
-    "check-bundle-budget": "node scripts/check-bundle-budget.mjs"
+    "preflight:extras": "node scripts/preflight-extras.mjs",
+    "preflight:extras:soft": "node scripts/preflight-extras.mjs --soft",
+    "check:markdown": "node scripts/preflight-extras.mjs --only=markdown",
+    "check:knip": "node scripts/preflight-extras.mjs --only=knip",
+    "check:licenses": "node scripts/preflight-extras.mjs --only=licenses",
+    "check-bundle-budget": "node scripts/check-bundle-budget.mjs",
+    "build:tokens": "node scripts/build-tokens.mjs",
+    "build:tokens:verify": "node scripts/build-tokens.mjs --verify",
+    "eval:rag": "node scripts/legal-ingestion/eval/run-eval.mjs",
+    "eval:rag:json": "node scripts/legal-ingestion/eval/run-eval.mjs --json"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

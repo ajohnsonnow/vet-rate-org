@@ -245,7 +245,11 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+        <div
+          className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
+          role="alert"
+          aria-live="polite"
+        >
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}

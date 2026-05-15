@@ -11,6 +11,12 @@
  * 100% local inference via GGUF format - no data leaves the device.
  */
 
+import {
+  TOOL_REQUIRED_CAPABILITY,
+  enforceAgentBoundary,
+  resolveAgentForTool,
+} from "./agentBoundaries";
+
 // Storage keys
 const SWARM_CONFIG_KEY = "vetrate_diamond_swarm_config";
 const SWARM_STATUS_KEY = "vetrate_diamond_swarm_status";
@@ -467,12 +473,26 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     onStream = null,
   } = options;
 
-  // Get the appropriate agent
-  const effectiveAgent = toolId ? TOOL_AGENT_MAP[toolId] || agentId : agentId;
+  // Resolve effective agent. When a toolId is supplied, derive the agent
+  // from the capability allowlist in agentBoundaries.js (not from the
+  // legacy TOOL_AGENT_MAP table) so the boundary check below has the
+  // matching contract to assert against.
+  const effectiveAgent = toolId
+    ? resolveAgentForTool(toolId, { strict: false })
+    : agentId;
   const agent = SWARM_AGENTS[effectiveAgent.toUpperCase()];
 
   if (!agent) {
     throw new Error(`Unknown agent: ${effectiveAgent}`);
+  }
+
+  // Property assertion: the agent must declare the capability the tool
+  // requires. Throws AgentBoundaryViolation otherwise — surfacing
+  // misrouting instead of silently letting the wrong agent answer.
+  // Bare swarm calls (no toolId) skip this check, since the caller is
+  // selecting the agent explicitly.
+  if (toolId && TOOL_REQUIRED_CAPABILITY[toolId]) {
+    enforceAgentBoundary(effectiveAgent, TOOL_REQUIRED_CAPABILITY[toolId]);
   }
 
   // Use custom system prompt or agent's default

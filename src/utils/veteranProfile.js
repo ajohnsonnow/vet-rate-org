@@ -161,7 +161,7 @@ export const saveVeteranProfile = (profile) => {
     // Only save valid fields
     for (const field of VALID_PROFILE_FIELDS) {
       if (
-        profile.hasOwnProperty(field) &&
+        Object.prototype.hasOwnProperty.call(profile, field) &&
         profile[field] !== undefined &&
         profile[field] !== ""
       ) {

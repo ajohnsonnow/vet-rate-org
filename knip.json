@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.jsx",
+    "src/App.jsx",
+    "index.html",
+    "vite.config.js",
+    "vitest.config.js",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "scripts/**/*.{js,mjs,cjs}",
+    "tests/**/*.{js,ts,jsx,tsx}",
+    "src/__tests__/**/*.{js,jsx,ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{js,jsx,ts,tsx}",
+    "scripts/**/*.{js,mjs,cjs}"
+  ],
+  "ignore": [
+    "packages/dompurify-noop/**",
+    "public/**",
+    "dist/**",
+    "coverage/**",
+    "playwright-report/**",
+    "src/data/**",
+    "src/**/*.test.{js,jsx,ts,tsx}",
+    "src/**/__mocks__/**"
+  ],
+  "ignoreDependencies": [
+    "autoprefixer",
+    "postcss",
+    "tailwindcss",
+    "vitest-axe",
+    "@axe-core/react"
+  ],
+  "ignoreBinaries": ["pwsh", "python"]
+}
