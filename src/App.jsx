@@ -17,7 +17,7 @@
  * VA disability claims process.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import BRAND from "./config/branding";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
@@ -26,105 +26,32 @@ import DisabilityDetails from "./components/DisabilityDetails";
 import Disclaimer from "./components/Disclaimer";
 import DisclaimerSplash from "./components/DisclaimerSplash";
 import BuyMeCoffee from "./components/BuyMeCoffee";
-import PrivacyPolicy from "./components/PrivacyPolicyPage";
-import AboutUs from "./components/AboutUs";
-import ContactUs from "./components/ContactUs";
-import SecondaryScout from "./components/SecondaryScout";
-import SecondaryScoutLauncher from "./components/SecondaryScoutLauncher";
-import NexusBuilder from "./components/NexusBuilder";
-import MyPacket from "./components/MyPacket";
-import CAPSimulator from "./components/CAPSimulator";
-import VAResources from "./components/VAResources";
-import FormsHelper from "./components/FormsHelper";
-import PublicationsLibrary from "./components/PublicationsLibrary";
-import CFileAnalyzer from "./components/CFileAnalyzer";
-import SharkRadar from "./components/SharkRadar";
-import Pathfinder from "./components/Pathfinder";
-import ClaimNavigator from "./components/ClaimNavigator";
-import BugSquasher from "./components/BugSquasher";
 import FloatingBugButton from "./components/FloatingBugButton";
 import ReportBugLink from "./components/ReportBugLink";
-import FeatureRequest from "./components/FeatureRequest";
-import CommunityRoadmap from "./components/CommunityRoadmap";
 import AdminLogin from "./components/AdminLogin";
 import AdminPanel from "./components/AdminPanel";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import QuickConditionPicker from "./components/QuickConditionPicker";
-import UserManual from "./components/UserManual";
-import StateBenefitHunter from "./components/StateBenefitHunter";
-import VSOFinder from "./components/VSOFinder";
-import RedTeam from "./components/RedTeam";
-import SymptomLogger from "./components/SymptomLogger";
-import DecisionDecoder from "./components/DecisionDecoder";
-import TacticalCalculator from "./components/TacticalCalculator";
 import MobileNotice from "./components/MobileNotice";
-import BlueButtonXRay from "./components/BlueButtonXRay";
-import WitnessBench from "./components/WitnessBench";
-import RiskAssessment from "./components/RiskAssessment";
-import TDIUBuilder from "./components/TDIUBuilder";
-import PACTActNavigator from "./components/PACTActNavigator";
 import TermsOfServiceModal from "./components/TermsOfServiceModal";
-import TermsOfServicePage from "./components/TermsOfServicePage";
-import FOIAGenerator from "./components/FOIAGenerator";
-import MillionDollarDashboard from "./components/MillionDollarDashboard";
-import MOSHazardMatcher from "./components/MOSHazardMatcher";
-import WebOfConditions from "./components/WebOfConditions";
-import LegislativeWatchdog from "./components/LegislativeWatchdog";
-import BackupManager from "./components/BackupManager";
-import TimeMachine from "./components/TimeMachine";
 import CommandersChecklist from "./components/CommandersChecklist";
-import TheTribunal from "./components/TheTribunal";
-import ConsistencyEngine from "./components/ConsistencyEngine";
-import WhatIfSandbox from "./components/WhatIfSandbox";
 import CrisisModal from "./components/CrisisModal";
 import UpdateBanner from "./components/UpdateBanner";
 import WhatsNewModal from "./components/WhatsNewModal";
 import ToastContainer, { useToast } from "./components/Toast";
-// StatementAnalyzer & ClaimProgress are embedded components
-// Used inside NexusBuilder and MyPacket - no App-level import needed
 import PWAInstallButton from "./components/PWAInstallButton";
-import DenialDecoder from "./components/DenialDecoder";
 import ZonkButton from "./components/ZonkButton";
 import LoadingBunker from "./components/LoadingBunker";
-import BodyMapSelector from "./components/BodyMapSelector";
-import ClaimStressTest from "./components/ClaimStressTest";
-import EvidenceTimeline from "./components/EvidenceTimeline";
-import BDDBuilder from "./components/BDDBuilder";
 import QuickExitButton from "./components/QuickExitButton";
-import MusterCall from "./components/MusterCall";
-import IntelligenceBriefing from "./components/IntelligenceBriefing";
-import VKBViewer from "./components/VKBViewer";
-import VKBTimeline from "./components/VKBTimeline";
-// ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
-import RecordSearch from "./components/RecordSearch";
-import MultiCloudManager from "./components/MultiCloudManager";
-import AICommandCenter from "./components/AICommandCenter";
 import { LocalAIProvider } from "./components/LocalAIPanel";
-import VisionSimulatorPanel from "./components/VisionSimulatorPanel";
-import DD214Analyzer from "./components/DD214Analyzer";
 import BootCampTour from "./components/BootCampTour";
 import DemoDataLoader from "./components/DemoDataLoader";
-import MissionProtocol from "./components/MissionProtocol";
-import WorkflowGuide from "./components/WorkflowGuide";
-import EvidenceGapVisualizer from "./components/EvidenceGapVisualizer";
-import RetroPayHunter from "./components/RetroPayHunter";
-import PainPainter from "./components/PainPainter";
-import VAAITransparency from "./components/VAAITransparency";
 import ShareButton, { PIISensitive } from "./components/ShareButton";
 import SecurityBadge from "./components/SecurityBadge";
-import VaIntegrationTest from "./components/VaIntegrationTest";
-import VaSandboxTest from "./components/VaSandboxTest";
-import DemoDashboard from "./components/DemoDashboard";
 import { VaApiStatusBanner } from "./components/VaApiStatus";
 import { isVaApiEnabled } from "./config/vaAuth";
 import { MobileSaveReminder } from "./components/PacketPersistence";
-// 🎮 Easter Egg: Stress Relief Division (Type IDDQD anywhere to activate)
 import StressReliefDivision from "./components/StressReliefDivision";
-// 📊 BVA Success Tools (powered by 18,609 decision analysis)
-import NexusQualityAnalyzer from "./components/NexusQualityAnalyzer";
-import RemandRiskChecker from "./components/RemandRiskChecker";
-import AppealsLaneAdvisor from "./components/AppealsLaneAdvisor";
-// AAAAA Diamond Standard Components
 import GlobalCommandSearch from "./components/GlobalCommandSearch";
 import MobileBottomNav, { MobileNavSpacer } from "./components/MobileBottomNav";
 import AtomicWipe from "./components/AtomicWipe";
@@ -132,6 +59,104 @@ import { HelperModeProvider } from "./contexts/HelperModeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+
+// Lazy-loaded modal-shaped feature surfaces (B21, audit #23 #28 #35).
+// Each becomes its own Vite bundle chunk, fetched only when the user opens
+// that surface. Suspense boundary for the cluster lives below, fallback is
+// <LoadingBunker />. Components rendered unconditionally (Header, SearchBar,
+// CommandersChecklist, etc.) and safety-critical modals (CrisisModal,
+// UpdateBanner, WhatsNewModal) stay eager.
+const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicyPage"));
+const AboutUs = lazy(() => import("./components/AboutUs"));
+const ContactUs = lazy(() => import("./components/ContactUs"));
+const SecondaryScout = lazy(() => import("./components/SecondaryScout"));
+const SecondaryScoutLauncher = lazy(
+  () => import("./components/SecondaryScoutLauncher"),
+);
+const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
+const MyPacket = lazy(() => import("./components/MyPacket"));
+const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
+const VAResources = lazy(() => import("./components/VAResources"));
+const FormsHelper = lazy(() => import("./components/FormsHelper"));
+const PublicationsLibrary = lazy(
+  () => import("./components/PublicationsLibrary"),
+);
+const CFileAnalyzer = lazy(() => import("./components/CFileAnalyzer"));
+const SharkRadar = lazy(() => import("./components/SharkRadar"));
+const Pathfinder = lazy(() => import("./components/Pathfinder"));
+const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
+const BugSquasher = lazy(() => import("./components/BugSquasher"));
+const FeatureRequest = lazy(() => import("./components/FeatureRequest"));
+const CommunityRoadmap = lazy(() => import("./components/CommunityRoadmap"));
+const UserManual = lazy(() => import("./components/UserManual"));
+const StateBenefitHunter = lazy(
+  () => import("./components/StateBenefitHunter"),
+);
+const VSOFinder = lazy(() => import("./components/VSOFinder"));
+const RedTeam = lazy(() => import("./components/RedTeam"));
+const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
+const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
+const TacticalCalculator = lazy(
+  () => import("./components/TacticalCalculator"),
+);
+const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
+const WitnessBench = lazy(() => import("./components/WitnessBench"));
+const RiskAssessment = lazy(() => import("./components/RiskAssessment"));
+const TDIUBuilder = lazy(() => import("./components/TDIUBuilder"));
+const PACTActNavigator = lazy(() => import("./components/PACTActNavigator"));
+const TermsOfServicePage = lazy(
+  () => import("./components/TermsOfServicePage"),
+);
+const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
+const MillionDollarDashboard = lazy(
+  () => import("./components/MillionDollarDashboard"),
+);
+const MOSHazardMatcher = lazy(() => import("./components/MOSHazardMatcher"));
+const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
+const LegislativeWatchdog = lazy(
+  () => import("./components/LegislativeWatchdog"),
+);
+const BackupManager = lazy(() => import("./components/BackupManager"));
+const TimeMachine = lazy(() => import("./components/TimeMachine"));
+const TheTribunal = lazy(() => import("./components/TheTribunal"));
+const ConsistencyEngine = lazy(() => import("./components/ConsistencyEngine"));
+const WhatIfSandbox = lazy(() => import("./components/WhatIfSandbox"));
+const DenialDecoder = lazy(() => import("./components/DenialDecoder"));
+const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
+const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
+const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
+const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
+const MusterCall = lazy(() => import("./components/MusterCall"));
+const IntelligenceBriefing = lazy(
+  () => import("./components/IntelligenceBriefing"),
+);
+const VKBViewer = lazy(() => import("./components/VKBViewer"));
+const VKBTimeline = lazy(() => import("./components/VKBTimeline"));
+const RecordSearch = lazy(() => import("./components/RecordSearch"));
+const MultiCloudManager = lazy(() => import("./components/MultiCloudManager"));
+const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
+const VisionSimulatorPanel = lazy(
+  () => import("./components/VisionSimulatorPanel"),
+);
+const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
+const MissionProtocol = lazy(() => import("./components/MissionProtocol"));
+const WorkflowGuide = lazy(() => import("./components/WorkflowGuide"));
+const EvidenceGapVisualizer = lazy(
+  () => import("./components/EvidenceGapVisualizer"),
+);
+const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
+const PainPainter = lazy(() => import("./components/PainPainter"));
+const VAAITransparency = lazy(() => import("./components/VAAITransparency"));
+const VaIntegrationTest = lazy(() => import("./components/VaIntegrationTest"));
+const VaSandboxTest = lazy(() => import("./components/VaSandboxTest"));
+const DemoDashboard = lazy(() => import("./components/DemoDashboard"));
+const NexusQualityAnalyzer = lazy(
+  () => import("./components/NexusQualityAnalyzer"),
+);
+const RemandRiskChecker = lazy(() => import("./components/RemandRiskChecker"));
+const AppealsLaneAdvisor = lazy(
+  () => import("./components/AppealsLaneAdvisor"),
+);
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -2824,101 +2849,355 @@ function App() {
         </div>
       </footer>
 
-      {/* Modals */}
-      {showPrivacyPolicy && (
-        <PrivacyPolicy
-          onClose={() => setShowPrivacyPolicy(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-        />
-      )}
-      {showAboutUs && (
-        <AboutUs
-          onClose={() => setShowAboutUs(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-        />
-      )}
-      {showContactUs && (
-        <ContactUs
-          onClose={() => setShowContactUs(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-        />
-      )}
-      {showTermsOfService && (
-        <TermsOfServicePage onClose={() => setShowTermsOfService(false)} />
-      )}
+      {/* Modals — lazy cluster with Suspense boundary (B21, audit #28).
+          Each <Show...> conditional below mounts a React.lazy component
+          declared at the top of this file; the chunk is fetched on first
+          open. <LoadingBunker /> is the shared fallback. */}
+      <Suspense fallback={<LoadingBunker />}>
+        {showPrivacyPolicy && (
+          <PrivacyPolicy
+            onClose={() => setShowPrivacyPolicy(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+          />
+        )}
+        {showAboutUs && (
+          <AboutUs
+            onClose={() => setShowAboutUs(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+          />
+        )}
+        {showContactUs && (
+          <ContactUs
+            onClose={() => setShowContactUs(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+          />
+        )}
+        {showTermsOfService && (
+          <TermsOfServicePage onClose={() => setShowTermsOfService(false)} />
+        )}
 
-      {/* Secondary Scout Launcher */}
-      {showSecondaryScoutLauncher && (
-        <SecondaryScoutLauncher
-          onLaunch={handleLaunchSecondaryScout}
-          onClose={() => setShowSecondaryScoutLauncher(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-        />
-      )}
+        {/* Secondary Scout Launcher */}
+        {showSecondaryScoutLauncher && (
+          <SecondaryScoutLauncher
+            onLaunch={handleLaunchSecondaryScout}
+            onClose={() => setShowSecondaryScoutLauncher(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+          />
+        )}
 
-      {/* Secondary Scout Results */}
-      {showSecondaryScout && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8">
-            <div className="bg-white dark:bg-emerald-950 rounded-lg shadow-xl max-w-7xl mx-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 z-10 rounded-t-lg">
-                {/* Mobile: Stack vertically, Desktop: Side by side */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-xl sm:text-3xl font-bold truncate">
-                      🔍 Secondary Scout Results
-                    </h2>
-                    <p className="text-sm text-blue-100 mt-1">
-                      Based on {userConditions.length} service-connected
-                      condition{userConditions.length !== 1 ? "s" : ""}
-                    </p>
+        {/* Secondary Scout Results */}
+        {showSecondaryScout && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+            <div className="min-h-screen px-4 py-8">
+              <div className="bg-white dark:bg-emerald-950 rounded-lg shadow-xl max-w-7xl mx-auto">
+                <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 z-10 rounded-t-lg">
+                  {/* Mobile: Stack vertically, Desktop: Side by side */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-xl sm:text-3xl font-bold truncate">
+                        🔍 Secondary Scout Results
+                      </h2>
+                      <p className="text-sm text-blue-100 mt-1">
+                        Based on {userConditions.length} service-connected
+                        condition{userConditions.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    {/* Mobile: Full width buttons, Desktop: Inline */}
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <ReportBugLink
+                        onClick={() => setShowBugSquasher(true)}
+                        variant="light"
+                        moduleName="Secondary Scout Results"
+                      />
+                      <button
+                        onClick={() => {
+                          setShowSecondaryScout(false);
+                          setShowMyPacket(true);
+                        }}
+                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                      >
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        <span className="hidden xs:inline">My </span>Packet
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowSecondaryScout(false);
+                          setShowSecondaryScoutLauncher(true);
+                        }}
+                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                      >
+                        <span className="hidden sm:inline">Change </span>
+                        Conditions
+                      </button>
+                      <button
+                        onClick={() => setShowSecondaryScout(false)}
+                        className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                        aria-label="Close"
+                      >
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  {/* Mobile: Full width buttons, Desktop: Inline */}
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                </div>
+                <div className="p-4 sm:p-6">
+                  <SecondaryScout
+                    userDisabilities={userConditions}
+                    onLearnHow={handleLearnHow}
+                    onViewPacket={() => {
+                      setShowSecondaryScout(false);
+                      setShowMyPacket(true);
+                    }}
+                    onOpenAISettings={() => setShowAISettings(true)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Nexus Builder */}
+        {showNexusBuilder && nexusBuilderData && (
+          <NexusBuilder
+            condition={nexusBuilderData.condition}
+            primaryCondition={nexusBuilderData.primaryCondition}
+            existingStatement={nexusBuilderData.existingStatement}
+            onClose={() => setShowNexusBuilder(false)}
+            onSave={handleSaveStatement}
+            onReportBug={() => setShowBugSquasher(true)}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* My Packet */}
+        {showMyPacket && (
+          <MyPacket
+            onResume={handleResumeFromPacket}
+            onClose={() => setShowMyPacket(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+            onAnalyzeStrategy={() => {
+              setPathfinderInitialConditions(null); // Clear any stale conditions
+              setShowMyPacket(false);
+              setShowPathfinder(true);
+            }}
+            onOpenGoogleDriveSync={() => {
+              setShowMyPacket(false);
+              setShowCloudSyncManager(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+            onOpenDD214Analyzer={() => {
+              setShowMyPacket(false);
+              setShowDD214Analyzer(true);
+            }}
+          />
+        )}
+
+        {/* C&P Simulator */}
+        {showCAPSimulator && (
+          <CAPSimulator
+            onClose={() => setShowCAPSimulator(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+            onSendToCalculator={handleSendToCalculator}
+          />
+        )}
+
+        {/* VA Resources Hub */}
+        {showVAResources && (
+          <VAResources
+            onClose={() => setShowVAResources(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+          />
+        )}
+
+        {/* Forms Helper */}
+        {showFormsHelper && (
+          <FormsHelper
+            onClose={() => setShowFormsHelper(false)}
+            onReportBug={() => setShowBugSquasher(true)}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* Publications Library */}
+        {showPublicationsLibrary && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  📚 Publications Library{" "}
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    BETA
+                  </span>
+                </h2>
+                <button
+                  onClick={() => setShowPublicationsLibrary(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6">
+                <PublicationsLibrary />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* C-File Analyzer */}
+        {showCFileAnalyzer && (
+          <CFileAnalyzer
+            onClose={() => setShowCFileAnalyzer(false)}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* DD214 Analyzer */}
+        {showDD214Analyzer && (
+          <DD214Analyzer
+            onClose={() => setShowDD214Analyzer(false)}
+            onReportBug={() => {
+              setShowDD214Analyzer(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+            onOpenMusterCall={() => {
+              setShowDD214Analyzer(false);
+              setShowMusterCall(true);
+            }}
+          />
+        )}
+
+        {/* Muster Call - Mass Document Processor */}
+        {showMusterCall && (
+          <MusterCall
+            isOpen={showMusterCall}
+            onClose={() => setShowMusterCall(false)}
+            onOpenDD214Analyzer={() => {
+              setShowMusterCall(false);
+              setShowDD214Analyzer(true);
+            }}
+            onProcessComplete={(extractedData) => {
+              setBriefingData(extractedData);
+              setShowIntelligenceBriefing(true);
+              setShowMusterCall(false);
+            }}
+          />
+        )}
+
+        {/* Intelligence Briefing - Post-Muster Call Data Review */}
+        {showIntelligenceBriefing && (
+          <IntelligenceBriefing
+            isOpen={showIntelligenceBriefing}
+            onClose={() => {
+              setShowIntelligenceBriefing(false);
+              setBriefingData(null);
+            }}
+            extractedData={briefingData}
+            onConfirm={(confirmedData) => {
+              // Save to My Packet
+              localStorage.setItem(
+                "vetrate_my_packet_data",
+                JSON.stringify(confirmedData),
+              );
+              setShowIntelligenceBriefing(false);
+              setBriefingData(null);
+              // Show success message
+              console.log("Data committed to My Packet:", confirmedData);
+            }}
+            onEdit={(section, field, value) => {
+              console.log(`User edited ${field} in ${section}:`, value);
+            }}
+          />
+        )}
+
+        {/* VKB Viewer - Veteran Knowledge Base */}
+        {showVKBViewer && (
+          <VKBViewer
+            isOpen={showVKBViewer}
+            onClose={() => setShowVKBViewer(false)}
+          />
+        )}
+
+        {/* VKB Timeline - Document Version History */}
+        {showVKBTimeline && (
+          <VKBTimeline
+            onDocumentClick={(doc) => {
+              console.log("Document clicked:", doc);
+              // Could open Intelligence Briefing modal here to view document
+            }}
+            onClose={() => setShowVKBTimeline(false)}
+          />
+        )}
+
+        {/* Shark Radar */}
+        {showSharkRadar && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
+            onClick={() => setShowSharkRadar(false)}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🦈</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        Shark Radar
+                        <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+                          AI
+                        </span>
+                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                          BETA
+                        </span>
+                      </h2>
+                      <p className="text-sm text-rose-100">
+                        Contract & Email Scanner • AI-Powered Analysis
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <ReportBugLink
-                      onClick={() => setShowBugSquasher(true)}
+                      onClick={() => {
+                        setShowSharkRadar(false);
+                        setShowBugSquasher(true);
+                      }}
                       variant="light"
-                      moduleName="Secondary Scout Results"
+                      moduleName="Shark Radar"
                     />
                     <button
-                      onClick={() => {
-                        setShowSecondaryScout(false);
-                        setShowMyPacket(true);
-                      }}
-                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-                    >
-                      <svg
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <span className="hidden xs:inline">My </span>Packet
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowSecondaryScout(false);
-                        setShowSecondaryScoutLauncher(true);
-                      }}
-                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
-                    >
-                      <span className="hidden sm:inline">Change </span>
-                      Conditions
-                    </button>
-                    <button
-                      onClick={() => setShowSecondaryScout(false)}
+                      onClick={() => setShowSharkRadar(false)}
                       className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                       aria-label="Close"
                     >
                       <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6"
+                        className="w-6 h-6"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2934,872 +3213,625 @@ function App() {
                   </div>
                 </div>
               </div>
-              <div className="p-4 sm:p-6">
-                <SecondaryScout
-                  userDisabilities={userConditions}
-                  onLearnHow={handleLearnHow}
-                  onViewPacket={() => {
-                    setShowSecondaryScout(false);
-                    setShowMyPacket(true);
-                  }}
+              <div className="overflow-y-auto flex-1 p-4">
+                <SharkRadar />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pathfinder */}
+        {showPathfinder && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
+            onClick={() => {
+              setPathfinderInitialConditions(null); // Clear conditions when closing
+              setShowPathfinder(false);
+            }}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🧭</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        The Pathfinder
+                        <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
+                          AI
+                        </span>
+                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                          BETA
+                        </span>
+                      </h2>
+                      <p className="text-sm text-teal-100">
+                        Strategic Claims Analysis
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ReportBugLink
+                      onClick={() => {
+                        setShowPathfinder(false);
+                        setShowBugSquasher(true);
+                      }}
+                      variant="light"
+                      moduleName="Pathfinder"
+                    />
+                    <button
+                      onClick={() => {
+                        setPathfinderInitialConditions(null); // Clear conditions when closing
+                        setShowPathfinder(false);
+                      }}
+                      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                      aria-label="Close"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="overflow-y-auto flex-1 p-4">
+                <Pathfinder
+                  onNavigate={handlePathfinderNavigate}
                   onOpenAISettings={() => setShowAISettings(true)}
+                  initialConditions={pathfinderInitialConditions}
                 />
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Nexus Builder */}
-      {showNexusBuilder && nexusBuilderData && (
-        <NexusBuilder
-          condition={nexusBuilderData.condition}
-          primaryCondition={nexusBuilderData.primaryCondition}
-          existingStatement={nexusBuilderData.existingStatement}
-          onClose={() => setShowNexusBuilder(false)}
-          onSave={handleSaveStatement}
-          onReportBug={() => setShowBugSquasher(true)}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
+        {/* Claim Navigator - Mission Control for VA Claims */}
+        {showClaimNavigator && (
+          <ClaimNavigator onClose={() => setShowClaimNavigator(false)} />
+        )}
 
-      {/* My Packet */}
-      {showMyPacket && (
-        <MyPacket
-          onResume={handleResumeFromPacket}
-          onClose={() => setShowMyPacket(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-          onAnalyzeStrategy={() => {
-            setPathfinderInitialConditions(null); // Clear any stale conditions
-            setShowMyPacket(false);
-            setShowPathfinder(true);
-          }}
-          onOpenGoogleDriveSync={() => {
-            setShowMyPacket(false);
-            setShowCloudSyncManager(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-          onOpenDD214Analyzer={() => {
-            setShowMyPacket(false);
-            setShowDD214Analyzer(true);
-          }}
-        />
-      )}
+        {/* Bug Squasher */}
+        {showBugSquasher && (
+          <BugSquasher
+            onClose={() => setShowBugSquasher(false)}
+            appState={getCurrentAppState()}
+            onOpenRoadmap={() => setShowCommunityRoadmap(true)}
+          />
+        )}
 
-      {/* C&P Simulator */}
-      {showCAPSimulator && (
-        <CAPSimulator
-          onClose={() => setShowCAPSimulator(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-          onSendToCalculator={handleSendToCalculator}
-        />
-      )}
+        {/* Feature Request */}
+        {showFeatureRequest && (
+          <FeatureRequest
+            onClose={() => setShowFeatureRequest(false)}
+            appState={getCurrentAppState()}
+            onOpenRoadmap={() => setShowCommunityRoadmap(true)}
+          />
+        )}
 
-      {/* VA Resources Hub */}
-      {showVAResources && (
-        <VAResources
-          onClose={() => setShowVAResources(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-        />
-      )}
+        {/* Community Roadmap */}
+        {showCommunityRoadmap && (
+          <CommunityRoadmap onClose={() => setShowCommunityRoadmap(false)} />
+        )}
 
-      {/* Forms Helper */}
-      {showFormsHelper && (
-        <FormsHelper
-          onClose={() => setShowFormsHelper(false)}
-          onReportBug={() => setShowBugSquasher(true)}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
+        {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
+        <AdminLogin />
+        <AdminPanel />
 
-      {/* Publications Library */}
-      {showPublicationsLibrary && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                📚 Publications Library{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                  BETA
-                </span>
-              </h2>
-              <button
-                onClick={() => setShowPublicationsLibrary(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6">
-              <PublicationsLibrary />
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Field Manual */}
+        {showUserManual && (
+          <UserManual
+            onClose={() => setShowUserManual(false)}
+            onReportBug={() => {
+              setShowUserManual(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* C-File Analyzer */}
-      {showCFileAnalyzer && (
-        <CFileAnalyzer
-          onClose={() => setShowCFileAnalyzer(false)}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
+        {/* State Benefit Hunter */}
+        {showStateBenefitHunter && (
+          <StateBenefitHunter
+            onClose={() => setShowStateBenefitHunter(false)}
+            onReportBug={() => {
+              setShowStateBenefitHunter(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* DD214 Analyzer */}
-      {showDD214Analyzer && (
-        <DD214Analyzer
-          onClose={() => setShowDD214Analyzer(false)}
-          onReportBug={() => {
-            setShowDD214Analyzer(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-          onOpenMusterCall={() => {
-            setShowDD214Analyzer(false);
-            setShowMusterCall(true);
-          }}
-        />
-      )}
+        {/* VSO Finder */}
+        {showVSOFinder && (
+          <VSOFinder
+            onClose={() => setShowVSOFinder(false)}
+            onReportBug={() => {
+              setShowVSOFinder(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* Muster Call - Mass Document Processor */}
-      {showMusterCall && (
-        <MusterCall
-          isOpen={showMusterCall}
-          onClose={() => setShowMusterCall(false)}
-          onOpenDD214Analyzer={() => {
-            setShowMusterCall(false);
-            setShowDD214Analyzer(true);
-          }}
-          onProcessComplete={(extractedData) => {
-            setBriefingData(extractedData);
-            setShowIntelligenceBriefing(true);
-            setShowMusterCall(false);
-          }}
-        />
-      )}
+        {/* VA Integration Demo Dashboard (for Production Access Demo) */}
+        {isVaApiEnabled() && showVaIntegrationDemo && (
+          <VaIntegrationTest onClose={() => setShowVaIntegrationDemo(false)} />
+        )}
 
-      {/* Intelligence Briefing - Post-Muster Call Data Review */}
-      {showIntelligenceBriefing && (
-        <IntelligenceBriefing
-          isOpen={showIntelligenceBriefing}
-          onClose={() => {
-            setShowIntelligenceBriefing(false);
-            setBriefingData(null);
-          }}
-          extractedData={briefingData}
-          onConfirm={(confirmedData) => {
-            // Save to My Packet
-            localStorage.setItem(
-              "vetrate_my_packet_data",
-              JSON.stringify(confirmedData),
-            );
-            setShowIntelligenceBriefing(false);
-            setBriefingData(null);
-            // Show success message
-            console.log("Data committed to My Packet:", confirmedData);
-          }}
-          onEdit={(section, field, value) => {
-            console.log(`User edited ${field} in ${section}:`, value);
-          }}
-        />
-      )}
+        {/* VA Sandbox Test Dashboard (Comprehensive API Validation) */}
+        {isVaApiEnabled() && showVaSandboxTest && (
+          <VaSandboxTest onClose={() => setShowVaSandboxTest(false)} />
+        )}
 
-      {/* VKB Viewer - Veteran Knowledge Base */}
-      {showVKBViewer && (
-        <VKBViewer
-          isOpen={showVKBViewer}
-          onClose={() => setShowVKBViewer(false)}
-        />
-      )}
+        {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
+        {isVaApiEnabled() && showDemoDashboard && (
+          <DemoDashboard onClose={() => setShowDemoDashboard(false)} />
+        )}
 
-      {/* VKB Timeline - Document Version History */}
-      {showVKBTimeline && (
-        <VKBTimeline
-          onDocumentClick={(doc) => {
-            console.log("Document clicked:", doc);
-            // Could open Intelligence Briefing modal here to view document
-          }}
-          onClose={() => setShowVKBTimeline(false)}
-        />
-      )}
+        {/* Red Team - Statement Stress Test */}
+        {showRedTeam && (
+          <RedTeam
+            onClose={() => setShowRedTeam(false)}
+            onReportBug={() => {
+              setShowRedTeam(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
 
-      {/* Shark Radar */}
-      {showSharkRadar && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-          onClick={() => setShowSharkRadar(false)}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">🦈</span>
-                  <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      Shark Radar
-                      <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
-                        AI
-                      </span>
-                      <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                        BETA
-                      </span>
-                    </h2>
-                    <p className="text-sm text-rose-100">
-                      Contract & Email Scanner • AI-Powered Analysis
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ReportBugLink
-                    onClick={() => {
-                      setShowSharkRadar(false);
-                      setShowBugSquasher(true);
-                    }}
-                    variant="light"
-                    moduleName="Shark Radar"
-                  />
-                  <button
-                    onClick={() => setShowSharkRadar(false)}
-                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label="Close"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
+        {/* Symptom Logger */}
+        {showSymptomLogger && (
+          <SymptomLogger
+            onClose={() => setShowSymptomLogger(false)}
+            onReportBug={() => {
+              setShowSymptomLogger(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Decision Decoder */}
+        {showDecisionDecoder && (
+          <DecisionDecoder
+            onClose={() => setShowDecisionDecoder(false)}
+            onReportBug={() => {
+              setShowDecisionDecoder(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* Tactical Calculator */}
+        {showTacticalCalculator && (
+          <TacticalCalculator
+            onClose={() => setShowTacticalCalculator(false)}
+            onReportBug={() => {
+              setShowTacticalCalculator(false);
+              setShowBugSquasher(true);
+            }}
+            capSimulatorResults={capSimulatorResults}
+            onClearCapResults={() => setCapSimulatorResults([])}
+          />
+        )}
+
+        {/* Blue Button X-Ray - Diamond Tier Data Mining */}
+        {showBlueButtonXRay && (
+          <BlueButtonXRay
+            onClose={() => setShowBlueButtonXRay(false)}
+            onAddToCalculator={(conditions) => {
+              // Add conditions to Pathfinder for analysis
+              console.log(
+                "BlueButton: Transferring",
+                conditions.length,
+                "conditions to Pathfinder",
+              );
+              setPathfinderInitialConditions(conditions);
+              setShowBlueButtonXRay(false);
+              setShowPathfinder(true);
+            }}
+            onCheckRatingCriteria={(conditionName) => {
+              // Search for the condition in the database
+              setShowBlueButtonXRay(false);
+              setSearchTerm(conditionName);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+            onReportBug={() => {
+              setShowBlueButtonXRay(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Witness Bench - Diamond Tier Buddy Letter Wizard */}
+        {showWitnessBench && (
+          <WitnessBench
+            onClose={() => setShowWitnessBench(false)}
+            onReportBug={() => {
+              setShowWitnessBench(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* Risk Assessment - Diamond Tier Poke the Bear Calculator */}
+        {showRiskAssessment && (
+          <RiskAssessment
+            onClose={() => setShowRiskAssessment(false)}
+            onReportBug={() => {
+              setShowRiskAssessment(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* TDIU Work Impact Builder - Specialized Tool */}
+        {showTDIUBuilder && (
+          <TDIUBuilder
+            onClose={() => setShowTDIUBuilder(false)}
+            onReportBug={() => {
+              setShowTDIUBuilder(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* PACT Act Navigator - Specialized Tool */}
+        {showPACTActNavigator && (
+          <PACTActNavigator
+            onClose={() => setShowPACTActNavigator(false)}
+            onReportBug={() => {
+              setShowPACTActNavigator(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* FOIA Generator (The Keysmith) - Specialized Tool */}
+        {showFOIAGenerator && (
+          <FOIAGenerator
+            onClose={() => setShowFOIAGenerator(false)}
+            onReportBug={() => {
+              setShowFOIAGenerator(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Million Dollar Dashboard - Shock & Awe */}
+        {showMillionDollarDashboard && (
+          <MillionDollarDashboard
+            onClose={() => setShowMillionDollarDashboard(false)}
+            onReportBug={() => {
+              setShowMillionDollarDashboard(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* MOS Hazard Matcher - Shock & Awe */}
+        {showMOSHazardMatcher && (
+          <MOSHazardMatcher
+            onClose={() => setShowMOSHazardMatcher(false)}
+            onAddToPathfinder={(conditions) => {
+              // Could integrate with Pathfinder or My Packet in the future
+              console.log("Add to pathfinder:", conditions);
+              setShowMOSHazardMatcher(false);
+            }}
+            onReportBug={() => {
+              setShowMOSHazardMatcher(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Web of Conditions - Shock & Awe */}
+        {showWebOfConditions && (
+          <WebOfConditions
+            onClose={() => setShowWebOfConditions(false)}
+            onSelectCondition={(condition) => {
+              // Could navigate to search for the condition
+              console.log("Selected condition:", condition);
+            }}
+            onReportBug={() => {
+              setShowWebOfConditions(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Legislative Watchdog - Rule Change Radar */}
+        {showLegislativeWatchdog && (
+          <LegislativeWatchdog
+            onClose={() => setShowLegislativeWatchdog(false)}
+            onReportBug={() => {
+              setShowLegislativeWatchdog(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* VA AI Transparency Hub */}
+        {showVAAITransparency && (
+          <VAAITransparency
+            onClose={() => setShowVAAITransparency(false)}
+            onReportBug={() => {
+              setShowVAAITransparency(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* Backup Manager - The Bunker */}
+        {showBackupManager && (
+          <BackupManager onClose={() => setShowBackupManager(false)} />
+        )}
+
+        {/* Time Machine - ITF Countdown */}
+        {showTimeMachine && (
+          <TimeMachine
+            onClose={() => setShowTimeMachine(false)}
+            onReportBug={() => {
+              setShowTimeMachine(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
+
+        {/* The Tribunal - Mock Hearing Simulator */}
+        {showTheTribunal && (
+          <TheTribunal
+            onClose={() => setShowTheTribunal(false)}
+            onReportBug={() => {
+              setShowTheTribunal(false);
+              setShowBugSquasher(true);
+            }}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* The Consistency Engine - Data Auditor */}
+        {showConsistencyEngine && (
+          <ConsistencyEngine onClose={() => setShowConsistencyEngine(false)} />
+        )}
+
+        {/* BVA SUCCESS TOOLS (powered by 18,609 decision analysis) */}
+        {showNexusQualityAnalyzer && (
+          <NexusQualityAnalyzer
+            onClose={() => setShowNexusQualityAnalyzer(false)}
+          />
+        )}
+        {showRemandRiskChecker && (
+          <RemandRiskChecker onClose={() => setShowRemandRiskChecker(false)} />
+        )}
+        {showAppealsLaneAdvisor && (
+          <AppealsLaneAdvisor
+            onClose={() => setShowAppealsLaneAdvisor(false)}
+          />
+        )}
+
+        {/* The What-If Sandbox - Scenario Planner */}
+        {showWhatIfSandbox && (
+          <WhatIfSandbox onClose={() => setShowWhatIfSandbox(false)} />
+        )}
+
+        {/* DIAMOND-TIER: The Denials Decoder - OCR + AI Simplifier */}
+        {showDenialDecoder && (
+          <DenialDecoder
+            onClose={() => setShowDenialDecoder(false)}
+            onOpenAISettings={() => setShowAISettings(true)}
+          />
+        )}
+
+        {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map (Legacy BodyMapSelector) */}
+        {showBodyMapSelector && (
+          <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
+            <div className="min-h-screen px-4 py-8">
+              <div className="max-w-6xl mx-auto">
+                <BodyMapSelector
+                  onClose={() => setShowBodyMapSelector(false)}
+                  onLogToSymptomLogger={() => {
+                    setShowBodyMapSelector(false);
+                    setShowSymptomLogger(true);
+                  }}
+                />
               </div>
             </div>
-            <div className="overflow-y-auto flex-1 p-4">
-              <SharkRadar />
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Pathfinder */}
-      {showPathfinder && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-          onClick={() => {
-            setPathfinderInitialConditions(null); // Clear conditions when closing
-            setShowPathfinder(false);
-          }}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex-shrink-0 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">🧭</span>
-                  <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      The Pathfinder
-                      <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
-                        AI
-                      </span>
-                      <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                        BETA
-                      </span>
-                    </h2>
-                    <p className="text-sm text-teal-100">
-                      Strategic Claims Analysis
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ReportBugLink
-                    onClick={() => {
-                      setShowPathfinder(false);
-                      setShowBugSquasher(true);
-                    }}
-                    variant="light"
-                    moduleName="Pathfinder"
-                  />
-                  <button
-                    onClick={() => {
-                      setPathfinderInitialConditions(null); // Clear conditions when closing
-                      setShowPathfinder(false);
-                    }}
-                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label="Close"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="overflow-y-auto flex-1 p-4">
-              <Pathfinder
-                onNavigate={handlePathfinderNavigate}
-                onOpenAISettings={() => setShowAISettings(true)}
-                initialConditions={pathfinderInitialConditions}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+        {/* WOW FEATURE: Pain Painter - Interactive Body Map 2.0 */}
+        {showPainPainter && (
+          <PainPainter
+            onClose={() => setShowPainPainter(false)}
+            onLogToSymptomLogger={(data) => {
+              setShowPainPainter(false);
+              setShowSymptomLogger(true);
+            }}
+            onReportBug={() => {
+              setShowPainPainter(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* Claim Navigator - Mission Control for VA Claims */}
-      {showClaimNavigator && (
-        <ClaimNavigator onClose={() => setShowClaimNavigator(false)} />
-      )}
+        {/* WOW FEATURE: Evidence Gap Visualizer */}
+        {showEvidenceGapVisualizer && (
+          <EvidenceGapVisualizer
+            onClose={() => setShowEvidenceGapVisualizer(false)}
+            onReportBug={() => {
+              setShowEvidenceGapVisualizer(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* Bug Squasher */}
-      {showBugSquasher && (
-        <BugSquasher
-          onClose={() => setShowBugSquasher(false)}
-          appState={getCurrentAppState()}
-          onOpenRoadmap={() => setShowCommunityRoadmap(true)}
-        />
-      )}
+        {/* WOW FEATURE: Retro Pay Hunter */}
+        {showRetroPayHunter && (
+          <RetroPayHunter
+            onClose={() => setShowRetroPayHunter(false)}
+            onReportBug={() => {
+              setShowRetroPayHunter(false);
+              setShowBugReporter(true);
+            }}
+            onAISettingsClick={() => setShowAISettings(true)}
+          />
+        )}
 
-      {/* Feature Request */}
-      {showFeatureRequest && (
-        <FeatureRequest
-          onClose={() => setShowFeatureRequest(false)}
-          appState={getCurrentAppState()}
-          onOpenRoadmap={() => setShowCommunityRoadmap(true)}
-        />
-      )}
-
-      {/* Community Roadmap */}
-      {showCommunityRoadmap && (
-        <CommunityRoadmap onClose={() => setShowCommunityRoadmap(false)} />
-      )}
-
-      {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
-      <AdminLogin />
-      <AdminPanel />
-
-      {/* Field Manual */}
-      {showUserManual && (
-        <UserManual
-          onClose={() => setShowUserManual(false)}
-          onReportBug={() => {
-            setShowUserManual(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* State Benefit Hunter */}
-      {showStateBenefitHunter && (
-        <StateBenefitHunter
-          onClose={() => setShowStateBenefitHunter(false)}
-          onReportBug={() => {
-            setShowStateBenefitHunter(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* VSO Finder */}
-      {showVSOFinder && (
-        <VSOFinder
-          onClose={() => setShowVSOFinder(false)}
-          onReportBug={() => {
-            setShowVSOFinder(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* VA Integration Demo Dashboard (for Production Access Demo) */}
-      {isVaApiEnabled() && showVaIntegrationDemo && (
-        <VaIntegrationTest onClose={() => setShowVaIntegrationDemo(false)} />
-      )}
-
-      {/* VA Sandbox Test Dashboard (Comprehensive API Validation) */}
-      {isVaApiEnabled() && showVaSandboxTest && (
-        <VaSandboxTest onClose={() => setShowVaSandboxTest(false)} />
-      )}
-
-      {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
-      {isVaApiEnabled() && showDemoDashboard && (
-        <DemoDashboard onClose={() => setShowDemoDashboard(false)} />
-      )}
-
-      {/* Red Team - Statement Stress Test */}
-      {showRedTeam && (
-        <RedTeam
-          onClose={() => setShowRedTeam(false)}
-          onReportBug={() => {
-            setShowRedTeam(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* Symptom Logger */}
-      {showSymptomLogger && (
-        <SymptomLogger
-          onClose={() => setShowSymptomLogger(false)}
-          onReportBug={() => {
-            setShowSymptomLogger(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Decision Decoder */}
-      {showDecisionDecoder && (
-        <DecisionDecoder
-          onClose={() => setShowDecisionDecoder(false)}
-          onReportBug={() => {
-            setShowDecisionDecoder(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* Tactical Calculator */}
-      {showTacticalCalculator && (
-        <TacticalCalculator
-          onClose={() => setShowTacticalCalculator(false)}
-          onReportBug={() => {
-            setShowTacticalCalculator(false);
-            setShowBugSquasher(true);
-          }}
-          capSimulatorResults={capSimulatorResults}
-          onClearCapResults={() => setCapSimulatorResults([])}
-        />
-      )}
-
-      {/* Blue Button X-Ray - Diamond Tier Data Mining */}
-      {showBlueButtonXRay && (
-        <BlueButtonXRay
-          onClose={() => setShowBlueButtonXRay(false)}
-          onAddToCalculator={(conditions) => {
-            // Add conditions to Pathfinder for analysis
-            console.log(
-              "BlueButton: Transferring",
-              conditions.length,
-              "conditions to Pathfinder",
-            );
-            setPathfinderInitialConditions(conditions);
-            setShowBlueButtonXRay(false);
-            setShowPathfinder(true);
-          }}
-          onCheckRatingCriteria={(conditionName) => {
-            // Search for the condition in the database
-            setShowBlueButtonXRay(false);
-            setSearchTerm(conditionName);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-          onReportBug={() => {
-            setShowBlueButtonXRay(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Witness Bench - Diamond Tier Buddy Letter Wizard */}
-      {showWitnessBench && (
-        <WitnessBench
-          onClose={() => setShowWitnessBench(false)}
-          onReportBug={() => {
-            setShowWitnessBench(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* Risk Assessment - Diamond Tier Poke the Bear Calculator */}
-      {showRiskAssessment && (
-        <RiskAssessment
-          onClose={() => setShowRiskAssessment(false)}
-          onReportBug={() => {
-            setShowRiskAssessment(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* TDIU Work Impact Builder - Specialized Tool */}
-      {showTDIUBuilder && (
-        <TDIUBuilder
-          onClose={() => setShowTDIUBuilder(false)}
-          onReportBug={() => {
-            setShowTDIUBuilder(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* PACT Act Navigator - Specialized Tool */}
-      {showPACTActNavigator && (
-        <PACTActNavigator
-          onClose={() => setShowPACTActNavigator(false)}
-          onReportBug={() => {
-            setShowPACTActNavigator(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* FOIA Generator (The Keysmith) - Specialized Tool */}
-      {showFOIAGenerator && (
-        <FOIAGenerator
-          onClose={() => setShowFOIAGenerator(false)}
-          onReportBug={() => {
-            setShowFOIAGenerator(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Million Dollar Dashboard - Shock & Awe */}
-      {showMillionDollarDashboard && (
-        <MillionDollarDashboard
-          onClose={() => setShowMillionDollarDashboard(false)}
-          onReportBug={() => {
-            setShowMillionDollarDashboard(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* MOS Hazard Matcher - Shock & Awe */}
-      {showMOSHazardMatcher && (
-        <MOSHazardMatcher
-          onClose={() => setShowMOSHazardMatcher(false)}
-          onAddToPathfinder={(conditions) => {
-            // Could integrate with Pathfinder or My Packet in the future
-            console.log("Add to pathfinder:", conditions);
-            setShowMOSHazardMatcher(false);
-          }}
-          onReportBug={() => {
-            setShowMOSHazardMatcher(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Web of Conditions - Shock & Awe */}
-      {showWebOfConditions && (
-        <WebOfConditions
-          onClose={() => setShowWebOfConditions(false)}
-          onSelectCondition={(condition) => {
-            // Could navigate to search for the condition
-            console.log("Selected condition:", condition);
-          }}
-          onReportBug={() => {
-            setShowWebOfConditions(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Legislative Watchdog - Rule Change Radar */}
-      {showLegislativeWatchdog && (
-        <LegislativeWatchdog
-          onClose={() => setShowLegislativeWatchdog(false)}
-          onReportBug={() => {
-            setShowLegislativeWatchdog(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* VA AI Transparency Hub */}
-      {showVAAITransparency && (
-        <VAAITransparency
-          onClose={() => setShowVAAITransparency(false)}
-          onReportBug={() => {
-            setShowVAAITransparency(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Backup Manager - The Bunker */}
-      {showBackupManager && (
-        <BackupManager onClose={() => setShowBackupManager(false)} />
-      )}
-
-      {/* Time Machine - ITF Countdown */}
-      {showTimeMachine && (
-        <TimeMachine
-          onClose={() => setShowTimeMachine(false)}
-          onReportBug={() => {
-            setShowTimeMachine(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* The Tribunal - Mock Hearing Simulator */}
-      {showTheTribunal && (
-        <TheTribunal
-          onClose={() => setShowTheTribunal(false)}
-          onReportBug={() => {
-            setShowTheTribunal(false);
-            setShowBugSquasher(true);
-          }}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* The Consistency Engine - Data Auditor */}
-      {showConsistencyEngine && (
-        <ConsistencyEngine onClose={() => setShowConsistencyEngine(false)} />
-      )}
-
-      {/* BVA SUCCESS TOOLS (powered by 18,609 decision analysis) */}
-      {showNexusQualityAnalyzer && (
-        <NexusQualityAnalyzer
-          onClose={() => setShowNexusQualityAnalyzer(false)}
-        />
-      )}
-      {showRemandRiskChecker && (
-        <RemandRiskChecker onClose={() => setShowRemandRiskChecker(false)} />
-      )}
-      {showAppealsLaneAdvisor && (
-        <AppealsLaneAdvisor onClose={() => setShowAppealsLaneAdvisor(false)} />
-      )}
-
-      {/* The What-If Sandbox - Scenario Planner */}
-      {showWhatIfSandbox && (
-        <WhatIfSandbox onClose={() => setShowWhatIfSandbox(false)} />
-      )}
-
-      {/* DIAMOND-TIER: The Denials Decoder - OCR + AI Simplifier */}
-      {showDenialDecoder && (
-        <DenialDecoder
-          onClose={() => setShowDenialDecoder(false)}
-          onOpenAISettings={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map (Legacy BodyMapSelector) */}
-      {showBodyMapSelector && (
-        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8">
-            <div className="max-w-6xl mx-auto">
-              <BodyMapSelector
-                onClose={() => setShowBodyMapSelector(false)}
-                onLogToSymptomLogger={() => {
-                  setShowBodyMapSelector(false);
-                  setShowSymptomLogger(true);
+        {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
+        {showClaimStressTest && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
+            <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <ClaimStressTest
+                onClose={() => setShowClaimStressTest(false)}
+                onReportBug={() => {
+                  setShowClaimStressTest(false);
+                  setShowBugSquasher(true);
                 }}
               />
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* WOW FEATURE: Pain Painter - Interactive Body Map 2.0 */}
-      {showPainPainter && (
-        <PainPainter
-          onClose={() => setShowPainPainter(false)}
-          onLogToSymptomLogger={(data) => {
-            setShowPainPainter(false);
-            setShowSymptomLogger(true);
-          }}
-          onReportBug={() => {
-            setShowPainPainter(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* WOW FEATURE: Evidence Gap Visualizer */}
-      {showEvidenceGapVisualizer && (
-        <EvidenceGapVisualizer
-          onClose={() => setShowEvidenceGapVisualizer(false)}
-          onReportBug={() => {
-            setShowEvidenceGapVisualizer(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* WOW FEATURE: Retro Pay Hunter */}
-      {showRetroPayHunter && (
-        <RetroPayHunter
-          onClose={() => setShowRetroPayHunter(false)}
-          onReportBug={() => {
-            setShowRetroPayHunter(false);
-            setShowBugReporter(true);
-          }}
-          onAISettingsClick={() => setShowAISettings(true)}
-        />
-      )}
-
-      {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
-      {showClaimStressTest && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-          <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <ClaimStressTest
-              onClose={() => setShowClaimStressTest(false)}
-              onReportBug={() => {
-                setShowClaimStressTest(false);
-                setShowBugSquasher(true);
-              }}
-            />
+        {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
+        {showEvidenceTimeline && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
+            <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+              <EvidenceTimeline
+                onClose={() => setShowEvidenceTimeline(false)}
+                onReportBug={() => {
+                  setShowEvidenceTimeline(false);
+                  setShowBugSquasher(true);
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
-      {showEvidenceTimeline && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-          <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <EvidenceTimeline
-              onClose={() => setShowEvidenceTimeline(false)}
-              onReportBug={() => {
-                setShowEvidenceTimeline(false);
-                setShowBugSquasher(true);
-              }}
-            />
-          </div>
-        </div>
-      )}
+        {/* BDD Builder - Pre-Discharge Claims Planner */}
+        {showBDDBuilder && (
+          <BDDBuilder
+            onClose={() => setShowBDDBuilder(false)}
+            onReportBug={() => {
+              setShowBDDBuilder(false);
+              setShowBugSquasher(true);
+            }}
+            onNavigateToTool={(toolId) => {
+              setShowBDDBuilder(false);
+              handleToolSelect(toolId);
+            }}
+          />
+        )}
 
-      {/* BDD Builder - Pre-Discharge Claims Planner */}
-      {showBDDBuilder && (
-        <BDDBuilder
-          onClose={() => setShowBDDBuilder(false)}
-          onReportBug={() => {
-            setShowBDDBuilder(false);
-            setShowBugSquasher(true);
-          }}
-          onNavigateToTool={(toolId) => {
-            setShowBDDBuilder(false);
-            handleToolSelect(toolId);
-          }}
-        />
-      )}
+        {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
 
-      {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
+        {/* FORCE MULTIPLIER: The Needle in the Haystack - PDF Keyword Search */}
+        {showRecordSearch && (
+          <RecordSearch onClose={() => setShowRecordSearch(false)} />
+        )}
 
-      {/* FORCE MULTIPLIER: The Needle in the Haystack - PDF Keyword Search */}
-      {showRecordSearch && (
-        <RecordSearch onClose={() => setShowRecordSearch(false)} />
-      )}
+        {/* FORCE MULTIPLIER: The Redundant Bunker Network - Multi-Cloud Sync */}
+        {showCloudSyncManager && (
+          <MultiCloudManager onClose={() => setShowCloudSyncManager(false)} />
+        )}
 
-      {/* FORCE MULTIPLIER: The Redundant Bunker Network - Multi-Cloud Sync */}
-      {showCloudSyncManager && (
-        <MultiCloudManager onClose={() => setShowCloudSyncManager(false)} />
-      )}
+        {/* AI Command Center - Unified Faraday Cage Protocol + AI Settings */}
+        {showAISettings && (
+          <AICommandCenter
+            onClose={() => setShowAISettings(false)}
+            onReportBug={() => {
+              setShowAISettings(false);
+              setShowBugSquasher(true);
+            }}
+          />
+        )}
 
-      {/* AI Command Center - Unified Faraday Cage Protocol + AI Settings */}
-      {showAISettings && (
-        <AICommandCenter
-          onClose={() => setShowAISettings(false)}
-          onReportBug={() => {
-            setShowAISettings(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-
-      {/* Vision Simulator Panel - OCR + AI document analysis (works in all browsers!) */}
-      {showVisionSimulator && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="relative">
-              <button
-                onClick={() => setShowVisionSimulator(false)}
-                className="absolute -top-2 -right-2 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full shadow-lg"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+        {/* Vision Simulator Panel - OCR + AI document analysis (works in all browsers!) */}
+        {showVisionSimulator && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="relative">
+                <button
+                  onClick={() => setShowVisionSimulator(false)}
+                  className="absolute -top-2 -right-2 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full shadow-lg"
+                  aria-label="Close"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-              <VisionSimulatorPanel
-                onAnalysisComplete={(result) => {
-                  console.log("Vision analysis complete:", result);
-                  // Could integrate with Navigator or other AI features
-                }}
-              />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <VisionSimulatorPanel
+                  onAnalysisComplete={(result) => {
+                    console.log("Vision analysis complete:", result);
+                    // Could integrate with Navigator or other AI features
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* DIAMOND-TIER: PWA Install Prompt */}
-      <PWAInstallButton />
+        {/* DIAMOND-TIER: PWA Install Prompt */}
+        <PWAInstallButton />
 
-      {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
-      <TermsOfServiceModal />
+        {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
+        <TermsOfServiceModal />
 
-      {/* LIVE OPS: Update notification banner */}
-      {showUpdateBanner && updateAvailable && (
-        <UpdateBanner
-          onApplyUpdate={handleApplyUpdate}
-          onDismiss={handleDismissUpdateBanner}
-          updateInfo={updateAvailable}
-        />
-      )}
+        {/* LIVE OPS: Update notification banner */}
+        {showUpdateBanner && updateAvailable && (
+          <UpdateBanner
+            onApplyUpdate={handleApplyUpdate}
+            onDismiss={handleDismissUpdateBanner}
+            updateInfo={updateAvailable}
+          />
+        )}
 
-      {/* LIVE OPS: What's New changelog modal */}
-      {showWhatsNew && currentChangelog.length > 0 && (
-        <WhatsNewModal
-          changelog={currentChangelog}
-          version={APP_VERSION}
-          onClose={handleCloseWhatsNew}
-        />
-      )}
+        {/* LIVE OPS: What's New changelog modal */}
+        {showWhatsNew && currentChangelog.length > 0 && (
+          <WhatsNewModal
+            changelog={currentChangelog}
+            version={APP_VERSION}
+            onClose={handleCloseWhatsNew}
+          />
+        )}
 
-      {/* CLEAR COAT: Mission Protocol - Trust Beacon */}
-      {showMissionProtocol && (
-        <MissionProtocol onClose={() => setShowMissionProtocol(false)} />
-      )}
+        {/* CLEAR COAT: Mission Protocol - Trust Beacon */}
+        {showMissionProtocol && (
+          <MissionProtocol onClose={() => setShowMissionProtocol(false)} />
+        )}
 
-      {/* CLEAR COAT: Workflow Guide - Mission Briefings */}
-      {showWorkflowGuide && (
-        <WorkflowGuide
-          onClose={() => setShowWorkflowGuide(false)}
-          onToolSelect={handleToolSelect}
-        />
-      )}
+        {/* CLEAR COAT: Workflow Guide - Mission Briefings */}
+        {showWorkflowGuide && (
+          <WorkflowGuide
+            onClose={() => setShowWorkflowGuide(false)}
+            onToolSelect={handleToolSelect}
+          />
+        )}
+      </Suspense>
 
       {/* CLEAR COAT: Boot Camp Tour - Only starts after all initial screens are dismissed */}
       {disclaimerAcknowledged && !showWhatsNew && <BootCampTour />}
