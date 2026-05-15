@@ -1,9 +1,24 @@
 {
-  "version": "1.21.0",
+  "version": "1.22.0",
   "updateDate": "2026-05-15",
   "maintenance_mode": false,
   "maintenance_message": "Vet-Rate.org is currently undergoing critical maintenance to protect your data. Please check back in a few hours. Follow us on Twitter @VetRateOrg for status updates.",
   "changelog": [
+    {
+      "type": "improvement",
+      "title": "Faster first paint — lazy-loaded feature surfaces",
+      "description": "Modal-shaped tools (My Packet, C&P Simulator, Pathfinder, Nexus Builder, and 60+ others) now load on first open instead of all at boot. Main bundle dropped to ~196 KB gzipped."
+    },
+    {
+      "type": "security",
+      "title": "Signed releases — cosign + SLSA-3 provenance",
+      "description": "Every release now ships with Sigstore keyless signatures and SLSA Level 3 build provenance. Anyone can verify the dist tarball + SBOMs came from the published GitHub workflow."
+    },
+    {
+      "type": "security",
+      "title": "Local-first structured logger",
+      "description": "New ring-buffer logger keeps recent events in memory for export-on-demand. Persistence is opt-in (IndexedDB), zero auto-egress, no third-party SDKs."
+    },
     {
       "type": "feature",
       "title": "📡 VA API Status Monitor - 'The Lighthouse'",
