@@ -408,6 +408,12 @@ const RecordSearch = ({ onClose }) => {
                         </div>
                         <p
                           className="text-gray-300 text-sm leading-relaxed"
+                          // Safe-by-construction: both inputs to
+                          // highlightSearchTerm() are escapeHtml()-wrapped
+                          // first, so the result is a string of escaped
+                          // entities plus a fixed <mark> tag injected by the
+                          // highlighter. No raw user/AI input reaches the DOM.
+                          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
                           dangerouslySetInnerHTML={{
                             __html: highlightSearchTerm(
                               escapeHtml(result.context),

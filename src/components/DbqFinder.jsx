@@ -251,6 +251,10 @@ const DbqFinder = ({ onClose }) => {
                   </h3>
                   <p
                     className="text-sm text-amber-700 dark:text-amber-300"
+                    // Safe: t() resolves an i18n key against developer-
+                    // curated translation catalogs only — no user input
+                    // flows here. CSP restricts script/connect origins.
+                    // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
                     dangerouslySetInnerHTML={{
                       __html: t("dbqFinder", "dbqDescription"),
                     }}

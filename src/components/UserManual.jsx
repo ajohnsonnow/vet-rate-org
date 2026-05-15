@@ -5,6 +5,7 @@ import { resetTourState, triggerTourRestart } from "./BootCampTour";
 import { getTotalToolCount } from "../data/toolkitData";
 import { PROJECT_STATS } from "../data/projectStats";
 import { getDisabilityCount } from "../utils/disabilityCount";
+import { sanitizeUrl } from "../utils/sanitize";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -3844,12 +3845,19 @@ const renderContent = (content, onClose) => {
       /`(.+?)`/g,
       '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
     );
-    // Handle links
-    text = text.replace(
-      /\[(.+?)\]\((.+?)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">$1</a>',
-    );
+    // Handle links — sanitize the href so a future contributor cannot land a
+    // javascript: URL in the static manual content. sanitizeUrl returns '#'
+    // for any non-http(s)/mailto/tel protocol.
+    text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+    });
 
+    // Safe-by-construction: `text` is developer-controlled manual content
+    // (static strings in this file). Bold / code / link replacements only
+    // emit a fixed allow-list of tags. Link hrefs are sanitizeUrl()-wrapped
+    // above. CSP in index.html blocks unknown script/connect origins.
+    // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
   };
 

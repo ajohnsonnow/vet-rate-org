@@ -140,10 +140,17 @@ const Badge = ({ badge, size = "md", showTooltip = true }) => {
       );
     }
 
-    // Second try: use embedded SVG if provided
+    // Second try: use embedded SVG if provided.
+    //
+    // Safe-by-construction: `badge.svg` is sourced exclusively from
+    // src/data/badgeData.js — a developer-curated static file of military
+    // badge/tab/insignia template literals (no user input flows here). CSP
+    // in index.html restricts the page's script/connect origins so even a
+    // contributor-injected <script> in an SVG would fail to call out.
     if (badge.svg) {
       return (
         <div
+          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
           dangerouslySetInnerHTML={{ __html: badge.svg }}
           style={{ width: dimensions.width, height: dimensions.height }}
         />
