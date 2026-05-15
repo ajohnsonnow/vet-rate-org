@@ -2202,6 +2202,24 @@ export const getAIDataDisclosure = () => {
   };
 };
 
+// ============================================================================
+// DUAL-LLM PATTERN (Sprint 3 lethal-trifecta defense)
+// ============================================================================
+//
+// The implementation lives in ./dualLLM.js so it can be unit-tested by
+// injecting a stub `generateAI`. Production code binds to the local
+// `generateAI` here once and re-exports the three helpers for convenience.
+//
+// See src/utils/dualLLM.js for the full design rationale (when to use,
+// when NOT to use, the threat model).
+
+import { createDualLLM } from "./dualLLM";
+
+const _dualLLM = createDualLLM(generateAI);
+export const dualLLMExtract = _dualLLM.extract;
+export const dualLLMSynthesize = _dualLLM.synthesize;
+export const runDualLLM = _dualLLM.run;
+
 // Re-export Diamond Swarm functions for convenience
 export {
   SWARM_AGENTS,
@@ -2242,6 +2260,10 @@ export default {
   registerSwarmEngine,
   generateAI,
   generateAIWithImage,
+  // Dual-LLM lethal-trifecta defense
+  dualLLMExtract,
+  dualLLMSynthesize,
+  runDualLLM,
   getAIStatus,
   getAIDataDisclosure,
   // Diamond Swarm
