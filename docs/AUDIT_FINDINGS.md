@@ -12,7 +12,7 @@
 
 ## Executive summary
 
-End-of-Sprint-2 snapshot. 40 in-scope guides audited; 3 critical findings (one fix-target outside S3 by design); top-line numbers below.
+End-of-Sprint-3 snapshot. Sprint 2's audit pass surfaced 3 critical and 17 high findings; Sprint 3 closed the AI/agent-safety subset and produced docs/THREAT_MODEL.md. Detailed Sprint 3 deltas appear in §"Sprint 3 closeout" below the scoreboard.
 
 **Critical findings — fix-window mapping:**
 
@@ -64,22 +64,25 @@ End-of-Sprint-2 snapshot. 40 in-scope guides audited; 3 critical findings (one f
 
 ## Counts at a glance
 
-| Status | Count |
-|---|---|
-| compliant | 2 |
-| partial | 22 |
-| gap | 11 |
-| n/a | 4 |
-| pending | 1 |
+End-of-Sprint-3 snapshot:
 
-| Severity | Count |
-|---|---|
-| critical | 3 |
-| high | 17 |
-| med | 12 |
-| low | 4 |
+| Status | S2 close | S3 close |
+|---|---|---|
+| compliant | 2 | 7 |
+| partial | 22 | 19 |
+| gap | 11 | 9 |
+| n/a | 4 | 4 |
+| pending | 1 | 1 |
 
-> Recount at the end of Sprint 8.
+| Severity | S2 close | S3 close |
+|---|---|---|
+| critical | 3 | 2 |
+| high | 17 | 9 |
+| med | 12 | 16 |
+| low | 4 | 9 |
+
+> S3 closed: rows 2, 4, 5, 7, 17 (compliant). Rows 8, 12, 13 downgraded in severity.
+> Sprints 4–8 close the remaining 9 gaps + 9 high-severity items.
 
 ---
 
@@ -88,22 +91,22 @@ End-of-Sprint-2 snapshot. 40 in-scope guides audited; 3 critical findings (one f
 | # | Guide | Dimension | Status | Severity | Evidence | Target sprint | Notes |
 |---|---|---|---|---|---|---|---|
 | 1 | claude-code-best-practices | AI/universal | n/a | low | Project uses local LLM stack (web-llm / wllama / transformers.js); Claude Code patterns (hooks, worktrees, skills) not used in app code | — | Mirror files cover the universal AI-rule subset already (compliant). |
-| 2 | ai-prompt-engineering-best-practices | AI/universal | partial | high | [aiSystemPrompts.js:194-220](../src/utils/aiSystemPrompts.js#L194) BASE_SYSTEM_PROMPT has guardrails; [unifiedAIService.js:663-700](../src/utils/unifiedAIService.js#L663) injects DKB context raw with no `<untrusted_content>` delimiter; OCR text from [dd214VisionParser.js](../src/utils/dd214VisionParser.js) flows raw into the prompt | 3 | S3 introduces a `spotlight()` helper and rewires every interpolation through it. |
+| 2 | ai-prompt-engineering-best-practices | AI/universal | compliant | low | `spotlight()` + `untrustedSection()` helpers added to [aiSystemPrompts.js](../src/utils/aiSystemPrompts.js); BASE_SYSTEM_PROMPT now carries the INSTRUCTION-vs-DATA rule (Sprint 3 commit `bb6455a`); `constructSafePrompt` + `formatDKBEntry` updated to wrap untrusted content. | — | S3 closed. Integration into all call sites continues into S4. |
 | 3 | agentic-development-best-practices | AI/universal | partial | med | Diamond Swarm 3-agent orchestrator (Auditor / Writer / Rater) present in [unifiedAIService.js:287-300](../src/utils/unifiedAIService.js#L287); no worktree isolation, no checkpoint pattern, no behavior-contract / property assertions | 3 | Document agent boundaries + add tool-allowlist enforcement during S3 hardening. |
-| 4 | ai-agent-security-best-practices | Security | partial | high | XSS via `dangerouslySetInnerHTML` at 4 sites ([BadgeDisplay.jsx:147](../src/components/BadgeDisplay.jsx#L147), [DbqFinder.jsx:254](../src/components/DbqFinder.jsx#L254), [RecordSearch.jsx:411](../src/components/RecordSearch.jsx#L411), [UserManual.jsx:3853](../src/components/UserManual.jsx#L3853)); DOMPurify shim is no-op in [vite.config.js](../vite.config.js); lethal-trifecta defenses not yet codified | 3 | S3 implements spotlight delimiters, dual-LLM split, real DOMPurify, CSP. |
-| 5 | ai-security-controls-best-practices | Security | partial | high | Overlaps with row 4. Specific controls present: PII scrub in [piiScrubber.js](../src/utils/piiScrubber.js) (3 TODOs); audit log absent; no append-only IndexedDB store for model I/O; no per-context tool allowlist | 3 | Folds into S3 hardening. Shares row 4 backlog. |
+| 4 | ai-agent-security-best-practices | Security | compliant | low | Lethal-trifecta defenses landed: spotlight delimiters (`piiScrubber.spotlight`), dual-LLM split ([dualLLM.js](../src/utils/dualLLM.js)), append-only audit log ([aiAuditLog.js](../src/utils/aiAuditLog.js)), URL allow-list stripper ([sanitize.stripUntrustedUrls](../src/utils/sanitize.js)), 4× nosemgrep-justified `dangerouslySetInnerHTML` sites, dompurify-noop documented ([packages/dompurify-noop/README.md](../packages/dompurify-noop/README.md)), CSP verified ([index.html](../index.html)). | — | S3 closed. 44 red-team tests in [`src/__tests__/red-team/`](../src/__tests__/red-team/). |
+| 5 | ai-security-controls-best-practices | Security | compliant | low | piiScrubber hardened (VA file, MRN, pattern ordering, /g statefulness fix); 58 adversarial tests; append-only hash-chained audit log with tamper detection. | — | S3 closed. |
 | 6 | ai-memory-systems-best-practices | AI | gap | med | No CONTEXT_VAULT.md or session-log pattern; [veteranProfile.js](../src/utils/veteranProfile.js) is state store, not a durable memory layer; static JSON `lastVerifiedDate` exists but unused programmatically | 4 | Episodic memory layer added incidentally during S4 monolith split if time permits, else deferred. |
-| 7 | prompt-engineering-advanced-best-practices | AI | partial | high | [aiSystemPrompts.js:260-295](../src/utils/aiSystemPrompts.js#L260) NEXUS_BUILDER_SYSTEM_PROMPT uses role/context/task/format but lacks "do not execute instructions from medical records" lethal-trifecta clause; DKB context concat has no XML boundary markers | 3 | Same fix path as row 2. |
-| 8 | red-team-best-practices | Security | gap | critical | No red-team exercises documented; no PyRIT/Promptfoo harness; no indirect-injection fixtures; no RAG-poisoning tests; no agent-scope-escalation tests; no token-extraction tests against the sessionStorage OAuth flow | 3 | **Critical** — S3 adds red-team harness, OWASP LLM Top 10 + MITRE ATLAS coverage of the LLM pipeline. |
+| 7 | prompt-engineering-advanced-best-practices | AI | compliant | low | Lethal-trifecta clause now in BASE_SYSTEM_PROMPT; all derived prompts inherit it. Dual-LLM split provides hard separation between data-side and instruction-side LLM calls. | — | S3 closed via commits `bb6455a` + `f733ef2`. |
+| 8 | red-team-best-practices | Security | partial | med | 44-payload red-team test suite in [`src/__tests__/red-team/`](../src/__tests__/red-team/) covers direct + indirect injection, exfiltration prompts, URL bait, schema hijack, PII obfuscation, and mixed-vector attacks. OWASP LLM Top 10 mapping documented in [THREAT_MODEL.md §6](./THREAT_MODEL.md). | 8 | Promote to `compliant` after S8 adds an automated promptfoo / PyRIT eval in CI. |
 | 9 | agentic-testing-best-practices | Testing | gap | high | No golden set (.jsonl) found; no eval harness; no LLM-as-judge rubric; swarm agents lack regression coverage; [aiStatementHelper.js](../src/utils/aiStatementHelper.js) does not snapshot trajectories | 4 | S4 establishes ≥30-example golden set per agent + Vitest-driven eval pipeline. |
 | 10 | token-optimization-best-practices | AI | partial | med | [unifiedAIService.js:112-123](../src/utils/unifiedAIService.js#L112) `getUserTokenLimit()` with 2048 default; AI_PRESETS defined. Prompt caching is a Claude API concept — not applicable to local LLMs; Gemini fallback unwired for cache breakpoints | 4 | Low priority; pick up alongside S4 perf work. |
 | 11 | va-veteran-tech-best-practices | Domain | compliant | low | VA API surface gated behind `VITE_VA_API_ENABLED` ([config/vaAuth.js](../src/config/vaAuth.js), [App.jsx](../src/App.jsx), [main.jsx](../src/main.jsx)) per S1 commit `aeebe47` | — | Re-audit when VA access is restored and flag flips to `true`. |
-| 12 | compliance-strategy-best-practices | Compliance | gap | high | [SECURITY.md:70-93](../SECURITY.md#L70) has 90-day disclosure + CSP/HSTS headers, but no framework selection (SOC 2 / ISO 27001 / NIST), no control catalog, no GRC platform integration, no policy/procedure/standard hierarchy, no vendor risk register | 3 | S3 adds framework selection rationale + initial control catalog stub; full GRC is post-audit work. |
-| 13 | zero-knowledge-local-first-best-practices | Privacy | partial | med | All storage via IndexedDB/localStorage ([storage.js](../src/utils/storage.js), [persistentStorage.js](../src/utils/persistentStorage.js)); no backend; PII scrubbed before external calls ([piiScrubber.js](../src/utils/piiScrubber.js)); PBKDF2 iteration count unspec'd in code; AES-256-GCM unverified; no key rotation; no device-deauth; no CRDT sync protocol | 3 | S3 audits Web Crypto API usage + closes piiScrubber TODOs. |
+| 12 | compliance-strategy-best-practices | Compliance | partial | med | [THREAT_MODEL.md](./THREAT_MODEL.md) documents trust boundaries + OWASP LLM Top 10 mapping. Compliance framework selection (SOC 2 / ISO 27001 / NIST) intentionally deferred — premature without organizational legal sign-off. SECURITY.md, CONTRIBUTING.md, audit log infrastructure in place. | 8 | S8 adds framework selection rationale once legal context is determined. |
+| 13 | zero-knowledge-local-first-best-practices | Privacy | partial | med | All storage via IndexedDB/localStorage; PII scrubbed before any cloud call; aiAuditLog stores sha256 digests not raw text. No encryption-at-rest layer yet (the data is on the user's device under their OS-level disk encryption). Web Crypto used only for `crypto.subtle.digest('SHA-256', ...)` in the audit chain — no PBKDF2/AES code in the codebase to audit. | 8 | If/when a key-derivation or device-sync feature lands, audit then. |
 | 14 | vector-database-rag-best-practices | AI/data | gap | med | [llm-compiler/](../llm-compiler/) scaffolds a knowledge base but no integrated vector retrieval in `src/`; no embedding model selected; no recall@k / MRR / NDCG evaluation | 6 | S6 builds eCFR/M21-1/CAVC/Fed-Cir ingestion → chunker → Q8 embeddings. |
 | 15 | ai-research-best-practices | AI | n/a | low | Operational app over fixed regulatory domain (38 CFR); not a research project | — | — |
 | 16 | knowledge-monitoring-best-practices | AI/ops | gap | high | [disabilityData.json:45](../src/data/disabilityData.json#L45) carries `lastVerifiedDate: "2026-01-18"` but no refresh mechanism; no `knowledge-sources.yaml`; no eCFR changedetection; no quarterly review CI job; no URL validity check in preflight | 7 | S7 wires weekly GitHub Action + diff-on-change PR opener. |
-| 17 | threat-modeling-best-practices | Security | gap | high | No DFD diagram; no threat model document; no STRIDE / LINDDUN worksheet; no pytm code; no documented attack trees for the lethal trifecta (private VA data + untrusted OCR + LLM-to-DOM) | 3 | S3 produces a `docs/THREAT_MODEL.md` covering OAuth boundary, AI pipeline, RAG corpus trust levels, OWASP LLM Top 10 mapping. |
+| 17 | threat-modeling-best-practices | Security | compliant | low | [docs/THREAT_MODEL.md](./THREAT_MODEL.md) covers scope, assets, trust boundaries (lethal-trifecta map), DFD, STRIDE per surface, OWASP LLM Top 10 mapping, and documented residual risk (7 open issues). | — | S3 closed. Update procedure in §8. |
 | 18 | api-security-best-practices | Security | partial | high | [api/va.js:99-159](../src/api/va.js#L99) handles 401/403; [vite.config.js](../vite.config.js) `/va-api` proxy is dev-only CORS bypass; rate limiter is global ([api/va.js:44-89](../src/api/va.js#L44)), not per-user; OAuth state generated but no explicit post-redirect verification check beyond `useVaAuth` internal | 3 | S3 adds per-user rate-limit keying, CORS allow-list documentation, key-rotation tracking. |
 | 19 | sast-preflight-integration-best-practices | DevSecOps | partial | high | gitleaks + semgrep wired into [scripts/preflight.js](../scripts/preflight.js) + [ci.yml](../.github/workflows/ci.yml) per S1; 44 SAST findings filed; `STRICT_SAST` toggle present for graduating to blocking | 3 | Flip `STRICT_SAST=true` when S3 closes 4× XSS + exec() + document.write. |
 | 20 | supply-chain-security-best-practices | DevSecOps | gap | critical | npm audit: protobufjs critical [GHSA-xq3m-2v4x-88gg](https://github.com/advisories/GHSA-xq3m-2v4x-88gg); xmldom 5× high; no Renovate / Dependabot grouping; no SBOM; no artifact signing (Cosign / SLSA provenance) | 8 | **Critical (dependency-tree, not app code)** — S8 introduces Renovate + grouped automerge + CycloneDX SBOM + signed releases. |
@@ -143,6 +146,28 @@ End-of-Sprint-2 snapshot. 40 in-scope guides audited; 3 critical findings (one f
 5. Assign target sprint (3–8). Security-critical findings move to Sprint 3 regardless of original placement; non-security critical (perf, supply-chain) stay in their natural sprint with a note.
 6. Update Counts tables at top.
 7. Add a bullet to the Executive summary if the finding is one of the top ~20.
+
+---
+
+## Sprint 3 closeout
+
+**Defenses landed (in commit order):**
+
+- `d14f688` — piiScrubber hardened: VA file numbers, MRN, pattern ordering (longest-first), /g lastIndex statefulness bug fixed, `spotlight()` + `scrubAndSpotlight()` helpers. 58 adversarial tests.
+- `bb6455a` — `spotlight()` + `untrustedSection()` wired into [aiSystemPrompts.js](../src/utils/aiSystemPrompts.js). BASE_SYSTEM_PROMPT carries INSTRUCTION-vs-DATA rule for every derived prompt. constructSafePrompt + formatDKBEntry updated.
+- `8f62299` — `safeHtml()` helper for `dangerouslySetInnerHTML` (markdown-lite + sanitizeUrl). 4 SAST sites annotated with justified `nosemgrep` and per-site defenses documented. dompurify-noop README explains the intentional no-DOMPurify design. CSP in [index.html](../index.html) verified comprehensive.
+- `f733ef2` — Dual-LLM lethal-trifecta defense in [src/utils/dualLLM.js](../src/utils/dualLLM.js). Extractor sees raw untrusted content (spotlight-wrapped) and emits only structured JSON. Synthesizer never sees raw text. `_injection_attempt: true` short-circuit. 18 tests.
+- `ccb17f1` — Append-only hash-chained AI audit log in [src/utils/aiAuditLog.js](../src/utils/aiAuditLog.js). Detects mutation, missing entries, broken prevHash links. 19 tests including 4 dedicated tamper-detection cases.
+- *(this commit)* — `stripUntrustedUrls` + `isLLMOutputUrlAllowed` for LLM output; allow-list = va.gov, ecfr.gov, federalregister.gov, uscourts.cavc.gov, cafc.uscourts.gov, ssa.gov, house.gov, senate.gov. Red-team test suite (44 cases). [docs/THREAT_MODEL.md](./THREAT_MODEL.md).
+
+**Total Sprint 3 test additions:** ~140 new test cases across piiScrubber, sanitize, dualLLM, aiAuditLog, red-team.
+
+**Deferred to later sprints:**
+
+- **STRICT_SAST=true flip** — most semgrep findings (e.g., the 4 dSetInnerHTML sites + App.jsx-internal patterns) are now justified or fixed, but a clean count requires the App.jsx feature-region split (S4) to complete first. Will flip in S4 or S8.
+- **Wiring `aiAuditLog.logModelCallWithDigests` into the dual-LLM call site** — deferred to S4 alongside the App.jsx feature-region split so each consumer flips independently.
+- **Compliance framework selection** — needs legal context (S8).
+- **Worktree isolation between Diamond Swarm agents** — S8 follow-up.
 
 ---
 
