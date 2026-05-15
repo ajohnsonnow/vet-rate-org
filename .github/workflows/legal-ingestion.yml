@@ -1,0 +1,116 @@
+name: legal-ingestion
+
+# Weekly re-ingest of the legal-index. Runs Mondays 04:00 UTC.
+# Behavior:
+#   - `run-all.mjs` fetches/chunks/embeds; emits a diff to stdout.
+#   - Exit code 0 = no diff (no-op, no PR opened).
+#   - Exit code 2 = diff detected → open a PR with the diff in the body.
+#   - Any other non-zero = fetcher failure → open an issue tagged
+#     `legal-ingestion-stale` so the on-call sees that the snapshot is
+#     stale.
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Explicit target version (e.g. v0.2.0). Omit for auto-increment.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: legal-ingestion
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh legal-index
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ingestion pipeline
+        id: ingest
+        continue-on-error: true
+        run: |
+          set +e
+          VERSION_ARG=""
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION_ARG="--version ${{ inputs.version }}"
+          fi
+          node scripts/legal-ingestion/run-all.mjs $VERSION_ARG > diff.md 2> ingest.log
+          CODE=$?
+          echo "exitcode=$CODE" >> "$GITHUB_OUTPUT"
+          # Surface the diff for review in the workflow log
+          echo "=== diff.md ==="
+          cat diff.md
+          echo "=== ingest.log ==="
+          tail -200 ingest.log || true
+          exit 0  # Never fail the step itself; downstream branches on exitcode.
+
+      - name: Open PR on diff
+        if: steps.ingest.outputs.exitcode == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Derive the version that run-all wrote
+          VERSION=$(ls public/legal-index | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort | tail -1)
+          BRANCH="auto/legal-index-${VERSION}-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add public/legal-index/
+          git commit -m "chore(legal): refresh index → ${VERSION}"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "chore(legal): refresh index → ${VERSION}" \
+            --body-file diff.md \
+            --label "legal-ingestion"
+
+      - name: File stale-source issue on failure
+        if: steps.ingest.outputs.exitcode != '0' && steps.ingest.outputs.exitcode != '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          BODY=$(cat <<EOF
+          The weekly legal-ingestion run exited with code \`${{ steps.ingest.outputs.exitcode }}\`.
+
+          One or more sources (eCFR / M21-1 / CAVC / Fed-Cir) likely returned an unexpected response shape or HTTP error. The index is now stale; in-app legal answers will fall back to the last committed version under \`public/legal-index/\`.
+
+          See the workflow log for the captured \`ingest.log\` tail.
+
+          Run ID: ${{ github.run_id }}
+          Triggered: ${DATE}
+          EOF
+          )
+          gh issue create \
+            --title "legal-ingestion stale ($DATE)" \
+            --label "legal-ingestion-stale" \
+            --body "$BODY"
+
+      - name: Upload diff artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legal-ingestion-${{ github.run_id }}
+          path: |
+            diff.md
+            ingest.log
+          retention-days: 30
