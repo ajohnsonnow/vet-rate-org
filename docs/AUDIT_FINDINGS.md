@@ -12,9 +12,22 @@
 
 ## Executive summary
 
-> Filled at end of Sprint 2 with ≤20 bullets covering the top gaps and any critical findings escalated to Sprint 3.
+> Sprint 2 fills this section comprehensively. Below is a Sprint 1 partial — only findings the new gitleaks + semgrep wiring surfaced this sprint.
 
-- _pending Sprint 2_
+**Sprint 1 baseline findings (2026-05-14):**
+
+- **Secrets:** 0 detected by gitleaks across 108 commits / 99 MB scanned. Baseline clean.
+- **SAST (semgrep, 44 blocking findings):**
+  - 4× `dangerouslySetInnerHTML` without sanitization: [BadgeDisplay.jsx:147](../src/components/BadgeDisplay.jsx#L147), [DbqFinder.jsx:254](../src/components/DbqFinder.jsx#L254), [RecordSearch.jsx:411](../src/components/RecordSearch.jsx#L411), [UserManual.jsx:3853](../src/components/UserManual.jsx#L3853). Target: Sprint 3 (CSP + DOMPurify-real, not noop shim).
+  - 1× `window.document.write` from non-constant: [systemCapabilityCheck.js:420](../src/utils/systemCapabilityCheck.js#L420). Target: Sprint 3.
+  - 1× Python `exec()`: [utils/vetrate_swarm.py:334](../src/utils/vetrate_swarm.py#L334). Target: Sprint 3.
+  - 37 additional findings to be triaged in Sprint 2.
+- **Supply chain (npm audit, 6 advisories):**
+  - 1× **critical** — protobufjs arbitrary code execution ([GHSA-xq3m-2v4x-88gg](https://github.com/advisories/GHSA-xq3m-2v4x-88gg)). Target: Sprint 8 supply-chain hardening (Renovate-driven update).
+  - 5× **high** — xmldom XML injection family. Target: Sprint 8.
+  - 1× **moderate** — protobufjs overlong UTF-8 decoding.
+- **Mirror files (CLAUDE.md, copilot-instructions.md, .cursor/rules/best-practices.mdc, .windsurfrules, .continuerules):** Diff-clean against the toolkit propagator output. Compliant.
+- **Preflight + CI wiring:** gitleaks and semgrep now run on every PR via [.github/workflows/ci.yml](../.github/workflows/ci.yml) (security job) and `npm run preflight`. Both non-blocking until Sprint 3 / Sprint 8 close their backlog.
 
 ---
 
@@ -22,16 +35,16 @@
 
 | Status | Count |
 |---|---|
-| compliant | 0 |
-| partial | 0 |
-| gap | 0 |
+| compliant | 1 |
+| partial | 2 |
+| gap | 1 |
 | n/a | 0 |
-| pending | 40 |
+| pending | 36 |
 
-| Severity | Count |
+| Severity | Count (Sprint 1 only — Sprint 2 will populate the rest) |
 |---|---|
-| critical | 0 |
-| high | 0 |
+| critical | 1 |
+| high | 5 |
 | med | 0 |
 | low | 0 |
 
@@ -46,14 +59,14 @@
 | 1 | claude-code-best-practices | AI/universal | pending | — | — | — | — |
 | 2 | ai-prompt-engineering-best-practices | AI/universal | pending | — | — | — | — |
 | 3 | agentic-development-best-practices | AI/universal | pending | — | — | — | — |
-| 4 | ai-agent-security-best-practices | Security | pending | — | — | — | Lethal-trifecta evidence required |
+| 4 | ai-agent-security-best-practices | Security | partial | high | XSS via dangerouslySetInnerHTML at 4 sites (BadgeDisplay/DbqFinder/RecordSearch/UserManual); DOMPurify shim is no-op in [vite.config.js](../vite.config.js); lethal-trifecta defenses not yet codified | 3 | S3 implements spotlight delimiters, dual-LLM split, real DOMPurify, CSP |
 | 5 | ai-security-controls-best-practices | Security | pending | — | — | — | — |
 | 6 | ai-memory-systems-best-practices | AI | pending | — | — | — | — |
 | 7 | prompt-engineering-advanced-best-practices | AI | pending | — | — | — | — |
 | 8 | red-team-best-practices | Security | pending | — | — | — | — |
 | 9 | agentic-testing-best-practices | Testing | pending | — | — | — | — |
 | 10 | token-optimization-best-practices | AI | pending | — | — | — | — |
-| 11 | va-veteran-tech-best-practices | Domain | pending | — | — | — | Domain-critical |
+| 11 | va-veteran-tech-best-practices | Domain | compliant | low | VA API surface fully gated behind `VITE_VA_API_ENABLED` flag pending re-credentialing ([config/vaAuth.js](../src/config/vaAuth.js), [App.jsx](../src/App.jsx), [main.jsx](../src/main.jsx)) | — | S1 commit `aeebe47` |
 | 12 | compliance-strategy-best-practices | Compliance | pending | — | — | — | PHI / 38 CFR posture |
 | 13 | zero-knowledge-local-first-best-practices | Privacy | pending | — | — | — | Aligns with browser-first stance |
 | 14 | vector-database-rag-best-practices | AI/data | pending | — | — | — | Read end-to-end in S6 |
@@ -61,8 +74,8 @@
 | 16 | knowledge-monitoring-best-practices | AI/ops | pending | — | — | — | Feeds S7 refresh design |
 | 17 | threat-modeling-best-practices | Security | pending | — | — | — | — |
 | 18 | api-security-best-practices | Security | pending | — | — | — | VA-API client paths |
-| 19 | sast-preflight-integration-best-practices | DevSecOps | pending | — | — | — | Sprint 1 lays the baseline |
-| 20 | supply-chain-security-best-practices | DevSecOps | pending | — | — | — | SBOM + Renovate in S8 |
+| 19 | sast-preflight-integration-best-practices | DevSecOps | partial | high | gitleaks + semgrep wired into preflight + CI ([scripts/preflight.js](../scripts/preflight.js), [.github/workflows/ci.yml](../.github/workflows/ci.yml)); 44 SAST findings filed | 3 | Non-blocking until S3 closes findings. Strict mode toggle: `STRICT_SAST` env var. |
+| 20 | supply-chain-security-best-practices | DevSecOps | gap | critical | npm audit: protobufjs critical [GHSA-xq3m-2v4x-88gg](https://github.com/advisories/GHSA-xq3m-2v4x-88gg); xmldom 5× high; no Renovate / SBOM yet | 8 | S8 handles via Renovate + grouped automerge + CycloneDX SBOM |
 | 21 | devsecops-pipeline-best-practices | DevSecOps | pending | — | — | — | — |
 | 22 | network-security-best-practices | Security | pending | — | — | — | CSP / HTTPS only |
 | 23 | frontend-react-best-practices | Frontend | pending | — | — | — | App.jsx monolith |
