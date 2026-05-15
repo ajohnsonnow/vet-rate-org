@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 // Test the data structure of disabilityData.json
-import disabilityData from "../data/disabilityData.json";
+import disabilityData from "../../data/disabilityData.json";
 
 describe("disabilityData.json structure", () => {
   it("exists and is loaded", () => {

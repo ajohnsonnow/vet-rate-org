@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateCombinedRating } from "../utils/ratingCalculator";
+import { calculateCombinedRating } from "../../utils/ratingCalculator";
 
 describe("calculateCombinedRating - VA Official Examples", () => {
   // 38 CFR § 4.25 examples

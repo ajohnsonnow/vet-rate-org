@@ -3,7 +3,7 @@ import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
   VA_PAY_RATES_2026,
-} from "../utils/vaCalculator";
+} from "../../utils/vaCalculator";
 
 describe("calculatePaymentEffectiveDate", () => {
   it("returns first of next month", () => {
