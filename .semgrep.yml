@@ -1,0 +1,33 @@
+# .semgrep.yml — Project-local Semgrep config for VS_Studio projects.
+#
+# Semgrep YAML config files only carry inline rules + paths.exclude. To pull
+# in registry packs (p/javascript, p/owasp-top-ten, etc.) the runner passes
+# them as additional --config flags. The pack list lives in the toolkit
+# runner at scripts/sast-check.mjs (search for REGISTRY_PACKS). Edit there
+# to add or remove packs project-wide, then re-run the propagator.
+#
+# This file currently carries:
+#   - The paths.exclude list (applied to every Semgrep run via this config)
+#   - An empty inline rules array (Semgrep requires the key to be present)
+#
+# To add a project-specific inline rule, append it under rules:.
+# To add a reusable custom rule, drop a .yml file in .semgrep/custom-rules/.
+# To suppress a single finding in code, use a comment:
+#   # nosemgrep: <rule-id>
+# Use sparingly; prefer fixing the underlying issue.
+#
+# Run locally via the toolkit runner:
+#   node scripts/sast-check.mjs
+
+rules: []
+
+paths:
+  exclude:
+    - node_modules
+    - data
+    - "**/*.enc"
+    - dist
+    - build
+    - coverage
+    - .git
+    - "**/.semgrep_logs"
