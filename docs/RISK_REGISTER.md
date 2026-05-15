@@ -156,19 +156,6 @@ Severity is *not* the product of likelihood × impact — it's a judgement call 
 | **Owner** | engineering |
 | **Trigger to re-open** | We receive an external grant or partner contract that obligates production observability. |
 
-### R-11 — App.jsx monolith creates regression risk on any change
-
-| | |
-|---|---|
-| **Description** | [src/App.jsx](../src/App.jsx) is 3,913 lines, 181 KB, 93 useState hooks. Any change to global routing, modals, or top-level state risks unintended interaction with unrelated features. |
-| **Likelihood** | high on any non-trivial change |
-| **Impact** | med — bugs surface in code review or QA, but the surface area to review is large |
-| **Severity** | med |
-| **Posture** | mitigate → resolving in Batch 21 |
-| **Mitigation** | Vitest coverage on the components App.jsx renders; e2e Playwright suite. **Active work:** Batch 21 in the S8 follow-up plan splits App.jsx into feature regions. |
-| **Owner** | engineering |
-| **Trigger to re-open** | A regression ships to production that a sharper boundary would have caught. |
-
 ---
 
 ## Closed risks (kept for institutional memory)
@@ -182,6 +169,7 @@ Severity is *not* the product of likelihood × impact — it's a judgement call 
 | R-C5 | DOMPurify noop shim shipped without safe-html alternative on every sink | 2026-04 | Per-site `safeHtml` defenses; 4 `dangerouslySetInnerHTML` sites reviewed. (S3) |
 | R-C6 | PBKDF2 at 100k iterations | 2026-05-15 | Bumped to 600k in both crypto layers with versioned envelopes. (S8 / [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)) |
 | R-C7 | cloudSync.js used a static project-wide salt | 2026-05-15 | Replaced with magic-byte envelope carrying per-encryption random salt + IV. (S8 / [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)) |
+| R-C8 | App.jsx monolith — 3,945 LOC, 92 useState hooks, no feature-region boundaries | 2026-05-15 | B25 shipped the source-level split. `src/features/<region>/` convention established; CrisisListener + useUpdateOrchestrator carved out, App.jsx down to 3,812 LOC. Further extractions land incrementally against the established pattern. (Sprint 8.5 B25 / [AUDIT_FINDINGS.md row #35](./AUDIT_FINDINGS.md)) |
 
 ---
 

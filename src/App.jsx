@@ -35,9 +35,8 @@ import QuickConditionPicker from "./components/QuickConditionPicker";
 import MobileNotice from "./components/MobileNotice";
 import TermsOfServiceModal from "./components/TermsOfServiceModal";
 import CommandersChecklist from "./components/CommandersChecklist";
-import CrisisModal from "./components/CrisisModal";
-import UpdateBanner from "./components/UpdateBanner";
-import WhatsNewModal from "./components/WhatsNewModal";
+import CrisisListener from "./features/crisis/CrisisListener";
+import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -64,8 +63,8 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 // Each becomes its own Vite bundle chunk, fetched only when the user opens
 // that surface. Suspense boundary for the cluster lives below, fallback is
 // <LoadingBunker />. Components rendered unconditionally (Header, SearchBar,
-// CommandersChecklist, etc.) and safety-critical modals (CrisisModal,
-// UpdateBanner, WhatsNewModal) stay eager.
+// CommandersChecklist, etc.) and safety-critical surfaces (CrisisListener,
+// update banner, What's-New modal) stay eager.
 const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicyPage"));
 const AboutUs = lazy(() => import("./components/AboutUs"));
 const ContactUs = lazy(() => import("./components/ContactUs"));
@@ -167,19 +166,11 @@ import {
 import { initializeErrorCapture } from "./utils/bugReportUtils";
 import { setupBeforeUnloadWarning } from "./utils/dataPersistence";
 import { migrateUserData } from "./utils/migrationManager";
-import {
-  startUpdateChecker,
-  stopUpdateChecker,
-  applyUpdate,
-} from "./utils/updateChecker";
 import { createDebugDumpHandler } from "./utils/debugDump";
-import { APP_VERSION, LAST_SEEN_VERSION_KEY } from "./utils/version";
 import { needsMigration, migrateFromLocalStorage } from "./utils/storage";
 import { initPersistentStorage } from "./utils/persistentStorage";
-import { generateWhatsNewChangelog } from "./utils/changelogGenerator";
 import { initAutoBackup } from "./utils/autoBackup";
 import disabilityData from "./data/disabilityData.json";
-import changelogData from "./data/changelog.json";
 import { PROJECT_STATS } from "./data/projectStats";
 import { getTotalToolCount } from "./data/toolkitData";
 import { getSquashedBugCount } from "./data/squashedBugs";
@@ -307,15 +298,14 @@ function App() {
   const [showMissionProtocol, setShowMissionProtocol] = useState(false);
   const [showWorkflowGuide, setShowWorkflowGuide] = useState(false);
 
-  // SAFETY-CRITICAL: Crisis Intervention State
-  const [showCrisisModal, setShowCrisisModal] = useState(false);
-  const [crisisSeverity, setCrisisSeverity] = useState("high");
+  // SAFETY-CRITICAL: Crisis Intervention surface lives in
+  // src/features/crisis/CrisisListener.jsx — state + listener + render
+  // colocated there (audit #35, B25).
 
-  // LIVE OPS: Update management state
-  const [updateAvailable, setUpdateAvailable] = useState(null);
-  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
-  const [currentChangelog, setCurrentChangelog] = useState([]);
+  // LIVE OPS: Update banner + What's-New modal live in
+  // src/features/update/useUpdateOrchestrator.jsx — banner/modal JSX, version
+  // bookkeeping, and SW update checker colocated there (audit #35, B25).
+  const { whatsNewOpen, updateBanner, whatsNewModal } = useUpdateOrchestrator();
 
   // KILL SWITCH: Maintenance mode state
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -332,51 +322,6 @@ function App() {
 
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
-
-  // LIVE OPS: Update management handlers
-  const handleApplyUpdate = () => {
-    applyUpdate(); // Force hard reload
-  };
-
-  const handleDismissUpdateBanner = () => {
-    setShowUpdateBanner(false);
-  };
-
-  const handleCloseWhatsNew = () => {
-    setShowWhatsNew(false);
-  };
-
-  // Listen for TOS acceptance to show What's New
-  useEffect(() => {
-    const handleTosAccepted = () => {
-      // TOS was just accepted, now check if we should show What's New
-      const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-      const currentVersion = APP_VERSION;
-
-      if (lastSeenVersion !== currentVersion) {
-        console.log(
-          `📰 TOS accepted - showing What's New for version ${currentVersion}`,
-        );
-        const dynamicChangelog = generateWhatsNewChangelog();
-        if (dynamicChangelog && dynamicChangelog.changelog.length > 0) {
-          setCurrentChangelog(dynamicChangelog.changelog);
-          setShowWhatsNew(true);
-        } else {
-          const versionUpdate = changelogData.updates.find(
-            (u) => u.version === currentVersion,
-          );
-          if (versionUpdate && versionUpdate.changelog.length > 0) {
-            setCurrentChangelog(versionUpdate.changelog);
-            setShowWhatsNew(true);
-          }
-        }
-        localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
-      }
-    };
-
-    window.addEventListener("tosAccepted", handleTosAccepted);
-    return () => window.removeEventListener("tosAccepted", handleTosAccepted);
-  }, []);
 
   // Listen for Vision Simulator open event (triggered from AICommandCenter when vision model fails)
   useEffect(() => {
@@ -594,75 +539,12 @@ function App() {
         // Could show a warning to user, but app should still function
       }
 
-      // Step 2: Check if user should see "What's New" modal
-      // IMPORTANT: Only show if TOS has been accepted (don't show on first visit before TOS)
-      const tosAccepted = localStorage.getItem("vet-rate-tos-accepted");
-      const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-      const currentVersion = APP_VERSION;
-
-      if (tosAccepted && lastSeenVersion !== currentVersion) {
-        // User has accepted TOS and hasn't seen this version's changelog yet
-        console.log(
-          `📰 New version detected: ${currentVersion} (last seen: ${lastSeenVersion || "none"})`,
-        );
-
-        // Use dynamic changelog generator (preferred) with JSON fallback
-        const dynamicChangelog = generateWhatsNewChangelog();
-        if (dynamicChangelog && dynamicChangelog.changelog.length > 0) {
-          console.log("📋 Using dynamic changelog generator");
-          setCurrentChangelog(dynamicChangelog.changelog);
-          setShowWhatsNew(true);
-        } else {
-          // Fallback to JSON file
-          const versionUpdate = changelogData.updates.find(
-            (u) => u.version === currentVersion,
-          );
-          if (versionUpdate && versionUpdate.changelog.length > 0) {
-            console.log("📋 Using JSON changelog fallback");
-            setCurrentChangelog(versionUpdate.changelog);
-            setShowWhatsNew(true);
-          }
-        }
-
-        // Mark this version as seen
-        localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
-      } else if (!tosAccepted) {
-        console.log(
-          "📰 Skipping What's New - TOS not yet accepted (first visit)",
-        );
-      }
-
-      // Step 3: Start update checker
-      startUpdateChecker((updateInfo) => {
-        console.log("🆕 Update available:", updateInfo);
-        setUpdateAvailable(updateInfo);
-        setShowUpdateBanner(true);
-      });
+      // Step 2 (What's-New modal) and Step 3 (SW update checker) live in
+      // useUpdateOrchestrator now — see src/features/update/.
     };
 
     // Run initialization
     initializeApp();
-
-    // Cleanup
-    return () => {
-      stopUpdateChecker();
-    };
-  }, []);
-
-  // SAFETY-CRITICAL: Listen for crisis events from any component
-  useEffect(() => {
-    const handleCrisisEvent = (event) => {
-      const { severity, source } = event.detail || {};
-      console.warn("🚨 Crisis detected:", { severity, source });
-      setCrisisSeverity(severity || "high");
-      setShowCrisisModal(true);
-    };
-
-    window.addEventListener("vetrate:crisis", handleCrisisEvent);
-
-    return () => {
-      window.removeEventListener("vetrate:crisis", handleCrisisEvent);
-    };
   }, []);
 
   const handleLaunchSecondaryScout = (conditions) => {
@@ -3801,23 +3683,9 @@ function App() {
         {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
         <TermsOfServiceModal />
 
-        {/* LIVE OPS: Update notification banner */}
-        {showUpdateBanner && updateAvailable && (
-          <UpdateBanner
-            onApplyUpdate={handleApplyUpdate}
-            onDismiss={handleDismissUpdateBanner}
-            updateInfo={updateAvailable}
-          />
-        )}
-
-        {/* LIVE OPS: What's New changelog modal */}
-        {showWhatsNew && currentChangelog.length > 0 && (
-          <WhatsNewModal
-            changelog={currentChangelog}
-            version={APP_VERSION}
-            onClose={handleCloseWhatsNew}
-          />
-        )}
+        {/* LIVE OPS: Update banner + What's-New modal — owned by useUpdateOrchestrator */}
+        {updateBanner}
+        {whatsNewModal}
 
         {/* CLEAR COAT: Mission Protocol - Trust Beacon */}
         {showMissionProtocol && (
@@ -3834,12 +3702,10 @@ function App() {
       </Suspense>
 
       {/* CLEAR COAT: Boot Camp Tour - Only starts after all initial screens are dismissed */}
-      {disclaimerAcknowledged && !showWhatsNew && <BootCampTour />}
+      {disclaimerAcknowledged && !whatsNewOpen && <BootCampTour />}
 
-      {/* SAFETY-CRITICAL: Crisis Modal - Highest z-index, blocks all other UI */}
-      {showCrisisModal && (
-        <CrisisModal severity={crisisSeverity} source="app" />
-      )}
+      {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
+      <CrisisListener />
 
       {/* MOBILE OPTIMIZATION: Small Screen Warning */}
       {window.innerWidth < 640 && !dismissedSmallScreenWarning && (
