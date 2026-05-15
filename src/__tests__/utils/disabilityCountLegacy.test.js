@@ -3,7 +3,7 @@ import {
   getDisabilityCount,
   getFormattedDisabilityCount,
   getDisabilityCountWithValidation,
-} from "../utils/disabilityCount";
+} from "../../utils/disabilityCount";
 
 describe("getDisabilityCount", () => {
   it("returns a positive number", () => {

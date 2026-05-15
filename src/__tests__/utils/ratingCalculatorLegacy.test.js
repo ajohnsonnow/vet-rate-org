@@ -11,7 +11,7 @@ import {
   calculateMonthlyCompensation,
   checkBilateralFactor,
   calculateExactCombinedRating,
-} from "../utils/ratingCalculator";
+} from "../../utils/ratingCalculator";
 
 describe("calculateCombinedRating - Basic Functionality", () => {
   it("should return 0 for empty array", () => {

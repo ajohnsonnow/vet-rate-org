@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { BASE_COLORS } from "../utils/colorSchemas";
+import { BASE_COLORS } from "../../utils/colorSchemas";
 
 describe("BASE_COLORS", () => {
   it("has backdrop colors", () => {

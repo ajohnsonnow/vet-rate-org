@@ -3,7 +3,7 @@ import {
   detectCrisisLanguage,
   CRISIS_RESOURCES,
   interceptBeforeAICall,
-} from "../utils/crisisInterceptor";
+} from "../../utils/crisisInterceptor";
 
 describe("crisisInterceptor", () => {
   describe("detectCrisisLanguage", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isStaleData, getDataAgeDays } from "../utils/staleDataDetection";
+import { isStaleData, getDataAgeDays } from "../../utils/staleDataDetection";
 
 describe("staleDataDetection", () => {
   describe("isStaleData", () => {

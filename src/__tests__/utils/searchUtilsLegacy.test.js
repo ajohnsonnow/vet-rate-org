@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeSearchTerm } from "../utils/searchUtils";
+import { normalizeSearchTerm } from "../../utils/searchUtils";
 
 describe("normalizeSearchTerm", () => {
   it("lowercases input", () => {
@@ -45,17 +45,17 @@ describe("normalizeSearchTerm", () => {
 describe("searchDisabilityData", () => {
   // Import dynamically since it needs the data file
   it("returns empty array for empty search", async () => {
-    const { searchDisabilityData } = await import("../utils/searchUtils");
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
     expect(searchDisabilityData("", { disabilities: [] })).toEqual([]);
   });
 
   it("returns empty array for whitespace search", async () => {
-    const { searchDisabilityData } = await import("../utils/searchUtils");
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
     expect(searchDisabilityData("   ", { disabilities: [] })).toEqual([]);
   });
 
   it("returns empty array for invalid data", async () => {
-    const { searchDisabilityData } = await import("../utils/searchUtils");
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
     expect(searchDisabilityData("ptsd", null)).toEqual([]);
   });
 });

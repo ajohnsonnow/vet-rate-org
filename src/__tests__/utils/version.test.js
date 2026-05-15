@@ -4,7 +4,7 @@ import {
   SCHEMA_VERSION,
   UPDATE_CHECK_INTERVAL,
   VERSION_STORAGE_KEY,
-} from "../utils/version";
+} from "../../utils/version";
 
 describe("APP_VERSION", () => {
   it("is defined", () => {
