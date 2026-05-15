@@ -1,8 +1,40 @@
 {
-  "version": "1.20.0",
+  "version": "1.21.0",
   "lastUpdated": "2026-05-15",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.21.0",
+      "date": "2026-05-15",
+      "isFirstRelease": false,
+      "releaseTitle": "Best-Practices Audit Complete — Legal-RAG + Supply-Chain Hardening",
+      "changelog": [
+        {
+          "type": "feat",
+          "category": "AI / Legal-RAG",
+          "title": "Legal-RAG runtime over 38 CFR Part 4",
+          "description": "New legalRag.js + legalAnswerer.js services with dual-LLM split (extractor → JSON facts → synthesizer) and LegalCitation badges that link to canonical .gov sources with fetched_at currency dates."
+        },
+        {
+          "type": "feat",
+          "category": "Knowledge / Ops",
+          "title": "Weekly legal-index ingestion cron",
+          "description": "GitHub Action refreshes the legal-index every Monday, opens a PR on content diff, and files a stale-source issue on fetcher failure. External-truth registry at knowledge-sources.yaml."
+        },
+        {
+          "type": "chore",
+          "category": "Supply chain",
+          "title": "Zero npm audit vulnerabilities + SBOM on release",
+          "description": "protobufjs and @xmldom/xmldom advisories resolved via npm overrides. Release tag now generates CycloneDX + SPDX SBOMs and attaches them to the GitHub Release."
+        },
+        {
+          "type": "chore",
+          "category": "DevSecOps",
+          "title": "CI security gates flipped to blocking",
+          "description": "npm audit (prod, ≥high) and semgrep SAST (--strict) now block CI. Preflight contract enforcement defaults to STRICT_AUDIT=true."
+        }
+      ]
+    },
     {
       "version": "1.20.0",
       "date": "2026-03-20",
