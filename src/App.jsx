@@ -37,6 +37,7 @@ import TermsOfServiceModal from "./components/TermsOfServiceModal";
 import CommandersChecklist from "./components/CommandersChecklist";
 import CrisisListener from "./features/crisis/CrisisListener";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
+import VisionSimulator from "./features/vision/VisionSimulator";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -134,9 +135,6 @@ const VKBTimeline = lazy(() => import("./components/VKBTimeline"));
 const RecordSearch = lazy(() => import("./components/RecordSearch"));
 const MultiCloudManager = lazy(() => import("./components/MultiCloudManager"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
-const VisionSimulatorPanel = lazy(
-  () => import("./components/VisionSimulatorPanel"),
-);
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 const MissionProtocol = lazy(() => import("./components/MissionProtocol"));
 const WorkflowGuide = lazy(() => import("./components/WorkflowGuide"));
@@ -253,7 +251,6 @@ function App() {
   const [showRecordSearch, setShowRecordSearch] = useState(false);
   const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
-  const [showVisionSimulator, setShowVisionSimulator] = useState(false);
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
 
   // WOW FEATURES: Evidence Gap, Retro Pay, Pain Painter
@@ -321,20 +318,13 @@ function App() {
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
 
-  // Listen for Vision Simulator open event (triggered from AICommandCenter when vision model fails)
+  // When VisionSimulator opens itself via the `openVisionSimulator` event,
+  // close the AI Command Center too (the dispatcher lives inside it).
+  // VisionSimulator owns the actual modal mount — see src/features/vision/.
   useEffect(() => {
-    const handleOpenVisionSimulator = () => {
-      setShowVisionSimulator(true);
-      // Close the AI Command Center if open
-      setShowAISettings(false);
-    };
-
-    window.addEventListener("openVisionSimulator", handleOpenVisionSimulator);
-    return () =>
-      window.removeEventListener(
-        "openVisionSimulator",
-        handleOpenVisionSimulator,
-      );
+    const handler = () => setShowAISettings(false);
+    window.addEventListener("openVisionSimulator", handler);
+    return () => window.removeEventListener("openVisionSimulator", handler);
   }, []);
 
   // Initialize error capture for bug reports
@@ -3635,40 +3625,8 @@ function App() {
           />
         )}
 
-        {/* Vision Simulator Panel - OCR + AI document analysis (works in all browsers!) */}
-        {showVisionSimulator && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="relative">
-                <button
-                  onClick={() => setShowVisionSimulator(false)}
-                  className="absolute -top-2 -right-2 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full shadow-lg"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-                <VisionSimulatorPanel
-                  onAnalysisComplete={(result) => {
-                    console.log("Vision analysis complete:", result);
-                    // Could integrate with Navigator or other AI features
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Vision Simulator — owned by features/vision/VisionSimulator (listens to `openVisionSimulator`) */}
+        <VisionSimulator />
 
         {/* DIAMOND-TIER: PWA Install Prompt */}
         <PWAInstallButton />
