@@ -3,6 +3,7 @@ import {
   sanitizeUrl,
   sanitizeErrorMessage,
   escapeHtml,
+  safeHtml,
 } from "../../utils/sanitize";
 
 describe("sanitizeUrl", () => {
@@ -79,5 +80,69 @@ describe("escapeHtml", () => {
   it("returns empty string for falsy input", () => {
     expect(escapeHtml("")).toBe("");
     expect(escapeHtml(null)).toBe("");
+  });
+});
+
+describe("safeHtml — markdown-lite allow-list", () => {
+  it("returns empty for falsy input", () => {
+    expect(safeHtml("")).toBe("");
+    expect(safeHtml(null)).toBe("");
+    expect(safeHtml(undefined)).toBe("");
+  });
+
+  it("escapes raw HTML to entities", () => {
+    const out = safeHtml("<script>alert(1)</script>");
+    expect(out).not.toContain("<script>");
+    expect(out).toContain("&lt;script&gt;");
+  });
+
+  it("renders **bold**", () => {
+    expect(safeHtml("**hello**")).toContain("<strong>hello</strong>");
+  });
+
+  it("renders *italic*", () => {
+    expect(safeHtml("Some *emphasized* word")).toContain("<em>emphasized</em>");
+  });
+
+  it("renders `code`", () => {
+    expect(safeHtml("`38 CFR § 4.71a`")).toContain(
+      "<code>38 CFR § 4.71a</code>",
+    );
+  });
+
+  it("renders [label](url) with sanitized href", () => {
+    const out = safeHtml("See [VA](https://va.gov) for info");
+    expect(out).toContain('href="https://va.gov"');
+    expect(out).toContain('rel="noopener noreferrer"');
+    expect(out).toContain('target="_blank"');
+    expect(out).toContain(">VA</a>");
+  });
+
+  it("blocks javascript: in link href", () => {
+    const out = safeHtml("[xss](javascript:alert(1))");
+    expect(out).toContain('href="#"');
+    expect(out).not.toContain("javascript:");
+  });
+
+  it("blocks data: URL in link href", () => {
+    const out = safeHtml("[xss](data:text/html,<script>alert(1)</script>)");
+    expect(out).toContain('href="#"');
+    expect(out).not.toContain("data:text/html");
+  });
+
+  it("does not double-render escaped HTML inside link labels", () => {
+    const out = safeHtml("[<img>](https://va.gov)");
+    expect(out).not.toContain("<img>");
+    expect(out).toContain("&lt;img&gt;");
+  });
+
+  it("survives adversarial mixed input (XSS + markdown)", () => {
+    const out = safeHtml(
+      "**Bold** then `<script>alert(1)</script>` and [link](javascript:alert(1))",
+    );
+    expect(out).toContain("<strong>Bold</strong>");
+    expect(out).toContain("&lt;script&gt;");
+    expect(out).not.toContain("<script>");
+    expect(out).toContain('href="#"');
   });
 });

@@ -132,6 +132,46 @@ export function escapeHtml(str) {
 }
 
 /**
+ * Render a Markdown-lite snippet to safe HTML for `dangerouslySetInnerHTML`.
+ *
+ * Defense model — we explicitly DO NOT use DOMPurify (see
+ * packages/dompurify-noop/README.md for the design rationale). Instead this
+ * helper escapes everything by default and re-introduces a *fixed allow-list*
+ * of inline elements: `**bold**` → `<strong>`, `*italic*` → `<em>`,
+ * `` `code` `` → `<code>`, `[label](url)` → `<a>` with `sanitizeUrl()` on the
+ * href. Any other angle bracket survives only as `&lt;`/`&gt;`.
+ *
+ * Use this for any developer-controlled markup that needs lightweight
+ * formatting — never for veteran-supplied or AI-generated text.
+ *
+ * @param {string} markdownLite
+ * @returns {string} HTML-safe markup
+ */
+export function safeHtml(markdownLite) {
+  if (!markdownLite || typeof markdownLite !== "string") return "";
+
+  // 1. Escape the entire input first — this is the safety floor.
+  let html = escapeHtml(markdownLite);
+
+  // 2. Re-introduce links with sanitized hrefs. `escapeHtml` already turned
+  //    `<` / `>` into entities, so the markdown brackets `[ ]` and `( )` are
+  //    untouched and the link replacement is safe.
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
+    const safeUrl = sanitizeUrl(url);
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+
+  // 3. Re-introduce inline formatting. Inputs were already escaped, so the
+  //    replacement bodies contain entity-safe characters only.
+  html = html
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  return html;
+}
+
+/**
  * Sanitize a Google Maps directions URL.
  * Validates coordinates are numeric and builds a safe URL.
  *
