@@ -16,7 +16,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { makeRecord } from "./sanitize-html.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -111,7 +111,7 @@ async function main() {
   console.log(`[cavc] wrote ${records.length} opinions → ${outPath}`);
 }
 
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((e) => {
     console.error(`[cavc] FAILED: ${e.message}`);
     process.exit(1);

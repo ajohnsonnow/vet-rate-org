@@ -27,7 +27,7 @@ import {
   readdirSync,
 } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
@@ -67,10 +67,7 @@ async function loadPipeline() {
   // Dynamic import so this script doesn't pay the cost when only chunking.
   const { pipeline } = await import("@huggingface/transformers");
   console.log(`[embed] loading model ${EMBEDDING_MODEL}…`);
-  return pipeline("feature-extraction", EMBEDDING_MODEL, {
-    pooling: "mean",
-    normalize: false, // we normalize manually so the quantization range is consistent
-  });
+  return pipeline("feature-extraction", EMBEDDING_MODEL);
 }
 
 async function embedSource({ chunkFile, vectorFile, embedder }) {
@@ -83,7 +80,10 @@ async function embedSource({ chunkFile, vectorFile, embedder }) {
   const buf = new Int8Array(lines.length * EMBED_DIM);
   for (let i = 0; i < lines.length; i++) {
     const chunk = JSON.parse(lines[i]);
-    const output = await embedder(chunk.text);
+    const output = await embedder(chunk.text, {
+      pooling: "mean",
+      normalize: false,
+    });
     const flat = new Float32Array(output.data); // tensor → flat Float32
     normalize(flat);
     const q = quantizeQ8(flat);
@@ -160,7 +160,7 @@ async function main() {
   console.log(`[embed] manifest: public/legal-index/${version}/manifest.json`);
 }
 
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((e) => {
     console.error(`[embed] FAILED: ${e.message}`);
     process.exit(1);

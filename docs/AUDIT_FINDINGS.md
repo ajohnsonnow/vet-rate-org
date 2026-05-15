@@ -46,11 +46,22 @@ End-of-Sprint-3 snapshot. Sprint 2's audit pass surfaced 3 critical and 17 high 
 - Full vitest suite: 571/571 passing across 34 test files after the localStorage shim in [setup.js](../src/__tests__/setup.js).
 - Honest gap: NVDA + Lighthouse perf-budget run is a manual item I cannot perform in this environment.
 
-**High-severity themes for Sprint 6–7 (RAG knowledge):**
+**Sprint 6 wins (closed 2026-05-15):**
 
-- No vector DB. [llm-compiler/](../llm-compiler/) has scrapers + a static knowledge base but no integrated retrieval.
+- eCFR fetcher refactored to current API ([scripts/legal-ingestion/fetch-ecfr.mjs](../scripts/legal-ingestion/fetch-ecfr.mjs)): scaffold's defunct `/api/versioner/v1/full/{date}/title-N.json` endpoint (HTTP 406) replaced with structure + renderer split (`structure/{date}/title-N.json` → JSON tree, `renderer/v1/content/enhanced/{date}/title-N?part=X&section=Y` → HTML body). CLI flags `--part=N,...` and `--limit=K` for narrow runs.
+- Cross-platform entry-point detection fixed across all 8 ingestion scripts. The scaffold's string-template comparison against `process.argv[1]` produced a `file://` URL with two slashes; on Windows `import.meta.url` is `file:///e:/...` with three, so `main()` never ran. Replaced with `pathToFileURL(process.argv[1]).href`.
+- Embedder pooling option fixed in [embed.mjs](../scripts/legal-ingestion/embed.mjs): `pooling: 'mean'` moved from pipeline construction (where transformers.js ignored it, producing `[1, T, 384]` tensors that overflowed the Q8 buffer) to call-time invocation (now correctly produces `[1, 384]` pooled vectors).
+- End-to-end run verified against 38 CFR Part 4 (the rating-schedule core): 101 sections → 226 chunks → 226 × 384-dim Q8 vectors (86 784 bytes). Manifest at [public/legal-index/v0.1.0/manifest.json](../public/legal-index/v0.1.0/manifest.json).
+- Content-hash determinism confirmed: two back-to-back fetches over the same `2026-05-01` eCFR snapshot produced byte-identical `content_hash` arrays across all 5 sampled records — the cron's diff-on-change detection will not be flapping on identical content.
+- `.work/` (transient JSONL between fetcher and chunker) added to `.gitignore`.
+- Known gaps deferred: M21-1 / CAVC / Fed-Cir fetchers remain unverified scaffolds (the canonical URL surfaces vary and need live probing); Parts 3, 19, 20 not yet fetched (Part 4 covers the highest-value content — the rating schedule). Both items belong to S7's cron-wiring step.
+
+**High-severity themes for Sprint 7 (RAG runtime + cron):**
+
 - Static [disabilityData.json](../src/data/disabilityData.json) carries a `lastVerifiedDate` but has no automated refresh.
 - No knowledge-monitoring registry (knowledge-sources.yaml) or changedetection on eCFR.
+- v0.1.0 index exists but is not wired into the runtime — no `src/services/legalRag.js` / `legalAnswerer.js` / `LegalCitation.jsx`.
+- M21-1 / CAVC / Fed-Cir fetchers still scaffolds (canonical-URL drift suspected — verify before promoting to cron).
 
 **High-severity themes for Sprint 8 (supply chain + DevOps):**
 
@@ -107,7 +118,7 @@ End-of-Sprint-3 snapshot:
 | 11 | va-veteran-tech-best-practices | Domain | compliant | low | VA API surface gated behind `VITE_VA_API_ENABLED` ([config/vaAuth.js](../src/config/vaAuth.js), [App.jsx](../src/App.jsx), [main.jsx](../src/main.jsx)) per S1 commit `aeebe47` | — | Re-audit when VA access is restored and flag flips to `true`. |
 | 12 | compliance-strategy-best-practices | Compliance | partial | med | [THREAT_MODEL.md](./THREAT_MODEL.md) documents trust boundaries + OWASP LLM Top 10 mapping. Compliance framework selection (SOC 2 / ISO 27001 / NIST) intentionally deferred — premature without organizational legal sign-off. SECURITY.md, CONTRIBUTING.md, audit log infrastructure in place. | 8 | S8 adds framework selection rationale once legal context is determined. |
 | 13 | zero-knowledge-local-first-best-practices | Privacy | partial | med | All storage via IndexedDB/localStorage; PII scrubbed before any cloud call; aiAuditLog stores sha256 digests not raw text. No encryption-at-rest layer yet (the data is on the user's device under their OS-level disk encryption). Web Crypto used only for `crypto.subtle.digest('SHA-256', ...)` in the audit chain — no PBKDF2/AES code in the codebase to audit. | 8 | If/when a key-derivation or device-sync feature lands, audit then. |
-| 14 | vector-database-rag-best-practices | AI/data | gap | med | [llm-compiler/](../llm-compiler/) scaffolds a knowledge base but no integrated vector retrieval in `src/`; no embedding model selected; no recall@k / MRR / NDCG evaluation | 6 | S6 builds eCFR/M21-1/CAVC/Fed-Cir ingestion → chunker → Q8 embeddings. |
+| 14 | vector-database-rag-best-practices | AI/data | partial | med | S6 closed the ingestion half: [fetch-ecfr.mjs](../scripts/legal-ingestion/fetch-ecfr.mjs) → [chunk.mjs](../scripts/legal-ingestion/chunk.mjs) → [embed.mjs](../scripts/legal-ingestion/embed.mjs) produces a deterministic v0.1.0 index (101 §s of 38 CFR Part 4, 226 chunks, bge-small-en-v1.5 Q8). Runtime retrieval + recall@k / MRR / NDCG eval still missing. | 7 | S7 wires `src/services/legalRag.js` + answerer + citation UI + weekly cron. |
 | 15 | ai-research-best-practices | AI | n/a | low | Operational app over fixed regulatory domain (38 CFR); not a research project | — | — |
 | 16 | knowledge-monitoring-best-practices | AI/ops | gap | high | [disabilityData.json:45](../src/data/disabilityData.json#L45) carries `lastVerifiedDate: "2026-01-18"` but no refresh mechanism; no `knowledge-sources.yaml`; no eCFR changedetection; no quarterly review CI job; no URL validity check in preflight | 7 | S7 wires weekly GitHub Action + diff-on-change PR opener. |
 | 17 | threat-modeling-best-practices | Security | compliant | low | [docs/THREAT_MODEL.md](./THREAT_MODEL.md) covers scope, assets, trust boundaries (lethal-trifecta map), DFD, STRIDE per surface, OWASP LLM Top 10 mapping, and documented residual risk (7 open issues). | — | S3 closed. Update procedure in §8. |

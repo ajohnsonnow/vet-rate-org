@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { contentHash } from "./sanitize-html.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -114,7 +114,7 @@ export async function chunkAll({ version }) {
 }
 
 // CLI entry — only when invoked directly.
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const version = process.argv[2] || "v0.0.0";
   chunkAll({ version })
     .then((r) =>
