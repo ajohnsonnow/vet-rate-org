@@ -20,6 +20,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { VaAuthProvider } from "./contexts/VaAuthContext";
 import VaAuthCallback from "./auth/VaAuthCallback";
 import VaSandboxTest from "./components/debug/VaSandboxTest";
+import { isVaApiEnabled } from "./config/vaAuth";
 import {
   checkSystemCapabilities,
   renderBrowserWarning,
@@ -64,15 +65,23 @@ if (!capabilityResults.passed) {
   // All systems go - render the app
   console.log("[Tech Check] ✓ All browser capabilities verified");
 
-  // Check if this is an OAuth callback or sandbox test route
+  // Check if this is an OAuth callback or sandbox test route.
+  // When the VA API surface is disabled, those routes redirect to "/" so the
+  // user never lands on a broken VA component.
   const pathname = window.location.pathname;
   const isOAuthCallback = pathname === "/callback";
   const isSandboxTest = pathname === "/sandbox-test";
 
+  if (!isVaApiEnabled() && (isOAuthCallback || isSandboxTest)) {
+    window.history.replaceState(null, "", "/");
+  }
+
   // Helper to render the appropriate component based on route
   const renderRoute = () => {
-    if (isOAuthCallback) return <VaAuthCallback />;
-    if (isSandboxTest) return <VaSandboxTest />;
+    if (isVaApiEnabled()) {
+      if (isOAuthCallback) return <VaAuthCallback />;
+      if (isSandboxTest) return <VaSandboxTest />;
+    }
     return <App />;
   };
 

@@ -11,7 +11,7 @@
  * - Facilities: https://developer.va.gov/explore/facilities/docs/va_facilities
  */
 
-import { VA_AUTH_CONFIG } from "../config/vaAuth";
+import { VA_AUTH_CONFIG, assertVaApiEnabled } from "../config/vaAuth";
 import { startApiLog, API_CATEGORIES } from "../utils/vaSyncLogger";
 
 // Base URLs for VA.gov APIs
@@ -97,6 +97,7 @@ export const getApiRateLimitStatus = () => rateLimiter.getStatus();
  * Uses Vite proxy in development to bypass CORS restrictions
  */
 async function authenticatedFetch(endpoint, accessToken, options = {}) {
+  assertVaApiEnabled();
   // Check rate limit before making request
   rateLimiter.checkLimit();
 
@@ -334,6 +335,7 @@ export async function uploadClaimDocument(
   file,
   documentType = "L049",
 ) {
+  assertVaApiEnabled();
   if (!accessToken) {
     throw new Error("No access token provided. Please log in first.");
   }
@@ -499,6 +501,7 @@ export async function getAppealableIssues(accessToken, options = {}) {
  * @returns {Promise<Object>} Facilities list
  */
 export async function getFacilities(apiKey, options = {}) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required for facility search");
   }
@@ -572,6 +575,7 @@ export async function getFacilities(apiKey, options = {}) {
  * @returns {Promise<Object>} Facility details
  */
 export async function getFacilityById(apiKey, facilityId) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required");
   }
@@ -678,6 +682,7 @@ export async function getAppealsStatus(accessToken) {
  * }
  */
 export async function searchForms(apiKey, query) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required for forms search");
   }
@@ -725,6 +730,7 @@ export async function searchForms(apiKey, query) {
  * @returns {Promise<Object>} Form details
  */
 export async function getFormByName(apiKey, formName) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required");
   }
@@ -769,6 +775,7 @@ export async function getFormByName(apiKey, formName) {
  * }
  */
 export async function getBenefitsReferenceDisabilities(apiKey) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required for benefits reference data");
   }
@@ -816,6 +823,7 @@ export async function getBenefitsReferenceDisabilities(apiKey) {
  * @returns {Promise<Object>} List of intake sites
  */
 export async function getBenefitsReferenceIntakeSites(apiKey) {
+  assertVaApiEnabled();
   if (!apiKey) {
     throw new Error("VA API Key is required");
   }

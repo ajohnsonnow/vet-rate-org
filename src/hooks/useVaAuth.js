@@ -13,6 +13,8 @@ import {
   VA_SCOPES,
   STORAGE_KEYS,
   validateConfig,
+  isVaApiEnabled,
+  VaApiDisabledError,
 } from "../config/vaAuth";
 import { generatePKCEPair, generateState } from "../utils/pkce";
 
@@ -36,6 +38,12 @@ export function useVaAuth() {
   const login = useCallback(
     async (usePopup = true) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError(
+            "VA login is disabled pending re-credentialing. Set VITE_VA_API_ENABLED=true once access is restored.",
+          );
+        }
+
         // Validate configuration
         if (!validateConfig()) {
           throw new Error(
@@ -102,6 +110,12 @@ export function useVaAuth() {
   const handleCallback = useCallback(
     async (code, state) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError(
+            "VA OAuth callback handled while API surface is disabled.",
+          );
+        }
+
         console.log("[VA Auth] Handling callback...");
 
         // Validate state parameter (CSRF protection)
@@ -216,6 +230,10 @@ export function useVaAuth() {
   const refreshAccessToken = useCallback(
     async (refreshToken) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError();
+        }
+
         console.log("[VA Auth] Refreshing access token...");
 
         const response = await fetch(VA_ENDPOINTS.token, {
