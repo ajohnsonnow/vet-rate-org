@@ -289,21 +289,27 @@ async function getOrCreateBackupFolder() {
 // Versioned encryption envelope.
 //   V1 (legacy): raw base64(iv || ciphertext), 12-byte IV, fixed salt
 //                "vet-rate-salt-v1", PBKDF2-SHA256 100k iterations.
-//   V2 (current): base64(magic[4] || salt[16] || iv[12] || ciphertext),
-//                 PBKDF2-SHA256 600k iterations (OWASP 2023). Salt is random
-//                 per encryption so rainbow tables / cross-user reuse fail.
-// Decrypt sniffs the magic; absence → V1 path so existing backups still open.
-// See docs/CRYPTO_AUDIT.md.
+//   V2 (legacy): base64(magic[4] || salt[16] || iv[12] || ciphertext),
+//                 PBKDF2-SHA256 600k iterations (OWASP 2023). Per-encryption
+//                 random salt.
+//   V3 (current): identical layout to V2 but new magic "VS3\0" and AAD-bound
+//                  AES-GCM. AAD = UTF-8 "vetrate.cloud-sync.v3" — domain-
+//                  separates this envelope from cloud-encryption.js V3 and
+//                  prevents cross-context ciphertext reuse.
+// Decrypt sniffs the magic; V1 (no magic) and V2 path still decrypt so
+// existing user backups keep working. See docs/CRYPTO_AUDIT.md.
 
 const CLOUDSYNC_V2_MAGIC = new Uint8Array([0x56, 0x53, 0x32, 0x00]); // "VS2\0"
+const CLOUDSYNC_V3_MAGIC = new Uint8Array([0x56, 0x53, 0x33, 0x00]); // "VS3\0"
+const CLOUDSYNC_AAD_V3 = new TextEncoder().encode("vetrate.cloud-sync.v3");
 const PBKDF2_ITERS_V2 = 600_000;
 const PBKDF2_ITERS_V1 = 100_000;
 const V1_FIXED_SALT_TEXT = "vet-rate-salt-v1";
 
-function _hasMagic(bytes) {
-  if (bytes.length < CLOUDSYNC_V2_MAGIC.length) return false;
-  for (let i = 0; i < CLOUDSYNC_V2_MAGIC.length; i++) {
-    if (bytes[i] !== CLOUDSYNC_V2_MAGIC[i]) return false;
+function _matchesMagic(bytes, magic) {
+  if (bytes.length < magic.length) return false;
+  for (let i = 0; i < magic.length; i++) {
+    if (bytes[i] !== magic[i]) return false;
   }
   return true;
 }
@@ -326,7 +332,7 @@ async function _deriveKey(password, salt, iterations, usage) {
   );
 }
 
-async function encryptData(text, password) {
+export async function encryptData(text, password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
 
@@ -335,17 +341,17 @@ async function encryptData(text, password) {
   const key = await _deriveKey(password, salt, PBKDF2_ITERS_V2, "encrypt");
 
   const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    { name: "AES-GCM", iv, additionalData: CLOUDSYNC_AAD_V3 },
     key,
     data,
   );
 
   const out = new Uint8Array(
-    CLOUDSYNC_V2_MAGIC.length + salt.length + iv.length + encrypted.byteLength,
+    CLOUDSYNC_V3_MAGIC.length + salt.length + iv.length + encrypted.byteLength,
   );
   let o = 0;
-  out.set(CLOUDSYNC_V2_MAGIC, o);
-  o += CLOUDSYNC_V2_MAGIC.length;
+  out.set(CLOUDSYNC_V3_MAGIC, o);
+  o += CLOUDSYNC_V3_MAGIC.length;
   out.set(salt, o);
   o += salt.length;
   out.set(iv, o);
@@ -355,12 +361,28 @@ async function encryptData(text, password) {
   return btoa(String.fromCharCode(...out));
 }
 
-async function decryptData(encryptedBase64, password) {
+export async function decryptData(encryptedBase64, password) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   const bytes = Uint8Array.from(atob(encryptedBase64), (c) => c.charCodeAt(0));
 
-  if (_hasMagic(bytes)) {
+  if (_matchesMagic(bytes, CLOUDSYNC_V3_MAGIC)) {
+    let o = CLOUDSYNC_V3_MAGIC.length;
+    const salt = bytes.slice(o, o + 16);
+    o += 16;
+    const iv = bytes.slice(o, o + 12);
+    o += 12;
+    const ciphertext = bytes.slice(o);
+    const key = await _deriveKey(password, salt, PBKDF2_ITERS_V2, "decrypt");
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv, additionalData: CLOUDSYNC_AAD_V3 },
+      key,
+      ciphertext,
+    );
+    return decoder.decode(plain);
+  }
+
+  if (_matchesMagic(bytes, CLOUDSYNC_V2_MAGIC)) {
     let o = CLOUDSYNC_V2_MAGIC.length;
     const salt = bytes.slice(o, o + 16);
     o += 16;
