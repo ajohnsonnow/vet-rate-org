@@ -24,7 +24,6 @@ import SearchBar from "./components/SearchBar";
 import SearchResultCard from "./components/SearchResultCard";
 import DisabilityDetails from "./components/DisabilityDetails";
 import Disclaimer from "./components/Disclaimer";
-import DisclaimerSplash from "./components/DisclaimerSplash";
 import BuyMeCoffee from "./components/BuyMeCoffee";
 import FloatingBugButton from "./components/FloatingBugButton";
 import ReportBugLink from "./components/ReportBugLink";
@@ -44,7 +43,7 @@ import ZonkButton from "./components/ZonkButton";
 import LoadingBunker from "./components/LoadingBunker";
 import QuickExitButton from "./components/QuickExitButton";
 import { LocalAIProvider } from "./components/LocalAIPanel";
-import BootCampTour from "./components/BootCampTour";
+import OnboardingGate from "./features/onboarding/OnboardingGate";
 import DemoDataLoader from "./components/DemoDataLoader";
 import ShareButton, { PIISensitive } from "./components/ShareButton";
 import SecurityBadge from "./components/SecurityBadge";
@@ -311,10 +310,6 @@ function App() {
   const [migrationComplete, setMigrationComplete] = useState(false);
 
   const [capSimulatorResults, setCapSimulatorResults] = useState([]);
-  const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
-    () => localStorage.getItem("vetrate_disclaimer-acknowledged") === "true",
-  );
-
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
 
@@ -1013,8 +1008,8 @@ function App() {
       {/* Toast Notification System */}
       <ToastContainer toasts={toasts} onClose={onClose} onAction={onAction} />
 
-      {/* Disclaimer Splash - shows on first visit */}
-      <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
+      {/* Onboarding — DisclaimerSplash + BootCampTour, gated on whatsNewOpen */}
+      <OnboardingGate whatsNewOpen={whatsNewOpen} />
 
       {/* VA API Status Banner — only when the VA-API surface is enabled */}
       {isVaApiEnabled() && <VaApiStatusBanner />}
@@ -3651,9 +3646,6 @@ function App() {
           />
         )}
       </Suspense>
-
-      {/* CLEAR COAT: Boot Camp Tour - Only starts after all initial screens are dismissed */}
-      {disclaimerAcknowledged && !whatsNewOpen && <BootCampTour />}
 
       {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
       <CrisisListener />
