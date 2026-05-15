@@ -110,10 +110,43 @@ if (!capabilityResults.passed) {
         .register("/service-worker.js")
         .then((reg) => {
           console.log("[SW] registered:", reg.scope);
+
+          // Detect new SW installs and surface an "Update available" signal.
+          // The SW intentionally does NOT auto-skipWaiting, so the page must
+          // accept the update by posting { type: "SKIP_WAITING" }. We dispatch
+          // a CustomEvent any component (e.g. a toast) can subscribe to.
+          reg.addEventListener("updatefound", () => {
+            const installing = reg.installing;
+            if (!installing) return;
+            installing.addEventListener("statechange", () => {
+              if (
+                installing.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                window.dispatchEvent(
+                  new CustomEvent("sw-update-available", {
+                    detail: {
+                      accept: () =>
+                        installing.postMessage({ type: "SKIP_WAITING" }),
+                    },
+                  }),
+                );
+              }
+            });
+          });
         })
         .catch((err) => {
           console.warn("[SW] registration failed:", err.message);
         });
+
+      // After the SW activates a new version, reload once so the new bundle
+      // is the one running. Guarded so it only fires after a real change.
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      });
     });
   }
 }

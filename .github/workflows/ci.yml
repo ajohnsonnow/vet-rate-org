@@ -99,6 +99,33 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  red-team:
+    name: Red-Team Suite (LLM defenses)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    # Dedicated blocking gate for the prompt-injection / exfiltration /
+    # PII-trap / URL-bait payloads under src/__tests__/red-team/. Kept
+    # separate from the main test job so a regression here is visible
+    # at a glance and bisectable from CI output. Promptfoo / PyRIT were
+    # considered and rejected: those tools want a live LLM endpoint to
+    # call, which this local-first app does not have in CI (we ship the
+    # dual-LLM split, PII scrubber, spotlight wrap, and URL allowlist —
+    # all of which are deterministic and testable against vitest mocks).
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run red-team suite (blocking)
+        run: npm run test:red-team
+
   security:
     name: Security Audit
     runs-on: ubuntu-latest

@@ -32,12 +32,33 @@
     "react/no-unknown-property": "warn",
     "no-useless-escape": "warn",
     "no-case-declarations": "warn",
-    "no-prototype-builtins": "warn",
     "no-undef": "warn",
     "no-dupe-keys": "warn",
     "no-constant-condition": "warn",
     "no-empty": "warn",
     "no-misleading-character-class": "warn",
-    "no-control-regex": "warn"
-  }
+    "no-control-regex": "warn",
+
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "no-prototype-builtins": "error",
+    "no-proto": "error",
+    "no-extend-native": "error",
+    "no-iterator": "error",
+    "no-caller": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/**/*.test.{js,jsx}",
+        "src/__tests__/**/*.{js,jsx}",
+        "tests/**/*.{js,ts,jsx,tsx}"
+      ],
+      "rules": {
+        "no-script-url": "off"
+      }
+    }
+  ]
 }

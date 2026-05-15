@@ -286,13 +286,30 @@ async function getOrCreateBackupFolder() {
   }
 }
 
-/**
- * Encrypt data using Web Crypto API
- */
-async function encryptData(text, password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
+// Versioned encryption envelope.
+//   V1 (legacy): raw base64(iv || ciphertext), 12-byte IV, fixed salt
+//                "vet-rate-salt-v1", PBKDF2-SHA256 100k iterations.
+//   V2 (current): base64(magic[4] || salt[16] || iv[12] || ciphertext),
+//                 PBKDF2-SHA256 600k iterations (OWASP 2023). Salt is random
+//                 per encryption so rainbow tables / cross-user reuse fail.
+// Decrypt sniffs the magic; absence → V1 path so existing backups still open.
+// See docs/CRYPTO_AUDIT.md.
 
+const CLOUDSYNC_V2_MAGIC = new Uint8Array([0x56, 0x53, 0x32, 0x00]); // "VS2\0"
+const PBKDF2_ITERS_V2 = 600_000;
+const PBKDF2_ITERS_V1 = 100_000;
+const V1_FIXED_SALT_TEXT = "vet-rate-salt-v1";
+
+function _hasMagic(bytes) {
+  if (bytes.length < CLOUDSYNC_V2_MAGIC.length) return false;
+  for (let i = 0; i < CLOUDSYNC_V2_MAGIC.length; i++) {
+    if (bytes[i] !== CLOUDSYNC_V2_MAGIC[i]) return false;
+  }
+  return true;
+}
+
+async function _deriveKey(password, salt, iterations, usage) {
+  const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     encoder.encode(password),
@@ -300,74 +317,81 @@ async function encryptData(text, password) {
     false,
     ["deriveKey"],
   );
-
-  const key = await crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode("vet-rate-salt-v1"),
-      iterations: 100000,
-      hash: "SHA-256",
-    },
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
-    ["encrypt"],
+    [usage],
   );
+}
 
+async function encryptData(text, password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await _deriveKey(password, salt, PBKDF2_ITERS_V2, "encrypt");
+
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
     data,
   );
 
-  const combined = new Uint8Array(iv.length + encrypted.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encrypted), iv.length);
+  const out = new Uint8Array(
+    CLOUDSYNC_V2_MAGIC.length + salt.length + iv.length + encrypted.byteLength,
+  );
+  let o = 0;
+  out.set(CLOUDSYNC_V2_MAGIC, o);
+  o += CLOUDSYNC_V2_MAGIC.length;
+  out.set(salt, o);
+  o += salt.length;
+  out.set(iv, o);
+  o += iv.length;
+  out.set(new Uint8Array(encrypted), o);
 
-  return btoa(String.fromCharCode(...combined));
+  return btoa(String.fromCharCode(...out));
 }
 
-/**
- * Decrypt data
- */
 async function decryptData(encryptedBase64, password) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
+  const bytes = Uint8Array.from(atob(encryptedBase64), (c) => c.charCodeAt(0));
 
-  const combined = Uint8Array.from(atob(encryptedBase64), (c) =>
-    c.charCodeAt(0),
+  if (_hasMagic(bytes)) {
+    let o = CLOUDSYNC_V2_MAGIC.length;
+    const salt = bytes.slice(o, o + 16);
+    o += 16;
+    const iv = bytes.slice(o, o + 12);
+    o += 12;
+    const ciphertext = bytes.slice(o);
+    const key = await _deriveKey(password, salt, PBKDF2_ITERS_V2, "decrypt");
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      ciphertext,
+    );
+    return decoder.decode(plain);
+  }
+
+  // V1 legacy fallback — fixed salt + 100k iterations. New writes never take
+  // this path; only existing user backups do.
+  const iv = bytes.slice(0, 12);
+  const ciphertext = bytes.slice(12);
+  const key = await _deriveKey(
+    password,
+    encoder.encode(V1_FIXED_SALT_TEXT),
+    PBKDF2_ITERS_V1,
+    "decrypt",
   );
-  const iv = combined.slice(0, 12);
-  const encrypted = combined.slice(12);
-
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
-
-  const key = await crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode("vet-rate-salt-v1"),
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["decrypt"],
-  );
-
-  const decrypted = await crypto.subtle.decrypt(
+  const plain = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
     key,
-    encrypted,
+    ciphertext,
   );
-  return decoder.decode(decrypted);
+  return decoder.decode(plain);
 }
 
 /**

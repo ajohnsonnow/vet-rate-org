@@ -86,7 +86,7 @@ const validateClaim = (claim) => {
 
   // Only copy valid fields
   for (const field of VALID_CLAIM_FIELDS) {
-    if (claim.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(claim, field)) {
       const value = claim[field];
 
       if (field === "id") {
@@ -150,7 +150,7 @@ const validateStatement = (statement) => {
   const sanitizedStatement = {};
 
   for (const field of VALID_STATEMENT_FIELDS) {
-    if (statement.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(statement, field)) {
       const value = statement[field];
 
       if (field === "savedDate") {

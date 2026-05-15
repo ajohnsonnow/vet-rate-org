@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useVaApiStatus, useVaFeatureStatus } from "../hooks/useVaApiStatus";
+import { Tooltip } from "./common/Tooltip";
 import { STATUS_LEVELS, getStatusPageUrl } from "../utils/vaApiStatus";
 import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl, sanitizeErrorMessage } from "../utils/sanitize";
@@ -107,25 +108,27 @@ export function VaApiStatusBanner({ onDismiss }) {
           </a>
 
           {summary?.severity !== "major_outage" && (
-            <button
-              onClick={handleDismiss}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
-              aria-label="Dismiss notification"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <Tooltip content="Dismiss notification" placement="bottom">
+              <button
+                onClick={handleDismiss}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                aria-label="Dismiss notification"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -345,26 +348,28 @@ export function VaApiStatusPanel() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || loading}
-              className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-              aria-label="Refresh status"
-            >
-              <svg
-                className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <Tooltip content="Refresh status" placement="bottom">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                aria-label="Refresh status"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
+                <svg
+                  className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+            </Tooltip>
 
             <a
               href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol

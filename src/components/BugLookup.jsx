@@ -471,7 +471,7 @@ export default function BugLookup({ onClose }) {
               <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
           ) : error && reports.length === 0 ? (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center" role="alert" aria-live="polite">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
               <p className="text-red-400">{error}</p>
             </div>
