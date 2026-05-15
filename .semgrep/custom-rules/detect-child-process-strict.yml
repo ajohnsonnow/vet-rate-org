@@ -1,0 +1,57 @@
+rules:
+  - id: local.detect-child-process-strict
+    severity: WARNING
+    message: >
+      child_process called with a non-literal command argument from
+      application code. If the command string can contain values derived
+      from req.body, req.query, or req.params, this is a command-injection
+      sink. Use execFileSync(cmd, args) with a hardcoded command name and
+      array of validated arguments instead.
+
+      This rule replaces the upstream
+      javascript.lang.security.detect-child-process.detect-child-process
+      with a path-scoped version: preflight and CI scripts under scripts/
+      are excluded because their commands are hardcoded build-tool flows
+      (npm, git, node) that never receive HTTP input.
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [nodejs]
+      cwe: "CWE-78: OS Command Injection"
+      replaces: javascript.lang.security.detect-child-process.detect-child-process
+      references:
+        - https://owasp.org/Top10/A03_2021-Injection/
+        - https://nodejs.org/api/child_process.html#child_processexecfilesyncfile-args-options
+    paths:
+      # Preflight orchestrator + propagator + SAST runner intentionally exec
+      # subprocesses with hardcoded npm/git/node command strings. They run in
+      # CI / pre-push contexts, never receive HTTP input.
+      exclude:
+        - "scripts/preflight.js"
+        - "scripts/preflight.mjs"
+        - "scripts/pre-push.js"
+        - "scripts/pre-deploy.js"
+        - "scripts/sast-check.mjs"
+        - "scripts/propagate-*.mjs"
+        - "scripts/codemods/**"
+    pattern-either:
+      - patterns:
+          - pattern-either:
+              - pattern: child_process.exec($CMD, ...)
+              - pattern: child_process.execSync($CMD, ...)
+              - pattern: child_process.spawn($CMD, ...)
+              - pattern: child_process.spawnSync($CMD, ...)
+          - pattern-not: child_process.exec("...", ...)
+          - pattern-not: child_process.execSync("...", ...)
+          - pattern-not: child_process.spawn("...", ...)
+          - pattern-not: child_process.spawnSync("...", ...)
+      - patterns:
+          - pattern-either:
+              - pattern: exec($CMD, ...)
+              - pattern: execSync($CMD, ...)
+              - pattern: spawn($CMD, ...)
+              - pattern: spawnSync($CMD, ...)
+          - pattern-not: exec("...", ...)
+          - pattern-not: execSync("...", ...)
+          - pattern-not: spawn("...", ...)
+          - pattern-not: spawnSync("...", ...)

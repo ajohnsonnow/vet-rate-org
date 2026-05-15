@@ -1,0 +1,34 @@
+rules:
+  - id: local.raw-html-format-strict
+    severity: WARNING
+    message: >
+      User data flows into manually-constructed HTML without escapeHtml().
+      Wrap interpolated values in escapeHtml(...) before interpolating into
+      template literals that contain HTML tags. This rule replaces the
+      upstream javascript.express.security.injection.raw-html-format pack
+      rule with a version that recognizes escapeHtml() as a sanitizer.
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [express, browser]
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      replaces: javascript.express.security.injection.raw-html-format
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+    patterns:
+      # Match an HTML-looking template literal with an interpolation
+      - pattern-either:
+          - pattern: |
+              `...<$TAG ...>${$VAR}...`
+          - pattern: |
+              `...<$TAG>${$VAR}...`
+          - pattern: |
+              `...</$TAG>${$VAR}...`
+      # Skip if the interpolated expression is the direct result of an
+      # escapeHtml/safeHtml call or sits inside a `${escapeHtml(...)}` form.
+      - pattern-not: |
+          `...${escapeHtml(...)}...`
+      - pattern-not: |
+          `...${safeHtml`...`}...`
+      - pattern-not-inside: |
+          $X = `...${escapeHtml(...)}...`

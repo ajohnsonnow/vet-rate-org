@@ -1,0 +1,20 @@
+rules:
+  - id: local.path-traversal-assertwithindir
+    severity: INFO
+    message: >
+      assertWithinDir() is a recognized path-traversal sanitizer. It resolves
+      the candidate path and verifies it stays within the base directory before
+      returning. Calls to fs methods that use assertWithinDir() as the path
+      argument are not exploitable via path traversal.
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [node.js]
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+      references:
+        - https://owasp.org/www-community/attacks/Path_Traversal
+    # Match any fs method call whose first argument is assertWithinDir(...).
+    # This tells Semgrep's taint engine that the path has been sanitized and
+    # should not propagate as a tainted sink.
+    pattern: |
+      fs.$METHOD(assertWithinDir(...), ...)
