@@ -20,6 +20,8 @@ import {
   VA_ENDPOINTS,
   VA_SCOPES,
   STORAGE_KEYS,
+  isVaApiEnabled,
+  VaApiDisabledError,
 } from "../config/vaAuth";
 
 // ============================================================================
@@ -203,6 +205,9 @@ export function useVaAuth() {
    * Refresh the access token using the refresh token
    */
   const refreshAccessToken = async (refreshToken) => {
+    if (!isVaApiEnabled()) {
+      throw new VaApiDisabledError();
+    }
     console.log("[VA Auth] Refreshing access token...");
 
     const response = await fetch(VA_ENDPOINTS.token, {
@@ -242,6 +247,12 @@ export function useVaAuth() {
     setIsLoading(true);
 
     try {
+      if (!isVaApiEnabled()) {
+        throw new VaApiDisabledError(
+          "VA login is disabled pending re-credentialing. Set VITE_VA_API_ENABLED=true once access is restored.",
+        );
+      }
+
       // Validate configuration
       if (!VA_AUTH_CONFIG.clientId) {
         throw new Error("Missing VA Client ID. Check your .env file.");
@@ -292,6 +303,12 @@ export function useVaAuth() {
     setIsLoading(true);
 
     try {
+      if (!isVaApiEnabled()) {
+        throw new VaApiDisabledError(
+          "VA OAuth callback handled while API surface is disabled.",
+        );
+      }
+
       // Verify state to prevent CSRF
       const storedState = sessionStorage.getItem(STORAGE_KEYS.STATE);
 

@@ -19,6 +19,32 @@
  * @see https://developer.va.gov/explore/api/veteran-service-history-and-eligibility/authorization-code
  */
 
+// Master switch for the entire VA API surface. Default off pending re-credentialing.
+// See .env.example § "VA.gov API integration master switch" for the re-enable runbook.
+export const VA_API_ENABLED =
+  String(import.meta.env.VITE_VA_API_ENABLED ?? "false").toLowerCase() ===
+  "true";
+
+export function isVaApiEnabled() {
+  return VA_API_ENABLED;
+}
+
+export class VaApiDisabledError extends Error {
+  constructor(
+    message = "VA API surface is disabled. Set VITE_VA_API_ENABLED=true to re-enable.",
+  ) {
+    super(message);
+    this.name = "VaApiDisabledError";
+    this.code = "VA_API_DISABLED";
+  }
+}
+
+export function assertVaApiEnabled() {
+  if (!VA_API_ENABLED) {
+    throw new VaApiDisabledError();
+  }
+}
+
 // Read from environment variables (set in .env file)
 export const VA_AUTH_CONFIG = {
   clientId: import.meta.env.VITE_VA_AUTH_ID,
@@ -109,7 +135,9 @@ export const STORAGE_KEYS = /* @__PURE__ */ (() => {
 })();
 
 // Check if VA integration is configured (without logging errors)
+// Returns false whenever the master switch is off, regardless of credential presence.
 export function isVaIntegrationConfigured() {
+  if (!VA_API_ENABLED) return false;
   return !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri);
 }
 
@@ -166,6 +194,13 @@ export function getVaConfigStatus() {
 
 // Validate configuration (logs errors - use for login attempts)
 export function validateConfig() {
+  if (!VA_API_ENABLED) {
+    console.warn(
+      "[VA Auth] VA API surface is disabled (VITE_VA_API_ENABLED=false). " +
+        "Login flow short-circuited pending re-credentialing.",
+    );
+    return false;
+  }
   if (!VA_AUTH_CONFIG.clientId) {
     console.error("[VA Auth] Missing VITE_VA_AUTH_ID environment variable");
     console.error(

@@ -116,6 +116,7 @@ import VaIntegrationTest from "./components/VaIntegrationTest";
 import VaSandboxTest from "./components/VaSandboxTest";
 import DemoDashboard from "./components/DemoDashboard";
 import { VaApiStatusBanner } from "./components/VaApiStatus";
+import { isVaApiEnabled } from "./config/vaAuth";
 import { MobileSaveReminder } from "./components/PacketPersistence";
 // 🎮 Easter Egg: Stress Relief Division (Type IDDQD anywhere to activate)
 import StressReliefDivision from "./components/StressReliefDivision";
@@ -435,8 +436,8 @@ function App() {
         e.preventDefault();
         setShowCommandSearch(true);
       }
-      // Ctrl+Shift+D: Open Demo Dashboard
-      if (e.ctrlKey && e.shiftKey && e.key === "D") {
+      // Ctrl+Shift+D: Open Demo Dashboard (gated to VA-API surface)
+      if (e.ctrlKey && e.shiftKey && e.key === "D" && isVaApiEnabled()) {
         e.preventDefault();
         setShowDemoDashboard(true);
       }
@@ -1120,8 +1121,8 @@ function App() {
       {/* Disclaimer Splash - shows on first visit */}
       <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
 
-      {/* VA API Status Banner - shows when VA APIs have issues */}
-      <VaApiStatusBanner />
+      {/* VA API Status Banner — only when the VA-API surface is enabled */}
+      {isVaApiEnabled() && <VaApiStatusBanner />}
 
       {/* Mobile device notice */}
       <MobileNotice />
@@ -1268,7 +1269,9 @@ function App() {
         onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
-        onVaIntegrationDemoClick={() => setShowVaIntegrationDemo(true)}
+        onVaIntegrationDemoClick={
+          isVaApiEnabled() ? () => setShowVaIntegrationDemo(true) : undefined
+        }
         onBackupManagerClick={() => setShowBackupManager(true)}
         onCloudSyncClick={() => setShowCloudSyncManager(true)}
         onAISettingsClick={() => setShowAISettings(true)}
@@ -3332,17 +3335,17 @@ function App() {
       )}
 
       {/* VA Integration Demo Dashboard (for Production Access Demo) */}
-      {showVaIntegrationDemo && (
+      {isVaApiEnabled() && showVaIntegrationDemo && (
         <VaIntegrationTest onClose={() => setShowVaIntegrationDemo(false)} />
       )}
 
       {/* VA Sandbox Test Dashboard (Comprehensive API Validation) */}
-      {showVaSandboxTest && (
+      {isVaApiEnabled() && showVaSandboxTest && (
         <VaSandboxTest onClose={() => setShowVaSandboxTest(false)} />
       )}
 
       {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
-      {showDemoDashboard && (
+      {isVaApiEnabled() && showDemoDashboard && (
         <DemoDashboard onClose={() => setShowDemoDashboard(false)} />
       )}
 
