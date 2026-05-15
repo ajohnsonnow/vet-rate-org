@@ -3,6 +3,24 @@
 @tailwind utilities;
 
 /* ============================================
+   ACCESSIBILITY — prefers-reduced-motion (Sprint 5 / WCAG 2.3.3)
+   Honor the OS-level "Reduce motion" preference. Set every animation /
+   transition to near-zero so vestibular-sensitive users (TBI, migraine,
+   PTSD-related visual hypersensitivity) aren't subjected to motion they
+   didn't ask for. Targets veterans specifically — TBI is high prevalence.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
    MOBILE OPTIMIZATION
    iOS auto-zoom prevention, touch targets, safe areas
    ============================================ */
