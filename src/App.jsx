@@ -308,7 +308,6 @@ function App() {
 
   // IndexedDB Migration State
   const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationComplete, setMigrationComplete] = useState(false);
 
   const [capSimulatorResults, setCapSimulatorResults] = useState([]);
   // LIVE OPS: Debug dump handler (Easter egg)
@@ -454,17 +453,14 @@ function App() {
           }
 
           setIsMigrating(false);
-          setMigrationComplete(true);
         } else {
           console.log(
             "✅ IndexedDB Migration: Already complete, using IndexedDB",
           );
-          setMigrationComplete(true);
         }
       } catch (error) {
         console.error("❌ IndexedDB Migration: Critical error", error);
         setIsMigrating(false);
-        setMigrationComplete(true); // Continue anyway
       }
     };
 
