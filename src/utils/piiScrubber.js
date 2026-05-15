@@ -1,162 +1,203 @@
 /**
- * PII Scrubber - Client-Side Privacy Firewall
- * Removes personally identifiable information before data leaves the browser
+ * PII Scrubber — Client-Side Privacy Firewall
  *
- * This runs 100% locally - nothing is sent to any server for analysis
+ * Removes personally identifiable information before data leaves the browser
+ * (e.g., before being interpolated into an LLM prompt or fed to a model that
+ * may emit text to the DOM). Runs 100% locally — nothing is sent to any
+ * server for analysis.
+ *
+ * Veteran-specific PII categories handled in addition to standard:
+ *   - VA file number (legacy "C" file numbers + 8–9 digit standalones)
+ *   - EDIPI / DOD ID (10 digits)
+ *   - MRN (medical record number)
+ *
+ * Sprint 3 hardening (commit forthcoming):
+ *   - Pattern application reordered longest-first to prevent the SSN
+ *     9-digit catchall from consuming VA files / phones / EDIPIs.
+ *   - `containsPII` / `analyzePII` now reset `lastIndex` before each `.test()`
+ *     call (the /g flag makes `.test()` stateful — a known JS gotcha that
+ *     caused intermittent false negatives).
+ *   - `scrubAndSpotlight()` added for the prompt-assembly path: scrubs PII
+ *     and wraps the result in `<untrusted_content>…</untrusted_content>` so
+ *     downstream LLM prompts can rely on the delimiter to treat the content
+ *     as data, not instruction (lethal-trifecta defense).
  */
 
-// Regex patterns for common PII
+const SPOTLIGHT_OPEN = "<untrusted_content>";
+const SPOTLIGHT_CLOSE = "</untrusted_content>";
+
+// Pattern application order matters: longest / most-specific first so the
+// less-specific catchalls don't consume tokens they shouldn't. Listed in the
+// order `scrubPII` applies them.
 const PII_PATTERNS = {
-  // SSN patterns (XXX-XX-XXXX or XXXXXXXXX)
-  ssn: [/\b\d{3}-\d{2}-\d{4}\b/g, /\b\d{9}\b/g],
-
-  // Phone numbers (various formats)
-  phone: [
-    /\b(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,
-    /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
-  ],
-
-  // Email addresses
-  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-
-  // Credit card numbers (basic pattern)
+  // Credit cards — 16 digits with optional separators. Highest specificity.
   creditCard: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
 
-  // Dates of birth (various formats)
-  dob: [
-    /\b(0[1-9]|1[0-2])[/-](0[1-9]|[12]\d|3[01])[/-](\d{2}|\d{4})\b/g,
-    /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g,
+  // Phone numbers (international + US formats). Run before SSN/EDIPI to
+  // claim the 10-digit space.
+  phone: [
+    /\b\+\d{1,2}\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g, // +1 (555) 123-4567
+    /\(\d{3}\)\s?\d{3}[\s.-]?\d{4}\b/g, // (555) 123-4567
+    /\b\d{3}[-.\s]\d{3}[-.\s]\d{4}\b/g, // 555-123-4567 / 555.123.4567 / 555 123 4567
   ],
 
-  // EDIPI / DOD ID numbers (10 digits)
+  // EDIPI / DOD ID — exactly 10 digits, no separators. Runs before SSN.
   edipi: /\b\d{10}\b/g,
 
-  // Full addresses (basic pattern - street numbers and names)
+  // VA file numbers — "C" prefix with 8–9 digits is canonical legacy form.
+  // Standalone 8–9 digit IDs go through `vaFileStandalone` in aggressive mode.
+  vaFile: /\bC[-\s]?\d{8,9}\b/gi,
+  vaFileStandalone: /\b\d{8,9}\b/g,
+
+  // SSN — XXX-XX-XXXX is the canonical form. The bare 9-digit form is
+  // only enabled in aggressive mode because it false-positives on VA file
+  // numbers, claim IDs, etc. (which is exactly why `vaFile` runs first).
+  ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
+  ssnBare: /\b\d{9}\b/g,
+
+  // MRN — medical record number, labeled or numeric.
+  mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
+  mrnLabeled: /\bmedical\s+record\s+(?:#|no\.?|number)?\s*:?\s*\d{6,12}\b/gi,
+
+  // Email — RFC-5322-lite. Runs late because /-chars don't overlap with the
+  // numeric patterns above.
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+
+  // Dates of birth — labeled or unlabeled numeric. Aggressive only.
+  dobLabeled:
+    /\b(?:DOB|D\.O\.B\.|date\s+of\s+birth|born(?:\s+on)?)\s*:?\s*(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{2,4})\b/gi,
+  dob: [
+    /\b(0[1-9]|1[0-2])[/-](0[1-9]|[12]\d|3[01])[/-](\d{2}|\d{4})\b/g, // MM/DD/YYYY
+    /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g, // DD/MM/YYYY
+  ],
+
+  // Street addresses — US format. Aggressive only.
   address:
-    /\b\d+\s+[A-Za-z0-9\s]+\b(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Circle|Cir|Way|Plaza|Place|Pl)\b/gi,
+    /\b\d+\s+[A-Za-z0-9\s]+\b(?:Street|St\.?|Avenue|Ave\.?|Road|Rd\.?|Boulevard|Blvd\.?|Lane|Ln\.?|Drive|Dr\.?|Court|Ct\.?|Circle|Cir\.?|Way|Plaza|Place|Pl\.?)\b/gi,
+
+  // PO Box — aggressive only.
+  poBox: /\bP\.?\s*O\.?\s*Box\s+\d+\b/gi,
 };
 
 /**
- * Scrub PII from text
- * @param {string} text - Input text to scrub
- * @param {Object} options - Configuration options
- * @returns {Object} { scrubbedText: string, piiFound: boolean, details: Array }
+ * Reset a regex's lastIndex before a stateful operation. JavaScript's /g flag
+ * makes `.test()` and `.exec()` stateful — calling them in a hot path (or in
+ * a `.some()` predicate) can alternate true/false against the same input.
+ * @param {RegExp} re
+ * @returns {RegExp} the same regex with lastIndex reset
+ */
+const reset = (re) => {
+  re.lastIndex = 0;
+  return re;
+};
+
+/**
+ * Scrub PII from text.
+ * @param {string} text
+ * @param {Object} options
+ * @param {boolean} [options.aggressive=false] also scrub bare SSN, bare VA
+ *   file numbers, DOB, addresses, PO Boxes.
+ * @param {boolean} [options.preservePartial=false] keep last 4 digits of
+ *   SSN / phone for human-readable debugging.
+ * @param {Array<{pattern: RegExp, label: string}>} [options.customPatterns]
+ * @returns {{scrubbedText: string, piiFound: boolean, details: Array<{type: string, count: number}>, originalLength: number, scrubbedLength: number}}
  */
 export const scrubPII = (text, options = {}) => {
   if (!text || typeof text !== "string") {
-    return { scrubbedText: text, piiFound: false, details: [] };
+    return {
+      scrubbedText: text,
+      piiFound: false,
+      details: [],
+      originalLength: 0,
+      scrubbedLength: 0,
+    };
   }
 
   const {
-    aggressive = false, // If true, also scrubs potential DOB and addresses
-    preservePartial = false, // If true, shows last 4 digits of SSN/phone
-    customPatterns = [], // Additional regex patterns to check
+    aggressive = false,
+    preservePartial = false,
+    customPatterns = [],
   } = options;
 
   let scrubbed = text;
   const details = [];
   let piiFound = false;
 
-  // SSN Scrubbing
-  PII_PATTERNS.ssn.forEach((pattern) => {
-    const matches = scrubbed.match(pattern);
-    if (matches) {
-      piiFound = true;
-      details.push({ type: "SSN", count: matches.length });
-      if (preservePartial) {
-        scrubbed = scrubbed.replace(pattern, (match) => {
-          const digits = match.replace(/\D/g, "");
-          return `XXX-XX-${digits.slice(-4)}`;
-        });
-      } else {
-        scrubbed = scrubbed.replace(pattern, "[REDACTED_SSN]");
-      }
-    }
-  });
+  const applyPattern = (pattern, type, replacer) => {
+    const matches = scrubbed.match(reset(pattern));
+    if (!matches) return;
+    piiFound = true;
+    details.push({ type, count: matches.length });
+    scrubbed = scrubbed.replace(reset(pattern), replacer);
+  };
 
-  // Phone Number Scrubbing
+  // 1. Credit cards (16 digits) — highest specificity.
+  applyPattern(PII_PATTERNS.creditCard, "Credit Card", "[REDACTED_CC]");
+
+  // 2. Phones (10 digits with separators or international).
   PII_PATTERNS.phone.forEach((pattern) => {
-    const matches = scrubbed.match(pattern);
-    if (matches) {
-      piiFound = true;
-      details.push({ type: "Phone", count: matches.length });
-      if (preservePartial) {
-        scrubbed = scrubbed.replace(pattern, (match) => {
-          const digits = match.replace(/\D/g, "");
-          return `XXX-XXX-${digits.slice(-4)}`;
-        });
-      } else {
-        scrubbed = scrubbed.replace(pattern, "[REDACTED_PHONE]");
-      }
-    }
+    applyPattern(pattern, "Phone", (match) => {
+      if (!preservePartial) return "[REDACTED_PHONE]";
+      const digits = match.replace(/\D/g, "");
+      return `XXX-XXX-${digits.slice(-4)}`;
+    });
   });
 
-  // Email Scrubbing
-  const emailMatches = scrubbed.match(PII_PATTERNS.email);
-  if (emailMatches) {
-    piiFound = true;
-    details.push({ type: "Email", count: emailMatches.length });
-    if (preservePartial) {
-      scrubbed = scrubbed.replace(PII_PATTERNS.email, (match) => {
-        const [user, domain] = match.split("@");
-        return `${user[0]}***@${domain}`;
-      });
-    } else {
-      scrubbed = scrubbed.replace(PII_PATTERNS.email, "[REDACTED_EMAIL]");
-    }
-  }
+  // 3. MRN labeled forms — run BEFORE EDIPI so "Medical Record Number: NNNN"
+  //    keeps the MRN label even when the digits would otherwise match EDIPI.
+  applyPattern(PII_PATTERNS.mrn, "MRN", "[REDACTED_MRN]");
+  applyPattern(PII_PATTERNS.mrnLabeled, "MRN", "[REDACTED_MRN]");
 
-  // Credit Card Scrubbing
-  const ccMatches = scrubbed.match(PII_PATTERNS.creditCard);
-  if (ccMatches) {
-    piiFound = true;
-    details.push({ type: "Credit Card", count: ccMatches.length });
-    scrubbed = scrubbed.replace(PII_PATTERNS.creditCard, "[REDACTED_CC]");
-  }
+  // 4. EDIPI (exactly 10 digits, no separator) — after phone + MRN.
+  applyPattern(PII_PATTERNS.edipi, "EDIPI/DOD ID", "[REDACTED_DOD_ID]");
 
-  // EDIPI Scrubbing (only if aggressive mode)
+  // 4. VA file numbers — "C" prefix form always; bare 8–9 digit form only
+  //    in aggressive mode.
+  applyPattern(PII_PATTERNS.vaFile, "VA File", "[REDACTED_VAFILE]");
   if (aggressive) {
-    const edipiMatches = scrubbed.match(PII_PATTERNS.edipi);
-    if (edipiMatches) {
-      piiFound = true;
-      details.push({ type: "EDIPI/DOD ID", count: edipiMatches.length });
-      scrubbed = scrubbed.replace(PII_PATTERNS.edipi, "[REDACTED_ID]");
-    }
+    applyPattern(PII_PATTERNS.vaFileStandalone, "VA File", "[REDACTED_VAFILE]");
   }
 
-  // DOB Scrubbing (only if aggressive mode)
+  // 5. SSN — canonical form always; bare 9-digit form only in aggressive
+  //    mode to avoid swallowing veteran-specific IDs already handled above.
+  applyPattern(PII_PATTERNS.ssn, "SSN", (match) => {
+    if (!preservePartial) return "[REDACTED_SSN]";
+    const digits = match.replace(/\D/g, "");
+    return `XXX-XX-${digits.slice(-4)}`;
+  });
+  if (aggressive) {
+    applyPattern(PII_PATTERNS.ssnBare, "SSN", "[REDACTED_SSN]");
+  }
+
+  // 7. Email — late because @ doesn't overlap with the numeric patterns.
+  applyPattern(PII_PATTERNS.email, "Email", (match) => {
+    if (!preservePartial) return "[REDACTED_EMAIL]";
+    const [user, domain] = match.split("@");
+    return `${user[0]}***@${domain}`;
+  });
+
+  // 8. DOB — labeled form always, bare numeric only in aggressive mode.
+  applyPattern(PII_PATTERNS.dobLabeled, "Date of Birth", "[REDACTED_DOB]");
   if (aggressive) {
     PII_PATTERNS.dob.forEach((pattern) => {
-      const matches = scrubbed.match(pattern);
-      if (matches) {
-        piiFound = true;
-        details.push({ type: "Date of Birth", count: matches.length });
-        scrubbed = scrubbed.replace(pattern, "[REDACTED_DOB]");
-      }
+      applyPattern(pattern, "Date of Birth", "[REDACTED_DOB]");
     });
   }
 
-  // Address Scrubbing (only if aggressive mode)
+  // 9. Address (aggressive only — high false-positive rate on street-named
+  //    proper nouns).
   if (aggressive) {
-    const addressMatches = scrubbed.match(PII_PATTERNS.address);
-    if (addressMatches) {
-      piiFound = true;
-      details.push({ type: "Address", count: addressMatches.length });
-      scrubbed = scrubbed.replace(PII_PATTERNS.address, "[REDACTED_ADDRESS]");
-    }
+    applyPattern(PII_PATTERNS.address, "Address", "[REDACTED_ADDRESS]");
+    applyPattern(PII_PATTERNS.poBox, "Address", "[REDACTED_ADDRESS]");
   }
 
-  // Custom patterns
+  // 10. Custom patterns last (project-specific overrides).
   customPatterns.forEach(({ pattern, label }) => {
-    const matches = scrubbed.match(pattern);
-    if (matches) {
-      piiFound = true;
-      details.push({ type: label || "Custom", count: matches.length });
-      scrubbed = scrubbed.replace(
-        pattern,
-        `[REDACTED_${label?.toUpperCase() || "INFO"}]`,
-      );
-    }
+    applyPattern(
+      pattern,
+      label || "Custom",
+      `[REDACTED_${(label || "INFO").toUpperCase()}]`,
+    );
   });
 
   return {
@@ -169,78 +210,87 @@ export const scrubPII = (text, options = {}) => {
 };
 
 /**
- * Quick check if text contains PII without scrubbing
- * @param {string} text - Text to check
+ * Quick boolean check — does this text contain any PII?
+ * @param {string} text
  * @returns {boolean}
  */
 export const containsPII = (text) => {
   if (!text || typeof text !== "string") return false;
-
-  // Check SSN
-  if (PII_PATTERNS.ssn.some((pattern) => pattern.test(text))) return true;
-
-  // Check Phone
-  if (PII_PATTERNS.phone.some((pattern) => pattern.test(text))) return true;
-
-  // Check Email
-  if (PII_PATTERNS.email.test(text)) return true;
-
-  // Check Credit Card
-  if (PII_PATTERNS.creditCard.test(text)) return true;
-
-  return false;
+  const result = scrubPII(text);
+  return result.piiFound;
 };
 
 /**
- * Analyze text for PII without modifying it
- * @param {string} text - Text to analyze
- * @returns {Object} Analysis results
+ * Analyze text for PII without modifying it.
+ * @param {string} text
+ * @returns {{hasPII: boolean, types: string[], score: number, riskLevel: 'none'|'low'|'medium'|'high'}}
  */
 export const analyzePII = (text) => {
   if (!text || typeof text !== "string") {
-    return { hasPII: false, types: [], score: 0 };
+    return { hasPII: false, types: [], score: 0, riskLevel: "none" };
   }
 
-  const types = [];
-  let score = 0;
+  // Run the full scrubber (in non-aggressive mode) to get an authoritative
+  // detail set, then map types to risk scores. This avoids the /g `.test()`
+  // statefulness pitfall entirely by going through the same code path as
+  // scrubPII.
+  const { piiFound, details } = scrubPII(text);
 
-  // Check each pattern
-  if (PII_PATTERNS.ssn.some((p) => p.test(text))) {
-    types.push("SSN");
-    score += 10; // Highest risk
-  }
+  const SCORES = {
+    SSN: 10,
+    "Credit Card": 10,
+    "VA File": 9,
+    "EDIPI/DOD ID": 8,
+    MRN: 8,
+    Phone: 5,
+    Email: 3,
+    "Date of Birth": 4,
+    Address: 4,
+  };
 
-  if (PII_PATTERNS.phone.some((p) => p.test(text))) {
-    types.push("Phone");
-    score += 5;
-  }
-
-  if (PII_PATTERNS.email.test(text)) {
-    types.push("Email");
-    score += 3;
-  }
-
-  if (PII_PATTERNS.creditCard.test(text)) {
-    types.push("Credit Card");
-    score += 10;
-  }
-
-  if (PII_PATTERNS.edipi.test(text)) {
-    types.push("DOD ID");
-    score += 7;
-  }
+  const types = [...new Set(details.map((d) => d.type))];
+  const score = types.reduce((sum, t) => sum + (SCORES[t] || 1), 0);
 
   return {
-    hasPII: types.length > 0,
+    hasPII: piiFound,
     types,
-    score, // 0 = clean, 10+ = high risk
+    score,
     riskLevel:
       score === 0 ? "none" : score < 5 ? "low" : score < 10 ? "medium" : "high",
   };
 };
 
+/**
+ * Scrub PII and wrap the result in spotlight delimiters for safe LLM
+ * prompt interpolation. The delimiters tell the model to treat the content
+ * as data, never as instructions — the core lethal-trifecta defense.
+ *
+ * Use this on any text from outside the trusted prompt boundary: OCR
+ * output, PDF text, user-pasted content, web-scraped legal sources,
+ * past-claim documents.
+ *
+ * @param {string} text
+ * @param {Object} [options] forwarded to `scrubPII`
+ * @returns {{scrubbedText: string, piiFound: boolean, details: Array, originalLength: number, scrubbedLength: number, spotlit: string}}
+ */
+export const scrubAndSpotlight = (text, options = {}) => {
+  const result = scrubPII(text, options);
+  const spotlit = `${SPOTLIGHT_OPEN}\n${result.scrubbedText ?? ""}\n${SPOTLIGHT_CLOSE}`;
+  return { ...result, spotlit };
+};
+
+/**
+ * Lower-level: wrap an already-scrubbed string in spotlight delimiters.
+ * @param {string} text
+ * @returns {string}
+ */
+export const spotlight = (text) =>
+  `${SPOTLIGHT_OPEN}\n${text ?? ""}\n${SPOTLIGHT_CLOSE}`;
+
 export default {
   scrubPII,
   containsPII,
   analyzePII,
+  scrubAndSpotlight,
+  spotlight,
 };
