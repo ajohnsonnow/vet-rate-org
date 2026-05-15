@@ -119,12 +119,12 @@ End-of-Sprint-3 snapshot:
 | 27 | pwa-privacy-best-practices | Frontend/privacy | partial | high | [public/manifest.json](../public/manifest.json) valid (192/512 + maskable + screenshots); no `public/sw.js`; no offline cache strategy; no `/offline.html` fallback | 5 | S5 adds service worker (stale-while-revalidate for data, cache-first for assets) + offline shell. |
 | 28 | performance-engineering-best-practices | Performance | gap | critical | Initial JS ~3.4 MB ungz / ~825 KB gz — 4× over 200 KB budget; [vite.config.js](../vite.config.js) has 19 manual chunks but App.jsx monolith blocks tree-shaking; no bundle analyzer; no web-vitals measurement; lazy `<img>` absent (only 13 `<img>` tags across 158 components) | 5 | **Critical (perf)** — S5 adds `rollup-plugin-visualizer` + budget gate, code-splits AI/vision modules, preloads with `fetchpriority`. |
 | 29 | html-css-best-practices | Frontend | partial | med | [src/index.css](../src/index.css) has mobile-first + safe-area-insets; Tailwind dark mode = `class`; ThemeContext supports 4 modes; **no** `prefers-reduced-motion` rules; no system-preference fallback on first load | 5 | S5 adds `@media (prefers-reduced-motion: reduce)` to all transitions. |
-| 30 | testing | Testing | partial | high | ~16 unit-test files vs ~298 source files (~5%); [vitest.config.js:14-22](../vitest.config.js#L14) thresholds at 25–35% (target 70% per plan); 84 tests added in `17e7c32` (Florence-2 + SmolVLM); 4 Playwright specs in [tests/e2e](../tests/e2e/) | 4 | S4 raises to ≥70% global, ≥85% on named high-risk modules. |
+| 30 | testing | Testing | partial | high | 32 unit-test files (Sprint 4.1 consolidation); aiSystemPrompts.js now has 49 dedicated tests (Sprint 4.4). 4 Playwright specs covering smoke + search + safety + a11y (20 E2E tests). vitest thresholds still at 25–35% in [vitest.config.js](../vitest.config.js); raise to 70% after coverage push completes. | 4 | S4 close: raise thresholds + add tests for pdfFormFiller, claimNavigatorEngine, llmRecommendations, advancedOCR. |
 | 31 | codebase-audit-best-practices | DX | partial | med | This document and [SPRINT_PLAN.md](./SPRINT_PLAN.md) ARE the audit artifact; ESLint configured but mostly warnings, not errors; no TS strict mode enforced in CI; magic numbers scattered in CSS + config | 4 | S4 enables ESLint `error` for security rules + TS strict mode in CI. |
 | 32 | plan-audit-best-practices | DX | n/a | low | Meta-guide for sprint-plan docs; we have a plan in [SPRINT_PLAN.md](./SPRINT_PLAN.md); not applicable to running code | — | — |
 | 33 | preflight-checks-best-practices | DevSecOps | partial | high | [scripts/preflight.js](../scripts/preflight.js) covers Phase 1 fix, Phase 2 prep, Phase 3 validate (lint/test/E2E/build/SECURITY/gitleaks/semgrep/contract/a11y/docs); missing: markdownlint, link validation, dead-code (knip), license auditor, SBOM (syft), Lighthouse-CI | 8 | S8 extends with the missing checks. |
 | 34 | ide-tooling-best-practices | DX | partial | med | [.vscode/settings.json](../.vscode/settings.json) present; no `.editorconfig`; no explicit `.prettierrc`; no `.vscode/tasks.json` / `launch.json` / `extensions.json`; Husky + lint-staged wired | 8 | S8 adds the missing dotfiles. Light lift. |
-| 35 | file-organization-best-practices | DX | partial | high | Root has ~37 files (target ≤15); three test dirs coexist (`src/__tests__/` + `src/test/` + `tests/`); [App.jsx](../src/App.jsx) 181 KB; 159 components flat in `src/components/`; ~30 scripts flat in `scripts/` | 4 | S4 consolidates test dirs, splits components by feature region, organizes scripts. |
+| 35 | file-organization-best-practices | DX | partial | med | Test-dir consolidation done (Sprint 4.1 commit `2faba8d`): `src/test/` removed; vitest now uses only `src/__tests__/`; Playwright keeps `tests/`. Root file count + App.jsx 181 KB monolith remain. | 4 | S4 App.jsx feature-region split is deferred to a focused session (per user instruction). |
 | 36 | developer-experience-best-practices | DX | partial | med | Comprehensive [README.md](../README.md); 45+ npm scripts; [CONTRIBUTING.md](../CONTRIBUTING.md); [.env.example](../.env.example); Husky wired; no `.devcontainer.json`; no Makefile | 8 | S8 adds devcontainer + Makefile for one-command setup. |
 | 37 | technical-writing-best-practices | Docs | partial | med | [docs/index.md](./index.md); 108 doc files in [docs/](.); no Diátaxis structure; no doc-site generator (VitePress/Docusaurus); no markdownlint in preflight | 8 | S8 adds markdownlint + optional doc-site. |
 | 38 | observability-monitoring-best-practices | Ops | gap | med | ~1,215 `console.log` calls in `src/`; no OpenTelemetry; no structured logging; no Sentry / Datadog (intentional under zero-knowledge stance); no health endpoints; no SLO burn-rate alerting; error boundary present but no centralized error tracking | 8 | S8 adds privacy-preserving local audit log + optional opt-in error reporting. |
@@ -146,6 +146,35 @@ End-of-Sprint-3 snapshot:
 5. Assign target sprint (3–8). Security-critical findings move to Sprint 3 regardless of original placement; non-security critical (perf, supply-chain) stay in their natural sprint with a note.
 6. Update Counts tables at top.
 7. Add a bullet to the Executive summary if the finding is one of the top ~20.
+
+---
+
+## Sprint 4 partial close
+
+**Landed:**
+
+- `2faba8d` — Test-tree consolidation: src/test/ removed; 14 files reorganized
+  into `src/__tests__/utils/`; 5 legacy duplicates renamed `*Legacy.test.js`
+  (kept running until hand-merge). Vitest setup file moved to canonical
+  location with React-Testing-Library cleanup hook. 517/517 tests pass.
+- `7955f7a` — aiSystemPrompts.js coverage: 49 new tests covering spotlight,
+  untrustedSection, detectDecisionText, constructSafePrompt, validateAIResponse
+  (FORBIDDEN_PHRASES + CFR grounding + warnings), pattern-regex regression
+  guards, and ANTI_HALLUCINATION_SUFFIX content guarantees. First dedicated
+  test file for this 1499-LOC security-critical module.
+
+**Deferred to a focused session (per user "pause before S4.5" instruction):**
+
+- App.jsx (181 KB / 3,913 LOC / 93 useState) feature-region extraction into
+  src/features/<region>/. Highest blast-radius change in the plan; needs eyes
+  on each region as it lands. Per-extraction Playwright golden paths land
+  alongside (not before).
+- Vitest threshold bump to ≥70% — premature without the coverage push it
+  enables. Hand-merge of the 5 `*Legacy.test.js` files into canonical also
+  deferred to that session.
+- Tests for pdfFormFiller (2933 LOC), claimNavigatorEngine (871), advancedOCR
+  (1021), dd214VisionParser (995), llmRecommendations (885) — all currently
+  untested. Sprint 4 follow-up.
 
 ---
 
