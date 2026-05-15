@@ -92,4 +92,25 @@ if (!capabilityResults.passed) {
       </ThemeProvider>
     </React.StrictMode>,
   );
+
+  // Register the service worker for offline shell (Sprint 5 / pwa-privacy).
+  // Production-only — dev mode bypasses the SW so HMR works correctly. The
+  // SW lives at public/service-worker.js and caches /index.html + core
+  // assets so the veteran can reach their saved data on a flaky network.
+  if (
+    import.meta.env.PROD &&
+    typeof navigator !== "undefined" &&
+    "serviceWorker" in navigator
+  ) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/service-worker.js")
+        .then((reg) => {
+          console.log("[SW] registered:", reg.scope);
+        })
+        .catch((err) => {
+          console.warn("[SW] registration failed:", err.message);
+        });
+    });
+  }
 }

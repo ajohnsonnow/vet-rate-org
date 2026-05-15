@@ -505,6 +505,24 @@ async function phaseValidate() {
     };
   });
 
+  // 5c. Bundle budget (Sprint 5). Non-blocking until App.jsx feature-region
+  // split (S4.5) brings the initial chunk under 300 KB gz. Flip
+  // STRICT_BUNDLE=true in CI after that lands.
+  await check("Bundle budget", () => {
+    const distExists = fs.existsSync(path.join(ROOT, "dist"));
+    if (!distExists) {
+      return { note: "dist/ missing — skipped (run after build)" };
+    }
+    const r = tryRun("node scripts/check-bundle-budget.mjs");
+    const breachMatch = /(\d+) budget breach/.exec(r.out);
+    if (breachMatch && breachMatch[1] !== "0") {
+      return {
+        note: `${breachMatch[1]} pre-existing breach(es) — tracked, fix in S4.5/S5`,
+      };
+    }
+    return { note: "all budgets met" };
+  });
+
   // 6. Contract enforcement
   //
   // Vulnerability findings are informational during Sprint 1–2 (pre-existing
