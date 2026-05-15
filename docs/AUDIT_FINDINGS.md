@@ -56,12 +56,17 @@ End-of-Sprint-3 snapshot. Sprint 2's audit pass surfaced 3 critical and 17 high 
 - `.work/` (transient JSONL between fetcher and chunker) added to `.gitignore`.
 - Known gaps deferred: M21-1 / CAVC / Fed-Cir fetchers remain unverified scaffolds (the canonical URL surfaces vary and need live probing); Parts 3, 19, 20 not yet fetched (Part 4 covers the highest-value content — the rating schedule). Both items belong to S7's cron-wiring step.
 
-**High-severity themes for Sprint 7 (RAG runtime + cron):**
+**Sprint 7 wins (closed 2026-05-15):**
 
-- Static [disabilityData.json](../src/data/disabilityData.json) carries a `lastVerifiedDate` but has no automated refresh.
-- No knowledge-monitoring registry (knowledge-sources.yaml) or changedetection on eCFR.
-- v0.1.0 index exists but is not wired into the runtime — no `src/services/legalRag.js` / `legalAnswerer.js` / `LegalCitation.jsx`.
-- M21-1 / CAVC / Fed-Cir fetchers still scaffolds (canonical-URL drift suspected — verify before promoting to cron).
+- [src/services/legalRag.js](../src/services/legalRag.js): lazy index loader (`loadManifest` → per-source `loadSource` on first hit), Q8 cosine via `cosineQ8(queryVec, bin, idx)`, top-K + threshold filter in `query()`. Embedder pipeline cached at the module level after first invocation.
+- [src/services/legalAnswerer.js](../src/services/legalAnswerer.js): PII-scrub → retrieve → `createDualLLM(generateAI)` extractor → synthesizer. Refuses ("I don't have a current citation that directly addresses that question") when retrieval is empty or no fact is applicable. Surfaces `injectionAttempt: true` when the extractor flags an instruction inside retrieved text.
+- [src/components/LegalCitation.jsx](../src/components/LegalCitation.jsx) + `LegalCitationList`: badge with citation, gov-domain-checked source link (`sanitizeUrl(url, { requireGov: true })`), `fetched_at` date, optional cosine score. `rel="noopener noreferrer"`.
+- [knowledge-sources.yaml](../knowledge-sources.yaml): registry of authoritative sources with `verified_status`, `last_verified`, and refresh cadences. Closes the knowledge-monitoring-best-practices registry gap on finding #16.
+- [.github/workflows/legal-ingestion.yml](../.github/workflows/legal-ingestion.yml): weekly cron (`0 4 * * 1` UTC) + `workflow_dispatch`. Runs `run-all.mjs`, opens a PR titled `chore(legal): refresh index → v{x.y.z}` on diff exit code 2, files a `legal-ingestion-stale` issue on any other non-zero exit. Diff artifact retained 30 days.
+- 32 new tests under `src/__tests__/services/` and `src/__tests__/components/LegalCitation.test.jsx`: cosine determinism, query() with mocked fetch+embedder, dim-mismatch refusal, refusal paths (zero chunks, no applicable fact, injection attempt), happy-path synthesis with citation extraction, PII-scrubbed query verification, link rendering with non-gov URL rejection, axe-clean rendering. Full suite: 591/591 across 37 files (up from 571/571 / 34).
+- Known gaps deferred: no integration into existing call sites ([claimNavigatorEngine.js](../src/utils/claimNavigatorEngine.js), [llmRecommendations.js](../src/utils/llmRecommendations.js)) — services exist standalone, wiring deferred to avoid regression risk on the unrelated existing claim-flow. `LegalKnowledgeFreshness.jsx` settings panel not built. Static-data cross-validation against the index moves to S8.
+
+**High-severity themes for Sprint 8 (supply chain + DevOps):**
 
 **High-severity themes for Sprint 8 (supply chain + DevOps):**
 
