@@ -40,6 +40,7 @@ import VisionSimulator from "./features/vision/VisionSimulator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
 import MusterCallFlow from "./features/muster-call/MusterCallFlow";
 import FeedbackHub from "./features/feedback/FeedbackHub";
+import LegalPages from "./features/legal/LegalPages";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -68,9 +69,6 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 // <LoadingBunker />. Components rendered unconditionally (Header, SearchBar,
 // CommandersChecklist, etc.) and safety-critical surfaces (CrisisListener,
 // update banner, What's-New modal) stay eager.
-const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicyPage"));
-const AboutUs = lazy(() => import("./components/AboutUs"));
-const ContactUs = lazy(() => import("./components/ContactUs"));
 const SecondaryScout = lazy(() => import("./components/SecondaryScout"));
 const SecondaryScoutLauncher = lazy(
   () => import("./components/SecondaryScoutLauncher"),
@@ -104,9 +102,6 @@ const WitnessBench = lazy(() => import("./components/WitnessBench"));
 const RiskAssessment = lazy(() => import("./components/RiskAssessment"));
 const TDIUBuilder = lazy(() => import("./components/TDIUBuilder"));
 const PACTActNavigator = lazy(() => import("./components/PACTActNavigator"));
-const TermsOfServicePage = lazy(
-  () => import("./components/TermsOfServicePage"),
-);
 const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
 const MillionDollarDashboard = lazy(
   () => import("./components/MillionDollarDashboard"),
@@ -186,10 +181,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showAboutUs, setShowAboutUs] = useState(false);
-  const [showContactUs, setShowContactUs] = useState(false);
-  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showSecondaryScoutLauncher, setShowSecondaryScoutLauncher] =
     useState(false);
   const [showSecondaryScout, setShowSecondaryScout] = useState(false);
@@ -308,6 +299,16 @@ function App() {
     const handler = () => setShowAISettings(false);
     window.addEventListener("openVisionSimulator", handler);
     return () => window.removeEventListener("openVisionSimulator", handler);
+  }, []);
+
+  // Bridge `openBugSquasher` event into local state. Extracted feature
+  // regions (LegalPages, etc.) dispatch this event instead of holding a
+  // direct setter reference. When BugSquasher itself is extracted, this
+  // listener moves with it.
+  useEffect(() => {
+    const handler = () => setShowBugSquasher(true);
+    window.addEventListener("openBugSquasher", handler);
+    return () => window.removeEventListener("openBugSquasher", handler);
   }, []);
 
   // Initialize error capture for bug reports
@@ -804,12 +805,6 @@ function App() {
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
 
-      // Modals
-      showPrivacyPolicy,
-      showAboutUs,
-      showContactUs,
-      showTermsOfService,
-
       // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
       currentModule: (() => {
         // Priority order: most specific tools first
@@ -858,10 +853,6 @@ function App() {
         if (showBackupManager) return "Backup Manager";
         if (showCloudSyncManager) return "Cloud Sync Manager";
         if (showAISettings) return "AI Command Center";
-        if (showPrivacyPolicy) return "Privacy Policy Modal";
-        if (showAboutUs) return "About Us Modal";
-        if (showContactUs) return "Contact Us Modal";
-        if (showTermsOfService) return "Terms of Service";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
       })(),
@@ -929,11 +920,6 @@ function App() {
       showCloudSyncManager,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
-      // Modals
-      showPrivacyPolicy,
-      showAboutUs,
-      showContactUs,
-      showTermsOfService,
     ],
   );
 
@@ -2524,7 +2510,9 @@ function App() {
                 absolutely free.
               </p>
               <button
-                onClick={() => setShowAboutUs(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openAboutUs"))
+                }
                 className="text-va-gold hover:underline text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-va-gold rounded"
               >
                 Learn More →
@@ -2539,7 +2527,9 @@ function App() {
               </p>
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => setShowPrivacyPolicy(true)}
+                  onClick={() =>
+                    window.dispatchEvent(new CustomEvent("openPrivacyPolicy"))
+                  }
                   className="text-va-gold hover:underline text-sm font-semibold text-left"
                 >
                   Privacy Policy →
@@ -2562,7 +2552,9 @@ function App() {
                 qualified professionals for specific guidance.
               </p>
               <button
-                onClick={() => setShowTermsOfService(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openTermsOfService"))
+                }
                 className="text-va-gold hover:underline text-sm font-semibold"
               >
                 Terms of Service →
@@ -2573,14 +2565,18 @@ function App() {
           <div className="border-t border-gray-700 pt-6">
             <div className="flex flex-wrap justify-center gap-4 mb-6">
               <button
-                onClick={() => setShowPrivacyPolicy(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openPrivacyPolicy"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 Privacy Policy
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowAboutUs(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openAboutUs"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 About Us
@@ -2601,14 +2597,18 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowContactUs(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openContactUs"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 Contact Us
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowTermsOfService(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openTermsOfService"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 Terms of Service
@@ -2684,27 +2684,8 @@ function App() {
           declared at the top of this file; the chunk is fetched on first
           open. <LoadingBunker /> is the shared fallback. */}
       <Suspense fallback={<LoadingBunker />}>
-        {showPrivacyPolicy && (
-          <PrivacyPolicy
-            onClose={() => setShowPrivacyPolicy(false)}
-            onReportBug={() => setShowBugSquasher(true)}
-          />
-        )}
-        {showAboutUs && (
-          <AboutUs
-            onClose={() => setShowAboutUs(false)}
-            onReportBug={() => setShowBugSquasher(true)}
-          />
-        )}
-        {showContactUs && (
-          <ContactUs
-            onClose={() => setShowContactUs(false)}
-            onReportBug={() => setShowBugSquasher(true)}
-          />
-        )}
-        {showTermsOfService && (
-          <TermsOfServicePage onClose={() => setShowTermsOfService(false)} />
-        )}
+        {/* Legal/info modals — Privacy, About, Contact, Terms (features/legal) */}
+        <LegalPages />
 
         {/* Secondary Scout Launcher */}
         {showSecondaryScoutLauncher && (
