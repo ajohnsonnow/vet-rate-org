@@ -39,6 +39,7 @@ import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import VisionSimulator from "./features/vision/VisionSimulator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
 import MusterCallFlow from "./features/muster-call/MusterCallFlow";
+import FeedbackHub from "./features/feedback/FeedbackHub";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -87,8 +88,6 @@ const SharkRadar = lazy(() => import("./components/SharkRadar"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
-const FeatureRequest = lazy(() => import("./components/FeatureRequest"));
-const CommunityRoadmap = lazy(() => import("./components/CommunityRoadmap"));
 const UserManual = lazy(() => import("./components/UserManual"));
 const StateBenefitHunter = lazy(
   () => import("./components/StateBenefitHunter"),
@@ -207,8 +206,6 @@ function App() {
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
-  const [showFeatureRequest, setShowFeatureRequest] = useState(false);
-  const [showCommunityRoadmap, setShowCommunityRoadmap] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
@@ -1129,9 +1126,13 @@ function App() {
         onAISettingsClick={() => setShowAISettings(true)}
         // Onboarding & Guides
         onWorkflowGuideClick={() => setShowWorkflowGuide(true)}
-        // Feature Request & Community Roadmap
-        onFeatureRequestClick={() => setShowFeatureRequest(true)}
-        onCommunityRoadmapClick={() => setShowCommunityRoadmap(true)}
+        // Feature Request & Community Roadmap — handled by FeedbackHub
+        onFeatureRequestClick={() =>
+          window.dispatchEvent(new CustomEvent("openFeatureRequest"))
+        }
+        onCommunityRoadmapClick={() =>
+          window.dispatchEvent(new CustomEvent("openCommunityRoadmap"))
+        }
       />
       <BuyMeCoffee
         show={hasSearched && results.length > 0}
@@ -3099,23 +3100,14 @@ function App() {
           <BugSquasher
             onClose={() => setShowBugSquasher(false)}
             appState={getCurrentAppState()}
-            onOpenRoadmap={() => setShowCommunityRoadmap(true)}
+            onOpenRoadmap={() =>
+              window.dispatchEvent(new CustomEvent("openCommunityRoadmap"))
+            }
           />
         )}
 
-        {/* Feature Request */}
-        {showFeatureRequest && (
-          <FeatureRequest
-            onClose={() => setShowFeatureRequest(false)}
-            appState={getCurrentAppState()}
-            onOpenRoadmap={() => setShowCommunityRoadmap(true)}
-          />
-        )}
-
-        {/* Community Roadmap */}
-        {showCommunityRoadmap && (
-          <CommunityRoadmap onClose={() => setShowCommunityRoadmap(false)} />
-        )}
+        {/* Feature Request + Community Roadmap — owned by features/feedback */}
+        <FeedbackHub getAppState={getCurrentAppState} />
 
         {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
         <AdminLogin />
