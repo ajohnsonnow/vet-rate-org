@@ -169,7 +169,7 @@ Severity is *not* the product of likelihood × impact — it's a judgement call 
 | R-C5 | DOMPurify noop shim shipped without safe-html alternative on every sink | 2026-04 | Per-site `safeHtml` defenses; 4 `dangerouslySetInnerHTML` sites reviewed. (S3) |
 | R-C6 | PBKDF2 at 100k iterations | 2026-05-15 | Bumped to 600k in both crypto layers with versioned envelopes. (S8 / [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)) |
 | R-C7 | cloudSync.js used a static project-wide salt | 2026-05-15 | Replaced with magic-byte envelope carrying per-encryption random salt + IV. (S8 / [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)) |
-| R-C8 | App.jsx monolith — 3,945 LOC, 92 useState hooks, no feature-region boundaries | 2026-05-15 | B25 shipped the source-level split. `src/features/<region>/` convention established; CrisisListener + useUpdateOrchestrator carved out, App.jsx down to 3,812 LOC. Further extractions land incrementally against the established pattern. (Sprint 8.5 B25 / [AUDIT_FINDINGS.md row #35](./AUDIT_FINDINGS.md)) |
+| R-C8 | App.jsx monolith — 3,945 LOC, 92 useState hooks, no feature-region boundaries | 2026-05-15 | B25 shipped the source-level split. `src/features/<region>/` convention established; CrisisListener + useUpdateOrchestrator carved out, App.jsx down to 3,812 LOC. B26–B33 continued the grind (Vision Simulator, OnboardingGate, MaintenancePage, MusterCallFlow, FeedbackHub, LegalPages extracted; 2 dead-state hooks removed); App.jsx now 3,653 LOC / 66 useState hooks. Further extractions land incrementally against the established pattern. (Sprint 8.5 B25–B33 / [AUDIT_FINDINGS.md row #35](./AUDIT_FINDINGS.md)) |
 
 ---
 
