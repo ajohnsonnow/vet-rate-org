@@ -41,6 +41,7 @@ import MaintenancePage from "./features/maintenance/MaintenancePage";
 import MusterCallFlow from "./features/muster-call/MusterCallFlow";
 import FeedbackHub from "./features/feedback/FeedbackHub";
 import LegalPages from "./features/legal/LegalPages";
+import VaDemoTools from "./features/va-demo/VaDemoTools";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -135,8 +136,6 @@ const EvidenceGapVisualizer = lazy(
 const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
 const PainPainter = lazy(() => import("./components/PainPainter"));
 const VAAITransparency = lazy(() => import("./components/VAAITransparency"));
-const VaIntegrationTest = lazy(() => import("./components/VaIntegrationTest"));
-const DemoDashboard = lazy(() => import("./components/DemoDashboard"));
 const NexusQualityAnalyzer = lazy(
   () => import("./components/NexusQualityAnalyzer"),
 );
@@ -221,8 +220,6 @@ function App() {
   const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
   const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
   const [showVAAITransparency, setShowVAAITransparency] = useState(false);
-  const [showVaIntegrationDemo, setShowVaIntegrationDemo] = useState(false);
-  const [showDemoDashboard, setShowDemoDashboard] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
   const [showDenialDecoder, setShowDenialDecoder] = useState(false);
@@ -381,7 +378,7 @@ function App() {
       // Ctrl+Shift+D: Open Demo Dashboard (gated to VA-API surface)
       if (e.ctrlKey && e.shiftKey && e.key === "D" && isVaApiEnabled()) {
         e.preventDefault();
-        setShowDemoDashboard(true);
+        window.dispatchEvent(new CustomEvent("openDemoDashboard"));
       }
       // NOTE: Admin panel access (Ctrl+Shift+A) is handled by AdminAuthContext
       // Bug Lookup and Feature Lookup are only accessible via Admin Panel
@@ -1105,7 +1102,10 @@ function App() {
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
         onVaIntegrationDemoClick={
-          isVaApiEnabled() ? () => setShowVaIntegrationDemo(true) : undefined
+          isVaApiEnabled()
+            ? () =>
+                window.dispatchEvent(new CustomEvent("openVaIntegrationDemo"))
+            : undefined
         }
         onBackupManagerClick={() => setShowBackupManager(true)}
         onCloudSyncClick={() => setShowCloudSyncManager(true)}
@@ -3127,15 +3127,7 @@ function App() {
           />
         )}
 
-        {/* VA Integration Demo Dashboard (for Production Access Demo) */}
-        {isVaApiEnabled() && showVaIntegrationDemo && (
-          <VaIntegrationTest onClose={() => setShowVaIntegrationDemo(false)} />
-        )}
-
-        {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
-        {isVaApiEnabled() && showDemoDashboard && (
-          <DemoDashboard onClose={() => setShowDemoDashboard(false)} />
-        )}
+        <VaDemoTools />
 
         {/* Red Team - Statement Stress Test */}
         {showRedTeam && (
