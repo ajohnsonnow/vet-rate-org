@@ -48,6 +48,7 @@ import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
 import DataManagementCluster from "./features/data-management/DataManagementCluster";
 import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster";
 import AITransparencyCluster from "./features/ai-transparency/AITransparencyCluster";
+import ResourcesCluster from "./features/resources/ResourcesCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -83,7 +84,6 @@ const SecondaryScoutLauncher = lazy(
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
 const MyPacket = lazy(() => import("./components/MyPacket"));
 const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
-const VAResources = lazy(() => import("./components/VAResources"));
 const FormsHelper = lazy(() => import("./components/FormsHelper"));
 const CFileAnalyzer = lazy(() => import("./components/CFileAnalyzer"));
 const SharkRadar = lazy(() => import("./components/SharkRadar"));
@@ -122,7 +122,6 @@ const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
-const RecordSearch = lazy(() => import("./components/RecordSearch"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 const MissionProtocol = lazy(() => import("./components/MissionProtocol"));
@@ -180,7 +179,6 @@ function App() {
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
   const [showMyPacket, setShowMyPacket] = useState(false);
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
-  const [showVAResources, setShowVAResources] = useState(false);
   const [showFormsHelper, setShowFormsHelper] = useState(false);
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showSharkRadar, setShowSharkRadar] = useState(false);
@@ -216,7 +214,6 @@ function App() {
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
-  const [showRecordSearch, setShowRecordSearch] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
 
@@ -341,7 +338,6 @@ function App() {
     if (showWebOfConditions) return "Web of Conditions";
     if (showLegislativeWatchdog) return "Legislative Watchdog";
     if (showTheTribunal) return "The Tribunal";
-    if (showVAResources) return "VA Resources";
     if (showWorkflowGuide) return "Workflow Guide";
     if (selectedResult) return "Disability Details";
     return "Home";
@@ -649,7 +645,8 @@ function App() {
       "vso-finder": () => setShowVSOFinder(true),
       "witness-bench": () => setShowWitnessBench(true),
       "claim-navigator": () => setShowClaimNavigator(true),
-      "va-resources": () => setShowVAResources(true),
+      "va-resources": () =>
+        window.dispatchEvent(new CustomEvent("openVAResources")),
       "user-manual": () => setShowUserManual(true),
       "nexus-analyzer": () => setShowNexusQualityAnalyzer(true),
       "remand-checker": () =>
@@ -728,7 +725,6 @@ function App() {
       // Core Navigation
       showMyPacket,
       showUserManual,
-      showVAResources,
 
       // Calculate Tools
       showTacticalCalculator,
@@ -750,7 +746,6 @@ function App() {
       // Build Evidence Tools
       showCFileAnalyzer,
       showBlueButtonXRay,
-      showRecordSearch,
       showWitnessBench,
       showNexusBuilder,
       nexusBuilderData,
@@ -800,7 +795,6 @@ function App() {
         if (showWebOfConditions) return "Web of Conditions";
         if (showCFileAnalyzer) return "C-File Analyzer";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
-        if (showRecordSearch) return "Record Search";
         if (showWitnessBench) return "Witness Bench (Buddy Letters)";
         if (showNexusBuilder) return "Nexus Builder";
         if (showFormsHelper) return "Forms Helper";
@@ -821,7 +815,6 @@ function App() {
         if (showTheTribunal) return "The Tribunal (Mock Hearing)";
         if (showLegislativeWatchdog) return "Legislative Watchdog";
         if (showVSOFinder) return "VSO Finder";
-        if (showVAResources) return "VA Resources Hub";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -837,7 +830,6 @@ function App() {
       // Core Navigation
       showMyPacket,
       showUserManual,
-      showVAResources,
       // Calculate Tools
       showTacticalCalculator,
       showMillionDollarDashboard,
@@ -857,7 +849,6 @@ function App() {
       // Build Evidence Tools
       showCFileAnalyzer,
       showBlueButtonXRay,
-      showRecordSearch,
       showWitnessBench,
       showNexusBuilder,
       nexusBuilderData,
@@ -990,7 +981,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openBackupManager")),
             "ai-settings": () => setShowAISettings(true),
             "workflow-guide": () => setShowWorkflowGuide(true),
-            "record-search": () => setShowRecordSearch(true),
+            "record-search": () =>
+              window.dispatchEvent(new CustomEvent("openRecordSearch")),
             "dd214-analyzer": () => setShowDD214Analyzer(true),
             "bdd-builder": () => setShowBDDBuilder(true),
           };
@@ -1027,7 +1019,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openVKBTimeline"))
         }
         onUserManualClick={() => setShowUserManual(true)}
-        onVAResourcesClick={() => setShowVAResources(true)}
+        onVAResourcesClick={() =>
+          window.dispatchEvent(new CustomEvent("openVAResources"))
+        }
         // Calculate
         onTacticalCalculatorClick={() => setShowTacticalCalculator(true)}
         onMillionDollarDashboardClick={() =>
@@ -1051,7 +1045,9 @@ function App() {
         // Build Evidence
         onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
-        onRecordSearchClick={() => setShowRecordSearch(true)}
+        onRecordSearchClick={() =>
+          window.dispatchEvent(new CustomEvent("openRecordSearch"))
+        }
         onWitnessBenchClick={() => setShowWitnessBench(true)}
         onNexusBuilderClick={() => setShowNexusBuilder(true)}
         onFormsHelperClick={() => setShowFormsHelper(true)}
@@ -2823,14 +2819,6 @@ function App() {
           />
         )}
 
-        {/* VA Resources Hub */}
-        {showVAResources && (
-          <VAResources
-            onClose={() => setShowVAResources(false)}
-            onReportBug={() => setShowBugSquasher(true)}
-          />
-        )}
-
         {/* Forms Helper */}
         {showFormsHelper && (
           <FormsHelper
@@ -3410,10 +3398,7 @@ function App() {
 
         {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
 
-        {/* FORCE MULTIPLIER: The Needle in the Haystack - PDF Keyword Search */}
-        {showRecordSearch && (
-          <RecordSearch onClose={() => setShowRecordSearch(false)} />
-        )}
+        <ResourcesCluster />
 
         <DataManagementCluster />
 
