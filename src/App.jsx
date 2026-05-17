@@ -45,6 +45,7 @@ import VaDemoTools from "./features/va-demo/VaDemoTools";
 import PublicationsLibraryModal from "./features/publications/PublicationsLibraryModal";
 import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
 import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
+import DataManagementCluster from "./features/data-management/DataManagementCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -112,7 +113,6 @@ const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
 const LegislativeWatchdog = lazy(
   () => import("./components/LegislativeWatchdog"),
 );
-const BackupManager = lazy(() => import("./components/BackupManager"));
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const TheTribunal = lazy(() => import("./components/TheTribunal"));
 const ConsistencyEngine = lazy(() => import("./components/ConsistencyEngine"));
@@ -124,7 +124,6 @@ const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
 const RecordSearch = lazy(() => import("./components/RecordSearch"));
-const MultiCloudManager = lazy(() => import("./components/MultiCloudManager"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 const MissionProtocol = lazy(() => import("./components/MissionProtocol"));
@@ -208,7 +207,6 @@ function App() {
   const [showMOSHazardMatcher, setShowMOSHazardMatcher] = useState(false);
   const [showWebOfConditions, setShowWebOfConditions] = useState(false);
   const [showLegislativeWatchdog, setShowLegislativeWatchdog] = useState(false);
-  const [showBackupManager, setShowBackupManager] = useState(false);
   const [showTimeMachine, setShowTimeMachine] = useState(false);
   const [showTheTribunal, setShowTheTribunal] = useState(false);
   const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
@@ -225,7 +223,6 @@ function App() {
 
   // FORCE MULTIPLIER FEATURES
   const [showRecordSearch, setShowRecordSearch] = useState(false);
-  const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
 
@@ -788,10 +785,6 @@ function App() {
       showVSOFinder,
       showVAAITransparency,
 
-      // Data Management
-      showBackupManager,
-      showCloudSyncManager,
-
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
 
@@ -840,8 +833,6 @@ function App() {
         if (showVSOFinder) return "VSO Finder";
         if (showVAAITransparency) return "VA AI Transparency";
         if (showVAResources) return "VA Resources Hub";
-        if (showBackupManager) return "Backup Manager";
-        if (showCloudSyncManager) return "Cloud Sync Manager";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -905,9 +896,6 @@ function App() {
       // Support Tools
       showVSOFinder,
       showVAAITransparency,
-      // Data Management
-      showBackupManager,
-      showCloudSyncManager,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
     ],
@@ -1010,7 +998,8 @@ function App() {
             "evidence-timeline": () => setShowEvidenceTimeline(true),
             "foia-generator": () => setShowFOIAGenerator(true),
             "legislative-watchdog": () => setShowLegislativeWatchdog(true),
-            "backup-manager": () => setShowBackupManager(true),
+            "backup-manager": () =>
+              window.dispatchEvent(new CustomEvent("openBackupManager")),
             "ai-settings": () => setShowAISettings(true),
             "workflow-guide": () => setShowWorkflowGuide(true),
             "record-search": () => setShowRecordSearch(true),
@@ -1102,8 +1091,12 @@ function App() {
                 window.dispatchEvent(new CustomEvent("openVaIntegrationDemo"))
             : undefined
         }
-        onBackupManagerClick={() => setShowBackupManager(true)}
-        onCloudSyncClick={() => setShowCloudSyncManager(true)}
+        onBackupManagerClick={() =>
+          window.dispatchEvent(new CustomEvent("openBackupManager"))
+        }
+        onCloudSyncClick={() =>
+          window.dispatchEvent(new CustomEvent("openCloudSyncManager"))
+        }
         onAISettingsClick={() => setShowAISettings(true)}
         // Onboarding & Guides
         onWorkflowGuideClick={() => setShowWorkflowGuide(true)}
@@ -2815,7 +2808,7 @@ function App() {
             }}
             onOpenGoogleDriveSync={() => {
               setShowMyPacket(false);
-              setShowCloudSyncManager(true);
+              window.dispatchEvent(new CustomEvent("openCloudSyncManager"));
             }}
             onOpenAISettings={() => setShowAISettings(true)}
             onOpenDD214Analyzer={() => {
@@ -3294,11 +3287,6 @@ function App() {
           />
         )}
 
-        {/* Backup Manager - The Bunker */}
-        {showBackupManager && (
-          <BackupManager onClose={() => setShowBackupManager(false)} />
-        )}
-
         {/* Time Machine - ITF Countdown */}
         {showTimeMachine && (
           <TimeMachine
@@ -3455,10 +3443,7 @@ function App() {
           <RecordSearch onClose={() => setShowRecordSearch(false)} />
         )}
 
-        {/* FORCE MULTIPLIER: The Redundant Bunker Network - Multi-Cloud Sync */}
-        {showCloudSyncManager && (
-          <MultiCloudManager onClose={() => setShowCloudSyncManager(false)} />
-        )}
+        <DataManagementCluster />
 
         {/* AI Command Center - Unified Faraday Cage Protocol + AI Settings */}
         {showAISettings && (
