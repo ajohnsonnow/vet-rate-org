@@ -52,6 +52,7 @@ import ResourcesCluster from "./features/resources/ResourcesCluster";
 import AdversarialTestingCluster from "./features/adversarial-testing/AdversarialTestingCluster";
 import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingCluster";
 import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
+import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -116,8 +117,6 @@ const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
-const MissionProtocol = lazy(() => import("./components/MissionProtocol"));
-const WorkflowGuide = lazy(() => import("./components/WorkflowGuide"));
 const EvidenceGapVisualizer = lazy(
   () => import("./components/EvidenceGapVisualizer"),
 );
@@ -228,8 +227,6 @@ function App() {
     );
 
   // CLEAR COAT: Onboarding & Trust Features
-  const [showMissionProtocol, setShowMissionProtocol] = useState(false);
-  const [showWorkflowGuide, setShowWorkflowGuide] = useState(false);
 
   // SAFETY-CRITICAL: Crisis Intervention surface lives in
   // src/features/crisis/CrisisListener.jsx — state + listener + render
@@ -316,7 +313,6 @@ function App() {
     if (showFOIAGenerator) return "FOIA Generator";
     if (showMOSHazardMatcher) return "MOS Hazard Matcher";
     if (showWebOfConditions) return "Web of Conditions";
-    if (showWorkflowGuide) return "Workflow Guide";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -591,12 +587,9 @@ function App() {
     }
   };
 
-  // Handler for Workflow Guide tool navigation
+  // Handler for Workflow Guide tool navigation (WorkflowGuidesCluster
+  // closes its own panel before invoking this).
   const handleToolSelect = (toolId) => {
-    // Close Workflow Guide first
-    setShowWorkflowGuide(false);
-
-    // Map tool IDs to state setters
     const toolMap = {
       "forms-helper": () => setShowFormsHelper(true),
       "veteran-profile": () => setShowMyPacket(true),
@@ -943,7 +936,8 @@ function App() {
             "backup-manager": () =>
               window.dispatchEvent(new CustomEvent("openBackupManager")),
             "ai-settings": () => setShowAISettings(true),
-            "workflow-guide": () => setShowWorkflowGuide(true),
+            "workflow-guide": () =>
+              window.dispatchEvent(new CustomEvent("openWorkflowGuide")),
             "record-search": () =>
               window.dispatchEvent(new CustomEvent("openRecordSearch")),
             "dd214-analyzer": () => setShowDD214Analyzer(true),
@@ -1066,7 +1060,9 @@ function App() {
         }
         onAISettingsClick={() => setShowAISettings(true)}
         // Onboarding & Guides
-        onWorkflowGuideClick={() => setShowWorkflowGuide(true)}
+        onWorkflowGuideClick={() =>
+          window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
+        }
         // Feature Request & Community Roadmap — handled by FeedbackHub
         onFeatureRequestClick={() =>
           window.dispatchEvent(new CustomEvent("openFeatureRequest"))
@@ -2558,14 +2554,18 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowMissionProtocol(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openMissionProtocol"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 🎖️ Our Promise
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowWorkflowGuide(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 🗺️ Workflow Guide
@@ -3322,18 +3322,7 @@ function App() {
         {updateBanner}
         {whatsNewModal}
 
-        {/* CLEAR COAT: Mission Protocol - Trust Beacon */}
-        {showMissionProtocol && (
-          <MissionProtocol onClose={() => setShowMissionProtocol(false)} />
-        )}
-
-        {/* CLEAR COAT: Workflow Guide - Mission Briefings */}
-        {showWorkflowGuide && (
-          <WorkflowGuide
-            onClose={() => setShowWorkflowGuide(false)}
-            onToolSelect={handleToolSelect}
-          />
-        )}
+        <WorkflowGuidesCluster onToolSelect={handleToolSelect} />
       </Suspense>
 
       {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
@@ -3408,7 +3397,9 @@ function App() {
         onSearchClick={() => setShowCommandSearch(true)}
         onCalculatorClick={() => setShowTacticalCalculator(true)}
         onPacketClick={() => setShowMyPacket(true)}
-        onMissionsClick={() => setShowWorkflowGuide(true)}
+        onMissionsClick={() =>
+          window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
+        }
         packetCount={userConditions.length}
         currentRating={
           userConditions.length > 0
