@@ -28,7 +28,7 @@ import FloatingBugButton from "./components/FloatingBugButton";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
-import LoadingBunker from "./components/LoadingBunker";
+import MigrationScreen from "./features/boot/MigrationScreen";
 import { LocalAIProvider } from "./components/LocalAIPanel";
 import { HelperModeProvider } from "./contexts/HelperModeContext";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -93,27 +93,8 @@ function App() {
     [searchTerm, results, selectedResult, hasSearched, error, userConditions],
   );
 
-  // Show migration loading screen if migrating
-  if (isMigrating) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingBunker
-            size="large"
-            message="Migrating to Enhanced Storage..."
-          />
-          <p className="text-gray-400 mt-4 text-sm">
-            Upgrading your data storage. This only happens once.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // KILL SWITCH: If maintenance mode is active, show static maintenance page
-  if (maintenanceMode) {
-    return <MaintenancePage message={maintenanceMessage} />;
-  }
+  if (isMigrating) return <MigrationScreen />;
+  if (maintenanceMode) return <MaintenancePage message={maintenanceMessage} />;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-emerald-950 flex flex-col transition-colors duration-200">
