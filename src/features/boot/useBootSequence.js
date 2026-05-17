@@ -3,6 +3,9 @@ import { migrateUserData } from "../../utils/migrationManager";
 import { needsMigration, migrateFromLocalStorage } from "../../utils/storage";
 import { initPersistentStorage } from "../../utils/persistentStorage";
 import { initAutoBackup } from "../../utils/autoBackup";
+import { initializeCompassionateVoice } from "../../utils/voiceIndex";
+import { initializeErrorCapture } from "../../utils/bugReportUtils";
+import { setupBeforeUnloadWarning } from "../../utils/dataPersistence";
 
 /**
  * App boot sequence — runs once on mount, in fixed order:
@@ -13,6 +16,12 @@ import { initAutoBackup } from "../../utils/autoBackup";
  *   4. Auto-backup ("Zero Data Loss Protocol") init
  *   5. User-data schema migrations
  *
+ * Plus three unconditional, synchronous inits that fire in parallel
+ * with the async sequence above (B69 moved them out of App.jsx):
+ *   - Error capture for bug reports
+ *   - Compassionate Voice / panic-key wiring
+ *   - beforeunload unsaved-changes warning
+ *
  * The What's-New modal and SW update checker (formerly Step 2 / Step 3)
  * are owned by useUpdateOrchestrator now.
  *
@@ -20,12 +29,19 @@ import { initAutoBackup } from "../../utils/autoBackup";
  *   - App.jsx renders <MaintenancePage> when maintenanceMode is true.
  *   - App.jsx renders a migration loading screen when isMigrating is true.
  *
- * Extracted from App.jsx (audit #35, B59).
+ * Extracted from App.jsx (audit #35, B59; B70 absorbed the sync inits).
  */
 export function useBootSequence() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState("");
   const [isMigrating, setIsMigrating] = useState(false);
+
+  useEffect(() => {
+    initializeErrorCapture();
+    initializeCompassionateVoice();
+    setupBeforeUnloadWarning();
+    console.log("🎙️ Compassionate Voice System initialized");
+  }, []);
 
   useEffect(() => {
     const checkMaintenanceMode = async () => {
