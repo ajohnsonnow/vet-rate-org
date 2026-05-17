@@ -17,53 +17,20 @@
  * VA disability claims process.
  */
 
-import React, { useState, useCallback, Suspense } from "react";
+import React, { useState, useCallback } from "react";
 import AppHeader from "./features/header/AppHeader";
 import HomeMain from "./features/home/HomeMain";
+import AppModals from "./features/modals/AppModals";
 import BuyMeCoffee from "./components/BuyMeCoffee";
 import FloatingBugButton from "./components/FloatingBugButton";
-import ReportBugLink from "./components/ReportBugLink";
-import AdminLogin from "./components/AdminLogin";
-import AdminPanel from "./components/AdminPanel";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import MobileNotice from "./components/MobileNotice";
 import ActiveDevBanner from "./features/active-dev-banner/ActiveDevBanner";
 import SmallScreenWarning from "./features/small-screen-warning/SmallScreenWarning";
-import TermsOfServiceModal from "./components/TermsOfServiceModal";
 import CrisisListener from "./features/crisis/CrisisListener";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
-import VisionSimulator from "./features/vision/VisionSimulator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
-import MusterCallFlow from "./features/muster-call/MusterCallFlow";
-import FeedbackHub from "./features/feedback/FeedbackHub";
-import LegalPages from "./features/legal/LegalPages";
-import VaDemoTools from "./features/va-demo/VaDemoTools";
-import PublicationsLibraryModal from "./features/publications/PublicationsLibraryModal";
-import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
-import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
-import DataManagementCluster from "./features/data-management/DataManagementCluster";
-import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster";
-import AITransparencyCluster from "./features/ai-transparency/AITransparencyCluster";
-import ResourcesCluster from "./features/resources/ResourcesCluster";
-import AdversarialTestingCluster from "./features/adversarial-testing/AdversarialTestingCluster";
-import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingCluster";
-import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
-import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesCluster";
-import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
-import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
-import QualityControlCluster from "./features/quality-control/QualityControlCluster";
-import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToolsCluster";
-import EvidenceInvestigationCluster from "./features/evidence-investigation/EvidenceInvestigationCluster";
-import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
-import CalculateCluster from "./features/calculate/CalculateCluster";
-import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
-import MyPacketModal from "./features/my-packet/MyPacketModal";
-import PathfinderModal from "./features/pathfinder/PathfinderModal";
-import BlueButtonXRayModal from "./features/blue-button/BlueButtonXRayModal";
-import DiscoverCluster from "./features/discover/DiscoverCluster";
 import ToastContainer, { useToast } from "./components/Toast";
-import PWAInstallButton from "./components/PWAInstallButton";
-import ZonkButton from "./components/ZonkButton";
 import LoadingBunker from "./components/LoadingBunker";
 import QuickExitButton from "./components/QuickExitButton";
 import { LocalAIProvider } from "./components/LocalAIPanel";
@@ -71,7 +38,6 @@ import OnboardingGate from "./features/onboarding/OnboardingGate";
 import SecurityBadge from "./components/SecurityBadge";
 import { VaApiStatusBanner } from "./components/VaApiStatus";
 import { isVaApiEnabled } from "./config/vaAuth";
-import { MobileSaveReminder } from "./components/PacketPersistence";
 import StressReliefDivision from "./components/StressReliefDivision";
 import MobileBottomNavWrapper from "./features/mobile-nav/MobileBottomNavWrapper";
 import GlobalCommandSearchWrapper from "./features/global-command-search/GlobalCommandSearchWrapper";
@@ -80,8 +46,6 @@ import { HelperModeProvider } from "./contexts/HelperModeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
-
-import { dispatchToolById } from "./utils/dispatchToolById";
 import { useBootSequence } from "./features/boot/useBootSequence";
 import { useDisabilitySearch } from "./features/search/useDisabilitySearch";
 import AIAssistantBubble from "./features/ai-assistant/AIAssistantBubble";
@@ -223,95 +187,13 @@ function App() {
 
       <AppFooter />
 
-      {/* Modals — lazy cluster with Suspense boundary (B21, audit #28).
-          Each <Show...> conditional below mounts a React.lazy component
-          declared at the top of this file; the chunk is fetched on first
-          open. <LoadingBunker /> is the shared fallback. */}
-      <Suspense fallback={<LoadingBunker />}>
-        {/* Legal/info modals — Privacy, About, Contact, Terms (features/legal) */}
-        <LegalPages />
-
-        <DiscoverCluster
-          userConditions={userConditions}
-          setUserConditions={setUserConditions}
-        />
-
-        <MyPacketModal />
-
-        <PublicationsLibraryModal />
-
-        <EvidenceInvestigationCluster />
-
-        {/* Muster Call → Intelligence Briefing — owned by features/muster-call */}
-        <MusterCallFlow
-          onOpenDD214Analyzer={() =>
-            window.dispatchEvent(new CustomEvent("openDD214Analyzer"))
-          }
-        />
-
-        <KnowledgeCluster />
-
-        <VKBTimelineModal />
-
-        <QualityControlCluster />
-
-        <PathfinderModal />
-
-        <ClaimNavigatorModal />
-
-        <SystemToolsCluster getAppState={getCurrentAppState} />
-
-        {/* Feature Request + Community Roadmap — owned by features/feedback */}
-        <FeedbackHub getAppState={getCurrentAppState} />
-
-        {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
-        <AdminLogin />
-        <AdminPanel />
-
-        <ClaimPrepCluster onToolSelect={dispatchToolById} />
-
-        <VaDemoTools />
-
-        <AdversarialTestingCluster />
-
-        <CalculateCluster />
-
-        <BlueButtonXRayModal />
-
-        <SpecializedToolsCluster />
-
-        <MaximizeRatingCluster />
-
-        {/* The Consistency Engine - Data Auditor */}
-        <AITransparencyCluster />
-
-        <AppealsToolsCluster />
-
-        <DecisionToolsCluster />
-
-        <BodyMappingCluster />
-
-        {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
-
-        <ResourcesCluster />
-
-        <DataManagementCluster />
-
-        {/* Vision Simulator — owned by features/vision/VisionSimulator (listens to `openVisionSimulator`) */}
-        <VisionSimulator />
-
-        {/* DIAMOND-TIER: PWA Install Prompt */}
-        <PWAInstallButton />
-
-        {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
-        <TermsOfServiceModal />
-
-        {/* LIVE OPS: Update banner + What's-New modal — owned by useUpdateOrchestrator */}
-        {updateBanner}
-        {whatsNewModal}
-
-        <WorkflowGuidesCluster onToolSelect={dispatchToolById} />
-      </Suspense>
+      <AppModals
+        userConditions={userConditions}
+        setUserConditions={setUserConditions}
+        getAppState={getCurrentAppState}
+        updateBanner={updateBanner}
+        whatsNewModal={whatsNewModal}
+      />
 
       {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
       <CrisisListener />
