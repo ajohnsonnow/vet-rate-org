@@ -25,15 +25,10 @@ import AppShellOverlays from "./features/app-shell/AppShellOverlays";
 import AppShellTop from "./features/app-shell/AppShellTop";
 import BuyMeCoffee from "./components/BuyMeCoffee";
 import FloatingBugButton from "./components/FloatingBugButton";
-import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import AppProviders from "./features/providers/AppProviders";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
 import MigrationScreen from "./features/boot/MigrationScreen";
-import { LocalAIProvider } from "./components/LocalAIPanel";
-import { HelperModeProvider } from "./contexts/HelperModeContext";
-import { ToastProvider } from "./contexts/ToastContext";
-import { FocusModeProvider } from "./contexts/FocusModeContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
 import { useBootSequence } from "./features/boot/useBootSequence";
 import { useDisabilitySearch } from "./features/search/useDisabilitySearch";
 import { useAppStateSnapshot } from "./features/feedback/useAppStateSnapshot";
@@ -136,23 +131,10 @@ function App() {
   );
 }
 
-// Wrap App with all required providers including secure admin authentication
-function AppWrapper() {
+export default function AppWrapper() {
   return (
-    <AdminAuthProvider>
-      <LanguageProvider>
-        <LocalAIProvider>
-          <ToastProvider>
-            <FocusModeProvider>
-              <HelperModeProvider>
-                <App />
-              </HelperModeProvider>
-            </FocusModeProvider>
-          </ToastProvider>
-        </LocalAIProvider>
-      </LanguageProvider>
-    </AdminAuthProvider>
+    <AppProviders>
+      <App />
+    </AppProviders>
   );
 }
-
-export default AppWrapper;
