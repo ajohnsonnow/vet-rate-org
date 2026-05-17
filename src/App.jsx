@@ -49,6 +49,7 @@ import DataManagementCluster from "./features/data-management/DataManagementClus
 import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster";
 import AITransparencyCluster from "./features/ai-transparency/AITransparencyCluster";
 import ResourcesCluster from "./features/resources/ResourcesCluster";
+import AdversarialTestingCluster from "./features/adversarial-testing/AdversarialTestingCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -95,7 +96,6 @@ const StateBenefitHunter = lazy(
   () => import("./components/StateBenefitHunter"),
 );
 const VSOFinder = lazy(() => import("./components/VSOFinder"));
-const RedTeam = lazy(() => import("./components/RedTeam"));
 const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
 const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
 const TacticalCalculator = lazy(
@@ -118,7 +118,6 @@ const LegislativeWatchdog = lazy(
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const TheTribunal = lazy(() => import("./components/TheTribunal"));
 const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
-const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
@@ -188,7 +187,6 @@ function App() {
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
-  const [showRedTeam, setShowRedTeam] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
@@ -208,7 +206,6 @@ function App() {
 
   // NEW DIAMOND-TIER FEATURES
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
-  const [showClaimStressTest, setShowClaimStressTest] = useState(false);
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
   const [showBDDBuilder, setShowBDDBuilder] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
@@ -319,12 +316,10 @@ function App() {
     if (showStateBenefitHunter) return "State Benefits";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
-    if (showRedTeam) return "War Game";
     if (showMillionDollarDashboard) return "Million Dollar Dashboard";
     if (showRetroPayHunter) return "Retro Pay Hunter";
     if (showEvidenceTimeline) return "Evidence Timeline";
     if (showBodyMapSelector) return "Body Map";
-    if (showClaimStressTest) return "Claim Stress Test";
     if (showPainPainter) return "Pain Painter";
     if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
@@ -757,8 +752,6 @@ function App() {
       showDD214Analyzer,
 
       // Quality Control Tools
-      showRedTeam,
-      showClaimStressTest,
       showDecisionDecoder,
       showSharkRadar,
       showEvidenceGapVisualizer,
@@ -804,8 +797,6 @@ function App() {
         if (showEvidenceTimeline) return "Evidence Timeline";
         if (showFOIAGenerator) return "FOIA Generator (Keysmith)";
         if (showDD214Analyzer) return "DD214 Analyzer";
-        if (showRedTeam) return "Red Team (Statement Stress Test)";
-        if (showClaimStressTest) return "Claim Stress Test (War Game)";
         if (showDecisionDecoder) return "Decision Decoder";
         if (showSharkRadar) return "Shark Radar (Scam Detector)";
         if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
@@ -859,8 +850,6 @@ function App() {
       showFOIAGenerator,
       showDD214Analyzer,
       // Quality Control Tools
-      showRedTeam,
-      showClaimStressTest,
       showDecisionDecoder,
       showSharkRadar,
       showEvidenceGapVisualizer,
@@ -946,14 +935,16 @@ function App() {
             "claim-navigator": () => setShowClaimNavigator(true),
             "cfile-analyzer": () => setShowCFileAnalyzer(true),
             "forms-helper": () => setShowFormsHelper(true),
-            "red-team": () => setShowRedTeam(true),
+            "red-team": () =>
+              window.dispatchEvent(new CustomEvent("openRedTeam")),
             "shark-radar": () => setShowSharkRadar(true),
             "denial-decoder": () =>
               window.dispatchEvent(new CustomEvent("openDenialDecoder")),
             "decision-decoder": () => setShowDecisionDecoder(true),
             "consistency-engine": () =>
               window.dispatchEvent(new CustomEvent("openConsistencyEngine")),
-            "claim-stress-test": () => setShowClaimStressTest(true),
+            "claim-stress-test": () =>
+              window.dispatchEvent(new CustomEvent("openClaimStressTest")),
             "evidence-gap": () => setShowEvidenceGapVisualizer(true),
             "risk-assessment": () => setShowRiskAssessment(true),
             "tdiu-builder": () => setShowTDIUBuilder(true),
@@ -1056,8 +1047,12 @@ function App() {
         onEvidenceTimelineClick={() => setShowEvidenceTimeline(true)}
         onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
         // Quality Control
-        onRedTeamClick={() => setShowRedTeam(true)}
-        onClaimStressTestClick={() => setShowClaimStressTest(true)}
+        onRedTeamClick={() =>
+          window.dispatchEvent(new CustomEvent("openRedTeam"))
+        }
+        onClaimStressTestClick={() =>
+          window.dispatchEvent(new CustomEvent("openClaimStressTest"))
+        }
         onDecisionDecoderClick={() => setShowDecisionDecoder(true)}
         onDenialDecoderClick={() =>
           window.dispatchEvent(new CustomEvent("openDenialDecoder"))
@@ -1704,7 +1699,9 @@ function App() {
                 "Tough guy" language = denials.
               </p>
               <button
-                onClick={() => setShowRedTeam(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openRedTeam"))
+                }
                 className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 🔍 Stress Test Statement
@@ -2101,7 +2098,9 @@ function App() {
                 now.
               </p>
               <button
-                onClick={() => setShowClaimStressTest(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openClaimStressTest"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ⚔️ Stress Test My Claim
@@ -3073,17 +3072,7 @@ function App() {
 
         <VaDemoTools />
 
-        {/* Red Team - Statement Stress Test */}
-        {showRedTeam && (
-          <RedTeam
-            onClose={() => setShowRedTeam(false)}
-            onReportBug={() => {
-              setShowRedTeam(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
+        <AdversarialTestingCluster />
 
         {/* Symptom Logger */}
         {showSymptomLogger && (
@@ -3349,21 +3338,6 @@ function App() {
             }}
             onAISettingsClick={() => setShowAISettings(true)}
           />
-        )}
-
-        {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
-        {showClaimStressTest && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-            <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-              <ClaimStressTest
-                onClose={() => setShowClaimStressTest(false)}
-                onReportBug={() => {
-                  setShowClaimStressTest(false);
-                  setShowBugSquasher(true);
-                }}
-              />
-            </div>
-          </div>
         )}
 
         {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
