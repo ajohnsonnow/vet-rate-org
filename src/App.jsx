@@ -58,6 +58,7 @@ import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
 import QualityControlCluster from "./features/quality-control/QualityControlCluster";
 import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToolsCluster";
 import EvidenceInvestigationCluster from "./features/evidence-investigation/EvidenceInvestigationCluster";
+import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -95,13 +96,10 @@ const MyPacket = lazy(() => import("./components/MyPacket"));
 const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
-const BugSquasher = lazy(() => import("./components/BugSquasher"));
-const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
 const TacticalCalculator = lazy(
   () => import("./components/TacticalCalculator"),
 );
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
-const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -149,14 +147,12 @@ function App() {
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
-  const [showBugSquasher, setShowBugSquasher] = useState(false);
-  const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
-  const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
+  // showAISettings hoisted into SystemToolsCluster (audit #35, B52).
 
   // VKB: Veteran Knowledge Base Viewer
 
@@ -196,32 +192,10 @@ function App() {
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
 
-  // When VisionSimulator opens itself via the `openVisionSimulator` event,
-  // close the AI Command Center too (the dispatcher lives inside it).
-  // VisionSimulator owns the actual modal mount — see src/features/vision/.
-  useEffect(() => {
-    const handler = () => setShowAISettings(false);
-    window.addEventListener("openVisionSimulator", handler);
-    return () => window.removeEventListener("openVisionSimulator", handler);
-  }, []);
-
-  // Bridge `openBugSquasher` and `openAISettings` events into local state.
-  // Extracted feature regions dispatch these instead of holding direct
-  // setter references. When BugSquasher / AICommandCenter themselves are
-  // extracted, the listeners move with them.
-  useEffect(() => {
-    const openBug = () => setShowBugSquasher(true);
-    const openAi = () => setShowAISettings(true);
-    const openSymptom = () => setShowSymptomLogger(true);
-    window.addEventListener("openBugSquasher", openBug);
-    window.addEventListener("openAISettings", openAi);
-    window.addEventListener("openSymptomLogger", openSymptom);
-    return () => {
-      window.removeEventListener("openBugSquasher", openBug);
-      window.removeEventListener("openAISettings", openAi);
-      window.removeEventListener("openSymptomLogger", openSymptom);
-    };
-  }, []);
+  // openBugSquasher / openAISettings / openSymptomLogger event bridges
+  // now live in SystemToolsCluster, which also handles the
+  // openVisionSimulator → close-AI-Command-Center side-effect
+  // (audit #35, B52).
 
   // Initialize error capture for bug reports
   useEffect(() => {
@@ -244,7 +218,6 @@ function App() {
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
-    if (showSymptomLogger) return "Symptom Logger";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -661,10 +634,6 @@ function App() {
       showBlueButtonXRay,
       showNexusBuilder,
       nexusBuilderData,
-      showSymptomLogger,
-
-      // AI & Settings (unified in AICommandCenter)
-      showAISettings,
 
       // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
       currentModule: (() => {
@@ -678,8 +647,6 @@ function App() {
         if (showClaimNavigator) return "Claim Navigator";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
         if (showNexusBuilder) return "Nexus Builder";
-        if (showSymptomLogger) return "Symptom Logger";
-        if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
       })(),
@@ -706,9 +673,6 @@ function App() {
       showBlueButtonXRay,
       showNexusBuilder,
       nexusBuilderData,
-      showSymptomLogger,
-      // AI & Settings (unified in AICommandCenter)
-      showAISettings,
     ],
   );
 
@@ -832,7 +796,8 @@ function App() {
             "blue-button": () => setShowBlueButtonXRay(true),
             "witness-bench": () =>
               window.dispatchEvent(new CustomEvent("openWitnessBench")),
-            "symptom-logger": () => setShowSymptomLogger(true),
+            "symptom-logger": () =>
+              window.dispatchEvent(new CustomEvent("openSymptomLogger")),
             "pain-painter": () =>
               window.dispatchEvent(new CustomEvent("openPainPainter")),
             "evidence-timeline": () =>
@@ -843,7 +808,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openLegislativeWatchdog")),
             "backup-manager": () =>
               window.dispatchEvent(new CustomEvent("openBackupManager")),
-            "ai-settings": () => setShowAISettings(true),
+            "ai-settings": () =>
+              window.dispatchEvent(new CustomEvent("openAISettings")),
             "workflow-guide": () =>
               window.dispatchEvent(new CustomEvent("openWorkflowGuide")),
             "record-search": () =>
@@ -940,7 +906,9 @@ function App() {
         onFormsHelperClick={() =>
           window.dispatchEvent(new CustomEvent("openFormsHelper"))
         }
-        onSymptomLoggerClick={() => setShowSymptomLogger(true)}
+        onSymptomLoggerClick={() =>
+          window.dispatchEvent(new CustomEvent("openSymptomLogger"))
+        }
         onPainPainterClick={() =>
           window.dispatchEvent(new CustomEvent("openPainPainter"))
         }
@@ -1004,7 +972,9 @@ function App() {
         onCloudSyncClick={() =>
           window.dispatchEvent(new CustomEvent("openCloudSyncManager"))
         }
-        onAISettingsClick={() => setShowAISettings(true)}
+        onAISettingsClick={() =>
+          window.dispatchEvent(new CustomEvent("openAISettings"))
+        }
         // Onboarding & Guides
         onWorkflowGuideClick={() =>
           window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
@@ -1060,7 +1030,7 @@ function App() {
                 else if (toolName === "cfile-analyzer")
                   window.dispatchEvent(new CustomEvent("openCFileAnalyzer"));
                 else if (toolName === "symptom-logger")
-                  setShowSymptomLogger(true);
+                  window.dispatchEvent(new CustomEvent("openSymptomLogger"));
                 else if (toolName === "my-packet") setShowMyPacket(true);
                 else if (toolName === "nexus-builder")
                   setShowNexusBuilder(true);
@@ -1913,7 +1883,9 @@ function App() {
                 </div>
                 <div className="flex-shrink-0">
                   <button
-                    onClick={() => setShowSymptomLogger(true)}
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("openSymptomLogger"))
+                    }
                     className="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
                   >
                     📝 Start Logging
@@ -2424,14 +2396,18 @@ function App() {
       </main>
 
       {/* Floating Bug Report Button */}
-      <FloatingBugButton onClick={() => setShowBugSquasher(true)} />
+      <FloatingBugButton
+        onClick={() => window.dispatchEvent(new CustomEvent("openBugSquasher"))}
+      />
 
       {/* AI Assistant (The Navigator) - Always available */}
       {aiAssistant.isOpen && (
         <AIAssistant
           currentTool={getCurrentToolName()}
           onClose={aiAssistant.close}
-          onOpenAISettings={() => setShowAISettings(true)}
+          onOpenAISettings={() =>
+            window.dispatchEvent(new CustomEvent("openAISettings"))
+          }
         />
       )}
 
@@ -2607,7 +2583,9 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowBugSquasher(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openBugSquasher"))
+                }
                 className="text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1 group"
               >
                 🐛 Report Bug
@@ -2663,7 +2641,9 @@ function App() {
           <SecondaryScoutLauncher
             onLaunch={handleLaunchSecondaryScout}
             onClose={() => setShowSecondaryScoutLauncher(false)}
-            onReportBug={() => setShowBugSquasher(true)}
+            onReportBug={() =>
+              window.dispatchEvent(new CustomEvent("openBugSquasher"))
+            }
           />
         )}
 
@@ -2687,7 +2667,11 @@ function App() {
                     {/* Mobile: Full width buttons, Desktop: Inline */}
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <ReportBugLink
-                        onClick={() => setShowBugSquasher(true)}
+                        onClick={() =>
+                          window.dispatchEvent(
+                            new CustomEvent("openBugSquasher"),
+                          )
+                        }
                         variant="light"
                         moduleName="Secondary Scout Results"
                       />
@@ -2753,7 +2737,9 @@ function App() {
                       setShowSecondaryScout(false);
                       setShowMyPacket(true);
                     }}
-                    onOpenAISettings={() => setShowAISettings(true)}
+                    onOpenAISettings={() =>
+                      window.dispatchEvent(new CustomEvent("openAISettings"))
+                    }
                   />
                 </div>
               </div>
@@ -2769,8 +2755,12 @@ function App() {
             existingStatement={nexusBuilderData.existingStatement}
             onClose={() => setShowNexusBuilder(false)}
             onSave={handleSaveStatement}
-            onReportBug={() => setShowBugSquasher(true)}
-            onOpenAISettings={() => setShowAISettings(true)}
+            onReportBug={() =>
+              window.dispatchEvent(new CustomEvent("openBugSquasher"))
+            }
+            onOpenAISettings={() =>
+              window.dispatchEvent(new CustomEvent("openAISettings"))
+            }
           />
         )}
 
@@ -2779,7 +2769,9 @@ function App() {
           <MyPacket
             onResume={handleResumeFromPacket}
             onClose={() => setShowMyPacket(false)}
-            onReportBug={() => setShowBugSquasher(true)}
+            onReportBug={() =>
+              window.dispatchEvent(new CustomEvent("openBugSquasher"))
+            }
             onAnalyzeStrategy={() => {
               setPathfinderInitialConditions(null); // Clear any stale conditions
               setShowMyPacket(false);
@@ -2789,7 +2781,9 @@ function App() {
               setShowMyPacket(false);
               window.dispatchEvent(new CustomEvent("openCloudSyncManager"));
             }}
-            onOpenAISettings={() => setShowAISettings(true)}
+            onOpenAISettings={() =>
+              window.dispatchEvent(new CustomEvent("openAISettings"))
+            }
             onOpenDD214Analyzer={() => {
               setShowMyPacket(false);
               window.dispatchEvent(new CustomEvent("openDD214Analyzer"));
@@ -2801,7 +2795,9 @@ function App() {
         {showCAPSimulator && (
           <CAPSimulator
             onClose={() => setShowCAPSimulator(false)}
-            onReportBug={() => setShowBugSquasher(true)}
+            onReportBug={() =>
+              window.dispatchEvent(new CustomEvent("openBugSquasher"))
+            }
             onSendToCalculator={handleSendToCalculator}
           />
         )}
@@ -2860,7 +2856,9 @@ function App() {
                     <ReportBugLink
                       onClick={() => {
                         setShowPathfinder(false);
-                        setShowBugSquasher(true);
+                        window.dispatchEvent(
+                          new CustomEvent("openBugSquasher"),
+                        );
                       }}
                       variant="light"
                       moduleName="Pathfinder"
@@ -2893,7 +2891,9 @@ function App() {
               <div className="overflow-y-auto flex-1 p-4">
                 <Pathfinder
                   onNavigate={handlePathfinderNavigate}
-                  onOpenAISettings={() => setShowAISettings(true)}
+                  onOpenAISettings={() =>
+                    window.dispatchEvent(new CustomEvent("openAISettings"))
+                  }
                   initialConditions={pathfinderInitialConditions}
                 />
               </div>
@@ -2906,16 +2906,7 @@ function App() {
           <ClaimNavigator onClose={() => setShowClaimNavigator(false)} />
         )}
 
-        {/* Bug Squasher */}
-        {showBugSquasher && (
-          <BugSquasher
-            onClose={() => setShowBugSquasher(false)}
-            appState={getCurrentAppState()}
-            onOpenRoadmap={() =>
-              window.dispatchEvent(new CustomEvent("openCommunityRoadmap"))
-            }
-          />
-        )}
+        <SystemToolsCluster getAppState={getCurrentAppState} />
 
         {/* Feature Request + Community Roadmap — owned by features/feedback */}
         <FeedbackHub getAppState={getCurrentAppState} />
@@ -2930,24 +2921,13 @@ function App() {
 
         <AdversarialTestingCluster />
 
-        {/* Symptom Logger */}
-        {showSymptomLogger && (
-          <SymptomLogger
-            onClose={() => setShowSymptomLogger(false)}
-            onReportBug={() => {
-              setShowSymptomLogger(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
         {/* Tactical Calculator */}
         {showTacticalCalculator && (
           <TacticalCalculator
             onClose={() => setShowTacticalCalculator(false)}
             onReportBug={() => {
               setShowTacticalCalculator(false);
-              setShowBugSquasher(true);
+              window.dispatchEvent(new CustomEvent("openBugSquasher"));
             }}
             capSimulatorResults={capSimulatorResults}
             onClearCapResults={() => setCapSimulatorResults([])}
@@ -2974,10 +2954,12 @@ function App() {
               setShowBlueButtonXRay(false);
               setSearchTerm(conditionName);
             }}
-            onOpenAISettings={() => setShowAISettings(true)}
+            onOpenAISettings={() =>
+              window.dispatchEvent(new CustomEvent("openAISettings"))
+            }
             onReportBug={() => {
               setShowBlueButtonXRay(false);
-              setShowBugSquasher(true);
+              window.dispatchEvent(new CustomEvent("openBugSquasher"));
             }}
           />
         )}
@@ -3000,17 +2982,6 @@ function App() {
         <ResourcesCluster />
 
         <DataManagementCluster />
-
-        {/* AI Command Center - Unified Faraday Cage Protocol + AI Settings */}
-        {showAISettings && (
-          <AICommandCenter
-            onClose={() => setShowAISettings(false)}
-            onReportBug={() => {
-              setShowAISettings(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
 
         {/* Vision Simulator — owned by features/vision/VisionSimulator (listens to `openVisionSimulator`) */}
         <VisionSimulator />
