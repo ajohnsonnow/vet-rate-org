@@ -59,6 +59,7 @@ import QualityControlCluster from "./features/quality-control/QualityControlClus
 import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToolsCluster";
 import EvidenceInvestigationCluster from "./features/evidence-investigation/EvidenceInvestigationCluster";
 import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
+import CalculateCluster from "./features/calculate/CalculateCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -93,12 +94,8 @@ const SecondaryScoutLauncher = lazy(
 );
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
 const MyPacket = lazy(() => import("./components/MyPacket"));
-const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
-const TacticalCalculator = lazy(
-  () => import("./components/TacticalCalculator"),
-);
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
@@ -144,10 +141,8 @@ function App() {
   const [showNexusBuilder, setShowNexusBuilder] = useState(false);
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
   const [showMyPacket, setShowMyPacket] = useState(false);
-  const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
-  const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
@@ -188,7 +183,6 @@ function App() {
   // IndexedDB Migration State
   const [isMigrating, setIsMigrating] = useState(false);
 
-  const [capSimulatorResults, setCapSimulatorResults] = useState([]);
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
 
@@ -211,10 +205,8 @@ function App() {
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
     if (showMyPacket) return "My Packet";
-    if (showTacticalCalculator) return "Rating Calculator";
     if (showSecondaryScout) return "Secondary Scout";
     if (showNexusBuilder) return "Nexus Builder";
-    if (showCAPSimulator) return "C&P Simulator";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
@@ -448,25 +440,10 @@ function App() {
       setShowNexusBuilder(true);
     } else if (tool === "dbq") {
       // Navigate to C&P Simulator with condition
-      setShowCAPSimulator(true);
+      window.dispatchEvent(new CustomEvent("openCAPSimulator"));
     } else if (tool === "secondary-scout") {
       setShowSecondaryScoutLauncher(true);
     }
-  };
-
-  // Handler for sending C&P Simulator results to Tactical Calculator
-  const handleSendToCalculator = (result, conditionName, diagnosticCode) => {
-    const newResult = {
-      id: Date.now(),
-      conditionName: conditionName,
-      diagnosticCode: diagnosticCode,
-      rating: result.predictedRating,
-      source: "C&P Simulator",
-      dateAdded: new Date().toISOString(),
-    };
-    setCapSimulatorResults((prev) => [...prev, newResult]);
-    setShowCAPSimulator(false);
-    setShowTacticalCalculator(true);
   };
 
   // Handler for navigating to a secondary condition from DisabilityDetails
@@ -500,7 +477,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openFormsHelper")),
       "veteran-profile": () => setShowMyPacket(true),
       "conditions-search": () => {}, // Main search is always visible
-      "tactical-calculator": () => setShowTacticalCalculator(true),
+      "tactical-calculator": () =>
+        window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
       "secondary-scout": () => setShowSecondaryScoutLauncher(true),
       "my-packet": () => setShowMyPacket(true),
       "knowledge-base": () =>
@@ -515,7 +493,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openDD214Analyzer")),
       "web-of-conditions": () =>
         window.dispatchEvent(new CustomEvent("openWebOfConditions")),
-      "cap-simulator": () => setShowCAPSimulator(true),
+      "cap-simulator": () =>
+        window.dispatchEvent(new CustomEvent("openCAPSimulator")),
       "pain-painter": () =>
         window.dispatchEvent(new CustomEvent("openPainPainter")),
       "evidence-gap": () =>
@@ -619,14 +598,10 @@ function App() {
       // Core Navigation
       showMyPacket,
 
-      // Calculate Tools
-      showTacticalCalculator,
-
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
       userConditions,
-      showCAPSimulator,
       showPathfinder,
       showClaimNavigator,
 
@@ -639,10 +614,8 @@ function App() {
       currentModule: (() => {
         // Priority order: most specific tools first
         if (showMyPacket) return "My Packet";
-        if (showTacticalCalculator) return "Tactical Calculator (Rating)";
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
-        if (showCAPSimulator) return "C&P Exam Simulator";
         if (showPathfinder) return "Pathfinder (AI Strategy)";
         if (showClaimNavigator) return "Claim Navigator";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
@@ -660,13 +633,10 @@ function App() {
       error,
       // Core Navigation
       showMyPacket,
-      // Calculate Tools
-      showTacticalCalculator,
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
       userConditions,
-      showCAPSimulator,
       showPathfinder,
       showClaimNavigator,
       // Build Evidence Tools
@@ -736,10 +706,12 @@ function App() {
           setShowCommandSearch(false);
           // Map tool IDs to their respective state setters
           const toolHandlers = {
-            "tactical-calculator": () => setShowTacticalCalculator(true),
+            "tactical-calculator": () =>
+              window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
             "my-packet": () => setShowMyPacket(true),
             "secondary-scout": () => setShowSecondaryScoutLauncher(true),
-            "cap-simulator": () => setShowCAPSimulator(true),
+            "cap-simulator": () =>
+              window.dispatchEvent(new CustomEvent("openCAPSimulator")),
             "nexus-builder": () => setShowNexusBuilder(true),
             pathfinder: () => setShowPathfinder(true),
             "claim-navigator": () => setShowClaimNavigator(true),
@@ -860,7 +832,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openVAResources"))
         }
         // Calculate
-        onTacticalCalculatorClick={() => setShowTacticalCalculator(true)}
+        onTacticalCalculatorClick={() =>
+          window.dispatchEvent(new CustomEvent("openTacticalCalculator"))
+        }
         onMillionDollarDashboardClick={() =>
           window.dispatchEvent(new CustomEvent("openMillionDollarDashboard"))
         }
@@ -875,7 +849,9 @@ function App() {
         }
         // Discover
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
-        onCAPSimulatorClick={() => setShowCAPSimulator(true)}
+        onCAPSimulatorClick={() =>
+          window.dispatchEvent(new CustomEvent("openCAPSimulator"))
+        }
         // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
         onPathfinderClick={() => setShowPathfinder(true)}
         onClaimNavigatorClick={() => setShowClaimNavigator(true)}
@@ -1037,7 +1013,9 @@ function App() {
                 else if (toolName === "secondary-scout")
                   setShowSecondaryScoutLauncher(true);
                 else if (toolName === "tactical-calculator")
-                  setShowTacticalCalculator(true);
+                  window.dispatchEvent(
+                    new CustomEvent("openTacticalCalculator"),
+                  );
                 else if (toolName === "forms-helper")
                   window.dispatchEvent(new CustomEvent("openFormsHelper"));
               }}
@@ -1173,7 +1151,11 @@ function App() {
 
                 <div className="flex-shrink-0">
                   <button
-                    onClick={() => setShowTacticalCalculator(true)}
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent("openTacticalCalculator"),
+                      )
+                    }
                     className="px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <span>🎯</span>
@@ -1267,7 +1249,9 @@ function App() {
                 real-time feedback to maximize your rating.
               </p>
               <button
-                onClick={() => setShowCAPSimulator(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openCAPSimulator"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg"
               >
                 🎯 Launch C&P Simulator
@@ -2791,17 +2775,6 @@ function App() {
           />
         )}
 
-        {/* C&P Simulator */}
-        {showCAPSimulator && (
-          <CAPSimulator
-            onClose={() => setShowCAPSimulator(false)}
-            onReportBug={() =>
-              window.dispatchEvent(new CustomEvent("openBugSquasher"))
-            }
-            onSendToCalculator={handleSendToCalculator}
-          />
-        )}
-
         <PublicationsLibraryModal />
 
         <EvidenceInvestigationCluster />
@@ -2921,18 +2894,7 @@ function App() {
 
         <AdversarialTestingCluster />
 
-        {/* Tactical Calculator */}
-        {showTacticalCalculator && (
-          <TacticalCalculator
-            onClose={() => setShowTacticalCalculator(false)}
-            onReportBug={() => {
-              setShowTacticalCalculator(false);
-              window.dispatchEvent(new CustomEvent("openBugSquasher"));
-            }}
-            capSimulatorResults={capSimulatorResults}
-            onClearCapResults={() => setCapSimulatorResults([])}
-          />
-        )}
+        <CalculateCluster />
 
         {/* Blue Button X-Ray - Diamond Tier Data Mining */}
         {showBlueButtonXRay && (
@@ -3069,7 +3031,9 @@ function App() {
       {/* AAAAA Diamond Standard: Mobile Bottom Navigation */}
       <MobileBottomNav
         onSearchClick={() => setShowCommandSearch(true)}
-        onCalculatorClick={() => setShowTacticalCalculator(true)}
+        onCalculatorClick={() =>
+          window.dispatchEvent(new CustomEvent("openTacticalCalculator"))
+        }
         onPacketClick={() => setShowMyPacket(true)}
         onMissionsClick={() =>
           window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
