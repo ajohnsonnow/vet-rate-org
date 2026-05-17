@@ -91,6 +91,7 @@ import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import { initializeErrorCapture } from "./utils/bugReportUtils";
 import { setupBeforeUnloadWarning } from "./utils/dataPersistence";
+import { dispatchToolById } from "./utils/dispatchToolById";
 import { useBootSequence } from "./features/boot/useBootSequence";
 import disabilityData from "./data/disabilityData.json";
 import { PROJECT_STATS } from "./data/projectStats";
@@ -225,76 +226,8 @@ function App() {
     }
   };
 
-  // Handler for Workflow Guide tool navigation (WorkflowGuidesCluster
-  // closes its own panel before invoking this).
-  const handleToolSelect = (toolId) => {
-    const toolMap = {
-      "forms-helper": () =>
-        window.dispatchEvent(new CustomEvent("openFormsHelper")),
-      "veteran-profile": () =>
-        window.dispatchEvent(new CustomEvent("openMyPacket")),
-      "conditions-search": () => {}, // Main search is always visible
-      "tactical-calculator": () =>
-        window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
-      "secondary-scout": () =>
-        window.dispatchEvent(new CustomEvent("openSecondaryScoutLauncher")),
-      "my-packet": () => window.dispatchEvent(new CustomEvent("openMyPacket")),
-      "knowledge-base": () =>
-        window.dispatchEvent(new CustomEvent("openVKBViewer")),
-      "nexus-builder": () =>
-        window.dispatchEvent(new CustomEvent("openNexusBuilder")),
-      "statement-analyzer": () =>
-        window.dispatchEvent(new CustomEvent("openNexusBuilder")),
-      "mos-hazard": () =>
-        window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
-      "timeline-wizard": () =>
-        window.dispatchEvent(new CustomEvent("openEvidenceTimeline")), // Timeline Wizard maps to Evidence Timeline
-      "dd214-analyzer": () =>
-        window.dispatchEvent(new CustomEvent("openDD214Analyzer")),
-      "web-of-conditions": () =>
-        window.dispatchEvent(new CustomEvent("openWebOfConditions")),
-      "cap-simulator": () =>
-        window.dispatchEvent(new CustomEvent("openCAPSimulator")),
-      "pain-painter": () =>
-        window.dispatchEvent(new CustomEvent("openPainPainter")),
-      "evidence-gap": () =>
-        window.dispatchEvent(new CustomEvent("openEvidenceGapVisualizer")),
-      "cfile-analyzer": () =>
-        window.dispatchEvent(new CustomEvent("openCFileAnalyzer")),
-      "foia-generator": () =>
-        window.dispatchEvent(new CustomEvent("openFOIAGenerator")),
-      "retro-pay-hunter": () =>
-        window.dispatchEvent(new CustomEvent("openRetroPayHunter")),
-      "tdiu-builder": () =>
-        window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
-      pathfinder: () => window.dispatchEvent(new CustomEvent("openPathfinder")),
-      "million-dollar-dashboard": () =>
-        window.dispatchEvent(new CustomEvent("openMillionDollarDashboard")),
-      "vso-finder": () =>
-        window.dispatchEvent(new CustomEvent("openVSOFinder")),
-      "witness-bench": () =>
-        window.dispatchEvent(new CustomEvent("openWitnessBench")),
-      "claim-navigator": () =>
-        window.dispatchEvent(new CustomEvent("openClaimNavigator")),
-      "va-resources": () =>
-        window.dispatchEvent(new CustomEvent("openVAResources")),
-      "user-manual": () =>
-        window.dispatchEvent(new CustomEvent("openUserManual")),
-      "nexus-analyzer": () =>
-        window.dispatchEvent(new CustomEvent("openNexusQualityAnalyzer")),
-      "remand-checker": () =>
-        window.dispatchEvent(new CustomEvent("openRemandRiskChecker")),
-      "appeals-advisor": () =>
-        window.dispatchEvent(new CustomEvent("openAppealsLaneAdvisor")),
-      "bdd-builder": () =>
-        window.dispatchEvent(new CustomEvent("openBDDBuilder")),
-    };
-
-    // Execute the tool opener if it exists
-    if (toolMap[toolId]) {
-      toolMap[toolId]();
-    }
-  };
+  // Tool-ID → CustomEvent dispatcher lives in utils/dispatchToolById
+  // (audit #35, B66). Passed directly as the cluster onToolSelect prop.
 
   // Debounced search
   useEffect(() => {
@@ -648,7 +581,7 @@ function App() {
         <AdminLogin />
         <AdminPanel />
 
-        <ClaimPrepCluster onToolSelect={handleToolSelect} />
+        <ClaimPrepCluster onToolSelect={dispatchToolById} />
 
         <VaDemoTools />
 
@@ -690,7 +623,7 @@ function App() {
         {updateBanner}
         {whatsNewModal}
 
-        <WorkflowGuidesCluster onToolSelect={handleToolSelect} />
+        <WorkflowGuidesCluster onToolSelect={dispatchToolById} />
       </Suspense>
 
       {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
