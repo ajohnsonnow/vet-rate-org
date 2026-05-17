@@ -17,7 +17,7 @@
  * VA disability claims process.
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import AppHeader from "./features/header/AppHeader";
 import HomeMain from "./features/home/HomeMain";
 import AppModals from "./features/modals/AppModals";
@@ -36,6 +36,7 @@ import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { useBootSequence } from "./features/boot/useBootSequence";
 import { useDisabilitySearch } from "./features/search/useDisabilitySearch";
+import { useAppStateSnapshot } from "./features/feedback/useAppStateSnapshot";
 import AIAssistantBubble from "./features/ai-assistant/AIAssistantBubble";
 import AppFooter from "./features/footer/AppFooter";
 import "./index.css";
@@ -72,26 +73,16 @@ function App() {
   const { isMigrating, maintenanceMode, maintenanceMessage } =
     useBootSequence();
 
-  // Gather current app state for bug reports - DIAMOND LEVEL: All 45+ tools tracked!
-  const getCurrentAppState = useCallback(
-    () => ({
-      // Search & Core
-      searchTerm,
-      results,
-      selectedResult,
-      hasSearched,
-      error,
-
-      userConditions,
-
-      // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
-      currentModule: (() => {
-        if (selectedResult) return "Disability Details View";
-        return "Disability Search";
-      })(),
-    }),
-    [searchTerm, results, selectedResult, hasSearched, error, userConditions],
-  );
+  // Snapshot of App-level state for bug reports + feature requests.
+  // See features/feedback/useAppStateSnapshot.js (audit #35, B80).
+  const getCurrentAppState = useAppStateSnapshot({
+    searchTerm,
+    results,
+    selectedResult,
+    hasSearched,
+    error,
+    userConditions,
+  });
 
   if (isMigrating) return <MigrationScreen />;
   if (maintenanceMode) return <MaintenancePage message={maintenanceMessage} />;
