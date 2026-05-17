@@ -31,6 +31,7 @@ import AdminPanel from "./components/AdminPanel";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import QuickConditionPicker from "./components/QuickConditionPicker";
 import MobileNotice from "./components/MobileNotice";
+import ActiveDevBanner from "./features/active-dev-banner/ActiveDevBanner";
 import SmallScreenWarning from "./features/small-screen-warning/SmallScreenWarning";
 import TermsOfServiceModal from "./components/TermsOfServiceModal";
 import CommandersChecklist from "./components/CommandersChecklist";
@@ -313,17 +314,7 @@ function App() {
       <MobileNotice />
 
       {/* Active Development Banner */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 text-center shadow-md">
-        <div className="flex items-center justify-center space-x-2 text-sm">
-          <span className="animate-pulse text-lg">🎖️</span>
-          <span className="font-semibold">ACTIVE DEVELOPMENT:</span>
-          <span>
-            We're on a ruck march bringing code improvements to you! Save your
-            work often.
-          </span>
-          <span className="animate-pulse text-lg">🎖️</span>
-        </div>
-      </div>
+      <ActiveDevBanner />
 
       <GlobalCommandSearchWrapper />
 
