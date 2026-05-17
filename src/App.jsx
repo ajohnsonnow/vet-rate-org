@@ -50,6 +50,7 @@ import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster
 import AITransparencyCluster from "./features/ai-transparency/AITransparencyCluster";
 import ResourcesCluster from "./features/resources/ResourcesCluster";
 import AdversarialTestingCluster from "./features/adversarial-testing/AdversarialTestingCluster";
+import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -92,9 +93,6 @@ const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
 const UserManual = lazy(() => import("./components/UserManual"));
-const StateBenefitHunter = lazy(
-  () => import("./components/StateBenefitHunter"),
-);
 const VSOFinder = lazy(() => import("./components/VSOFinder"));
 const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
 const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
@@ -104,7 +102,6 @@ const TacticalCalculator = lazy(
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 const WitnessBench = lazy(() => import("./components/WitnessBench"));
 const RiskAssessment = lazy(() => import("./components/RiskAssessment"));
-const TDIUBuilder = lazy(() => import("./components/TDIUBuilder"));
 const PACTActNavigator = lazy(() => import("./components/PACTActNavigator"));
 const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
 const MillionDollarDashboard = lazy(
@@ -112,11 +109,7 @@ const MillionDollarDashboard = lazy(
 );
 const MOSHazardMatcher = lazy(() => import("./components/MOSHazardMatcher"));
 const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
-const LegislativeWatchdog = lazy(
-  () => import("./components/LegislativeWatchdog"),
-);
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
-const TheTribunal = lazy(() => import("./components/TheTribunal"));
 const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
@@ -185,7 +178,6 @@ function App() {
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
-  const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
@@ -193,16 +185,13 @@ function App() {
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   const [showWitnessBench, setShowWitnessBench] = useState(false);
   const [showRiskAssessment, setShowRiskAssessment] = useState(false);
-  const [showTDIUBuilder, setShowTDIUBuilder] = useState(false);
   const [showPACTActNavigator, setShowPACTActNavigator] = useState(false);
   const [showFOIAGenerator, setShowFOIAGenerator] = useState(false);
   const [showMillionDollarDashboard, setShowMillionDollarDashboard] =
     useState(false);
   const [showMOSHazardMatcher, setShowMOSHazardMatcher] = useState(false);
   const [showWebOfConditions, setShowWebOfConditions] = useState(false);
-  const [showLegislativeWatchdog, setShowLegislativeWatchdog] = useState(false);
   const [showTimeMachine, setShowTimeMachine] = useState(false);
-  const [showTheTribunal, setShowTheTribunal] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
@@ -309,11 +298,9 @@ function App() {
     if (showCFileAnalyzer) return "C-File Analyzer";
     if (showNexusBuilder) return "Nexus Builder";
     if (showPACTActNavigator) return "PACT Act Navigator";
-    if (showTDIUBuilder) return "TDIU Builder";
     if (showCAPSimulator) return "C&P Simulator";
     if (showFormsHelper) return "Forms Helper";
     if (showWitnessBench) return "Witness Bench";
-    if (showStateBenefitHunter) return "State Benefits";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
     if (showMillionDollarDashboard) return "Million Dollar Dashboard";
@@ -331,8 +318,6 @@ function App() {
     if (showFOIAGenerator) return "FOIA Generator";
     if (showMOSHazardMatcher) return "MOS Hazard Matcher";
     if (showWebOfConditions) return "Web of Conditions";
-    if (showLegislativeWatchdog) return "Legislative Watchdog";
-    if (showTheTribunal) return "The Tribunal";
     if (showWorkflowGuide) return "Workflow Guide";
     if (selectedResult) return "Disability Details";
     return "Home";
@@ -634,7 +619,8 @@ function App() {
       "cfile-analyzer": () => setShowCFileAnalyzer(true),
       "foia-generator": () => setShowFOIAGenerator(true),
       "retro-pay-hunter": () => setShowRetroPayHunter(true),
-      "tdiu-builder": () => setShowTDIUBuilder(true),
+      "tdiu-builder": () =>
+        window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
       pathfinder: () => setShowPathfinder(true),
       "million-dollar-dashboard": () => setShowMillionDollarDashboard(true),
       "vso-finder": () => setShowVSOFinder(true),
@@ -757,12 +743,6 @@ function App() {
       showEvidenceGapVisualizer,
       showRiskAssessment,
 
-      // Maximize Rating Tools
-      showTDIUBuilder,
-      showStateBenefitHunter,
-      showTheTribunal,
-      showLegislativeWatchdog,
-
       // Support Tools
       showVSOFinder,
 
@@ -801,10 +781,6 @@ function App() {
         if (showSharkRadar) return "Shark Radar (Scam Detector)";
         if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
         if (showRiskAssessment) return "Risk Assessment (Poke the Bear)";
-        if (showTDIUBuilder) return "TDIU Builder";
-        if (showStateBenefitHunter) return "State Benefit Hunter";
-        if (showTheTribunal) return "The Tribunal (Mock Hearing)";
-        if (showLegislativeWatchdog) return "Legislative Watchdog";
         if (showVSOFinder) return "VSO Finder";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
@@ -854,11 +830,6 @@ function App() {
       showSharkRadar,
       showEvidenceGapVisualizer,
       showRiskAssessment,
-      // Maximize Rating Tools
-      showTDIUBuilder,
-      showStateBenefitHunter,
-      showTheTribunal,
-      showLegislativeWatchdog,
       // Support Tools
       showVSOFinder,
       // AI & Settings (unified in AICommandCenter)
@@ -947,9 +918,12 @@ function App() {
               window.dispatchEvent(new CustomEvent("openClaimStressTest")),
             "evidence-gap": () => setShowEvidenceGapVisualizer(true),
             "risk-assessment": () => setShowRiskAssessment(true),
-            "tdiu-builder": () => setShowTDIUBuilder(true),
-            "state-benefits": () => setShowStateBenefitHunter(true),
-            "the-tribunal": () => setShowTheTribunal(true),
+            "tdiu-builder": () =>
+              window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
+            "state-benefits": () =>
+              window.dispatchEvent(new CustomEvent("openStateBenefitHunter")),
+            "the-tribunal": () =>
+              window.dispatchEvent(new CustomEvent("openTheTribunal")),
             "vso-finder": () => setShowVSOFinder(true),
             "user-manual": () => setShowUserManual(true),
             "knowledge-base": () => setShowVKBViewer(true),
@@ -967,7 +941,8 @@ function App() {
             "pain-painter": () => setShowPainPainter(true),
             "evidence-timeline": () => setShowEvidenceTimeline(true),
             "foia-generator": () => setShowFOIAGenerator(true),
-            "legislative-watchdog": () => setShowLegislativeWatchdog(true),
+            "legislative-watchdog": () =>
+              window.dispatchEvent(new CustomEvent("openLegislativeWatchdog")),
             "backup-manager": () =>
               window.dispatchEvent(new CustomEvent("openBackupManager")),
             "ai-settings": () => setShowAISettings(true),
@@ -1064,10 +1039,18 @@ function App() {
         onEvidenceGapVisualizerClick={() => setShowEvidenceGapVisualizer(true)}
         onRiskAssessmentClick={() => setShowRiskAssessment(true)}
         // Maximize Your Rating
-        onTDIUBuilderClick={() => setShowTDIUBuilder(true)}
-        onStateBenefitHunterClick={() => setShowStateBenefitHunter(true)}
-        onTheTribunalClick={() => setShowTheTribunal(true)}
-        onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
+        onTDIUBuilderClick={() =>
+          window.dispatchEvent(new CustomEvent("openTDIUBuilder"))
+        }
+        onStateBenefitHunterClick={() =>
+          window.dispatchEvent(new CustomEvent("openStateBenefitHunter"))
+        }
+        onTheTribunalClick={() =>
+          window.dispatchEvent(new CustomEvent("openTheTribunal"))
+        }
+        onLegislativeWatchdogClick={() =>
+          window.dispatchEvent(new CustomEvent("openLegislativeWatchdog"))
+        }
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
         onVaIntegrationDemoClick={
@@ -1880,7 +1863,9 @@ function App() {
                 paid at 100% even with a 60-70% rating.
               </p>
               <button
-                onClick={() => setShowTDIUBuilder(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openTDIUBuilder"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 📝 Build My TDIU Case
@@ -2157,7 +2142,9 @@ function App() {
                 Board of Veterans' Appeals.
               </p>
               <button
-                onClick={() => setShowTheTribunal(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openTheTribunal"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ⚖️ Start Mock Hearing
@@ -2232,7 +2219,11 @@ function App() {
                 and more.
               </p>
               <button
-                onClick={() => setShowStateBenefitHunter(true)}
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("openStateBenefitHunter"),
+                  )
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🎯 Find My State Benefits
@@ -2263,7 +2254,11 @@ function App() {
                 presumptive condition.
               </p>
               <button
-                onClick={() => setShowLegislativeWatchdog(true)}
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("openLegislativeWatchdog"),
+                  )
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 📡 Watch Regulations
@@ -3048,17 +3043,6 @@ function App() {
           />
         )}
 
-        {/* State Benefit Hunter */}
-        {showStateBenefitHunter && (
-          <StateBenefitHunter
-            onClose={() => setShowStateBenefitHunter(false)}
-            onReportBug={() => {
-              setShowStateBenefitHunter(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
         {/* VSO Finder */}
         {showVSOFinder && (
           <VSOFinder
@@ -3162,18 +3146,6 @@ function App() {
           />
         )}
 
-        {/* TDIU Work Impact Builder - Specialized Tool */}
-        {showTDIUBuilder && (
-          <TDIUBuilder
-            onClose={() => setShowTDIUBuilder(false)}
-            onReportBug={() => {
-              setShowTDIUBuilder(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
-
         {/* PACT Act Navigator - Specialized Tool */}
         {showPACTActNavigator && (
           <PACTActNavigator
@@ -3238,16 +3210,7 @@ function App() {
           />
         )}
 
-        {/* Legislative Watchdog - Rule Change Radar */}
-        {showLegislativeWatchdog && (
-          <LegislativeWatchdog
-            onClose={() => setShowLegislativeWatchdog(false)}
-            onReportBug={() => {
-              setShowLegislativeWatchdog(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
+        <MaximizeRatingCluster />
 
         {/* Time Machine - ITF Countdown */}
         {showTimeMachine && (
@@ -3257,18 +3220,6 @@ function App() {
               setShowTimeMachine(false);
               setShowBugSquasher(true);
             }}
-          />
-        )}
-
-        {/* The Tribunal - Mock Hearing Simulator */}
-        {showTheTribunal && (
-          <TheTribunal
-            onClose={() => setShowTheTribunal(false)}
-            onReportBug={() => {
-              setShowTheTribunal(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
           />
         )}
 
