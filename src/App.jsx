@@ -56,6 +56,7 @@ import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesClus
 import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
 import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
 import QualityControlCluster from "./features/quality-control/QualityControlCluster";
+import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToolsCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -102,14 +103,8 @@ const TacticalCalculator = lazy(
 );
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 const WitnessBench = lazy(() => import("./components/WitnessBench"));
-const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
-const MillionDollarDashboard = lazy(
-  () => import("./components/MillionDollarDashboard"),
-);
-const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
-const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -164,19 +159,11 @@ function App() {
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   const [showWitnessBench, setShowWitnessBench] = useState(false);
-  const [showFOIAGenerator, setShowFOIAGenerator] = useState(false);
-  const [showMillionDollarDashboard, setShowMillionDollarDashboard] =
-    useState(false);
-  // NEW DIAMOND-TIER FEATURES
-  const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
-
-  // WOW FEATURES: Retro Pay, Pain Painter
-  const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
 
   // VKB: Veteran Knowledge Base Viewer
 
@@ -266,13 +253,9 @@ function App() {
     if (showWitnessBench) return "Witness Bench";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
-    if (showMillionDollarDashboard) return "Million Dollar Dashboard";
-    if (showRetroPayHunter) return "Retro Pay Hunter";
-    if (showEvidenceTimeline) return "Evidence Timeline";
     if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (showSymptomLogger) return "Symptom Logger";
-    if (showFOIAGenerator) return "FOIA Generator";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -563,7 +546,8 @@ function App() {
       "statement-analyzer": () => setShowNexusBuilder(true), // Statement Analyzer is embedded in Nexus Builder
       "mos-hazard": () =>
         window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
-      "timeline-wizard": () => setShowEvidenceTimeline(true), // Timeline Wizard maps to Evidence Timeline
+      "timeline-wizard": () =>
+        window.dispatchEvent(new CustomEvent("openEvidenceTimeline")), // Timeline Wizard maps to Evidence Timeline
       "dd214-analyzer": () => setShowDD214Analyzer(true),
       "web-of-conditions": () =>
         window.dispatchEvent(new CustomEvent("openWebOfConditions")),
@@ -573,12 +557,15 @@ function App() {
       "evidence-gap": () =>
         window.dispatchEvent(new CustomEvent("openEvidenceGapVisualizer")),
       "cfile-analyzer": () => setShowCFileAnalyzer(true),
-      "foia-generator": () => setShowFOIAGenerator(true),
-      "retro-pay-hunter": () => setShowRetroPayHunter(true),
+      "foia-generator": () =>
+        window.dispatchEvent(new CustomEvent("openFOIAGenerator")),
+      "retro-pay-hunter": () =>
+        window.dispatchEvent(new CustomEvent("openRetroPayHunter")),
       "tdiu-builder": () =>
         window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
       pathfinder: () => setShowPathfinder(true),
-      "million-dollar-dashboard": () => setShowMillionDollarDashboard(true),
+      "million-dollar-dashboard": () =>
+        window.dispatchEvent(new CustomEvent("openMillionDollarDashboard")),
       "vso-finder": () =>
         window.dispatchEvent(new CustomEvent("openVSOFinder")),
       "witness-bench": () => setShowWitnessBench(true),
@@ -668,8 +655,6 @@ function App() {
 
       // Calculate Tools
       showTacticalCalculator,
-      showMillionDollarDashboard,
-      showRetroPayHunter,
 
       // Discover Tools
       showSecondaryScoutLauncher,
@@ -687,8 +672,6 @@ function App() {
       nexusBuilderData,
       showFormsHelper,
       showSymptomLogger,
-      showEvidenceTimeline,
-      showFOIAGenerator,
       showDD214Analyzer,
 
       // AI & Settings (unified in AICommandCenter)
@@ -699,8 +682,6 @@ function App() {
         // Priority order: most specific tools first
         if (showMyPacket) return "My Packet";
         if (showTacticalCalculator) return "Tactical Calculator (Rating)";
-        if (showMillionDollarDashboard) return "Million Dollar Dashboard";
-        if (showRetroPayHunter) return "Retro Pay Hunter";
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
         if (showCAPSimulator) return "C&P Exam Simulator";
@@ -712,8 +693,6 @@ function App() {
         if (showNexusBuilder) return "Nexus Builder";
         if (showFormsHelper) return "Forms Helper";
         if (showSymptomLogger) return "Symptom Logger";
-        if (showEvidenceTimeline) return "Evidence Timeline";
-        if (showFOIAGenerator) return "FOIA Generator (Keysmith)";
         if (showDD214Analyzer) return "DD214 Analyzer";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
@@ -731,8 +710,6 @@ function App() {
       showMyPacket,
       // Calculate Tools
       showTacticalCalculator,
-      showMillionDollarDashboard,
-      showRetroPayHunter,
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
@@ -748,8 +725,6 @@ function App() {
       nexusBuilderData,
       showFormsHelper,
       showSymptomLogger,
-      showEvidenceTimeline,
-      showFOIAGenerator,
       showDD214Analyzer,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
@@ -855,10 +830,14 @@ function App() {
               window.dispatchEvent(new CustomEvent("openUserManual")),
             "knowledge-base": () =>
               window.dispatchEvent(new CustomEvent("openVKBViewer")),
-            "million-dollar": () => setShowMillionDollarDashboard(true),
+            "million-dollar": () =>
+              window.dispatchEvent(
+                new CustomEvent("openMillionDollarDashboard"),
+              ),
             "what-if-sandbox": () =>
               window.dispatchEvent(new CustomEvent("openWhatIfSandbox")),
-            "retro-pay": () => setShowRetroPayHunter(true),
+            "retro-pay": () =>
+              window.dispatchEvent(new CustomEvent("openRetroPayHunter")),
             "time-machine": () =>
               window.dispatchEvent(new CustomEvent("openTimeMachine")),
             "pact-act": () =>
@@ -872,8 +851,10 @@ function App() {
             "symptom-logger": () => setShowSymptomLogger(true),
             "pain-painter": () =>
               window.dispatchEvent(new CustomEvent("openPainPainter")),
-            "evidence-timeline": () => setShowEvidenceTimeline(true),
-            "foia-generator": () => setShowFOIAGenerator(true),
+            "evidence-timeline": () =>
+              window.dispatchEvent(new CustomEvent("openEvidenceTimeline")),
+            "foia-generator": () =>
+              window.dispatchEvent(new CustomEvent("openFOIAGenerator")),
             "legislative-watchdog": () =>
               window.dispatchEvent(new CustomEvent("openLegislativeWatchdog")),
             "backup-manager": () =>
@@ -930,12 +911,14 @@ function App() {
         // Calculate
         onTacticalCalculatorClick={() => setShowTacticalCalculator(true)}
         onMillionDollarDashboardClick={() =>
-          setShowMillionDollarDashboard(true)
+          window.dispatchEvent(new CustomEvent("openMillionDollarDashboard"))
         }
         onWhatIfSandboxClick={() =>
           window.dispatchEvent(new CustomEvent("openWhatIfSandbox"))
         }
-        onRetroPayHunterClick={() => setShowRetroPayHunter(true)}
+        onRetroPayHunterClick={() =>
+          window.dispatchEvent(new CustomEvent("openRetroPayHunter"))
+        }
         onTimeMachineClick={() =>
           window.dispatchEvent(new CustomEvent("openTimeMachine"))
         }
@@ -970,8 +953,12 @@ function App() {
         onPainPainterClick={() =>
           window.dispatchEvent(new CustomEvent("openPainPainter"))
         }
-        onEvidenceTimelineClick={() => setShowEvidenceTimeline(true)}
-        onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
+        onEvidenceTimelineClick={() =>
+          window.dispatchEvent(new CustomEvent("openEvidenceTimeline"))
+        }
+        onFOIAGeneratorClick={() =>
+          window.dispatchEvent(new CustomEvent("openFOIAGenerator"))
+        }
         // Quality Control
         onRedTeamClick={() =>
           window.dispatchEvent(new CustomEvent("openRedTeam"))
@@ -1993,7 +1980,9 @@ function App() {
                 See what VA used - and <strong>what they ignored</strong>.
               </p>
               <button
-                onClick={() => setShowFOIAGenerator(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openFOIAGenerator"))
+                }
                 className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔓 Generate FOIA Request
@@ -2095,7 +2084,9 @@ function App() {
                 it's too late.
               </p>
               <button
-                onClick={() => setShowEvidenceTimeline(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openEvidenceTimeline"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🧵 Build My Timeline
@@ -2315,7 +2306,11 @@ function App() {
                   climb.
                 </p>
                 <button
-                  onClick={() => setShowMillionDollarDashboard(true)}
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("openMillionDollarDashboard"),
+                    )
+                  }
                   className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-lg font-bold hover:from-yellow-600 hover:to-amber-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   💵 Show Me The Money
@@ -2413,7 +2408,9 @@ function App() {
                   missing bilateral factors, and underpayments.
                 </p>
                 <button
-                  onClick={() => setShowRetroPayHunter(true)}
+                  onClick={() =>
+                    window.dispatchEvent(new CustomEvent("openRetroPayHunter"))
+                  }
                   className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black rounded-lg font-bold hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   💰 Hunt My Back Pay
@@ -3025,27 +3022,7 @@ function App() {
           />
         )}
 
-        {/* FOIA Generator (The Keysmith) - Specialized Tool */}
-        {showFOIAGenerator && (
-          <FOIAGenerator
-            onClose={() => setShowFOIAGenerator(false)}
-            onReportBug={() => {
-              setShowFOIAGenerator(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
-        {/* Million Dollar Dashboard - Shock & Awe */}
-        {showMillionDollarDashboard && (
-          <MillionDollarDashboard
-            onClose={() => setShowMillionDollarDashboard(false)}
-            onReportBug={() => {
-              setShowMillionDollarDashboard(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
+        <SpecializedToolsCluster />
 
         <MaximizeRatingCluster />
 
@@ -3057,33 +3034,6 @@ function App() {
         <DecisionToolsCluster />
 
         <BodyMappingCluster />
-
-        {/* WOW FEATURE: Retro Pay Hunter */}
-        {showRetroPayHunter && (
-          <RetroPayHunter
-            onClose={() => setShowRetroPayHunter(false)}
-            onReportBug={() => {
-              setShowRetroPayHunter(false);
-              setShowBugReporter(true);
-            }}
-            onAISettingsClick={() => setShowAISettings(true)}
-          />
-        )}
-
-        {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
-        {showEvidenceTimeline && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-            <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-              <EvidenceTimeline
-                onClose={() => setShowEvidenceTimeline(false)}
-                onReportBug={() => {
-                  setShowEvidenceTimeline(false);
-                  setShowBugSquasher(true);
-                }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
 
