@@ -357,29 +357,18 @@ function App() {
             <CommandersChecklist
               isEmbedded={true}
               onToolSelect={(toolName) => {
-                // Handle tool navigation from checklist
-                if (toolName === "veteran-profile")
+                // 3 mappings diverge from dispatchToolById:
+                // conditions-search clears the search instead of
+                // opening a modal; veteran-profile here means
+                // "edit profile" (FormsHelper), not "view packet"
+                // (MyPacket) like the other surfaces; symptom-logger
+                // isn't in the shared map. Everything else delegates.
+                if (toolName === "conditions-search") setHasSearched(false);
+                else if (toolName === "veteran-profile")
                   window.dispatchEvent(new CustomEvent("openFormsHelper"));
-                else if (toolName === "conditions-search")
-                  setHasSearched(false);
-                else if (toolName === "cfile-analyzer")
-                  window.dispatchEvent(new CustomEvent("openCFileAnalyzer"));
                 else if (toolName === "symptom-logger")
                   window.dispatchEvent(new CustomEvent("openSymptomLogger"));
-                else if (toolName === "my-packet")
-                  window.dispatchEvent(new CustomEvent("openMyPacket"));
-                else if (toolName === "nexus-builder")
-                  window.dispatchEvent(new CustomEvent("openNexusBuilder"));
-                else if (toolName === "secondary-scout")
-                  window.dispatchEvent(
-                    new CustomEvent("openSecondaryScoutLauncher"),
-                  );
-                else if (toolName === "tactical-calculator")
-                  window.dispatchEvent(
-                    new CustomEvent("openTacticalCalculator"),
-                  );
-                else if (toolName === "forms-helper")
-                  window.dispatchEvent(new CustomEvent("openFormsHelper"));
+                else dispatchToolById(toolName);
               }}
             />
           </div>
