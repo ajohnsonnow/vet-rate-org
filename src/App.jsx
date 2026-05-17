@@ -57,6 +57,7 @@ import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
 import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
 import QualityControlCluster from "./features/quality-control/QualityControlCluster";
 import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToolsCluster";
+import EvidenceInvestigationCluster from "./features/evidence-investigation/EvidenceInvestigationCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -92,8 +93,6 @@ const SecondaryScoutLauncher = lazy(
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
 const MyPacket = lazy(() => import("./components/MyPacket"));
 const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
-const FormsHelper = lazy(() => import("./components/FormsHelper"));
-const CFileAnalyzer = lazy(() => import("./components/CFileAnalyzer"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
@@ -102,9 +101,7 @@ const TacticalCalculator = lazy(
   () => import("./components/TacticalCalculator"),
 );
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
-const WitnessBench = lazy(() => import("./components/WitnessBench"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
-const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -150,20 +147,16 @@ function App() {
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
   const [showMyPacket, setShowMyPacket] = useState(false);
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
-  const [showFormsHelper, setShowFormsHelper] = useState(false);
-  const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
-  const [showWitnessBench, setShowWitnessBench] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
-  const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
 
   // VKB: Veteran Knowledge Base Viewer
 
@@ -246,14 +239,10 @@ function App() {
     if (showMyPacket) return "My Packet";
     if (showTacticalCalculator) return "Rating Calculator";
     if (showSecondaryScout) return "Secondary Scout";
-    if (showCFileAnalyzer) return "C-File Analyzer";
     if (showNexusBuilder) return "Nexus Builder";
     if (showCAPSimulator) return "C&P Simulator";
-    if (showFormsHelper) return "Forms Helper";
-    if (showWitnessBench) return "Witness Bench";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
-    if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (showSymptomLogger) return "Symptom Logger";
     if (selectedResult) return "Disability Details";
@@ -534,7 +523,8 @@ function App() {
   // closes its own panel before invoking this).
   const handleToolSelect = (toolId) => {
     const toolMap = {
-      "forms-helper": () => setShowFormsHelper(true),
+      "forms-helper": () =>
+        window.dispatchEvent(new CustomEvent("openFormsHelper")),
       "veteran-profile": () => setShowMyPacket(true),
       "conditions-search": () => {}, // Main search is always visible
       "tactical-calculator": () => setShowTacticalCalculator(true),
@@ -548,7 +538,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
       "timeline-wizard": () =>
         window.dispatchEvent(new CustomEvent("openEvidenceTimeline")), // Timeline Wizard maps to Evidence Timeline
-      "dd214-analyzer": () => setShowDD214Analyzer(true),
+      "dd214-analyzer": () =>
+        window.dispatchEvent(new CustomEvent("openDD214Analyzer")),
       "web-of-conditions": () =>
         window.dispatchEvent(new CustomEvent("openWebOfConditions")),
       "cap-simulator": () => setShowCAPSimulator(true),
@@ -556,7 +547,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openPainPainter")),
       "evidence-gap": () =>
         window.dispatchEvent(new CustomEvent("openEvidenceGapVisualizer")),
-      "cfile-analyzer": () => setShowCFileAnalyzer(true),
+      "cfile-analyzer": () =>
+        window.dispatchEvent(new CustomEvent("openCFileAnalyzer")),
       "foia-generator": () =>
         window.dispatchEvent(new CustomEvent("openFOIAGenerator")),
       "retro-pay-hunter": () =>
@@ -568,7 +560,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openMillionDollarDashboard")),
       "vso-finder": () =>
         window.dispatchEvent(new CustomEvent("openVSOFinder")),
-      "witness-bench": () => setShowWitnessBench(true),
+      "witness-bench": () =>
+        window.dispatchEvent(new CustomEvent("openWitnessBench")),
       "claim-navigator": () => setShowClaimNavigator(true),
       "va-resources": () =>
         window.dispatchEvent(new CustomEvent("openVAResources")),
@@ -665,14 +658,10 @@ function App() {
       showClaimNavigator,
 
       // Build Evidence Tools
-      showCFileAnalyzer,
       showBlueButtonXRay,
-      showWitnessBench,
       showNexusBuilder,
       nexusBuilderData,
-      showFormsHelper,
       showSymptomLogger,
-      showDD214Analyzer,
 
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
@@ -687,13 +676,9 @@ function App() {
         if (showCAPSimulator) return "C&P Exam Simulator";
         if (showPathfinder) return "Pathfinder (AI Strategy)";
         if (showClaimNavigator) return "Claim Navigator";
-        if (showCFileAnalyzer) return "C-File Analyzer";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
-        if (showWitnessBench) return "Witness Bench (Buddy Letters)";
         if (showNexusBuilder) return "Nexus Builder";
-        if (showFormsHelper) return "Forms Helper";
         if (showSymptomLogger) return "Symptom Logger";
-        if (showDD214Analyzer) return "DD214 Analyzer";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -718,14 +703,10 @@ function App() {
       showPathfinder,
       showClaimNavigator,
       // Build Evidence Tools
-      showCFileAnalyzer,
       showBlueButtonXRay,
-      showWitnessBench,
       showNexusBuilder,
       nexusBuilderData,
-      showFormsHelper,
       showSymptomLogger,
-      showDD214Analyzer,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
     ],
@@ -798,8 +779,10 @@ function App() {
             "nexus-builder": () => setShowNexusBuilder(true),
             pathfinder: () => setShowPathfinder(true),
             "claim-navigator": () => setShowClaimNavigator(true),
-            "cfile-analyzer": () => setShowCFileAnalyzer(true),
-            "forms-helper": () => setShowFormsHelper(true),
+            "cfile-analyzer": () =>
+              window.dispatchEvent(new CustomEvent("openCFileAnalyzer")),
+            "forms-helper": () =>
+              window.dispatchEvent(new CustomEvent("openFormsHelper")),
             "red-team": () =>
               window.dispatchEvent(new CustomEvent("openRedTeam")),
             "shark-radar": () =>
@@ -847,7 +830,8 @@ function App() {
             "web-of-conditions": () =>
               window.dispatchEvent(new CustomEvent("openWebOfConditions")),
             "blue-button": () => setShowBlueButtonXRay(true),
-            "witness-bench": () => setShowWitnessBench(true),
+            "witness-bench": () =>
+              window.dispatchEvent(new CustomEvent("openWitnessBench")),
             "symptom-logger": () => setShowSymptomLogger(true),
             "pain-painter": () =>
               window.dispatchEvent(new CustomEvent("openPainPainter")),
@@ -864,7 +848,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openWorkflowGuide")),
             "record-search": () =>
               window.dispatchEvent(new CustomEvent("openRecordSearch")),
-            "dd214-analyzer": () => setShowDD214Analyzer(true),
+            "dd214-analyzer": () =>
+              window.dispatchEvent(new CustomEvent("openDD214Analyzer")),
             "bdd-builder": () =>
               window.dispatchEvent(new CustomEvent("openBDDBuilder")),
           };
@@ -941,14 +926,20 @@ function App() {
           window.dispatchEvent(new CustomEvent("openBDDBuilder"))
         }
         // Build Evidence
-        onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
+        onCFileAnalyzerClick={() =>
+          window.dispatchEvent(new CustomEvent("openCFileAnalyzer"))
+        }
         onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
         onRecordSearchClick={() =>
           window.dispatchEvent(new CustomEvent("openRecordSearch"))
         }
-        onWitnessBenchClick={() => setShowWitnessBench(true)}
+        onWitnessBenchClick={() =>
+          window.dispatchEvent(new CustomEvent("openWitnessBench"))
+        }
         onNexusBuilderClick={() => setShowNexusBuilder(true)}
-        onFormsHelperClick={() => setShowFormsHelper(true)}
+        onFormsHelperClick={() =>
+          window.dispatchEvent(new CustomEvent("openFormsHelper"))
+        }
         onSymptomLoggerClick={() => setShowSymptomLogger(true)}
         onPainPainterClick={() =>
           window.dispatchEvent(new CustomEvent("openPainPainter"))
@@ -1062,11 +1053,12 @@ function App() {
               isEmbedded={true}
               onToolSelect={(toolName) => {
                 // Handle tool navigation from checklist
-                if (toolName === "veteran-profile") setShowFormsHelper(true);
+                if (toolName === "veteran-profile")
+                  window.dispatchEvent(new CustomEvent("openFormsHelper"));
                 else if (toolName === "conditions-search")
                   setHasSearched(false);
                 else if (toolName === "cfile-analyzer")
-                  setShowCFileAnalyzer(true);
+                  window.dispatchEvent(new CustomEvent("openCFileAnalyzer"));
                 else if (toolName === "symptom-logger")
                   setShowSymptomLogger(true);
                 else if (toolName === "my-packet") setShowMyPacket(true);
@@ -1076,7 +1068,8 @@ function App() {
                   setShowSecondaryScoutLauncher(true);
                 else if (toolName === "tactical-calculator")
                   setShowTacticalCalculator(true);
-                else if (toolName === "forms-helper") setShowFormsHelper(true);
+                else if (toolName === "forms-helper")
+                  window.dispatchEvent(new CustomEvent("openFormsHelper"));
               }}
             />
           </div>
@@ -1487,7 +1480,9 @@ function App() {
                 </div>
               </div>
               <button
-                onClick={() => setShowCFileAnalyzer(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openCFileAnalyzer"))
+                }
                 className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
               >
                 🚀 Analyze My C-File
@@ -1550,7 +1545,9 @@ function App() {
                 <strong>witness evidence</strong>.
               </p>
               <button
-                onClick={() => setShowWitnessBench(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openWitnessBench"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ✍️ Create Buddy Statement
@@ -1595,7 +1592,9 @@ function App() {
                 </div>
               </div>
               <button
-                onClick={() => setShowFormsHelper(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openFormsHelper"))
+                }
                 className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 📝 Open Forms Helper
@@ -2579,7 +2578,9 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowFormsHelper(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openFormsHelper"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 📋 Forms Helper
@@ -2791,7 +2792,7 @@ function App() {
             onOpenAISettings={() => setShowAISettings(true)}
             onOpenDD214Analyzer={() => {
               setShowMyPacket(false);
-              setShowDD214Analyzer(true);
+              window.dispatchEvent(new CustomEvent("openDD214Analyzer"));
             }}
           />
         )}
@@ -2805,44 +2806,15 @@ function App() {
           />
         )}
 
-        {/* Forms Helper */}
-        {showFormsHelper && (
-          <FormsHelper
-            onClose={() => setShowFormsHelper(false)}
-            onReportBug={() => setShowBugSquasher(true)}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
-
         <PublicationsLibraryModal />
 
-        {/* C-File Analyzer */}
-        {showCFileAnalyzer && (
-          <CFileAnalyzer
-            onClose={() => setShowCFileAnalyzer(false)}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
-
-        {/* DD214 Analyzer */}
-        {showDD214Analyzer && (
-          <DD214Analyzer
-            onClose={() => setShowDD214Analyzer(false)}
-            onReportBug={() => {
-              setShowDD214Analyzer(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
-            onOpenMusterCall={() => {
-              setShowDD214Analyzer(false);
-              window.dispatchEvent(new CustomEvent("openMusterCall"));
-            }}
-          />
-        )}
+        <EvidenceInvestigationCluster />
 
         {/* Muster Call → Intelligence Briefing — owned by features/muster-call */}
         <MusterCallFlow
-          onOpenDD214Analyzer={() => setShowDD214Analyzer(true)}
+          onOpenDD214Analyzer={() =>
+            window.dispatchEvent(new CustomEvent("openDD214Analyzer"))
+          }
         />
 
         <KnowledgeCluster />
@@ -3007,18 +2979,6 @@ function App() {
               setShowBlueButtonXRay(false);
               setShowBugSquasher(true);
             }}
-          />
-        )}
-
-        {/* Witness Bench - Diamond Tier Buddy Letter Wizard */}
-        {showWitnessBench && (
-          <WitnessBench
-            onClose={() => setShowWitnessBench(false)}
-            onReportBug={() => {
-              setShowWitnessBench(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
           />
         )}
 
