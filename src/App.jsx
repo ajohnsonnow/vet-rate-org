@@ -117,9 +117,6 @@ function App() {
 
   // VKB: Veteran Knowledge Base Viewer
 
-  // AAAAA DIAMOND STANDARD: Command Search & Privacy
-  const [showAtomicWipe, setShowAtomicWipe] = useState(false);
-
   // CLEAR COAT: Onboarding & Trust Features
 
   // SAFETY-CRITICAL: Crisis Intervention surface lives in
@@ -355,18 +352,7 @@ function App() {
       <GlobalCommandSearchWrapper />
 
       {/* AAAAA Diamond Standard: Atomic Wipe (Panic Button) */}
-      <AtomicWipe
-        isOpen={showAtomicWipe}
-        onClose={() => setShowAtomicWipe(false)}
-        onWipeComplete={() => {
-          setShowAtomicWipe(false);
-          // Reset all state to initial values
-          setUserConditions([]);
-          setSearchTerm("");
-          setResults([]);
-          setSelectedResult(null);
-        }}
-      />
+      <AtomicWipe />
 
       <AppHeader />
       <BuyMeCoffee
