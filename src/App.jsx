@@ -61,6 +61,7 @@ import EvidenceInvestigationCluster from "./features/evidence-investigation/Evid
 import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
 import CalculateCluster from "./features/calculate/CalculateCluster";
 import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
+import MyPacketModal from "./features/my-packet/MyPacketModal";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -94,7 +95,6 @@ const SecondaryScoutLauncher = lazy(
   () => import("./components/SecondaryScoutLauncher"),
 );
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
-const MyPacket = lazy(() => import("./components/MyPacket"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
@@ -140,7 +140,6 @@ function App() {
   const [userConditions, setUserConditions] = useState([]);
   const [showNexusBuilder, setShowNexusBuilder] = useState(false);
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
-  const [showMyPacket, setShowMyPacket] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
@@ -203,7 +202,6 @@ function App() {
 
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
-    if (showMyPacket) return "My Packet";
     if (showSecondaryScout) return "Secondary Scout";
     if (showNexusBuilder) return "Nexus Builder";
     if (showPathfinder) return "Pathfinder";
@@ -215,6 +213,31 @@ function App() {
   // Setup beforeunload warning for unsaved changes
   useEffect(() => {
     setupBeforeUnloadWarning();
+  }, []);
+
+  // Bridge listeners for events dispatched by extracted clusters whose
+  // targets (Pathfinder, NexusBuilder) still live in App.jsx. These move
+  // into their own clusters when Pathfinder / NexusBuilder extract (B56+).
+  useEffect(() => {
+    const openPathfinderBridge = (e) => {
+      setPathfinderInitialConditions(e?.detail?.conditions ?? null);
+      setShowPathfinder(true);
+    };
+    const openNexusBuilderBridge = (e) => {
+      if (e?.detail) setNexusBuilderData(e.detail);
+      setShowNexusBuilder(true);
+    };
+    const resumeFromPacketBridge = (e) => {
+      if (e?.detail) handleResumeFromPacket(e.detail);
+    };
+    window.addEventListener("openPathfinder", openPathfinderBridge);
+    window.addEventListener("openNexusBuilder", openNexusBuilderBridge);
+    window.addEventListener("resumeFromPacket", resumeFromPacketBridge);
+    return () => {
+      window.removeEventListener("openPathfinder", openPathfinderBridge);
+      window.removeEventListener("openNexusBuilder", openNexusBuilderBridge);
+      window.removeEventListener("resumeFromPacket", resumeFromPacketBridge);
+    };
   }, []);
 
   // DEMO: Keyboard shortcut to open Demo Dashboard (Ctrl+Shift+D)
@@ -398,7 +421,7 @@ function App() {
 
     // Close Nexus Builder and show success
     setShowNexusBuilder(false);
-    setShowMyPacket(true);
+    window.dispatchEvent(new CustomEvent("openMyPacket"));
   };
 
   const handleResumeFromPacket = (claim) => {
@@ -410,7 +433,6 @@ function App() {
       primaryCondition: claim.parentCondition,
       existingStatement: existingStatement,
     });
-    setShowMyPacket(false);
     setShowNexusBuilder(true);
   };
 
@@ -473,12 +495,13 @@ function App() {
     const toolMap = {
       "forms-helper": () =>
         window.dispatchEvent(new CustomEvent("openFormsHelper")),
-      "veteran-profile": () => setShowMyPacket(true),
+      "veteran-profile": () =>
+        window.dispatchEvent(new CustomEvent("openMyPacket")),
       "conditions-search": () => {}, // Main search is always visible
       "tactical-calculator": () =>
         window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
       "secondary-scout": () => setShowSecondaryScoutLauncher(true),
-      "my-packet": () => setShowMyPacket(true),
+      "my-packet": () => window.dispatchEvent(new CustomEvent("openMyPacket")),
       "knowledge-base": () =>
         window.dispatchEvent(new CustomEvent("openVKBViewer")),
       "nexus-builder": () => setShowNexusBuilder(true),
@@ -594,9 +617,6 @@ function App() {
       hasSearched,
       error,
 
-      // Core Navigation
-      showMyPacket,
-
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
@@ -611,7 +631,6 @@ function App() {
       // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
       currentModule: (() => {
         // Priority order: most specific tools first
-        if (showMyPacket) return "My Packet";
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
         if (showPathfinder) return "Pathfinder (AI Strategy)";
@@ -628,8 +647,6 @@ function App() {
       selectedResult,
       hasSearched,
       error,
-      // Core Navigation
-      showMyPacket,
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
@@ -704,7 +721,8 @@ function App() {
           const toolHandlers = {
             "tactical-calculator": () =>
               window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
-            "my-packet": () => setShowMyPacket(true),
+            "my-packet": () =>
+              window.dispatchEvent(new CustomEvent("openMyPacket")),
             "secondary-scout": () => setShowSecondaryScoutLauncher(true),
             "cap-simulator": () =>
               window.dispatchEvent(new CustomEvent("openCAPSimulator")),
@@ -815,7 +833,9 @@ function App() {
 
       <Header
         // Core Navigation
-        onMyPacketClick={() => setShowMyPacket(true)}
+        onMyPacketClick={() =>
+          window.dispatchEvent(new CustomEvent("openMyPacket"))
+        }
         onKnowledgeBaseClick={() =>
           window.dispatchEvent(new CustomEvent("openVKBViewer"))
         }
@@ -1006,7 +1026,8 @@ function App() {
                   window.dispatchEvent(new CustomEvent("openCFileAnalyzer"));
                 else if (toolName === "symptom-logger")
                   window.dispatchEvent(new CustomEvent("openSymptomLogger"));
-                else if (toolName === "my-packet") setShowMyPacket(true);
+                else if (toolName === "my-packet")
+                  window.dispatchEvent(new CustomEvent("openMyPacket"));
                 else if (toolName === "nexus-builder")
                   setShowNexusBuilder(true);
                 else if (toolName === "secondary-scout")
@@ -1039,7 +1060,9 @@ function App() {
             {/* Demo Data Loader - "Gold Standard" Example */}
             <div className="text-center mt-4">
               <DemoDataLoader
-                onDataLoaded={() => setShowMyPacket(true)}
+                onDataLoaded={() =>
+                  window.dispatchEvent(new CustomEvent("openMyPacket"))
+                }
                 variant="link"
               />
             </div>
@@ -1095,7 +1118,11 @@ function App() {
 
         {/* Quick Condition Picker - Below Search Results */}
         <div id="tour-quick-picker" className="max-w-4xl mx-auto mb-8">
-          <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
+          <QuickConditionPicker
+            onViewPacket={() =>
+              window.dispatchEvent(new CustomEvent("openMyPacket"))
+            }
+          />
         </div>
 
         {selectedResult && (
@@ -2661,7 +2688,7 @@ function App() {
                       <button
                         onClick={() => {
                           setShowSecondaryScout(false);
-                          setShowMyPacket(true);
+                          window.dispatchEvent(new CustomEvent("openMyPacket"));
                         }}
                         className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                       >
@@ -2718,7 +2745,7 @@ function App() {
                     onLearnHow={handleLearnHow}
                     onViewPacket={() => {
                       setShowSecondaryScout(false);
-                      setShowMyPacket(true);
+                      window.dispatchEvent(new CustomEvent("openMyPacket"));
                     }}
                     onOpenAISettings={() =>
                       window.dispatchEvent(new CustomEvent("openAISettings"))
@@ -2747,32 +2774,7 @@ function App() {
           />
         )}
 
-        {/* My Packet */}
-        {showMyPacket && (
-          <MyPacket
-            onResume={handleResumeFromPacket}
-            onClose={() => setShowMyPacket(false)}
-            onReportBug={() =>
-              window.dispatchEvent(new CustomEvent("openBugSquasher"))
-            }
-            onAnalyzeStrategy={() => {
-              setPathfinderInitialConditions(null); // Clear any stale conditions
-              setShowMyPacket(false);
-              setShowPathfinder(true);
-            }}
-            onOpenGoogleDriveSync={() => {
-              setShowMyPacket(false);
-              window.dispatchEvent(new CustomEvent("openCloudSyncManager"));
-            }}
-            onOpenAISettings={() =>
-              window.dispatchEvent(new CustomEvent("openAISettings"))
-            }
-            onOpenDD214Analyzer={() => {
-              setShowMyPacket(false);
-              window.dispatchEvent(new CustomEvent("openDD214Analyzer"));
-            }}
-          />
-        )}
+        <MyPacketModal />
 
         <PublicationsLibraryModal />
 
@@ -3030,7 +3032,9 @@ function App() {
         onCalculatorClick={() =>
           window.dispatchEvent(new CustomEvent("openTacticalCalculator"))
         }
-        onPacketClick={() => setShowMyPacket(true)}
+        onPacketClick={() =>
+          window.dispatchEvent(new CustomEvent("openMyPacket"))
+        }
         onMissionsClick={() =>
           window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
         }
