@@ -17,7 +17,7 @@
  * VA disability claims process.
  */
 
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import BRAND from "./config/branding";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
@@ -64,6 +64,7 @@ import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
 import MyPacketModal from "./features/my-packet/MyPacketModal";
 import PathfinderModal from "./features/pathfinder/PathfinderModal";
 import BlueButtonXRayModal from "./features/blue-button/BlueButtonXRayModal";
+import DiscoverCluster from "./features/discover/DiscoverCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -86,24 +87,8 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
-// Lazy-loaded modal-shaped feature surfaces (B21, audit #23 #28 #35).
-// Each becomes its own Vite bundle chunk, fetched only when the user opens
-// that surface. Suspense boundary for the cluster lives below, fallback is
-// <LoadingBunker />. Components rendered unconditionally (Header, SearchBar,
-// CommandersChecklist, etc.) and safety-critical surfaces (CrisisListener,
-// update banner, What's-New modal) stay eager.
-const SecondaryScout = lazy(() => import("./components/SecondaryScout"));
-const SecondaryScoutLauncher = lazy(
-  () => import("./components/SecondaryScoutLauncher"),
-);
-const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
-import {
-  saveStatement,
-  getSavedClaims,
-  getStatement,
-} from "./utils/claimsStorage";
 import { initializeErrorCapture } from "./utils/bugReportUtils";
 import { setupBeforeUnloadWarning } from "./utils/dataPersistence";
 import { migrateUserData } from "./utils/migrationManager";
@@ -134,12 +119,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [showSecondaryScoutLauncher, setShowSecondaryScoutLauncher] =
-    useState(false);
-  const [showSecondaryScout, setShowSecondaryScout] = useState(false);
   const [userConditions, setUserConditions] = useState([]);
-  const [showNexusBuilder, setShowNexusBuilder] = useState(false);
-  const [nexusBuilderData, setNexusBuilderData] = useState(null);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
@@ -196,8 +176,6 @@ function App() {
 
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
-    if (showSecondaryScout) return "Secondary Scout";
-    if (showNexusBuilder) return "Nexus Builder";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -207,36 +185,14 @@ function App() {
     setupBeforeUnloadWarning();
   }, []);
 
-  // Bridge listeners for events dispatched by extracted clusters whose
-  // targets (NexusBuilder, SecondaryScoutLauncher) still live in App.jsx.
-  // These move into the DiscoverCluster when it extracts (B57+).
+  // searchDisability bridge: BlueButtonXRayModal's Check Rating Criteria
+  // callback dispatches into App.jsx's searchTerm state.
   useEffect(() => {
-    const openNexusBuilderBridge = (e) => {
-      if (e?.detail) setNexusBuilderData(e.detail);
-      setShowNexusBuilder(true);
-    };
-    const openSecondaryScoutLauncherBridge = () =>
-      setShowSecondaryScoutLauncher(true);
-    const resumeFromPacketBridge = (e) => {
-      if (e?.detail) handleResumeFromPacket(e.detail);
-    };
     const searchDisabilityBridge = (e) => {
       if (e?.detail?.term !== undefined) setSearchTerm(e.detail.term);
     };
-    window.addEventListener("openNexusBuilder", openNexusBuilderBridge);
-    window.addEventListener(
-      "openSecondaryScoutLauncher",
-      openSecondaryScoutLauncherBridge,
-    );
-    window.addEventListener("resumeFromPacket", resumeFromPacketBridge);
     window.addEventListener("searchDisability", searchDisabilityBridge);
     return () => {
-      window.removeEventListener("openNexusBuilder", openNexusBuilderBridge);
-      window.removeEventListener(
-        "openSecondaryScoutLauncher",
-        openSecondaryScoutLauncherBridge,
-      );
-      window.removeEventListener("resumeFromPacket", resumeFromPacketBridge);
       window.removeEventListener("searchDisability", searchDisabilityBridge);
     };
   }, []);
@@ -387,65 +343,17 @@ function App() {
     initializeApp();
   }, []);
 
-  const handleLaunchSecondaryScout = (conditions) => {
-    setUserConditions(conditions);
-    setShowSecondaryScoutLauncher(false);
-    setShowSecondaryScout(true);
-  };
-
-  const handleLearnHow = (suggestion) => {
-    setNexusBuilderData({
-      condition: suggestion.secondaryCondition,
-      primaryCondition: suggestion.primaryCondition,
-    });
-    setShowSecondaryScout(false);
-    setShowNexusBuilder(true);
-  };
-
-  const handleSaveStatement = (statementData) => {
-    // Find the matching claim by condition name and parent condition
-    const savedClaims = getSavedClaims();
-    const matchingClaim = savedClaims.find(
-      (c) =>
-        c.conditionName === statementData.condition &&
-        c.parentCondition === (statementData.primaryCondition || null),
-    );
-
-    if (matchingClaim) {
-      // Save statement with the claim's ID
-      saveStatement(matchingClaim.id, statementData);
-    } else {
-      alert(
-        "Error: Could not find matching claim. Please save the claim first from Secondary Scout.",
-      );
-    }
-
-    // Close Nexus Builder and show success
-    setShowNexusBuilder(false);
-    window.dispatchEvent(new CustomEvent("openMyPacket"));
-  };
-
-  const handleResumeFromPacket = (claim) => {
-    // Get existing statement for editing
-    const existingStatement = getStatement(claim.id);
-
-    setNexusBuilderData({
-      condition: claim.conditionName,
-      primaryCondition: claim.parentCondition,
-      existingStatement: existingStatement,
-    });
-    setShowNexusBuilder(true);
-  };
-
   const handleBuildStatementFromSearch = (conditionName) => {
-    // Open NexusBuilder for a primary (non-secondary) condition
-    setNexusBuilderData({
-      condition: conditionName,
-      primaryCondition: null,
-      existingStatement: null,
-    });
-    setSelectedResult(null); // Close the details view
-    setShowNexusBuilder(true);
+    setSelectedResult(null);
+    window.dispatchEvent(
+      new CustomEvent("openNexusBuilder", {
+        detail: {
+          condition: conditionName,
+          primaryCondition: null,
+          existingStatement: null,
+        },
+      }),
+    );
   };
 
   // Handler for navigating to a secondary condition from DisabilityDetails
@@ -482,12 +390,15 @@ function App() {
       "conditions-search": () => {}, // Main search is always visible
       "tactical-calculator": () =>
         window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
-      "secondary-scout": () => setShowSecondaryScoutLauncher(true),
+      "secondary-scout": () =>
+        window.dispatchEvent(new CustomEvent("openSecondaryScoutLauncher")),
       "my-packet": () => window.dispatchEvent(new CustomEvent("openMyPacket")),
       "knowledge-base": () =>
         window.dispatchEvent(new CustomEvent("openVKBViewer")),
-      "nexus-builder": () => setShowNexusBuilder(true),
-      "statement-analyzer": () => setShowNexusBuilder(true), // Statement Analyzer is embedded in Nexus Builder
+      "nexus-builder": () =>
+        window.dispatchEvent(new CustomEvent("openNexusBuilder")),
+      "statement-analyzer": () =>
+        window.dispatchEvent(new CustomEvent("openNexusBuilder")),
       "mos-hazard": () =>
         window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
       "timeline-wizard": () =>
@@ -599,40 +510,15 @@ function App() {
       hasSearched,
       error,
 
-      // Discover Tools
-      showSecondaryScoutLauncher,
-      showSecondaryScout,
       userConditions,
-
-      // Build Evidence Tools
-      showNexusBuilder,
-      nexusBuilderData,
 
       // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
       currentModule: (() => {
-        // Priority order: most specific tools first
-        if (showSecondaryScout) return "Secondary Scout";
-        if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
-        if (showNexusBuilder) return "Nexus Builder";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
       })(),
     }),
-    [
-      // Search & Core
-      searchTerm,
-      results,
-      selectedResult,
-      hasSearched,
-      error,
-      // Discover Tools
-      showSecondaryScoutLauncher,
-      showSecondaryScout,
-      userConditions,
-      // Build Evidence Tools
-      showNexusBuilder,
-      nexusBuilderData,
-    ],
+    [searchTerm, results, selectedResult, hasSearched, error, userConditions],
   );
 
   // Show migration loading screen if migrating
@@ -699,10 +585,14 @@ function App() {
               window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
             "my-packet": () =>
               window.dispatchEvent(new CustomEvent("openMyPacket")),
-            "secondary-scout": () => setShowSecondaryScoutLauncher(true),
+            "secondary-scout": () =>
+              window.dispatchEvent(
+                new CustomEvent("openSecondaryScoutLauncher"),
+              ),
             "cap-simulator": () =>
               window.dispatchEvent(new CustomEvent("openCAPSimulator")),
-            "nexus-builder": () => setShowNexusBuilder(true),
+            "nexus-builder": () =>
+              window.dispatchEvent(new CustomEvent("openNexusBuilder")),
             pathfinder: () =>
               window.dispatchEvent(new CustomEvent("openPathfinder")),
             "claim-navigator": () =>
@@ -843,7 +733,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openTimeMachine"))
         }
         // Discover
-        onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
+        onSecondaryScoutClick={() =>
+          window.dispatchEvent(new CustomEvent("openSecondaryScoutLauncher"))
+        }
         onCAPSimulatorClick={() =>
           window.dispatchEvent(new CustomEvent("openCAPSimulator"))
         }
@@ -879,7 +771,9 @@ function App() {
         onWitnessBenchClick={() =>
           window.dispatchEvent(new CustomEvent("openWitnessBench"))
         }
-        onNexusBuilderClick={() => setShowNexusBuilder(true)}
+        onNexusBuilderClick={() =>
+          window.dispatchEvent(new CustomEvent("openNexusBuilder"))
+        }
         onFormsHelperClick={() =>
           window.dispatchEvent(new CustomEvent("openFormsHelper"))
         }
@@ -1011,9 +905,11 @@ function App() {
                 else if (toolName === "my-packet")
                   window.dispatchEvent(new CustomEvent("openMyPacket"));
                 else if (toolName === "nexus-builder")
-                  setShowNexusBuilder(true);
+                  window.dispatchEvent(new CustomEvent("openNexusBuilder"));
                 else if (toolName === "secondary-scout")
-                  setShowSecondaryScoutLauncher(true);
+                  window.dispatchEvent(
+                    new CustomEvent("openSecondaryScoutLauncher"),
+                  );
                 else if (toolName === "tactical-calculator")
                   window.dispatchEvent(
                     new CustomEvent("openTacticalCalculator"),
@@ -1217,7 +1113,11 @@ function App() {
                 nexus database and 38 CFR § 3.310.
               </p>
               <button
-                onClick={() => setShowSecondaryScoutLauncher(true)}
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("openSecondaryScoutLauncher"),
+                  )
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
               >
                 🚀 Launch Secondary Scout
@@ -2632,133 +2532,10 @@ function App() {
         {/* Legal/info modals — Privacy, About, Contact, Terms (features/legal) */}
         <LegalPages />
 
-        {/* Secondary Scout Launcher */}
-        {showSecondaryScoutLauncher && (
-          <SecondaryScoutLauncher
-            onLaunch={handleLaunchSecondaryScout}
-            onClose={() => setShowSecondaryScoutLauncher(false)}
-            onReportBug={() =>
-              window.dispatchEvent(new CustomEvent("openBugSquasher"))
-            }
-          />
-        )}
-
-        {/* Secondary Scout Results */}
-        {showSecondaryScout && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-            <div className="min-h-screen px-4 py-8">
-              <div className="bg-white dark:bg-emerald-950 rounded-lg shadow-xl max-w-7xl mx-auto">
-                <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 z-10 rounded-t-lg">
-                  {/* Mobile: Stack vertically, Desktop: Side by side */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-xl sm:text-3xl font-bold truncate">
-                        🔍 Secondary Scout Results
-                      </h2>
-                      <p className="text-sm text-blue-100 mt-1">
-                        Based on {userConditions.length} service-connected
-                        condition{userConditions.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    {/* Mobile: Full width buttons, Desktop: Inline */}
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      <ReportBugLink
-                        onClick={() =>
-                          window.dispatchEvent(
-                            new CustomEvent("openBugSquasher"),
-                          )
-                        }
-                        variant="light"
-                        moduleName="Secondary Scout Results"
-                      />
-                      <button
-                        onClick={() => {
-                          setShowSecondaryScout(false);
-                          window.dispatchEvent(new CustomEvent("openMyPacket"));
-                        }}
-                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-                      >
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        <span className="hidden xs:inline">My </span>Packet
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowSecondaryScout(false);
-                          setShowSecondaryScoutLauncher(true);
-                        }}
-                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
-                      >
-                        <span className="hidden sm:inline">Change </span>
-                        Conditions
-                      </button>
-                      <button
-                        onClick={() => setShowSecondaryScout(false)}
-                        className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                        aria-label="Close"
-                      >
-                        <svg
-                          className="w-5 h-5 sm:w-6 sm:h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <SecondaryScout
-                    userDisabilities={userConditions}
-                    onLearnHow={handleLearnHow}
-                    onViewPacket={() => {
-                      setShowSecondaryScout(false);
-                      window.dispatchEvent(new CustomEvent("openMyPacket"));
-                    }}
-                    onOpenAISettings={() =>
-                      window.dispatchEvent(new CustomEvent("openAISettings"))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Nexus Builder */}
-        {showNexusBuilder && nexusBuilderData && (
-          <NexusBuilder
-            condition={nexusBuilderData.condition}
-            primaryCondition={nexusBuilderData.primaryCondition}
-            existingStatement={nexusBuilderData.existingStatement}
-            onClose={() => setShowNexusBuilder(false)}
-            onSave={handleSaveStatement}
-            onReportBug={() =>
-              window.dispatchEvent(new CustomEvent("openBugSquasher"))
-            }
-            onOpenAISettings={() =>
-              window.dispatchEvent(new CustomEvent("openAISettings"))
-            }
-          />
-        )}
+        <DiscoverCluster
+          userConditions={userConditions}
+          setUserConditions={setUserConditions}
+        />
 
         <MyPacketModal />
 
