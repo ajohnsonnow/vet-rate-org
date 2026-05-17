@@ -22,22 +22,14 @@ import AppHeader from "./features/header/AppHeader";
 import HomeMain from "./features/home/HomeMain";
 import AppModals from "./features/modals/AppModals";
 import AppShellOverlays from "./features/app-shell/AppShellOverlays";
+import AppShellTop from "./features/app-shell/AppShellTop";
 import BuyMeCoffee from "./components/BuyMeCoffee";
 import FloatingBugButton from "./components/FloatingBugButton";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
-import MobileNotice from "./components/MobileNotice";
-import ActiveDevBanner from "./features/active-dev-banner/ActiveDevBanner";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
-import ToastContainer, { useToast } from "./components/Toast";
 import LoadingBunker from "./components/LoadingBunker";
 import { LocalAIProvider } from "./components/LocalAIPanel";
-import OnboardingGate from "./features/onboarding/OnboardingGate";
-import { VaApiStatusBanner } from "./components/VaApiStatus";
-import { isVaApiEnabled } from "./config/vaAuth";
-import StressReliefDivision from "./components/StressReliefDivision";
-import GlobalCommandSearchWrapper from "./features/global-command-search/GlobalCommandSearchWrapper";
-import AtomicWipe from "./components/AtomicWipe";
 import { HelperModeProvider } from "./contexts/HelperModeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
@@ -49,9 +41,6 @@ import AppFooter from "./features/footer/AppFooter";
 import "./index.css";
 
 function App() {
-  // Toast notification system
-  const { toasts, onClose, onAction } = useToast();
-
   // Disability search subsystem (state, debounce, bridge, handlers)
   // lives in features/search/useDisabilitySearch.js (audit #35, B74).
   const {
@@ -128,28 +117,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-emerald-950 flex flex-col transition-colors duration-200">
-      {/* 🎮 Stress Relief Division Easter Egg - Type IDDQD anywhere */}
-      <StressReliefDivision />
-
-      {/* Toast Notification System */}
-      <ToastContainer toasts={toasts} onClose={onClose} onAction={onAction} />
-
-      {/* Onboarding — DisclaimerSplash + BootCampTour, gated on whatsNewOpen */}
-      <OnboardingGate whatsNewOpen={whatsNewOpen} />
-
-      {/* VA API Status Banner — only when the VA-API surface is enabled */}
-      {isVaApiEnabled() && <VaApiStatusBanner />}
-
-      {/* Mobile device notice */}
-      <MobileNotice />
-
-      {/* Active Development Banner */}
-      <ActiveDevBanner />
-
-      <GlobalCommandSearchWrapper />
-
-      {/* AAAAA Diamond Standard: Atomic Wipe (Panic Button) */}
-      <AtomicWipe />
+      <AppShellTop whatsNewOpen={whatsNewOpen} />
 
       <AppHeader />
       <BuyMeCoffee
