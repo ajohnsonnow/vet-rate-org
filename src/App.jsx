@@ -141,12 +141,6 @@ function App() {
   // setupBeforeUnloadWarning now run inside useBootSequence (audit
   // #35, B70).
 
-  // Helper function to get current tool name for AI Assistant context
-  const getCurrentToolName = () => {
-    if (selectedResult) return "Disability Details";
-    return "Home";
-  };
-
   // searchDisability bridge: BlueButtonXRayModal's Check Rating Criteria
   // callback dispatches into App.jsx's searchTerm state.
   useEffect(() => {
@@ -474,7 +468,9 @@ function App() {
         onClick={() => window.dispatchEvent(new CustomEvent("openBugSquasher"))}
       />
 
-      <AIAssistantBubble currentTool={getCurrentToolName()} />
+      <AIAssistantBubble
+        currentTool={selectedResult ? "Disability Details" : "Home"}
+      />
 
       <AppFooter />
 
