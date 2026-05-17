@@ -54,6 +54,7 @@ import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingClus
 import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
 import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesCluster";
 import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
+import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -95,7 +96,6 @@ const SharkRadar = lazy(() => import("./components/SharkRadar"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
-const VSOFinder = lazy(() => import("./components/VSOFinder"));
 const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
 const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
 const TacticalCalculator = lazy(
@@ -104,16 +104,11 @@ const TacticalCalculator = lazy(
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 const WitnessBench = lazy(() => import("./components/WitnessBench"));
 const RiskAssessment = lazy(() => import("./components/RiskAssessment"));
-const PACTActNavigator = lazy(() => import("./components/PACTActNavigator"));
 const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
 const MillionDollarDashboard = lazy(
   () => import("./components/MillionDollarDashboard"),
 );
-const MOSHazardMatcher = lazy(() => import("./components/MOSHazardMatcher"));
-const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
-const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
-const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 const EvidenceGapVisualizer = lazy(
@@ -174,24 +169,17 @@ function App() {
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
-  const [showVSOFinder, setShowVSOFinder] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   const [showWitnessBench, setShowWitnessBench] = useState(false);
   const [showRiskAssessment, setShowRiskAssessment] = useState(false);
-  const [showPACTActNavigator, setShowPACTActNavigator] = useState(false);
   const [showFOIAGenerator, setShowFOIAGenerator] = useState(false);
   const [showMillionDollarDashboard, setShowMillionDollarDashboard] =
     useState(false);
-  const [showMOSHazardMatcher, setShowMOSHazardMatcher] = useState(false);
-  const [showWebOfConditions, setShowWebOfConditions] = useState(false);
-  const [showTimeMachine, setShowTimeMachine] = useState(false);
-
   // NEW DIAMOND-TIER FEATURES
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
-  const [showBDDBuilder, setShowBDDBuilder] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
@@ -290,7 +278,6 @@ function App() {
     if (showSecondaryScout) return "Secondary Scout";
     if (showCFileAnalyzer) return "C-File Analyzer";
     if (showNexusBuilder) return "Nexus Builder";
-    if (showPACTActNavigator) return "PACT Act Navigator";
     if (showCAPSimulator) return "C&P Simulator";
     if (showFormsHelper) return "Forms Helper";
     if (showWitnessBench) return "Witness Bench";
@@ -303,12 +290,9 @@ function App() {
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (showDecisionDecoder) return "Decision Decoder";
     if (showRiskAssessment) return "Risk Assessment";
-    if (showVSOFinder) return "VSO Finder";
     if (showSharkRadar) return "Shark Radar";
     if (showSymptomLogger) return "Symptom Logger";
     if (showFOIAGenerator) return "FOIA Generator";
-    if (showMOSHazardMatcher) return "MOS Hazard Matcher";
-    if (showWebOfConditions) return "Web of Conditions";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -597,10 +581,12 @@ function App() {
         window.dispatchEvent(new CustomEvent("openVKBViewer")),
       "nexus-builder": () => setShowNexusBuilder(true),
       "statement-analyzer": () => setShowNexusBuilder(true), // Statement Analyzer is embedded in Nexus Builder
-      "mos-hazard": () => setShowMOSHazardMatcher(true),
+      "mos-hazard": () =>
+        window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
       "timeline-wizard": () => setShowEvidenceTimeline(true), // Timeline Wizard maps to Evidence Timeline
       "dd214-analyzer": () => setShowDD214Analyzer(true),
-      "web-of-conditions": () => setShowWebOfConditions(true),
+      "web-of-conditions": () =>
+        window.dispatchEvent(new CustomEvent("openWebOfConditions")),
       "cap-simulator": () => setShowCAPSimulator(true),
       "pain-painter": () =>
         window.dispatchEvent(new CustomEvent("openPainPainter")),
@@ -612,7 +598,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
       pathfinder: () => setShowPathfinder(true),
       "million-dollar-dashboard": () => setShowMillionDollarDashboard(true),
-      "vso-finder": () => setShowVSOFinder(true),
+      "vso-finder": () =>
+        window.dispatchEvent(new CustomEvent("openVSOFinder")),
       "witness-bench": () => setShowWitnessBench(true),
       "claim-navigator": () => setShowClaimNavigator(true),
       "va-resources": () =>
@@ -624,7 +611,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openRemandRiskChecker")),
       "appeals-advisor": () =>
         window.dispatchEvent(new CustomEvent("openAppealsLaneAdvisor")),
-      "bdd-builder": () => setShowBDDBuilder(true),
+      "bdd-builder": () =>
+        window.dispatchEvent(new CustomEvent("openBDDBuilder")),
     };
 
     // Execute the tool opener if it exists
@@ -700,7 +688,6 @@ function App() {
       showTacticalCalculator,
       showMillionDollarDashboard,
       showRetroPayHunter,
-      showTimeMachine,
 
       // Discover Tools
       showSecondaryScoutLauncher,
@@ -709,9 +696,6 @@ function App() {
       showCAPSimulator,
       showPathfinder,
       showClaimNavigator,
-      showMOSHazardMatcher,
-      showPACTActNavigator,
-      showWebOfConditions,
 
       // Build Evidence Tools
       showCFileAnalyzer,
@@ -731,9 +715,6 @@ function App() {
       showEvidenceGapVisualizer,
       showRiskAssessment,
 
-      // Support Tools
-      showVSOFinder,
-
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
 
@@ -744,22 +725,17 @@ function App() {
         if (showTacticalCalculator) return "Tactical Calculator (Rating)";
         if (showMillionDollarDashboard) return "Million Dollar Dashboard";
         if (showRetroPayHunter) return "Retro Pay Hunter";
-        if (showTimeMachine) return "Time Machine (ITF Tracker)";
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
         if (showCAPSimulator) return "C&P Exam Simulator";
         if (showPathfinder) return "Pathfinder (AI Strategy)";
         if (showClaimNavigator) return "Claim Navigator";
-        if (showMOSHazardMatcher) return "MOS Hazard Matcher";
-        if (showPACTActNavigator) return "PACT Act Navigator";
-        if (showWebOfConditions) return "Web of Conditions";
         if (showCFileAnalyzer) return "C-File Analyzer";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
         if (showWitnessBench) return "Witness Bench (Buddy Letters)";
         if (showNexusBuilder) return "Nexus Builder";
         if (showFormsHelper) return "Forms Helper";
         if (showSymptomLogger) return "Symptom Logger";
-        if (showBDDBuilder) return "BDD Builder";
         if (showEvidenceTimeline) return "Evidence Timeline";
         if (showFOIAGenerator) return "FOIA Generator (Keysmith)";
         if (showDD214Analyzer) return "DD214 Analyzer";
@@ -767,7 +743,6 @@ function App() {
         if (showSharkRadar) return "Shark Radar (Scam Detector)";
         if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
         if (showRiskAssessment) return "Risk Assessment (Poke the Bear)";
-        if (showVSOFinder) return "VSO Finder";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -786,7 +761,6 @@ function App() {
       showTacticalCalculator,
       showMillionDollarDashboard,
       showRetroPayHunter,
-      showTimeMachine,
       // Discover Tools
       showSecondaryScoutLauncher,
       showSecondaryScout,
@@ -794,10 +768,6 @@ function App() {
       showCAPSimulator,
       showPathfinder,
       showClaimNavigator,
-      showMOSHazardMatcher,
-      showPACTActNavigator,
-      showWebOfConditions,
-      showBDDBuilder,
       // Build Evidence Tools
       showCFileAnalyzer,
       showBlueButtonXRay,
@@ -814,8 +784,6 @@ function App() {
       showSharkRadar,
       showEvidenceGapVisualizer,
       showRiskAssessment,
-      // Support Tools
-      showVSOFinder,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
     ],
@@ -908,7 +876,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openStateBenefitHunter")),
             "the-tribunal": () =>
               window.dispatchEvent(new CustomEvent("openTheTribunal")),
-            "vso-finder": () => setShowVSOFinder(true),
+            "vso-finder": () =>
+              window.dispatchEvent(new CustomEvent("openVSOFinder")),
             "user-manual": () =>
               window.dispatchEvent(new CustomEvent("openUserManual")),
             "knowledge-base": () =>
@@ -917,10 +886,14 @@ function App() {
             "what-if-sandbox": () =>
               window.dispatchEvent(new CustomEvent("openWhatIfSandbox")),
             "retro-pay": () => setShowRetroPayHunter(true),
-            "time-machine": () => setShowTimeMachine(true),
-            "pact-act": () => setShowPACTActNavigator(true),
-            "mos-hazard": () => setShowMOSHazardMatcher(true),
-            "web-of-conditions": () => setShowWebOfConditions(true),
+            "time-machine": () =>
+              window.dispatchEvent(new CustomEvent("openTimeMachine")),
+            "pact-act": () =>
+              window.dispatchEvent(new CustomEvent("openPACTActNavigator")),
+            "mos-hazard": () =>
+              window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
+            "web-of-conditions": () =>
+              window.dispatchEvent(new CustomEvent("openWebOfConditions")),
             "blue-button": () => setShowBlueButtonXRay(true),
             "witness-bench": () => setShowWitnessBench(true),
             "symptom-logger": () => setShowSymptomLogger(true),
@@ -938,7 +911,8 @@ function App() {
             "record-search": () =>
               window.dispatchEvent(new CustomEvent("openRecordSearch")),
             "dd214-analyzer": () => setShowDD214Analyzer(true),
-            "bdd-builder": () => setShowBDDBuilder(true),
+            "bdd-builder": () =>
+              window.dispatchEvent(new CustomEvent("openBDDBuilder")),
           };
           const handler = toolHandlers[toolId];
           if (handler) handler();
@@ -989,17 +963,27 @@ function App() {
           window.dispatchEvent(new CustomEvent("openWhatIfSandbox"))
         }
         onRetroPayHunterClick={() => setShowRetroPayHunter(true)}
-        onTimeMachineClick={() => setShowTimeMachine(true)}
+        onTimeMachineClick={() =>
+          window.dispatchEvent(new CustomEvent("openTimeMachine"))
+        }
         // Discover
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
         // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
         onPathfinderClick={() => setShowPathfinder(true)}
         onClaimNavigatorClick={() => setShowClaimNavigator(true)}
-        onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
-        onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
-        onWebOfConditionsClick={() => setShowWebOfConditions(true)}
-        onBDDBuilderClick={() => setShowBDDBuilder(true)}
+        onMOSHazardMatcherClick={() =>
+          window.dispatchEvent(new CustomEvent("openMOSHazardMatcher"))
+        }
+        onPACTActNavigatorClick={() =>
+          window.dispatchEvent(new CustomEvent("openPACTActNavigator"))
+        }
+        onWebOfConditionsClick={() =>
+          window.dispatchEvent(new CustomEvent("openWebOfConditions"))
+        }
+        onBDDBuilderClick={() =>
+          window.dispatchEvent(new CustomEvent("openBDDBuilder"))
+        }
         // Build Evidence
         onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
@@ -1046,7 +1030,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openLegislativeWatchdog"))
         }
         // Support & Resources
-        onVSOFinderClick={() => setShowVSOFinder(true)}
+        onVSOFinderClick={() =>
+          window.dispatchEvent(new CustomEvent("openVSOFinder"))
+        }
         onVaIntegrationDemoClick={
           isVaApiEnabled()
             ? () =>
@@ -1392,7 +1378,9 @@ function App() {
 
                 <div className="flex-shrink-0">
                   <button
-                    onClick={() => setShowBDDBuilder(true)}
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("openBDDBuilder"))
+                    }
                     className="px-6 py-3 bg-white text-amber-700 rounded-lg font-bold text-lg hover:bg-amber-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <span>🎖️</span>
@@ -1736,7 +1724,9 @@ function App() {
                 ITF deadline.
               </p>
               <button
-                onClick={() => setShowTimeMachine(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openTimeMachine"))
+                }
                 className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 ⏰ Track Deadline
@@ -1979,7 +1969,9 @@ function App() {
                 <strong>No proof needed.</strong>
               </p>
               <button
-                onClick={() => setShowPACTActNavigator(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openPACTActNavigator"))
+                }
                 className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🗺️ Check My Presumptives
@@ -2183,7 +2175,9 @@ function App() {
                 <strong>"Claim Sharks"</strong> forever.
               </p>
               <button
-                onClick={() => setShowVSOFinder(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openVSOFinder"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔍 Find Free Help
@@ -2361,7 +2355,11 @@ function App() {
                   <strong>It's not just you - it's the job.</strong>
                 </p>
                 <button
-                  onClick={() => setShowMOSHazardMatcher(true)}
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("openMOSHazardMatcher"),
+                    )
+                  }
                   className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black rounded-lg font-bold hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   🔍 Match My MOS
@@ -2392,7 +2390,9 @@ function App() {
                   medical nexus.
                 </p>
                 <button
-                  onClick={() => setShowWebOfConditions(true)}
+                  onClick={() =>
+                    window.dispatchEvent(new CustomEvent("openWebOfConditions"))
+                  }
                   className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black rounded-lg font-bold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   🗺️ Explore The Web
@@ -3030,16 +3030,7 @@ function App() {
         <AdminLogin />
         <AdminPanel />
 
-        {/* VSO Finder */}
-        {showVSOFinder && (
-          <VSOFinder
-            onClose={() => setShowVSOFinder(false)}
-            onReportBug={() => {
-              setShowVSOFinder(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
+        <ClaimPrepCluster onToolSelect={handleToolSelect} />
 
         <VaDemoTools />
 
@@ -3133,17 +3124,6 @@ function App() {
           />
         )}
 
-        {/* PACT Act Navigator - Specialized Tool */}
-        {showPACTActNavigator && (
-          <PACTActNavigator
-            onClose={() => setShowPACTActNavigator(false)}
-            onReportBug={() => {
-              setShowPACTActNavigator(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
         {/* FOIA Generator (The Keysmith) - Specialized Tool */}
         {showFOIAGenerator && (
           <FOIAGenerator
@@ -3166,49 +3146,7 @@ function App() {
           />
         )}
 
-        {/* MOS Hazard Matcher - Shock & Awe */}
-        {showMOSHazardMatcher && (
-          <MOSHazardMatcher
-            onClose={() => setShowMOSHazardMatcher(false)}
-            onAddToPathfinder={(conditions) => {
-              // Could integrate with Pathfinder or My Packet in the future
-              console.log("Add to pathfinder:", conditions);
-              setShowMOSHazardMatcher(false);
-            }}
-            onReportBug={() => {
-              setShowMOSHazardMatcher(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
-        {/* Web of Conditions - Shock & Awe */}
-        {showWebOfConditions && (
-          <WebOfConditions
-            onClose={() => setShowWebOfConditions(false)}
-            onSelectCondition={(condition) => {
-              // Could navigate to search for the condition
-              console.log("Selected condition:", condition);
-            }}
-            onReportBug={() => {
-              setShowWebOfConditions(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
         <MaximizeRatingCluster />
-
-        {/* Time Machine - ITF Countdown */}
-        {showTimeMachine && (
-          <TimeMachine
-            onClose={() => setShowTimeMachine(false)}
-            onReportBug={() => {
-              setShowTimeMachine(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
 
         {/* The Consistency Engine - Data Auditor */}
         <AITransparencyCluster />
@@ -3261,21 +3199,6 @@ function App() {
               />
             </div>
           </div>
-        )}
-
-        {/* BDD Builder - Pre-Discharge Claims Planner */}
-        {showBDDBuilder && (
-          <BDDBuilder
-            onClose={() => setShowBDDBuilder(false)}
-            onReportBug={() => {
-              setShowBDDBuilder(false);
-              setShowBugSquasher(true);
-            }}
-            onNavigateToTool={(toolId) => {
-              setShowBDDBuilder(false);
-              handleToolSelect(toolId);
-            }}
-          />
         )}
 
         {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
