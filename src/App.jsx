@@ -21,25 +21,21 @@ import React, { useState, useCallback } from "react";
 import AppHeader from "./features/header/AppHeader";
 import HomeMain from "./features/home/HomeMain";
 import AppModals from "./features/modals/AppModals";
+import AppShellOverlays from "./features/app-shell/AppShellOverlays";
 import BuyMeCoffee from "./components/BuyMeCoffee";
 import FloatingBugButton from "./components/FloatingBugButton";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import MobileNotice from "./components/MobileNotice";
 import ActiveDevBanner from "./features/active-dev-banner/ActiveDevBanner";
-import SmallScreenWarning from "./features/small-screen-warning/SmallScreenWarning";
-import CrisisListener from "./features/crisis/CrisisListener";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
 import ToastContainer, { useToast } from "./components/Toast";
 import LoadingBunker from "./components/LoadingBunker";
-import QuickExitButton from "./components/QuickExitButton";
 import { LocalAIProvider } from "./components/LocalAIPanel";
 import OnboardingGate from "./features/onboarding/OnboardingGate";
-import SecurityBadge from "./components/SecurityBadge";
 import { VaApiStatusBanner } from "./components/VaApiStatus";
 import { isVaApiEnabled } from "./config/vaAuth";
 import StressReliefDivision from "./components/StressReliefDivision";
-import MobileBottomNavWrapper from "./features/mobile-nav/MobileBottomNavWrapper";
 import GlobalCommandSearchWrapper from "./features/global-command-search/GlobalCommandSearchWrapper";
 import AtomicWipe from "./components/AtomicWipe";
 import { HelperModeProvider } from "./contexts/HelperModeContext";
@@ -195,21 +191,7 @@ function App() {
         whatsNewModal={whatsNewModal}
       />
 
-      {/* SAFETY-CRITICAL: Crisis interception — highest z-index, blocks all other UI */}
-      <CrisisListener />
-
-      <SmallScreenWarning />
-
-      {/* FORCE MULTIPLIER: Focus Mode Toggle for TBI/ADHD users - Now integrated into modal headers */}
-
-      {/* COMPASSIONATE VOICE: Quick Exit Button - Trauma-informed safety */}
-      <QuickExitButton position="bottom-left" variant="subtle" />
-
-      {/* Security Badge - Always visible proof of privacy */}
-      <SecurityBadge />
-
-      {/* AAAAA Diamond Standard: Mobile Bottom Navigation */}
-      <MobileBottomNavWrapper userConditions={userConditions} />
+      <AppShellOverlays userConditions={userConditions} />
     </div>
   );
 }
