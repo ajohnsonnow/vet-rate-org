@@ -43,6 +43,7 @@ import FeedbackHub from "./features/feedback/FeedbackHub";
 import LegalPages from "./features/legal/LegalPages";
 import VaDemoTools from "./features/va-demo/VaDemoTools";
 import PublicationsLibraryModal from "./features/publications/PublicationsLibraryModal";
+import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -121,7 +122,6 @@ const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
-const VKBTimeline = lazy(() => import("./components/VKBTimeline"));
 const RecordSearch = lazy(() => import("./components/RecordSearch"));
 const MultiCloudManager = lazy(() => import("./components/MultiCloudManager"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
@@ -240,7 +240,6 @@ function App() {
 
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
-  const [showVKBTimeline, setShowVKBTimeline] = useState(false);
 
   // BVA SUCCESS TOOLS (powered by 18,609 decision analysis)
   const [showNexusQualityAnalyzer, setShowNexusQualityAnalyzer] =
@@ -1050,7 +1049,9 @@ function App() {
         // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
         onKnowledgeBaseClick={() => setShowVKBViewer(true)}
-        onVKBTimelineClick={() => setShowVKBTimeline(true)}
+        onVKBTimelineClick={() =>
+          window.dispatchEvent(new CustomEvent("openVKBTimeline"))
+        }
         onUserManualClick={() => setShowUserManual(true)}
         onVAResourcesClick={() => setShowVAResources(true)}
         // Calculate
@@ -2892,16 +2893,7 @@ function App() {
           />
         )}
 
-        {/* VKB Timeline - Document Version History */}
-        {showVKBTimeline && (
-          <VKBTimeline
-            onDocumentClick={(doc) => {
-              console.log("Document clicked:", doc);
-              // Could open Intelligence Briefing modal here to view document
-            }}
-            onClose={() => setShowVKBTimeline(false)}
-          />
-        )}
+        <VKBTimelineModal />
 
         {/* Shark Radar */}
         {showSharkRadar && (
