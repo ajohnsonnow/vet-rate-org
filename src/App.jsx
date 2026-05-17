@@ -63,6 +63,7 @@ import CalculateCluster from "./features/calculate/CalculateCluster";
 import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
 import MyPacketModal from "./features/my-packet/MyPacketModal";
 import PathfinderModal from "./features/pathfinder/PathfinderModal";
+import BlueButtonXRayModal from "./features/blue-button/BlueButtonXRayModal";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -96,7 +97,6 @@ const SecondaryScoutLauncher = lazy(
   () => import("./components/SecondaryScoutLauncher"),
 );
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
-const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -140,7 +140,6 @@ function App() {
   const [userConditions, setUserConditions] = useState([]);
   const [showNexusBuilder, setShowNexusBuilder] = useState(false);
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
-  const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
   // FORCE MULTIPLIER FEATURES
@@ -199,7 +198,6 @@ function App() {
   const getCurrentToolName = () => {
     if (showSecondaryScout) return "Secondary Scout";
     if (showNexusBuilder) return "Nexus Builder";
-    if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (selectedResult) return "Disability Details";
     return "Home";
   };
@@ -222,12 +220,16 @@ function App() {
     const resumeFromPacketBridge = (e) => {
       if (e?.detail) handleResumeFromPacket(e.detail);
     };
+    const searchDisabilityBridge = (e) => {
+      if (e?.detail?.term !== undefined) setSearchTerm(e.detail.term);
+    };
     window.addEventListener("openNexusBuilder", openNexusBuilderBridge);
     window.addEventListener(
       "openSecondaryScoutLauncher",
       openSecondaryScoutLauncherBridge,
     );
     window.addEventListener("resumeFromPacket", resumeFromPacketBridge);
+    window.addEventListener("searchDisability", searchDisabilityBridge);
     return () => {
       window.removeEventListener("openNexusBuilder", openNexusBuilderBridge);
       window.removeEventListener(
@@ -235,6 +237,7 @@ function App() {
         openSecondaryScoutLauncherBridge,
       );
       window.removeEventListener("resumeFromPacket", resumeFromPacketBridge);
+      window.removeEventListener("searchDisability", searchDisabilityBridge);
     };
   }, []);
 
@@ -602,7 +605,6 @@ function App() {
       userConditions,
 
       // Build Evidence Tools
-      showBlueButtonXRay,
       showNexusBuilder,
       nexusBuilderData,
 
@@ -611,7 +613,6 @@ function App() {
         // Priority order: most specific tools first
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
-        if (showBlueButtonXRay) return "Blue Button X-Ray";
         if (showNexusBuilder) return "Nexus Builder";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -629,7 +630,6 @@ function App() {
       showSecondaryScout,
       userConditions,
       // Build Evidence Tools
-      showBlueButtonXRay,
       showNexusBuilder,
       nexusBuilderData,
     ],
@@ -757,7 +757,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
             "web-of-conditions": () =>
               window.dispatchEvent(new CustomEvent("openWebOfConditions")),
-            "blue-button": () => setShowBlueButtonXRay(true),
+            "blue-button": () =>
+              window.dispatchEvent(new CustomEvent("openBlueButtonXRay")),
             "witness-bench": () =>
               window.dispatchEvent(new CustomEvent("openWitnessBench")),
             "symptom-logger": () =>
@@ -869,7 +870,9 @@ function App() {
         onCFileAnalyzerClick={() =>
           window.dispatchEvent(new CustomEvent("openCFileAnalyzer"))
         }
-        onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
+        onBlueButtonXRayClick={() =>
+          window.dispatchEvent(new CustomEvent("openBlueButtonXRay"))
+        }
         onRecordSearchClick={() =>
           window.dispatchEvent(new CustomEvent("openRecordSearch"))
         }
@@ -1474,7 +1477,9 @@ function App() {
                 in your records.
               </p>
               <button
-                onClick={() => setShowBlueButtonXRay(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openBlueButtonXRay"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔬 Scan My Records
@@ -2795,38 +2800,7 @@ function App() {
 
         <CalculateCluster />
 
-        {/* Blue Button X-Ray - Diamond Tier Data Mining */}
-        {showBlueButtonXRay && (
-          <BlueButtonXRay
-            onClose={() => setShowBlueButtonXRay(false)}
-            onAddToCalculator={(conditions) => {
-              // Add conditions to Pathfinder for analysis
-              console.log(
-                "BlueButton: Transferring",
-                conditions.length,
-                "conditions to Pathfinder",
-              );
-              setShowBlueButtonXRay(false);
-              window.dispatchEvent(
-                new CustomEvent("openPathfinder", {
-                  detail: { conditions },
-                }),
-              );
-            }}
-            onCheckRatingCriteria={(conditionName) => {
-              // Search for the condition in the database
-              setShowBlueButtonXRay(false);
-              setSearchTerm(conditionName);
-            }}
-            onOpenAISettings={() =>
-              window.dispatchEvent(new CustomEvent("openAISettings"))
-            }
-            onReportBug={() => {
-              setShowBlueButtonXRay(false);
-              window.dispatchEvent(new CustomEvent("openBugSquasher"));
-            }}
-          />
-        )}
+        <BlueButtonXRayModal />
 
         <SpecializedToolsCluster />
 
