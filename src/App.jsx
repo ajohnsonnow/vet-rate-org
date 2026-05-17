@@ -55,6 +55,7 @@ import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
 import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesCluster";
 import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
 import ClaimPrepCluster from "./features/claim-prep/ClaimPrepCluster";
+import QualityControlCluster from "./features/quality-control/QualityControlCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -92,18 +93,15 @@ const MyPacket = lazy(() => import("./components/MyPacket"));
 const CAPSimulator = lazy(() => import("./components/CAPSimulator"));
 const FormsHelper = lazy(() => import("./components/FormsHelper"));
 const CFileAnalyzer = lazy(() => import("./components/CFileAnalyzer"));
-const SharkRadar = lazy(() => import("./components/SharkRadar"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
 const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
-const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
 const TacticalCalculator = lazy(
   () => import("./components/TacticalCalculator"),
 );
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 const WitnessBench = lazy(() => import("./components/WitnessBench"));
-const RiskAssessment = lazy(() => import("./components/RiskAssessment"));
 const FOIAGenerator = lazy(() => import("./components/FOIAGenerator"));
 const MillionDollarDashboard = lazy(
   () => import("./components/MillionDollarDashboard"),
@@ -111,13 +109,7 @@ const MillionDollarDashboard = lazy(
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
-const EvidenceGapVisualizer = lazy(
-  () => import("./components/EvidenceGapVisualizer"),
-);
 const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
-const NexusQualityAnalyzer = lazy(
-  () => import("./components/NexusQualityAnalyzer"),
-);
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import {
@@ -165,16 +157,13 @@ function App() {
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showFormsHelper, setShowFormsHelper] = useState(false);
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
-  const [showSharkRadar, setShowSharkRadar] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
-  const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
   const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   const [showWitnessBench, setShowWitnessBench] = useState(false);
-  const [showRiskAssessment, setShowRiskAssessment] = useState(false);
   const [showFOIAGenerator, setShowFOIAGenerator] = useState(false);
   const [showMillionDollarDashboard, setShowMillionDollarDashboard] =
     useState(false);
@@ -186,16 +175,10 @@ function App() {
   const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
 
-  // WOW FEATURES: Evidence Gap, Retro Pay, Pain Painter
-  const [showEvidenceGapVisualizer, setShowEvidenceGapVisualizer] =
-    useState(false);
+  // WOW FEATURES: Retro Pay, Pain Painter
   const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
 
   // VKB: Veteran Knowledge Base Viewer
-
-  // BVA SUCCESS TOOLS (powered by 18,609 decision analysis)
-  const [showNexusQualityAnalyzer, setShowNexusQualityAnalyzer] =
-    useState(false);
 
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
   const [showCommandSearch, setShowCommandSearch] = useState(false);
@@ -288,9 +271,6 @@ function App() {
     if (showEvidenceTimeline) return "Evidence Timeline";
     if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
-    if (showDecisionDecoder) return "Decision Decoder";
-    if (showRiskAssessment) return "Risk Assessment";
-    if (showSharkRadar) return "Shark Radar";
     if (showSymptomLogger) return "Symptom Logger";
     if (showFOIAGenerator) return "FOIA Generator";
     if (selectedResult) return "Disability Details";
@@ -590,7 +570,8 @@ function App() {
       "cap-simulator": () => setShowCAPSimulator(true),
       "pain-painter": () =>
         window.dispatchEvent(new CustomEvent("openPainPainter")),
-      "evidence-gap": () => setShowEvidenceGapVisualizer(true),
+      "evidence-gap": () =>
+        window.dispatchEvent(new CustomEvent("openEvidenceGapVisualizer")),
       "cfile-analyzer": () => setShowCFileAnalyzer(true),
       "foia-generator": () => setShowFOIAGenerator(true),
       "retro-pay-hunter": () => setShowRetroPayHunter(true),
@@ -606,7 +587,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openVAResources")),
       "user-manual": () =>
         window.dispatchEvent(new CustomEvent("openUserManual")),
-      "nexus-analyzer": () => setShowNexusQualityAnalyzer(true),
+      "nexus-analyzer": () =>
+        window.dispatchEvent(new CustomEvent("openNexusQualityAnalyzer")),
       "remand-checker": () =>
         window.dispatchEvent(new CustomEvent("openRemandRiskChecker")),
       "appeals-advisor": () =>
@@ -709,12 +691,6 @@ function App() {
       showFOIAGenerator,
       showDD214Analyzer,
 
-      // Quality Control Tools
-      showDecisionDecoder,
-      showSharkRadar,
-      showEvidenceGapVisualizer,
-      showRiskAssessment,
-
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
 
@@ -739,10 +715,6 @@ function App() {
         if (showEvidenceTimeline) return "Evidence Timeline";
         if (showFOIAGenerator) return "FOIA Generator (Keysmith)";
         if (showDD214Analyzer) return "DD214 Analyzer";
-        if (showDecisionDecoder) return "Decision Decoder";
-        if (showSharkRadar) return "Shark Radar (Scam Detector)";
-        if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
-        if (showRiskAssessment) return "Risk Assessment (Poke the Bear)";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
         return "Disability Search";
@@ -779,11 +751,6 @@ function App() {
       showEvidenceTimeline,
       showFOIAGenerator,
       showDD214Analyzer,
-      // Quality Control Tools
-      showDecisionDecoder,
-      showSharkRadar,
-      showEvidenceGapVisualizer,
-      showRiskAssessment,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
     ],
@@ -860,16 +827,22 @@ function App() {
             "forms-helper": () => setShowFormsHelper(true),
             "red-team": () =>
               window.dispatchEvent(new CustomEvent("openRedTeam")),
-            "shark-radar": () => setShowSharkRadar(true),
+            "shark-radar": () =>
+              window.dispatchEvent(new CustomEvent("openSharkRadar")),
             "denial-decoder": () =>
               window.dispatchEvent(new CustomEvent("openDenialDecoder")),
-            "decision-decoder": () => setShowDecisionDecoder(true),
+            "decision-decoder": () =>
+              window.dispatchEvent(new CustomEvent("openDecisionDecoder")),
             "consistency-engine": () =>
               window.dispatchEvent(new CustomEvent("openConsistencyEngine")),
             "claim-stress-test": () =>
               window.dispatchEvent(new CustomEvent("openClaimStressTest")),
-            "evidence-gap": () => setShowEvidenceGapVisualizer(true),
-            "risk-assessment": () => setShowRiskAssessment(true),
+            "evidence-gap": () =>
+              window.dispatchEvent(
+                new CustomEvent("openEvidenceGapVisualizer"),
+              ),
+            "risk-assessment": () =>
+              window.dispatchEvent(new CustomEvent("openRiskAssessment")),
             "tdiu-builder": () =>
               window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
             "state-benefits": () =>
@@ -1006,16 +979,24 @@ function App() {
         onClaimStressTestClick={() =>
           window.dispatchEvent(new CustomEvent("openClaimStressTest"))
         }
-        onDecisionDecoderClick={() => setShowDecisionDecoder(true)}
+        onDecisionDecoderClick={() =>
+          window.dispatchEvent(new CustomEvent("openDecisionDecoder"))
+        }
         onDenialDecoderClick={() =>
           window.dispatchEvent(new CustomEvent("openDenialDecoder"))
         }
-        onSharkRadarClick={() => setShowSharkRadar(true)}
+        onSharkRadarClick={() =>
+          window.dispatchEvent(new CustomEvent("openSharkRadar"))
+        }
         onConsistencyEngineClick={() =>
           window.dispatchEvent(new CustomEvent("openConsistencyEngine"))
         }
-        onEvidenceGapVisualizerClick={() => setShowEvidenceGapVisualizer(true)}
-        onRiskAssessmentClick={() => setShowRiskAssessment(true)}
+        onEvidenceGapVisualizerClick={() =>
+          window.dispatchEvent(new CustomEvent("openEvidenceGapVisualizer"))
+        }
+        onRiskAssessmentClick={() =>
+          window.dispatchEvent(new CustomEvent("openRiskAssessment"))
+        }
         // Maximize Your Rating
         onTDIUBuilderClick={() =>
           window.dispatchEvent(new CustomEvent("openTDIUBuilder"))
@@ -1696,7 +1677,9 @@ function App() {
                 missing + next steps.
               </p>
               <button
-                onClick={() => setShowDecisionDecoder(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openDecisionDecoder"))
+                }
                 className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 🔓 Decode Decision
@@ -1758,7 +1741,9 @@ function App() {
                 based on 38 CFR § 14.636.
               </p>
               <button
-                onClick={() => setShowSharkRadar(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openSharkRadar"))
+                }
                 className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 🔍 Scan Contract
@@ -1809,7 +1794,11 @@ function App() {
                 </div>
                 <div className="flex-shrink-0">
                   <button
-                    onClick={() => setShowEvidenceGapVisualizer(true)}
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent("openEvidenceGapVisualizer"),
+                      )
+                    }
                     className="px-8 py-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-rose-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
                   >
                     🔗 Find My Gaps
@@ -1880,7 +1869,9 @@ function App() {
                 .
               </p>
               <button
-                onClick={() => setShowRiskAssessment(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openRiskAssessment"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ⚖️ Check My Risk
@@ -2861,73 +2852,7 @@ function App() {
 
         <VKBTimelineModal />
 
-        {/* Shark Radar */}
-        {showSharkRadar && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-            onClick={() => setShowSharkRadar(false)}
-          >
-            <div
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🦈</span>
-                    <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        Shark Radar
-                        <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
-                          AI
-                        </span>
-                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                          BETA
-                        </span>
-                      </h2>
-                      <p className="text-sm text-rose-100">
-                        Contract & Email Scanner • AI-Powered Analysis
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ReportBugLink
-                      onClick={() => {
-                        setShowSharkRadar(false);
-                        setShowBugSquasher(true);
-                      }}
-                      variant="light"
-                      moduleName="Shark Radar"
-                    />
-                    <button
-                      onClick={() => setShowSharkRadar(false)}
-                      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                      aria-label="Close"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-y-auto flex-1 p-4">
-                <SharkRadar />
-              </div>
-            </div>
-          </div>
-        )}
+        <QualityControlCluster />
 
         {/* Pathfinder */}
         {showPathfinder && (
@@ -3047,18 +2972,6 @@ function App() {
           />
         )}
 
-        {/* Decision Decoder */}
-        {showDecisionDecoder && (
-          <DecisionDecoder
-            onClose={() => setShowDecisionDecoder(false)}
-            onReportBug={() => {
-              setShowDecisionDecoder(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
-
         {/* Tactical Calculator */}
         {showTacticalCalculator && (
           <TacticalCalculator
@@ -3112,18 +3025,6 @@ function App() {
           />
         )}
 
-        {/* Risk Assessment - Diamond Tier Poke the Bear Calculator */}
-        {showRiskAssessment && (
-          <RiskAssessment
-            onClose={() => setShowRiskAssessment(false)}
-            onReportBug={() => {
-              setShowRiskAssessment(false);
-              setShowBugSquasher(true);
-            }}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
-
         {/* FOIA Generator (The Keysmith) - Specialized Tool */}
         {showFOIAGenerator && (
           <FOIAGenerator
@@ -3151,28 +3052,11 @@ function App() {
         {/* The Consistency Engine - Data Auditor */}
         <AITransparencyCluster />
 
-        {/* BVA SUCCESS TOOLS (powered by 18,609 decision analysis) */}
-        {showNexusQualityAnalyzer && (
-          <NexusQualityAnalyzer
-            onClose={() => setShowNexusQualityAnalyzer(false)}
-          />
-        )}
         <AppealsToolsCluster />
 
         <DecisionToolsCluster />
 
         <BodyMappingCluster />
-
-        {/* WOW FEATURE: Evidence Gap Visualizer */}
-        {showEvidenceGapVisualizer && (
-          <EvidenceGapVisualizer
-            onClose={() => setShowEvidenceGapVisualizer(false)}
-            onReportBug={() => {
-              setShowEvidenceGapVisualizer(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
 
         {/* WOW FEATURE: Retro Pay Hunter */}
         {showRetroPayHunter && (
