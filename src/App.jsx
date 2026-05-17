@@ -44,6 +44,7 @@ import LegalPages from "./features/legal/LegalPages";
 import VaDemoTools from "./features/va-demo/VaDemoTools";
 import PublicationsLibraryModal from "./features/publications/PublicationsLibraryModal";
 import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
+import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -136,10 +137,6 @@ const PainPainter = lazy(() => import("./components/PainPainter"));
 const VAAITransparency = lazy(() => import("./components/VAAITransparency"));
 const NexusQualityAnalyzer = lazy(
   () => import("./components/NexusQualityAnalyzer"),
-);
-const RemandRiskChecker = lazy(() => import("./components/RemandRiskChecker"));
-const AppealsLaneAdvisor = lazy(
-  () => import("./components/AppealsLaneAdvisor"),
 );
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
@@ -244,8 +241,6 @@ function App() {
   // BVA SUCCESS TOOLS (powered by 18,609 decision analysis)
   const [showNexusQualityAnalyzer, setShowNexusQualityAnalyzer] =
     useState(false);
-  const [showRemandRiskChecker, setShowRemandRiskChecker] = useState(false);
-  const [showAppealsLaneAdvisor, setShowAppealsLaneAdvisor] = useState(false);
 
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
   const [showCommandSearch, setShowCommandSearch] = useState(false);
@@ -663,8 +658,10 @@ function App() {
       "va-resources": () => setShowVAResources(true),
       "user-manual": () => setShowUserManual(true),
       "nexus-analyzer": () => setShowNexusQualityAnalyzer(true),
-      "remand-checker": () => setShowRemandRiskChecker(true),
-      "appeals-advisor": () => setShowAppealsLaneAdvisor(true),
+      "remand-checker": () =>
+        window.dispatchEvent(new CustomEvent("openRemandRiskChecker")),
+      "appeals-advisor": () =>
+        window.dispatchEvent(new CustomEvent("openAppealsLaneAdvisor")),
       "bdd-builder": () => setShowBDDBuilder(true),
     };
 
@@ -3336,14 +3333,7 @@ function App() {
             onClose={() => setShowNexusQualityAnalyzer(false)}
           />
         )}
-        {showRemandRiskChecker && (
-          <RemandRiskChecker onClose={() => setShowRemandRiskChecker(false)} />
-        )}
-        {showAppealsLaneAdvisor && (
-          <AppealsLaneAdvisor
-            onClose={() => setShowAppealsLaneAdvisor(false)}
-          />
-        )}
+        <AppealsToolsCluster />
 
         {/* The What-If Sandbox - Scenario Planner */}
         {showWhatIfSandbox && (
