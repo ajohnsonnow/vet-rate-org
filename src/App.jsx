@@ -173,19 +173,10 @@ function App() {
     };
   }, []);
 
-  // DEMO: Keyboard shortcut to open Demo Dashboard (Ctrl+Shift+D)
-  // CMD+K (GlobalCommandSearch) lives in GlobalCommandSearchWrapper.
-  // Admin panel (Ctrl+Shift+A) is handled by AdminAuthContext.
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === "D" && isVaApiEnabled()) {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent("openDemoDashboard"));
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  // DEMO Ctrl+Shift+D shortcut + openDemoDashboard listener live in
+  // features/va-demo/VaDemoTools.jsx (audit #35, B69). CMD+K lives in
+  // GlobalCommandSearchWrapper; Admin panel Ctrl+Shift+A is owned by
+  // AdminAuthContext.
 
   const handleBuildStatementFromSearch = (conditionName) => {
     setSelectedResult(null);
