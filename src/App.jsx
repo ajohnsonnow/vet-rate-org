@@ -51,6 +51,7 @@ import AITransparencyCluster from "./features/ai-transparency/AITransparencyClus
 import ResourcesCluster from "./features/resources/ResourcesCluster";
 import AdversarialTestingCluster from "./features/adversarial-testing/AdversarialTestingCluster";
 import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingCluster";
+import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -110,7 +111,6 @@ const MillionDollarDashboard = lazy(
 const MOSHazardMatcher = lazy(() => import("./components/MOSHazardMatcher"));
 const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
-const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
@@ -122,7 +122,6 @@ const EvidenceGapVisualizer = lazy(
   () => import("./components/EvidenceGapVisualizer"),
 );
 const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
-const PainPainter = lazy(() => import("./components/PainPainter"));
 const NexusQualityAnalyzer = lazy(
   () => import("./components/NexusQualityAnalyzer"),
 );
@@ -194,7 +193,6 @@ function App() {
   const [showTimeMachine, setShowTimeMachine] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
-  const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
   const [showBDDBuilder, setShowBDDBuilder] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
@@ -207,7 +205,6 @@ function App() {
   const [showEvidenceGapVisualizer, setShowEvidenceGapVisualizer] =
     useState(false);
   const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
-  const [showPainPainter, setShowPainPainter] = useState(false);
 
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
@@ -270,11 +267,14 @@ function App() {
   useEffect(() => {
     const openBug = () => setShowBugSquasher(true);
     const openAi = () => setShowAISettings(true);
+    const openSymptom = () => setShowSymptomLogger(true);
     window.addEventListener("openBugSquasher", openBug);
     window.addEventListener("openAISettings", openAi);
+    window.addEventListener("openSymptomLogger", openSymptom);
     return () => {
       window.removeEventListener("openBugSquasher", openBug);
       window.removeEventListener("openAISettings", openAi);
+      window.removeEventListener("openSymptomLogger", openSymptom);
     };
   }, []);
 
@@ -306,8 +306,6 @@ function App() {
     if (showMillionDollarDashboard) return "Million Dollar Dashboard";
     if (showRetroPayHunter) return "Retro Pay Hunter";
     if (showEvidenceTimeline) return "Evidence Timeline";
-    if (showBodyMapSelector) return "Body Map";
-    if (showPainPainter) return "Pain Painter";
     if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (showDecisionDecoder) return "Decision Decoder";
@@ -614,7 +612,8 @@ function App() {
       "dd214-analyzer": () => setShowDD214Analyzer(true),
       "web-of-conditions": () => setShowWebOfConditions(true),
       "cap-simulator": () => setShowCAPSimulator(true),
-      "pain-painter": () => setShowPainPainter(true),
+      "pain-painter": () =>
+        window.dispatchEvent(new CustomEvent("openPainPainter")),
       "evidence-gap": () => setShowEvidenceGapVisualizer(true),
       "cfile-analyzer": () => setShowCFileAnalyzer(true),
       "foia-generator": () => setShowFOIAGenerator(true),
@@ -732,7 +731,6 @@ function App() {
       nexusBuilderData,
       showFormsHelper,
       showSymptomLogger,
-      showPainPainter,
       showEvidenceTimeline,
       showFOIAGenerator,
       showDD214Analyzer,
@@ -772,7 +770,6 @@ function App() {
         if (showNexusBuilder) return "Nexus Builder";
         if (showFormsHelper) return "Forms Helper";
         if (showSymptomLogger) return "Symptom Logger";
-        if (showPainPainter) return "Pain Painter (Body Map)";
         if (showBDDBuilder) return "BDD Builder";
         if (showEvidenceTimeline) return "Evidence Timeline";
         if (showFOIAGenerator) return "FOIA Generator (Keysmith)";
@@ -821,7 +818,6 @@ function App() {
       nexusBuilderData,
       showFormsHelper,
       showSymptomLogger,
-      showPainPainter,
       showEvidenceTimeline,
       showFOIAGenerator,
       showDD214Analyzer,
@@ -938,7 +934,8 @@ function App() {
             "blue-button": () => setShowBlueButtonXRay(true),
             "witness-bench": () => setShowWitnessBench(true),
             "symptom-logger": () => setShowSymptomLogger(true),
-            "pain-painter": () => setShowPainPainter(true),
+            "pain-painter": () =>
+              window.dispatchEvent(new CustomEvent("openPainPainter")),
             "evidence-timeline": () => setShowEvidenceTimeline(true),
             "foia-generator": () => setShowFOIAGenerator(true),
             "legislative-watchdog": () =>
@@ -1018,7 +1015,9 @@ function App() {
         onNexusBuilderClick={() => setShowNexusBuilder(true)}
         onFormsHelperClick={() => setShowFormsHelper(true)}
         onSymptomLoggerClick={() => setShowSymptomLogger(true)}
-        onPainPainterClick={() => setShowPainPainter(true)}
+        onPainPainterClick={() =>
+          window.dispatchEvent(new CustomEvent("openPainPainter"))
+        }
         onEvidenceTimelineClick={() => setShowEvidenceTimeline(true)}
         onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
         // Quality Control
@@ -2054,7 +2053,9 @@ function App() {
                 into proper diagnosis language.
               </p>
               <button
-                onClick={() => setShowPainPainter(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openPainPainter"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🎯 Map My Pain
@@ -3236,37 +3237,7 @@ function App() {
 
         <DecisionToolsCluster />
 
-        {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map (Legacy BodyMapSelector) */}
-        {showBodyMapSelector && (
-          <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
-            <div className="min-h-screen px-4 py-8">
-              <div className="max-w-6xl mx-auto">
-                <BodyMapSelector
-                  onClose={() => setShowBodyMapSelector(false)}
-                  onLogToSymptomLogger={() => {
-                    setShowBodyMapSelector(false);
-                    setShowSymptomLogger(true);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* WOW FEATURE: Pain Painter - Interactive Body Map 2.0 */}
-        {showPainPainter && (
-          <PainPainter
-            onClose={() => setShowPainPainter(false)}
-            onLogToSymptomLogger={(data) => {
-              setShowPainPainter(false);
-              setShowSymptomLogger(true);
-            }}
-            onReportBug={() => {
-              setShowPainPainter(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
+        <BodyMappingCluster />
 
         {/* WOW FEATURE: Evidence Gap Visualizer */}
         {showEvidenceGapVisualizer && (
