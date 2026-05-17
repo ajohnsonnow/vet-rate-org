@@ -53,6 +53,7 @@ import AdversarialTestingCluster from "./features/adversarial-testing/Adversaria
 import MaximizeRatingCluster from "./features/maximize-rating/MaximizeRatingCluster";
 import BodyMappingCluster from "./features/body-mapping/BodyMappingCluster";
 import WorkflowGuidesCluster from "./features/workflow-guides/WorkflowGuidesCluster";
+import KnowledgeCluster from "./features/knowledge/KnowledgeCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -94,7 +95,6 @@ const SharkRadar = lazy(() => import("./components/SharkRadar"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BugSquasher = lazy(() => import("./components/BugSquasher"));
-const UserManual = lazy(() => import("./components/UserManual"));
 const VSOFinder = lazy(() => import("./components/VSOFinder"));
 const SymptomLogger = lazy(() => import("./components/SymptomLogger"));
 const DecisionDecoder = lazy(() => import("./components/DecisionDecoder"));
@@ -114,7 +114,6 @@ const WebOfConditions = lazy(() => import("./components/WebOfConditions"));
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
-const VKBViewer = lazy(() => import("./components/VKBViewer"));
 const AICommandCenter = lazy(() => import("./components/AICommandCenter"));
 const DD214Analyzer = lazy(() => import("./components/DD214Analyzer"));
 const EvidenceGapVisualizer = lazy(
@@ -175,7 +174,6 @@ function App() {
   const [showPathfinder, setShowPathfinder] = useState(false);
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
-  const [showUserManual, setShowUserManual] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
   const [showSymptomLogger, setShowSymptomLogger] = useState(false);
   const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
@@ -206,7 +204,6 @@ function App() {
   const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
 
   // VKB: Veteran Knowledge Base Viewer
-  const [showVKBViewer, setShowVKBViewer] = useState(false);
 
   // BVA SUCCESS TOOLS (powered by 18,609 decision analysis)
   const [showNexusQualityAnalyzer, setShowNexusQualityAnalyzer] =
@@ -289,7 +286,6 @@ function App() {
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
     if (showMyPacket) return "My Packet";
-    if (showUserManual) return "Field Manual";
     if (showTacticalCalculator) return "Rating Calculator";
     if (showSecondaryScout) return "Secondary Scout";
     if (showCFileAnalyzer) return "C-File Analyzer";
@@ -597,7 +593,8 @@ function App() {
       "tactical-calculator": () => setShowTacticalCalculator(true),
       "secondary-scout": () => setShowSecondaryScoutLauncher(true),
       "my-packet": () => setShowMyPacket(true),
-      "knowledge-base": () => setShowVKBViewer(true),
+      "knowledge-base": () =>
+        window.dispatchEvent(new CustomEvent("openVKBViewer")),
       "nexus-builder": () => setShowNexusBuilder(true),
       "statement-analyzer": () => setShowNexusBuilder(true), // Statement Analyzer is embedded in Nexus Builder
       "mos-hazard": () => setShowMOSHazardMatcher(true),
@@ -620,7 +617,8 @@ function App() {
       "claim-navigator": () => setShowClaimNavigator(true),
       "va-resources": () =>
         window.dispatchEvent(new CustomEvent("openVAResources")),
-      "user-manual": () => setShowUserManual(true),
+      "user-manual": () =>
+        window.dispatchEvent(new CustomEvent("openUserManual")),
       "nexus-analyzer": () => setShowNexusQualityAnalyzer(true),
       "remand-checker": () =>
         window.dispatchEvent(new CustomEvent("openRemandRiskChecker")),
@@ -697,7 +695,6 @@ function App() {
 
       // Core Navigation
       showMyPacket,
-      showUserManual,
 
       // Calculate Tools
       showTacticalCalculator,
@@ -744,7 +741,6 @@ function App() {
       currentModule: (() => {
         // Priority order: most specific tools first
         if (showMyPacket) return "My Packet";
-        if (showUserManual) return "Field Manual";
         if (showTacticalCalculator) return "Tactical Calculator (Rating)";
         if (showMillionDollarDashboard) return "Million Dollar Dashboard";
         if (showRetroPayHunter) return "Retro Pay Hunter";
@@ -786,7 +782,6 @@ function App() {
       error,
       // Core Navigation
       showMyPacket,
-      showUserManual,
       // Calculate Tools
       showTacticalCalculator,
       showMillionDollarDashboard,
@@ -914,8 +909,10 @@ function App() {
             "the-tribunal": () =>
               window.dispatchEvent(new CustomEvent("openTheTribunal")),
             "vso-finder": () => setShowVSOFinder(true),
-            "user-manual": () => setShowUserManual(true),
-            "knowledge-base": () => setShowVKBViewer(true),
+            "user-manual": () =>
+              window.dispatchEvent(new CustomEvent("openUserManual")),
+            "knowledge-base": () =>
+              window.dispatchEvent(new CustomEvent("openVKBViewer")),
             "million-dollar": () => setShowMillionDollarDashboard(true),
             "what-if-sandbox": () =>
               window.dispatchEvent(new CustomEvent("openWhatIfSandbox")),
@@ -971,11 +968,15 @@ function App() {
       <Header
         // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
-        onKnowledgeBaseClick={() => setShowVKBViewer(true)}
+        onKnowledgeBaseClick={() =>
+          window.dispatchEvent(new CustomEvent("openVKBViewer"))
+        }
         onVKBTimelineClick={() =>
           window.dispatchEvent(new CustomEvent("openVKBTimeline"))
         }
-        onUserManualClick={() => setShowUserManual(true)}
+        onUserManualClick={() =>
+          window.dispatchEvent(new CustomEvent("openUserManual"))
+        }
         onVAResourcesClick={() =>
           window.dispatchEvent(new CustomEvent("openVAResources"))
         }
@@ -2597,7 +2598,9 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
-                onClick={() => setShowUserManual(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openUserManual"))
+                }
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 📖 Field Manual
@@ -2854,13 +2857,7 @@ function App() {
           onOpenDD214Analyzer={() => setShowDD214Analyzer(true)}
         />
 
-        {/* VKB Viewer - Veteran Knowledge Base */}
-        {showVKBViewer && (
-          <VKBViewer
-            isOpen={showVKBViewer}
-            onClose={() => setShowVKBViewer(false)}
-          />
-        )}
+        <KnowledgeCluster />
 
         <VKBTimelineModal />
 
@@ -3032,17 +3029,6 @@ function App() {
         {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
         <AdminLogin />
         <AdminPanel />
-
-        {/* Field Manual */}
-        {showUserManual && (
-          <UserManual
-            onClose={() => setShowUserManual(false)}
-            onReportBug={() => {
-              setShowUserManual(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
 
         {/* VSO Finder */}
         {showVSOFinder && (
