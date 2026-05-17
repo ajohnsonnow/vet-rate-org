@@ -62,6 +62,7 @@ import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
 import CalculateCluster from "./features/calculate/CalculateCluster";
 import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
 import MyPacketModal from "./features/my-packet/MyPacketModal";
+import PathfinderModal from "./features/pathfinder/PathfinderModal";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -95,7 +96,6 @@ const SecondaryScoutLauncher = lazy(
   () => import("./components/SecondaryScoutLauncher"),
 );
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
-const Pathfinder = lazy(() => import("./components/Pathfinder"));
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
@@ -140,7 +140,6 @@ function App() {
   const [userConditions, setUserConditions] = useState([]);
   const [showNexusBuilder, setShowNexusBuilder] = useState(false);
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
-  const [showPathfinder, setShowPathfinder] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
@@ -152,10 +151,6 @@ function App() {
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
   const [showCommandSearch, setShowCommandSearch] = useState(false);
   const [showAtomicWipe, setShowAtomicWipe] = useState(false);
-
-  // BlueButton -> Pathfinder transfer state
-  const [pathfinderInitialConditions, setPathfinderInitialConditions] =
-    useState(null);
 
   // MOBILE: Small screen warning
   const [dismissedSmallScreenWarning, setDismissedSmallScreenWarning] =
@@ -204,7 +199,6 @@ function App() {
   const getCurrentToolName = () => {
     if (showSecondaryScout) return "Secondary Scout";
     if (showNexusBuilder) return "Nexus Builder";
-    if (showPathfinder) return "Pathfinder";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (selectedResult) return "Disability Details";
     return "Home";
@@ -216,26 +210,30 @@ function App() {
   }, []);
 
   // Bridge listeners for events dispatched by extracted clusters whose
-  // targets (Pathfinder, NexusBuilder) still live in App.jsx. These move
-  // into their own clusters when Pathfinder / NexusBuilder extract (B56+).
+  // targets (NexusBuilder, SecondaryScoutLauncher) still live in App.jsx.
+  // These move into the DiscoverCluster when it extracts (B57+).
   useEffect(() => {
-    const openPathfinderBridge = (e) => {
-      setPathfinderInitialConditions(e?.detail?.conditions ?? null);
-      setShowPathfinder(true);
-    };
     const openNexusBuilderBridge = (e) => {
       if (e?.detail) setNexusBuilderData(e.detail);
       setShowNexusBuilder(true);
     };
+    const openSecondaryScoutLauncherBridge = () =>
+      setShowSecondaryScoutLauncher(true);
     const resumeFromPacketBridge = (e) => {
       if (e?.detail) handleResumeFromPacket(e.detail);
     };
-    window.addEventListener("openPathfinder", openPathfinderBridge);
     window.addEventListener("openNexusBuilder", openNexusBuilderBridge);
+    window.addEventListener(
+      "openSecondaryScoutLauncher",
+      openSecondaryScoutLauncherBridge,
+    );
     window.addEventListener("resumeFromPacket", resumeFromPacketBridge);
     return () => {
-      window.removeEventListener("openPathfinder", openPathfinderBridge);
       window.removeEventListener("openNexusBuilder", openNexusBuilderBridge);
+      window.removeEventListener(
+        "openSecondaryScoutLauncher",
+        openSecondaryScoutLauncherBridge,
+      );
       window.removeEventListener("resumeFromPacket", resumeFromPacketBridge);
     };
   }, []);
@@ -447,25 +445,6 @@ function App() {
     setShowNexusBuilder(true);
   };
 
-  // Handler for Pathfinder navigation to other tools
-  const handlePathfinderNavigate = (tool, data) => {
-    setShowPathfinder(false);
-
-    if (tool === "nexus") {
-      setNexusBuilderData({
-        condition: data.condition,
-        primaryCondition: data.primaryCondition,
-        existingStatement: null,
-      });
-      setShowNexusBuilder(true);
-    } else if (tool === "dbq") {
-      // Navigate to C&P Simulator with condition
-      window.dispatchEvent(new CustomEvent("openCAPSimulator"));
-    } else if (tool === "secondary-scout") {
-      setShowSecondaryScoutLauncher(true);
-    }
-  };
-
   // Handler for navigating to a secondary condition from DisabilityDetails
   const handleSecondaryConditionClick = (diagnosticCode, conditionName) => {
     // First try to find by diagnostic code
@@ -528,7 +507,7 @@ function App() {
         window.dispatchEvent(new CustomEvent("openRetroPayHunter")),
       "tdiu-builder": () =>
         window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
-      pathfinder: () => setShowPathfinder(true),
+      pathfinder: () => window.dispatchEvent(new CustomEvent("openPathfinder")),
       "million-dollar-dashboard": () =>
         window.dispatchEvent(new CustomEvent("openMillionDollarDashboard")),
       "vso-finder": () =>
@@ -621,7 +600,6 @@ function App() {
       showSecondaryScoutLauncher,
       showSecondaryScout,
       userConditions,
-      showPathfinder,
 
       // Build Evidence Tools
       showBlueButtonXRay,
@@ -633,7 +611,6 @@ function App() {
         // Priority order: most specific tools first
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
-        if (showPathfinder) return "Pathfinder (AI Strategy)";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
         if (showNexusBuilder) return "Nexus Builder";
         if (selectedResult) return "Disability Details View";
@@ -651,7 +628,6 @@ function App() {
       showSecondaryScoutLauncher,
       showSecondaryScout,
       userConditions,
-      showPathfinder,
       // Build Evidence Tools
       showBlueButtonXRay,
       showNexusBuilder,
@@ -727,7 +703,8 @@ function App() {
             "cap-simulator": () =>
               window.dispatchEvent(new CustomEvent("openCAPSimulator")),
             "nexus-builder": () => setShowNexusBuilder(true),
-            pathfinder: () => setShowPathfinder(true),
+            pathfinder: () =>
+              window.dispatchEvent(new CustomEvent("openPathfinder")),
             "claim-navigator": () =>
               window.dispatchEvent(new CustomEvent("openClaimNavigator")),
             "cfile-analyzer": () =>
@@ -870,7 +847,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openCAPSimulator"))
         }
         // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
-        onPathfinderClick={() => setShowPathfinder(true)}
+        onPathfinderClick={() =>
+          window.dispatchEvent(new CustomEvent("openPathfinder"))
+        }
         onClaimNavigatorClick={() =>
           window.dispatchEvent(new CustomEvent("openClaimNavigator"))
         }
@@ -1364,7 +1343,9 @@ function App() {
 
                 <div className="flex-shrink-0">
                   <button
-                    onClick={() => setShowPathfinder(true)}
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("openPathfinder"))
+                    }
                     className="px-6 py-3 bg-white text-teal-700 rounded-lg font-bold text-lg hover:bg-teal-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <span>📊</span>
@@ -2793,87 +2774,7 @@ function App() {
 
         <QualityControlCluster />
 
-        {/* Pathfinder */}
-        {showPathfinder && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-            onClick={() => {
-              setPathfinderInitialConditions(null); // Clear conditions when closing
-              setShowPathfinder(false);
-            }}
-          >
-            <div
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🧭</span>
-                    <div>
-                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        The Pathfinder
-                        <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
-                          AI
-                        </span>
-                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                          BETA
-                        </span>
-                      </h2>
-                      <p className="text-sm text-teal-100">
-                        Strategic Claims Analysis
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ReportBugLink
-                      onClick={() => {
-                        setShowPathfinder(false);
-                        window.dispatchEvent(
-                          new CustomEvent("openBugSquasher"),
-                        );
-                      }}
-                      variant="light"
-                      moduleName="Pathfinder"
-                    />
-                    <button
-                      onClick={() => {
-                        setPathfinderInitialConditions(null); // Clear conditions when closing
-                        setShowPathfinder(false);
-                      }}
-                      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                      aria-label="Close"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-y-auto flex-1 p-4">
-                <Pathfinder
-                  onNavigate={handlePathfinderNavigate}
-                  onOpenAISettings={() =>
-                    window.dispatchEvent(new CustomEvent("openAISettings"))
-                  }
-                  initialConditions={pathfinderInitialConditions}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <PathfinderModal />
 
         <ClaimNavigatorModal />
 
@@ -2905,9 +2806,12 @@ function App() {
                 conditions.length,
                 "conditions to Pathfinder",
               );
-              setPathfinderInitialConditions(conditions);
               setShowBlueButtonXRay(false);
-              setShowPathfinder(true);
+              window.dispatchEvent(
+                new CustomEvent("openPathfinder", {
+                  detail: { conditions },
+                }),
+              );
             }}
             onCheckRatingCriteria={(conditionName) => {
               // Search for the condition in the database
