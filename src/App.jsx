@@ -46,6 +46,7 @@ import PublicationsLibraryModal from "./features/publications/PublicationsLibrar
 import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
 import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
 import DataManagementCluster from "./features/data-management/DataManagementCluster";
+import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -116,8 +117,6 @@ const LegislativeWatchdog = lazy(
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const TheTribunal = lazy(() => import("./components/TheTribunal"));
 const ConsistencyEngine = lazy(() => import("./components/ConsistencyEngine"));
-const WhatIfSandbox = lazy(() => import("./components/WhatIfSandbox"));
-const DenialDecoder = lazy(() => import("./components/DenialDecoder"));
 const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
 const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
@@ -210,11 +209,9 @@ function App() {
   const [showTimeMachine, setShowTimeMachine] = useState(false);
   const [showTheTribunal, setShowTheTribunal] = useState(false);
   const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
-  const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
   const [showVAAITransparency, setShowVAAITransparency] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
-  const [showDenialDecoder, setShowDenialDecoder] = useState(false);
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
   const [showClaimStressTest, setShowClaimStressTest] = useState(false);
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
@@ -286,14 +283,19 @@ function App() {
     return () => window.removeEventListener("openVisionSimulator", handler);
   }, []);
 
-  // Bridge `openBugSquasher` event into local state. Extracted feature
-  // regions (LegalPages, etc.) dispatch this event instead of holding a
-  // direct setter reference. When BugSquasher itself is extracted, this
-  // listener moves with it.
+  // Bridge `openBugSquasher` and `openAISettings` events into local state.
+  // Extracted feature regions dispatch these instead of holding direct
+  // setter references. When BugSquasher / AICommandCenter themselves are
+  // extracted, the listeners move with them.
   useEffect(() => {
-    const handler = () => setShowBugSquasher(true);
-    window.addEventListener("openBugSquasher", handler);
-    return () => window.removeEventListener("openBugSquasher", handler);
+    const openBug = () => setShowBugSquasher(true);
+    const openAi = () => setShowAISettings(true);
+    window.addEventListener("openBugSquasher", openBug);
+    window.addEventListener("openAISettings", openAi);
+    return () => {
+      window.removeEventListener("openBugSquasher", openBug);
+      window.removeEventListener("openAISettings", openAi);
+    };
   }, []);
 
   // Initialize error capture for bug reports
@@ -326,9 +328,7 @@ function App() {
     if (showRedTeam) return "War Game";
     if (showMillionDollarDashboard) return "Million Dollar Dashboard";
     if (showRetroPayHunter) return "Retro Pay Hunter";
-    if (showWhatIfSandbox) return "What-If Sandbox";
     if (showEvidenceTimeline) return "Evidence Timeline";
-    if (showDenialDecoder) return "Denial Decoder";
     if (showBodyMapSelector) return "Body Map";
     if (showClaimStressTest) return "Claim Stress Test";
     if (showPainPainter) return "Pain Painter";
@@ -736,7 +736,6 @@ function App() {
       // Calculate Tools
       showTacticalCalculator,
       showMillionDollarDashboard,
-      showWhatIfSandbox,
       showRetroPayHunter,
       showTimeMachine,
 
@@ -769,7 +768,6 @@ function App() {
       showRedTeam,
       showClaimStressTest,
       showDecisionDecoder,
-      showDenialDecoder,
       showSharkRadar,
       showConsistencyEngine,
       showEvidenceGapVisualizer,
@@ -795,7 +793,6 @@ function App() {
         if (showUserManual) return "Field Manual";
         if (showTacticalCalculator) return "Tactical Calculator (Rating)";
         if (showMillionDollarDashboard) return "Million Dollar Dashboard";
-        if (showWhatIfSandbox) return "What-If Sandbox";
         if (showRetroPayHunter) return "Retro Pay Hunter";
         if (showTimeMachine) return "Time Machine (ITF Tracker)";
         if (showSecondaryScout) return "Secondary Scout";
@@ -821,7 +818,6 @@ function App() {
         if (showRedTeam) return "Red Team (Statement Stress Test)";
         if (showClaimStressTest) return "Claim Stress Test (War Game)";
         if (showDecisionDecoder) return "Decision Decoder";
-        if (showDenialDecoder) return "Denial Decoder";
         if (showSharkRadar) return "Shark Radar (Scam Detector)";
         if (showConsistencyEngine) return "Consistency Engine";
         if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
@@ -852,7 +848,6 @@ function App() {
       // Calculate Tools
       showTacticalCalculator,
       showMillionDollarDashboard,
-      showWhatIfSandbox,
       showRetroPayHunter,
       showTimeMachine,
       // Discover Tools
@@ -883,7 +878,6 @@ function App() {
       showRedTeam,
       showClaimStressTest,
       showDecisionDecoder,
-      showDenialDecoder,
       showSharkRadar,
       showConsistencyEngine,
       showEvidenceGapVisualizer,
@@ -972,7 +966,8 @@ function App() {
             "forms-helper": () => setShowFormsHelper(true),
             "red-team": () => setShowRedTeam(true),
             "shark-radar": () => setShowSharkRadar(true),
-            "denial-decoder": () => setShowDenialDecoder(true),
+            "denial-decoder": () =>
+              window.dispatchEvent(new CustomEvent("openDenialDecoder")),
             "decision-decoder": () => setShowDecisionDecoder(true),
             "consistency-engine": () => setShowConsistencyEngine(true),
             "claim-stress-test": () => setShowClaimStressTest(true),
@@ -985,7 +980,8 @@ function App() {
             "user-manual": () => setShowUserManual(true),
             "knowledge-base": () => setShowVKBViewer(true),
             "million-dollar": () => setShowMillionDollarDashboard(true),
-            "what-if-sandbox": () => setShowWhatIfSandbox(true),
+            "what-if-sandbox": () =>
+              window.dispatchEvent(new CustomEvent("openWhatIfSandbox")),
             "retro-pay": () => setShowRetroPayHunter(true),
             "time-machine": () => setShowTimeMachine(true),
             "pact-act": () => setShowPACTActNavigator(true),
@@ -1045,7 +1041,9 @@ function App() {
         onMillionDollarDashboardClick={() =>
           setShowMillionDollarDashboard(true)
         }
-        onWhatIfSandboxClick={() => setShowWhatIfSandbox(true)}
+        onWhatIfSandboxClick={() =>
+          window.dispatchEvent(new CustomEvent("openWhatIfSandbox"))
+        }
         onRetroPayHunterClick={() => setShowRetroPayHunter(true)}
         onTimeMachineClick={() => setShowTimeMachine(true)}
         // Discover
@@ -1073,7 +1071,9 @@ function App() {
         onRedTeamClick={() => setShowRedTeam(true)}
         onClaimStressTestClick={() => setShowClaimStressTest(true)}
         onDecisionDecoderClick={() => setShowDecisionDecoder(true)}
-        onDenialDecoderClick={() => setShowDenialDecoder(true)}
+        onDenialDecoderClick={() =>
+          window.dispatchEvent(new CustomEvent("openDenialDecoder"))
+        }
         onSharkRadarClick={() => setShowSharkRadar(true)}
         onConsistencyEngineClick={() => setShowConsistencyEngine(true)}
         onEvidenceGapVisualizerClick={() => setShowEvidenceGapVisualizer(true)}
@@ -3323,18 +3323,7 @@ function App() {
         )}
         <AppealsToolsCluster />
 
-        {/* The What-If Sandbox - Scenario Planner */}
-        {showWhatIfSandbox && (
-          <WhatIfSandbox onClose={() => setShowWhatIfSandbox(false)} />
-        )}
-
-        {/* DIAMOND-TIER: The Denials Decoder - OCR + AI Simplifier */}
-        {showDenialDecoder && (
-          <DenialDecoder
-            onClose={() => setShowDenialDecoder(false)}
-            onOpenAISettings={() => setShowAISettings(true)}
-          />
-        )}
+        <DecisionToolsCluster />
 
         {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map (Legacy BodyMapSelector) */}
         {showBodyMapSelector && (
