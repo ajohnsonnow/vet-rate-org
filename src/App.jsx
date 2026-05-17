@@ -91,11 +91,8 @@ import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import { initializeErrorCapture } from "./utils/bugReportUtils";
 import { setupBeforeUnloadWarning } from "./utils/dataPersistence";
-import { migrateUserData } from "./utils/migrationManager";
+import { useBootSequence } from "./features/boot/useBootSequence";
 import { createDebugDumpHandler } from "./utils/debugDump";
-import { needsMigration, migrateFromLocalStorage } from "./utils/storage";
-import { initPersistentStorage } from "./utils/persistentStorage";
-import { initAutoBackup } from "./utils/autoBackup";
 import disabilityData from "./data/disabilityData.json";
 import { PROJECT_STATS } from "./data/projectStats";
 import { getTotalToolCount } from "./data/toolkitData";
@@ -148,12 +145,11 @@ function App() {
   // bookkeeping, and SW update checker colocated there (audit #35, B25).
   const { whatsNewOpen, updateBanner, whatsNewModal } = useUpdateOrchestrator();
 
-  // KILL SWITCH: Maintenance mode state
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [maintenanceMessage, setMaintenanceMessage] = useState("");
-
-  // IndexedDB Migration State
-  const [isMigrating, setIsMigrating] = useState(false);
+  // Boot sequence: maintenance check, IndexedDB migration, persistent
+  // storage + auto-backup init, user-data migrations. See
+  // features/boot/useBootSequence.js (audit #35, B59).
+  const { isMigrating, maintenanceMode, maintenanceMessage } =
+    useBootSequence();
 
   // LIVE OPS: Debug dump handler (Easter egg)
   const debugDumpHandler = createDebugDumpHandler();
@@ -215,132 +211,6 @@ function App() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  // LIVE OPS: Data migration and update checking
-  useEffect(() => {
-    // Step 0A: KILL SWITCH - Check maintenance mode FIRST
-    const checkMaintenanceMode = async () => {
-      try {
-        const response = await fetch("/version.json?t=" + Date.now());
-        const data = await response.json();
-
-        if (data.maintenance_mode === true) {
-          console.warn("🚨 MAINTENANCE MODE ACTIVE - App disabled");
-          setMaintenanceMode(true);
-          setMaintenanceMessage(
-            data.maintenance_message ||
-              "System maintenance in progress. Please check back later.",
-          );
-          return true; // Stop all other initialization
-        }
-        return false;
-      } catch (error) {
-        console.error("⚠️ Could not check maintenance mode:", error);
-        return false; // If check fails, allow app to continue (fail-open)
-      }
-    };
-
-    // Step 0B: IndexedDB Migration (CRITICAL - runs FIRST before everything)
-    const runStorageMigration = async () => {
-      try {
-        const shouldMigrate = await needsMigration();
-
-        if (shouldMigrate) {
-          console.log(
-            "🔄 IndexedDB Migration: Migrating data from localStorage...",
-          );
-          setIsMigrating(true);
-
-          const migrationResult = await migrateFromLocalStorage();
-
-          if (migrationResult.success) {
-            console.log(
-              "✅ IndexedDB Migration: Successfully migrated",
-              migrationResult.itemsMigrated,
-              "items",
-            );
-            console.log("   Migrated keys:", migrationResult.keysProcessed);
-          } else {
-            console.error(
-              "⚠️ IndexedDB Migration: Failed",
-              migrationResult.errors,
-            );
-          }
-
-          setIsMigrating(false);
-        } else {
-          console.log(
-            "✅ IndexedDB Migration: Already complete, using IndexedDB",
-          );
-        }
-      } catch (error) {
-        console.error("❌ IndexedDB Migration: Critical error", error);
-        setIsMigrating(false);
-      }
-    };
-
-    const initializeApp = async () => {
-      // CRITICAL: Check maintenance mode before anything else
-      const inMaintenanceMode = await checkMaintenanceMode();
-      if (inMaintenanceMode) {
-        return; // Stop all initialization if in maintenance mode
-      }
-
-      // Continue with normal initialization
-      await runStorageMigration();
-
-      // Initialize crash-proof persistent storage system ("The Bunker")
-      try {
-        const persistentResult = await initPersistentStorage();
-        console.log("🛡️ Persistent Storage: Initialized", persistentResult);
-        if (persistentResult.hasUnsavedChanges) {
-          console.log(
-            "⚠️ Found unsaved changes from previous session - will auto-save",
-          );
-        }
-      } catch (error) {
-        console.error(
-          "⚠️ Persistent Storage: Initialization failed, continuing anyway",
-          error,
-        );
-      }
-
-      // Initialize auto-backup system ("Zero Data Loss Protocol")
-      try {
-        await initAutoBackup();
-        console.log(
-          "💾 Auto-Backup: System initialized - all data will be backed up after every action",
-        );
-      } catch (error) {
-        console.error(
-          "⚠️ Auto-Backup: Initialization failed, continuing anyway",
-          error,
-        );
-      }
-
-      // Step 1: Migrate user data if needed (CRITICAL - runs after IndexedDB migration)
-      console.log("🛡️ LIVE OPS: Initializing protection systems...");
-      const migrationResult = migrateUserData();
-
-      if (migrationResult.migrationsRun.length > 0) {
-        console.log(
-          `✅ Ran ${migrationResult.migrationsRun.length} migration(s):`,
-          migrationResult.migrationsRun,
-        );
-      }
-
-      if (!migrationResult.success) {
-        console.error("⚠️ Some migrations failed:", migrationResult.errors);
-        // Could show a warning to user, but app should still function
-      }
-
-      // Step 2 (What's-New modal) and Step 3 (SW update checker) live in
-      // useUpdateOrchestrator now — see src/features/update/.
-    };
-
-    // Run initialization
-    initializeApp();
   }, []);
 
   const handleBuildStatementFromSearch = (conditionName) => {
