@@ -79,8 +79,8 @@ import { VaApiStatusBanner } from "./components/VaApiStatus";
 import { isVaApiEnabled } from "./config/vaAuth";
 import { MobileSaveReminder } from "./components/PacketPersistence";
 import StressReliefDivision from "./components/StressReliefDivision";
-import GlobalCommandSearch from "./components/GlobalCommandSearch";
 import MobileBottomNav, { MobileNavSpacer } from "./components/MobileBottomNav";
+import GlobalCommandSearchWrapper from "./features/global-command-search/GlobalCommandSearchWrapper";
 import AtomicWipe from "./components/AtomicWipe";
 import { HelperModeProvider } from "./contexts/HelperModeContext";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -118,7 +118,6 @@ function App() {
   // VKB: Veteran Knowledge Base Viewer
 
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
-  const [showCommandSearch, setShowCommandSearch] = useState(false);
   const [showAtomicWipe, setShowAtomicWipe] = useState(false);
 
   // CLEAR COAT: Onboarding & Trust Features
@@ -178,20 +177,14 @@ function App() {
   }, []);
 
   // DEMO: Keyboard shortcut to open Demo Dashboard (Ctrl+Shift+D)
+  // CMD+K (GlobalCommandSearch) lives in GlobalCommandSearchWrapper.
+  // Admin panel (Ctrl+Shift+A) is handled by AdminAuthContext.
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // CMD/Ctrl + K: Open Global Command Search
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setShowCommandSearch(true);
-      }
-      // Ctrl+Shift+D: Open Demo Dashboard (gated to VA-API surface)
       if (e.ctrlKey && e.shiftKey && e.key === "D" && isVaApiEnabled()) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent("openDemoDashboard"));
       }
-      // NOTE: Admin panel access (Ctrl+Shift+A) is handled by AdminAuthContext
-      // Bug Lookup and Feature Lookup are only accessible via Admin Panel
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -427,117 +420,7 @@ function App() {
         </div>
       </div>
 
-      {/* AAAAA Diamond Standard: Global Command Search (CMD+K) */}
-      <GlobalCommandSearch
-        isOpen={showCommandSearch}
-        onClose={() => setShowCommandSearch(false)}
-        onSelectTool={(toolId) => {
-          setShowCommandSearch(false);
-          // Map tool IDs to their respective state setters
-          const toolHandlers = {
-            "tactical-calculator": () =>
-              window.dispatchEvent(new CustomEvent("openTacticalCalculator")),
-            "my-packet": () =>
-              window.dispatchEvent(new CustomEvent("openMyPacket")),
-            "secondary-scout": () =>
-              window.dispatchEvent(
-                new CustomEvent("openSecondaryScoutLauncher"),
-              ),
-            "cap-simulator": () =>
-              window.dispatchEvent(new CustomEvent("openCAPSimulator")),
-            "nexus-builder": () =>
-              window.dispatchEvent(new CustomEvent("openNexusBuilder")),
-            pathfinder: () =>
-              window.dispatchEvent(new CustomEvent("openPathfinder")),
-            "claim-navigator": () =>
-              window.dispatchEvent(new CustomEvent("openClaimNavigator")),
-            "cfile-analyzer": () =>
-              window.dispatchEvent(new CustomEvent("openCFileAnalyzer")),
-            "forms-helper": () =>
-              window.dispatchEvent(new CustomEvent("openFormsHelper")),
-            "red-team": () =>
-              window.dispatchEvent(new CustomEvent("openRedTeam")),
-            "shark-radar": () =>
-              window.dispatchEvent(new CustomEvent("openSharkRadar")),
-            "denial-decoder": () =>
-              window.dispatchEvent(new CustomEvent("openDenialDecoder")),
-            "decision-decoder": () =>
-              window.dispatchEvent(new CustomEvent("openDecisionDecoder")),
-            "consistency-engine": () =>
-              window.dispatchEvent(new CustomEvent("openConsistencyEngine")),
-            "claim-stress-test": () =>
-              window.dispatchEvent(new CustomEvent("openClaimStressTest")),
-            "evidence-gap": () =>
-              window.dispatchEvent(
-                new CustomEvent("openEvidenceGapVisualizer"),
-              ),
-            "risk-assessment": () =>
-              window.dispatchEvent(new CustomEvent("openRiskAssessment")),
-            "tdiu-builder": () =>
-              window.dispatchEvent(new CustomEvent("openTDIUBuilder")),
-            "state-benefits": () =>
-              window.dispatchEvent(new CustomEvent("openStateBenefitHunter")),
-            "the-tribunal": () =>
-              window.dispatchEvent(new CustomEvent("openTheTribunal")),
-            "vso-finder": () =>
-              window.dispatchEvent(new CustomEvent("openVSOFinder")),
-            "user-manual": () =>
-              window.dispatchEvent(new CustomEvent("openUserManual")),
-            "knowledge-base": () =>
-              window.dispatchEvent(new CustomEvent("openVKBViewer")),
-            "million-dollar": () =>
-              window.dispatchEvent(
-                new CustomEvent("openMillionDollarDashboard"),
-              ),
-            "what-if-sandbox": () =>
-              window.dispatchEvent(new CustomEvent("openWhatIfSandbox")),
-            "retro-pay": () =>
-              window.dispatchEvent(new CustomEvent("openRetroPayHunter")),
-            "time-machine": () =>
-              window.dispatchEvent(new CustomEvent("openTimeMachine")),
-            "pact-act": () =>
-              window.dispatchEvent(new CustomEvent("openPACTActNavigator")),
-            "mos-hazard": () =>
-              window.dispatchEvent(new CustomEvent("openMOSHazardMatcher")),
-            "web-of-conditions": () =>
-              window.dispatchEvent(new CustomEvent("openWebOfConditions")),
-            "blue-button": () =>
-              window.dispatchEvent(new CustomEvent("openBlueButtonXRay")),
-            "witness-bench": () =>
-              window.dispatchEvent(new CustomEvent("openWitnessBench")),
-            "symptom-logger": () =>
-              window.dispatchEvent(new CustomEvent("openSymptomLogger")),
-            "pain-painter": () =>
-              window.dispatchEvent(new CustomEvent("openPainPainter")),
-            "evidence-timeline": () =>
-              window.dispatchEvent(new CustomEvent("openEvidenceTimeline")),
-            "foia-generator": () =>
-              window.dispatchEvent(new CustomEvent("openFOIAGenerator")),
-            "legislative-watchdog": () =>
-              window.dispatchEvent(new CustomEvent("openLegislativeWatchdog")),
-            "backup-manager": () =>
-              window.dispatchEvent(new CustomEvent("openBackupManager")),
-            "ai-settings": () =>
-              window.dispatchEvent(new CustomEvent("openAISettings")),
-            "workflow-guide": () =>
-              window.dispatchEvent(new CustomEvent("openWorkflowGuide")),
-            "record-search": () =>
-              window.dispatchEvent(new CustomEvent("openRecordSearch")),
-            "dd214-analyzer": () =>
-              window.dispatchEvent(new CustomEvent("openDD214Analyzer")),
-            "bdd-builder": () =>
-              window.dispatchEvent(new CustomEvent("openBDDBuilder")),
-          };
-          const handler = toolHandlers[toolId];
-          if (handler) handler();
-        }}
-        onSelectDiagnosticCode={(code) => {
-          setShowCommandSearch(false);
-          // Search for the diagnostic code
-          setSearchTerm(code.code);
-          handleSearch(code.code);
-        }}
-      />
+      <GlobalCommandSearchWrapper />
 
       {/* AAAAA Diamond Standard: Atomic Wipe (Panic Button) */}
       <AtomicWipe
@@ -2259,7 +2142,9 @@ function App() {
 
       {/* AAAAA Diamond Standard: Mobile Bottom Navigation */}
       <MobileBottomNav
-        onSearchClick={() => setShowCommandSearch(true)}
+        onSearchClick={() =>
+          window.dispatchEvent(new CustomEvent("openGlobalCommandSearch"))
+        }
         onCalculatorClick={() =>
           window.dispatchEvent(new CustomEvent("openTacticalCalculator"))
         }
