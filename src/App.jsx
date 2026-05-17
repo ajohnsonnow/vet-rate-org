@@ -60,6 +60,7 @@ import SpecializedToolsCluster from "./features/specialized-tools/SpecializedToo
 import EvidenceInvestigationCluster from "./features/evidence-investigation/EvidenceInvestigationCluster";
 import SystemToolsCluster from "./features/system-tools/SystemToolsCluster";
 import CalculateCluster from "./features/calculate/CalculateCluster";
+import ClaimNavigatorModal from "./features/navigator/ClaimNavigatorModal";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -95,7 +96,6 @@ const SecondaryScoutLauncher = lazy(
 const NexusBuilder = lazy(() => import("./components/NexusBuilder"));
 const MyPacket = lazy(() => import("./components/MyPacket"));
 const Pathfinder = lazy(() => import("./components/Pathfinder"));
-const ClaimNavigator = lazy(() => import("./components/ClaimNavigator"));
 const BlueButtonXRay = lazy(() => import("./components/BlueButtonXRay"));
 import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
@@ -142,7 +142,6 @@ function App() {
   const [nexusBuilderData, setNexusBuilderData] = useState(null);
   const [showMyPacket, setShowMyPacket] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
-  const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
@@ -208,7 +207,6 @@ function App() {
     if (showSecondaryScout) return "Secondary Scout";
     if (showNexusBuilder) return "Nexus Builder";
     if (showPathfinder) return "Pathfinder";
-    if (showClaimNavigator) return "Claim Navigator";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
     if (selectedResult) return "Disability Details";
     return "Home";
@@ -514,7 +512,8 @@ function App() {
         window.dispatchEvent(new CustomEvent("openVSOFinder")),
       "witness-bench": () =>
         window.dispatchEvent(new CustomEvent("openWitnessBench")),
-      "claim-navigator": () => setShowClaimNavigator(true),
+      "claim-navigator": () =>
+        window.dispatchEvent(new CustomEvent("openClaimNavigator")),
       "va-resources": () =>
         window.dispatchEvent(new CustomEvent("openVAResources")),
       "user-manual": () =>
@@ -603,7 +602,6 @@ function App() {
       showSecondaryScout,
       userConditions,
       showPathfinder,
-      showClaimNavigator,
 
       // Build Evidence Tools
       showBlueButtonXRay,
@@ -617,7 +615,6 @@ function App() {
         if (showSecondaryScout) return "Secondary Scout";
         if (showSecondaryScoutLauncher) return "Secondary Scout Launcher";
         if (showPathfinder) return "Pathfinder (AI Strategy)";
-        if (showClaimNavigator) return "Claim Navigator";
         if (showBlueButtonXRay) return "Blue Button X-Ray";
         if (showNexusBuilder) return "Nexus Builder";
         if (selectedResult) return "Disability Details View";
@@ -638,7 +635,6 @@ function App() {
       showSecondaryScout,
       userConditions,
       showPathfinder,
-      showClaimNavigator,
       // Build Evidence Tools
       showBlueButtonXRay,
       showNexusBuilder,
@@ -714,7 +710,8 @@ function App() {
               window.dispatchEvent(new CustomEvent("openCAPSimulator")),
             "nexus-builder": () => setShowNexusBuilder(true),
             pathfinder: () => setShowPathfinder(true),
-            "claim-navigator": () => setShowClaimNavigator(true),
+            "claim-navigator": () =>
+              window.dispatchEvent(new CustomEvent("openClaimNavigator")),
             "cfile-analyzer": () =>
               window.dispatchEvent(new CustomEvent("openCFileAnalyzer")),
             "forms-helper": () =>
@@ -854,7 +851,9 @@ function App() {
         }
         // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
         onPathfinderClick={() => setShowPathfinder(true)}
-        onClaimNavigatorClick={() => setShowClaimNavigator(true)}
+        onClaimNavigatorClick={() =>
+          window.dispatchEvent(new CustomEvent("openClaimNavigator"))
+        }
         onMOSHazardMatcherClick={() =>
           window.dispatchEvent(new CustomEvent("openMOSHazardMatcher"))
         }
@@ -2874,10 +2873,7 @@ function App() {
           </div>
         )}
 
-        {/* Claim Navigator - Mission Control for VA Claims */}
-        {showClaimNavigator && (
-          <ClaimNavigator onClose={() => setShowClaimNavigator(false)} />
-        )}
+        <ClaimNavigatorModal />
 
         <SystemToolsCluster getAppState={getCurrentAppState} />
 
