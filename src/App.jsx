@@ -87,10 +87,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
-import { initializeCompassionateVoice } from "./utils/voiceIndex";
 import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
-import { initializeErrorCapture } from "./utils/bugReportUtils";
-import { setupBeforeUnloadWarning } from "./utils/dataPersistence";
 import { dispatchToolById } from "./utils/dispatchToolById";
 import { useBootSequence } from "./features/boot/useBootSequence";
 import disabilityData from "./data/disabilityData.json";
@@ -139,27 +136,15 @@ function App() {
   // openVisionSimulator → close-AI-Command-Center side-effect
   // (audit #35, B52).
 
-  // Initialize error capture for bug reports
-  useEffect(() => {
-    initializeErrorCapture();
-  }, []);
-
-  // Initialize Compassionate Voice System (panic key, crisis listener)
-  useEffect(() => {
-    initializeCompassionateVoice();
-    console.log("🎙️ Compassionate Voice System initialized");
-  }, []);
+  // initializeErrorCapture / initializeCompassionateVoice /
+  // setupBeforeUnloadWarning now run inside useBootSequence (audit
+  // #35, B70).
 
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
     if (selectedResult) return "Disability Details";
     return "Home";
   };
-
-  // Setup beforeunload warning for unsaved changes
-  useEffect(() => {
-    setupBeforeUnloadWarning();
-  }, []);
 
   // searchDisability bridge: BlueButtonXRayModal's Check Rating Criteria
   // callback dispatches into App.jsx's searchTerm state.
