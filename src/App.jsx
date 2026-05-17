@@ -47,6 +47,7 @@ import VKBTimelineModal from "./features/vkb/VKBTimelineModal";
 import AppealsToolsCluster from "./features/appeals-tools/AppealsToolsCluster";
 import DataManagementCluster from "./features/data-management/DataManagementCluster";
 import DecisionToolsCluster from "./features/decision-tools/DecisionToolsCluster";
+import AITransparencyCluster from "./features/ai-transparency/AITransparencyCluster";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -116,7 +117,6 @@ const LegislativeWatchdog = lazy(
 );
 const TimeMachine = lazy(() => import("./components/TimeMachine"));
 const TheTribunal = lazy(() => import("./components/TheTribunal"));
-const ConsistencyEngine = lazy(() => import("./components/ConsistencyEngine"));
 const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
 const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
@@ -132,7 +132,6 @@ const EvidenceGapVisualizer = lazy(
 );
 const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
 const PainPainter = lazy(() => import("./components/PainPainter"));
-const VAAITransparency = lazy(() => import("./components/VAAITransparency"));
 const NexusQualityAnalyzer = lazy(
   () => import("./components/NexusQualityAnalyzer"),
 );
@@ -208,8 +207,6 @@ function App() {
   const [showLegislativeWatchdog, setShowLegislativeWatchdog] = useState(false);
   const [showTimeMachine, setShowTimeMachine] = useState(false);
   const [showTheTribunal, setShowTheTribunal] = useState(false);
-  const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
-  const [showVAAITransparency, setShowVAAITransparency] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
@@ -769,7 +766,6 @@ function App() {
       showClaimStressTest,
       showDecisionDecoder,
       showSharkRadar,
-      showConsistencyEngine,
       showEvidenceGapVisualizer,
       showRiskAssessment,
 
@@ -781,7 +777,6 @@ function App() {
 
       // Support Tools
       showVSOFinder,
-      showVAAITransparency,
 
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
@@ -819,7 +814,6 @@ function App() {
         if (showClaimStressTest) return "Claim Stress Test (War Game)";
         if (showDecisionDecoder) return "Decision Decoder";
         if (showSharkRadar) return "Shark Radar (Scam Detector)";
-        if (showConsistencyEngine) return "Consistency Engine";
         if (showEvidenceGapVisualizer) return "Evidence Gap Visualizer";
         if (showRiskAssessment) return "Risk Assessment (Poke the Bear)";
         if (showTDIUBuilder) return "TDIU Builder";
@@ -827,7 +821,6 @@ function App() {
         if (showTheTribunal) return "The Tribunal (Mock Hearing)";
         if (showLegislativeWatchdog) return "Legislative Watchdog";
         if (showVSOFinder) return "VSO Finder";
-        if (showVAAITransparency) return "VA AI Transparency";
         if (showVAResources) return "VA Resources Hub";
         if (showAISettings) return "AI Command Center";
         if (selectedResult) return "Disability Details View";
@@ -879,7 +872,6 @@ function App() {
       showClaimStressTest,
       showDecisionDecoder,
       showSharkRadar,
-      showConsistencyEngine,
       showEvidenceGapVisualizer,
       showRiskAssessment,
       // Maximize Rating Tools
@@ -889,7 +881,6 @@ function App() {
       showLegislativeWatchdog,
       // Support Tools
       showVSOFinder,
-      showVAAITransparency,
       // AI & Settings (unified in AICommandCenter)
       showAISettings,
     ],
@@ -969,7 +960,8 @@ function App() {
             "denial-decoder": () =>
               window.dispatchEvent(new CustomEvent("openDenialDecoder")),
             "decision-decoder": () => setShowDecisionDecoder(true),
-            "consistency-engine": () => setShowConsistencyEngine(true),
+            "consistency-engine": () =>
+              window.dispatchEvent(new CustomEvent("openConsistencyEngine")),
             "claim-stress-test": () => setShowClaimStressTest(true),
             "evidence-gap": () => setShowEvidenceGapVisualizer(true),
             "risk-assessment": () => setShowRiskAssessment(true),
@@ -1075,7 +1067,9 @@ function App() {
           window.dispatchEvent(new CustomEvent("openDenialDecoder"))
         }
         onSharkRadarClick={() => setShowSharkRadar(true)}
-        onConsistencyEngineClick={() => setShowConsistencyEngine(true)}
+        onConsistencyEngineClick={() =>
+          window.dispatchEvent(new CustomEvent("openConsistencyEngine"))
+        }
         onEvidenceGapVisualizerClick={() => setShowEvidenceGapVisualizer(true)}
         onRiskAssessmentClick={() => setShowRiskAssessment(true)}
         // Maximize Your Rating
@@ -2302,7 +2296,9 @@ function App() {
                 and your privacy protections.
               </p>
               <button
-                onClick={() => setShowVAAITransparency(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openVAAITransparency"))
+                }
                 className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-bold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🧠 Understand VA AI
@@ -3276,17 +3272,6 @@ function App() {
           />
         )}
 
-        {/* VA AI Transparency Hub */}
-        {showVAAITransparency && (
-          <VAAITransparency
-            onClose={() => setShowVAAITransparency(false)}
-            onReportBug={() => {
-              setShowVAAITransparency(false);
-              setShowBugSquasher(true);
-            }}
-          />
-        )}
-
         {/* Time Machine - ITF Countdown */}
         {showTimeMachine && (
           <TimeMachine
@@ -3311,9 +3296,7 @@ function App() {
         )}
 
         {/* The Consistency Engine - Data Auditor */}
-        {showConsistencyEngine && (
-          <ConsistencyEngine onClose={() => setShowConsistencyEngine(false)} />
-        )}
+        <AITransparencyCluster />
 
         {/* BVA SUCCESS TOOLS (powered by 18,609 decision analysis) */}
         {showNexusQualityAnalyzer && (
