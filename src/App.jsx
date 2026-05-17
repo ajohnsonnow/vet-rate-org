@@ -79,7 +79,7 @@ import { VaApiStatusBanner } from "./components/VaApiStatus";
 import { isVaApiEnabled } from "./config/vaAuth";
 import { MobileSaveReminder } from "./components/PacketPersistence";
 import StressReliefDivision from "./components/StressReliefDivision";
-import MobileBottomNav, { MobileNavSpacer } from "./components/MobileBottomNav";
+import MobileBottomNavWrapper from "./features/mobile-nav/MobileBottomNavWrapper";
 import GlobalCommandSearchWrapper from "./features/global-command-search/GlobalCommandSearchWrapper";
 import AtomicWipe from "./components/AtomicWipe";
 import { HelperModeProvider } from "./contexts/HelperModeContext";
@@ -626,27 +626,7 @@ function App() {
       <SecurityBadge />
 
       {/* AAAAA Diamond Standard: Mobile Bottom Navigation */}
-      <MobileBottomNav
-        onSearchClick={() =>
-          window.dispatchEvent(new CustomEvent("openGlobalCommandSearch"))
-        }
-        onCalculatorClick={() =>
-          window.dispatchEvent(new CustomEvent("openTacticalCalculator"))
-        }
-        onPacketClick={() =>
-          window.dispatchEvent(new CustomEvent("openMyPacket"))
-        }
-        onMissionsClick={() =>
-          window.dispatchEvent(new CustomEvent("openWorkflowGuide"))
-        }
-        packetCount={userConditions.length}
-        currentRating={
-          userConditions.length > 0
-            ? userConditions.reduce((acc, c) => Math.max(acc, c.rating || 0), 0)
-            : null
-        }
-      />
-      <MobileNavSpacer />
+      <MobileBottomNavWrapper userConditions={userConditions} />
     </div>
   );
 }
