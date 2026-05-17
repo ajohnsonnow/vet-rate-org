@@ -17,7 +17,7 @@
  * VA disability claims process.
  */
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useCallback, Suspense } from "react";
 import AppHeader from "./features/header/AppHeader";
 import SearchBar from "./components/SearchBar";
 import SearchResultCard from "./components/SearchResultCard";
@@ -88,10 +88,9 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
-import { searchDisabilityData, validateSearchTerm } from "./utils/searchUtils";
 import { dispatchToolById } from "./utils/dispatchToolById";
 import { useBootSequence } from "./features/boot/useBootSequence";
-import disabilityData from "./data/disabilityData.json";
+import { useDisabilitySearch } from "./features/search/useDisabilitySearch";
 import { PROJECT_STATS } from "./data/projectStats";
 import AIAssistantBubble from "./features/ai-assistant/AIAssistantBubble";
 import AppFooter from "./features/footer/AppFooter";
@@ -101,151 +100,36 @@ function App() {
   // Toast notification system
   const { toasts, onClose, onAction } = useToast();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState([]);
-  const [selectedResult, setSelectedResult] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  // Disability search subsystem (state, debounce, bridge, handlers)
+  // lives in features/search/useDisabilitySearch.js (audit #35, B74).
+  const {
+    searchTerm,
+    setSearchTerm,
+    results,
+    selectedResult,
+    setSelectedResult,
+    isLoading,
+    error,
+    hasSearched,
+    setHasSearched,
+    handleClearSearch,
+    handleBuildStatementFromSearch,
+    handleSecondaryConditionClick,
+  } = useDisabilitySearch();
+
   const [userConditions, setUserConditions] = useState([]);
-  // ExamPrepRoom state removed - functionality merged into CAPSimulator
 
-  // FORCE MULTIPLIER FEATURES
-  // showAISettings hoisted into SystemToolsCluster (audit #35, B52).
-
-  // VKB: Veteran Knowledge Base Viewer
-
-  // CLEAR COAT: Onboarding & Trust Features
-
-  // SAFETY-CRITICAL: Crisis Intervention surface lives in
-  // src/features/crisis/CrisisListener.jsx — state + listener + render
-  // colocated there (audit #35, B25).
-
-  // LIVE OPS: Update banner + What's-New modal live in
-  // src/features/update/useUpdateOrchestrator.jsx — banner/modal JSX, version
-  // bookkeeping, and SW update checker colocated there (audit #35, B25).
+  // What's-New / SW-update banner + modal — owned by
+  // useUpdateOrchestrator (audit #35, B25).
   const { whatsNewOpen, updateBanner, whatsNewModal } = useUpdateOrchestrator();
 
   // Boot sequence: maintenance check, IndexedDB migration, persistent
-  // storage + auto-backup init, user-data migrations. See
-  // features/boot/useBootSequence.js (audit #35, B59).
+  // storage + auto-backup init, user-data migrations, and three
+  // unconditional sync inits (error-capture, panic-key,
+  // beforeunload warning). See features/boot/useBootSequence.js
+  // (audit #35, B59; sync inits absorbed in B70).
   const { isMigrating, maintenanceMode, maintenanceMessage } =
     useBootSequence();
-
-  // openBugSquasher / openAISettings / openSymptomLogger event bridges
-  // now live in SystemToolsCluster, which also handles the
-  // openVisionSimulator → close-AI-Command-Center side-effect
-  // (audit #35, B52).
-
-  // initializeErrorCapture / initializeCompassionateVoice /
-  // setupBeforeUnloadWarning now run inside useBootSequence (audit
-  // #35, B70).
-
-  // searchDisability bridge: BlueButtonXRayModal's Check Rating Criteria
-  // callback dispatches into App.jsx's searchTerm state.
-  useEffect(() => {
-    const searchDisabilityBridge = (e) => {
-      if (e?.detail?.term !== undefined) setSearchTerm(e.detail.term);
-    };
-    window.addEventListener("searchDisability", searchDisabilityBridge);
-    return () => {
-      window.removeEventListener("searchDisability", searchDisabilityBridge);
-    };
-  }, []);
-
-  // DEMO Ctrl+Shift+D shortcut + openDemoDashboard listener live in
-  // features/va-demo/VaDemoTools.jsx (audit #35, B69). CMD+K lives in
-  // GlobalCommandSearchWrapper; Admin panel Ctrl+Shift+A is owned by
-  // AdminAuthContext.
-
-  const handleBuildStatementFromSearch = (conditionName) => {
-    setSelectedResult(null);
-    window.dispatchEvent(
-      new CustomEvent("openNexusBuilder", {
-        detail: {
-          condition: conditionName,
-          primaryCondition: null,
-          existingStatement: null,
-        },
-      }),
-    );
-  };
-
-  // Handler for navigating to a secondary condition from DisabilityDetails
-  const handleSecondaryConditionClick = (diagnosticCode, conditionName) => {
-    // First try to find by diagnostic code
-    const foundCondition = disabilityData.disabilities.find(
-      (d) => d.diagnosticCode === diagnosticCode,
-    );
-
-    if (foundCondition) {
-      setSelectedResult(foundCondition);
-      // Scroll to diagnostic header to position heading at top of view
-      setTimeout(() => {
-        const headerElement = document.getElementById("diagnostic-header");
-        if (headerElement) {
-          headerElement.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
-    } else {
-      // If not found by exact code, search by name
-      setSearchTerm(conditionName);
-      setSelectedResult(null);
-    }
-  };
-
-  // Tool-ID → CustomEvent dispatcher lives in utils/dispatchToolById
-  // (audit #35, B66). Passed directly as the cluster onToolSelect prop.
-
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!searchTerm.trim()) {
-        setResults([]);
-        setError(null);
-        return;
-      }
-
-      // Validate search term
-      if (!validateSearchTerm(searchTerm)) {
-        setError(
-          "Invalid search term. Please use only letters, numbers, spaces, hyphens, or slashes.",
-        );
-        setResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const foundResults = searchDisabilityData(searchTerm, disabilityData);
-        setResults(foundResults);
-        setHasSearched(true);
-
-        if (foundResults.length === 0) {
-          setError(
-            `No disabilities found for "${searchTerm}". Try searching by condition name (e.g., "PTSD", "arthritis") or diagnostic code (e.g., "9411", "5002").`,
-          );
-        }
-      } catch (err) {
-        console.error("Search error:", err);
-        setError("An error occurred while searching. Please try again.");
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchTerm("");
-    setResults([]);
-    setSelectedResult(null);
-    setError(null);
-  }, []);
 
   // Gather current app state for bug reports - DIAMOND LEVEL: All 45+ tools tracked!
   const getCurrentAppState = useCallback(
