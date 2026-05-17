@@ -100,16 +100,12 @@ import { getTotalToolCount } from "./data/toolkitData";
 import { getSquashedBugCount } from "./data/squashedBugs";
 import { getFormsCount } from "./utils/formsCount";
 import AnimatedBug from "./components/AnimatedBug";
-import AIAssistant from "./components/AIAssistant";
-import { useAIAssistant } from "./hooks/useAIAssistant";
+import AIAssistantBubble from "./features/ai-assistant/AIAssistantBubble";
 import "./index.css";
 
 function App() {
   // Toast notification system
   const { toasts, onClose, onAction } = useToast();
-
-  // AI Assistant (The Navigator)
-  const aiAssistant = useAIAssistant();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
@@ -2161,34 +2157,7 @@ function App() {
         onClick={() => window.dispatchEvent(new CustomEvent("openBugSquasher"))}
       />
 
-      {/* AI Assistant (The Navigator) - Always available */}
-      {aiAssistant.isOpen && (
-        <AIAssistant
-          currentTool={getCurrentToolName()}
-          onClose={aiAssistant.close}
-          onOpenAISettings={() =>
-            window.dispatchEvent(new CustomEvent("openAISettings"))
-          }
-        />
-      )}
-
-      {/* AI Assistant Launch Button - Fixed position, bottom-left */}
-      {!aiAssistant.isOpen && (
-        <button
-          id="tour-ai-navigator-btn"
-          onClick={() => aiAssistant.open(getCurrentToolName())}
-          className="fixed bottom-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group"
-          aria-label="Open AI Navigator - Your personal claims guide"
-        >
-          <div className="relative">
-            <span className="text-2xl">🧭</span>
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
-          </div>
-          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Ask me anything about VA claims! 💬
-          </div>
-        </button>
-      )}
+      <AIAssistantBubble currentTool={getCurrentToolName()} />
 
       <footer
         className="bg-gray-900 dark:bg-black text-white py-8 mt-12"
