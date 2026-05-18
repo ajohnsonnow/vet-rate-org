@@ -1,11 +1,11 @@
 {
-  "version": "1.22.0",
-  "lastUpdated": "2026-05-15",
+  "version": "1.23.0",
+  "lastUpdated": "2026-05-18",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
-      "version": "1.22.0",
-      "date": "2026-05-15",
+      "version": "1.23.0",
+      "date": "2026-05-18",
       "isFirstRelease": false,
       "releaseTitle": "Audit Closeout — Lazy Chunks + Signed Releases + Local-First Logging",
       "changelog": [
