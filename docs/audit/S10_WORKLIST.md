@@ -54,17 +54,18 @@ move body → `children`, primary CTA → `footer`, drop the bespoke close butto
 backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend mobile.spec.ts.
 
 - **Cluster A — quick clean wins (low risk, role=dialog + clear CTA), prove the pattern:**
-  ~~DisclaimerSplash~~, **ContactUs ✅**, ~~TermsOfServiceModal~~, **PrivacyPolicyPage ✅**, ~~TimeMachine~~.
-  **Reality check (during execution):** only ContactUs + PrivacyPolicyPage are genuine clean
-  fits — a dismissible content modal with a plain title + a close CTA. The other three were
-  mis-bucketed and are **deferred until ResponsiveModal gains a custom-`header` slot**:
+  **DisclaimerSplash ✅**, **ContactUs ✅**, **TermsOfServiceModal ✅**, **PrivacyPolicyPage ✅**, ~~TimeMachine~~.
+  **Reality check (during execution):** ContactUs + PrivacyPolicyPage were the genuine clean
+  fits (plain title + close CTA). The other three needed the additive header slot first:
   - *DisclaimerSplash* (z-100) and *TermsOfServiceModal* (z-99) are **mandatory consent gates**
     — no close button, must-not ESC/backdrop-dismiss, custom gradient header, a read-gate
-    countdown (ToS). ResponsiveModal as built always renders a close-X with `title` and wires
-    ESC→onClose; forcing them in would add dismiss affordances to mandatory consent.
+    countdown (ToS). **Now migrated** (commit `74ec944`) using the `header` slot +
+    `showClose={false}` + `dismissable={false}` + `zIndex` + `backdropClassName` (splash's
+    branded gradient scrim). Behavioral contracts preserved; the un-seeded `consent gates`
+    block in mobile.spec.ts proves the footer CTA stays in view at 360/390/768.
   - *TimeMachine* is **dual-mode** (`isWidget` inline vs. full modal) with an urgency-colored
-    gradient header that varies by state. The modal branch can migrate, but not as a "plain
-    title" — it needs the header slot too.
+    gradient header that varies by state. The modal branch can migrate via the header slot —
+    **still deferred** (next rich-header target).
 - **Cluster B — no-max-h modals (migration is pure overflow fix):**
   RetroPayHunter, DemoDashboard, VaIntegrationTest, MissionProtocol, StateBenefitHunter.
 - **Cluster C — medium single-CTA tools:** SecondaryScoutLauncher, NexusBuilder,
@@ -100,6 +101,21 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Gates migrated (commit `74ec944`; type-check + 803 unit + 0 lint errors + 24 mobile e2e @360/390/768):**
+  1. **ResponsiveModal** gained an additive `backdropClassName` prop (default `bg-black/60`
+     preserved) on top of the prior `header`/`showClose`/`dismissable`/`zIndex` enhancement.
+  2. **DisclaimerSplash** → ResponsiveModal (`size="lg"`, `dismissable={false}`,
+     `showClose={false}`, `zIndex={100}`, gradient header, branded `backdropClassName`; the sole
+     acknowledge button is the sticky footer, preserving the e2e "last button" contract).
+  3. **TermsOfServiceModal** → ResponsiveModal (`size="xl"`, `dismissable={false}`,
+     `zIndex={99}`, red warning header, read-gate countdown on the footer Accept button; still
+     reads/writes `vet-rate-tos-accepted` and dispatches `tosAccepted`).
+  4. **mobile.spec.ts** — returning-user fixture (seeds all first-run keys) + `openModalByEvent`
+     re-dispatch helper + a dedicated un-seeded `consent gates` block covering both gates; the
+     overflow metric now discounts bleed contained by an ancestor
+     `overflow-x:hidden/clip/auto/scroll` (fixes false positives from a clipped header flourish
+     in TacticalCalculator and the intentional scrollable tab bar in MyPacket — `getBoundingClientRect`
+     returns the unclipped box). Document scroll still asserted via `pageOverflow`.
 - **Done & verified (type-check + 798 unit + 0 lint errors + 18 mobile e2e @360/390/768):**
   1. MobileNotice dead `isPhone` branch pruned → tablet-only banner; dropped the now-unused
      `useLanguage`.
@@ -116,8 +132,8 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
   `.fixed.inset-0 z-[100]` overlay satisfied the "overlay found" poll *before* the lazy modal
   loaded, so the existing modal tests were racing / measuring the warning, not the modal. The
   warning has **no** `role="dialog"`, which is why the strict footer assertion caught it.
-- **Primitive gap surfaced:** most rich modals (and the deferred Cluster A gates) carry a custom
-  gradient header + sometimes no-close / high-z / no-dismiss semantics. Next step is an **additive**
-  ResponsiveModal enhancement — a `header` node slot, `showClose`, `dismissable` (ESC/backdrop),
-  and a `zIndex` override — kept backward-compatible so ContactUs/PrivacyPolicy (plain `title`
-  path) are untouched. Then the gates + rich-header modals can migrate without degrading UX.
+- **Primitive gap resolved:** the additive ResponsiveModal enhancement — `header` node slot,
+  `showClose`, `dismissable` (ESC/backdrop), `zIndex` override (commit `a460126`), and
+  `backdropClassName` (commit `74ec944`) — is in place and backward-compatible (ContactUs/
+  PrivacyPolicy plain-`title` path untouched). The consent gates are migrated; TimeMachine +
+  the remaining rich-header modals (Clusters B–G) are the next targets, one cluster per commit.
