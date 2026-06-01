@@ -30,6 +30,17 @@ const MODALS = [
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
   { label: "Workflow Guide", event: "openWorkflowGuide" },
   { label: "Time Machine", event: "openTimeMachine" },
+  // Cluster B (S10): rich-header / no-max-h modals migrated to the shell. These
+  // keep their action bar in the body (permanently-dark panels whose theming
+  // would clash with the shell's light footer slot), so they assert the overflow
+  // contract rather than the sticky-footer-CTA one.
+  { label: "Mission Protocol", event: "openMissionProtocol" },
+  { label: "Retro Pay Hunter", event: "openRetroPayHunter" },
+  // Not listed: DemoDashboard (openDemoDashboard) + VaIntegrationTest
+  // (openVaIntegrationDemo) — both were migrated to the shell, but VaDemoTools
+  // gates them behind `isVaApiEnabled()` (build-time VITE_VA_API_ENABLED, off by
+  // default), so they never mount in the standard build this gate runs against.
+  // They are exercised manually in a VA-demo build.
 ];
 
 /**
@@ -40,6 +51,9 @@ const MODALS = [
 const MIGRATED_MODALS = [
   { label: "Privacy Policy", event: "openPrivacyPolicy" },
   { label: "Contact Us", event: "openContactUs" },
+  // Cluster B (S10): standard-themed, so the Close CTA lives in the sticky
+  // footer slot — assert it stays inside the viewport at every baseline.
+  { label: "State Benefit Hunter", event: "openStateBenefitHunter" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
