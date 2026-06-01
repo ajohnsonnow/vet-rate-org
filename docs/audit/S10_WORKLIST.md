@@ -54,7 +54,17 @@ move body → `children`, primary CTA → `footer`, drop the bespoke close butto
 backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend mobile.spec.ts.
 
 - **Cluster A — quick clean wins (low risk, role=dialog + clear CTA), prove the pattern:**
-  DisclaimerSplash, ContactUs, TermsOfServiceModal, PrivacyPolicyPage, TimeMachine.
+  ~~DisclaimerSplash~~, **ContactUs ✅**, ~~TermsOfServiceModal~~, **PrivacyPolicyPage ✅**, ~~TimeMachine~~.
+  **Reality check (during execution):** only ContactUs + PrivacyPolicyPage are genuine clean
+  fits — a dismissible content modal with a plain title + a close CTA. The other three were
+  mis-bucketed and are **deferred until ResponsiveModal gains a custom-`header` slot**:
+  - *DisclaimerSplash* (z-100) and *TermsOfServiceModal* (z-99) are **mandatory consent gates**
+    — no close button, must-not ESC/backdrop-dismiss, custom gradient header, a read-gate
+    countdown (ToS). ResponsiveModal as built always renders a close-X with `title` and wires
+    ESC→onClose; forcing them in would add dismiss affordances to mandatory consent.
+  - *TimeMachine* is **dual-mode** (`isWidget` inline vs. full modal) with an urgency-colored
+    gradient header that varies by state. The modal branch can migrate, but not as a "plain
+    title" — it needs the header slot too.
 - **Cluster B — no-max-h modals (migration is pure overflow fix):**
   RetroPayHunter, DemoDashboard, VaIntegrationTest, MissionProtocol, StateBenefitHunter.
 - **Cluster C — medium single-CTA tools:** SecondaryScoutLauncher, NexusBuilder,
@@ -87,3 +97,27 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 6. SmallScreenWarning removal **only after** the top-20 mobile suite is green.
 7. Add `e2e-mobile` CI job + `test:e2e:mobile` script; note branch-protection is owner-run.
 8. S10 verification gate: full lint/type/unit/e2e green; desktop snapshots unmoved.
+
+## S10 progress (live)
+
+- **Done & verified (type-check + 798 unit + 0 lint errors + 18 mobile e2e @360/390/768):**
+  1. MobileNotice dead `isPhone` branch pruned → tablet-only banner; dropped the now-unused
+     `useLanguage`.
+  2. **PrivacyPolicyPage** → ResponsiveModal (`size="xl"`, header `ReportBugLink` relocated to
+     the sticky footer beside Close).
+  3. **ContactUs** → ResponsiveModal (`size="lg"`; the `type="submit"` Send button stays inside
+     the `<form>` in `children` — ResponsiveModal's `footer` renders outside the form, so it
+     can't host a submit. Footer carries Close + relocated `ReportBugLink`). Dropped
+     `useColorSchemas`/`useBodyScrollLock` (shell owns scroll lock).
+  4. **mobile.spec.ts** extended: a `MIGRATED_MODALS` group asserts the ResponsiveModal contract
+     (sticky `.modal-footer` button stays within the viewport) at all three baselines.
+- **Gate validity fix (important):** the spec now pre-dismisses `SmallScreenWarning` via
+  `addInitScript(sessionStorage…)` in `beforeEach`. Before this, at <640px the warning's
+  `.fixed.inset-0 z-[100]` overlay satisfied the "overlay found" poll *before* the lazy modal
+  loaded, so the existing modal tests were racing / measuring the warning, not the modal. The
+  warning has **no** `role="dialog"`, which is why the strict footer assertion caught it.
+- **Primitive gap surfaced:** most rich modals (and the deferred Cluster A gates) carry a custom
+  gradient header + sometimes no-close / high-z / no-dismiss semantics. Next step is an **additive**
+  ResponsiveModal enhancement — a `header` node slot, `showClose`, `dismissable` (ESC/backdrop),
+  and a `zIndex` override — kept backward-compatible so ContactUs/PrivacyPolicy (plain `title`
+  path) are untouched. Then the gates + rich-header modals can migrate without degrading UX.
