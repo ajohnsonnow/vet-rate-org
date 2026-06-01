@@ -17,7 +17,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { generateAI } from "../utils/unifiedAIService";
@@ -42,7 +42,6 @@ const STORAGE_KEY = "vet_rate_retro_pay_history";
 
 const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // Rating history state
   const [ratingHistory, setRatingHistory] = useState([]);
@@ -584,449 +583,442 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
     );
   };
 
-  return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-4xl mx-auto border border-gray-700">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
-            <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
+  const header = (
+    <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white px-6 py-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
+      <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
 
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-4xl">💸</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-                    Retroactive Pay Hunter
-                    <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
-                      AI
-                    </span>
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-yellow-100 mt-1">
-                    "You Owe Me Money" - Find Missed Payments
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="Retroactive Pay Hunter"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <span className="text-4xl">💸</span>
           </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {/* AI Mode Section */}
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <LLMRecommendationBadge toolId="retro-pay-hunter" />
-                  <AIStatusBadge showLabel={true} onClick={onAISettingsClick} />
-                  <span className="text-sm text-gray-400">
-                    {aiStatus.effectiveMode === AI_MODES.LOCAL
-                      ? "🔒 100% Private - runs on your device"
-                      : "☁️ Cloud AI - fast & powerful"}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-500">
-                  Click badge to configure
-                </span>
-              </div>
-            </div>
-
-            {/* Date Terminology Info Box */}
-            <div className="bg-blue-900/30 border-2 border-blue-500 rounded-xl p-4">
-              <h4 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
-                <span>📅</span> Understanding VA Payment Dates
-              </h4>
-              <div className="text-sm text-blue-200 space-y-1">
-                <p>
-                  <strong>Effective Date:</strong> When your entitlement began
-                  (the decision date on your VA letter)
-                </p>
-                <p>
-                  <strong>Payment Effective Date:</strong> When payments
-                  actually start = <strong>first day of month FOLLOWING</strong>{" "}
-                  effective date
-                </p>
-                <p className="text-xs text-blue-400 mt-2 italic">
-                  Per 38 CFR § 3.400: "Payment shall commence on the first day
-                  of the month following the month in which the effective date
-                  falls."
-                </p>
-                <p className="text-xs text-amber-300 mt-2">
-                  💡 Example: Decision effective Jan 15, 2024 → Payments start
-                  Feb 1, 2024 (not Jan 15)
-                </p>
-              </div>
-            </div>
-
-            {/* Add Rating Period Form */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <span>➕</span> Add Rating Period
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                    Effective Date *
-                    <span className="group relative">
-                      <span className="text-blue-400 cursor-help text-xs">
-                        ℹ️
-                      </span>
-                      <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
-                        <strong className="text-amber-400">
-                          Effective Date vs Payment Date:
-                        </strong>
-                        <br />• <strong>Effective Date:</strong> When
-                        entitlement began (decision date)
-                        <br />• <strong>Payment Start:</strong> First of
-                        FOLLOWING month (38 CFR § 3.400)
-                        <br />
-                        <br />
-                        <em className="text-gray-400">
-                          Example: Effective date Feb 15, 2024 → Payments start
-                          Mar 1, 2024
-                        </em>
-                      </span>
-                    </span>
-                  </label>
-                  <input
-                    type="date"
-                    value={newEntry.effectiveDate}
-                    onChange={(e) =>
-                      setNewEntry({
-                        ...newEntry,
-                        effectiveDate: e.target.value,
-                      })
-                    }
-                    max={new Date().toISOString().split("T")[0]}
-                    className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    This is the decision effective date (when entitlement began)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Combined Rating *
-                  </label>
-                  <select
-                    value={newEntry.rating}
-                    onChange={(e) =>
-                      setNewEntry({
-                        ...newEntry,
-                        rating: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
-                  >
-                    {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((r) => (
-                      <option key={r} value={r}>
-                        {r}%
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Dependents */}
-              <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
-                <p className="text-sm text-gray-400 mb-3">
-                  Dependents (for pay calculation)
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={newEntry.married}
-                      onChange={(e) =>
-                        setNewEntry({ ...newEntry, married: e.target.checked })
-                      }
-                      className="w-4 h-4 text-amber-500 rounded bg-gray-700 border-gray-600"
-                    />
-                    Married
-                  </label>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={newEntry.childrenUnder18}
-                      onChange={(e) =>
-                        setNewEntry({
-                          ...newEntry,
-                          childrenUnder18: e.target.value,
-                        })
-                      }
-                      className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                    />
-                    <span className="text-sm text-gray-400">
-                      Children &lt;18
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={newEntry.childrenSchool}
-                      onChange={(e) =>
-                        setNewEntry({
-                          ...newEntry,
-                          childrenSchool: e.target.value,
-                        })
-                      }
-                      className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                    />
-                    <span className="text-sm text-gray-400">In School 18+</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="2"
-                      value={newEntry.dependentParents}
-                      onChange={(e) =>
-                        setNewEntry({
-                          ...newEntry,
-                          dependentParents: e.target.value,
-                        })
-                      }
-                      className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
-                    />
-                    <span className="text-sm text-gray-400">Parents</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleAddPeriod}
-                className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Rating Period
-              </button>
-
-              {conditions.length > 0 && (
-                <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">📋</span>
-                    <p className="text-purple-200 font-semibold">
-                      Loaded from My Packet
-                    </p>
-                  </div>
-                  <p className="text-purple-300 text-sm">
-                    {conditions.length} condition
-                    {conditions.length !== 1 ? "s" : ""} detected for bilateral
-                    factor analysis.
-                    {conditions.filter(
-                      (c) =>
-                        c.side === "bilateral" ||
-                        c.side === "left" ||
-                        c.side === "right",
-                    ).length > 0 && (
-                      <span className="block mt-1 text-purple-400">
-                        ⚠️ Paired body parts found - bilateral factor may apply!
-                      </span>
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Timeline */}
-            {renderTimeline()}
-
-            {/* Analyze Button */}
-            {ratingHistory.length > 0 && !analysis && (
-              <ToolCardButton
-                className="w-full"
-                type="button"
-                onClick={runAnalysis}
-                disabled={isAnalyzing}
-              >
-                {isAnalyzing ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span> Analyzing Pay
-                    Records...
-                  </>
-                ) : (
-                  <>Analyze Pay Records</>
-                )}
-              </ToolCardButton>
-            )}
-
-            {/* Analysis Results */}
-            {renderAnalysisResults()}
-
-            {/* AI Analysis Section */}
-            {analysis && isAIAvailable() && (
-              <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-xl p-6 border border-purple-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🤖</span>
-                    <h3 className="text-lg font-bold text-purple-100">
-                      AI Expert Analysis
-                    </h3>
-                  </div>
-                  {!showAIAnalysis && (
-                    <button
-                      onClick={handleAIAnalysis}
-                      disabled={isAIThinking}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      {isAIThinking ? (
-                        <>
-                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                          Analyzing...
-                        </>
-                      ) : (
-                        <>🔍 Get AI Analysis</>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                {showAIAnalysis && aiAnalysis && (
-                  <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-purple-600/30">
-                    <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-purple-100 prose-p:text-gray-300">
-                      <div className="whitespace-pre-wrap">{aiAnalysis}</div>
-                    </div>
-                  </div>
-                )}
-
-                {!showAIAnalysis && (
-                  <p className="text-purple-300 text-sm">
-                    Get an AI-powered analysis that explains your findings in
-                    plain language, recommends next steps, and warns you about
-                    common mistakes when filing retroactive pay claims.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* CUE Patterns Reference */}
-            <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
-              <button
-                onClick={() => setShowCuePatterns(!showCuePatterns)}
-                className="flex items-center justify-between w-full"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📚</span>
-                  <h3 className="text-lg font-bold text-white">
-                    Common CUE Patterns
-                  </h3>
-                </div>
-                <span className="text-gray-400">
-                  {showCuePatterns ? "−" : "+"}
-                </span>
-              </button>
-
-              {showCuePatterns && (
-                <div className="mt-4 space-y-3">
-                  {CUE_PATTERNS.map((pattern) => (
-                    <div
-                      key={pattern.id}
-                      className={`p-4 rounded-lg ${
-                        pattern.severity === "high"
-                          ? "bg-red-900/20 border border-red-500/30"
-                          : "bg-yellow-900/20 border border-yellow-500/30"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span
-                          className={`${
-                            pattern.severity === "high"
-                              ? "text-red-500"
-                              : "text-yellow-500"
-                          }`}
-                        >
-                          {pattern.severity === "high" ? "🔴" : "🟡"}
-                        </span>
-                        <div>
-                          <p className="font-semibold text-white">
-                            {pattern.name}
-                          </p>
-                          <p className="text-gray-400 text-sm mt-1">
-                            {pattern.description}
-                          </p>
-                          <p className="text-gray-500 text-xs mt-2">
-                            💡 Detection: {pattern.detection}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div>
+            <h2
+              id="retro-pay-hunter-title"
+              className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
+            >
+              Retroactive Pay Hunter
+              <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-yellow-100 mt-1">
+              "You Owe Me Money" - Find Missed Payments
+            </p>
           </div>
-
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-gray-500 text-center sm:text-left">
-                ⚠️ This tool provides estimates only. Consult with a VSO or
-                attorney for official payment disputes.
-              </p>
-              <BuyMeCoffee variant="compact" />
-            </div>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Retroactive Pay Hunter"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      labelledBy="retro-pay-hunter-title"
+      className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"
+      header={header}
+    >
+      {/* Content */}
+      <div className="space-y-6">
+        {/* AI Mode Section */}
+        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <LLMRecommendationBadge toolId="retro-pay-hunter" />
+              <AIStatusBadge showLabel={true} onClick={onAISettingsClick} />
+              <span className="text-sm text-gray-400">
+                {aiStatus.effectiveMode === AI_MODES.LOCAL
+                  ? "🔒 100% Private - runs on your device"
+                  : "☁️ Cloud AI - fast & powerful"}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">
+              Click badge to configure
+            </span>
+          </div>
+        </div>
+
+        {/* Date Terminology Info Box */}
+        <div className="bg-blue-900/30 border-2 border-blue-500 rounded-xl p-4">
+          <h4 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
+            <span>📅</span> Understanding VA Payment Dates
+          </h4>
+          <div className="text-sm text-blue-200 space-y-1">
+            <p>
+              <strong>Effective Date:</strong> When your entitlement began (the
+              decision date on your VA letter)
+            </p>
+            <p>
+              <strong>Payment Effective Date:</strong> When payments actually
+              start = <strong>first day of month FOLLOWING</strong> effective
+              date
+            </p>
+            <p className="text-xs text-blue-400 mt-2 italic">
+              Per 38 CFR § 3.400: "Payment shall commence on the first day of
+              the month following the month in which the effective date falls."
+            </p>
+            <p className="text-xs text-amber-300 mt-2">
+              💡 Example: Decision effective Jan 15, 2024 → Payments start Feb
+              1, 2024 (not Jan 15)
+            </p>
+          </div>
+        </div>
+
+        {/* Add Rating Period Form */}
+        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>➕</span> Add Rating Period
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                Effective Date *
+                <span className="group relative">
+                  <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
+                  <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
+                    <strong className="text-amber-400">
+                      Effective Date vs Payment Date:
+                    </strong>
+                    <br />• <strong>Effective Date:</strong> When entitlement
+                    began (decision date)
+                    <br />• <strong>Payment Start:</strong> First of FOLLOWING
+                    month (38 CFR § 3.400)
+                    <br />
+                    <br />
+                    <em className="text-gray-400">
+                      Example: Effective date Feb 15, 2024 → Payments start Mar
+                      1, 2024
+                    </em>
+                  </span>
+                </span>
+              </label>
+              <input
+                type="date"
+                value={newEntry.effectiveDate}
+                onChange={(e) =>
+                  setNewEntry({
+                    ...newEntry,
+                    effectiveDate: e.target.value,
+                  })
+                }
+                max={new Date().toISOString().split("T")[0]}
+                className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This is the decision effective date (when entitlement began)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                Combined Rating *
+              </label>
+              <select
+                value={newEntry.rating}
+                onChange={(e) =>
+                  setNewEntry({
+                    ...newEntry,
+                    rating: parseInt(e.target.value),
+                  })
+                }
+                className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              >
+                {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((r) => (
+                  <option key={r} value={r}>
+                    {r}%
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Dependents */}
+          <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
+            <p className="text-sm text-gray-400 mb-3">
+              Dependents (for pay calculation)
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newEntry.married}
+                  onChange={(e) =>
+                    setNewEntry({ ...newEntry, married: e.target.checked })
+                  }
+                  className="w-4 h-4 text-amber-500 rounded bg-gray-700 border-gray-600"
+                />
+                Married
+              </label>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={newEntry.childrenUnder18}
+                  onChange={(e) =>
+                    setNewEntry({
+                      ...newEntry,
+                      childrenUnder18: e.target.value,
+                    })
+                  }
+                  className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                />
+                <span className="text-sm text-gray-400">Children &lt;18</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={newEntry.childrenSchool}
+                  onChange={(e) =>
+                    setNewEntry({
+                      ...newEntry,
+                      childrenSchool: e.target.value,
+                    })
+                  }
+                  className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                />
+                <span className="text-sm text-gray-400">In School 18+</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="2"
+                  value={newEntry.dependentParents}
+                  onChange={(e) =>
+                    setNewEntry({
+                      ...newEntry,
+                      dependentParents: e.target.value,
+                    })
+                  }
+                  className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                />
+                <span className="text-sm text-gray-400">Parents</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleAddPeriod}
+            className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Rating Period
+          </button>
+
+          {conditions.length > 0 && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">📋</span>
+                <p className="text-purple-200 font-semibold">
+                  Loaded from My Packet
+                </p>
+              </div>
+              <p className="text-purple-300 text-sm">
+                {conditions.length} condition
+                {conditions.length !== 1 ? "s" : ""} detected for bilateral
+                factor analysis.
+                {conditions.filter(
+                  (c) =>
+                    c.side === "bilateral" ||
+                    c.side === "left" ||
+                    c.side === "right",
+                ).length > 0 && (
+                  <span className="block mt-1 text-purple-400">
+                    ⚠️ Paired body parts found - bilateral factor may apply!
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Timeline */}
+        {renderTimeline()}
+
+        {/* Analyze Button */}
+        {ratingHistory.length > 0 && !analysis && (
+          <ToolCardButton
+            className="w-full"
+            type="button"
+            onClick={runAnalysis}
+            disabled={isAnalyzing}
+          >
+            {isAnalyzing ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span> Analyzing Pay
+                Records...
+              </>
+            ) : (
+              <>Analyze Pay Records</>
+            )}
+          </ToolCardButton>
+        )}
+
+        {/* Analysis Results */}
+        {renderAnalysisResults()}
+
+        {/* AI Analysis Section */}
+        {analysis && isAIAvailable() && (
+          <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-xl p-6 border border-purple-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🤖</span>
+                <h3 className="text-lg font-bold text-purple-100">
+                  AI Expert Analysis
+                </h3>
+              </div>
+              {!showAIAnalysis && (
+                <button
+                  onClick={handleAIAnalysis}
+                  disabled={isAIThinking}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isAIThinking ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>🔍 Get AI Analysis</>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {showAIAnalysis && aiAnalysis && (
+              <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-purple-600/30">
+                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-purple-100 prose-p:text-gray-300">
+                  <div className="whitespace-pre-wrap">{aiAnalysis}</div>
+                </div>
+              </div>
+            )}
+
+            {!showAIAnalysis && (
+              <p className="text-purple-300 text-sm">
+                Get an AI-powered analysis that explains your findings in plain
+                language, recommends next steps, and warns you about common
+                mistakes when filing retroactive pay claims.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* CUE Patterns Reference */}
+        <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
+          <button
+            onClick={() => setShowCuePatterns(!showCuePatterns)}
+            className="flex items-center justify-between w-full"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📚</span>
+              <h3 className="text-lg font-bold text-white">
+                Common CUE Patterns
+              </h3>
+            </div>
+            <span className="text-gray-400">{showCuePatterns ? "−" : "+"}</span>
+          </button>
+
+          {showCuePatterns && (
+            <div className="mt-4 space-y-3">
+              {CUE_PATTERNS.map((pattern) => (
+                <div
+                  key={pattern.id}
+                  className={`p-4 rounded-lg ${
+                    pattern.severity === "high"
+                      ? "bg-red-900/20 border border-red-500/30"
+                      : "bg-yellow-900/20 border border-yellow-500/30"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`${
+                        pattern.severity === "high"
+                          ? "text-red-500"
+                          : "text-yellow-500"
+                      }`}
+                    >
+                      {pattern.severity === "high" ? "🔴" : "🟡"}
+                    </span>
+                    <div>
+                      <p className="font-semibold text-white">{pattern.name}</p>
+                      <p className="text-gray-400 text-sm mt-1">
+                        {pattern.description}
+                      </p>
+                      <p className="text-gray-500 text-xs mt-2">
+                        💡 Detection: {pattern.detection}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Footer */}
+        <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-500 text-center sm:text-left">
+              ⚠️ This tool provides estimates only. Consult with a VSO or
+              attorney for official payment disputes.
+            </p>
+            <BuyMeCoffee variant="compact" />
+          </div>
+        </div>
+      </div>
+    </ResponsiveModal>
   );
 };
 

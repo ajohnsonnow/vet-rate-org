@@ -54,7 +54,7 @@ move body → `children`, primary CTA → `footer`, drop the bespoke close butto
 backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend mobile.spec.ts.
 
 - **Cluster A — quick clean wins (low risk, role=dialog + clear CTA), prove the pattern:**
-  **DisclaimerSplash ✅**, **ContactUs ✅**, **TermsOfServiceModal ✅**, **PrivacyPolicyPage ✅**, ~~TimeMachine~~.
+  **DisclaimerSplash ✅**, **ContactUs ✅**, **TermsOfServiceModal ✅**, **PrivacyPolicyPage ✅**, **TimeMachine ✅**.
   **Reality check (during execution):** ContactUs + PrivacyPolicyPage were the genuine clean
   fits (plain title + close CTA). The other three needed the additive header slot first:
   - *DisclaimerSplash* (z-100) and *TermsOfServiceModal* (z-99) are **mandatory consent gates**
@@ -64,10 +64,29 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
     branded gradient scrim). Behavioral contracts preserved; the un-seeded `consent gates`
     block in mobile.spec.ts proves the footer CTA stays in view at 360/390/768.
   - *TimeMachine* is **dual-mode** (`isWidget` inline vs. full modal) with an urgency-colored
-    gradient header that varies by state. The modal branch can migrate via the header slot —
-    **still deferred** (next rich-header target).
-- **Cluster B — no-max-h modals (migration is pure overflow fix):**
-  RetroPayHunter, DemoDashboard, VaIntegrationTest, MissionProtocol, StateBenefitHunter.
+    gradient header that varies by state. **Now migrated** (commit `18fcc9e`): the full-modal
+    branch uses the header slot (urgency gradient + ReportBugLink + close); the `isWidget` inline
+    branch is untouched. `useBodyScrollLock` dropped (shell owns it).
+- **Cluster B — no-max-h modals (migration is pure overflow fix): all ✅.**
+  - **MissionProtocol ✅** — permanently-dark (gray-900 + va-gold); header slot for the gradient
+    banner, `className="!bg-gray-900 border-2 border-va-gold"` forces the dark panel, "Roger That"
+    button kept in the body (shell's light footer slot would clash). MODALS group (overflow).
+  - **StateBenefitHunter ✅** — standard-themed; header slot (green gradient + ReportBugLink +
+    close), `size="xl"`, and the BuyMeCoffee + Close bar moved to the sticky **footer slot**.
+    MIGRATED_MODALS group (sticky-CTA-in-viewport contract).
+  - **RetroPayHunter ✅** — permanently-dark; header slot (amber gradient), dark-panel override
+    `className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"`, disclaimer +
+    BuyMeCoffee footer kept in body as a `bg-gray-800/50` card. MODALS group (overflow).
+  - **DemoDashboard ✅** + **VaIntegrationTest ✅** — standard-themed, `size="2xl"` (`max-w-5xl`→
+    `max-w-6xl`); full hero (title + embedded `grid-cols-5` status bar) → header slot. DemoDashboard
+    wraps its full-bleed body sections in `-mx-4` (cancels the shell's `px-4` so the `border-b`
+    dividers reach the panel edge) and puts the status line in the footer slot; VaIntegrationTest
+    renders its nested `VaSandboxTest` (own root `z-50`) in a `relative z-[70]` wrapper to clear the
+    shell's z-60. **Both gated behind `isVaApiEnabled()`** (build-time `VITE_VA_API_ENABLED`, off by
+    default) so they never mount in the standard build — migrated and type-checked, but **not
+    e2e-coverable here**; manual check in a VA-demo build. *Follow-up:* their header rows pack an
+    inline action button next to the close-X in a `justify-between` flex — verify the close stays
+    reachable (add `flex-wrap`) when exercised on a phone in a demo build.
 - **Cluster C — medium single-CTA tools:** SecondaryScoutLauncher, NexusBuilder,
   DecisionDecoder, WorkflowGuide, SymptomLogger, VAResources, LegislativeWatchdog,
   MOSHazardMatcher, VSOFinder, MillionDollarDashboard, RedTeam.
@@ -101,6 +120,19 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster B + TimeMachine migrated (type-check + 803 unit + 0 lint errors + 108 mobile e2e
+  @360/390/768 across chromium/firefox/mobile-chrome):**
+  1. **TimeMachine** (commit `18fcc9e`) — full-modal branch → ResponsiveModal via the urgency
+     header slot; `isWidget` inline branch untouched.
+  2. **Cluster B** — MissionProtocol, StateBenefitHunter, RetroPayHunter migrated to the shell
+     (header slot; dark panels override `className` and keep their action bar in the body, the
+     standard StateBenefitHunter uses the sticky footer slot). DemoDashboard + VaIntegrationTest
+     also migrated but are `isVaApiEnabled()`-gated (off by default) so they don't mount in the
+     standard build — not e2e-coverable here (manual check in a VA-demo build). See the Cluster B
+     list above for the per-modal detail.
+  3. **mobile.spec.ts** — added MissionProtocol + RetroPayHunter to the `MODALS` (overflow) group
+     and StateBenefitHunter to `MIGRATED_MODALS` (sticky-CTA) group; documented why the two
+     VA-demo modals are excluded.
 - **Gates migrated (commit `74ec944`; type-check + 803 unit + 0 lint errors + 24 mobile e2e @360/390/768):**
   1. **ResponsiveModal** gained an additive `backdropClassName` prop (default `bg-black/60`
      preserved) on top of the prior `header`/`showClose`/`dismissable`/`zIndex` enhancement.
