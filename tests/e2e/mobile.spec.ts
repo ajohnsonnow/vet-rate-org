@@ -28,7 +28,6 @@ const VIEWPORTS = [
 const MODALS = [
   { label: "My Packet", event: "openMyPacket" },
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
-  { label: "Workflow Guide", event: "openWorkflowGuide" },
   { label: "Time Machine", event: "openTimeMachine" },
   // Cluster B (S10): rich-header / no-max-h modals migrated to the shell. These
   // keep their action bar in the body (permanently-dark panels whose theming
@@ -54,6 +53,16 @@ const MIGRATED_MODALS = [
   // Cluster B (S10): standard-themed, so the Close CTA lives in the sticky
   // footer slot — assert it stays inside the viewport at every baseline.
   { label: "State Benefit Hunter", event: "openStateBenefitHunter" },
+  // Cluster C (S10): medium single-CTA tools migrated to the shell with a
+  // rich header slot + sticky footer slot (BuyMeCoffee/encouragement + Close).
+  // Workflow Guide moved here from MODALS now that its Close CTA lives in the
+  // shell's sticky footer rather than an in-body action bar.
+  { label: "Decision Decoder", event: "openDecisionDecoder" },
+  { label: "Legislative Watchdog", event: "openLegislativeWatchdog" },
+  { label: "Red Team", event: "openRedTeam" },
+  { label: "VSO Finder", event: "openVSOFinder" },
+  { label: "Symptom Logger", event: "openSymptomLogger" },
+  { label: "Workflow Guide", event: "openWorkflowGuide" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
