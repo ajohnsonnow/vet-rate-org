@@ -29,6 +29,7 @@ const MODALS = [
   { label: "My Packet", event: "openMyPacket" },
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
   { label: "Workflow Guide", event: "openWorkflowGuide" },
+  { label: "Time Machine", event: "openTimeMachine" },
 ];
 
 /**
