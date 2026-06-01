@@ -10,6 +10,12 @@
  * primary action is always reachable without scrolling. Body scroll lock +
  * focus trap + dialog semantics are wired in.
  *
+ * Two header modes: pass `title` for the default bar (heading + close-X), or
+ * `header` for a custom full-bleed bar (gradient gates, urgency states) — then
+ * pass `labelledBy` pointing at the heading id inside it. `showClose` hides the
+ * default close-X, `dismissable={false}` removes ESC/backdrop close (mandatory
+ * consent gates), and `zIndex` lifts nested children above their parent shell.
+ *
  * Migration target for the legacy `max-w-* + max-h-[90vh]` modals
  * (docs/SPRINT_PLAN_S9-S17.md, Layer 3).
  */
@@ -34,6 +40,10 @@ export default function ResponsiveModal({
   isOpen,
   onClose,
   title,
+  header,
+  showClose = true,
+  dismissable = true,
+  zIndex = 60,
   size = "lg",
   children,
   footer,
@@ -46,43 +56,57 @@ export default function ResponsiveModal({
   const titleId = labelledBy || `responsive-modal-${generatedId}`;
 
   useBodyScrollLock(isOpen);
-  useFocusTrap(panelRef, { active: isOpen, onEscape: onClose });
+  useFocusTrap(panelRef, {
+    active: isOpen,
+    onEscape: dismissable ? onClose : undefined,
+  });
 
   if (!isOpen) return null;
 
   const modal = (
     <div
-      className="fixed inset-0 z-[60] flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+      style={{ zIndex }}
       onMouseDown={(e) => {
-        if (closeOnBackdrop && e.target === e.currentTarget) onClose?.();
+        if (dismissable && closeOnBackdrop && e.target === e.currentTarget)
+          onClose?.();
       }}
     >
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        className={`modal-content relative flex w-full max-w-full flex-col bg-white shadow-2xl dark:bg-gray-900 h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl ${
+        aria-labelledby={title || labelledBy ? titleId : undefined}
+        className={`modal-content relative flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl ${
           SIZE[size] || SIZE.lg
         } ${className}`}
       >
-        {title && (
-          <header className="modal-header sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
-            <h2
-              id={titleId}
-              className="text-lg font-semibold text-gray-900 dark:text-white"
-            >
-              {title}
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close dialog"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </header>
+        {header ? (
+          // Custom full-bleed bar. `.modal-header` exempts it from the <768px
+          // `.modal-content > div` body-padding rule in index.css; `!p-0` clears
+          // the mobile `.modal-header` padding so the bar reaches every edge.
+          <div className="modal-header sticky top-0 z-10 !p-0">{header}</div>
+        ) : (
+          title && (
+            <header className="modal-header sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+              <h2
+                id={titleId}
+                className="text-lg font-semibold text-gray-900 dark:text-white"
+              >
+                {title}
+              </h2>
+              {showClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close dialog"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </header>
+          )
         )}
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">

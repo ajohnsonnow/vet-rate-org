@@ -80,4 +80,61 @@ describe("ResponsiveModal", () => {
     fireEvent.mouseDown(overlay);
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("hides the default close button when showClose is false", () => {
+    render(
+      <ResponsiveModal isOpen onClose={() => {}} title="T" showClose={false}>
+        content
+      </ResponsiveModal>,
+    );
+    expect(screen.queryByLabelText("Close dialog")).toBeNull();
+    expect(screen.getByText("T")).toBeInTheDocument();
+  });
+
+  it("renders a custom header instead of the default bar and labels via labelledBy", () => {
+    render(
+      <ResponsiveModal
+        isOpen
+        onClose={() => {}}
+        labelledBy="gate-title"
+        header={<h2 id="gate-title">Consent Required</h2>}
+      >
+        content
+      </ResponsiveModal>,
+    );
+    expect(screen.queryByLabelText("Close dialog")).toBeNull();
+    expect(screen.getByText("Consent Required")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "aria-labelledby",
+      "gate-title",
+    );
+  });
+
+  it("ignores Escape and backdrop when dismissable is false", () => {
+    const onClose = vi.fn();
+    render(
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        title="Gate"
+        dismissable={false}
+      >
+        content
+      </ResponsiveModal>,
+    );
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    fireEvent.mouseDown(screen.getByRole("dialog").parentElement);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("applies the zIndex prop to the overlay", () => {
+    render(
+      <ResponsiveModal isOpen onClose={() => {}} title="T" zIndex={100}>
+        content
+      </ResponsiveModal>,
+    );
+    expect(screen.getByRole("dialog").parentElement).toHaveStyle({
+      zIndex: "100",
+    });
+  });
 });
