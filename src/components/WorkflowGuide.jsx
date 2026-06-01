@@ -32,7 +32,7 @@ import {
   Star,
   AlertTriangle,
 } from "lucide-react";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 // Storage key for workflow progress
 const WORKFLOW_PROGRESS_KEY = "vet_rate_workflow_progress";
@@ -844,9 +844,6 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [progress, setProgress] = useState(loadWorkflowProgress);
 
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
-
   // Save progress when it changes
   useEffect(() => {
     saveWorkflowProgress(progress);
@@ -1102,16 +1099,27 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
     );
   };
 
+  const footer = (
+    <div className="flex items-center justify-between">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        💾 Progress auto-saved locally
+      </p>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  );
+
   return (
-    <div
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="workflow-guide-title"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-        {/* Header */}
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      labelledBy="workflow-guide-title"
+      header={
         <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-va-gold/20 rounded-lg">
@@ -1140,42 +1148,27 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
             <X className="w-6 h-6 text-gray-400 hover:text-white" />
           </button>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {selectedWorkflow ? (
-            <WorkflowDetail workflowId={selectedWorkflow} />
-          ) : (
-            <>
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Choose Your Mission
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Select a workflow to see step-by-step guidance through the VA
-                  claims process. Each step links directly to the right tool.
-                </p>
-              </div>
-              <WorkflowGrid />
-            </>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              💾 Progress auto-saved locally
-            </p>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      }
+      footer={footer}
+    >
+      <div>
+        {selectedWorkflow ? (
+          <WorkflowDetail workflowId={selectedWorkflow} />
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Choose Your Mission
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Select a workflow to see step-by-step guidance through the VA
+                claims process. Each step links directly to the right tool.
+              </p>
+            </div>
+            <WorkflowGrid />
+          </>
+        )}
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }
