@@ -116,3 +116,4 @@ Each sprint is independently shippable and verifiable.
 ## Progress Log
 
 - **2026‑05‑31** — Cycle planned. S9 in progress on branch `audit/s9-mobile-safety-net`.
+- **2026‑05‑31** — S9 complete + committed (primitives, CSS safety‑net, mobile.spec.ts; full suite green). S10 **discovery** done via the `s10-discovery` workflow and verified by completeness critics — worklist at [audit/S10_WORKLIST.md](audit/S10_WORKLIST.md), raw output at [audit/s10-discovery.json](audit/s10-discovery.json). Key corrections recorded there: ~103 modal surfaces (not ~30); the grid inventory is an unreliable ~4× undercount and needs a fresh codemod pass before any apply; only 1 of 25 detections is safely migratable to `useBreakpoint`; the mobile e2e already runs in CI (blocking lever is GitHub branch protection, out of repo). **Paused before S10 code edits at owner request.**
