@@ -56,17 +56,13 @@ const MobileNotice = () => {
       return;
     }
 
-    // Check screen size and device type
+    // Check screen size and device type. The phone banner is intentionally
+    // silenced during the S9–S17 mobile rebuild — its "optimized for mobile"
+    // copy contradicts the small-screen warning while layouts are still being
+    // fixed. Restored once the mobile suite is green (docs/SPRINT_PLAN_S9-S17.md,
+    // S10). Only the tablet notice remains.
     const checkDevice = () => {
-      const width = window.innerWidth;
-
-      if (isTablet()) {
-        setDeviceType("tablet");
-      } else if (width < 768) {
-        setDeviceType("phone");
-      } else {
-        setDeviceType(null); // Desktop
-      }
+      setDeviceType(isTablet() ? "tablet" : null);
     };
 
     checkDevice();

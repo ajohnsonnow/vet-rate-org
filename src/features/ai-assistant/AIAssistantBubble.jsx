@@ -30,7 +30,7 @@ export default function AIAssistantBubble({ currentTool }) {
     <button
       id="tour-ai-navigator-btn"
       onClick={() => aiAssistant.open(currentTool)}
-      className="fixed bottom-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group"
+      className="above-mobile-nav fixed bottom-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group"
       aria-label="Open AI Navigator - Your personal claims guide"
     >
       <div className="relative">

@@ -1985,6 +1985,7 @@ a {
   /* Optimize modal sizes for mobile */
   .modal-content {
     max-height: 90vh;
+    max-height: 90dvh; /* dynamic viewport — keeps footer above the URL bar */
     border-radius: 16px 16px 0 0;
   }
 
@@ -2130,6 +2131,7 @@ body {
   .modal-content {
     width: 100%;
     max-height: 92vh;
+    max-height: 92dvh; /* dynamic viewport — keeps footer above the URL bar */
     border-radius: 20px 20px 0 0;
     margin: 0;
   }
@@ -2327,6 +2329,49 @@ body {
   nav button [class*="icon"] {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   S9 MOBILE SAFETY-NET — audit cycle S9–S17 (2026-05-31)
+   Cross-cutting mobile fixes that belong to no single component. See
+   docs/SPRINT_PLAN_S9-S17.md. Fuller de-dup of the legacy mobile blob above
+   is deferred to S10's per-cluster refactor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Dynamic viewport height for the ~90 legacy `max-h-[Nvh]` modal panels that
+   set the cap via a Tailwind utility (not the `.modal-content` class). Mobile
+   browsers shrink the visual viewport when the URL bar shows, so a `90vh`
+   panel can push its action bar below the toolbar; `dvh` tracks the *visible*
+   height. Declared after the Tailwind utilities so it wins on a specificity
+   tie; browsers without `dvh` silently keep the original `vh`. `dvh === vh` on
+   desktop, so this is safe at every width. */
+.max-h-\[60vh\] {
+  max-height: 60dvh;
+}
+.max-h-\[70vh\] {
+  max-height: 70dvh;
+}
+.max-h-\[80vh\] {
+  max-height: 80dvh;
+}
+.max-h-\[90vh\] {
+  max-height: 90dvh;
+}
+.max-h-\[95vh\] {
+  max-height: 95dvh;
+}
+
+/* Lift the bottom-left floating buttons clear of the 70px MobileBottomNav
+   (`md:hidden`, so phones only) plus the iOS home-indicator safe area. Two
+   tiers keep the AI bubble (lower) and the bug button (upper) from stacking on
+   top of each other. */
+@media (max-width: 767px) {
+  .above-mobile-nav {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 1rem) !important;
+  }
+  .above-mobile-nav-stacked {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 5.5rem) !important;
   }
 }
 
