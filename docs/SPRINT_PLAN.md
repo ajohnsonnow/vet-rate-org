@@ -3,6 +3,8 @@
 > Plan version: 1.0 · Drafted: 2026-05-14 · Owner: Anthony Johnson
 > Working tree: `e:\VS_Studio\vet-rate-org-official` · Source branch: `audit/pr8-hygiene`
 > Companion artifacts: [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) (scoreboard) · [RAG_DESIGN.md](./RAG_DESIGN.md) (legal-knowledge pipeline design)
+>
+> **Next cycle (S9–S17):** mobile + quality remediation continues in [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md) (drafted 2026-05-31). The 8-sprint plan below (S0–S8) is complete; the S9–S17 plan front-loads the broken mobile layouts, then closes the remaining best-practice gaps.
 
 ---
 

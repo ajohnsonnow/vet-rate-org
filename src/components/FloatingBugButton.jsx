@@ -43,7 +43,7 @@ function FloatingBugButton({ onClick }) {
   }, [onClick]);
 
   return (
-    <div className="fixed bottom-24 left-4 z-50 flex flex-col items-start gap-2">
+    <div className="above-mobile-nav-stacked fixed bottom-24 left-4 z-50 flex flex-col items-start gap-2">
       {/* Tooltip */}
       {showTooltip && (
         <div className="bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg animate-fade-in max-w-xs">

@@ -2,6 +2,8 @@
 
 > Companion to [SPRINT_PLAN.md](./SPRINT_PLAN.md). Sprint 2 fills this scoreboard guide-by-guide; subsequent sprints close the gaps.
 >
+> **Active cycle:** S9–S17 remediation (mobile + quality) is planned in [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md) (2026-05-31). New rows from that cycle land below once shipped.
+>
 > Status legend: `compliant` (full evidence) · `partial` (some controls present) · `gap` (not implemented) · `n/a` (justified non-applicable) · `pending` (not yet audited)
 >
 > Severity legend: `critical` (must fix in Sprint 3) · `high` · `med` · `low`
