@@ -1,0 +1,1850 @@
+{
+  "summary": "Map S10 mobile-refactor worklists: modals, grids, detections, warnings, CI gate — verified for completeness",
+  "agentCount": 7,
+  "logs": [],
+  "result": {
+    "modals": {
+      "modals": [
+        {
+          "file": "src/components/common/ResponsiveModal.jsx",
+          "name": "ResponsiveModal",
+          "opensVia": "prop: isOpen (the new target shell)",
+          "shellPattern": "fixed inset-0 z-[60] flex items-stretch sm:items-center bg-black/60 + panel h-[100dvh] sm:max-h-[90dvh] sm:max-w-* (SIZE map)",
+          "hasRoleDialog": true,
+          "heightCap": "100dvh phone / sm:max-h-[90dvh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "This IS the target shell. Already mobile-first (100dvh sheet), focus trap, scroll lock, sticky header+footer. No migration; other modals migrate ONTO this."
+        },
+        {
+          "file": "src/features/pathfinder/PathfinderModal.jsx",
+          "name": "PathfinderModal",
+          "opensVia": "window CustomEvent openPathfinder (detail.conditions)",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Bespoke teal/emerald gradient header with AI+BETA badges, ReportBugLink and close button. Move header content into ResponsiveModal title slot (loses gradient) or pass custom title node; map max-w-6xl -> size='2xl'. closeOnBackdrop matches onClick={close}."
+        },
+        {
+          "file": "src/features/publications/PublicationsLibraryModal.jsx",
+          "name": "PublicationsLibraryModal",
+          "opensVia": "window CustomEvent openPublicationsLibrary",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-6xl w-full max-h-[90vh] overflow-y-auto (sticky header)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Sticky-header pattern with emoji title + BETA badge. size='2xl'; title='Publications Library'. No focus trap today — migration adds it."
+        },
+        {
+          "file": "src/features/navigator/ClaimNavigatorModal.jsx → src/components/ClaimNavigator.jsx",
+          "name": "ClaimNavigator",
+          "opensVia": "window CustomEvent openClaimNavigator (also route/command palette)",
+          "shellPattern": "fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col (full-bleed app-shell)",
+          "hasRoleDialog": false,
+          "heightCap": "none (full screen)",
+          "nestedChildModals": true,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Full-screen 'Mission Control' shell, not a centered panel — use size='full'. Contains a NESTED z-60 inner dialog at line 1853 (max-w-2xl max-h-[80vh]). Multi-step wizard with its own internal scroll regions; heavy migration."
+        },
+        {
+          "file": "src/features/blue-button/BlueButtonXRayModal.jsx → src/components/BlueButtonXRay.jsx",
+          "name": "BlueButtonXRay",
+          "opensVia": "window CustomEvent openBlueButtonXRay",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Data-mining tool with dense tables + many action buttons (Add to Calculator / Check Rating). size='2xl'. Internal table overflow needs horizontal scroll on mobile; footer CTAs should land in footer slot."
+        },
+        {
+          "file": "src/features/vkb/VKBTimelineModal.jsx → src/components/VKBTimeline.jsx",
+          "name": "VKBTimeline",
+          "opensVia": "window CustomEvent openVKBTimeline",
+          "shellPattern": "fixed inset-0 bg-black/50 backdrop-blur z-50 p-4 + max-w-6xl w-full max-h-[90vh] flex flex-col (loading max-w-md @131; nested viewer max-w-4xl max-h-[80vh] @339)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Timeline UI plus a NESTED inner viewer at line 339 (max-w-4xl max-h-[80vh] border-2 border-blue-500) and a loading-state overlay at 131. size='2xl'; migrate outer, keep inner as second ResponsiveModal."
+        },
+        {
+          "file": "src/features/my-packet/MyPacketModal.jsx → src/components/MyPacket.jsx",
+          "name": "MyPacket",
+          "opensVia": "window CustomEvent openMyPacket",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 overflow-y-auto modal-backdrop + max-w-6xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Largest hub modal. Has role=dialog already. Contains FOUR nested z-60 child overlays (image viewers + a role=dialog confirm at 4124-4126, lines 3816/3960/4043/4121). Many primary CTAs (Resume, Analyze Strategy, Drive sync). size='2xl'; nested children must each become their own ResponsiveModal layered above."
+        },
+        {
+          "file": "src/features/discover/DiscoverCluster.jsx (SecondaryScout inline) + src/components/SecondaryScout.jsx",
+          "name": "SecondaryScout (results)",
+          "opensVia": "cluster state after SecondaryScoutLauncher onLaunch",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 overflow-y-auto + min-h-screen px-4 py-8 + max-w-7xl mx-auto (sticky gradient header)",
+          "hasRoleDialog": false,
+          "heightCap": "none (page-scroll inside overlay)",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "max-w-7xl is widest in app; uses page-scroll pattern not capped panel. Header has My Packet + Change Conditions + close buttons (3 CTAs cramped at 360px). size='full'; convert to single body scroll."
+        },
+        {
+          "file": "src/components/SecondaryScoutLauncher.jsx",
+          "name": "SecondaryScoutLauncher",
+          "opensVia": "window CustomEvent openSecondaryScoutLauncher (via DiscoverCluster)",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Condition-picker with Launch CTA. size='xl'. Clean candidate."
+        },
+        {
+          "file": "src/components/NexusBuilder.jsx",
+          "name": "NexusBuilder",
+          "opensVia": "window CustomEvent openNexusBuilder (detail condition) via DiscoverCluster",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Statement drafting with Save CTA (footer). size='xl'. Good candidate."
+        },
+        {
+          "file": "src/features/specialized-tools/SpecializedToolsCluster.jsx (EvidenceTimeline inline)",
+          "name": "EvidenceTimeline (wrapper)",
+          "opensVia": "window CustomEvent openEvidenceTimeline",
+          "shellPattern": "fixed inset-0 bg-black/80 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Inner EvidenceTimeline lacks own chrome; cluster supplies bare scroll box. Wide timeline. size='2xl'."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "name": "FOIAGenerator",
+          "opensVia": "window CustomEvent openFOIAGenerator",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden relative modal-content flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-step FOIA builder, inner max-w-2xl/3xl step columns. Generate/Download CTAs. size='2xl'."
+        },
+        {
+          "file": "src/components/MillionDollarDashboard.jsx",
+          "name": "MillionDollarDashboard",
+          "opensVia": "window CustomEvent openMillionDollarDashboard",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Chart-heavy (max-w-2xl chart inside) — verify chart reflows at 360px. size='xl'."
+        },
+        {
+          "file": "src/components/RetroPayHunter.jsx",
+          "name": "RetroPayHunter",
+          "opensVia": "window CustomEvent openRetroPayHunter",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 + max-w-4xl mx-auto (NO max-h cap!) border gradient",
+          "hasRoleDialog": true,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present BUT inner panel has no max-h — relies on p-4 only; tall content can overflow viewport with no internal scroll. Migrating to ResponsiveModal fixes this (single scroll body). size='xl'."
+        },
+        {
+          "file": "src/features/quality-control/QualityControlCluster.jsx (SharkRadar inline)",
+          "name": "SharkRadar (wrapper)",
+          "opensVia": "window CustomEvent openSharkRadar",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content (rose gradient header)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Bespoke rose/red gradient header w/ ReportBugLink. size='2xl'. Header badge row crowds at 360px."
+        },
+        {
+          "file": "src/components/DecisionDecoder.jsx",
+          "name": "DecisionDecoder",
+          "opensVia": "window CustomEvent openDecisionDecoder",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. BVA decoder with analyze CTA. size='xl' or '2xl'."
+        },
+        {
+          "file": "src/components/RiskAssessment.jsx",
+          "name": "RiskAssessment",
+          "opensVia": "window CustomEvent openRiskAssessment",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-step 'Poke the Bear' wizard, inner max-w-2xl/3xl step panels + footer nav. size='2xl'."
+        },
+        {
+          "file": "src/components/EvidenceGapVisualizer.jsx",
+          "name": "EvidenceGapVisualizer",
+          "opensVia": "window CustomEvent openEvidenceGapVisualizer",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present. Renders a node/map graphic with max-w-[60px] labels — graphic likely overflows horizontally at 360px. size='xl'. Verify SVG/grid reflow."
+        },
+        {
+          "file": "src/components/NexusQualityAnalyzer.jsx",
+          "name": "NexusQualityAnalyzer",
+          "opensVia": "window CustomEvent openNexusQualityAnalyzer",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Single overflow-auto box (no flex header/body split). size='xl'."
+        },
+        {
+          "file": "src/features/body-mapping/BodyMappingCluster.jsx (BodyMapSelector inline) + src/components/BodyMapSelector.jsx",
+          "name": "BodyMapSelector (wrapper)",
+          "opensVia": "window CustomEvent openBodyMapSelector",
+          "shellPattern": "fixed inset-0 bg-black/80 z-50 overflow-y-auto + min-h-screen px-4 py-8 + max-w-6xl mx-auto",
+          "hasRoleDialog": false,
+          "heightCap": "none (page-scroll)",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Interactive body SVG (absolute-positioned tooltip max-w-[200px]). Page-scroll pattern. SVG must scale to 360px. size='2xl'/full."
+        },
+        {
+          "file": "src/components/PainPainter.jsx",
+          "name": "PainPainter",
+          "opensVia": "window CustomEvent openPainPainter",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 modal-backdrop + max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present. Interactive paint-on-body canvas (max-w-md). Contains NESTED z-60 confirm dialog at line 1797 (max-w-md). Canvas interaction at 360px is the hard part. size='xl'."
+        },
+        {
+          "file": "src/features/adversarial-testing/AdversarialTestingCluster.jsx (ClaimStressTest inline)",
+          "name": "ClaimStressTest (wrapper)",
+          "opensVia": "window CustomEvent openClaimStressTest",
+          "shellPattern": "fixed inset-0 bg-black/80 z-50 p-4 modal-backdrop + max-w-5xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Bare scroll box wrapper; inner owns chrome. size='xl'."
+        },
+        {
+          "file": "src/components/RedTeam.jsx",
+          "name": "RedTeam",
+          "opensVia": "window CustomEvent openRedTeam",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Skeptical-reviewer chat-style; max-w-sm inner card. size='xl'."
+        },
+        {
+          "file": "src/features/calculate/CalculateCluster.jsx → src/components/CAPSimulator.jsx",
+          "name": "CAPSimulator",
+          "opensVia": "window CustomEvent openCAPSimulator",
+          "shellPattern": "EIGHT fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop overlays + panels max-w-3xl/4xl/5xl max-h-[90vh]",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Most complex: 8 distinct modal shells (all role=dialog) in one file (lines 1755/2017/2146/2392/3223/3403/3561 + more). C&P exam simulator with stepper. Each sub-dialog migrates separately; some stack (nested). High effort. size varies xl/2xl."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "name": "TacticalCalculator",
+          "opensVia": "window CustomEvent openTacticalCalculator",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-2 sm:p-4 modal-backdrop + w-full sm:max-w-6xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col (already mobile full-bleed)",
+          "hasRoleDialog": true,
+          "heightCap": "h-full / sm:max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog + already does the full-bleed-on-phone pattern manually (closest to ResponsiveModal). Has a NESTED z-60 sub-dialog at line 2507 (max-w-lg). size='2xl'. Good reference + clean migration."
+        },
+        {
+          "file": "src/features/maximize-rating/MaximizeRatingCluster.jsx → src/components/TDIUBuilder.jsx",
+          "name": "TDIUBuilder",
+          "opensVia": "window CustomEvent openTDIUBuilder",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-step builder (max-w-2xl/3xl/4xl inner steps), sticky footer nav with Continue/Submit. size='2xl'."
+        },
+        {
+          "file": "src/components/StateBenefitHunter.jsx",
+          "name": "StateBenefitHunter",
+          "opensVia": "window CustomEvent openStateBenefitHunter",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 overflow-y-auto p-4 (page-scroll) + max-w-4xl my-8",
+          "hasRoleDialog": true,
+          "heightCap": "none (my-8 page scroll)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present but uses overflow-y-auto + my-8 page-scroll, no inner max-h. State data tables risk horizontal overflow at 360px. size='xl'."
+        },
+        {
+          "file": "src/features/maximize-rating/MaximizeRatingCluster.jsx → src/components/TheTribunal.jsx",
+          "name": "TheTribunal",
+          "opensVia": "window CustomEvent openTheTribunal",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col (plus a loading max-w-md state)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-persona AI debate, chat bubbles max-w-[80%]. Two render branches (loading + main). size='2xl'."
+        },
+        {
+          "file": "src/features/maximize-rating/MaximizeRatingCluster.jsx → src/components/LegislativeWatchdog.jsx",
+          "name": "LegislativeWatchdog",
+          "opensVia": "window CustomEvent openLegislativeWatchdog",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Bill list. size='xl'."
+        },
+        {
+          "file": "src/features/data-management/DataManagementCluster.jsx → src/components/BackupManager.jsx",
+          "name": "BackupManager",
+          "opensVia": "window CustomEvent openBackupManager",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-y-auto (plus two nested confirm overlays)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Main modal + NESTED z-50 confirm dialogs at lines 653 (max-w-md) and 690 (max-w-md). Export/Import/Restore CTAs. size='xl'; nested confirms -> small ResponsiveModal."
+        },
+        {
+          "file": "src/features/data-management/DataManagementCluster.jsx → src/components/CloudSyncManager.jsx",
+          "name": "CloudSyncManager",
+          "opensVia": "window CustomEvent openCloudSyncManager",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/80 backdrop-blur + max-w-4xl w-full max-h-[90vh] overflow-hidden border green gradient",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Gradient-bordered sync panel. size='xl'."
+        },
+        {
+          "file": "src/features/ai-transparency/AITransparencyCluster.jsx → src/components/VAAITransparency.jsx",
+          "name": "VAAITransparency",
+          "opensVia": "window CustomEvent openVAAITransparency",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-6xl w-full max-h-[90vh] flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Dense transparency tables, max-w-6xl. size='2xl'. Verify tables scroll on mobile."
+        },
+        {
+          "file": "src/features/ai-transparency/AITransparencyCluster.jsx → src/components/ConsistencyEngine.jsx",
+          "name": "ConsistencyEngine",
+          "opensVia": "window CustomEvent openConsistencyEngine",
+          "shellPattern": "TWO fixed inset-0 bg-black/50 z-50 p-4 + max-w-7xl/5xl w-full max-h-[90vh] overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Two modal shells (gray max-w-7xl at 45 + main max-w-5xl at 106). max-w-7xl is extreme; diff/consistency tables. size='full'/'2xl'."
+        },
+        {
+          "file": "src/features/workflow-guides/WorkflowGuidesCluster.jsx → src/components/MissionProtocol.jsx",
+          "name": "MissionProtocol",
+          "opensVia": "window CustomEvent openMissionProtocol",
+          "shellPattern": "fixed inset-0 bg-black/90 z-50 p-4 + max-w-2xl w-full my-8 (no max-h cap)",
+          "hasRoleDialog": true,
+          "heightCap": "none (my-8)",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present but no inner max-h — long protocol can overflow; migration adds single scroll body. size='lg'."
+        },
+        {
+          "file": "src/features/workflow-guides/WorkflowGuidesCluster.jsx → src/components/WorkflowGuide.jsx",
+          "name": "WorkflowGuide",
+          "opensVia": "window CustomEvent openWorkflowGuide",
+          "shellPattern": "fixed inset-0 bg-black/80 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Step-through guide with Next/Done. size='xl'."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/PACTActNavigator.jsx",
+          "name": "PACTActNavigator",
+          "opensVia": "window CustomEvent openPACTActNavigator",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-step (max-w-3xl/4xl inner) navigator with footer nav. size='2xl'."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/MOSHazardMatcher.jsx",
+          "name": "MOSHazardMatcher",
+          "opensVia": "window CustomEvent openMOSHazardMatcher",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. MOS search/match list. size='xl'."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/WebOfConditions.jsx",
+          "name": "WebOfConditions",
+          "opensVia": "window CustomEvent openWebOfConditions",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 overflow-y-auto + max-w-6xl mx-auto (page-scroll, absolute legend max-w-sm)",
+          "hasRoleDialog": true,
+          "heightCap": "none (page-scroll)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present. Force-graph/web visualization with absolutely-positioned legend; graph won't fit 360px without pan/zoom. size='full'. Hard graphic reflow."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/TimeMachine.jsx",
+          "name": "TimeMachine",
+          "opensVia": "window CustomEvent openTimeMachine",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "low",
+          "migrationNotes": "Narrower (max-w-3xl) timeline; inner max-w-md card. size='lg'/'xl'. Easy migration."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/BDDBuilder.jsx",
+          "name": "BDDBuilder",
+          "opensVia": "window CustomEvent openBDDBuilder",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-2 sm:p-4 modal-backdrop + max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[95vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "max-h-[95vh] (taller than 90). Multi-step (max-w-2xl/3xl steps) with footer nav. size='2xl'."
+        },
+        {
+          "file": "src/features/claim-prep/ClaimPrepCluster.jsx → src/components/VSOFinder.jsx",
+          "name": "VSOFinder",
+          "opensVia": "window CustomEvent openVSOFinder",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 overflow-y-auto modal-backdrop + max-w-4xl w-full max-h-[90vh] flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. VSO directory/search. size='xl'."
+        },
+        {
+          "file": "src/features/legal/LegalPages.jsx → src/components/AboutUs.jsx",
+          "name": "AboutUs",
+          "opensVia": "window CustomEvent openAboutUs",
+          "shellPattern": "modalClasses.overlay + modalClasses.content max-w-4xl my-8 (shared helper); decorative fixed inset-0 z-[60] pointer-events-none layer at 1083",
+          "hasRoleDialog": true,
+          "heightCap": "none (my-8 page scroll)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Uses shared modalClasses helper (also used by ContactUs/Privacy/Terms/Disclaimer). Long marketing content; page-scroll. size='xl'. Decorative z-60 layer is non-interactive, ignore."
+        },
+        {
+          "file": "src/features/legal/LegalPages.jsx → src/components/ContactUs.jsx",
+          "name": "ContactUs",
+          "opensVia": "window CustomEvent openContactUs",
+          "shellPattern": "modalClasses.overlay + modalClasses.content max-w-2xl my-8",
+          "hasRoleDialog": true,
+          "heightCap": "none (my-8)",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present via helper. Contact form with Send CTA. size='lg'. Clean."
+        },
+        {
+          "file": "src/components/PrivacyPolicyPage.jsx",
+          "name": "PrivacyPolicyPage",
+          "opensVia": "window CustomEvent openPrivacyPolicy (via LegalPages)",
+          "shellPattern": "modalClasses.overlay + modalClasses.content max-w-4xl my-8 max-h-[90vh] flex flex-col overflow-hidden",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present. Long legal text, already capped + flex. size='xl'. Easy."
+        },
+        {
+          "file": "src/components/TermsOfServiceModal.jsx",
+          "name": "TermsOfServiceModal",
+          "opensVia": "window CustomEvent openTermsOfService (mounted in AppModals + LegalPages)",
+          "shellPattern": "modalClasses.overlay + modalClasses.content max-w-4xl max-h-[90vh] flex flex-col overflow-hidden",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present. Terms text + Accept CTA. size='xl'. Easy."
+        },
+        {
+          "file": "src/components/DisclaimerSplash.jsx",
+          "name": "DisclaimerSplash",
+          "opensVia": "prop/first-run gate (mounted high in App)",
+          "shellPattern": "modalClasses.overlay + modalClasses.content max-w-2xl rounded-2xl max-h-[90vh]",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present. Blocking first-run disclaimer with Accept CTA that MUST be reachable. size='lg'. Good candidate (footer slot guarantees CTA)."
+        },
+        {
+          "file": "src/features/evidence-investigation/EvidenceInvestigationCluster.jsx → src/components/FormsHelper.jsx",
+          "name": "FormsHelper",
+          "opensVia": "window CustomEvent openFormsHelper",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 items-start justify-center p-4 + max-w-4xl my-4 overflow-hidden flex flex-col max-h-[90vh]",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Very large file (7400+ lines) — many forms. items-start alignment. size='xl'."
+        },
+        {
+          "file": "src/features/evidence-investigation/EvidenceInvestigationCluster.jsx → src/components/CFileAnalyzer.jsx",
+          "name": "CFileAnalyzer",
+          "opensVia": "window CustomEvent openCFileAnalyzer",
+          "shellPattern": "TWO shells: fixed inset-0 z-50 p-4 + max-w-2xl max-h-[90vh] (upload @473) and max-w-7xl w-full max-h-[90vh] flex flex-col (results @1015)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Two modal shells (upload max-w-2xl @473 + results max-w-7xl @1015). max-w-7xl results table extreme width. size='lg' + 'full'."
+        },
+        {
+          "file": "src/features/evidence-investigation/EvidenceInvestigationCluster.jsx → src/components/WitnessBench.jsx",
+          "name": "WitnessBench",
+          "opensVia": "window CustomEvent openWitnessBench",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Multi-step witness statement builder (max-w-2xl/3xl steps). size='2xl'."
+        },
+        {
+          "file": "src/features/evidence-investigation/EvidenceInvestigationCluster.jsx → src/components/DD214Analyzer.jsx",
+          "name": "DD214Analyzer",
+          "opensVia": "window CustomEvent openDD214Analyzer",
+          "shellPattern": "fixed inset-0 bg-black/70 backdrop-blur z-50 p-4 + max-w-4xl w-full max-h-[95vh] flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[95vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "max-h-[95vh]. Upload + parsed-field analysis. size='xl'."
+        },
+        {
+          "file": "src/features/knowledge/KnowledgeCluster.jsx → src/components/VKBViewer.jsx",
+          "name": "VKBViewer",
+          "opensVia": "window CustomEvent openVKBViewer",
+          "shellPattern": "fixed inset-0 bg-black/50 backdrop-blur z-50 p-4 + max-w-6xl w-full max-h-[90vh] flex flex-col (nested max-w-3xl max-h-[80vh] inner @694)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Knowledge-base viewer with NESTED inner doc modal at line 694 (max-w-3xl max-h-[80vh]). size='2xl'."
+        },
+        {
+          "file": "src/features/knowledge/KnowledgeCluster.jsx → src/components/UserManual.jsx",
+          "name": "UserManual",
+          "opensVia": "window CustomEvent openUserManual",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 flex (sidebar + content, max-w-4xl inner)",
+          "hasRoleDialog": false,
+          "heightCap": "none (flex layout)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Two-pane (sidebar + max-w-4xl content) docs layout — sidebar+content won't fit side-by-side at 360px; needs responsive stacking. size='full'. Hard layout migration, not just shell."
+        },
+        {
+          "file": "src/features/muster-call/MusterCallFlow.jsx → src/components/MusterCall.jsx",
+          "name": "MusterCall",
+          "opensVia": "window CustomEvent openMusterCall",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 overflow-y-auto + w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Onboarding/roll-call flow, max-w-6xl. size='2xl'."
+        },
+        {
+          "file": "src/features/resources/ResourcesCluster.jsx → src/components/RecordSearch.jsx",
+          "name": "RecordSearch",
+          "opensVia": "window CustomEvent openRecordSearch",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/80 backdrop-blur + w-full max-w-6xl max-h-[90vh] overflow-hidden border blue gradient",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Gradient-bordered record search w/ results table. size='2xl'."
+        },
+        {
+          "file": "src/features/resources/ResourcesCluster.jsx → src/components/VAResources.jsx",
+          "name": "VAResources",
+          "opensVia": "window CustomEvent openVAResources",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-5xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Resource link list. size='xl'."
+        },
+        {
+          "file": "src/features/va-demo/VaDemoTools.jsx → src/components/DemoDashboard.jsx",
+          "name": "DemoDashboard",
+          "opensVia": "window CustomEvent openDemoDashboard",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 + max-w-5xl w-full animate-modalEnter (no max-h cap)",
+          "hasRoleDialog": true,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present but inner panel has NO max-h — tall demo content overflows with no internal scroll. Migration fixes. size='xl'."
+        },
+        {
+          "file": "src/features/va-demo/VaDemoTools.jsx → src/components/VaIntegrationTest.jsx",
+          "name": "VaIntegrationTest",
+          "opensVia": "window CustomEvent openVaIntegrationDemo",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-5xl w-full animate-modalEnter relative (no max-h)",
+          "hasRoleDialog": true,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "role=dialog present; no inner max-h cap. Diagnostic output can be very long. size='xl'."
+        },
+        {
+          "file": "src/features/feedback/FeedbackHub.jsx → src/components/FeatureRequest.jsx",
+          "name": "FeatureRequest",
+          "opensVia": "window CustomEvent openFeatureRequest",
+          "shellPattern": "fixed inset-0 bg-black/60 z-[100] p-4 modal-backdrop + max-w-3xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[100] (above default). Feature-request form w/ Submit CTA. size='lg'/'xl'. ResponsiveModal z-[60] — confirm stacking vs other z-100 modals."
+        },
+        {
+          "file": "src/features/feedback/FeedbackHub.jsx → src/components/CommunityRoadmap.jsx",
+          "name": "CommunityRoadmap",
+          "opensVia": "window CustomEvent openCommunityRoadmap",
+          "shellPattern": "fixed inset-0 bg-black/60 z-[100] p-4 modal-backdrop + max-w-7xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "z-[100] + max-w-7xl (widest). Roadmap board columns won't fit 360px. size='full'. Verify column stacking."
+        },
+        {
+          "file": "src/features/system-tools/SystemToolsCluster.jsx → src/components/BugSquasher.jsx",
+          "name": "BugSquasher",
+          "opensVia": "window CustomEvent openBugSquasher",
+          "shellPattern": "fixed inset-0 bg-black/60 z-[100] p-4 modal-backdrop + max-w-3xl w-full max-h-[90vh] flex flex-col modal-content",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[100]. Bug-report form w/ Submit CTA. size='lg'/'xl'."
+        },
+        {
+          "file": "src/features/system-tools/SystemToolsCluster.jsx → src/components/SymptomLogger.jsx",
+          "name": "SymptomLogger",
+          "opensVia": "window CustomEvent openSymptomLogger",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 modal-backdrop + max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "role=dialog present. Symptom journal entry w/ Save CTA. size='xl'."
+        },
+        {
+          "file": "src/components/AIAssistant.jsx",
+          "name": "AIAssistant",
+          "opensVia": "window CustomEvent openAISettings (via SystemToolsCluster) / AI bubble",
+          "shellPattern": "fixed inset-0 z-50 bg-black/60 backdrop-blur p-4 + w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "h-[85vh] (fixed, not max)",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Chat UI with FIXED h-[85vh] + message bubbles max-w-[70%]/[85%] + sticky input bar (the must-reach CTA). size='xl'. Map input bar to footer slot; chat scroll = body."
+        },
+        {
+          "file": "src/components/AICommandCenter.jsx",
+          "name": "AICommandCenter",
+          "opensVia": "prop/internal (rendered conditionally; AI hub)",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 + max-w-2xl w-full max-h-[90vh] flex flex-col border",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Dark gradient command center. size='lg'."
+        },
+        {
+          "file": "src/components/LocalAIPanel.jsx",
+          "name": "LocalAIPanel",
+          "opensVia": "prop/internal (local-AI config, opened from AI settings)",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 + max-w-3xl w-full max-h-[90vh] flex flex-col border",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Local model picker/config. size='lg'/'xl'."
+        },
+        {
+          "file": "src/components/MultiCloudManager.jsx",
+          "name": "MultiCloudManager",
+          "opensVia": "prop/internal (from CloudSync/data mgmt)",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/80 backdrop-blur + max-w-5xl max-h-[90vh] border + nested z-60 confirm @1116",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "high",
+          "migrationNotes": "Has NESTED z-60 confirm dialog at line 1116 (max-w-md). Provider grid. size='xl'/'2xl'."
+        },
+        {
+          "file": "src/components/DoctorsPacket.jsx",
+          "name": "DoctorsPacket",
+          "opensVia": "prop/internal (generated from MyPacket/evidence flow)",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/60 backdrop-blur + max-w-4xl w-full max-h-[90vh] overflow-hidden border purple gradient",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Printable packet preview. size='xl'."
+        },
+        {
+          "file": "src/components/ClaimEvidenceUpload.jsx",
+          "name": "ClaimEvidenceUpload",
+          "opensVia": "prop/internal (from MyPacket)",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 + max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Upload dropzone + Save CTA. size='lg'. Easy."
+        },
+        {
+          "file": "src/components/VeteranTranslator.jsx",
+          "name": "VeteranTranslator",
+          "opensVia": "prop/internal (tool)",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/60 backdrop-blur + w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Chat-style translator, bubbles max-w-[85%], input bar CTA. size='xl'."
+        },
+        {
+          "file": "src/components/UnityLanguageTutor.jsx",
+          "name": "UnityLanguageTutor",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/80 z-50 p-4 + max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Language tutor panel. size='lg'."
+        },
+        {
+          "file": "src/components/IntelligenceBriefing.jsx",
+          "name": "IntelligenceBriefing",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-50 p-4 + max-w-6xl w-full max-h-[90vh] overflow-hidden border (inner max-w-md error card)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "Amber-bordered briefing, max-w-6xl dense report. size='2xl'."
+        },
+        {
+          "file": "src/components/DocumentIntelligenceBriefing.jsx",
+          "name": "DocumentIntelligenceBriefing",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 overflow-y-auto + max-w-4xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Double overflow-y-auto (page + panel). size='xl'."
+        },
+        {
+          "file": "src/components/DbqFinder.jsx",
+          "name": "DbqFinder",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "DBQ search list. size='xl'."
+        },
+        {
+          "file": "src/components/DbqBrowser.jsx",
+          "name": "DbqBrowser",
+          "opensVia": "prop/internal",
+          "shellPattern": "TWO shells: fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl (browser @417/625) and max-w-2xl (detail @626) max-h-[90vh] flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": true,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Browser + detail modal pair. size='xl' + 'lg'."
+        },
+        {
+          "file": "src/components/AppealsLaneAdvisor.jsx",
+          "name": "AppealsLaneAdvisor",
+          "opensVia": "window CustomEvent openAppealsLaneAdvisor",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Single overflow-auto box. size='xl'."
+        },
+        {
+          "file": "src/components/RemandRiskChecker.jsx",
+          "name": "RemandRiskChecker",
+          "opensVia": "window CustomEvent openRemandRiskChecker",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Single overflow-auto box. size='xl'."
+        },
+        {
+          "file": "src/components/WhatIfSandbox.jsx",
+          "name": "WhatIfSandbox",
+          "opensVia": "window CustomEvent openWhatIfSandbox",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-7xl w-full max-h-[90vh] overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "max-w-7xl scenario simulator with combination grids. size='full'. Wide tables risk overflow."
+        },
+        {
+          "file": "src/components/DenialDecoder.jsx",
+          "name": "DenialDecoder",
+          "opensVia": "window CustomEvent openDenialDecoder (via DecisionToolsCluster)",
+          "shellPattern": "renders inside cluster wrapper; inner uses max-w-md progress bar (no own fixed inset-0 — wrapped)",
+          "hasRoleDialog": false,
+          "heightCap": "depends on wrapper",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "Confirm wrapper in DecisionToolsCluster supplies the fixed-inset-0 shell; component itself is body content. size='xl'."
+        },
+        {
+          "file": "src/components/AIConsentModal.jsx",
+          "name": "AIConsentModal",
+          "opensVia": "prop: isOpen (consent gate before AI features)",
+          "shellPattern": "fixed inset-0 bg-black/60 z-[60] p-4 + max-w-2xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": true,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present, already z-[60] like ResponsiveModal, prop-driven isOpen. Accept/Decline CTAs MUST be reachable. size='lg'. Cleanest migration candidate."
+        },
+        {
+          "file": "src/components/CrisisModal.jsx",
+          "name": "CrisisModal",
+          "opensVia": "prop/global crisis trigger",
+          "shellPattern": "fixed inset-0 z-[9999] bg-red-900 p-4 overflow-hidden + max-w-2xl w-full p-8 border-4 border-red-600 (no max-h)",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "aria-modal set but NO role=dialog. z-[9999] crisis/988 overlay — must always show hotline CTA. Keep very high z (override ResponsiveModal z-[60]) or render above. size='lg'. Safety-critical."
+        },
+        {
+          "file": "src/components/HelperModeToggle.jsx",
+          "name": "HelperModeToggle",
+          "opensVia": "prop/internal toggle",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-[9999] p-4 animate-fadeIn + max-w-2xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "z-[9999]. Helper-mode explainer + confirm. size='lg'."
+        },
+        {
+          "file": "src/components/AtomicWipe.jsx",
+          "name": "AtomicWipe",
+          "opensVia": "prop/internal (data reset confirm)",
+          "shellPattern": "fixed inset-0 z-[100] p-4 bg-black/60 backdrop-blur + max-w-md w-full rounded-2xl overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "z-[100] destructive-action confirm. Small. size='sm'/'md'. Easy."
+        },
+        {
+          "file": "src/components/VaDataConsentPrompt.jsx",
+          "name": "VaDataConsentPrompt",
+          "opensVia": "prop/internal (before VA.gov fetch)",
+          "shellPattern": "fixed inset-0 bg-black/50 backdrop-blur z-[9999] p-4 + max-w-lg w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "z-[9999] consent gate with Allow/Deny CTAs. size='md'/'lg'."
+        },
+        {
+          "file": "src/components/ProfileImportConfirmModal.jsx",
+          "name": "ProfileImportConfirmModal",
+          "opensVia": "prop: isOpen (import flow)",
+          "shellPattern": "fixed inset-0 z-[9999] p-4 bg-black/50 backdrop-blur + max-w-5xl w-full max-h-[90vh] flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[9999]. Import diff/confirm with Import CTA. size='xl'."
+        },
+        {
+          "file": "src/components/LanguageSuggestionModal.jsx",
+          "name": "LanguageSuggestionModal",
+          "opensVia": "prop: isOpen (locale suggestion)",
+          "shellPattern": "fixed inset-0 z-50 p-4 bg-black/60 backdrop-blur + w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Switch-language suggestion w/ CTA. size='lg'. Easy."
+        },
+        {
+          "file": "src/components/WhatsNewModal.jsx",
+          "name": "WhatsNewModal",
+          "opensVia": "rendered node from useUpdateOrchestrator (mounted in AppModals)",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 + max-w-2xl w-full max-h-[90vh] overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Changelog w/ dismiss CTA. size='lg'. Easy."
+        },
+        {
+          "file": "src/components/CommandersChecklist.jsx",
+          "name": "CommandersChecklist",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl w-full max-h-[90vh] overflow-hidden (also max-w-7xl page header variant @104)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Checklist. size='xl'."
+        },
+        {
+          "file": "src/components/GlobalCommandSearch.jsx",
+          "name": "GlobalCommandSearch",
+          "opensVia": "window CustomEvent openGlobalCommandSearch (via GlobalCommandSearchWrapper)",
+          "shellPattern": "fixed inset-0 z-[100] items-start justify-center pt-[10vh] px-4 + max-w-2xl rounded-2xl overflow-hidden",
+          "hasRoleDialog": true,
+          "heightCap": "none (command palette, results scroll)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "low",
+          "migrationNotes": "role=dialog present. Spotlight-style command palette, TOP-anchored (pt-[10vh]) not centered — ResponsiveModal centers/full-sheets; special case, may NOT want full migration. size='lg'."
+        },
+        {
+          "file": "src/components/ShareButton.jsx",
+          "name": "ShareButton (share sheet)",
+          "opensVia": "prop/internal (Share action)",
+          "shellPattern": "fixed inset-0 bg-black/80 backdrop-blur z-[100] p-4 + max-w-4xl w-full max-h-[90vh] overflow-hidden border (plus z-40 click-catcher @339)",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[100] share-image preview (max-w-full img). size='xl'."
+        },
+        {
+          "file": "src/components/AdminPanel.jsx",
+          "name": "AdminPanel",
+          "opensVia": "context openAdminPanel (Ctrl+Shift+A via AdminAuthContext)",
+          "shellPattern": "fixed inset-0 bg-slate-950 z-[150] overflow-hidden flex flex-col (full-bleed app, max-w-6xl inner)",
+          "hasRoleDialog": false,
+          "heightCap": "none (full screen)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "high",
+          "migrationNotes": "z-[150] full-screen admin console. size='full'. Internal data tables/tabs — heavy, admin-only, low migration priority."
+        },
+        {
+          "file": "src/components/AdminLogin.jsx",
+          "name": "AdminLogin",
+          "opensVia": "context (Ctrl+Shift+A gate)",
+          "shellPattern": "fixed inset-0 bg-black/90 z-[200] p-4 + max-w-md w-full overflow-hidden",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "z-[200] password gate. Small. size='sm'/'md'. Easy."
+        },
+        {
+          "file": "src/components/Header.jsx",
+          "name": "Header mobile menu (drawer)",
+          "opensVia": "prop: mobile menu open state",
+          "shellPattern": "md:hidden fixed inset-0 z-50 bg-black/50 + absolute right-0 w-[85vw] max-w-sm slide-in drawer overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "full height drawer",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "low",
+          "migrationNotes": "This is a SIDE DRAWER, not a centered dialog — ResponsiveModal is wrong fit (it sheets from bottom/centers). Leave as drawer or build a drawer variant. Exclude from standard migration."
+        },
+        {
+          "file": "src/components/QuickExitButton.jsx",
+          "name": "QuickExitButton (confirm)",
+          "opensVia": "prop/internal (safety quick-exit)",
+          "shellPattern": "fixed inset-0 bg-black/80 z-[99999] + max-w-sm mx-4 rounded-xl p-6",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "z-[99999] safety overlay — must stay top-most. Small confirm. size='sm'. Keep elevated z."
+        },
+        {
+          "file": "src/components/SecurityBadge.jsx",
+          "name": "SecurityBadge (info modal)",
+          "opensVia": "prop/internal (badge click)",
+          "shellPattern": "fixed inset-0 bg-black/70 z-[9999] p-4 + max-w-4xl w-full max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[9999] security-info modal. size='xl'."
+        },
+        {
+          "file": "src/components/VAGovRatingPaster.jsx",
+          "name": "VAGovRatingPaster",
+          "opensVia": "prop/internal (paste VA.gov ratings)",
+          "shellPattern": "fixed inset-0 bg-black/70 backdrop-blur z-[100] p-4 + w-full max-w-3xl max-h-[90vh] overflow-y-auto",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh]",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "medium",
+          "migrationNotes": "z-[100] paste/parse textarea + Import CTA. size='lg'/'xl'."
+        },
+        {
+          "file": "src/components/DemoDataLoader.jsx",
+          "name": "DemoDataLoader",
+          "opensVia": "prop/internal (demo data confirm)",
+          "shellPattern": "TWO fixed inset-0 bg-black/80 z-50 p-4 + max-w-md w-full p-6 border (confirm dialogs @389/439)",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": true,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Two small confirm dialogs. size='md'. Easy."
+        },
+        {
+          "file": "src/components/PWAInstallButton.jsx",
+          "name": "PWAInstallButton (install prompt)",
+          "opensVia": "prop/beforeinstallprompt event",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 p-4 + max-w-md w-full p-6 (plus a fixed bottom-4 toast variant)",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Small install prompt + Install/Dismiss CTA. size='md'. Easy."
+        },
+        {
+          "file": "src/components/ZonkButton.jsx",
+          "name": "ZonkButton (easter-egg modal)",
+          "opensVia": "prop/internal",
+          "shellPattern": "fixed inset-0 bg-black/60 z-50 p-4 animate-fadeIn + max-w-md w-full border-4 rounded-2xl p-8 animate-bounce",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "low",
+          "migrationNotes": "Tiny animated easter-egg. size='md'. Low priority."
+        },
+        {
+          "file": "src/components/VoiceInput.jsx",
+          "name": "VoiceInput (recording modal)",
+          "opensVia": "prop/internal (mic button)",
+          "shellPattern": "fixed inset-0 bg-black/50 z-50 + rounded-xl p-6 mx-4 max-w-sm",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": true,
+          "overflowRisk": "low",
+          "migrationNotes": "Small recording indicator + Stop CTA. size='sm'. Easy."
+        },
+        {
+          "file": "src/components/debug/VaSandboxTest.jsx",
+          "name": "VaSandboxTest (debug)",
+          "opensVia": "prop/debug only",
+          "shellPattern": "fixed inset-0 bg-black/60 backdrop-blur z-50 p-4 + max-w-5xl w-full animate-modalEnter (no max-h)",
+          "hasRoleDialog": false,
+          "heightCap": "none",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Debug-only sandbox; no max-h cap. Low priority."
+        },
+        {
+          "file": "src/components/VADataCenter.jsx",
+          "name": "VADataCenter",
+          "opensVia": "prop: onClose/embeddedMode (rendered conditionally, often embedded)",
+          "shellPattern": "conditional: embeddedMode='' else fixed inset-0 bg-black/50 z-50 p-4 + max-w-4xl max-h-[90vh] overflow-hidden flex flex-col",
+          "hasRoleDialog": false,
+          "heightCap": "max-h-[90vh] (overlay mode)",
+          "nestedChildModals": false,
+          "hasFooterCTA": false,
+          "overflowRisk": "medium",
+          "migrationNotes": "Dual-mode: same component renders inline (embeddedMode) or as overlay. API records tables. Migrate overlay branch only; size='xl'."
+        }
+      ],
+      "topByRisk": [
+        "src/components/MyPacket.jsx",
+        "src/components/CAPSimulator.jsx",
+        "src/components/ClaimNavigator.jsx",
+        "src/components/UserManual.jsx",
+        "src/components/WebOfConditions.jsx",
+        "src/components/EvidenceGapVisualizer.jsx",
+        "src/components/CFileAnalyzer.jsx",
+        "src/components/RetroPayHunter.jsx",
+        "src/components/ConsistencyEngine.jsx",
+        "src/features/discover/DiscoverCluster.jsx",
+        "src/components/VKBTimeline.jsx",
+        "src/components/VKBViewer.jsx",
+        "src/components/CommunityRoadmap.jsx",
+        "src/components/PainPainter.jsx",
+        "src/components/AIAssistant.jsx",
+        "src/components/WhatIfSandbox.jsx",
+        "src/components/DemoDashboard.jsx",
+        "src/components/VaIntegrationTest.jsx",
+        "src/components/StateBenefitHunter.jsx",
+        "src/features/blue-button/BlueButtonXRayModal.jsx"
+      ],
+      "totalCount": 93
+    },
+    "grids": {
+      "items": [
+        {
+          "file": "src/components/AccessibilityMenu.jsx",
+          "line": 270,
+          "className": "<div className=\"grid grid-cols-2 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2",
+          "reason": "Display-mode theme buttons (icon+label cards) mapped from themeModeOptions; uniform repeated children, safe to stack on phone."
+        },
+        {
+          "file": "src/components/AICommandCenter.jsx",
+          "line": 926,
+          "className": "<div className=\"grid grid-cols-2 gap-3 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm",
+          "reason": "Device-capability info cards (Device Tier / WebGPU); independent label-value cells, safe to stack."
+        },
+        {
+          "file": "src/components/AIModelQuickLoad.jsx",
+          "line": 231,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-2",
+          "reason": "Agent-selection buttons mapped from SWARM_AGENTS; 3 fixed cols are tight on phones, uniform children."
+        },
+        {
+          "file": "src/components/BackupManager.jsx",
+          "line": 585,
+          "className": "<div className=\"grid grid-cols-2 gap-4 mb-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4",
+          "reason": "Storage-stats label/value pair (Total Keys / Total Size); two independent cells."
+        },
+        {
+          "file": "src/components/AppealsLaneAdvisor.jsx",
+          "line": 403,
+          "className": "border-t border-gray-200 dark:border-gray-600 grid grid-cols-2 gap-4 text-sm",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm",
+          "reason": "Timeline / Success Rate stat pair; independent cells, safe to stack."
+        },
+        {
+          "file": "src/components/AppealsLaneAdvisor.jsx",
+          "line": 458,
+          "className": "<div className=\"grid grid-cols-2 gap-2 text-xs\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs",
+          "reason": "Official / Actual timeline pair inside lane card; two independent label-value cells."
+        },
+        {
+          "file": "src/components/BugLookup.jsx",
+          "line": 649,
+          "className": "<div className=\"grid grid-cols-2 gap-2 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm",
+          "reason": "Client-environment metadata key/value cells (browser/os); independent, safe to stack."
+        },
+        {
+          "file": "src/components/CFileClaimsCards.jsx",
+          "line": 68,
+          "className": "<div className=\"grid grid-cols-3 gap-4 mb-6\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6",
+          "reason": "High/Medium/Low summary stat cards; uniform clickable filter cards, safe to stack."
+        },
+        {
+          "file": "src/components/ClaimEvidenceUpload.jsx",
+          "line": 308,
+          "className": "<div className=\"grid grid-cols-2 gap-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3",
+          "reason": "Document-type selection buttons mapped from DOCUMENT_TYPES; uniform repeated children."
+        },
+        {
+          "file": "src/components/ConsistencyEngine.jsx",
+          "line": 168,
+          "className": "<div className=\"grid grid-cols-4 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-2 sm:grid-cols-4 gap-4",
+          "reason": "Status/Critical/High/Medium summary with text-2xl numbers; 4 fixed cols overflow on phones, uniform independent cells."
+        },
+        {
+          "file": "src/components/ConsistencyEngine.jsx",
+          "line": 375,
+          "className": "<div className=\"mb-3 grid grid-cols-2 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3",
+          "reason": "Location 1 / Location 2 contradiction cells; two independent font-mono cells."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "line": 465,
+          "className": "<div className=\"grid grid-cols-2 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4",
+          "reason": "First Name / Last Name form fields; independent inputs, safe to stack."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "line": 492,
+          "className": "<div className=\"grid grid-cols-2 gap-4 mt-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4",
+          "reason": "Last-4-SSN / DOB form fields; independent inputs."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "line": 558,
+          "className": "<div className=\"grid grid-cols-6 gap-4 mt-4\">",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "City/State/ZIP row whose children use col-span-3, col-span-1, col-span-2; mechanically prepending grid-cols-1 breaks the col-span arithmetic. Needs a deliberate sm: span scheme."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "line": 607,
+          "className": "<div className=\"grid grid-cols-2 gap-4 mt-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4",
+          "reason": "Phone / next contact field; independent form inputs."
+        },
+        {
+          "file": "src/components/FOIAGenerator.jsx",
+          "line": 924,
+          "className": "<div className=\"grid grid-cols-2 gap-4 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm",
+          "reason": "Request-summary key/value cells (Requester, Records, Time Period); independent."
+        },
+        {
+          "file": "src/components/DemoDashboard.jsx",
+          "line": 672,
+          "className": "<div className=\"mt-6 grid grid-cols-5 gap-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-6",
+          "reason": "Status-summary bar of 5 stat cards (Active/Sandbox/Pending/Errors/Future) with text-2xl numbers; 5 fixed cols overflow badly on phones, uniform independent cells."
+        },
+        {
+          "file": "src/components/FeatureLookup.jsx",
+          "line": 652,
+          "className": "<div className=\"grid grid-cols-2 gap-2 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm",
+          "reason": "Client-environment metadata key/value cells; independent, safe to stack."
+        },
+        {
+          "file": "src/components/MillionDollarDashboard.jsx",
+          "line": 592,
+          "className": "<div className=\"grid grid-cols-3 gap-4 mt-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4",
+          "reason": "Spouse / # Children / P&T compact form fields; three independent inputs, no col-span coupling."
+        },
+        {
+          "file": "src/components/LocalAIPanel.jsx",
+          "line": 2100,
+          "className": "<div className=\"grid grid-cols-2 gap-2 pl-11\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 pl-11",
+          "reason": "GPU specs label/value cells (Vendor/VRAM/Architecture); independent compact cells."
+        },
+        {
+          "file": "src/components/KnowledgeBaseStatus.jsx",
+          "line": 1046,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2",
+          "reason": "Authority-hierarchy legend chips (numbered 1-4); reading order preserved when column count changes, cosmetic-only."
+        },
+        {
+          "file": "src/components/IntelligenceBriefing.jsx",
+          "line": 276,
+          "className": "<div className=\"grid grid-cols-2 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2",
+          "reason": "Discrepancy resolution value buttons mapped from disc.values; uniform repeated children."
+        },
+        {
+          "file": "src/components/PACTActNavigator.jsx",
+          "line": 882,
+          "className": "<div className=\"grid grid-cols-2 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4",
+          "reason": "Exposure-profile key/value cells (Exposure Type / Location); independent."
+        },
+        {
+          "file": "src/components/PresetSelector.jsx",
+          "line": 78,
+          "className": "<div className=\"grid grid-cols-3 gap-2 text-xs\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs",
+          "reason": "Temperature/Top-K/Top-P spec cells; three independent label-value cells."
+        },
+        {
+          "file": "src/components/PainPainter.jsx",
+          "line": 1402,
+          "className": "<div className=\"grid grid-cols-2 gap-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3",
+          "reason": "Limb-visibility toggle labels mapped from showPhantomLimbs; uniform repeated toggles."
+        },
+        {
+          "file": "src/components/PainPainter.jsx",
+          "line": 1484,
+          "className": "className=\"grid grid-cols-4 gap-2\" role=\"group\" aria-label=\"Body view selector\"",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "Icon+short-label body-view selector toolbar (role=group, aria-pressed toggle buttons). Icon-button row where a deliberate compact column count is intended; mechanical grid-cols-1 stacking is likely wrong UX."
+        },
+        {
+          "file": "src/components/ProfileImportConfirmModal.jsx",
+          "line": 578,
+          "className": "<div className=\"grid grid-cols-2 gap-3 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm",
+          "reason": "Current Value / Imported Value comparison; each column self-labeled so stacking remains clear."
+        },
+        {
+          "file": "src/components/RetroPayHunter.jsx",
+          "line": 458,
+          "className": "<div className=\"grid grid-cols-2 gap-4 mt-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4",
+          "reason": "Analysis result cards (Total Months / Total Should Have Received) with text-3xl numbers; independent cells."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "line": 690,
+          "className": "<div className=\"grid grid-cols-2 gap-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3",
+          "reason": "Quick-stats cards (conditions count / raw score) with text-2xl numbers; independent cells."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "line": 934,
+          "className": "<div className=\"grid grid-cols-3 gap-3 text-center\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-3 text-center",
+          "reason": "Preview stat cards (Current / +CAP / total) with text-2xl numbers; three independent cells."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "line": 1920,
+          "className": "<div className=\"grid grid-cols-6 gap-2\">",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "Rating-percentage chip picker (~10 small r% buttons) deliberately laid out as a compact 6-wide button pad; mechanical grid-cols-1 prepend is wrong, needs an intentional grid-cols-3 sm:grid-cols-6 type scheme."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "line": 1965,
+          "className": "<div className=\"grid grid-cols-2 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4",
+          "reason": "Before/after comparison cards (Current vs projected) with text-3xl numbers; each column self-labeled."
+        },
+        {
+          "file": "src/components/TacticalCalculator.jsx",
+          "line": 2130,
+          "className": "<div className=\"grid grid-cols-2 gap-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3",
+          "reason": "Benefit-amount cards (10% / 20% rates) with text-2xl numbers; independent cells."
+        },
+        {
+          "file": "src/components/SymptomLogger.jsx",
+          "line": 1153,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-2 sm:grid-cols-3 gap-2",
+          "reason": "Duration-option chip buttons mapped from config.durationOptions; uniform short-text chips, safe to drop a column on phone."
+        },
+        {
+          "file": "src/components/TheTribunal.jsx",
+          "line": 885,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-2",
+          "reason": "Judge-persona selection cards (avatar+name+style) mapped from JUDGE_PERSONAS; uniform selectable cards."
+        },
+        {
+          "file": "src/components/TokenLimitConfig.jsx",
+          "line": 316,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-3 gap-2",
+          "reason": "Token-preset selection buttons mapped from TOKEN_PRESETS; uniform repeated cards."
+        },
+        {
+          "file": "src/components/UnityLanguageTutor.jsx",
+          "line": 444,
+          "className": "<div className=\"grid grid-cols-2 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4",
+          "reason": "Target-language / category select inputs; two independent form controls."
+        },
+        {
+          "file": "src/components/VaIntegrationTest.jsx",
+          "line": 705,
+          "className": "<div className=\"grid grid-cols-2 gap-3 text-sm\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm",
+          "reason": "Expanded claim detail key/value cells (Claim ID / Closed); independent."
+        },
+        {
+          "file": "src/components/VeteranTranslator.jsx",
+          "line": 609,
+          "className": "<div className=\"grid grid-cols-2 gap-2\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2",
+          "reason": "Quick-phrase buttons mapped from QUICK_PHRASES; uniform repeated children."
+        },
+        {
+          "file": "src/components/VisionSimulatorPanel.jsx",
+          "line": 491,
+          "className": "<div className=\"mt-2 grid grid-cols-2 gap-2 text-xs\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mt-2",
+          "reason": "Capabilities / Limitations two-column lists; each column self-labeled, safe to stack."
+        },
+        {
+          "file": "src/components/VKBTimeline.jsx",
+          "line": 282,
+          "className": "<div className=\"grid grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3",
+          "reason": "Document metadata key/value cells (Size/Pages/Method); independent compact cells."
+        },
+        {
+          "file": "src/components/VKBTimeline.jsx",
+          "line": 370,
+          "className": "<div className=\"grid grid-cols-2 gap-4 mb-6\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6",
+          "reason": "Document 1 / Document 2 comparison cards; each self-labeled, safe to stack."
+        },
+        {
+          "file": "src/components/VKBTimeline.jsx",
+          "line": 414,
+          "className": "<div className=\"grid grid-cols-2 gap-4\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-4",
+          "reason": "Document 1 / Document 2 diff-value cells; each self-labeled."
+        },
+        {
+          "file": "src/components/WhatIfSandbox.jsx",
+          "line": 338,
+          "className": "<div className=\"grid grid-cols-2 gap-6\">",
+          "classification": "clean",
+          "suggestedFix": "grid grid-cols-1 sm:grid-cols-2 gap-6",
+          "reason": "Result display (Combined VA Rating / Monthly Compensation) with text-5xl numbers; two independent self-labeled cells."
+        },
+        {
+          "file": "src/components/WhatIfSandbox.jsx",
+          "line": 369,
+          "className": "<div className=\"grid grid-cols-4 h-[calc(90vh-250px)]\">",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "Fixed-height app shell: col-span-1 sidebar (Condition Library) + col-span-3 canvas drag-drop area. Mechanically prepending grid-cols-1 destroys the sidebar/canvas span layout; needs a deliberate mobile drawer/stacked design."
+        },
+        {
+          "file": "src/components/LanguageSelector.jsx",
+          "line": 285,
+          "className": "<div className=\"grid grid-cols-2 gap-2\">",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "Action-button row (Translator + 1 more) inside a fixed-width dropdown footer popover. Viewport-based sm: breakpoints do not track the popover's own fixed width, so a mechanical responsive prefix may behave incorrectly; needs human judgment."
+        },
+        {
+          "file": "src/components/LanguageSelector.jsx",
+          "line": 527,
+          "className": "<div className=\"grid grid-cols-3 gap-2\">",
+          "classification": "ambiguous",
+          "suggestedFix": "HAND-REVIEW",
+          "reason": "Three action buttons (Translator/Tutor/...) inside a fixed-width dropdown footer popover. Same constrained-popover concern as line 285; viewport breakpoints don't match panel width."
+        }
+      ],
+      "summary": {
+        "clean": 41,
+        "ambiguous": 6,
+        "excluded": 0,
+        "fileCount": 32
+      }
+    },
+    "detections": {
+      "detections": [
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\dkbIndexedDB.js",
+          "line": 28,
+          "code": "const isSmallScreen = window.innerWidth < 768;",
+          "detects": "Phone-sized viewport (< md/768px) inside isMobileDevice(), OR'd with touch + UA mobile keywords.",
+          "migration": "Replace the width comparison with useBreakpoint().isMobile (isMobile === width < 768, the same MOBILE_MAX threshold). But this is a plain util function, not a component, so it cannot call the hook directly — the caller would need to pass isMobile in, or the function should read it from a shared snapshot. The touch part is already covered by useBreakpoint().isTouch; only the UA-keyword part is extra.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\useDeviceCapability.js",
+          "line": 56,
+          "code": "const isSmallScreen = window.innerWidth < 768;",
+          "detects": "Phone-sized viewport inside checkIsMobile(), which feeds the AI device-capability tier (HIGH/MID/LEGACY/UNSUPPORTED) alongside WebGPU, deviceMemory, UA version parsing.",
+          "migration": "The bare width<768 check equals useBreakpoint().isMobile and isTouch equals useBreakpoint().isTouch. However this lives in the device-capability / AI-tier path, which also models GPU/WebGPU, deviceMemory, data-saver, and Android/iOS version parsing — none of which useBreakpoint covers. Do not fold the whole function into the hook; at most swap the width literal for the shared breakpoint when a component owns the call.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\features\\small-screen-warning\\SmallScreenWarning.jsx",
+          "line": 15,
+          "code": "if (dismissed || window.innerWidth >= 640) return null;",
+          "detects": "Viewport narrower than sm/640px to gate a 'screen too small' warning modal.",
+          "migration": "This is a React component, so it is a clean swap: const { width } = useBreakpoint(); then `if (dismissed || width >= 640) return null;` (or `bp !== 'base'` to mean >= xs... but 640 is sm, so compare width >= 640 / BREAKPOINTS.sm). Bonus: the hook re-renders on resize, so the warning would now react live to rotation/resize instead of only the first render.",
+          "safeToMigrate": true
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\MobileNotice.jsx",
+          "line": 27,
+          "code": "const screenWidth = Math.max(window.screen.width, window.screen.height);\n  const isTabletScreenSize = screenWidth >= 768 && screenWidth <= 1366;",
+          "detects": "Tablet-class physical SCREEN size (largest dimension 768-1366) combined with UA/platform sniffing (iPad, Android tablet, Surface, maxTouchPoints>2) to label the device a tablet.",
+          "migration": "useBreakpoint models the VIEWPORT (window.innerWidth/Height), not the physical screen (window.screen.width/height). It exposes isTablet = width in [768,1024), which is a different and narrower band than this 768-1366 screen-size heuristic, and it has no UA/platform tablet sniffing (iPad-as-Mac, Surface). Cannot reproduce this classification from useBreakpoint.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\MobileNotice.jsx",
+          "line": 13,
+          "code": "const ua = navigator.userAgent; ... /iPad/i.test(ua) || (navigator.platform === \"MacIntel\" && navigator.maxTouchPoints > 1); /Android/i.test(ua) && !/Mobile/i.test(ua); /Windows.*Touch/i.test(ua);",
+          "detects": "User-agent / platform mobile+tablet sniffing (iPad, Android tablet, Surface) to choose the notice text.",
+          "migration": "useBreakpoint has no userAgent sniffing — only isTouch (ontouchstart / maxTouchPoints>0) and viewport width buckets. It cannot tell an iPad from an Android tablet or a Surface. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\MobileNotice.jsx",
+          "line": 69,
+          "code": "window.addEventListener(\"resize\", checkDevice); return () => window.removeEventListener(\"resize\", checkDevice);",
+          "detects": "Re-runs the tablet check on viewport resize so the notice updates on rotation/resize — a hand-rolled resize listener for layout.",
+          "migration": "useBreakpoint already owns one shared resize + orientationchange listener and re-renders consumers. If the tablet decision were viewport-based you would drop this listener entirely and read the hook. Here the decision is screen-size + UA based (see lines 13/27), so the listener is only re-triggering UA/screen logic the hook does not model — the listener itself is redundant with the hook's, but the work it does is not.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\persistentStorage.js",
+          "line": 85,
+          "code": "const screenWidth = Math.max(window.screen.width, window.screen.height);\n  const isTabletScreenSize = screenWidth >= 768 && screenWidth <= 1366;",
+          "detects": "Identical tablet physical-SCREEN-size heuristic (768-1366) inside isTabletDevice(), combined with UA/platform sniffing, used to pick the storage strategy (File System API vs IndexedDB+download).",
+          "migration": "Same as MobileNotice: this is window.screen (physical screen), not the viewport useBreakpoint reads, plus UA/platform sniffing the hook has none of. useBreakpoint().isTablet is a 768-1024 viewport band, not equivalent. Also this is a non-component util that cannot call the hook. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\persistentStorage.js",
+          "line": 123,
+          "code": "const isLandscape = window.innerWidth > window.innerHeight;",
+          "detects": "Landscape orientation of the viewport inside getOrientationInfo().",
+          "migration": "Equivalent to useBreakpoint().isLandscape (width >= height). Caveat: the hook uses >= (square counts as landscape) while this uses strict > (square counts as portrait) — a 1px edge-case difference. Still a non-component util, so it cannot call the hook directly; a component caller would pass isLandscape in.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\persistentStorage.js",
+          "line": 134,
+          "code": "width: window.innerWidth,\n    height: window.innerHeight,",
+          "detects": "Raw viewport width/height returned in the getOrientationInfo() payload (consumed by PacketPersistence for an orientation badge).",
+          "migration": "Equivalent to useBreakpoint().width and .height. Same constraint: util function, not a hook context; a component would read width/height from the hook and pass them down.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\PacketPersistence.jsx",
+          "line": 161,
+          "code": "window.addEventListener(\"resize\", handleOrientationChange);\n    window.addEventListener(\"orientationchange\", handleOrientationChange);",
+          "detects": "Hand-rolled resize + orientationchange listener that refreshes storageInfo.orientation (via getOrientationInfo) so the UI reflects rotation.",
+          "migration": "This duplicates exactly the listener pair inside useBreakpoint (resize + orientationchange). The component could consume useBreakpoint() for {width,height,isLandscape} and drop both addEventListener calls and the manual cleanup. Blocked only because the orientation data also flows through getOrientationInfo()'s UA-based screenType ('tablet'/'phone'/'desktop'), which the hook does not model; the width/height/landscape half is a clean swap.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\WebOfConditions.jsx",
+          "line": 721,
+          "code": "window.addEventListener(\"resize\", updateDimensions); return () => window.removeEventListener(\"resize\", updateDimensions);",
+          "detects": "Resize listener that re-measures the SVG container via containerRef.getBoundingClientRect() to size the D3 graph. Tracks element box, not the window viewport.",
+          "migration": "Not a viewport-breakpoint listener — it measures a specific DOM element's box (getBoundingClientRect), which useBreakpoint does not provide (the hook only knows window.innerWidth/Height). The correct consolidation target is a ResizeObserver on the element, not useBreakpoint. Leave as-is for this task.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\AIAssistant.jsx",
+          "line": 42,
+          "code": "x: (window.innerWidth - 384) / 2, // Centered horizontally (w-96 = 384px)\n          y: (window.innerHeight - 600) / 2,",
+          "detects": "Reads viewport width/height to center the draggable assistant panel on first open (no saved position).",
+          "migration": "width/height are available as useBreakpoint().width/.height. But this is a one-shot computation inside a useState initializer for absolute pixel math (centering), not a breakpoint decision; calling the hook here adds a re-rendering subscription for a value only needed once. Low value, and it is arithmetic the hook does not simplify.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\AIAssistant.jsx",
+          "line": 136,
+          "code": "const maxX = window.innerWidth - width;\n      const maxY = window.innerHeight - height;",
+          "detects": "Reads live viewport size during a drag to clamp the panel inside the visible area.",
+          "migration": "Could read useBreakpoint().width/.height, but this runs inside a synchronous mousemove handler that needs the instantaneous value; the hook's state can lag a frame behind during fast drags and it would also force re-renders. Viewport-clamp math, not a breakpoint — keep window.innerWidth/Height here.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\AIAssistant.jsx",
+          "line": 408,
+          "code": "y: window.innerHeight - 72 - 16, ... y: Math.max(16, window.innerHeight - 600 - 16),",
+          "detects": "Reads viewport height to anchor the minimized/expanded launcher near the bottom of the screen.",
+          "migration": "useBreakpoint().height holds the same value, but this is absolute positioning arithmetic, not a breakpoint check. Substituting the hook adds a subscription without removing the need for the literal pixel math. Not a meaningful consolidation.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\useBodyScrollLock.js",
+          "line": 33,
+          "code": "const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;",
+          "detects": "Computes the OS scrollbar gutter width (layout-viewport vs document client width) to pad the body and avoid layout shift when locking scroll.",
+          "migration": "useBreakpoint exposes window.innerWidth but NOT document.documentElement.clientWidth, so it cannot compute scrollbar width. This is a scrollbar-gutter measurement, unrelated to breakpoints. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\contexts\\ThemeContext.jsx",
+          "line": 51,
+          "code": "return window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches;",
+          "detects": "User's OS reduced-motion accessibility preference (initial value).",
+          "migration": "Not a viewport query — it is a prefers-reduced-motion media feature. useBreakpoint models only viewport size/orientation/touch and exposes no media-preference state. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\contexts\\ThemeContext.jsx",
+          "line": 107,
+          "code": "const mediaQuery = window.matchMedia(\"(prefers-color-scheme: dark)\");",
+          "detects": "OS dark-mode preference, with a change listener to react to live theme switches.",
+          "migration": "prefers-color-scheme is a color-preference media feature, not a viewport breakpoint. Outside useBreakpoint's scope. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\contexts\\ThemeContext.jsx",
+          "line": 122,
+          "code": "const mediaQuery = window.matchMedia(\"(prefers-reduced-motion: reduce)\");",
+          "detects": "Live listener on the OS reduced-motion preference.",
+          "migration": "Accessibility media-preference, not viewport. Not modeled by useBreakpoint. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\PWAInstallButton.jsx",
+          "line": 24,
+          "code": "if (window.matchMedia(\"(display-mode: standalone)\").matches) {",
+          "detects": "Whether the app is running as an installed PWA (standalone display mode).",
+          "migration": "display-mode is a PWA presentation media feature, not a viewport size query. useBreakpoint does not model install/display state. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\PWAInstallButton.jsx",
+          "line": 31,
+          "code": "/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;",
+          "detects": "iOS user-agent sniff to show iOS-specific 'Add to Home Screen' instructions.",
+          "migration": "UA platform sniffing; useBreakpoint has no userAgent or OS awareness. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\systemCapabilityCheck.js",
+          "line": 151,
+          "code": "const ua = navigator.userAgent.toLowerCase(); if (ua.includes(\"iphone\") || ua.includes(\"ipad\")) ...",
+          "detects": "Browser/OS family from user-agent to produce an upgrade recommendation string.",
+          "migration": "UA sniffing for browser-support guidance; nothing to do with viewport. Not modeled by useBreakpoint. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\bugReportUtils.js",
+          "line": 137,
+          "code": "screenResolution: `${screen.width}x${screen.height}`, windowSize: `${window.innerWidth}x${window.innerHeight}`,",
+          "detects": "Diagnostic snapshot of physical screen resolution and current window size, embedded in a bug report.",
+          "migration": "Distinguishes screen (physical) from window (viewport) on purpose for diagnostics. useBreakpoint only knows the viewport (innerWidth/Height), not screen.width/height, and these are recorded as plain strings, not layout decisions. Keep as raw reads.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\bugReportStorage.js",
+          "line": 197,
+          "code": "`${screen.width}x${screen.height}`, ... `${window.innerWidth}x${window.innerHeight}`,",
+          "detects": "Diagnostic screen-resolution and window-size strings stored with a persisted bug report.",
+          "migration": "Diagnostic capture, screen vs viewport intentionally separate. Not a breakpoint decision and useBreakpoint has no screen.width/height. Not migratable.",
+          "safeToMigrate": false
+        },
+        {
+          "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\utils\\debugDump.js",
+          "line": 33,
+          "code": "screenResolution: `${window.screen.width}x${window.screen.height}`, windowSize: `${window.innerWidth}x${window.innerHeight}`,",
+          "detects": "Diagnostic dump of physical screen resolution and viewport size.",
+          "migration": "Diagnostics only; screen vs viewport distinction is intentional. useBreakpoint cannot supply screen.width/height. Not migratable.",
+          "safeToMigrate": false
+        }
+      ],
+      "count": 25
+    },
+    "warnings": {
+      "smallScreenWarning": {
+        "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\features\\small-screen-warning\\SmallScreenWarning.jsx",
+        "renderedIn": "Rendered once, inside AppShellOverlays (e:\\VS_Studio\\vet-rate-org-official\\src\\features\\app-shell\\AppShellOverlays.jsx:24), which is the always-mounted bottom overlay layer. AppShellOverlays is itself rendered by the main App component at e:\\VS_Studio\\vet-rate-org-official\\src\\App.jsx:129 (<AppShellOverlays userConditions={userConditions} />). It sits alongside CrisisListener, QuickExitButton, SecurityBadge, and MobileBottomNavWrapper. There are no other call sites.",
+        "triggerCondition": "A full-screen blocking modal (fixed inset-0, z-[100]) that renders when window.innerWidth < 640px AND it has not already been dismissed this session. Guard at SmallScreenWarning.jsx:15: `if (dismissed || window.innerWidth >= 640) return null;`. Dismissal state is read from / written to sessionStorage under key 'vetrate-small-screen-dismissed', so it appears once per browser session per tab. Note: the width check only runs on render (no resize listener), so it is effectively evaluated on mount.",
+        "copy": "Heading: \"Screen Size Warning\". Body paragraph 1: \"VetRate is optimized for tablet and desktop screens. Some features may not work properly on smaller devices.\" Body paragraph 2: \"For the best experience, please use a device with a screen width of at least 640px, or switch to landscape mode.\" Primary button: \"I Understand, Continue Anyway\". Secondary link: \"Email Us About Mobile Support\" (mailto:support@vetrate.org?subject=Mobile%20Support%20Request).",
+        "removalGate": "Deletion is GATED on the mobile e2e suite being green across the top-20 surfaces at the S10 exit (docs/SPRINT_PLAN_S9-S17.md lines 53, 67, 100). 'Green' here means tests/e2e/mobile.spec.ts passes under the mobile-chrome project (Pixel 5, 393px) plus the pinned 360px and 768px viewports, where per surface: root scrollWidth <= clientWidth+1 (no horizontal overflow); every primary CTA's getBoundingClientRect().bottom <= innerHeight (visible, not clipped by the 70px MobileBottomNav); all tap targets >= 44x44px; and the same assertions re-run inside each top-20 modal after dispatching its open* event. The mobile-chrome CI job must also be promoted to blocking. The gate exists explicitly because removing the warning early would re-expose still-broken mobile UI as 'supported' (line 100). Honest limit per the plan: real iOS Safari URL-bar/notch and screen-reader gesture checks stay owner-run manual items, not part of the automated 'green'."
+      },
+      "mobileNotice": {
+        "file": "e:\\VS_Studio\\vet-rate-org-official\\src\\components\\MobileNotice.jsx",
+        "currentBehavior": "A dismissible top banner (gradient bar) rendered by AppShellTop (e:\\VS_Studio\\vet-rate-org-official\\src\\features\\app-shell\\AppShellTop.jsx:39), which App.jsx renders above the header. It computes a deviceType via the isTablet() UA/screen heuristic (iPad incl. iPadOS-as-Mac, Android non-Mobile, Surface/Windows touch, or maxTouchPoints>2 within 768-1366px). After S9, the phone path is intentionally silenced: checkDevice sets deviceType to 'tablet' or null only (MobileNotice.jsx:65, with the explanatory comment at lines 59-63). So in practice only the blue tablet banner can appear; it shows once per session (dismissal persisted in sessionStorage key 'vetrate-mobile-notice-dismissed') and re-evaluates on window resize. Consequence: the entire isPhone branch (the emerald banner and the '90% of veterans' copy at lines 100-105) is now dead/unreachable code, since deviceType is never 'phone'.",
+        "copyIssues": "The dead phone branch still contains the contradiction the plan calls out (docs/SPRINT_PLAN_S9-S17.md line 19 'two contradictory banners'): phone copy reads \"Mobile-Optimized Experience!\" / \"90% of veterans use mobile - this app is built for you\" (lines 102-104), which directly contradicts SmallScreenWarning's standing message that screens below 640px are NOT properly supported. Both could otherwise fire on the same small device, telling the veteran simultaneously that the app is built for their phone and that their phone may break. Secondary issue: the aria-label at line 95 still maps isPhone to 'Mobile optimized', and the surviving tablet copy (\"Tablet Mode - Perfect for Detailed Work!\" / \"Tablet screens are ideal for reviewing claims & building your packet\") remains positive marketing, which is fine for tablets (>=768px, not warned) but the now-unreachable phone strings remain a latent re-introduction risk if anyone flips deviceType back on without reconciling copy.",
+        "reconciliation": "Reconcile copy as scheduled in S10 (lines 53, 67), tied to the same green-suite gate that removes SmallScreenWarning. Concretely: (1) delete the dead isPhone branch entirely (the emerald banner, the '90% of veterans... built for you' lines, and the isPhone-conditional aria-label/emoji), collapsing MobileNotice to the tablet-only notice it now is, so the false 'built for you' claim cannot be re-exposed; or (2) keep a phone branch only after the mobile suite is green, and at that point replace the contradictory '90% / built for you' copy with honest, non-conflicting wording and remove SmallScreenWarning in the same change so the two banners can never co-assert opposite messages. Until the gate is met, the correct state is exactly today's: phone banner silent, tablet notice kept, SmallScreenWarning retained. The minimal immediate cleanup is option (1) - prune the unreachable phone code so the contradictory copy no longer ships in the bundle, leaving SmallScreenWarning as the single source of truth for small-screen messaging until S10 removes it."
+      }
+    },
+    "ci": {
+      "ciFile": "e:\\VS_Studio\\vet-rate-org-official\\.github\\workflows\\ci.yml (the CI workflow named \"CI\", triggered on push and pull_request to `main`). Playwright config: e:\\VS_Studio\\vet-rate-org-official\\playwright.config.ts. Mobile spec: e:\\VS_Studio\\vet-rate-org-official\\tests\\e2e\\mobile.spec.ts. Helpers: e:\\VS_Studio\\vet-rate-org-official\\tests\\e2e\\helpers.ts. (Note: a second, unrelated Playwright config exists at audit\\dynamic-testing\\playwright.config.js — not used by CI.)",
+      "mobileProjectNow": "The `mobile-chrome` project (playwright.config.ts:27-30) is defined as `use: { ...devices[\"Pixel 5\"] }` — Pixel 5 emulation (~393x851, mobile UA, touch). It is one of three projects (chromium, firefox, mobile-chrome) and has NO testMatch/testIgnore filter, so every spec under tests/e2e runs once per project. CI DOES run it: the e2e job invokes `npx playwright test` with no `--project` flag, so all three projects execute. IMPORTANT nuance: mobile.spec.ts does NOT rely on the Pixel-5 viewport of `mobile-chrome` — it overrides the viewport per-describe via `test.use({ viewport: {width,height} })` for 360/390/768 (mobile.spec.ts:60-62). Because there is no project filter, mobile.spec.ts actually runs 3x (once under chromium, once under firefox, once under mobile-chrome), each time re-applying the 360/390/768 viewports. So the @360/390/768 coverage already exists and already executes in CI today.",
+      "howTestsRun": "Job `e2e` (name: \"E2E Tests (Playwright)\"), ci.yml:72-100. Steps: checkout, setup-node 20, `npm ci`, `npx playwright install --with-deps chromium firefox`, then `npx playwright test` (ci.yml:91-92), then an artifact upload step guarded by `if: always()`. The job has `needs: [build]` (which `needs: [quality]`), so it is part of the lint→build→e2e chain. The test step has NO `continue-on-error` and NO `if: always()` (only the upload step does), so a Playwright failure fails the `e2e` job and thus the overall workflow run. Whether that BLOCKS A MERGE depends on GitHub branch-protection required-status-checks, which is NOT defined in-repo: there is no .github/settings.yml, no CODEOWNERS, no branch-protection file. So today e2e failure makes the PR's CI \"red\" but is only merge-blocking if `e2e` (or the workflow) is configured as a required check in the repo's branch-protection settings on GitHub — that cannot be confirmed from the repo and is the real unverified gap. Caveat: `npx playwright install` only installs chromium+firefox; the `mobile-chrome` project uses chromium under the hood, so it still runs — no missing browser.",
+      "promoteToBlockingSteps": [
+        "No code/config change is needed for the spec to RUN at 360/390/768: tests/e2e/mobile.spec.ts is already discovered by `npx playwright test` (no testIgnore) and already self-applies the 360/390/768 viewports via test.use() — so it executes today across chromium, firefox, and mobile-chrome.",
+        "Confirm the spec is non-flaky/green in CI before gating: the modal tests dispatch CustomEvents (openMyPacket / openTacticalCalculator / openWorkflowGuide) and poll for an overlay; if the app no longer fires those, the gate would block on a stale test. Run `npx playwright test mobile.spec.ts` in CI conditions once to validate it passes.",
+        "Make the gate explicit and bisectable (optional but recommended): mirror the existing `red-team` pattern by adding a dedicated job, e.g. `e2e-mobile`, that runs only the mobile spec: `npx playwright test tests/e2e/mobile.spec.ts --project=mobile-chrome` (add `--project=chromium` too if you want it under desktop engines). Give it `needs: [build]`. A separate job makes a mobile regression visible at a glance rather than buried in the combined e2e run.",
+        "If you keep it inside the existing `e2e` job instead of a new job, add a script alias in package.json (e.g. `\"test:e2e:mobile\": \"playwright test tests/e2e/mobile.spec.ts\"`) and call it as its own step so failures are labeled.",
+        "Ensure the gate is NOT bypassable: verify neither the `e2e` job nor any new mobile job has `continue-on-error: true` (currently none do — only legal-ingestion.yml:50 uses it, unrelated). Do not add `if: always()` to the test step.",
+        "THE ACTUAL BLOCKING STEP (must be done in GitHub, not in the repo): add the job to branch protection. On GitHub → Settings → Branches → branch protection rule for `main` → enable 'Require status checks to pass before merging' and add the job's check name ('E2E Tests (Playwright)' and/or the new 'e2e-mobile') to the Required checks list. Without this, a red e2e run does not prevent merge.",
+        "Optionally codify branch protection in-repo so it is reviewable: add a `.github/settings.yml` (Probot Settings app) or a Terraform/GH-API script listing the required checks, since no such file exists today.",
+        "Optional hardening: pin the 360/390/768 baselines so they cannot silently drift — they are currently hardcoded in mobile.spec.ts:14-18 (small-android 360x740, iphone 390x844, tablet-edge 768x1024), which already matches the owner-specified @360/390/768 requirement, so no change required there."
+      ],
+      "playwrightConfigFindings": "playwright.config.ts: testDir './tests/e2e'; fullyParallel true; forbidOnly/CI; retries 2 in CI (0 local); workers 1 in CI; reporter html+github in CI. baseURL: 'http://localhost:5174'. webServer.command: `npm run dev -- --port 5174` (which runs `vite` per package.json:7) serving the Vite DEV server (not a production build/preview) on port 5174; url http://localhost:5174; reuseExistingServer when not CI; timeout 30s. Projects (3): `chromium` (Desktop Chrome), `firefox` (Desktop Firefox), `mobile-chrome` (Pixel 5 ~393x851). No testMatch/testIgnore/grep, so all 5 e2e specs run under all 3 projects. Existing 360/768 coverage: NOT defined as Playwright projects/devices in the config — instead the 360/390/768 viewport coverage lives entirely inside tests/e2e/mobile.spec.ts via per-describe `test.use({ viewport })` (360x740, 390x844, 768x1024 at mobile.spec.ts:14-18, applied at :60-62). So the config itself has no 360/768 project; the responsive viewports are spec-driven and run on top of whatever project executes the spec."
+    },
+    "modalCritic": "`AppModals.jsx` is confirmed a pure mounting wrapper (no shell, no max-w). `RegulationsReference` is not mounted in AppModals — it's reached only through VAResources, which is why the inventory (event-driven scan) missed it. The `StressReliefDivision` overlay is mounted in `AppShellTop`. All `aria-modal` files are otherwise covered.\n\nI have enough to compile the final report.\n\n{\"missed\":[{\"file\":\"src/components/RegulationsReference.jsx\",\"name\":\"RegulationsReference\",\"why\":\"Top-level modal: 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4' with role=dialog + aria-modal, inner 'max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col', gradient header, onClose. Not event-driven (opened from VAResources.jsx via setShowRegulationsReference, line 689-691), so the inventory's openX-event scan missed it. size='xl'/'2xl'. Genuine standalone modal.\"},{\"file\":\"src/components/TermsOfServicePage.jsx\",\"name\":\"TermsOfServicePage\",\"why\":\"DISTINCT from the inventoried TermsOfServiceModal.jsx. Full-screen page-scroll modal: 'fixed inset-0 z-50 overflow-y-auto bg-gray-900' + 'max-w-5xl mx-auto ... min-h-screen' with sticky red header. Opened via openTermsOfService window event through LegalPages.jsx (lazy-imported), rendered as {showTerms && <TermsOfServicePage/>}. The inventory only captured the small first-run TOS-acceptance gate (TermsOfServiceModal.jsx, modalClasses helper) and conflated/omitted this full-page variant. size='full'.\"},{\"file\":\"src/components/VisionSimulator.jsx (src/features/vision/VisionSimulator.jsx)\",\"name\":\"VisionSimulator\",\"why\":\"Top-level modal mounted in AppModals.jsx (line 126). 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4' + 'max-w-2xl w-full max-h-[90vh] overflow-y-auto', floating corner close button (no role=dialog, no focus trap). Opens on openVisionSimulator window event (fired by LocalAIPanel line 2690). Wraps lazy VisionSimulatorPanel. Completely absent from inventory. size='lg'/'xl'.\"},{\"file\":\"src/features/small-screen-warning/SmallScreenWarning.jsx\",\"name\":\"SmallScreenWarning\",\"why\":\"Top-level blocking modal mounted in AppShellOverlays.jsx (line 24). 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4' + 'max-w-md' amber-bordered panel with Continue / Email CTAs. Shown when innerWidth<640, dismissal persisted in sessionStorage. No role=dialog, no focus trap. Absent from inventory. size='md'.\"},{\"file\":\"src/components/StressReliefDivision.jsx\",\"name\":\"StressReliefDivision (Doom easter egg)\",\"why\":\"Top-level overlay mounted in AppShellTop.jsx (line 35). Main overlay 'fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4' with role=dialog + aria-label, plus a sibling 'fixed inset-0 z-[9998]' CRT-glitch decorative layer. ESC-to-close, [X] EXIT CTA. Absent from inventory. Very high z (9999) — like the safety overlays, would need elevated z if migrated. size='full'.\"},{\"file\":\"src/components/FeatureLookup.jsx\",\"name\":\"FeatureLookup (admin)\",\"why\":\"Full-screen admin shell 'fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col' rendered inside AdminPanel.jsx (line 124) with onClose. Also contains a NESTED status-update modal at line 730 ('fixed inset-0 bg-black/70 ... z-50' + max-w-md). Admin-only, low priority, but a genuine overlay missing from inventory. size='full' + nested 'md'.\"},{\"file\":\"src/components/BugLookup.jsx\",\"name\":\"BugLookup (admin)\",\"why\":\"Full-screen admin shell 'fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col' rendered inside AdminPanel.jsx (line 120) with onClose. Contains a NESTED resolve modal at line 751 ('fixed inset-0 bg-black/70 ... z-50' + max-w-md). Admin-only. Absent from inventory. size='full' + nested 'md'.\"},{\"file\":\"src/components/DD214FormBuilder.jsx\",\"name\":\"DD214FormBuilder\",\"why\":\"createPortal modal: 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm' + 'max-w-4xl max-h-[90vh] flex flex-col'. Rendered from DD214Analyzer.jsx (line 2359) — which IS in the inventory but marked nestedChildModals:false. This is a missed nested/child modal that stacks above DD214Analyzer at z-[9999]. size='xl'.\"},{\"file\":\"src/components/PublicationsLibrary.jsx\",\"name\":\"PublicationDetailsModal\",\"why\":\"Nested child modal inside PublicationsLibrary.jsx (line 165): 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4' + 'max-w-2xl max-h-[90vh] overflow-y-auto'. The inventory captured the PublicationsLibraryModal wrapper but set nestedChildModals:false — this detail modal is a missed child. size='lg'.\"},{\"file\":\"src/components/Pathfinder.jsx\",\"name\":\"Pathfinder 'File Drop In' modal\",\"why\":\"Pathfinder.jsx is the body rendered inside the inventoried PathfinderModal (PathfinderModal.jsx line 125), which the inventory marked nestedChildModals:false. It contains a nested 'File Drop In Modal' at line 1115 ('fixed inset-0 z-50 ... bg-black/50 backdrop-blur-sm' + 'max-w-lg max-h-[90vh]'). Missed nested child. size='lg'.\"}],\"misclassifiedRisk\":[{\"file\":\"src/features/pathfinder/PathfinderModal.jsx\",\"was\":\"nestedChildModals:false\",\"shouldBe\":\"nestedChildModals:true\",\"why\":\"Its body component Pathfinder.jsx renders a nested 'File Drop In' modal (line 1115) and also mounts VAGovRatingPaster (line 1105). Inventory's nestedChildModals:false is wrong.\"},{\"file\":\"src/features/publications/PublicationsLibraryModal.jsx\",\"was\":\"nestedChildModals:false\",\"shouldBe\":\"nestedChildModals:true\",\"why\":\"Body component PublicationsLibrary.jsx renders a nested PublicationDetailsModal (line 165). Inventory missed it.\"},{\"file\":\"src/features/evidence-investigation/EvidenceInvestigationCluster.jsx → src/components/DD214Analyzer.jsx\",\"was\":\"nestedChildModals:false\",\"shouldBe\":\"nestedChildModals:true\",\"why\":\"DD214Analyzer renders DD214FormBuilder (line 2359), a z-[9999] createPortal modal. Inventory's nestedChildModals:false is wrong.\"}],\"inventoryLooksComplete\":false,\"notes\":\"Inventory covered 93 entries and is strong on event-driven modals, but its discovery method (openX window events + *Modal*.jsx names) systematically missed: (1) modals reached only through PARENT-COMPONENT state rather than window events — RegulationsReference (via VAResources), the admin shells FeatureLookup/BugLookup (via AdminPanel); (2) a distinct full-page variant — TermsOfServicePage.jsx vs the inventoried TermsOfServiceModal.jsx (two different files, only one captured); (3) overlays mounted in shell wrappers, not AppModals — VisionSimulator (AppModals does mount it, plain miss), SmallScreenWarning (AppShellOverlays), StressReliefDivision (AppShellTop); (4) several nested child modals under modals it marked nestedChildModals:false (DD214FormBuilder, PublicationDetailsModal, Pathfinder drop-in). Risk classifications, shellPattern descriptions, size recommendations, z-index notes, and the topByRisk ordering for the entries it DID capture are accurate and well-reasoned. VADataCenter's dual-mode/hasRoleDialog:false call is correct. AppModals.jsx and AppShellOverlays.jsx are pure mounting wrappers (no own shell) and correctly excluded. Net: ~10 additional modal surfaces (3 top-level, 2 full-screen admin, 5 nested children) plus 3 nestedChildModals flags to flip. True modal-surface count is closer to ~103.\"}",
+    "gridCritic": "That confirms my spot-check set. Here is my independent audit.\n\n{\"greppedTotal\":200,\"firstAgentTotal\":47,\"likelyMissed\":[{\"file\":\"src\\\\components\\\\WhatIfSandbox.jsx\",\"line\":369,\"why\":\"grid grid-cols-4 with col-span-1 sidebar + col-span-3 canvas; layout-critical fixed-track grid the first agent's 47-item set omitted. Mechanical grid-cols-1 sm:.. rewrite breaks the col-span math.\"},{\"file\":\"src\\\\components\\\\FOIAGenerator.jsx\",\"line\":558,\"why\":\"grid grid-cols-6 with col-span-3/col-span-1 children (City/State/Zip row). Fixed 6-track dependency; not in first agent's count.\"},{\"file\":\"src\\\\components\\\\DemoDashboard.jsx\",\"line\":672,\"why\":\"grid grid-cols-5 status bar with 5 hardcoded sibling cards; 5 does not map cleanly to a 1/2/4 ladder. Omitted by first agent.\"},{\"file\":\"src\\\\components\\\\TacticalCalculator.jsx\",\"line\":1920,\"why\":\"One of 12 grid-cols- occurrences in this file alone; first agent's 47 total cannot cover the 200 real occurrences across 94 files.\"},{\"file\":\"src\\\\utils\\\\dossierExport.js\",\"line\":541,\"why\":\"grid-template-columns: repeat(auto-fit, minmax(250px,1fr)) inside an exported HTML string template. A className grep AND a grid-cols- grep both miss it; it is a real grid not expressible as grid-cols-1 sm:..\"}],\"cleanBucketSpotCheck\":[{\"file\":\"src\\\\components\\\\WhatIfSandbox.jsx\",\"verdict\":\"ambiguous\",\"why\":\"Children use col-span-1 / col-span-3 against a fixed grid-cols-4. Collapsing the base to grid-cols-1 makes col-span-3 exceed the track count and destroys the 1:3 sidebar/canvas split. NOT safe for a mechanical rewrite.\"},{\"file\":\"src\\\\components\\\\FOIAGenerator.jsx\",\"verdict\":\"ambiguous\",\"why\":\"grid-cols-6 form row with col-span-3/col-span-1 City/State fields. Fixed-column-count dependency; mechanical rewrite breaks field widths.\"},{\"file\":\"src\\\\components\\\\DemoDashboard.jsx\",\"verdict\":\"ambiguous\",\"why\":\"grid-cols-5 with exactly 5 hardcoded stat cards. No grid-cols-1 base; a 1/2/4 ladder leaves an orphan card and does not reflect the intended 5-up row. Needs a deliberate choice, not mechanical.\"},{\"file\":\"src\\\\components\\\\TacticalCalculator.jsx\",\"verdict\":\"clean\",\"why\":\"grid-cols-6 over a .map() of equal-width rating buttons; no col-span on children. Buttons reflow fine, so grid-cols-3 sm:grid-cols-6 style rewrite is mechanically safe.\"},{\"file\":\"src\\\\components\\\\AppealsLaneAdvisor.jsx\",\"verdict\":\"clean\",\"why\":\"grid grid-cols-2 md:grid-cols-4 over uniform stat cells, no col-span, already responsive. Safe.\"}],\"looksComplete\":false,\"notes\":\"First agent's inventory is a severe undercount: independent grep finds 200 grid-cols- occurrences across 94 files excluding index.css (213 incl. index.css's 13), versus the claimed 47 items / 32 files — roughly 4x too low; the 47 'clean'+'ambiguous'+'excluded' buckets cannot have covered the surface. Files like FormsHelper.jsx (12), TacticalCalculator.jsx (12), MyPacket.jsx (10), HomeFeatureCards.jsx (8), AboutUs.jsx (6), FOIAGenerator.jsx (6) alone total ~54, already exceeding 47. No camelCase inline gridTemplateColumns style props exist in src (className grep is not missing JSX inline grids), but there IS one grep-invisible grid in src\\\\utils\\\\dossierExport.js (grid-template-columns in an exported HTML string, lines 541/655/822) that a grid-cols- audit misses entirely. The 'clean' bucket is also not trustworthy as a mechanical-rewrite green light: at least 3 of 5 high-risk spot-checks (WhatIfSandbox grid-cols-4, FOIAGenerator grid-cols-6, DemoDashboard grid-cols-5) have children with col-span- or fixed sibling counts and should be ambiguous. Recommend re-running the inventory from scratch and adding a 'col-span- / fixed-child-count' detector before any mechanical grid-cols-1 sm:.. rewrite.\"}"
+  }
+}
