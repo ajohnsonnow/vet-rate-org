@@ -14,7 +14,8 @@
  * `header` for a custom full-bleed bar (gradient gates, urgency states) — then
  * pass `labelledBy` pointing at the heading id inside it. `showClose` hides the
  * default close-X, `dismissable={false}` removes ESC/backdrop close (mandatory
- * consent gates), and `zIndex` lifts nested children above their parent shell.
+ * consent gates), `zIndex` lifts nested children above their parent shell, and
+ * `backdropClassName` overrides the default scrim (e.g. a branded gradient).
  *
  * Migration target for the legacy `max-w-* + max-h-[90vh]` modals
  * (docs/SPRINT_PLAN_S9-S17.md, Layer 3).
@@ -50,6 +51,7 @@ export default function ResponsiveModal({
   closeOnBackdrop = true,
   labelledBy,
   className = "",
+  backdropClassName = "",
 }) {
   const panelRef = useRef(null);
   const generatedId = useId();
@@ -65,7 +67,9 @@ export default function ResponsiveModal({
 
   const modal = (
     <div
-      className="fixed inset-0 flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 flex items-stretch justify-center backdrop-blur-sm sm:items-center sm:p-4 ${
+        backdropClassName || "bg-black/60"
+      }`}
       style={{ zIndex }}
       onMouseDown={(e) => {
         if (dismissable && closeOnBackdrop && e.target === e.currentTarget)

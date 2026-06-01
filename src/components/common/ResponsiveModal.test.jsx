@@ -137,4 +137,20 @@ describe("ResponsiveModal", () => {
       zIndex: "100",
     });
   });
+
+  it("uses backdropClassName instead of the default scrim when provided", () => {
+    render(
+      <ResponsiveModal
+        isOpen
+        onClose={() => {}}
+        title="T"
+        backdropClassName="bg-gradient-to-br from-va-blue/95 to-green-900/95"
+      >
+        content
+      </ResponsiveModal>,
+    );
+    const overlay = screen.getByRole("dialog").parentElement;
+    expect(overlay.className).toContain("from-va-blue/95");
+    expect(overlay.className).not.toContain("bg-black/60");
+  });
 });

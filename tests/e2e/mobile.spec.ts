@@ -1,5 +1,13 @@
+import { readFileSync } from "node:fs";
 import { test, expect, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
+
+// Current release, read from package.json (Playwright's cwd is the repo root).
+// The "returning user" fixture below marks this version as already-seen so the
+// What's New modal stays closed.
+const APP_VERSION: string = JSON.parse(
+  readFileSync("package.json", "utf-8"),
+).version;
 
 /**
  * Mobile layout gate (audit cycle S9–S17). Validates the S9 safety-net on the
@@ -41,11 +49,39 @@ async function pageOverflow(page: Page): Promise<number> {
   });
 }
 
-/** Worst right-edge overflow of any visible descendant of the topmost overlay. */
+/**
+ * Worst right-edge overflow of any visible descendant of the topmost overlay
+ * whose bleed is not contained by an ancestor clip/scroll context.
+ *
+ * `getBoundingClientRect()` reports the unclipped layout box, so a decorative
+ * flourish clipped by a header's `overflow:hidden`, or a tab inside an
+ * intentional `overflow-x:auto` scroller, shows a `right` past the viewport
+ * while causing no page/panel scroll. `containsX` walks each offender's
+ * ancestors up to the overlay and discounts that contained bleed — it is not a
+ * horizontal-overflow defect. Document scroll is still asserted independently
+ * via `pageOverflow`.
+ */
 async function overlayOverflow(
   page: Page,
 ): Promise<{ found: boolean; overflow: number }> {
   return page.evaluate(() => {
+    const containsX = (el: Element, root: Element): boolean => {
+      let p = el.parentElement;
+      while (p) {
+        const ox = getComputedStyle(p).overflowX;
+        if (
+          ox === "hidden" ||
+          ox === "clip" ||
+          ox === "auto" ||
+          ox === "scroll"
+        )
+          return true;
+        if (p === root) break;
+        p = p.parentElement;
+      }
+      return false;
+    };
+
     const overlays = Array.from(
       document.querySelectorAll('[role="dialog"], .fixed.inset-0'),
     ).filter((el) => {
@@ -61,7 +97,8 @@ async function overlayOverflow(
       if (el.getAttribute("aria-hidden") === "true") return;
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return;
-      if (r.right > vw + 1) worst = Math.max(worst, r.right - vw);
+      if (r.right > vw + 1 && !containsX(el, overlay))
+        worst = Math.max(worst, r.right - vw);
     });
     return { found: true, overflow: Math.round(worst) };
   });
@@ -79,6 +116,23 @@ async function inspectResponsiveModal(page: Page): Promise<{
   ctaInViewport: boolean;
 }> {
   return page.evaluate(() => {
+    const containsX = (el: Element, root: Element): boolean => {
+      let p = el.parentElement;
+      while (p) {
+        const ox = getComputedStyle(p).overflowX;
+        if (
+          ox === "hidden" ||
+          ox === "clip" ||
+          ox === "auto" ||
+          ox === "scroll"
+        )
+          return true;
+        if (p === root) break;
+        p = p.parentElement;
+      }
+      return false;
+    };
+
     const footer = document.querySelector(".modal-footer");
     const panel = footer?.closest('[role="dialog"]');
     if (!footer || !panel)
@@ -95,7 +149,8 @@ async function inspectResponsiveModal(page: Page): Promise<{
       if (el.getAttribute("aria-hidden") === "true") return;
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return;
-      if (r.right > vw + 1) worst = Math.max(worst, r.right - vw);
+      if (r.right > vw + 1 && !containsX(el, panel))
+        worst = Math.max(worst, r.right - vw);
     });
 
     const fr = footer.getBoundingClientRect();
@@ -108,18 +163,51 @@ async function inspectResponsiveModal(page: Page): Promise<{
   });
 }
 
+/**
+ * Dispatch a modal-open window event until the modal appears, re-firing it on
+ * every poll tick. The feature clusters that own these modals are lazy-loaded,
+ * so a single dispatch sent before the cluster's listener attaches is silently
+ * lost. Every open handler is an idempotent `setShow(true)`, so re-dispatching
+ * is safe. `probe` returns the overlay's `found` flag for the modal's family.
+ */
+async function openModalByEvent(
+  page: Page,
+  event: string,
+  probe: (page: Page) => Promise<{ found: boolean }>,
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        await page.evaluate((evt) => {
+          window.dispatchEvent(new CustomEvent(evt));
+        }, event);
+        return (await probe(page)).found;
+      },
+      { timeout: 6000 },
+    )
+    .toBe(true);
+}
+
 for (const vp of VIEWPORTS) {
   test.describe(`mobile @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test.beforeEach(async ({ page }) => {
-      // Pre-dismiss the <640px SmallScreenWarning so the gate measures the real
-      // app, not the warning overlay (which would otherwise sit at z-[100] over
-      // every modal and race the lazy chunk load). Mirrors a real mobile user
-      // tapping "Continue Anyway"; becomes a no-op once the warning is removed.
-      await page.addInitScript(() => {
+      // Returning-user fixture: boot the app with every first-run overlay
+      // already cleared so the only modal on screen is the one each test opens.
+      //   - small-screen-dismissed: skips the <640px SmallScreenWarning (z-100).
+      //   - tos-accepted: skips the migrated ToS gate (now a role=dialog with a
+      //     `.modal-footer` that the locators below would otherwise grab).
+      //   - last_seen_version: ToS-accepted alone trips the What's New modal
+      //     (useUpdateOrchestrator) — marking this release seen suppresses it.
+      //   - tour-completed: and 500ms after ToS, BootCampTour auto-starts; this
+      //     skips it. The gates' own coverage lives in the "consent gates" block.
+      await page.addInitScript((appVersion) => {
         sessionStorage.setItem("vetrate-small-screen-dismissed", "true");
-      });
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+      }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);
     });
@@ -130,15 +218,7 @@ for (const vp of VIEWPORTS) {
 
     for (const modal of MODALS) {
       test(`${modal.label} modal fits the viewport`, async ({ page }) => {
-        await page.evaluate((evt) => {
-          window.dispatchEvent(new CustomEvent(evt));
-        }, modal.event);
-
-        await expect
-          .poll(async () => (await overlayOverflow(page)).found, {
-            timeout: 6000,
-          })
-          .toBe(true);
+        await openModalByEvent(page, modal.event, overlayOverflow);
 
         const { overflow } = await overlayOverflow(page);
         expect(overflow).toBeLessThanOrEqual(1);
@@ -150,15 +230,7 @@ for (const vp of VIEWPORTS) {
       test(`${modal.label} (ResponsiveModal) keeps its CTA in view`, async ({
         page,
       }) => {
-        await page.evaluate((evt) => {
-          window.dispatchEvent(new CustomEvent(evt));
-        }, modal.event);
-
-        await expect
-          .poll(async () => (await inspectResponsiveModal(page)).found, {
-            timeout: 6000,
-          })
-          .toBe(true);
+        await openModalByEvent(page, modal.event, inspectResponsiveModal);
 
         const m = await inspectResponsiveModal(page);
         expect(m.overflow).toBeLessThanOrEqual(1);
@@ -167,5 +239,61 @@ for (const vp of VIEWPORTS) {
         expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
       });
     }
+  });
+
+  // The first-run consent gates (S10): both migrated to ResponsiveModal with a
+  // custom header + sticky-footer CTA + dismissable=false. They are not opened
+  // by an event — DisclaimerSplash auto-shows on first visit and ToS follows
+  // once the disclaimer is acknowledged — so they get their own setup (no
+  // pre-accept) and assert the same footer-CTA-in-viewport contract.
+  test.describe(`consent gates @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(() => {
+        sessionStorage.setItem("vetrate-small-screen-dismissed", "true");
+      });
+      await page.goto("/");
+    });
+
+    test("DisclaimerSplash keeps its CTA in view", async ({ page }) => {
+      await expect
+        .poll(async () => (await inspectResponsiveModal(page)).found, {
+          timeout: 6000,
+        })
+        .toBe(true);
+
+      const m = await inspectResponsiveModal(page);
+      expect(m.overflow).toBeLessThanOrEqual(1);
+      expect(m.hasButton).toBe(true);
+      expect(m.ctaInViewport).toBe(true);
+      expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+    });
+
+    test("TermsOfServiceModal keeps its CTA in view", async ({ page }) => {
+      await dismissDisclaimer(page);
+
+      // ToS polls for the acknowledged disclaimer, then opens after ~300ms with
+      // a read-gate countdown. The Accept button is disabled until the timer
+      // ends, but it is present and positioned — layout is what we assert here.
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(
+              () =>
+                !!document.querySelector(
+                  '[role="dialog"][aria-labelledby="tos-title"]',
+                ),
+            ),
+          { timeout: 8000 },
+        )
+        .toBe(true);
+
+      const m = await inspectResponsiveModal(page);
+      expect(m.overflow).toBeLessThanOrEqual(1);
+      expect(m.hasButton).toBe(true);
+      expect(m.ctaInViewport).toBe(true);
+      expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+    });
   });
 }
