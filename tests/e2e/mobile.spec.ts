@@ -104,6 +104,17 @@ const MODALS = [
   // a bare open* event; both are exercised via those flows.
   { label: "VKB Timeline", event: "openVKBTimeline" },
   { label: "VKB Viewer", event: "openVKBViewer" },
+  // Cluster F (S10): PainPainter is a permanently-dark gradient panel — its
+  // "Pro Tip" line is plain text (no CTA), so it lives in the body, not the
+  // footer slot, and the modal asserts the overflow contract here. Its Save Map
+  // child lifts to zIndex={70} above the z-60 shell and opens only after tapping
+  // Save, so it has no bare open* event. BackupManager ("The Bunker") uses a
+  // gradient header slot with no always-present footer CTA; its Confirm-Clear
+  // child lifts to zIndex={70} and opens only after tapping Clear All Data. (Its
+  // CloudSyncManager / DbqBrowser launches are separate components, migrated
+  // independently.) Both nested children are exercised via those flows.
+  { label: "Pain Painter", event: "openPainPainter" },
+  { label: "Backup Manager", event: "openBackupManager" },
 ];
 
 /**
