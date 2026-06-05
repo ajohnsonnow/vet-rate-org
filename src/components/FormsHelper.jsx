@@ -14,7 +14,7 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
   enhanceFormStatement,
@@ -46,7 +46,6 @@ import {
  */
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // AI Status monitoring
   const [aiStatus, setAIStatus] = useState(getAIStatus());
@@ -7435,19 +7434,19 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4">
-      <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
-        <div
-          ref={formsContentRef}
-          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden flex flex-col max-h-[90vh]"
-        >
-          {/* Header */}
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="forms-helper-title"
+        header={
           <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📋</span>
                 <div>
-                  <h2 className="text-xl font-bold">
+                  <h2 id="forms-helper-title" className="text-xl font-bold">
                     {t("formsHelper", "title")}
                   </h2>
                   <p className="text-violet-100 text-sm">
@@ -7490,28 +7489,31 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
             </div>
           </div>
-
-          {/* Content - Scrollable */}
-          <div className="overflow-y-auto flex-1 p-6">{renderContent()}</div>
-
-          {/* Footer */}
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
-            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
-              <p>📌 {t("formsHelper", "footerPrivacy")}</p>
-              <BuyMeCoffee show={true} trigger="forms-helper" />
-            </div>
+        }
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <p>📌 {t("formsHelper", "footerPrivacy")}</p>
           </div>
-        </div>
+        }
+      >
+        <div ref={formsContentRef}>{renderContent()}</div>
+      </ResponsiveModal>
+
+      {/* Luna encouragement — lifted above the z-60 shell */}
+      <div className="relative z-[70]">
+        <BuyMeCoffee show={true} trigger="forms-helper" />
       </div>
 
-      {/* AI Consent Modal */}
-      <AIConsentModal
-        isOpen={showAIConsent}
-        onConsent={handleAIConsent}
-        onCancel={handleAICancel}
-        statementType={getAIStatementType()}
-      />
-    </div>
+      {/* AI consent gate — lifted above the z-60 shell */}
+      <div className="relative z-[70]">
+        <AIConsentModal
+          isOpen={showAIConsent}
+          onConsent={handleAIConsent}
+          onCancel={handleAICancel}
+          statementType={getAIStatementType()}
+        />
+      </div>
+    </>
   );
 };
 
