@@ -15,7 +15,7 @@
 
 import React, { useState, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   Document,
@@ -272,8 +272,6 @@ const generateRequestText = (formData, selectedRecords) => {
 
 export default function FOIAGenerator({ onClose, onReportBug }) {
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -1151,64 +1149,65 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden relative modal-content flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header - Fixed at top */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🔑</span>
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  The Keysmith{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-amber-100">
-                  FOIA / C-File Request Generator
-                </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="foia-generator-title"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🔑</span>
+                <div>
+                  <h2
+                    id="foia-generator-title"
+                    className="text-xl font-bold text-white"
+                  >
+                    The Keysmith{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-amber-100">
+                    FOIA / C-File Request Generator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="FOIA Keysmith"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="FOIA Keysmith"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
-        </div>
-
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto">
+        }
+      >
+        <div>
           {/* Progress Steps */}
           <div className="px-6 pt-6">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -1274,15 +1273,15 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
               </div>
             )}
           </div>
-
-          {/* BuyMeCoffee - shows on download page */}
-          {step === 3 && (
-            <div className="p-6 pt-0">
-              <BuyMeCoffee show={true} trigger="foia" />
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+      </ResponsiveModal>
+
+      {/* BuyMeCoffee - shows on download page */}
+      {step === 3 && (
+        <div className="relative z-[70]">
+          <BuyMeCoffee show={true} trigger="foia" />
+        </div>
+      )}
+    </>
   );
 }
