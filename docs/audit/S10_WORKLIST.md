@@ -94,9 +94,9 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 - **Cluster D — multi-step wizards: all ✅** (D1 `1b796a1`, D2 `f86066d`). TDIUBuilder, BDDBuilder
   (max-h-95vh), WitnessBench, PACTActNavigator, RiskAssessment, FOIAGenerator, FormsHelper, DD214Analyzer.
   Per-step nav lives in-body (overflow contract); only DD214Analyzer's single action bar uses the footer slot.
-- **Cluster E — wide tables / page-scroll → size='full':** SecondaryScout (max-w-7xl),
-  ConsistencyEngine (2 shells, max-w-7xl), CommunityRoadmap (z-100, max-w-7xl), CFileAnalyzer
-  (upload+results 2 shells), VAAITransparency, RecordSearch, MusterCall.
+- **Cluster E — wide tables / page-scroll → size='full': all ✅** (`4d4f3cc`). SecondaryScout
+  results, ConsistencyEngine (2 shells), CommunityRoadmap, CFileAnalyzer, VAAITransparency,
+  RecordSearch, MusterCall → size="full". See progress log for grouping detail.
 - **Cluster F — nested children (z-index care, migrate child → its own ResponsiveModal):**
   MyPacket (4 nested z-60 + confirm), CAPSimulator (8 shells in one file), VKBTimeline,
   VKBViewer, PainPainter (nested confirm), BackupManager (2 confirms), ClaimNavigator,
@@ -122,6 +122,23 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster E migrated — all ✅ (commit `4d4f3cc`; type-check + 803 unit + 0 lint errors +
+  105 full mobile e2e @360/390/768 chromium, no regression):** wide-table / page-scrolling
+  tools (legacy `max-w-6xl`/`max-w-7xl`) → `size="full"` so they go full-bleed on phones and
+  keep a desktop ceiling. Two overflow-contract groups in `mobile.spec.ts`:
+  - **MODALS (overflow-only probe):** Record Search, Consistency Engine, C-File Analyzer,
+    Muster Call. Their footer slot carries status/disclaimer text or a CTA that is conditional
+    and **absent on a fresh open**, so they are not asserted to have an in-viewport footer button.
+  - **MIGRATED_MODALS (footer Close CTA probe):** VA AI Transparency, Community Roadmap.
+  - **Not e2e-listed:** Secondary Scout *results* (DiscoverCluster wrapper) — migrated, but it
+    mounts only via the launcher `onLaunch` flow with no bare `open*` event to dispatch (mirrors
+    the existing NexusBuilder/DemoDashboard exclusions).
+  ConsistencyEngine has **two** shells (AI tab `size="full"` `!bg-gray-900`; rules tab
+  `size="2xl"`) sharing one `consistency-engine-title` id (never rendered together); its rules
+  status grid gained `grid-cols-2 sm:grid-cols-4`. CFileAnalyzer's privacy-consent gate is
+  lifted out of the body to a `z-[70]` Fragment sibling so its `fixed` overlay paints above the
+  z-60 shell. MusterCall uses `dismissable={!processing}` to keep its lock-during-processing
+  behavior (blocks ESC + backdrop close while a file is processing).
 - **Cluster D migrated — all ✅ (D1 commit `1b796a1`, D2 commit `f86066d`; type-check +
   803 unit + 0 lint errors + 174 mobile e2e @360/390/768 across chromium/mobile-chrome):**
   multi-step wizards. Their per-step nav (Back/Continue/Submit) lives inside each step
