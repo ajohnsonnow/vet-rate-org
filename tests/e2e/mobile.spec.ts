@@ -72,6 +72,22 @@ const MODALS = [
   // z-60 shell. (DD214Analyzer, the other D2 tool, has a real action bar and so
   // lives in MIGRATED_MODALS below.)
   { label: "Forms Helper", event: "openFormsHelper" },
+  // Cluster E (S10): wide-table / page-scroll tools migrated to size="full".
+  // RecordSearch and ConsistencyEngine are permanently-dark, header-close-only
+  // panels (no footer slot). CFileAnalyzer and MusterCall do render a footer
+  // slot, but its only always-present content is disclaimer text / a mode-status
+  // line — their real CTAs are conditional (a file must be dropped first) and so
+  // are absent on fresh open. All four therefore assert the overflow contract
+  // here. CFileAnalyzer's mandatory privacy-consent gate is lifted to a
+  // `relative z-[70]` sibling to clear the z-60 shell.
+  // Not listed: Secondary Scout *results* (the SecondaryScout body modal in
+  // DiscoverCluster) — also migrated to size="full", but it mounts only after
+  // the Secondary Scout Launcher's onLaunch picks conditions (no bare event sets
+  // `showSecondaryScout`), so it is exercised via that flow manually.
+  { label: "Record Search", event: "openRecordSearch" },
+  { label: "Consistency Engine", event: "openConsistencyEngine" },
+  { label: "C-File Analyzer", event: "openCFileAnalyzer" },
+  { label: "Muster Call", event: "openMusterCall" },
 ];
 
 /**
@@ -101,6 +117,12 @@ const MIGRATED_MODALS = [
   // DD214FormBuilder both portal to document.body, so they clear the shell
   // without a lift wrapper.
   { label: "DD214 Analyzer", event: "openDD214Analyzer" },
+  // Cluster E (S10): standard-themed wide modals migrated to size="full" with a
+  // real Close CTA in the sticky-footer slot — assert it stays in view.
+  // VAAITransparency combines its gradient header + tab strip in the header
+  // slot; CommunityRoadmap keeps its privacy note + Close in the footer slot.
+  { label: "VA AI Transparency", event: "openVAAITransparency" },
+  { label: "Community Roadmap", event: "openCommunityRoadmap" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */

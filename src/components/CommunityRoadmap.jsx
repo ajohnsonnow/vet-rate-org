@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import changelogData from "../data/changelog.json";
 import { SQUASHED_BUGS } from "../data/squashedBugs";
 
@@ -624,9 +624,6 @@ function CommunityRoadmap({ onClose }) {
   const { t } = useLanguage();
   const { isDark } = useTheme();
 
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
-
   // State
   const [roadmapItems, setRoadmapItems] = useState(INITIAL_ROADMAP_ITEMS);
   const [userVotes, setUserVotes] = useState([]);
@@ -736,42 +733,48 @@ function CommunityRoadmap({ onClose }) {
   }, [roadmapItems]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-      <div className="min-h-screen px-4 py-8 flex items-start justify-center w-full">
-        <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] flex flex-col modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 rounded-xl p-2">
-                  <svg
-                    className="w-8 h-8"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">🗺️ Community Roadmap</h2>
-                  <p className="text-purple-100 text-sm">
-                    Vote on features • See what's coming • Submit your ideas
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Close roadmap"
-              >
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="full"
+      labelledBy="community-roadmap-title"
+      className="!bg-gray-100 dark:!bg-gray-900"
+      footer={
+        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+            <span>
+              <strong>Privacy-First:</strong> Votes & submissions stored locally
+              on your device only
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+          >
+            Close
+          </button>
+        </div>
+      }
+      header={
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 rounded-xl p-2">
                 <svg
-                  className="w-6 h-6"
+                  className="w-8 h-8"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -780,120 +783,26 @@ function CommunityRoadmap({ onClose }) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
                   />
                 </svg>
-              </button>
-            </div>
-
-            {/* Stats Bar */}
-            <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full">
-                  {stats.totalShipped} shipped
-                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full">
-                  {stats.features} features
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full">
-                  {stats.bugFixes} bugs squashed
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full">
-                  {stats.improvements} improvements
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full">
-                  {userVotes.length} your votes
-                </span>
+              <div>
+                <h2 id="community-roadmap-title" className="text-2xl font-bold">
+                  🗺️ Community Roadmap
+                </h2>
+                <p className="text-purple-100 text-sm">
+                  Vote on features • See what's coming • Submit your ideas
+                </p>
               </div>
             </div>
-          </div>
-
-          {/* Action Bar */}
-          <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium text-gray-900 dark:text-white">
-                  Your voice matters!
-                </span>{" "}
-                Vote for features you want, or submit your own idea.
-              </div>
-
-              <button
-                onClick={() => setShowSubmitForm(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-lg shrink-0"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Submit Feature Request
-              </button>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {FILTER_TABS.map((tab) => {
-                const count =
-                  tab.id === "all"
-                    ? roadmapItems.filter((i) => i.status === "live").length
-                    : roadmapItems.filter(
-                        (i) => i.status === "live" && i.itemType === tab.id,
-                      ).length;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveFilter(tab.id)}
-                    className={`
-                      px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5
-                      ${
-                        activeFilter === tab.id
-                          ? "bg-indigo-600 text-white shadow-md"
-                          : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                      }
-                    `}
-                  >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
-                    <span
-                      className={`
-                      px-1.5 py-0.5 rounded-full text-xs
-                      ${
-                        activeFilter === tab.id
-                          ? "bg-white/20"
-                          : "bg-gray-200 dark:bg-gray-600"
-                      }
-                    `}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mx-6 mt-4 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="Close roadmap"
+            >
               <svg
-                className="w-5 h-5 text-green-600 dark:text-green-400"
+                className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -902,129 +811,217 @@ function CommunityRoadmap({ onClose }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 13l4 4L19 7"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <span className="text-sm text-green-700 dark:text-green-300">
-                {successMessage}
+            </button>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                {stats.totalShipped} shipped
               </span>
             </div>
-          )}
-
-          {/* Submit Form (when open) */}
-          {showSubmitForm && (
-            <div className="px-6 py-4">
-              <SubmitFeatureForm
-                onSubmit={handleSubmit}
-                onCancel={() => setShowSubmitForm(false)}
-              />
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                {stats.features} features
+              </span>
             </div>
-          )}
-
-          {/* Kanban Board */}
-          {!showSubmitForm && (
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {ROADMAP_COLUMNS.map((column) => {
-                  const items = getItemsForColumn(column.id);
-
-                  return (
-                    <div
-                      key={column.id}
-                      className={`
-                        rounded-xl ${column.bgColor} border ${column.borderColor}
-                        flex flex-col max-h-[600px]
-                      `}
-                    >
-                      {/* Column Header */}
-                      <div
-                        className={`${column.headerBg} rounded-t-xl px-4 py-3 border-b ${column.borderColor}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-                            {column.title}
-                          </h3>
-                          <span className="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full font-medium">
-                            {items.length}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          {column.subtitle}
-                        </p>
-                      </div>
-
-                      {/* Column Items - Scrollable */}
-                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                        {items.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-                            {column.id === "requested" ? (
-                              <div>
-                                <p className="mb-2">
-                                  No community requests yet.
-                                </p>
-                                <button
-                                  onClick={() => setShowSubmitForm(true)}
-                                  className="text-purple-600 dark:text-purple-400 font-medium hover:underline"
-                                >
-                                  Be the first! →
-                                </button>
-                              </div>
-                            ) : (
-                              <p>Nothing here yet</p>
-                            )}
-                          </div>
-                        ) : (
-                          items.map((item) => (
-                            <RoadmapCard
-                              key={item.id}
-                              item={item}
-                              onVote={handleVote}
-                              hasVoted={userVotes.includes(item.id)}
-                              isSubmitting={false}
-                            />
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                {stats.bugFixes} bugs squashed
+              </span>
             </div>
-          )}
-
-          {/* Footer */}
-          <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 rounded-b-2xl border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4 text-green-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                <span>
-                  <strong>Privacy-First:</strong> Votes & submissions stored
-                  locally on your device only
-                </span>
-              </div>
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
-              >
-                Close
-              </button>
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                {stats.improvements} improvements
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                {userVotes.length} your votes
+              </span>
             </div>
           </div>
         </div>
+      }
+    >
+      {/* Action Bar */}
+      <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-medium text-gray-900 dark:text-white">
+              Your voice matters!
+            </span>{" "}
+            Vote for features you want, or submit your own idea.
+          </div>
+
+          <button
+            onClick={() => setShowSubmitForm(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-lg shrink-0"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Submit Feature Request
+          </button>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {FILTER_TABS.map((tab) => {
+            const count =
+              tab.id === "all"
+                ? roadmapItems.filter((i) => i.status === "live").length
+                : roadmapItems.filter(
+                    (i) => i.status === "live" && i.itemType === tab.id,
+                  ).length;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
+                className={`
+                      px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5
+                      ${
+                        activeFilter === tab.id
+                          ? "bg-indigo-600 text-white shadow-md"
+                          : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      }
+                    `}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                <span
+                  className={`
+                      px-1.5 py-0.5 rounded-full text-xs
+                      ${
+                        activeFilter === tab.id
+                          ? "bg-white/20"
+                          : "bg-gray-200 dark:bg-gray-600"
+                      }
+                    `}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mx-6 mt-4 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
+          <svg
+            className="w-5 h-5 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span className="text-sm text-green-700 dark:text-green-300">
+            {successMessage}
+          </span>
+        </div>
+      )}
+
+      {/* Submit Form (when open) */}
+      {showSubmitForm && (
+        <div className="px-6 py-4">
+          <SubmitFeatureForm
+            onSubmit={handleSubmit}
+            onCancel={() => setShowSubmitForm(false)}
+          />
+        </div>
+      )}
+
+      {/* Kanban Board */}
+      {!showSubmitForm && (
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {ROADMAP_COLUMNS.map((column) => {
+              const items = getItemsForColumn(column.id);
+
+              return (
+                <div
+                  key={column.id}
+                  className={`
+                        rounded-xl ${column.bgColor} border ${column.borderColor}
+                        flex flex-col max-h-[600px]
+                      `}
+                >
+                  {/* Column Header */}
+                  <div
+                    className={`${column.headerBg} rounded-t-xl px-4 py-3 border-b ${column.borderColor}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+                        {column.title}
+                      </h3>
+                      <span className="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full font-medium">
+                        {items.length}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                      {column.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Column Items - Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                    {items.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                        {column.id === "requested" ? (
+                          <div>
+                            <p className="mb-2">No community requests yet.</p>
+                            <button
+                              onClick={() => setShowSubmitForm(true)}
+                              className="text-purple-600 dark:text-purple-400 font-medium hover:underline"
+                            >
+                              Be the first! →
+                            </button>
+                          </div>
+                        ) : (
+                          <p>Nothing here yet</p>
+                        )}
+                      </div>
+                    ) : (
+                      items.map((item) => (
+                        <RoadmapCard
+                          key={item.id}
+                          item={item}
+                          onVote={handleVote}
+                          hasVoted={userVotes.includes(item.id)}
+                          isSubmitting={false}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </ResponsiveModal>
   );
 }
 

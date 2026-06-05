@@ -14,7 +14,7 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import useConsistencyCheck, {
   getHealthStatus,
 } from "../utils/useConsistencyCheck";
@@ -22,9 +22,6 @@ import AIConsistencyAnalyzer from "./AIConsistencyAnalyzer";
 
 export default function ConsistencyEngine({ onClose }) {
   const { t } = useLanguage();
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
 
   const [activeTab, setActiveTab] = useState("rules"); // 'rules' or 'ai'
   const {
@@ -42,13 +39,20 @@ export default function ConsistencyEngine({ onClose }) {
   // If AI tab is selected, render the AI analyzer
   if (activeTab === "ai") {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-800 rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-          {/* Header with tabs */}
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="full"
+        labelledBy="consistency-engine-title"
+        className="!bg-gray-900"
+        header={
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <h2 className="text-2xl font-bold">
+                <h2
+                  id="consistency-engine-title"
+                  className="text-2xl font-bold"
+                >
                   🔍 The Consistency Engine
                 </h2>
                 {/* Tabs */}
@@ -84,12 +88,10 @@ export default function ConsistencyEngine({ onClose }) {
               </button>
             </div>
           </div>
-          {/* AI Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-80px)] bg-gray-900">
-            <AIConsistencyAnalyzer onBack={() => setActiveTab("rules")} />
-          </div>
-        </div>
-      </div>
+        }
+      >
+        <AIConsistencyAnalyzer onBack={() => setActiveTab("rules")} />
+      </ResponsiveModal>
     );
   }
 
@@ -103,9 +105,12 @@ export default function ConsistencyEngine({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header */}
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="consistency-engine-title"
+      header={
         <div
           className={`bg-gradient-to-r ${
             healthStatus.color === "green"
@@ -120,7 +125,10 @@ export default function ConsistencyEngine({ onClose }) {
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-4 mb-2">
-                <h2 className="text-3xl font-bold">
+                <h2
+                  id="consistency-engine-title"
+                  className="text-3xl font-bold"
+                >
                   {healthStatus.icon} The Consistency Engine{" "}
                   <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
                     BETA
@@ -165,7 +173,7 @@ export default function ConsistencyEngine({ onClose }) {
 
           {/* Status Summary */}
           <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-white/75 mb-1">Status</p>
                 <p className="text-2xl font-bold">{healthStatus.message}</p>
@@ -191,135 +199,132 @@ export default function ConsistencyEngine({ onClose }) {
             )}
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
-          {isChecking && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">
-                Running consistency checks...
-              </p>
-            </div>
-          )}
-
-          {!isChecking && contradictions.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">✓</div>
-              <h3 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
-                All Clear!
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                No contradictions detected in your data. Your claim packet is
-                internally consistent.
-              </p>
-              <button
-                onClick={refresh}
-                className="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
-              >
-                Re-check Now
-              </button>
-            </div>
-          )}
-
-          {!isChecking && contradictions.length > 0 && (
-            <>
-              {/* Critical Issues First */}
-              {criticalCount > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-3">
-                    🚨 Critical Issues (Fix Immediately)
-                  </h3>
-                  <div className="space-y-3">
-                    {contradictions
-                      .filter((c) => c.severity === "critical")
-                      .map((contradiction, index) => (
-                        <ContradictionCard
-                          key={index}
-                          contradiction={contradiction}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* High Priority */}
-              {highCount > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-orange-600 dark:text-orange-400 mb-3">
-                    ⚠️ High Priority Issues
-                  </h3>
-                  <div className="space-y-3">
-                    {contradictions
-                      .filter((c) => c.severity === "high")
-                      .map((contradiction, index) => (
-                        <ContradictionCard
-                          key={index}
-                          contradiction={contradiction}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Medium Priority */}
-              {mediumCount > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-3">
-                    ⚡ Medium Priority Issues
-                  </h3>
-                  <div className="space-y-3">
-                    {contradictions
-                      .filter((c) => c.severity === "medium")
-                      .map((contradiction, index) => (
-                        <ContradictionCard
-                          key={index}
-                          contradiction={contradiction}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Refresh Button */}
-              <div className="text-center mt-6">
-                <button
-                  onClick={refresh}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  Re-check for Contradictions
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Info Box */}
-          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded">
-            <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
-              💡 Why This Matters:
-            </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-              The VA looks for <strong>any reason to deny</strong>. Internal
-              contradictions are their favorite ammunition.
-            </p>
-            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>
-                • If you say "constant pain" but your logs show gaps, they'll
-                question your credibility
-              </li>
-              <li>
-                • If you say "left knee" in one place and "right knee" in
-                another, they'll deny everything
-              </li>
-              <li>
-                • If you claim you "can't lift 10 lbs" but logged a gym workout,
-                that's evidence against you
-              </li>
-            </ul>
-          </div>
+      }
+    >
+      {isChecking && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Running consistency checks...
+          </p>
         </div>
+      )}
+
+      {!isChecking && contradictions.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">✓</div>
+          <h3 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
+            All Clear!
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            No contradictions detected in your data. Your claim packet is
+            internally consistent.
+          </p>
+          <button
+            onClick={refresh}
+            className="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Re-check Now
+          </button>
+        </div>
+      )}
+
+      {!isChecking && contradictions.length > 0 && (
+        <>
+          {/* Critical Issues First */}
+          {criticalCount > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-3">
+                🚨 Critical Issues (Fix Immediately)
+              </h3>
+              <div className="space-y-3">
+                {contradictions
+                  .filter((c) => c.severity === "critical")
+                  .map((contradiction, index) => (
+                    <ContradictionCard
+                      key={index}
+                      contradiction={contradiction}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* High Priority */}
+          {highCount > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-orange-600 dark:text-orange-400 mb-3">
+                ⚠️ High Priority Issues
+              </h3>
+              <div className="space-y-3">
+                {contradictions
+                  .filter((c) => c.severity === "high")
+                  .map((contradiction, index) => (
+                    <ContradictionCard
+                      key={index}
+                      contradiction={contradiction}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Medium Priority */}
+          {mediumCount > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-3">
+                ⚡ Medium Priority Issues
+              </h3>
+              <div className="space-y-3">
+                {contradictions
+                  .filter((c) => c.severity === "medium")
+                  .map((contradiction, index) => (
+                    <ContradictionCard
+                      key={index}
+                      contradiction={contradiction}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Refresh Button */}
+          <div className="text-center mt-6">
+            <button
+              onClick={refresh}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Re-check for Contradictions
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Info Box */}
+      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded">
+        <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
+          💡 Why This Matters:
+        </h4>
+        <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+          The VA looks for <strong>any reason to deny</strong>. Internal
+          contradictions are their favorite ammunition.
+        </p>
+        <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+          <li>
+            • If you say "constant pain" but your logs show gaps, they'll
+            question your credibility
+          </li>
+          <li>
+            • If you say "left knee" in one place and "right knee" in another,
+            they'll deny everything
+          </li>
+          <li>
+            • If you claim you "can't lift 10 lbs" but logged a gym workout,
+            that's evidence against you
+          </li>
+        </ul>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }
 
