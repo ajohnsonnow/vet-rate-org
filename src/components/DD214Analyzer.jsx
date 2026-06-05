@@ -13,7 +13,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   generateAI,
   generateAIWithImage,
@@ -388,7 +388,6 @@ const DD214Analyzer = ({
   onOpenMusterCall,
 }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // State
   const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
@@ -1439,58 +1438,109 @@ const DD214Analyzer = ({
     originalPDFFiles.length > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">📜</span>
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                {t("dd214Analyzer", "title")}{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                  {t("dd214Analyzer", "beta")}
-                </span>
-              </h2>
-              <p className="text-sm text-blue-200">
-                {t("dd214Analyzer", "subtitle")}
-              </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="dd214-analyzer-title"
+        footer={
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              {hasInput && (
+                <button
+                  onClick={handleClearAll}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                >
+                  {t("dd214Analyzer", "clearAll")}
+                </button>
+              )}
+
+              {analysisResult && (
+                <button
+                  onClick={handleSaveResults}
+                  className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  💾 {t("dd214Analyzer", "saveToProfile")}
+                </button>
+              )}
+
+              <button
+                onClick={handleAnalyzeWithAI}
+                disabled={
+                  !hasInput ||
+                  !aiStatus.anyAvailable ||
+                  isGenerating ||
+                  isProcessing
+                }
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {t("dd214Analyzer", "analyzing")}
+                  </>
+                ) : (
+                  <>🤖 {t("dd214Analyzer", "analyzeWithAi")}</>
+                )}
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <LLMRecommendationBadge toolId="dd214-analyzer" />
-            <AIStatusBadge onClick={onOpenAISettings} />
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="DD214 Analyzer"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label={t("dd214Analyzer", "close")}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+        }
+        header={
+          <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">📜</span>
+              <div>
+                <h2
+                  id="dd214-analyzer-title"
+                  className="text-xl font-bold text-white"
+                >
+                  {t("dd214Analyzer", "title")}{" "}
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    {t("dd214Analyzer", "beta")}
+                  </span>
+                </h2>
+                <p className="text-sm text-blue-200">
+                  {t("dd214Analyzer", "subtitle")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <LLMRecommendationBadge toolId="dd214-analyzer" />
+              <AIStatusBadge onClick={onOpenAISettings} />
+              {onReportBug && (
+                <ReportBugLink
+                  onClick={onReportBug}
+                  variant="light"
+                  moduleName="DD214 Analyzer"
                 />
-              </svg>
-            </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label={t("dd214Analyzer", "close")}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        }
+      >
+        <div className="space-y-6">
           {/* Workflow Guidance Banner */}
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -2295,53 +2345,9 @@ const DD214Analyzer = ({
             </div>
           )}
         </div>
+      </ResponsiveModal>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col sm:flex-row items-center justify-end gap-4 rounded-b-2xl bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            {hasInput && (
-              <button
-                onClick={handleClearAll}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-              >
-                {t("dd214Analyzer", "clearAll")}
-              </button>
-            )}
-
-            {analysisResult && (
-              <button
-                onClick={handleSaveResults}
-                className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                💾 {t("dd214Analyzer", "saveToProfile")}
-              </button>
-            )}
-
-            <button
-              onClick={handleAnalyzeWithAI}
-              disabled={
-                !hasInput ||
-                !aiStatus.anyAvailable ||
-                isGenerating ||
-                isProcessing
-              }
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {t("dd214Analyzer", "analyzing")}
-                </>
-              ) : (
-                <>🤖 {t("dd214Analyzer", "analyzeWithAi")}</>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Import Confirmation Modal - Rendered via portal to escape z-index stacking context */}
+      {/* Profile import confirmation — already portaled to document.body */}
       {showProfileImportModal &&
         extractedProfileData &&
         createPortal(
@@ -2354,7 +2360,7 @@ const DD214Analyzer = ({
           document.body,
         )}
 
-      {/* DD214 Form Builder Modal */}
+      {/* DD214 Form Builder — fixed z-[9999] portal, renders above the shell */}
       {showFormBuilder && (
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
@@ -2364,7 +2370,7 @@ const DD214Analyzer = ({
           }}
         />
       )}
-    </div>
+    </>
   );
 };
 

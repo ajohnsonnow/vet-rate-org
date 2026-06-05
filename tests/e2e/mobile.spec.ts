@@ -65,6 +65,13 @@ const MODALS = [
   { label: "PACT Act Navigator", event: "openPACTActNavigator" },
   { label: "Risk Assessment", event: "openRiskAssessment" },
   { label: "FOIA Generator", event: "openFOIAGenerator" },
+  // Cluster D2 (S10): FormsHelper migrated to the shell. Its only footer content
+  // is a privacy note — no CTA button — so it asserts the overflow contract here
+  // rather than the sticky-footer-CTA one. The BuyMeCoffee/Luna popup and the
+  // AIConsentModal gate are lifted to `relative z-[70]` siblings to clear the
+  // z-60 shell. (DD214Analyzer, the other D2 tool, has a real action bar and so
+  // lives in MIGRATED_MODALS below.)
+  { label: "Forms Helper", event: "openFormsHelper" },
 ];
 
 /**
@@ -88,6 +95,12 @@ const MIGRATED_MODALS = [
   { label: "VSO Finder", event: "openVSOFinder" },
   { label: "Symptom Logger", event: "openSymptomLogger" },
   { label: "Workflow Guide", event: "openWorkflowGuide" },
+  // Cluster D2 (S10): DD214Analyzer migrated to the shell. Its action bar
+  // (Clear / Save / Analyze) moves into the sticky-footer slot, so it asserts
+  // the footer-CTA contract. Its ProfileImportConfirmModal and the z-[9999]
+  // DD214FormBuilder both portal to document.body, so they clear the shell
+  // without a lift wrapper.
+  { label: "DD214 Analyzer", event: "openDD214Analyzer" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
