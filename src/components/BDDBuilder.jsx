@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
@@ -50,7 +50,6 @@ const TABS = [
 ];
 
 const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
-  useBodyScrollLock(true);
   const { t } = useLanguage();
 
   // ── State ──────────────────────────────────────────────────
@@ -160,112 +159,113 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   // RENDER
   // ══════════════════════════════════════════════════════════════
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ── Header ────────────────────────────────────── */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-green-700 via-emerald-700 to-teal-700 p-4 shadow-lg rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🎖️</span>
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  BDD Builder
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    NEW
-                  </span>
-                </h2>
-                <p className="text-sm text-emerald-100">
-                  Pre-Discharge Claims Planner (38 CFR § 3.326)
-                </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="bdd-builder-title"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-green-700 via-emerald-700 to-teal-700 p-4 shadow-lg rounded-t-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🎖️</span>
+                <div>
+                  <h2
+                    id="bdd-builder-title"
+                    className="text-xl font-bold text-white flex items-center gap-2"
+                  >
+                    BDD Builder
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                      NEW
+                    </span>
+                  </h2>
+                  <p className="text-sm text-emerald-100">
+                    Pre-Discharge Claims Planner (38 CFR § 3.326)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <ReportBugLink
+                  onClick={() => {
+                    onClose();
+                    onReportBug?.();
+                  }}
+                  variant="light"
+                  moduleName="BDD Builder"
+                />
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close BDD Builder"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <ReportBugLink
-                onClick={() => {
-                  onClose();
-                  onReportBug?.();
-                }}
-                variant="light"
-                moduleName="BDD Builder"
-              />
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close BDD Builder"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
 
-          {/* Status Banner */}
-          {separationDate && eligibility.phase && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {(() => {
-                const badge = getPhaseBadge();
-                return badge ? (
-                  <span
-                    className={`px-3 py-1 ${badge.color} text-white text-xs font-bold rounded-full`}
-                  >
-                    {badge.text}
-                  </span>
-                ) : null;
-              })()}
-              {eligibility.daysUntilSep != null &&
-                eligibility.daysUntilSep >= 0 && (
-                  <span className="text-emerald-100 text-sm">
-                    {eligibility.daysUntilSep} days until separation
+            {/* Status Banner */}
+            {separationDate && eligibility.phase && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {(() => {
+                  const badge = getPhaseBadge();
+                  return badge ? (
+                    <span
+                      className={`px-3 py-1 ${badge.color} text-white text-xs font-bold rounded-full`}
+                    >
+                      {badge.text}
+                    </span>
+                  ) : null;
+                })()}
+                {eligibility.daysUntilSep != null &&
+                  eligibility.daysUntilSep >= 0 && (
+                    <span className="text-emerald-100 text-sm">
+                      {eligibility.daysUntilSep} days until separation
+                    </span>
+                  )}
+                {checklistCompletion > 0 && (
+                  <span className="text-emerald-200 text-sm ml-auto">
+                    Checklist: {checklistCompletion}% complete
                   </span>
                 )}
-              {checklistCompletion > 0 && (
-                <span className="text-emerald-200 text-sm ml-auto">
-                  Checklist: {checklistCompletion}% complete
-                </span>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* Tab Bar */}
-          {!showSetup && (
-            <div className="flex gap-1 mt-3 overflow-x-auto pb-1 -mb-4">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                      : "text-emerald-100 hover:bg-white/10"
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── Body ──────────────────────────────────────── */}
-        <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+            {/* Tab Bar */}
+            {!showSetup && (
+              <div className="flex gap-1 mt-3 overflow-x-auto pb-1 -mb-4">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        : "text-emerald-100 hover:bg-white/10"
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        }
+      >
+        <div>
           {/* ── SETUP VIEW ────────────────────────────── */}
           {showSetup && (
             <SetupView
@@ -326,19 +326,21 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
               }
             />
           )}
-
-          {/* Buy Me a Coffee */}
-          {!showSetup && (
-            <BuyMeCoffee
-              show={true}
-              trigger="bdd-builder"
-              context={{ phase: eligibility.phase }}
-              componentKey="bdd-builder"
-            />
-          )}
         </div>
-      </div>
-    </div>
+      </ResponsiveModal>
+
+      {/* Buy Me a Coffee */}
+      {!showSetup && (
+        <div className="relative z-[70]">
+          <BuyMeCoffee
+            show={true}
+            trigger="bdd-builder"
+            context={{ phase: eligibility.phase }}
+            componentKey="bdd-builder"
+          />
+        </div>
+      )}
+    </>
   );
 };
 

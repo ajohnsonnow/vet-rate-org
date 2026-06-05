@@ -54,6 +54,17 @@ const MODALS = [
   // gates them behind `isVaApiEnabled()` (build-time VITE_VA_API_ENABLED, off by
   // default), so they never mount in the standard build this gate runs against.
   // They are exercised manually in a VA-demo build.
+  // Cluster D1 (S10): multi-step wizards migrated to the shell. Their step nav
+  // (Back/Continue/Submit) lives per-step inside the scroll body, not a single
+  // shared footer, so they assert the overflow contract (no .modal-footer slot).
+  // The BuyMeCoffee/Luna popups in TDIU, BDD, PACT and FOIA are wrapped in a
+  // `relative z-[70]` lift to clear the z-60 shell.
+  { label: "TDIU Builder", event: "openTDIUBuilder" },
+  { label: "BDD Builder", event: "openBDDBuilder" },
+  { label: "Witness Bench", event: "openWitnessBench" },
+  { label: "PACT Act Navigator", event: "openPACTActNavigator" },
+  { label: "Risk Assessment", event: "openRiskAssessment" },
+  { label: "FOIA Generator", event: "openFOIAGenerator" },
 ];
 
 /**

@@ -17,7 +17,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import {
@@ -400,8 +400,6 @@ export default function TDIUBuilder({
   onOpenAISettings,
 }) {
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Ref for screenshot/share functionality
   const tdiuContentRef = useRef(null);
@@ -1258,75 +1256,75 @@ export default function TDIUBuilder({
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        ref={tdiuContentRef}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">💼</span>
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  TDIU Work Impact Builder
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    AI
-                  </span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-amber-100">
-                  The 100% Backdoor - Vocational Statement Generator
-                </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="tdiu-builder-title"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💼</span>
+                <div>
+                  <h2
+                    id="tdiu-builder-title"
+                    className="text-xl font-bold text-white flex items-center gap-2"
+                  >
+                    TDIU Work Impact Builder
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                      AI
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-amber-100">
+                    The 100% Backdoor - Vocational Statement Generator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <LLMRecommendationBadge toolId="tdiu-builder" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+                <ShareButton
+                  targetRef={tdiuContentRef}
+                  filename="tdiu-vocational-analysis"
+                  variant="icon"
+                />
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="TDIU Work Impact Builder"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <LLMRecommendationBadge toolId="tdiu-builder" />
-              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-              <ShareButton
-                targetRef={tdiuContentRef}
-                filename="tdiu-vocational-analysis"
-                variant="icon"
-              />
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="TDIU Work Impact Builder"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="overflow-y-auto flex-1 p-4">
+        }
+      >
+        <div ref={tdiuContentRef}>
           {/* Progress Steps */}
           <div className="max-w-4xl mx-auto pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -1417,8 +1415,10 @@ export default function TDIUBuilder({
             )}
           </div>
         </div>
+      </ResponsiveModal>
 
-        {/* BuyMeCoffee - shows after generating statement */}
+      {/* BuyMeCoffee - shows after generating statement */}
+      <div className="relative z-[70]">
         <BuyMeCoffee
           show={step === 3 && vocationalAnalysis !== null}
           trigger="tdiu"
@@ -1426,6 +1426,6 @@ export default function TDIUBuilder({
           componentKey="tdiu-builder"
         />
       </div>
-    </div>
+    </>
   );
 }

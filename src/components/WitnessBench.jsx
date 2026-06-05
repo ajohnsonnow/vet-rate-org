@@ -12,7 +12,7 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   Document,
   Packer,
@@ -454,8 +454,6 @@ export default function WitnessBench({
   onOpenAISettings,
 }) {
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Helper function to get translated relationship label
   const getRelationshipLabel = (relationshipValue) => {
@@ -1176,22 +1174,21 @@ export default function WitnessBench({
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        ref={witnessContentRef}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="witness-bench-title"
+      header={
         <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">👥</span>
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2
+                  id="witness-bench-title"
+                  className="text-xl font-bold text-white flex items-center gap-2"
+                >
                   {t("witnessBench", "title")}
                   <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
                     {t("witnessBench", "aiBadge")}
@@ -1243,47 +1240,47 @@ export default function WitnessBench({
             </div>
           </div>
         </div>
-
-        <div className="overflow-y-auto flex-1 p-4">
-          {/* Main Content */}
-          <div className="max-w-4xl mx-auto">
-            {/* Info Banner */}
-            <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 mb-6 rounded-r-lg">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💡</span>
-                <div>
-                  <h3 className="font-bold text-purple-800 dark:text-purple-200">
-                    {t("witnessBench", "whyBuddyStatementsMatter")}
-                  </h3>
-                  <p className="text-purple-700 dark:text-purple-300 text-sm mt-1">
-                    {t("witnessBench", "buddyStatementExplanation")}
-                  </p>
-                </div>
+      }
+    >
+      <div ref={witnessContentRef}>
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto">
+          {/* Info Banner */}
+          <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💡</span>
+              <div>
+                <h3 className="font-bold text-purple-800 dark:text-purple-200">
+                  {t("witnessBench", "whyBuddyStatementsMatter")}
+                </h3>
+                <p className="text-purple-700 dark:text-purple-300 text-sm mt-1">
+                  {t("witnessBench", "buddyStatementExplanation")}
+                </p>
               </div>
             </div>
-
-            {/* Smart AI Load Button */}
-            {!isAnyAIAvailable() && (
-              <div className="mb-6">
-                <SmartAILoadButton
-                  toolId="witness-bench"
-                  onLoadComplete={(model) => {
-                    console.log(
-                      "Smart AI loaded for Witness Bench:",
-                      model?.name,
-                    );
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Step Content */}
-            {step === 1 && renderSetupStep()}
-            {step === 2 && renderInterviewStep()}
-            {step === 3 && renderOutputStep()}
           </div>
+
+          {/* Smart AI Load Button */}
+          {!isAnyAIAvailable() && (
+            <div className="mb-6">
+              <SmartAILoadButton
+                toolId="witness-bench"
+                onLoadComplete={(model) => {
+                  console.log(
+                    "Smart AI loaded for Witness Bench:",
+                    model?.name,
+                  );
+                }}
+              />
+            </div>
+          )}
+
+          {/* Step Content */}
+          {step === 1 && renderSetupStep()}
+          {step === 2 && renderInterviewStep()}
+          {step === 3 && renderOutputStep()}
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }

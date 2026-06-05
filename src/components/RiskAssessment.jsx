@@ -15,7 +15,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   generateAI,
   isAnyAIAvailable,
@@ -160,8 +160,6 @@ export default function RiskAssessment({
   onOpenAISettings,
 }) {
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Input state
   const [currentRating, setCurrentRating] = useState("");
@@ -1106,21 +1104,21 @@ Respond in this JSON format:
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="risk-assessment-title"
+      header={
         <div className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-red-600 p-4 shadow-lg rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🐻</span>
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2
+                  id="risk-assessment-title"
+                  className="text-xl font-bold text-white flex items-center gap-2"
+                >
                   Poke the Bear Calculator
                   <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">
                     AI
@@ -1165,85 +1163,84 @@ Respond in this JSON format:
             </div>
           </div>
         </div>
+      }
+    >
+      <div>
+        {/* Educational Banner */}
+        {!showResults && (
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">📚</span>
+              <div>
+                <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                  Know Your Rights
+                </h3>
+                <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                  VA ratings have legal protections under{" "}
+                  <strong>38 CFR</strong>. The longer your rating has been in
+                  effect, the harder it is to reduce. This tool checks your
+                  protection status before you file.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Scrollable Content */}
-        <div className="overflow-y-auto flex-1 p-6">
-          {/* Educational Banner */}
-          {!showResults && (
-            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📚</span>
-                <div>
-                  <h3 className="font-bold text-amber-800 dark:text-amber-200">
-                    Know Your Rights
-                  </h3>
-                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                    VA ratings have legal protections under{" "}
-                    <strong>38 CFR</strong>. The longer your rating has been in
-                    effect, the harder it is to reduce. This tool checks your
-                    protection status before you file.
-                  </p>
+        {/* AI Required Warning */}
+        {!isAnyAIAvailable() && !showResults && (
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💡</span>
+              <div>
+                <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                  AI Required for Analysis
+                </h3>
+                <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                  Click the <strong>AI Status button</strong> in the header
+                  above to load your secure Local AI (100% private) or enter
+                  your Gemini API key.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Packet Integration */}
+        {savedRatings.length > 0 && !showResults && (
+          <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">📦</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-800 dark:text-blue-200">
+                  Loaded from My Packet
+                </h3>
+                <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                  Found {savedRatings.length} saved ratings. Your conditions
+                  have been auto-populated below.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {savedRatings.slice(0, 5).map((r, i) => (
+                    <span
+                      key={i}
+                      className="px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded"
+                    >
+                      {r.name || r.bodyPart} {r.rating}%
+                    </span>
+                  ))}
+                  {savedRatings.length > 5 && (
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs rounded">
+                      +{savedRatings.length - 5} more
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* AI Required Warning */}
-          {!isAnyAIAvailable() && !showResults && (
-            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💡</span>
-                <div>
-                  <h3 className="font-bold text-amber-800 dark:text-amber-200">
-                    AI Required for Analysis
-                  </h3>
-                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                    Click the <strong>AI Status button</strong> in the header
-                    above to load your secure Local AI (100% private) or enter
-                    your Gemini API key.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* My Packet Integration */}
-          {savedRatings.length > 0 && !showResults && (
-            <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📦</span>
-                <div className="flex-1">
-                  <h3 className="font-bold text-blue-800 dark:text-blue-200">
-                    Loaded from My Packet
-                  </h3>
-                  <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-                    Found {savedRatings.length} saved ratings. Your conditions
-                    have been auto-populated below.
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {savedRatings.slice(0, 5).map((r, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded"
-                      >
-                        {r.name || r.bodyPart} {r.rating}%
-                      </span>
-                    ))}
-                    {savedRatings.length > 5 && (
-                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs rounded">
-                        +{savedRatings.length - 5} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Content */}
-          {showResults ? renderResults() : renderInputForm()}
-        </div>
+        {/* Content */}
+        {showResults ? renderResults() : renderInputForm()}
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }
