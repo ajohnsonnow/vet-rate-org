@@ -35,6 +35,20 @@ const MODALS = [
   // contract rather than the sticky-footer-CTA one.
   { label: "Mission Protocol", event: "openMissionProtocol" },
   { label: "Retro Pay Hunter", event: "openRetroPayHunter" },
+  // Cluster C2 (S10): dark-panel / nested-child tools migrated to the shell.
+  // Footerless (their actions live in-body), so they assert the overflow
+  // contract rather than the sticky-footer-CTA one. Their nested children clear
+  // the z-60 shell — VAGovRatingPaster already paints at z-100; RegulationsRef,
+  // AIConsentModal, DoctorsPacket and the BuyMeCoffee/Luna popups are wrapped in
+  // a `relative z-[70]` lift.
+  { label: "MOS Hazard Matcher", event: "openMOSHazardMatcher" },
+  { label: "Million Dollar Dashboard", event: "openMillionDollarDashboard" },
+  { label: "Secondary Scout Launcher", event: "openSecondaryScoutLauncher" },
+  { label: "VA Resources", event: "openVAResources" },
+  // Not listed: NexusBuilder (openNexusBuilder) — migrated to the shell, but
+  // DiscoverCluster renders it only once `nexusBuilderData` is set from the event
+  // detail (`showNexusBuilder && nexusBuilderData`), so a bare event never mounts
+  // it. It is exercised via the Secondary Scout "Learn how" flow manually.
   // Not listed: DemoDashboard (openDemoDashboard) + VaIntegrationTest
   // (openVaIntegrationDemo) — both were migrated to the shell, but VaDemoTools
   // gates them behind `isVaApiEnabled()` (build-time VITE_VA_API_ENABLED, off by

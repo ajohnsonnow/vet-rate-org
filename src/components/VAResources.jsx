@@ -20,7 +20,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import RegulationsReference from "./RegulationsReference";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -34,8 +34,6 @@ import { useLanguage } from "../contexts/LanguageContext";
  */
 const VAResources = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   const [showRegulationsReference, setShowRegulationsReference] =
     useState(false);
@@ -422,67 +420,70 @@ const VAResources = ({ onClose, onReportBug }) => {
   ];
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="va-resources-title"
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col modal-content">
-        {/* Header - Fixed */}
-        <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 rounded-t-lg relative flex-shrink-0">
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="VA Resources Hub"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 transition-colors"
-              aria-label={t("vaResources.closeVaResources")}
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="h-8 w-8" />
-            <h2 id="va-resources-title" className="text-3xl font-bold">
-              {t("vaResources.title")}{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                {t("common.beta")}
-              </span>
-            </h2>
-          </div>
-          <p className="text-blue-100 text-lg">{t("vaResources.subtitle")}</p>
-        </div>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="va-resources-title"
+        header={
+          <>
+            <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 relative flex-shrink-0">
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="VA Resources Hub"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 transition-colors"
+                  aria-label={t("vaResources.closeVaResources")}
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <Globe className="h-8 w-8" />
+                <h2 id="va-resources-title" className="text-3xl font-bold">
+                  {t("vaResources.title")}{" "}
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    {t("common.beta")}
+                  </span>
+                </h2>
+              </div>
+              <p className="text-blue-100 text-lg">
+                {t("vaResources.subtitle")}
+              </p>
+            </div>
 
-        {/* Crisis Banner */}
-        <div className="bg-red-600 dark:bg-red-700 text-white px-6 py-3 flex items-center justify-center gap-4 flex-shrink-0">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-          <div className="text-center">
-            <span className="font-semibold">
-              {t("vaResources.veteransCrisisLine")}
-            </span>{" "}
-            <a href="tel:988" className="underline font-bold">
-              {t("vaResources.dialPress1")}
-            </a>{" "}
-            | <span>{t("vaResources.text838255")}</span> |{" "}
-            <a
-              href="https://www.veteranscrisisline.net/get-help-now/chat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              {t("vaResources.chatOnline247")}
-            </a>
-          </div>
-        </div>
-
-        {/* Content - Scrollable */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+            {/* Crisis Banner */}
+            <div className="bg-red-600 dark:bg-red-700 text-white px-6 py-3 flex items-center justify-center gap-4 flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+              <div className="text-center">
+                <span className="font-semibold">
+                  {t("vaResources.veteransCrisisLine")}
+                </span>{" "}
+                <a href="tel:988" className="underline font-bold">
+                  {t("vaResources.dialPress1")}
+                </a>{" "}
+                | <span>{t("vaResources.text838255")}</span> |{" "}
+                <a
+                  href="https://www.veteranscrisisline.net/get-help-now/chat"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  {t("vaResources.chatOnline247")}
+                </a>
+              </div>
+            </div>
+          </>
+        }
+      >
+        <div className="space-y-4">
           {/* PACT Act Highlight Banner */}
           <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-5">
             <div className="flex items-start gap-4">
@@ -683,15 +684,17 @@ const VAResources = ({ onClose, onReportBug }) => {
             </p>
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* Regulations Reference Modal */}
       {showRegulationsReference && (
-        <RegulationsReference
-          onClose={() => setShowRegulationsReference(false)}
-        />
+        <div className="relative z-[70]">
+          <RegulationsReference
+            onClose={() => setShowRegulationsReference(false)}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

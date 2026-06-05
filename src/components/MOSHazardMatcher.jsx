@@ -19,7 +19,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   MOS_DATABASE,
@@ -1188,7 +1188,6 @@ export default function MOSHazardMatcher({
   onReportBug,
 }) {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMOS, setSelectedMOS] = useState(null);
@@ -1227,62 +1226,63 @@ export default function MOSHazardMatcher({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mos-hazard-matcher-title"
-    >
-      <div className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="mos-hazard-matcher-title"
+        className="!bg-gray-900"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🎖️</span>
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🎖️</span>
+                </div>
+                <div>
+                  <h2
+                    id="mos-hazard-matcher-title"
+                    className="text-2xl sm:text-3xl font-bold text-black"
+                  >
+                    MOS Hazard Matcher{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
+                    Your Job → Your Injuries
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2
-                  id="mos-hazard-matcher-title"
-                  className="text-2xl sm:text-3xl font-bold text-black"
-                >
-                  MOS Hazard Matcher{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-yellow-800 text-sm sm:text-base mt-1">
-                  Your Job → Your Injuries
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <button
+                onClick={onClose}
+                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                aria-label="Close"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-
+        }
+      >
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-900">
+        <div className="space-y-6">
           {/* Intro */}
           <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
             <p className="text-slate-200 text-center">
@@ -1663,18 +1663,20 @@ export default function MOSHazardMatcher({
             </div>
           )}
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* BuyMeCoffee - shows after selecting MOS */}
-      <BuyMeCoffee
-        show={selectedMOS !== null}
-        trigger="mos-hazard"
-        context={{
-          mos: selectedMOS?.code
-            ? `${selectedMOS.code} (${selectedMOS.title})`
-            : null,
-        }}
-      />
-    </div>
+      <div className="relative z-[70]">
+        <BuyMeCoffee
+          show={selectedMOS !== null}
+          trigger="mos-hazard"
+          context={{
+            mos: selectedMOS?.code
+              ? `${selectedMOS.code} (${selectedMOS.title})`
+              : null,
+          }}
+        />
+      </div>
+    </>
   );
 }
