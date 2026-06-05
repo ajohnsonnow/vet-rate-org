@@ -88,6 +88,12 @@ const MODALS = [
   { label: "Consistency Engine", event: "openConsistencyEngine" },
   { label: "C-File Analyzer", event: "openCFileAnalyzer" },
   { label: "Muster Call", event: "openMusterCall" },
+  // Cluster F (S10): nested-children modals. PublicationsLibraryModal wraps the
+  // inline library page — header-close-only (no footer CTA), so it asserts the
+  // overflow contract. Its PublicationDetailsModal child lifts to zIndex={70}
+  // above the z-60 shell; that child opens only after a publication card is
+  // tapped, so it has no bare open* event and is exercised via that flow.
+  { label: "Publications Library", event: "openPublicationsLibrary" },
 ];
 
 /**

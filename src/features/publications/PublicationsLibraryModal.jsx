@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from "react";
+import ResponsiveModal from "../../components/common/ResponsiveModal";
 
 const PublicationsLibrary = lazy(
   () => import("../../components/PublicationsLibrary"),
@@ -25,10 +26,17 @@ export default function PublicationsLibraryModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+    <ResponsiveModal
+      isOpen
+      onClose={() => setOpen(false)}
+      size="2xl"
+      labelledBy="publications-library-title"
+      header={
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h2
+            id="publications-library-title"
+            className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+          >
             📚 Publications Library{" "}
             <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
               BETA
@@ -37,16 +45,16 @@ export default function PublicationsLibraryModal() {
           <button
             onClick={() => setOpen(false)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+            aria-label="Close"
           >
             ✕
           </button>
         </div>
-        <div className="p-6">
-          <Suspense fallback={null}>
-            <PublicationsLibrary />
-          </Suspense>
-        </div>
-      </div>
-    </div>
+      }
+    >
+      <Suspense fallback={null}>
+        <PublicationsLibrary />
+      </Suspense>
+    </ResponsiveModal>
   );
 }
