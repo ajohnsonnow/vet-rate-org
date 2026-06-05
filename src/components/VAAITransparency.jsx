@@ -17,7 +17,7 @@ import {
   Scale,
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -30,7 +30,6 @@ import { useLanguage } from "../contexts/LanguageContext";
  */
 const VAAITransparency = ({ onClose }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -803,100 +802,97 @@ const VAAITransparency = ({ onClose }) => {
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 p-6 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <Brain className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white">
-                  VA AI Transparency Hub{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-blue-100 text-sm mt-1">
-                  Understanding How VA Uses Artificial Intelligence
-                </p>
-              </div>
-            </div>
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="va-ai-transparency-title"
+      footer={
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            Data from{" "}
+            <a
+              href="https://department.va.gov/ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              department.va.gov/ai/
+            </a>{" "}
+            (Updated January 2026)
+          </div>
+          <div className="flex items-center gap-3">
+            <ReportBugLink />
             <button
               onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
-              aria-label="Close"
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
             >
-              <X className="h-6 w-6" />
+              Close
             </button>
           </div>
         </div>
-
-        {/* Tabs */}
-        <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-full">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-colors whitespace-nowrap flex-1 justify-center ${
-                  activeTab === tab.id
-                    ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
-              >
-                <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === "overview" && renderOverview()}
-          {activeTab === "healthcare" && renderHealthcareAI()}
-          {activeTab === "benefits" && renderBenefitsAI()}
-          {activeTab === "privacy" && renderPrivacy()}
-          {activeTab === "inventory" && renderInventory()}
-        </div>
-
-        {/* Footer */}
-        <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 p-4 rounded-b-lg border-t border-gray-300 dark:border-gray-700">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Data from{" "}
-              <a
-                href="https://department.va.gov/ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                department.va.gov/ai/
-              </a>{" "}
-              (Updated January 2026)
-            </div>
-            <div className="flex items-center gap-3">
-              <ReportBugLink />
+      }
+      header={
+        <>
+          <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 p-6 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <Brain className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2
+                    id="va-ai-transparency-title"
+                    className="text-3xl font-bold text-white"
+                  >
+                    VA AI Transparency Hub{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    Understanding How VA Uses Artificial Intelligence
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                aria-label="Close"
               >
-                Close
+                <X className="h-6 w-6" />
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          {/* Tabs */}
+          <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+            <div className="flex min-w-full">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-colors whitespace-nowrap flex-1 justify-center ${
+                    activeTab === tab.id
+                      ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      }
+    >
+      {activeTab === "overview" && renderOverview()}
+      {activeTab === "healthcare" && renderHealthcareAI()}
+      {activeTab === "benefits" && renderBenefitsAI()}
+      {activeTab === "privacy" && renderPrivacy()}
+      {activeTab === "inventory" && renderInventory()}
+    </ResponsiveModal>
   );
 };
 
