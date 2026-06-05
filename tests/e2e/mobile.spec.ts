@@ -94,6 +94,16 @@ const MODALS = [
   // above the z-60 shell; that child opens only after a publication card is
   // tapped, so it has no bare open* event and is exercised via that flow.
   { label: "Publications Library", event: "openPublicationsLibrary" },
+  // Cluster F (S10): the VKB pair. VKBTimeline is a permanently-dark
+  // (!bg-slate-800) header-close-only panel (no footer slot); VKBViewer's footer
+  // (Show LLM Context / Clear All Data) is data-gated — absent until a Knowledge
+  // Base is loaded — so on fresh open it shows only its loading/empty state.
+  // Both therefore assert the overflow contract here. Their nested children lift
+  // to zIndex={70} above the z-60 shell and open only after interaction
+  // (selecting two docs to compare / tapping "Show LLM Context"), so neither has
+  // a bare open* event; both are exercised via those flows.
+  { label: "VKB Timeline", event: "openVKBTimeline" },
+  { label: "VKB Viewer", event: "openVKBViewer" },
 ];
 
 /**
