@@ -87,11 +87,13 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
     e2e-coverable here**; manual check in a VA-demo build. *Follow-up:* their header rows pack an
     inline action button next to the close-X in a `justify-between` flex — verify the close stays
     reachable (add `flex-wrap`) when exercised on a phone in a demo build.
-- **Cluster C — medium single-CTA tools:** SecondaryScoutLauncher, NexusBuilder,
+- **Cluster C — medium single-CTA tools: all ✅** (C1 `f074b97` standard-light → MIGRATED_MODALS;
+  C2 `cb435bc` dark/nested → MODALS). SecondaryScoutLauncher, NexusBuilder (not e2e-listed),
   DecisionDecoder, WorkflowGuide, SymptomLogger, VAResources, LegislativeWatchdog,
-  MOSHazardMatcher, VSOFinder, MillionDollarDashboard, RedTeam.
-- **Cluster D — multi-step wizards (footer nav = Continue/Submit):** TDIUBuilder, BDDBuilder
+  MOSHazardMatcher, VSOFinder, MillionDollarDashboard, RedTeam. See progress log for detail.
+- **Cluster D — multi-step wizards: all ✅** (D1 `1b796a1`, D2 `f86066d`). TDIUBuilder, BDDBuilder
   (max-h-95vh), WitnessBench, PACTActNavigator, RiskAssessment, FOIAGenerator, FormsHelper, DD214Analyzer.
+  Per-step nav lives in-body (overflow contract); only DD214Analyzer's single action bar uses the footer slot.
 - **Cluster E — wide tables / page-scroll → size='full':** SecondaryScout (max-w-7xl),
   ConsistencyEngine (2 shells, max-w-7xl), CommunityRoadmap (z-100, max-w-7xl), CFileAnalyzer
   (upload+results 2 shells), VAAITransparency, RecordSearch, MusterCall.
@@ -120,6 +122,41 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster D migrated — all ✅ (D1 commit `1b796a1`, D2 commit `f86066d`; type-check +
+  803 unit + 0 lint errors + 174 mobile e2e @360/390/768 across chromium/mobile-chrome):**
+  multi-step wizards. Their per-step nav (Back/Continue/Submit) lives inside each step
+  render in the scroll body, **not** a single shared footer, so the wizards assert the
+  overflow contract (MODALS group) rather than the sticky-footer-CTA one. DD214Analyzer is
+  the exception — it has one clean action bar, so it uses the footer slot (MIGRATED_MODALS).
+  1. **D1 (`1b796a1`)** — TDIUBuilder, BDDBuilder, WitnessBench, PACTActNavigator,
+     RiskAssessment, FOIAGenerator → shell via the header slot (gradient banner + badges +
+     ReportBugLink + close), `size="2xl"` (legacy `max-w-6xl`). ShareButton content refs
+     (TDIU, Witness) moved to a body wrapper `<div ref=…>`. The BuyMeCoffee/Luna popups in
+     TDIU/BDD/PACT/FOIA (`fixed z-50`) lifted to `relative z-[70]` Fragment siblings to clear
+     the z-60 shell; WitnessBench + RiskAssessment have no siblings (plain ResponsiveModal).
+  2. **D2 (`f86066d`)** — the two complex-nested wizards, `size="xl"` (legacy `max-w-4xl`):
+     - *FormsHelper* — header slot; footer slot = the privacy note only (no CTA button → MODALS
+       group). ShareButton ref → body wrapper. BuyMeCoffee/Luna (`fixed z-50`) **and** the
+       AIConsentModal gate (`fixed z-[60]`) lifted to `relative z-[70]` siblings.
+     - *DD214Analyzer* — header slot + the Clear/Save/Analyze action bar relocated into the
+       sticky **footer slot** (MIGRATED_MODALS). Its ProfileImportConfirmModal and the
+       `z-[9999]` DD214FormBuilder both already `createPortal` to `document.body`, so they clear
+       the shell without a lift wrapper.
+  3. **mobile.spec.ts** — the 6 D1 wizards + FormsHelper added to `MODALS` (overflow);
+     DD214Analyzer added to `MIGRATED_MODALS` (sticky-CTA). 162 → 174 tests.
+- **Cluster C migrated — all ✅ (C1 commit `f074b97`, C2 commit `cb435bc`):** medium
+  single-CTA tools.
+  1. **C1 (`f074b97`)** — standard-light modals migrated with a rich header slot + sticky
+     footer slot (encouragement/BuyMeCoffee + Close): DecisionDecoder, LegislativeWatchdog,
+     RedTeam, VSOFinder, SymptomLogger, WorkflowGuide → `MIGRATED_MODALS` (Workflow Guide moved
+     out of MODALS now that its Close CTA lives in the shell footer).
+  2. **C2 (`cb435bc`)** — dark-panel / nested-child tools (footerless; actions stay in-body) →
+     `MODALS` (overflow): MOSHazardMatcher, MillionDollarDashboard, SecondaryScoutLauncher,
+     VAResources. Nested children clear the z-60 shell — VAGovRatingPaster already paints at
+     z-100; RegulationsReference, AIConsentModal, DoctorsPacket and the BuyMeCoffee/Luna popups
+     are wrapped in a `relative z-[70]` lift. NexusBuilder also migrated but is **not e2e-listed**
+     — DiscoverCluster only mounts it once `nexusBuilderData` is set from the event detail, so a
+     bare event never mounts it (exercised via the Secondary Scout "Learn how" flow manually).
 - **Cluster B + TimeMachine migrated (type-check + 803 unit + 0 lint errors + 108 mobile e2e
   @360/390/768 across chromium/firefox/mobile-chrome):**
   1. **TimeMachine** (commit `18fcc9e`) — full-modal branch → ResponsiveModal via the urgency
