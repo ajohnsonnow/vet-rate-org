@@ -26,6 +26,7 @@ const VersionDropUp = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [changelogData, setChangelogData] = useState(null);
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     const data = generateWhatsNewChangelog();
@@ -33,18 +34,27 @@ const VersionDropUp = () => {
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
+    // ESC closes the disclosure and returns focus to its trigger (APG
+    // disclosure pattern — informational popup, not a menu/dialog, so no trap).
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -113,9 +123,11 @@ const VersionDropUp = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors flex items-center gap-1"
         aria-label="View version changelog"
+        aria-expanded={isOpen}
       >
         v{version}
         <ChevronUp

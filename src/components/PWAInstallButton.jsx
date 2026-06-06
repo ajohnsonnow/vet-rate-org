@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, X, Smartphone, Check } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 const PWAInstallButton = ({ className = "" }) => {
   const { t } = useLanguage();
@@ -110,61 +111,54 @@ const PWAInstallButton = ({ className = "" }) => {
   // iOS Instructions Modal
   if (showIOSInstructions) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900">Install on iOS</h3>
-            <button
-              onClick={() => setShowIOSInstructions(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+      <ResponsiveModal
+        isOpen
+        onClose={() => setShowIOSInstructions(false)}
+        title="Install on iOS"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            To install Vet-Rate.org on your iPhone or iPad:
+          </p>
 
-          <div className="space-y-4">
-            <p className="text-sm text-gray-700">
-              To install Vet-Rate.org on your iPhone or iPad:
+          <ol className="space-y-3 text-sm text-gray-800 dark:text-gray-200">
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
+                1.
+              </span>
+              <span>
+                Tap the <strong>Share</strong> button{" "}
+                <span className="text-2xl">⎋</span> at the bottom of Safari
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
+                2.
+              </span>
+              <span>
+                Scroll down and tap <strong>"Add to Home Screen"</strong>{" "}
+                <span className="text-xl">➕</span>
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
+                3.
+              </span>
+              <span>
+                Tap <strong>"Add"</strong> in the top right corner
+              </span>
+            </li>
+          </ol>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 dark:border-blue-800 dark:bg-blue-950/40">
+            <p className="text-xs text-blue-900 dark:text-blue-200">
+              <strong>Note:</strong> This only works in Safari browser, not
+              Chrome or other browsers on iOS.
             </p>
-
-            <ol className="space-y-3 text-sm text-gray-800">
-              <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">
-                  1.
-                </span>
-                <span>
-                  Tap the <strong>Share</strong> button{" "}
-                  <span className="text-2xl">⎋</span> at the bottom of Safari
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">
-                  2.
-                </span>
-                <span>
-                  Scroll down and tap <strong>"Add to Home Screen"</strong>{" "}
-                  <span className="text-xl">➕</span>
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">
-                  3.
-                </span>
-                <span>
-                  Tap <strong>"Add"</strong> in the top right corner
-                </span>
-              </li>
-            </ol>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-              <p className="text-xs text-blue-900">
-                <strong>Note:</strong> This only works in Safari browser, not
-                Chrome or other browsers on iOS.
-              </p>
-            </div>
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
@@ -173,10 +167,15 @@ const PWAInstallButton = ({ className = "" }) => {
     return (
       <div className={`pwa-install-prompt ${className}`}>
         {/* Desktop/Floating button */}
-        <div className="fixed bottom-4 right-4 z-40 max-w-sm hidden md:block">
+        <div
+          className="fixed bottom-4 right-4 z-40 max-w-sm hidden md:block"
+          role="region"
+          aria-label="Install Vet-Rate"
+        >
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-2xl p-4">
             <button
               onClick={handleDismiss}
+              aria-label="Dismiss install prompt"
               className="absolute top-2 right-2 text-white hover:text-gray-200"
             >
               <X className="w-5 h-5" />
@@ -202,10 +201,15 @@ const PWAInstallButton = ({ className = "" }) => {
         </div>
 
         {/* Mobile banner */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
+          role="status"
+          aria-live="polite"
+        >
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-2xl">
             <button
               onClick={handleDismiss}
+              aria-label="Dismiss install prompt"
               className="absolute top-2 right-2 text-white hover:text-gray-200"
             >
               <X className="w-5 h-5" />
