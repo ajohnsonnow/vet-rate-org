@@ -196,6 +196,10 @@ const MODALS = [
   { label: "Appeals Lane Advisor", event: "openAppealsLaneAdvisor" },
   { label: "Remand Risk Checker", event: "openRemandRiskChecker" },
   { label: "Nexus Quality Analyzer", event: "openNexusQualityAnalyzer" },
+  // SharkRadar (S12) also mounts via QualityControlCluster. Its rose/red gradient
+  // header (with ReportBugLink + close) rides the shell's header slot and it has
+  // no sticky-footer CTA, so it asserts the overflow contract here, not the CTA one.
+  { label: "Shark Radar", event: "openSharkRadar" },
 ];
 
 /**
