@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useState } from "react";
 import { triggerPanicRedirect, triggerSoftExit } from "../utils/safetyRedirect";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * QuickExitButton Component
@@ -14,8 +14,6 @@ const QuickExitButton = ({
   showTooltip = true,
   className = "",
 }) => {
-  const { t } = useLanguage();
-
   const [isHovered, setIsHovered] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -61,31 +59,40 @@ const QuickExitButton = ({
         </button>
 
         {/* Confirmation Modal */}
-        {showConfirm && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[99999]">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-sm mx-4 shadow-2xl">
-              <h3 className="text-white font-bold mb-3">Exit Now?</h3>
-              <p className="text-slate-400 text-sm mb-4">
-                This will immediately redirect you to a neutral website
-                (weather.com).
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-2 text-slate-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmExit}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition-colors"
-                >
-                  Exit
-                </button>
-              </div>
+        <ResponsiveModal
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          labelledBy="quick-exit-confirm-title"
+          size="sm"
+          zIndex={99999}
+          footer={
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmExit}
+                className="flex-1 rounded-lg bg-red-600 py-2 text-white transition-colors hover:bg-red-700"
+              >
+                Exit
+              </button>
             </div>
-          </div>
-        )}
+          }
+        >
+          <h3
+            id="quick-exit-confirm-title"
+            className="mb-3 font-bold text-gray-900 dark:text-white"
+          >
+            Exit Now?
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This will immediately redirect you to a neutral website
+            (weather.com).
+          </p>
+        </ResponsiveModal>
       </>
     );
   }
