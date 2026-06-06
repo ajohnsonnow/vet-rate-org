@@ -183,7 +183,26 @@ RedTeam (already on ResponsiveModal).
       (VAGovRatingPaster is prop-driven, mounted by host tools; ExplainerModal is localStorage +
       first-click gated), so both are **manual-verify** for mobile through the proven shell (precedent:
       VaDataConsentPrompt, Chunk 3). Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
-- [ ] Chunks 7+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 7 — migrate two more standard prop/flow-gated modals: **ProfileImportConfirmModal**
+      (DD214/PDF import review; rendered by DD214Analyzer) and **LanguageSuggestionModal**
+      (`isOpen`-driven; rendered by LanguageSelector). ProfileImportConfirmModal shed its
+      `fixed inset-0 z-[9999]` + `max-w-5xl max-h-[90vh]` card for `ResponsiveModal size="2xl"
+      zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
+      Select-All/None controls) move into the custom `header` slot as a fragment so they stay pinned
+      edge-to-edge (desktop unchanged), the four field-category sections become the scroll body
+      (inner `flex-1 overflow-y-auto` wrapper flattened to avoid double-scroll), and the Cancel /
+      Import-Selected bar is extracted to a `const footer`. LanguageSuggestionModal → `size="lg"`
+      (default z); gradient cyan→blue bar → `header` slot (h2 gains `id`; `aria-label="Close"` added to
+      its `✕`), the static "40+ languages" caption demoted to a body note, and the **state-dependent**
+      CTA extracted to a `const footer` branching on `isSubmitted` (Generate-Request before → Suggest-
+      More/Done after). The submit button moved to the sticky footer but stays wired to the in-body
+      `<form>` via HTML5 `form="lang-suggestion-form"` (Enter-to-submit preserved); `if (!isOpen)
+      return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
+      gain focus-trap + `role="dialog"` + ESC/backdrop dismiss for free. **No `mobile.spec.ts` entry** —
+      both are prop/flow-gated, not event-triggerable, so **manual-verify** through the proven shell
+      (precedent: VaDataConsentPrompt, Chunk 3; VAGovRatingPaster, Chunk 6). Gate: ESLint 0 errors,
+      `tsc` clean, 809 unit tests green.
+- [ ] Chunks 8+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist

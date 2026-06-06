@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * Profile Import Confirmation Modal
@@ -22,7 +22,6 @@ const ProfileImportConfirmModal = ({
   onCancel,
 }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
@@ -309,212 +308,221 @@ const ProfileImportConfirmModal = ({
   const selectedCount = Object.values(selectedFields).filter(Boolean).length;
   const totalCount = Object.keys(editableData).length;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              📋 Review Imported Profile Data
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Review and edit information before saving to your Veteran Profile
-            </p>
-          </div>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Warning Banner */}
-        <div className="px-6 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
-            <span className="text-lg">⚠️</span>
+  const footer = (
+    <div className="flex items-center justify-between gap-4">
+      <button
+        onClick={onCancel}
+        className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
+      >
+        ✗ Cancel Import
+      </button>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {selectedCount === 0 ? (
+            <span className="text-red-600 dark:text-red-400 font-semibold">
+              ⚠️ No fields selected
+            </span>
+          ) : (
             <span>
-              <strong>Important:</strong> Review the extracted information
-              below. Uncheck any fields you don't want to update. Fields already
-              in your profile that differ from the imported data are
-              pre-selected for your review.
+              Ready to import {selectedCount} field
+              {selectedCount !== 1 ? "s" : ""}
             </span>
-          </p>
-        </div>
-
-        {/* Selection Controls */}
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <strong className="text-gray-900 dark:text-white">
-              {selectedCount}
-            </strong>{" "}
-            of{" "}
-            <strong className="text-gray-900 dark:text-white">
-              {totalCount}
-            </strong>{" "}
-            fields selected for import
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleSelectAll}
-              className="px-3 py-1.5 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 rounded transition-colors"
-            >
-              ✓ Select All
-            </button>
-            <button
-              onClick={handleSelectNone}
-              className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 rounded transition-colors"
-            >
-              ✗ Select None
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {/* Personal Information */}
-          {categories.personal.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                👤 Personal Information
-              </h3>
-              <div className="space-y-3">
-                {categories.personal.map((field) => (
-                  <FieldRow
-                    key={field}
-                    field={field}
-                    label={getFieldLabel(field)}
-                    currentValue={formatValue(field, currentProfile[field])}
-                    importedValue={editableData[field]}
-                    isSelected={selectedFields[field]}
-                    onToggle={() => handleFieldToggle(field)}
-                    onChange={(value) => handleFieldChange(field, value)}
-                  />
-                ))}
-              </div>
-            </div>
           )}
-
-          {/* Service Information */}
-          {categories.service.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                🎖️ Service Information
-              </h3>
-              <div className="space-y-3">
-                {categories.service.map((field) => (
-                  <FieldRow
-                    key={field}
-                    field={field}
-                    label={getFieldLabel(field)}
-                    currentValue={formatValue(field, currentProfile[field])}
-                    importedValue={editableData[field]}
-                    isSelected={selectedFields[field]}
-                    onToggle={() => handleFieldToggle(field)}
-                    onChange={(value) => handleFieldChange(field, value)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Contact Information */}
-          {categories.contact.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                📞 Contact Information
-              </h3>
-              <div className="space-y-3">
-                {categories.contact.map((field) => (
-                  <FieldRow
-                    key={field}
-                    field={field}
-                    label={getFieldLabel(field)}
-                    currentValue={formatValue(field, currentProfile[field])}
-                    importedValue={editableData[field]}
-                    isSelected={selectedFields[field]}
-                    onToggle={() => handleFieldToggle(field)}
-                    onChange={(value) => handleFieldChange(field, value)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Other Fields */}
-          {categories.other.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                📝 Other Information
-              </h3>
-              <div className="space-y-3">
-                {categories.other.map((field) => (
-                  <FieldRow
-                    key={field}
-                    field={field}
-                    label={getFieldLabel(field)}
-                    currentValue={formatValue(field, currentProfile[field])}
-                    importedValue={editableData[field]}
-                    isSelected={selectedFields[field]}
-                    onToggle={() => handleFieldToggle(field)}
-                    onChange={(value) => handleFieldChange(field, value)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-4">
-          <button
-            onClick={onCancel}
-            className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
-          >
-            ✗ Cancel Import
-          </button>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {selectedCount === 0 ? (
-                <span className="text-red-600 dark:text-red-400 font-semibold">
-                  ⚠️ No fields selected
-                </span>
-              ) : (
-                <span>
-                  Ready to import {selectedCount} field
-                  {selectedCount !== 1 ? "s" : ""}
-                </span>
-              )}
-            </span>
-            <button
-              onClick={handleConfirm}
-              disabled={selectedCount === 0}
-              className={`px-6 py-2.5 font-semibold rounded-lg transition-colors ${
-                selectedCount === 0
-                  ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              }`}
-            >
-              ✓ Import Selected Fields
-            </button>
-          </div>
-        </div>
+        </span>
+        <button
+          onClick={handleConfirm}
+          disabled={selectedCount === 0}
+          className={`px-6 py-2.5 font-semibold rounded-lg transition-colors ${
+            selectedCount === 0
+              ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+          }`}
+        >
+          ✓ Import Selected Fields
+        </button>
       </div>
     </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onCancel}
+      size="2xl"
+      zIndex={9999}
+      labelledBy="profile-import-title"
+      footer={footer}
+      header={
+        <>
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div>
+              <h2
+                id="profile-import-title"
+                className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+              >
+                📋 Review Imported Profile Data
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Review and edit information before saving to your Veteran
+                Profile
+              </p>
+            </div>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg
+                className="w-6 h-6 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Warning Banner */}
+          <div className="px-6 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
+              <span className="text-lg">⚠️</span>
+              <span>
+                <strong>Important:</strong> Review the extracted information
+                below. Uncheck any fields you don't want to update. Fields
+                already in your profile that differ from the imported data are
+                pre-selected for your review.
+              </span>
+            </p>
+          </div>
+
+          {/* Selection Controls */}
+          <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              <strong className="text-gray-900 dark:text-white">
+                {selectedCount}
+              </strong>{" "}
+              of{" "}
+              <strong className="text-gray-900 dark:text-white">
+                {totalCount}
+              </strong>{" "}
+              fields selected for import
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSelectAll}
+                className="px-3 py-1.5 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 rounded transition-colors"
+              >
+                ✓ Select All
+              </button>
+              <button
+                onClick={handleSelectNone}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 rounded transition-colors"
+              >
+                ✗ Select None
+              </button>
+            </div>
+          </div>
+        </>
+      }
+    >
+      {/* Personal Information */}
+      {categories.personal.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            👤 Personal Information
+          </h3>
+          <div className="space-y-3">
+            {categories.personal.map((field) => (
+              <FieldRow
+                key={field}
+                field={field}
+                label={getFieldLabel(field)}
+                currentValue={formatValue(field, currentProfile[field])}
+                importedValue={editableData[field]}
+                isSelected={selectedFields[field]}
+                onToggle={() => handleFieldToggle(field)}
+                onChange={(value) => handleFieldChange(field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Service Information */}
+      {categories.service.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            🎖️ Service Information
+          </h3>
+          <div className="space-y-3">
+            {categories.service.map((field) => (
+              <FieldRow
+                key={field}
+                field={field}
+                label={getFieldLabel(field)}
+                currentValue={formatValue(field, currentProfile[field])}
+                importedValue={editableData[field]}
+                isSelected={selectedFields[field]}
+                onToggle={() => handleFieldToggle(field)}
+                onChange={(value) => handleFieldChange(field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Contact Information */}
+      {categories.contact.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            📞 Contact Information
+          </h3>
+          <div className="space-y-3">
+            {categories.contact.map((field) => (
+              <FieldRow
+                key={field}
+                field={field}
+                label={getFieldLabel(field)}
+                currentValue={formatValue(field, currentProfile[field])}
+                importedValue={editableData[field]}
+                isSelected={selectedFields[field]}
+                onToggle={() => handleFieldToggle(field)}
+                onChange={(value) => handleFieldChange(field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Other Fields */}
+      {categories.other.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            📝 Other Information
+          </h3>
+          <div className="space-y-3">
+            {categories.other.map((field) => (
+              <FieldRow
+                key={field}
+                field={field}
+                label={getFieldLabel(field)}
+                currentValue={formatValue(field, currentProfile[field])}
+                importedValue={editableData[field]}
+                isSelected={selectedFields[field]}
+                onToggle={() => handleFieldToggle(field)}
+                onChange={(value) => handleFieldChange(field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </ResponsiveModal>
   );
 };
 
