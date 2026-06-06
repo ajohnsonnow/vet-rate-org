@@ -176,7 +176,7 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
                     className="text-xl font-bold text-white flex items-center gap-2"
                   >
                     BDD Builder
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                       NEW
                     </span>
                   </h2>
@@ -436,6 +436,7 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
         </label>
         <input
           type="date"
+          aria-label="Separation or ETS date"
           value={localDate}
           onChange={(e) => setLocalDate(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg"

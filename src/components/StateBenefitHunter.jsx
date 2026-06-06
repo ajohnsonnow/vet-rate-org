@@ -405,7 +405,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               className="text-2xl sm:text-3xl font-bold"
             >
               State Benefit Hunter{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                 BETA
               </span>
             </h2>
@@ -500,6 +500,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 Your State
               </label>
               <select
+                aria-label="Your State"
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -518,6 +519,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 Combined VA Rating
               </label>
               <select
+                aria-label="Combined VA Rating"
                 value={selectedRating}
                 onChange={(e) => {
                   setSelectedRating(e.target.value);

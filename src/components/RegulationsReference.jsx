@@ -153,7 +153,7 @@ const RegulationsReference = ({ onClose }) => {
             <div>
               <h2 id="regulations-title" className="text-2xl font-bold">
                 38 CFR Title 38 - Your Rights & The Rules{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                   BETA
                 </span>
               </h2>

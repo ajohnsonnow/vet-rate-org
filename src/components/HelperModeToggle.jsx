@@ -74,7 +74,7 @@ const HelperModeToggle = ({ compact = false }) => {
             {isHelperMode ? "Helper ON" : "Helping"}
           </span>
           {!isHelperMode && (
-            <span className="hidden lg:inline text-[10px] px-1 py-0.5 bg-pink-500 text-white rounded font-bold group-hover:animate-pulse">
+            <span className="hidden lg:inline text-[10px] px-1 py-0.5 bg-pink-600 text-white rounded font-bold group-hover:animate-pulse">
               Caregiver?
             </span>
           )}

@@ -355,7 +355,7 @@ const TacticalCalculator = ({
                     className="text-lg sm:text-2xl md:text-3xl font-bold truncate"
                   >
                     {t("tacticalCalc", "title")}{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                       {t("common", "beta")}
                     </span>
                   </h2>
@@ -1031,6 +1031,10 @@ const TacticalCalculator = ({
                           {t("tacticalCalc", "bodyPartConditionType")}
                         </label>
                         <select
+                          aria-label={t(
+                            "tacticalCalc",
+                            "bodyPartConditionType",
+                          )}
                           value={newCondition.bodyPart}
                           onChange={(e) => {
                             const bp = e.target.value;
@@ -1076,6 +1080,7 @@ const TacticalCalculator = ({
                             {t("tacticalCalc", "side")}
                           </label>
                           <select
+                            aria-label={t("tacticalCalc", "side")}
                             value={newCondition.side}
                             onChange={(e) =>
                               setNewCondition((prev) => ({
@@ -1107,6 +1112,7 @@ const TacticalCalculator = ({
                           {t("tacticalCalc", "ratingPercent")}
                         </label>
                         <select
+                          aria-label={t("tacticalCalc", "ratingPercent")}
                           value={newCondition.rating}
                           onChange={(e) =>
                             setNewCondition((prev) => ({
@@ -2556,6 +2562,7 @@ const TacticalCalculator = ({
                 {t("tacticalCalc", "bodyPartSystem")}
               </label>
               <select
+                aria-label={t("tacticalCalc", "bodyPartSystem")}
                 value={editForm.bodyPart}
                 onChange={(e) =>
                   setEditForm({ ...editForm, bodyPart: e.target.value })
@@ -2586,6 +2593,7 @@ const TacticalCalculator = ({
                 {t("tacticalCalc", "ratingPercentage")}
               </label>
               <select
+                aria-label={t("tacticalCalc", "ratingPercentage")}
                 value={editForm.rating}
                 onChange={(e) =>
                   setEditForm({
@@ -2612,6 +2620,7 @@ const TacticalCalculator = ({
                     {t("tacticalCalc", "sideBilateral")}
                   </label>
                   <select
+                    aria-label={t("tacticalCalc", "sideBilateral")}
                     value={editForm.side}
                     onChange={(e) =>
                       setEditForm({ ...editForm, side: e.target.value })

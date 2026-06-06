@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vet-Rate.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
@@ -1498,7 +1498,7 @@ const DD214Analyzer = ({
                   className="text-xl font-bold text-white"
                 >
                   {t("dd214Analyzer", "title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                     {t("dd214Analyzer", "beta")}
                   </span>
                 </h2>

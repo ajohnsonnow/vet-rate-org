@@ -250,7 +250,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
                   <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
                     AI
                   </span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                     BETA
                   </span>
                 </h2>

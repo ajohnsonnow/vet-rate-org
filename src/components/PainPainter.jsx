@@ -1258,7 +1258,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                     className="text-2xl sm:text-3xl font-bold"
                   >
                     Pain Painter{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                       BETA
                     </span>
                   </h2>

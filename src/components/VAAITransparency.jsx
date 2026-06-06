@@ -815,7 +815,7 @@ const VAAITransparency = ({ onClose }) => {
               href="https://department.va.gov/ai/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-blue-600 dark:text-blue-400 underline"
             >
               department.va.gov/ai/
             </a>{" "}
@@ -846,7 +846,7 @@ const VAAITransparency = ({ onClose }) => {
                     className="text-3xl font-bold text-white"
                   >
                     VA AI Transparency Hub{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                       BETA
                     </span>
                   </h2>

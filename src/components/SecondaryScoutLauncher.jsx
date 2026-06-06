@@ -1206,7 +1206,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                   className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
                 >
                   🔍 Secondary Scout{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     BETA
                   </span>
                 </h2>

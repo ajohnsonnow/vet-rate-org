@@ -908,7 +908,7 @@ function CommunityRoadmap({ onClose }) {
                       px-1.5 py-0.5 rounded-full text-xs
                       ${
                         activeFilter === tab.id
-                          ? "bg-white/20"
+                          ? "bg-black/25"
                           : "bg-gray-200 dark:bg-gray-600"
                       }
                     `}

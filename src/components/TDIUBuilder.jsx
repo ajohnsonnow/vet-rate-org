@@ -754,6 +754,7 @@ export default function TDIUBuilder({
             What condition affects your work?
           </label>
           <select
+            aria-label="What condition affects your work?"
             value={currentDisability.condition}
             onChange={(e) =>
               setCurrentDisability({ condition: e.target.value, symptoms: [] })
@@ -951,6 +952,7 @@ export default function TDIUBuilder({
               Highest level of education?
             </label>
             <select
+              aria-label="Highest level of education?"
               value={workHistory.education}
               onChange={(e) =>
                 setWorkHistory((prev) => ({
@@ -1273,10 +1275,10 @@ export default function TDIUBuilder({
                     className="text-xl font-bold text-white flex items-center gap-2"
                   >
                     TDIU Work Impact Builder
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                       AI
                     </span>
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                       BETA
                     </span>
                   </h2>

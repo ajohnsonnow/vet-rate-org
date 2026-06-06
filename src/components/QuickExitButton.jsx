@@ -50,7 +50,7 @@ const QuickExitButton = ({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={`${positions[position]} z-[9999] px-3 py-1.5 text-xs 
-            ${isHovered ? "bg-slate-700 text-white" : "bg-slate-800/50 text-slate-500"} 
+            ${isHovered ? "bg-slate-700 text-white" : "bg-slate-800/50 text-slate-400"}
             border border-slate-700 rounded-md transition-all hover:border-slate-600
             ${className}`}
           aria-label="Quick exit - immediately leave this page"

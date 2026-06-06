@@ -500,7 +500,7 @@ const VaSandboxTest = ({ onClose }) => {
           <div>
             <h2 id="va-sandbox-title" className="text-2xl font-bold">
               VA Sandbox Validation Dashboard{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                 BETA
               </span>
             </h2>

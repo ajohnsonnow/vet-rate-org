@@ -598,7 +598,7 @@ const DemoDashboard = ({ onClose }) => {
               className="text-2xl font-bold tracking-tight"
             >
               VA.gov API System Status{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                 BETA
               </span>
             </h2>

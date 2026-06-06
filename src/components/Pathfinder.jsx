@@ -699,7 +699,7 @@ export default function Pathfinder({
         </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {t("pathfinder", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
             BETA
           </span>
         </h1>

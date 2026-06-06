@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -370,7 +370,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                   className="text-2xl sm:text-3xl font-bold"
                 >
                   Legislative Watchdog{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     BETA
                   </span>
                 </h2>
@@ -489,7 +489,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                 onClick={() => setActiveFilter(filter.key)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
                   activeFilter === filter.key
-                    ? "bg-amber-600 text-white"
+                    ? "bg-amber-700 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
@@ -543,7 +543,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                           {update.status.replace("_", " ").toUpperCase()}
                         </span>
                         {update.urgency === "high" && (
-                          <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                          <span className="px-2 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse">
                             🚨 URGENT
                           </span>
                         )}
@@ -667,7 +667,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                         href={update.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+                        className="flex-shrink-0 px-4 py-2 bg-amber-700 text-white rounded-lg text-sm font-medium hover:bg-amber-800 transition-colors"
                       >
                         Read More →
                       </a>

@@ -208,7 +208,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
         <div className="text-left">
           <span className="block text-sm font-bold">Atomic Wipe</span>
           <span
-            className={`block text-xs ${isDark || isTbiComfort ? "text-red-500/70" : "text-red-500"}`}
+            className={`block text-xs ${isDark || isTbiComfort ? "text-red-400" : "text-red-500"}`}
           >
             Clear All Local Data
           </span>

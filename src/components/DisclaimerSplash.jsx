@@ -88,7 +88,7 @@ function DisclaimerSplash({ onAcknowledge }) {
           <div className="flex-1">
             <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
               Active Development - Beta Tools
-              <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">
+              <span className="px-2 py-0.5 bg-amber-700 text-white text-xs font-bold rounded-full">
                 BETA
               </span>
             </h3>
