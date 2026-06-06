@@ -287,6 +287,24 @@ RedTeam (already on ResponsiveModal).
       hamburger; the rest are flow/prop-gated), so **manual-verify**; the drawer's trap/ESC/restore reuses
       the unit-tested `useFocusTrap` / `useBodyScrollLock` primitives. Gate: ESLint 0 errors, `tsc` clean,
       809 unit tests green.
+- [x] Passive/aria (live-region + label hygiene on non-modal surfaces — Bucket E + Bucket C
+      "PWA banners"). **AccessibilityMenu** (Bucket E): the `role="menu"` panel's
+      `aria-labelledby="accessibility-menu"` pointed at a **non-existent id** (dangling reference →
+      no accessible name, SC 4.1.2) → added `id="accessibility-menu"` to the trigger button so the
+      menu is named by its opener (the button's existing `aria-label` supplies the text; the standard
+      "menu labelled by its trigger" pattern; one-attribute fix). **Toast**: the multi-toast container
+      carried `aria-atomic="true"`, which re-announces *every* visible toast on each add → removed it
+      (additions-only is the default and correct for a stack); and every toast was `role="alert"` +
+      `aria-live="assertive"` regardless of severity → made it severity-aware (`error`/`warning`/
+      `network` → `alert`/assertive; `success`/`info` → `status`/polite) so a success toast no longer
+      interrupts a screen reader mid-task. **UpdateBanner** + **MobileNotice**: both are injected after
+      mount (SW-update detection / tablet detection) with no live-region semantics → added
+      `role="status"` + `aria-live="polite"` so SR users hear them appear (polite — neither is urgent).
+      **MobileBottomNav**: audited, **already compliant** (`<nav aria-label="Main navigation">`,
+      per-button `aria-label` + `aria-current="page"`, `min-h-[60px]`/`min-w-touch` ≥44px targets,
+      focus rings) → no change. **Note:** full screen-reader confirmation (NVDA/VoiceOver/TalkBack) of
+      the announce behaviour is a manual-checklist item (cannot be verified in CI). Gate: ESLint 0
+      errors, `tsc` clean, 809 unit tests green.
 - [ ] **Deferred this pass (examined, not mechanical — need their own focused chunk):**
       **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
       `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed
@@ -303,7 +321,10 @@ RedTeam (already on ResponsiveModal).
 - [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
       forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
 - [ ] Navigation — AboutUs VersionDropUp (Header drawer + Tools/Resources dropdowns done in Bucket A)
-- [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
+- [x] Passive/aria — AccessibilityMenu (dangling `aria-labelledby` fixed), Toast (severity-aware
+      live region + atomic re-announce removed), UpdateBanner + MobileNotice (`role="status"`),
+      MobileBottomNav (already compliant). PWAInstallButton banners (Bucket C) ride the
+      light-only-theming chunk below, alongside its iOS-instructions migration.
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
 - [ ] CI wiring — flagged for owner authorization
 
