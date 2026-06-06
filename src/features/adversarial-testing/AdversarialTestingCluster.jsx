@@ -42,17 +42,13 @@ export default function AdversarialTestingCluster() {
         />
       )}
       {showClaimStressTest && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-          <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <ClaimStressTest
-              onClose={() => setShowClaimStressTest(false)}
-              onReportBug={() => {
-                setShowClaimStressTest(false);
-                window.dispatchEvent(new CustomEvent("openBugSquasher"));
-              }}
-            />
-          </div>
-        </div>
+        <ClaimStressTest
+          onClose={() => setShowClaimStressTest(false)}
+          onReportBug={() => {
+            setShowClaimStressTest(false);
+            window.dispatchEvent(new CustomEvent("openBugSquasher"));
+          }}
+        />
       )}
     </Suspense>
   );
