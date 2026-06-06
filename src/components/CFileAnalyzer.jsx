@@ -159,7 +159,7 @@ export default function CFileAnalyzer({
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
       setError(t("cfileAnalyzer", "noAiAvailable"));
-      setShowAISettings(true);
+      onOpenAISettings?.();
       return;
     }
 

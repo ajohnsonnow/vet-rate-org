@@ -89,15 +89,24 @@ selection.
 
 Triage of the pre-existing `no-undef` backlog surfaced **real latent runtime bugs**, not
 style noise. These were already `no-undef:"warn"` before S13 (not newly introduced) and
-`tsc --noEmit` does **not** catch them (`checkJs:false`). Flagged here for a dedicated
-fast-follow chunk — **not** fixed in S13, because several need intended-UX/domain judgment
-(do not guess). Left at "warn"; do **not** ratchet `no-undef` to "error" until drained.
+`tsc --noEmit` does **not** catch them (`checkJs:false`). The 3 `setShowAISettings` crashes
+were **fixed** in this sprint because the correct behavior was unambiguous from the
+codebase's own convention (not a guess — see below). The rest remain a documented fast-follow
+backlog: several need intended-UX/domain judgment. Left at "warn"; do **not** ratchet
+`no-undef` to "error" until drained.
+
+**Fixed (3 of the cluster) — `setShowAISettings` → `onOpenAISettings?.()`.** CFileAnalyzer,
+DenialDecoder, and Pathfinder each already **receive** an `onOpenAISettings` prop (wired by
+their cluster shells to dispatch the `openAISettings` event / call the shell handler) and use
+it for their `AIStatusBadge`. Their no-AI-available path wrongly called the nonexistent local
+setter `setShowAISettings(true)` → `ReferenceError` instead of opening settings. Switched each
+to the prop they already own. Convention-following, not guesswork; lint `no-undef` 12 → 9.
 
 | file:line | undefined name | assessment |
 |---|---|---|
-| [CFileAnalyzer.jsx:162](../../src/components/CFileAnalyzer.jsx#L162) | `setShowAISettings` | **confirmed bug** — `handleStartAnalysis` calls it when no AI is available; setter is undefined in the component → `ReferenceError` instead of opening settings. |
-| [DenialDecoder.jsx:148](../../src/components/DenialDecoder.jsx#L148) | `setShowAISettings` | same pattern (no-AI path). |
-| [Pathfinder.jsx:637](../../src/components/Pathfinder.jsx#L637) | `setShowAISettings` | same pattern (no-AI path). |
+| [CFileAnalyzer.jsx:162](../../src/components/CFileAnalyzer.jsx#L162) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
+| [DenialDecoder.jsx:148](../../src/components/DenialDecoder.jsx#L148) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
+| [Pathfinder.jsx:637](../../src/components/Pathfinder.jsx#L637) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
 | [LocalAIPanel.jsx:1558](../../src/components/LocalAIPanel.jsx#L1558) | `setWebGPUStatus` | undefined setter cluster — needs read of intended state wiring. |
 | [LocalAIPanel.jsx:1568](../../src/components/LocalAIPanel.jsx#L1568) | `handleUnload` | undefined handler. |
 | [LocalAIPanel.jsx:1572](../../src/components/LocalAIPanel.jsx#L1572) | `handleLoadModel` | undefined handler. |
@@ -123,8 +132,10 @@ a blind edit. Left at "warn"; do not ratchet `no-dupe-keys` to "error" until res
 
 ## Out of S13 scope (documented backlog → fast-follow / later sprints)
 
-- `no-undef` cluster (above) — dedicated bug-fix chunk; needs intended-UX confirmation for the
-  `setShowAISettings` no-AI path (open an AI-settings surface vs. a different fallback).
+- `no-undef` cluster (above) — 3 `setShowAISettings` crashes fixed in this sprint; the
+  remaining 9 (LocalAIPanel handler/setter cluster, `hasVisionModel`, `priorAppeals`,
+  `STANDARD_FONT_DATA_URL`, worker `gc`) are a dedicated bug-fix fast-follow needing per-site
+  investigation.
 - `no-dupe-keys` in `mosDatabase.js` — MOS-code dedupe with domain judgment.
 - `no-console` → "error" ratchet — deferred to **S17** (after `console.*` → `logger`).
 - jsx-a11y + `exhaustive-deps` backlog drain — incremental; ratchet each rule to error once 0.
