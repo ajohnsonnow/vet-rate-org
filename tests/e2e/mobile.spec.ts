@@ -115,6 +115,15 @@ const MODALS = [
   // independently.) Both nested children are exercised via those flows.
   { label: "Pain Painter", event: "openPainPainter" },
   { label: "Backup Manager", event: "openBackupManager" },
+  // Cluster F (S10): PathfinderModal (teal-gradient header slot, no always-present
+  // shell footer CTA) and ClaimNavigator (a full-bleed "Mission Control" takeover)
+  // assert the overflow contract here. Pathfinder's File-Drop-In child and
+  // ClaimNavigator's Help modal both lift above their parent shell (zIndex={70} /
+  // default z-60 over the z-50 takeover) and open only after interaction (a
+  // drop-in trigger / the Help button), so neither has a bare open* event; both
+  // are exercised via those flows.
+  { label: "Pathfinder", event: "openPathfinder" },
+  { label: "Claim Navigator", event: "openClaimNavigator" },
 ];
 
 /**
