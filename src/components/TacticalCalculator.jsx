@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ShareButton, { PIISensitive } from "./ShareButton";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { FocusToggle } from "../contexts/FocusModeContext";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -43,7 +43,6 @@ const TacticalCalculator = ({
   capSimulatorResults = [],
   onClearCapResults,
 }) => {
-  useBodyScrollLock(true);
   const { t } = useLanguage();
 
   // Ref for screenshot capture
@@ -335,19 +334,14 @@ const TacticalCalculator = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop overscroll-contain"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="calculator-title"
-    >
-      <div className="w-full h-full sm:min-h-0 sm:max-h-[90vh] flex items-start justify-center">
-        <div
-          ref={calculatorContentRef}
-          className="bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-xl w-full sm:max-w-6xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col"
-        >
-          {/* Header - Sticky */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-none sm:rounded-t-lg relative overflow-hidden flex-shrink-0">
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="calculator-title"
+        header={
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
             <div className="relative flex items-start justify-between gap-2">
@@ -405,7 +399,9 @@ const TacticalCalculator = ({
               </div>
             </div>
           </div>
-
+        }
+      >
+        <div ref={calculatorContentRef}>
           {/* Tab Navigation - Sticky */}
           <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
             <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
@@ -481,8 +477,8 @@ const TacticalCalculator = ({
             </nav>
           </div>
 
-          {/* Content - Scrollable */}
-          <div className="p-3 sm:p-4 md:p-6 overflow-y-auto flex-1">
+          {/* Content */}
+          <div className="p-3 sm:p-4 md:p-6">
             {/* My Ratings Tab - Save and manage your actual VA ratings */}
             {activeTab === "myratings" && (
               <div className="space-y-6">
@@ -2491,7 +2487,7 @@ const TacticalCalculator = ({
             </div>
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* VA.gov Rating Paster Modal */}
       {showVAGovPaster && (
@@ -2504,143 +2500,24 @@ const TacticalCalculator = ({
 
       {/* Edit Condition Modal */}
       {editingCondition && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-xl font-bold">
+        <ResponsiveModal
+          isOpen
+          onClose={handleCancelEdit}
+          size="md"
+          zIndex={70}
+          labelledBy="edit-condition-title"
+          header={
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4">
+              <h3 id="edit-condition-title" className="text-xl font-bold">
                 {t("tacticalCalc", "editCondition")}
               </h3>
               <p className="text-blue-100 text-sm mt-1">
                 Update rating and bilateral status
               </p>
             </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-4">
-              {/* Condition Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t("tacticalCalc", "conditionName")}
-                </label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder={t("tacticalCalc", "conditionPlaceholder")}
-                />
-              </div>
-
-              {/* Body Part */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t("tacticalCalc", "bodyPartSystem")}
-                </label>
-                <select
-                  value={editForm.bodyPart}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, bodyPart: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">
-                    {t("tacticalCalc", "selectBodyPart")}
-                  </option>
-                  <optgroup label={t("tacticalCalc", "extremitiesGroup")}>
-                    {BODY_PARTS.extremities.map((bp) => (
-                      <option key={bp.value} value={bp.value}>
-                        {bp.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={t("tacticalCalc", "otherSystems")}>
-                    {BODY_PARTS.other.map((bp) => (
-                      <option key={bp.value} value={bp.value}>
-                        {bp.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-
-              {/* Rating Percentage */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t("tacticalCalc", "ratingPercentage")}
-                </label>
-                <select
-                  value={editForm.rating}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      rating: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  {ratingOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}%
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Side (only show if body part can be bilateral) */}
-              {editForm.bodyPart &&
-                allBodyParts.find((bp) => bp.value === editForm.bodyPart)
-                  ?.canBeBilateral && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("tacticalCalc", "sideBilateral")}
-                    </label>
-                    <select
-                      value={editForm.side}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, side: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="none">
-                        {t("tacticalCalc", "notBilateral")}
-                      </option>
-                      <option value="left">{t("tacticalCalc", "left")}</option>
-                      <option value="right">
-                        {t("tacticalCalc", "right")}
-                      </option>
-                      <option value="bilateral">
-                        {t("tacticalCalc", "bothSides")}
-                      </option>
-                    </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      💡 {t("tacticalCalc", "bilateralHint")}
-                    </p>
-                  </div>
-                )}
-
-              {/* Bilateral Factor Explanation */}
-              {editForm.side !== "none" && (
-                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
-                  <div className="flex gap-2">
-                    <span className="text-lg">🔄</span>
-                    <div className="text-sm text-purple-700 dark:text-purple-300">
-                      <p className="font-semibold">
-                        {t("tacticalCalc", "bilateralWillApply")}
-                      </p>
-                      <p className="text-xs mt-1">
-                        {t("tacticalCalc", "bilateralExplanation")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 rounded-b-lg flex justify-end gap-3">
+          }
+          footer={
+            <div className="flex justify-end gap-3">
               <button
                 onClick={handleCancelEdit}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -2654,10 +2531,128 @@ const TacticalCalculator = ({
                 {t("tacticalCalc", "saveChanges")}
               </button>
             </div>
+          }
+        >
+          <div className="space-y-4">
+            {/* Condition Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("tacticalCalc", "conditionName")}
+              </label>
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder={t("tacticalCalc", "conditionPlaceholder")}
+              />
+            </div>
+
+            {/* Body Part */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("tacticalCalc", "bodyPartSystem")}
+              </label>
+              <select
+                value={editForm.bodyPart}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, bodyPart: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">{t("tacticalCalc", "selectBodyPart")}</option>
+                <optgroup label={t("tacticalCalc", "extremitiesGroup")}>
+                  {BODY_PARTS.extremities.map((bp) => (
+                    <option key={bp.value} value={bp.value}>
+                      {bp.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t("tacticalCalc", "otherSystems")}>
+                  {BODY_PARTS.other.map((bp) => (
+                    <option key={bp.value} value={bp.value}>
+                      {bp.label}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Rating Percentage */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("tacticalCalc", "ratingPercentage")}
+              </label>
+              <select
+                value={editForm.rating}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    rating: parseInt(e.target.value),
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                {ratingOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}%
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Side (only show if body part can be bilateral) */}
+            {editForm.bodyPart &&
+              allBodyParts.find((bp) => bp.value === editForm.bodyPart)
+                ?.canBeBilateral && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t("tacticalCalc", "sideBilateral")}
+                  </label>
+                  <select
+                    value={editForm.side}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, side: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="none">
+                      {t("tacticalCalc", "notBilateral")}
+                    </option>
+                    <option value="left">{t("tacticalCalc", "left")}</option>
+                    <option value="right">{t("tacticalCalc", "right")}</option>
+                    <option value="bilateral">
+                      {t("tacticalCalc", "bothSides")}
+                    </option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    💡 {t("tacticalCalc", "bilateralHint")}
+                  </p>
+                </div>
+              )}
+
+            {/* Bilateral Factor Explanation */}
+            {editForm.side !== "none" && (
+              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
+                <div className="flex gap-2">
+                  <span className="text-lg">🔄</span>
+                  <div className="text-sm text-purple-700 dark:text-purple-300">
+                    <p className="font-semibold">
+                      {t("tacticalCalc", "bilateralWillApply")}
+                    </p>
+                    <p className="text-xs mt-1">
+                      {t("tacticalCalc", "bilateralExplanation")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </ResponsiveModal>
       )}
-    </div>
+    </>
   );
 };
 

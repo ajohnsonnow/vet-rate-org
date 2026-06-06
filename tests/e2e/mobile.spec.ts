@@ -33,7 +33,6 @@ const MODALS = [
   // lift to zIndex={70} above the z-60 main shell and open only after interaction
   // (selecting a saved item / importing a file), so they are exercised via flows.
   { label: "My Packet", event: "openMyPacket" },
-  { label: "Tactical Calculator", event: "openTacticalCalculator" },
   { label: "Time Machine", event: "openTimeMachine" },
   // Cluster B (S10): rich-header / no-max-h modals migrated to the shell. These
   // keep their action bar in the body (permanently-dark panels whose theming
@@ -141,6 +140,15 @@ const MODALS = [
   // exercised via those flows; the flashcard + results BuyMeCoffee popups are
   // fragment siblings of the shell.
   { label: "C&P Simulator", event: "openCAPSimulator" },
+  // Cluster F7 (S10): TacticalCalculator's main modal migrated to the shell. Its
+  // gradient header carries an always-visible close-X and the footer (CFR
+  // disclaimer + Buy-Me-Coffee + Close) sits as the last body element rather than
+  // the sticky-footer slot, so it asserts the overflow contract here. The nested
+  // Edit Condition modal lifts to zIndex={70} above the z-60 shell and uses the
+  // footer slot for its Cancel/Save CTAs, but it only mounts after tapping a saved
+  // condition's edit action (editingCondition gate, no bare event), so it is
+  // exercised via that flow. VAGovRatingPaster already paints at z-100.
+  { label: "Tactical Calculator", event: "openTacticalCalculator" },
 ];
 
 /**
