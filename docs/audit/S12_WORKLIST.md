@@ -158,7 +158,7 @@ RedTeam (already on ResponsiveModal).
       handled by global `!important` overrides on base utility classes in `index.css`
       (`html.tbi-comfort .bg-white`, `html.aaa-high-contrast body/*`), not Tailwind `dark:`. Added a
       `mobile.spec.ts` block clicking the real AppShellTop trigger (`aria-label="Clear all local
-    data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
+  data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
       VaDataConsentPrompt is VA-OAuth-gated (no automatable trigger) → same shell, manual-verify only.
 - [x] Chunk 4 — migrate the event-triggerable BVA-data tool modals: **AppealsLaneAdvisor**
       (blue→cyan), **RemandRiskChecker** (amber→orange) and **NexusQualityAnalyzer**
@@ -202,7 +202,7 @@ RedTeam (already on ResponsiveModal).
       (DD214/PDF import review; rendered by DD214Analyzer) and **LanguageSuggestionModal**
       (`isOpen`-driven; rendered by LanguageSelector). ProfileImportConfirmModal shed its
       `fixed inset-0 z-[9999]` + `max-w-5xl max-h-[90vh]` card for `ResponsiveModal size="2xl"
-    zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
+  zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
       Select-All/None controls) move into the custom `header` slot as a fragment so they stay pinned
       edge-to-edge (desktop unchanged), the four field-category sections become the scroll body
       (inner `flex-1 overflow-y-auto` wrapper flattened to avoid double-scroll), and the Cancel /
@@ -212,7 +212,7 @@ RedTeam (already on ResponsiveModal).
       CTA extracted to a `const footer` branching on `isSubmitted` (Generate-Request before → Suggest-
       More/Done after). The submit button moved to the sticky footer but stays wired to the in-body
       `<form>` via HTML5 `form="lang-suggestion-form"` (Enter-to-submit preserved); `if (!isOpen)
-    return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
+  return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
       gain focus-trap + `role="dialog"` + ESC/backdrop dismiss for free. **No `mobile.spec.ts` entry** —
       both are prop/flow-gated, not event-triggerable, so **manual-verify** through the proven shell
       (precedent: VaDataConsentPrompt, Chunk 3; VAGovRatingPaster, Chunk 6). Gate: ESLint 0 errors,
@@ -244,7 +244,7 @@ RedTeam (already on ResponsiveModal).
       "won't ask again this session" caption move to the sticky `footer` slot. SecurityBadge's nested
       `SecurityModal` component (re-created on every render — would have remounted the shell, fighting the
       focus-trap, on each `activeTab` switch) was **inlined** at the render site as `ResponsiveModal
-    size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
+  size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
       move into the custom `header` slot as a fragment so both stay pinned, the `<h2>` gains
       `id="security-proof-title"` for `labelledBy`, the close `✕` `aria-label` is upgraded to
       "Close dialog", and the four tab-content components become the scroll body (its `p-6 dark:bg-gray-800`
@@ -256,13 +256,13 @@ RedTeam (already on ResponsiveModal).
 - [x] Chunk 10 — migrate **CommandersChecklist** `ChecklistModal` (the gamified claim-readiness
       progress tracker; modal mode only — its `isWidget` / `isEmbedded` render modes are untouched).
       Shed the `fixed inset-0` + `max-w-4xl max-h-[90vh] overflow-hidden` card for `ResponsiveModal
-    size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
+  size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
       the custom `header` slot (the `<h2>` gains `id="commanders-checklist-title"` for `labelledBy`,
       close `×` `aria-label` upgraded to "Close dialog"); the `p-6 overflow-y-auto max-h-[calc(...)]`
       content wrapper is flattened into the shell scroll body (status message + milestones grid + next
       steps + tips). The modal had **no footer bar** (close-only), so no `footer` slot. Removed two
       now-redundant pieces the shell owns: the parent's conditional `useBodyScrollLock(showModal &&
-    !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
+  !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
       `window.addEventListener("keydown", …Escape)` effect — focus-trap + ref-counted scroll-lock +
       ESC/backdrop dismiss + `role="dialog"` now come from the shell. Dropped the now-unused default
       `React` import (automatic JSX runtime). **No `mobile.spec.ts` entry** — it mounts behind
@@ -325,7 +325,7 @@ RedTeam (already on ResponsiveModal).
       on the text, so the blocker was theming, not layout. Added `dark:` variants to the intro / step /
       note text (`text-gray-700→dark:text-gray-300`, `text-gray-800→dark:text-gray-200`,
       `text-blue-600→dark:text-blue-400`, the note box `bg-blue-50 border-blue-200 →
-    dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
+  dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
       the modal to `ResponsiveModal size="sm"` (default dark-aware `title` header + close-X; gains
       focus-trap + `role="dialog"` + ESC/backdrop + scroll-lock for free; dropped the bespoke
       `fixed inset-0` + `bg-white max-w-md` card and its hand-rolled header/close). The same file's
@@ -360,7 +360,11 @@ RedTeam (already on ResponsiveModal).
       live region + atomic re-announce removed), UpdateBanner + MobileNotice (`role="status"`),
       MobileBottomNav (already compliant). PWAInstallButton banners (Bucket C) ride the
       light-only-theming chunk below, alongside its iOS-instructions migration.
-- [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
+- [x] SR manual checklist **drafted** → [S12_SR_MANUAL_CHECKLIST.md](./S12_SR_MANUAL_CHECKLIST.md)
+      (NVDA/Firefox, VoiceOver/Safari-iOS, TalkBack/Chrome-Android × landmarks, dialog contract,
+      live regions, disclosure/menu, tooltips, tour, forms). DoD "SR checklist drafted" met; the
+      owner-run pass is tracked in that doc's sign-off log.
+- [ ] Tests — Playwright trap/ESC/restore + axe (axe e2e needs `@axe-core/playwright` + CI → owner)
 - [ ] CI wiring — flagged for owner authorization
 
 ## Verification gate (per chunk)
