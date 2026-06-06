@@ -9,7 +9,7 @@
 > variants, don't blind-concat. **Apply per-cluster with a visual check — never
 > bulk auto-commit.**
 
-**Totals:** 72 findings across 49 files — 72 clean (5 high, 10 medium, 57 low), 0 ambiguous.
+**Totals:** 72 findings across 49 files — 69 clean (3 high, 10 medium, 56 low), 3 ambiguous.
 
 ## High priority — 4+ unprefixed columns (cramps/overflows at 360px)
 
@@ -18,12 +18,6 @@
 - L660 `grid-cols-5`
   current: `mt-6 grid grid-cols-5 gap-3`
   suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-5`
-
-### src/components/FOIAGenerator.jsx
-
-- L556 `grid-cols-6`
-  current: `grid grid-cols-6 gap-4 mt-4`
-  suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-6`
 
 ### src/components/PainPainter.jsx
 
@@ -36,12 +30,6 @@
 - L1916 `grid-cols-6`
   current: `grid grid-cols-6 gap-2`
   suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-6`
-
-### src/components/WhatIfSandbox.jsx
-
-- L369 `grid-cols-4`
-  current: `grid grid-cols-4 h-[calc(90vh-250px)]`
-  suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`
 
 ## Medium priority — 3 unprefixed columns (tight at 360px)
 
@@ -280,9 +268,6 @@
 - L2671 `grid-cols-2` · already-responsive
   current: `grid grid-cols-2 md:grid-cols-3 gap-4`
   suggest base → `grid-cols-1 sm:grid-cols-2`
-- L3281 `grid-cols-2`
-  current: `grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto`
-  suggest base → `grid-cols-1 sm:grid-cols-2`
 
 ### src/components/PACTActNavigator.jsx
 
@@ -406,4 +391,20 @@
 
 ## Ambiguous bucket (hand-review: dynamic class, interpolated cols, fixed children, or string-builder)
 
-_None._
+### src/components/FOIAGenerator.jsx
+
+- L556 `grid-cols-6` — fixed-child-subtree(verify)
+  current: `grid grid-cols-6 gap-4 mt-4`
+  suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-6`
+
+### src/components/MyPacket.jsx
+
+- L3281 `grid-cols-2` — fixed-child-subtree(verify)
+  current: `grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto`
+  suggest base → `grid-cols-1 sm:grid-cols-2`
+
+### src/components/WhatIfSandbox.jsx
+
+- L369 `grid-cols-4` — fixed-child-subtree(verify)
+  current: `grid grid-cols-4 h-[calc(90vh-250px)]`
+  suggest base → `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`

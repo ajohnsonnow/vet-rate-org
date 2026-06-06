@@ -105,7 +105,7 @@ function extractClassNames(code) {
       const end = skipString(code, i, code[i]);
       const inner = code.slice(i + 1, end - 1);
       if (inner.includes("grid-cols-"))
-        results.push({ inner, line: lineOf(i), isTemplate: false });
+        results.push({ inner, line: lineOf(i), isTemplate: false, at: i });
     } else if (code[i] === "{") {
       // balanced brace expression — collect every "..." and `...` fragment
       let depth = 1;
@@ -138,6 +138,7 @@ function extractClassNames(code) {
           inner: f.inner,
           line: lineOf(f.at),
           isTemplate: f.tpl || conditional,
+          at: f.at,
         });
       }
     }
@@ -216,6 +217,21 @@ for (const file of files) {
     if (!a) continue;
     let bucket = a.bucket;
     const reasons = [...a.reasons];
+    // Subtree col-span scan: analyze() only sees the grid's OWN className, but a
+    // fixed-child layout puts col-span/col-start on the *child* elements (e.g.
+    // a grid-cols-6 form row with col-span-3 City + col-span-1 State). Reflowing
+    // such a grid moves the spanned children, so it must be hand-fixed. Scan a
+    // bounded window of the source right after the grid's className — the
+    // immediate children — for child spans. Heuristic + bounded: it errs toward
+    // ambiguous (safe for a report), never silently labels a span layout clean.
+    if (
+      typeof str.at === "number" &&
+      !reasons.includes("fixed-child(col-span/start)") &&
+      /\bcol-(span|start|end)-/.test(code.slice(str.at, str.at + 900))
+    ) {
+      bucket = "ambiguous";
+      reasons.push("fixed-child-subtree(verify)");
+    }
     if (isStringBuilder) {
       bucket = "ambiguous";
       reasons.push("string-builder-file");
