@@ -19,7 +19,7 @@ For the ~38 **standard centered modals** that lack the dialog contract: **migrat
 a11y in place. ResponsiveModal already wires `useFocusTrap` (trap + ESC via `onEscape` +
 focus-restore on teardown), `useBodyScrollLock`, `role="dialog"`, `aria-modal="true"`,
 `aria-labelledby` (`title` or `labelledBy`), and `createPortal` to `document.body`; migration
-gets the full WCAG dialog contract *and* the mobile-first sticky-footer layout for free.
+gets the full WCAG dialog contract _and_ the mobile-first sticky-footer layout for free.
 Bespoke-pattern overlays (safety-critical `alertdialog`, command palette, drawer, two-pane
 shells, dropdowns) are **hand-applied** — migration would be semantically wrong for them.
 
@@ -54,20 +54,20 @@ editing** — the audit is the map and priority, not a license to edit blind.
 
 ### A. Hand-apply a11y (~11 — migration would be wrong)
 
-| Surface | Fix | Priority |
-|---|---|---|
-| `CrisisModal` | `useFocusTrap` (ESC **blocked**, autoFocus → Call button) | **#1 safety** |
-| `VoiceInput` Safety Confirmation | see Bucket B (migrate, dismissable per flow) | — |
-| `GlobalCommandSearch` | `useFocusTrap` under existing roving-tabindex; **don't migrate** | high |
-| `Header` Mobile Menu Drawer | `useFocusTrap` + ESC + `role="dialog"` (drawer) | **high (mobile nav)** |
-| `Header` Tools dropdown | `role="menu"` + ESC + focus mgmt | medium |
-| `Header` Resources dropdown | `role="menu"` + ESC + focus mgmt | medium |
-| `AboutUs` main modal | `useFocusTrap` + ESC (semantics present) | medium |
-| `AboutUs` VersionDropUp | disclosure: `aria-expanded` + ESC + focus-restore (NOT `role="menu"`) | low |
-| `AIConsentModal` | `useFocusTrap` + ESC (aria-modal already there) | high (cheap) |
-| `VADataCenter` Primary | `useFocusTrap` + focus-restore (role/aria/portal present) | medium |
-| `StressReliefDivision` DoomOverlay | `useFocusTrap` + `aria-modal` | medium |
-| `FeatureLookup` main two-pane shell | top-level ESC + nested-pane focus mgmt | medium |
+| Surface                             | Fix                                                                   | Priority              |
+| ----------------------------------- | --------------------------------------------------------------------- | --------------------- |
+| `CrisisModal`                       | `useFocusTrap` (ESC **blocked**, autoFocus → Call button)             | **#1 safety**         |
+| `VoiceInput` Safety Confirmation    | see Bucket B (migrate, dismissable per flow)                          | —                     |
+| `GlobalCommandSearch`               | `useFocusTrap` under existing roving-tabindex; **don't migrate**      | high                  |
+| `Header` Mobile Menu Drawer         | `useFocusTrap` + ESC + `role="dialog"` (drawer)                       | **high (mobile nav)** |
+| `Header` Tools dropdown             | `role="menu"` + ESC + focus mgmt                                      | medium                |
+| `Header` Resources dropdown         | `role="menu"` + ESC + focus mgmt                                      | medium                |
+| `AboutUs` main modal                | `useFocusTrap` + ESC (semantics present)                              | medium                |
+| `AboutUs` VersionDropUp             | disclosure: `aria-expanded` + ESC + focus-restore (NOT `role="menu"`) | low                   |
+| `AIConsentModal`                    | `useFocusTrap` + ESC (aria-modal already there)                       | high (cheap)          |
+| `VADataCenter` Primary              | `useFocusTrap` + focus-restore (role/aria/portal present)             | medium                |
+| `StressReliefDivision` DoomOverlay  | `useFocusTrap` + `aria-modal`                                         | medium                |
+| `FeatureLookup` main two-pane shell | top-level ESC + nested-pane focus mgmt                                | medium                |
 
 ### B. Migrate to ResponsiveModal (~38 standard modals)
 
@@ -102,20 +102,32 @@ WhatsNewModal → ShareButton → RemandRiskChecker.
 embedded view, `QuickExitButton` button, `SecurityBadge` button, `AdversarialTestingCluster`
 RedTeam (already on ResponsiveModal).
 
-### E. Surfaces the 48-file grep missed (fold into S12)
+### E. Surfaces the 48-file grep missed (fold into S12) — VERIFIED (Chunk 14)
 
-- `AccessibilityMenu` — `role="menu"` panel; misuses `role="menu"` with non-menuitem children,
-  `aria-labelledby="accessibility-menu"` points at a **non-existent id**; verify trap/restore on open.
-- Header **skip-link** + `#main-content` target — present ([Header.jsx:188](../../src/components/Header.jsx#L188),
-  [HomeMain.jsx:39](../../src/features/home/HomeMain.jsx#L39)); verify first-focusable + visible-on-focus via e2e.
-- `MobileBottomNav` — nav landmark; verify `aria-current`, label, 44px targets.
-- `Toast` — verify `aria-live`/`role="status"` (passive).
-- `DisclaimerSplash`, `TermsOfService` — S10 ResponsiveModal-backed consent gates; spot-check shell coverage.
-- `BootCampTour` — coachmark overlay; verify ESC + per-step focus, no keyboard trap.
-- `common/Tooltip` — verify `aria-describedby` + dismiss (WCAG 1.4.13).
+- `AccessibilityMenu` — **fixed** (Chunk 12): dangling `aria-labelledby="accessibility-menu"` → added
+  matching `id` to the trigger (menu-labelled-by-trigger). _(The "misuses `role="menu"` with
+  non-menuitem children" note: the panel's direct children are the toggle rows; left as-is — a
+  follow-up could revisit `role`, but the labelling bug was the SC 4.1.2 blocker.)_
+- Header **skip-link** + `#main-content` target — present + correct:
+  [Header.jsx:200](../../src/components/Header.jsx#L200) (`skip-link sr-only focus:not-sr-only` →
+  hidden until focused) targets `#main-content` in [HomeMain.jsx](../../src/features/home/HomeMain.jsx).
+  First-focusable + visible-on-focus is an **e2e** check (Tests row).
+- `MobileBottomNav` — **verified compliant** (Chunk 12): nav landmark + per-button `aria-label` +
+  `aria-current="page"` + ≥44px targets. No change.
+- `Toast` — **fixed** (Chunk 12): severity-aware live region + removed atomic re-announce.
+- `DisclaimerSplash`, `TermsOfServiceModal` — **verified** ResponsiveModal-backed
+  ([DisclaimerSplash.jsx:32](../../src/components/DisclaimerSplash.jsx#L32),
+  [TermsOfServiceModal.jsx:74](../../src/components/TermsOfServiceModal.jsx#L74)) → full dialog
+  contract via the shell. No change.
+- `BootCampTour` — **verified**: renders `null` itself; the popover/overlay/focus/keyboard are all
+  **driver.js** (configured `allowClose: true` → ESC exits, `overlayClickNext: false`). Descriptions
+  are trusted `t()` i18n (not user input). A11y is the library's responsibility; config is sound — no
+  fixable in-repo gap. Focus-order/SR step announcement is a manual/e2e item.
+- `common/Tooltip` — **verified fully WCAG 1.4.13-compliant**: ESC-dismissable (capture-phase
+  handler), hoverable (tooltip `pointer-events-auto` + pin-on-enter), persistent, `role="tooltip"` +
+  `aria-describedby`, shows on hover **and** focus. No change.
 - The ~30 S10 ResponsiveModal-migrated modals (`MODALS`/`MIGRATED_MODALS` in
-  [tests/e2e/mobile.spec.ts](../../tests/e2e/mobile.spec.ts)) — already covered; spot-check
-  custom-header `labelledBy` ones genuinely render through the shell.
+  [tests/e2e/mobile.spec.ts](../../tests/e2e/mobile.spec.ts)) — already covered by S10's green suite.
 
 ## Tooling note (needs owner authorization before CI work)
 
@@ -146,7 +158,7 @@ RedTeam (already on ResponsiveModal).
       handled by global `!important` overrides on base utility classes in `index.css`
       (`html.tbi-comfort .bg-white`, `html.aaa-high-contrast body/*`), not Tailwind `dark:`. Added a
       `mobile.spec.ts` block clicking the real AppShellTop trigger (`aria-label="Clear all local
-      data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
+    data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
       VaDataConsentPrompt is VA-OAuth-gated (no automatable trigger) → same shell, manual-verify only.
 - [x] Chunk 4 — migrate the event-triggerable BVA-data tool modals: **AppealsLaneAdvisor**
       (blue→cyan), **RemandRiskChecker** (amber→orange) and **NexusQualityAnalyzer**
@@ -190,7 +202,7 @@ RedTeam (already on ResponsiveModal).
       (DD214/PDF import review; rendered by DD214Analyzer) and **LanguageSuggestionModal**
       (`isOpen`-driven; rendered by LanguageSelector). ProfileImportConfirmModal shed its
       `fixed inset-0 z-[9999]` + `max-w-5xl max-h-[90vh]` card for `ResponsiveModal size="2xl"
-      zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
+    zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
       Select-All/None controls) move into the custom `header` slot as a fragment so they stay pinned
       edge-to-edge (desktop unchanged), the four field-category sections become the scroll body
       (inner `flex-1 overflow-y-auto` wrapper flattened to avoid double-scroll), and the Cancel /
@@ -200,7 +212,7 @@ RedTeam (already on ResponsiveModal).
       CTA extracted to a `const footer` branching on `isSubmitted` (Generate-Request before → Suggest-
       More/Done after). The submit button moved to the sticky footer but stays wired to the in-body
       `<form>` via HTML5 `form="lang-suggestion-form"` (Enter-to-submit preserved); `if (!isOpen)
-      return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
+    return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
       gain focus-trap + `role="dialog"` + ESC/backdrop dismiss for free. **No `mobile.spec.ts` entry** —
       both are prop/flow-gated, not event-triggerable, so **manual-verify** through the proven shell
       (precedent: VaDataConsentPrompt, Chunk 3; VAGovRatingPaster, Chunk 6). Gate: ESLint 0 errors,
@@ -232,7 +244,7 @@ RedTeam (already on ResponsiveModal).
       "won't ask again this session" caption move to the sticky `footer` slot. SecurityBadge's nested
       `SecurityModal` component (re-created on every render — would have remounted the shell, fighting the
       focus-trap, on each `activeTab` switch) was **inlined** at the render site as `ResponsiveModal
-      size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
+    size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
       move into the custom `header` slot as a fragment so both stay pinned, the `<h2>` gains
       `id="security-proof-title"` for `labelledBy`, the close `✕` `aria-label` is upgraded to
       "Close dialog", and the four tab-content components become the scroll body (its `p-6 dark:bg-gray-800`
@@ -244,13 +256,13 @@ RedTeam (already on ResponsiveModal).
 - [x] Chunk 10 — migrate **CommandersChecklist** `ChecklistModal` (the gamified claim-readiness
       progress tracker; modal mode only — its `isWidget` / `isEmbedded` render modes are untouched).
       Shed the `fixed inset-0` + `max-w-4xl max-h-[90vh] overflow-hidden` card for `ResponsiveModal
-      size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
+    size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
       the custom `header` slot (the `<h2>` gains `id="commanders-checklist-title"` for `labelledBy`,
       close `×` `aria-label` upgraded to "Close dialog"); the `p-6 overflow-y-auto max-h-[calc(...)]`
       content wrapper is flattened into the shell scroll body (status message + milestones grid + next
       steps + tips). The modal had **no footer bar** (close-only), so no `footer` slot. Removed two
       now-redundant pieces the shell owns: the parent's conditional `useBodyScrollLock(showModal &&
-      !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
+    !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
       `window.addEventListener("keydown", …Escape)` effect — focus-trap + ref-counted scroll-lock +
       ESC/backdrop dismiss + `role="dialog"` now come from the shell. Dropped the now-unused default
       `React` import (automatic JSX runtime). **No `mobile.spec.ts` entry** — it mounts behind
@@ -261,7 +273,7 @@ RedTeam (already on ResponsiveModal).
       [QualityControlCluster.jsx](../../src/features/quality-control/QualityControlCluster.jsx), which is
       why the earlier `src/components/**` `fixed inset-0` sweep missed it. Chunk 4 deliberately left this
       one as a bespoke wrapper ("part of the tool's visual identity, not boilerplate"), but that rationale
-      conflated the rose/red gradient *identity* (fully preservable) with the dialog *a11y contract* the
+      conflated the rose/red gradient _identity_ (fully preservable) with the dialog _a11y contract_ the
       wrapper lacked (no `role="dialog"`, no focus-trap, no ESC, no scroll-lock, `max-h-[90vh]` not dvh) —
       exactly the S12 gap. Shed the `fixed inset-0` + `bg-white dark:bg-gray-800 max-w-6xl max-h-[90vh]`
       card for `ResponsiveModal size="2xl"`; the rose→red→rose gradient bar (🦈 title + AI/BETA pills +
@@ -272,7 +284,7 @@ RedTeam (already on ResponsiveModal).
       corrected to reflect the shell. **Has a `mobile.spec.ts` entry** (MODALS, overflow-only — no sticky
       footer CTA): "Shark Radar" / `openSharkRadar`. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests
       green, **9/9 Shark Radar mobile tests pass @360/390/768 × chromium/firefox/mobile-chrome**.
-- [x] Bucket A (hand-apply a11y — overlays where a ResponsiveModal swap would be *wrong*: a crisis
+- [x] Bucket A (hand-apply a11y — overlays where a ResponsiveModal swap would be _wrong_: a crisis
       alertdialog, a command palette, nav disclosure menus, a fullscreen game). **Audit found most
       already compliant** from the S9 primitives pass: **CrisisModal** (`role="alertdialog"`, aria-modal,
       aria-labelledby + aria-describedby, focus-trap with ESC intentionally blocked since it is
@@ -296,7 +308,7 @@ RedTeam (already on ResponsiveModal).
       no accessible name, SC 4.1.2) → added `id="accessibility-menu"` to the trigger button so the
       menu is named by its opener (the button's existing `aria-label` supplies the text; the standard
       "menu labelled by its trigger" pattern; one-attribute fix). **Toast**: the multi-toast container
-      carried `aria-atomic="true"`, which re-announces *every* visible toast on each add → removed it
+      carried `aria-atomic="true"`, which re-announces _every_ visible toast on each add → removed it
       (additions-only is the default and correct for a stack); and every toast was `role="alert"` +
       `aria-live="assertive"` regardless of severity → made it severity-aware (`error`/`warning`/
       `network` → `alert`/assertive; `success`/`info` → `status`/polite) so a success toast no longer
@@ -313,14 +325,14 @@ RedTeam (already on ResponsiveModal).
       on the text, so the blocker was theming, not layout. Added `dark:` variants to the intro / step /
       note text (`text-gray-700→dark:text-gray-300`, `text-gray-800→dark:text-gray-200`,
       `text-blue-600→dark:text-blue-400`, the note box `bg-blue-50 border-blue-200 →
-      dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
+    dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
       the modal to `ResponsiveModal size="sm"` (default dark-aware `title` header + close-X; gains
       focus-trap + `role="dialog"` + ESC/backdrop + scroll-lock for free; dropped the bespoke
       `fixed inset-0` + `bg-white max-w-md` card and its hand-rolled header/close). The same file's
       **Bucket C** banners were handled here too (see Bucket C above). **No `mobile.spec.ts` entry** —
       the iOS sheet is gated by `isIOS` + a click on the install banner, not an `open*` event, so it is
       **manual-verify** through the proven shell.
-      **ZonkButton** reward card (morale easter egg): its panel background is a *dynamic celebratory*
+      **ZonkButton** reward card (morale easter egg): its panel background is a _dynamic celebratory_
       color (`getColorClasses` → `bg-{green|blue|purple|indigo|teal}-50` pastel with `text-*-900`),
       which reads correctly on both themes and is deliberate identity — a ResponsiveModal swap (forced
       `bg-white dark:bg-gray-900`) would destroy it. So **hand-applied** the dialog contract instead:
@@ -339,7 +351,7 @@ RedTeam (already on ResponsiveModal).
       bucket as VeteranTranslator's two-pane).
 - [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
       forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
-- [x] Navigation — AboutUs **VersionDropUp** done (Chunk 13): it reveals a changelog *content* panel,
+- [x] Navigation — AboutUs **VersionDropUp** done (Chunk 13): it reveals a changelog _content_ panel,
       so it is a **disclosure**, not a menu — applied the APG disclosure pattern (`aria-expanded` on the
       trigger + ESC closes & restores focus to the trigger), **not** the worklist's earlier `role="menu"`
       / `aria-haspopup` note (which would misrepresent informational content as a command menu). Header
