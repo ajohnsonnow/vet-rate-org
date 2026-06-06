@@ -445,8 +445,8 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     speak(result.translated, myLanguage);
   };
 
-  // Use quick phrase - get the translated version and speak it
-  const useQuickPhrase = (phrase) => {
+  // Apply quick phrase - get the translated version and speak it
+  const applyQuickPhrase = (phrase) => {
     // Get the phrase in my language (what I'm saying)
     const myPhrase = phrase.translations[myLanguage] || phrase.translations.en;
     // Get the phrase translated to their language
@@ -635,7 +635,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 {QUICK_PHRASES[activeQuickCategory].map((phrase) => (
                   <button
                     key={phrase.key}
-                    onClick={() => useQuickPhrase(phrase)}
+                    onClick={() => applyQuickPhrase(phrase)}
                     className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
                   >
                     <span className="mr-2">{phrase.emoji}</span>
