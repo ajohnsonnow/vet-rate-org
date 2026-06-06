@@ -7,7 +7,9 @@
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
-    "plugin:react/jsx-runtime"
+    "plugin:react/jsx-runtime",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -16,7 +18,7 @@
       "jsx": true
     }
   },
-  "plugins": ["react"],
+  "plugins": ["react", "react-hooks", "jsx-a11y"],
   "settings": {
     "react": {
       "version": "detect"
@@ -24,7 +26,7 @@
   },
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "off",
+    "no-console": "warn",
     "react/prop-types": "off",
     "react/no-unescaped-entities": "warn",
     "react/display-name": "warn",
@@ -38,6 +40,18 @@
     "no-empty": "warn",
     "no-misleading-character-class": "warn",
     "no-control-regex": "warn",
+
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+
+    "jsx-a11y/label-has-associated-control": "warn",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/no-autofocus": "warn",
+    "jsx-a11y/no-noninteractive-element-interactions": "warn",
+    "jsx-a11y/no-redundant-roles": "warn",
+    "jsx-a11y/iframe-has-title": "warn",
+    "jsx-a11y/no-noninteractive-tabindex": "warn",
 
     "no-eval": "error",
     "no-implied-eval": "error",
@@ -57,7 +71,8 @@
         "tests/**/*.{js,ts,jsx,tsx}"
       ],
       "rules": {
-        "no-script-url": "off"
+        "no-script-url": "off",
+        "no-console": "off"
       }
     }
   ]

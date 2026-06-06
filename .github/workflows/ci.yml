@@ -31,6 +31,30 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    # Blocking gate as of S13 (docs/SPRINT_PLAN_S9-S17.md, row S13;
+    # docs/audit/S13_WORKLIST.md). Runs `tsc --noEmit` over the typed surface
+    # (tsconfig.json: allowJs + checkJs:false, so .ts/.tsx + config are checked,
+    # JS/JSX bodies are not). Green at adoption. Kept as its own job — like the
+    # Lint job — so a type regression is visible at a glance and bisectable from
+    # CI output. Owner-authorized CI scope (the S13 selection).
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run type-check
+
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
