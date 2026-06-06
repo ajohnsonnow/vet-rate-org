@@ -12,10 +12,9 @@
  * - Multiple export formats for different platforms
  */
 
-import React, { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useScreenshot } from "../hooks/useScreenshot";
-import ToolCardButton from "./ToolCardButton";
-import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * ShareButton Component
@@ -33,7 +32,6 @@ const ShareButton = ({
   className = "",
   onCapture,
 }) => {
-  const { t } = useLanguage();
   const [showMenu, setShowMenu] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -103,136 +101,138 @@ const ShareButton = ({
   const renderPreviewModal = () => {
     if (!showPreview || !previewUrl) return null;
 
-    return (
-      <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-        onClick={() => setShowPreview(false)}
-      >
-        <div
-          className="bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-700"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📸</span>
-                <div>
-                  <h3 className="text-lg font-bold text-white">
-                    Screenshot Preview
-                  </h3>
-                  <p className="text-green-200 text-sm">
-                    PII automatically redacted
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Preview Image */}
-          <div className="p-4 max-h-[60vh] overflow-auto bg-gray-950">
-            <img
-              src={previewUrl}
-              alt="Screenshot preview"
-              className="max-w-full rounded-lg shadow-lg border border-gray-700 mx-auto"
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="px-6 py-4 bg-gray-800/50 border-t border-gray-700">
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                onClick={async () => {
-                  const link = document.createElement("a");
-                  link.href = previewUrl;
-                  link.download = getFilename();
-                  link.click();
-                  setDownloadSuccess(true);
-                  setTimeout(() => setDownloadSuccess(false), 2000);
-                }}
-                className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                {downloadSuccess ? "✓ Downloaded!" : "Download PNG"}
-              </button>
-
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch(previewUrl);
-                    const blob = await response.blob();
-                    await navigator.clipboard.write([
-                      new ClipboardItem({ "image/png": blob }),
-                    ]);
-                    setCopySuccess(true);
-                    setTimeout(() => setCopySuccess(false), 2000);
-                  } catch (err) {
-                    console.error("Copy failed:", err);
-                  }
-                }}
-                className="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                  />
-                </svg>
-                {copySuccess ? "✓ Copied!" : "Copy to Clipboard"}
-              </button>
-
-              <button
-                onClick={() => setShowPreview(false)}
-                className="flex items-center gap-2 px-5 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-
-            <p className="text-center text-gray-500 text-xs mt-4">
-              🔒 All sensitive information has been automatically redacted for
-              safe sharing
-            </p>
+    const header = (
+      <div className="flex items-center justify-between bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📸</span>
+          <div>
+            <h3
+              id="share-preview-title"
+              className="text-lg font-bold text-white"
+            >
+              Screenshot Preview
+            </h3>
+            <p className="text-sm text-green-200">PII automatically redacted</p>
           </div>
         </div>
+        <button
+          onClick={() => setShowPreview(false)}
+          aria-label="Close dialog"
+          className="rounded-lg p-2 text-white/80 hover:bg-white/20 hover:text-white"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
       </div>
+    );
+
+    const footer = (
+      <div>
+        <div className="flex flex-wrap justify-center gap-3">
+          <button
+            onClick={async () => {
+              const link = document.createElement("a");
+              link.href = previewUrl;
+              link.download = getFilename();
+              link.click();
+              setDownloadSuccess(true);
+              setTimeout(() => setDownloadSuccess(false), 2000);
+            }}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            {downloadSuccess ? "✓ Downloaded!" : "Download PNG"}
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch(previewUrl);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                  new ClipboardItem({ "image/png": blob }),
+                ]);
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+              } catch (err) {
+                console.error("Copy failed:", err);
+              }
+            }}
+            className="flex items-center gap-2 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-purple-700"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+              />
+            </svg>
+            {copySuccess ? "✓ Copied!" : "Copy to Clipboard"}
+          </button>
+
+          <button
+            onClick={() => setShowPreview(false)}
+            className="flex items-center gap-2 rounded-lg bg-gray-200 px-5 py-3 font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700"
+          >
+            Close
+          </button>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
+          🔒 All sensitive information has been automatically redacted for safe
+          sharing
+        </p>
+      </div>
+    );
+
+    return (
+      <ResponsiveModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        header={header}
+        labelledBy="share-preview-title"
+        size="xl"
+        zIndex={100}
+        footer={footer}
+        className="border border-gray-200 dark:border-gray-700"
+      >
+        <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-950">
+          <img
+            src={previewUrl}
+            alt="Screenshot preview"
+            className="mx-auto max-w-full rounded-lg border border-gray-200 shadow-lg dark:border-gray-700"
+          />
+        </div>
+      </ResponsiveModal>
     );
   };
 
@@ -290,43 +290,47 @@ const ShareButton = ({
           </button>
           {/* Dropdown Menu */}
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden z-50">
+            <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
               <div className="py-2">
                 <button
                   onClick={handlePreview}
-                  className="w-full px-4 py-3 text-left text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-gray-900 transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
                 >
                   <span className="text-xl">👁️</span>
                   <div>
                     <div className="font-semibold">Preview & Edit</div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       See before sharing
                     </div>
                   </div>
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="w-full px-4 py-3 text-left text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-gray-900 transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
                 >
                   <span className="text-xl">💾</span>
                   <div>
                     <div className="font-semibold">Download PNG</div>
-                    <div className="text-xs text-gray-400">Save to device</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      Save to device
+                    </div>
                   </div>
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="w-full px-4 py-3 text-left text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-gray-900 transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
                 >
                   <span className="text-xl">📋</span>
                   <div>
                     <div className="font-semibold">Copy to Clipboard</div>
-                    <div className="text-xs text-gray-400">Paste anywhere</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      Paste anywhere
+                    </div>
                   </div>
                 </button>
               </div>
-              <div className="px-4 py-3 bg-gray-900/50 border-t border-gray-700">
-                <p className="text-xs text-gray-500 flex items-center gap-1">
+              <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/50">
+                <p className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-500">
                   <span>🔒</span> PII auto-redacted for safety
                 </p>
               </div>
@@ -353,7 +357,7 @@ const ShareButton = ({
           onClick={handlePreview}
           disabled={isCapturing}
           aria-label="Export for Reddit (PII Protected)"
-          className={`p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50 ${className}`}
+          className={`rounded-lg p-2 text-gray-600 transition-colors hover:bg-green-100 hover:text-green-600 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-green-500/10 dark:hover:text-green-400 ${className}`}
         >
           {isCapturing ? (
             <svg
