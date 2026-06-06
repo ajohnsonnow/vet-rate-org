@@ -404,3 +404,24 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
   with **no interstitial**. The `MobileNotice` comment was updated to reflect that small-screen
   messaging is gone entirely (the responsive layouts are the support). Type-check + mobile
   e2e 153/153.
+
+### S10 verification gate — GREEN (full suite, post-removal)
+
+Run after the SmallScreenWarning removal commit, across the whole repo:
+
+- **ESLint:** 0 errors (1349 pre-existing warnings — the `jsx-a11y`/`react-hooks`/`no-console`
+  backlog is S13 scope, not S10).
+- **Type-check (`tsc --noEmit`):** clean.
+- **Unit (vitest):** 803/803 across 46 files.
+- **E2E (Playwright, all projects):** 493/493 across `chromium` + `firefox` + `mobile-chrome`.
+  Desktop (chromium/firefox) green = desktop behavior unmoved; `mobile-chrome` green = the
+  mobile gate holds. No visual-regression baselines exist in this repo (no `toHaveScreenshot`
+  project), so "desktop snapshots unmoved" is proven via the green desktop e2e behavior.
+
+**S10 coding work is complete.** All modal clusters A–H migrated, grid workstream applied,
+viewport thresholds centralized, mobile CI gate added (blocking), SmallScreenWarning removed,
+MobileNotice reconciled. Documented intentional deferrals remain (the two-pane independent-scroll
+shells UserManual / FeatureLookup / BugLookup / WhatIfSandbox L369; the StressReliefDivision
+z-9999 easter egg; the VA-demo-gated DemoDashboard / VaIntegrationTest manual checks). Per the
+standing instruction, **no push / PR until the owner authorizes** — all work to date is local
+commits on `audit/s9-mobile-safety-net`.
