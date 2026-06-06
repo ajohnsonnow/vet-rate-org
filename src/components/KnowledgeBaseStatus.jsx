@@ -1043,7 +1043,7 @@ export default function KnowledgeBaseStatus({ compact = false }) {
           <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
             📊 Authority Hierarchy
           </h4>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg border border-red-100 dark:border-red-800">
               <span className="font-bold">1</span>
               <span>Statutory Law</span>

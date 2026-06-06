@@ -65,7 +65,7 @@ export default function CFileClaimsCards({ claims = [] }) {
   return (
     <div className="p-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div
           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "high" ? "ring-2 ring-green-500" : ""} ${LIKELIHOOD_STYLES.high.bg} ${LIKELIHOOD_STYLES.high.border}`}
           onClick={() => setFilter(filter === "high" ? "all" : "high")}

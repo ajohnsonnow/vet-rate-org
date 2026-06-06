@@ -1155,7 +1155,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     ⏱️ Duration
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {config.durationOptions.map((option) => (
                       <button
                         key={option}
