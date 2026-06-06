@@ -2,11 +2,11 @@
   "generated": "run `node scripts/grid-mobile-audit.mjs` to refresh",
   "totals": {
     "findings": 72,
-    "clean": 72,
-    "ambiguous": 0,
-    "high": 5,
+    "clean": 69,
+    "ambiguous": 3,
+    "high": 3,
     "medium": 10,
-    "low": 57,
+    "low": 56,
     "files": 49
   },
   "clean": [
@@ -298,17 +298,6 @@
     },
     {
       "file": "src/components/FOIAGenerator.jsx",
-      "line": 556,
-      "cols": 6,
-      "bucket": "clean",
-      "reasons": [],
-      "priority": "high",
-      "hasUpVariant": false,
-      "suggested": "grid-cols-1 sm:grid-cols-2 md:grid-cols-6",
-      "className": "grid grid-cols-6 gap-4 mt-4"
-    },
-    {
-      "file": "src/components/FOIAGenerator.jsx",
       "line": 605,
       "cols": 2,
       "bucket": "clean",
@@ -449,17 +438,6 @@
       "hasUpVariant": true,
       "suggested": "grid-cols-1 sm:grid-cols-2",
       "className": "grid grid-cols-2 md:grid-cols-3 gap-4"
-    },
-    {
-      "file": "src/components/MyPacket.jsx",
-      "line": 3281,
-      "cols": 2,
-      "bucket": "clean",
-      "reasons": [],
-      "priority": "low",
-      "hasUpVariant": false,
-      "suggested": "grid-cols-1 sm:grid-cols-2",
-      "className": "grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto"
     },
     {
       "file": "src/components/PACTActNavigator.jsx",
@@ -781,17 +759,6 @@
       "className": "grid grid-cols-2 gap-6"
     },
     {
-      "file": "src/components/WhatIfSandbox.jsx",
-      "line": 369,
-      "cols": 4,
-      "bucket": "clean",
-      "reasons": [],
-      "priority": "high",
-      "hasUpVariant": false,
-      "suggested": "grid-cols-1 sm:grid-cols-2 md:grid-cols-4",
-      "className": "grid grid-cols-4 h-[calc(90vh-250px)]"
-    },
-    {
       "file": "src/components/WitnessBench.jsx",
       "line": 750,
       "cols": 2,
@@ -803,5 +770,45 @@
       "className": "grid grid-cols-2 md:grid-cols-4 gap-3"
     }
   ],
-  "ambiguous": []
+  "ambiguous": [
+    {
+      "file": "src/components/FOIAGenerator.jsx",
+      "line": 556,
+      "cols": 6,
+      "bucket": "ambiguous",
+      "reasons": [
+        "fixed-child-subtree(verify)"
+      ],
+      "priority": "high",
+      "hasUpVariant": false,
+      "suggested": "grid-cols-1 sm:grid-cols-2 md:grid-cols-6",
+      "className": "grid grid-cols-6 gap-4 mt-4"
+    },
+    {
+      "file": "src/components/MyPacket.jsx",
+      "line": 3281,
+      "cols": 2,
+      "bucket": "ambiguous",
+      "reasons": [
+        "fixed-child-subtree(verify)"
+      ],
+      "priority": "low",
+      "hasUpVariant": false,
+      "suggested": "grid-cols-1 sm:grid-cols-2",
+      "className": "grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto"
+    },
+    {
+      "file": "src/components/WhatIfSandbox.jsx",
+      "line": 369,
+      "cols": 4,
+      "bucket": "ambiguous",
+      "reasons": [
+        "fixed-child-subtree(verify)"
+      ],
+      "priority": "high",
+      "hasUpVariant": false,
+      "suggested": "grid-cols-1 sm:grid-cols-2 md:grid-cols-4",
+      "className": "grid grid-cols-4 h-[calc(90vh-250px)]"
+    }
+  ]
 }
