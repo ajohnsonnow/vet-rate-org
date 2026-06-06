@@ -341,14 +341,31 @@ RedTeam (already on ResponsiveModal).
       default `React` import (automatic JSX runtime). Minor known limit: the opener ("DISMISSED") button
       unmounts while the modal is open (`{!showZonk && …}`), so focus restores to `<body>` rather than
       the trigger on close — acceptable for an easter egg; trap/ESC/scroll-lock are the real wins.
-- [ ] **Still deferred (examined, not mechanical — need their own focused chunk):**
-      **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
-      `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed
-      `px-4 py-4` body would inset those dividers → needs a card-based body restructure, not a swap.
-      **TheTribunal** (mock-BVA chat) — properly themed and header/body/footer-shaped, but its bottom
-      "Control Panel" (voice-status row + two-column judge/mic controls + text input) is far too tall
-      for a compact sticky footer on a phone; needs a mobile-compact control redesign first (same
-      bucket as VeteranTranslator's two-pane).
+- [x] Chunk 14 — the hard-redesign set (examined, not mechanical — each its own focused redesign,
+      one commit apiece): **AIAssistant** Expanded view, **DocumentIntelligenceBriefing**,
+      **VeteranTranslator**, **TheTribunal**.
+      - **AIAssistant** (Expanded) → ResponsiveModal (`737357e`).
+      - **DocumentIntelligenceBriefing** (`a877298`) — the ~1300-line DD214 verifier had a sectioned
+        layout with full-width `border-t` dividers between Document-Info / fields / Options / Actions;
+        the shell's fixed `px-4 py-4` body would have inset those dividers, so the body was
+        restructured card-based (full-bleed `-m-4` wrapper, each section keeps its own padding/bg)
+        rather than a straight swap.
+      - **VeteranTranslator** (`783afa6`) — two-pane Human-to-Human translator; stacked
+        `flex-col md:flex-row` panes (`w-full md:w-1/2`, `md:h-[60vh]` independent scroll, divider
+        flips `border-b → md:border-r`), full-bleed `-m-4` body, custom gradient `header` slot +
+        status-bar `footer` slot.
+      - **TheTribunal** (`5f5f17e`) — mock-BVA chat; the bottom "Control Panel" (voice-status row +
+        two-column judge/mic controls + text input) was far too tall for a compact sticky footer on a
+        phone, so it was redesigned mobile-compact (voice-status row `hidden sm:flex`, grid stacks
+        `grid-cols-1 md:grid-cols-2`) and routed through the sticky `footer` slot
+        (`footer={showInstructions ? instructionsFooter : hearingFooter}` — Enter-CTA in setup mode,
+        controls in hearing mode). Header → custom slot with `id="the-tribunal-title"` + 44px close;
+        loading branch → small ResponsiveModal; bodies full-bleed `-m-4`; bubbles widen on phones
+        (`max-w-[85%] sm:max-w-[80%]`). Both shed `useBodyScrollLock` + default `React` import.
+      All four: ESLint 0 errors (pre-existing warnings only), `tsc` clean, 809 unit tests green;
+      re-verified at 360/390/768 through the proven shell. **No `mobile.spec.ts` entries** — all four
+      are flow/prop-gated (AIAssistant bubble, DD214 analyzer, translate button, parent-mounted
+      Tribunal), not `open*`-event modals, so they are manual-verify through the shell.
 - [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
       forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
 - [x] Navigation — AboutUs **VersionDropUp** done (Chunk 13): it reveals a changelog _content_ panel,
