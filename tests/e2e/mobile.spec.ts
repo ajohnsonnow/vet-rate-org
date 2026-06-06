@@ -236,6 +236,12 @@ const MIGRATED_MODALS = [
   // to size="xl" with the red gradient bar in the header slot and its always-on
   // Close CTA in the sticky-footer slot.
   { label: "Terms of Service Page", event: "openTermsOfService" },
+  // Cluster (S12): the Bug Squasher and Feature Request wizards — structural
+  // twins (3-step: classification → details → review/submit). Their Back / Next
+  // / Generate / Done bar moves into the sticky-footer slot, so each asserts the
+  // footer-CTA-in-viewport contract.
+  { label: "Bug Squasher", event: "openBugSquasher" },
+  { label: "Feature Request", event: "openFeatureRequest" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
