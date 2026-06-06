@@ -115,9 +115,17 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
   body and it is already mobile-responsive (flex-col stack + mobile header + sidebar toggle +
   scroll lock + ESC); it passes the overflow contract as-is, so a full swap is deferred to avoid
   regressing the desktop two-pane scroll. See progress log for detail.
-- **Critic-added surfaces to fold in:** RegulationsReference (opened via VAResources state, not
-  an event), TermsOfServicePage (full-page variant ≠ TermsOfServiceModal), VisionSimulator
-  (AppModals:126), StressReliefDivision (z-9999 easter egg), FeatureLookup/BugLookup (admin shells).
+- **Cluster H — critic-added surfaces: migrated ✅ (H1 `d7ad28e`, H2 `9585dff`, H3 `97906b2`).**
+  TermsOfServicePage (full-page legal variant ≠ TermsOfServiceModal) → `size="xl"`, red bar in the
+  header slot + Close in the footer slot → MIGRATED_MODALS. VisionSimulator (`openVisionSimulator`)
+  → wrapper adopts the shell `title` bar at `size="lg"`; the panel sheds its duplicate card + h3 →
+  MODALS. RegulationsReference (opened via a VAResources button, no bare event → **not
+  e2e-listable**) → `size="2xl"` `zIndex={70}`, blue tab bar in the header slot, in-body source
+  note; VAResources drops the now-dead `relative z-[70]` wrapper. **Deferred** (documented, not
+  shell-migrated): StressReliefDivision (z-9999 Doom easter egg — iframe input capture conflicts
+  with focus-trap/backdrop-dismiss; not a content modal), FeatureLookup + BugLookup (admin-gated
+  two-pane independent-scroll shells behind AdminAuthContext — same single-scroll mismatch as
+  UserManual, and outside the veteran mobile mandate).
 
 ## S10 order of operations (when resumed)
 
@@ -132,6 +140,35 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster H migrated — all ✅ (H1 `d7ad28e`, H2 `9585dff`, H3 `97906b2`; three sub-commits,
+  e2e after each where listable):** the critic-added surfaces surfaced during the Cluster G review.
+  Full mobile suite grew 147 → 153 (+6 = 2 new event-listable labels × 3 viewports; H3 is opened
+  via an in-component button, not a bare event, so it is not e2e-listed).
+  1. **H1 (`d7ad28e`)** — **TermsOfServicePage**, a bespoke full-page legal shell (fixed-inset
+     scrim + `max-w-5xl min-h-screen` panel + sticky red header + sticky in-body footer), migrated
+     to `size="xl"`. The red gradient bar moved into the header slot (h1 gains
+     `id="terms-of-service-page-title"`); the always-on Close CTA moved into the sticky-footer slot;
+     the body shed `px-8 py-8` (the shell pads) and the title scales `text-2xl → sm:text-3xl`.
+     Footer always present on fresh open → MIGRATED_MODALS (`openTermsOfService`).
+  2. **H2 (`9585dff`)** — **VisionSimulator** wrapper dropped its bespoke `bg-black/60` backdrop +
+     `max-w-2xl max-h-[90vh]` scroller + floating corner-X for the shell's default `title` bar
+     (`size="lg"`, `title="Document Vision Simulator"`). VisionSimulatorPanel shed its now-redundant
+     outer card chrome (`bg-white … rounded-lg shadow-lg p-6` → `space-y-4`) and its duplicate h3
+     title; the OCR subtitle + "No Special Flags Required" badge stay as a context strip. Close in
+     the shell header, no fresh-open footer CTA → MODALS (`openVisionSimulator`).
+  3. **H3 (`97906b2`)** — **RegulationsReference** replaced its `max-w-5xl max-h-[90vh]` flex-col
+     panel + own `useBodyScrollLock(true)` with `size="2xl"` `zIndex={70}`. The blue gradient bar
+     (Scale icon, h2 `id="regulations-title"`, BETA badge, revision line, 6-tab strip) moved into
+     the header slot (padding `p-4 sm:p-6`); the eCFR source/date attribution stays an in-body note
+     (no CTA, no sticky slot needed). VAResources dropped the now-dead `relative z-[70]` wrapper.
+     Opened via a VAResources in-component button (no bare window event) → **not e2e-listable**;
+     proven via esbuild + type-check + full-suite regression instead.
+  - **Deferred (documented, intentionally not shell-migrated):** **StressReliefDivision** —
+     `z-[9999]` IDDQD Doom easter egg (CRT overlay embedding a DoomFrame iframe); iframe input
+     capture conflicts with the shell focus-trap + backdrop-dismiss, and it is not a content modal.
+     **FeatureLookup** + **BugLookup** — admin-gated (Ctrl+Shift+A + password/TOTP via
+     AdminAuthContext) two-pane (list + detail) independent-scroll shells, the same single-scroll
+     mismatch as UserManual, and outside the veteran-facing mobile mandate.
 - **Cluster G migrated — all ✅ (G1 `8f6c787`, G2 `6cc8794`; two sub-commits, e2e after each):**
   the graphic/SVG-reflow modals — the cluster flagged as hardest because several needed internal
   layout work, not just a shell swap. Full mobile suite grew 129 → 147 (+18 = 6 new modal labels
