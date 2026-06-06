@@ -228,7 +228,7 @@ export default function AIModelQuickLoad({
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
             Alternative Warrant Council Agents:
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {Object.values(SWARM_AGENTS)
               .filter((agent) => agent.id !== recommendedAgentId)
               .map((agent) => (

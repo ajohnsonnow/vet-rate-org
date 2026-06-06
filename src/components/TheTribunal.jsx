@@ -882,7 +882,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Select Your Judge:
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
                   <button
                     key={key}

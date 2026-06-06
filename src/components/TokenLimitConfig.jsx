@@ -313,7 +313,7 @@ const TokenLimitConfig = () => {
       </div>
 
       {/* Preset Buttons */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {Object.entries(TOKEN_PRESETS).map(([key, preset]) => {
           const isSelected = !isCustom && tokenLimit === preset.value;
           return (
