@@ -238,7 +238,35 @@ RedTeam (already on ResponsiveModal).
       scroll-lock before). **No `mobile.spec.ts` entry** — VoiceInput's prompt is flow-gated and
       SecurityBadge opens from a floating badge (not an `open*` event), so both are **manual-verify**
       through the proven shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
-- [ ] Chunks 10+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 10 — migrate **CommandersChecklist** `ChecklistModal` (the gamified claim-readiness
+      progress tracker; modal mode only — its `isWidget` / `isEmbedded` render modes are untouched).
+      Shed the `fixed inset-0` + `max-w-4xl max-h-[90vh] overflow-hidden` card for `ResponsiveModal
+      size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
+      the custom `header` slot (the `<h2>` gains `id="commanders-checklist-title"` for `labelledBy`,
+      close `×` `aria-label` upgraded to "Close dialog"); the `p-6 overflow-y-auto max-h-[calc(...)]`
+      content wrapper is flattened into the shell scroll body (status message + milestones grid + next
+      steps + tips). The modal had **no footer bar** (close-only), so no `footer` slot. Removed two
+      now-redundant pieces the shell owns: the parent's conditional `useBodyScrollLock(showModal &&
+      !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
+      `window.addEventListener("keydown", …Escape)` effect — focus-trap + ref-counted scroll-lock +
+      ESC/backdrop dismiss + `role="dialog"` now come from the shell. Dropped the now-unused default
+      `React` import (automatic JSX runtime). **No `mobile.spec.ts` entry** — it mounts behind
+      `showModal` state (prop/flow-gated, not an `open*` event), so **manual-verify** through the proven
+      shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
+- [ ] **Deferred this pass (examined, not mechanical — need their own focused chunk):**
+      **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
+      `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed
+      `px-4 py-4` body would inset those dividers → needs a card-based body restructure, not a swap.
+      **TheTribunal** (mock-BVA chat) — properly themed and header/body/footer-shaped, but its bottom
+      "Control Panel" (voice-status row + two-column judge/mic controls + text input) is far too tall
+      for a compact sticky footer on a phone; needs a mobile-compact control redesign first (same
+      bucket as VeteranTranslator's two-pane). **PWAInstallButton** iOS-install instructions —
+      panel is `bg-white` with **no `dark:` variants** on its text; moving onto the themed
+      (`dark:bg-gray-900`) shell would put dark text on a dark panel → needs dark-mode variants added
+      (a small theming fix) before migration. **ZonkButton** reward card — panel background is a
+      dynamic celebratory color (`getColorClasses`), not the standard `bg-white dark:bg-gray-*`; a
+      deliberate non-standard design, hand-apply only.
+- [ ] Chunks 11+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist

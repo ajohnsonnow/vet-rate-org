@@ -9,10 +9,10 @@
  * Makes the overwhelming process feel achievable
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import useClaimProgress from "../utils/useClaimProgress";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 // Tool navigation mapping
 const TOOL_LINKS = {
@@ -39,9 +39,6 @@ export default function CommandersChecklist({
   const { t } = useLanguage();
   const progress = useClaimProgress();
   const [showModal, setShowModal] = useState(!isWidget && !isEmbedded);
-
-  // Lock background scroll when opened as full modal (not widget/embedded)
-  useBodyScrollLock(showModal && !isWidget && !isEmbedded);
 
   const handleMilestoneClick = (milestone) => {
     if (onToolSelect && TOOL_LINKS[milestone.id]) {
@@ -282,29 +279,13 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
 
   const completedMilestones = progress.completedMilestones.map((m) => m.id);
 
-  // ESC key handler
-  React.useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => {
-        // Close if clicking the backdrop (not the modal content)
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header */}
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      labelledBy="commanders-checklist-title"
+      header={
         <div
           className={`bg-gradient-to-r ${
             progress.percentage === 100
@@ -318,7 +299,10 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
         >
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2">
+              <h2
+                id="commanders-checklist-title"
+                className="text-3xl font-bold mb-2"
+              >
                 🎖️ Commander's Checklist{" "}
                 <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
                   BETA
@@ -331,7 +315,7 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
             <button
               onClick={onClose}
               className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
+              aria-label="Close dialog"
             >
               ×
             </button>
@@ -367,150 +351,142 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
             </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
-          {/* Status Message */}
-          <div
-            className={`${status.bg} dark:bg-opacity-20 border-l-4 ${
-              progress.percentage === 100
-                ? "border-green-600"
-                : progress.percentage >= 80
-                  ? "border-blue-600"
-                  : progress.percentage >= 50
-                    ? "border-yellow-600"
-                    : "border-gray-600"
-            } p-4 rounded mb-6`}
-          >
-            <p className={`font-bold text-lg ${status.color} dark:opacity-90`}>
-              {status.text}
-            </p>
-            {progress.percentage === 100 && (
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                You've completed all major milestones! Review your packet and
-                you're ready to file.
-              </p>
-            )}
-          </div>
-
-          {/* Milestones Grid */}
-          <div className="space-y-3">
-            {progress.milestones.map((milestone) => {
-              const isCompleted = completedMilestones.includes(milestone.id);
-
-              return (
-                <div
-                  key={milestone.id}
-                  onClick={() =>
-                    !isCompleted &&
-                    onMilestoneClick &&
-                    onMilestoneClick(milestone)
-                  }
-                  className={`border-2 rounded-lg p-4 transition-all ${
-                    isCompleted
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-500 hover:shadow-lg cursor-pointer"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox/Icon */}
-                    <div className="flex-shrink-0">
-                      {isCompleted ? (
-                        <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          ✓
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 border-2 border-gray-400 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-600">
-                          <div className="w-4 h-4 bg-gray-300 dark:bg-gray-700 rounded-full" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{milestone.icon}</span>
-                        <h4
-                          className={`font-bold text-lg ${
-                            isCompleted
-                              ? "text-green-700 dark:text-green-400"
-                              : "text-gray-800 dark:text-white"
-                          }`}
-                        >
-                          {milestone.title}
-                        </h4>
-                      </div>
-                      <p
-                        className={`text-sm ${
-                          isCompleted
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-600 dark:text-gray-400"
-                        }`}
-                      >
-                        {milestone.description}
-                      </p>
-
-                      {!isCompleted && (
-                        <button
-                          onClick={() =>
-                            onMilestoneClick && onMilestoneClick(milestone)
-                          }
-                          className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
-                        >
-                          Start this objective →
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Weight indicator */}
-                    <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
-                      {milestone.weight}pts
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Next Steps */}
-          {progress.percentage < 100 && (
-            <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded">
-              <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
-                🎯 Next Steps:
-              </h4>
-              <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
-                {progress.milestones
-                  .filter((m) => !completedMilestones.includes(m.id))
-                  .slice(0, 3)
-                  .map((m) => (
-                    <li key={m.id}>• {m.title}</li>
-                  ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Tips */}
-          <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded">
-            <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              💡 Pro Tips:
-            </h4>
-            <ul className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
-              <li>
-                • You don't need 100% to file - but more evidence = stronger
-                claim
-              </li>
-              <li>
-                • Focus on the highest-weight items first (diagnosis, nexus,
-                statement)
-              </li>
-              <li>• Each completed objective brings you closer to victory!</li>
-              <li>
-                • This progress is saved automatically - come back anytime
-              </li>
-            </ul>
-          </div>
-        </div>
+      }
+    >
+      {/* Status Message */}
+      <div
+        className={`${status.bg} dark:bg-opacity-20 border-l-4 ${
+          progress.percentage === 100
+            ? "border-green-600"
+            : progress.percentage >= 80
+              ? "border-blue-600"
+              : progress.percentage >= 50
+                ? "border-yellow-600"
+                : "border-gray-600"
+        } p-4 rounded mb-6`}
+      >
+        <p className={`font-bold text-lg ${status.color} dark:opacity-90`}>
+          {status.text}
+        </p>
+        {progress.percentage === 100 && (
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            You've completed all major milestones! Review your packet and you're
+            ready to file.
+          </p>
+        )}
       </div>
-    </div>
+
+      {/* Milestones Grid */}
+      <div className="space-y-3">
+        {progress.milestones.map((milestone) => {
+          const isCompleted = completedMilestones.includes(milestone.id);
+
+          return (
+            <div
+              key={milestone.id}
+              onClick={() =>
+                !isCompleted && onMilestoneClick && onMilestoneClick(milestone)
+              }
+              className={`border-2 rounded-lg p-4 transition-all ${
+                isCompleted
+                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-500 hover:shadow-lg cursor-pointer"
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                {/* Checkbox/Icon */}
+                <div className="flex-shrink-0">
+                  {isCompleted ? (
+                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      ✓
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 border-2 border-gray-400 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                      <div className="w-4 h-4 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">{milestone.icon}</span>
+                    <h4
+                      className={`font-bold text-lg ${
+                        isCompleted
+                          ? "text-green-700 dark:text-green-400"
+                          : "text-gray-800 dark:text-white"
+                      }`}
+                    >
+                      {milestone.title}
+                    </h4>
+                  </div>
+                  <p
+                    className={`text-sm ${
+                      isCompleted
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    {milestone.description}
+                  </p>
+
+                  {!isCompleted && (
+                    <button
+                      onClick={() =>
+                        onMilestoneClick && onMilestoneClick(milestone)
+                      }
+                      className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                    >
+                      Start this objective →
+                    </button>
+                  )}
+                </div>
+
+                {/* Weight indicator */}
+                <div className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                  {milestone.weight}pts
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Next Steps */}
+      {progress.percentage < 100 && (
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 p-4 rounded">
+          <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
+            🎯 Next Steps:
+          </h4>
+          <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
+            {progress.milestones
+              .filter((m) => !completedMilestones.includes(m.id))
+              .slice(0, 3)
+              .map((m) => (
+                <li key={m.id}>• {m.title}</li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Tips */}
+      <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded">
+        <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+          💡 Pro Tips:
+        </h4>
+        <ul className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
+          <li>
+            • You don't need 100% to file - but more evidence = stronger claim
+          </li>
+          <li>
+            • Focus on the highest-weight items first (diagnosis, nexus,
+            statement)
+          </li>
+          <li>• Each completed objective brings you closer to victory!</li>
+          <li>• This progress is saved automatically - come back anytime</li>
+        </ul>
+      </div>
+    </ResponsiveModal>
   );
 }
