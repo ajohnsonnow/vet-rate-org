@@ -77,7 +77,11 @@ const MobileNotice = () => {
   if (dismissed || !deviceType) return null;
 
   return (
-    <div className="text-white px-4 py-3 text-center relative shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600">
+    <div
+      className="text-white px-4 py-3 text-center relative shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600"
+      role="status"
+      aria-live="polite"
+    >
       <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 pr-10">
         <span className="text-2xl" role="img" aria-label="Tablet optimized">
           📱💻

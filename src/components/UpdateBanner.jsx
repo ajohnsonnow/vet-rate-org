@@ -19,7 +19,11 @@ import { useLanguage } from "../contexts/LanguageContext";
 const UpdateBanner = ({ onApplyUpdate, onDismiss, updateInfo }) => {
   const { t } = useLanguage();
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-slideDown">
+    <div
+      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-slideDown"
+      role="status"
+      aria-live="polite"
+    >
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           <RefreshCw className="w-5 h-5 animate-spin-slow" />
