@@ -155,7 +155,18 @@ RedTeam (already on ResponsiveModal).
       `MODALS` array (overflow contract) — they mount on `openAppealsLaneAdvisor` /
       `openRemandRiskChecker` (AppealsToolsCluster) and `openNexusQualityAnalyzer`
       (QualityControlCluster); green at 360/390/768.
-- [ ] Chunks 5+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 5 — migrate the event-triggerable 3-step wizard twins **BugSquasher** (red→orange)
+      and **FeatureRequest** (purple→indigo). Each shed the legacy `fixed inset-0 z-[100]` +
+      `min-h-screen` wrapper + `max-w-3xl max-h-[90vh]` card for `ResponsiveModal size="lg"`
+      (`zIndex={100}`). The gradient bar + progress steps move to a custom `header` slot (h2 now
+      carries an `id` for `labelledBy`); the Back / Next / Generate / Done bar is extracted to a
+      `footer` const fed to the sticky `footer` slot (footer-CTA contract); the three step bodies
+      become the scroll body. Each component's redundant `useBodyScrollLock(true)` was removed —
+      the shell owns the (ref-counted) scroll-lock — and both gain focus-trap + `role="dialog"` +
+      ESC/backdrop dismiss for free. Added both to the `mobile.spec.ts` `MIGRATED_MODALS` array;
+      they mount on `openBugSquasher` (SystemToolsCluster) / `openFeatureRequest` (FeedbackHub) —
+      green at 360/390/768.
+- [ ] Chunks 6+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
