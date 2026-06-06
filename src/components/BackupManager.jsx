@@ -701,20 +701,18 @@ export default function BackupManager({ onClose }) {
 
       {/* DBQ Browser Modal */}
       {showDbqBrowser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <DbqBrowser
-            onClose={async () => {
-              setShowDbqBrowser(false);
-              // Refresh DBQ cache stats when closing
-              try {
-                const stats = await getCacheStats();
-                setDbqCacheStats(stats);
-              } catch (e) {
-                console.error("Error refreshing DBQ stats:", e);
-              }
-            }}
-          />
-        </div>
+        <DbqBrowser
+          onClose={async () => {
+            setShowDbqBrowser(false);
+            // Refresh DBQ cache stats when closing
+            try {
+              const stats = await getCacheStats();
+              setDbqCacheStats(stats);
+            } catch (e) {
+              console.error("Error refreshing DBQ stats:", e);
+            }
+          }}
+        />
       )}
     </>
   );
