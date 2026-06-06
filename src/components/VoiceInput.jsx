@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * VoiceInput Component
@@ -341,86 +342,88 @@ const VoiceInputButton = ({
 
       {/* Safety confirmation prompt - shows first time before recording */}
       {showSafetyPrompt && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={handleSafetyDecline}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 mx-4 max-w-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-blue-600 dark:text-blue-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+        <ResponsiveModal
+          isOpen
+          onClose={handleSafetyDecline}
+          size="sm"
+          labelledBy="voice-safety-title"
+          footer={
+            <>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSafetyDecline}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                  />
-                </svg>
+                  Not Now
+                </button>
+                <button
+                  onClick={handleSafetyConfirm}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Yes, I'm Safe
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Before You Speak
-              </h3>
-            </div>
-
-            <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-              You're about to speak aloud about your health conditions.
-              <strong className="text-gray-800 dark:text-white">
-                {" "}
-                Are you in a private place
-              </strong>{" "}
-              where you feel safe discussing personal medical information?
-            </p>
-
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-5">
-              <p className="text-sm text-green-800 dark:text-green-200 flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                <span>
-                  Your voice is processed by your browser only - we never hear
-                  or store your audio.
-                </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                We won't ask again this session
               </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleSafetyDecline}
-                className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+            </>
+          }
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Not Now
-              </button>
-              <button
-                onClick={handleSafetyConfirm}
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Yes, I'm Safe
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
+              </svg>
             </div>
+            <h3
+              id="voice-safety-title"
+              className="text-lg font-semibold text-gray-900 dark:text-white"
+            >
+              Before You Speak
+            </h3>
+          </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-              We won't ask again this session
+          <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+            You're about to speak aloud about your health conditions.
+            <strong className="text-gray-800 dark:text-white">
+              {" "}
+              Are you in a private place
+            </strong>{" "}
+            where you feel safe discussing personal medical information?
+          </p>
+
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
+            <p className="text-sm text-green-800 dark:text-green-200 flex items-start gap-2">
+              <svg
+                className="w-5 h-5 flex-shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+              <span>
+                Your voice is processed by your browser only - we never hear or
+                store your audio.
+              </span>
             </p>
           </div>
-        </div>
+        </ResponsiveModal>
       )}
     </div>
   );

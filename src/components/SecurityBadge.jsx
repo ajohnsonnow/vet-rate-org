@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * SecurityBadge - Prominent, always-visible proof of client-side security
@@ -25,71 +26,6 @@ const SecurityBadge = () => {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const SecurityModal = () => (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4"
-      onClick={() => setShowModal(false)}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 rounded-t-lg">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
-                <Shield className="w-8 h-8" />
-                Security Proof - Zero BS Transparency
-              </h2>
-              <p className="text-green-100 text-sm">
-                Don't trust us. Verify us. Here's exactly how.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowModal(false)}
-              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6">
-          <div className="flex gap-2 overflow-x-auto">
-            {[
-              { id: "overview", label: "Overview", icon: Eye },
-              { id: "proof", label: "Technical Proof", icon: Network },
-              { id: "verify", label: "Verify Yourself", icon: Code },
-              { id: "faq", label: "Skeptic FAQ", icon: AlertCircle },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-6 dark:bg-gray-800">
-          {activeTab === "overview" && <OverviewTab />}
-          {activeTab === "proof" && <ProofTab />}
-          {activeTab === "verify" && <VerifyTab />}
-          {activeTab === "faq" && <FAQTab />}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
       {/* Floating Badge */}
@@ -103,7 +39,72 @@ const SecurityBadge = () => {
         <span className="sm:hidden">🔒</span>
       </button>
 
-      {showModal && <SecurityModal />}
+      {showModal && (
+        <ResponsiveModal
+          isOpen
+          onClose={() => setShowModal(false)}
+          size="xl"
+          zIndex={9999}
+          labelledBy="security-proof-title"
+          header={
+            <>
+              <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2
+                      id="security-proof-title"
+                      className="text-3xl font-bold flex items-center gap-3 mb-2"
+                    >
+                      <Shield className="w-8 h-8" />
+                      Security Proof - Zero BS Transparency
+                    </h2>
+                    <p className="text-green-100 text-sm">
+                      Don't trust us. Verify us. Here's exactly how.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+                    aria-label="Close dialog"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6">
+                <div className="flex gap-2 overflow-x-auto">
+                  {[
+                    { id: "overview", label: "Overview", icon: Eye },
+                    { id: "proof", label: "Technical Proof", icon: Network },
+                    { id: "verify", label: "Verify Yourself", icon: Code },
+                    { id: "faq", label: "Skeptic FAQ", icon: AlertCircle },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
+                          : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          }
+        >
+          {activeTab === "overview" && <OverviewTab />}
+          {activeTab === "proof" && <ProofTab />}
+          {activeTab === "verify" && <VerifyTab />}
+          {activeTab === "faq" && <FAQTab />}
+        </ResponsiveModal>
+      )}
     </>
   );
 };

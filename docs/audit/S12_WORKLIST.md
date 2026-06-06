@@ -219,7 +219,26 @@ RedTeam (already on ResponsiveModal).
       search bar. **No `mobile.spec.ts` entry** — both are prop/`show*`-gated, not event-triggerable,
       so **manual-verify** through the proven shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit
       tests green.
-- [ ] Chunks 9+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 9 — migrate two more clean, properly-themed standard modals: the **VoiceInput** safety
+      confirmation prompt ("Before You Speak", flow-gated by `showSafetyPrompt`) and **SecurityBadge**
+      ("Security Proof" tabbed modal, opened by the floating 🔒 badge). VoiceInput's prompt shed its
+      `fixed inset-0 bg-black/50` + `max-w-sm` card for `ResponsiveModal size="sm"`
+      (`onClose={handleSafetyDecline}`, so backdrop/ESC both decline, matching the old backdrop
+      `onClick`). It has **no gradient bar** → no `header` slot; instead `labelledBy="voice-safety-title"`
+      points at the in-body `<h3>` "Before You Speak", and the Not-Now / Yes-I'm-Safe button row plus the
+      "won't ask again this session" caption move to the sticky `footer` slot. SecurityBadge's nested
+      `SecurityModal` component (re-created on every render — would have remounted the shell, fighting the
+      focus-trap, on each `activeTab` switch) was **inlined** at the render site as `ResponsiveModal
+      size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
+      move into the custom `header` slot as a fragment so both stay pinned, the `<h2>` gains
+      `id="security-proof-title"` for `labelledBy`, the close `✕` `aria-label` is upgraded to
+      "Close dialog", and the four tab-content components become the scroll body (its `p-6 dark:bg-gray-800`
+      wrapper dropped — shell owns padding; dark panel standardizes to `gray-900`). Both **gain**
+      focus-trap + `role="dialog"` + ESC/backdrop dismiss + ref-counted scroll-lock for free (neither had
+      scroll-lock before). **No `mobile.spec.ts` entry** — VoiceInput's prompt is flow-gated and
+      SecurityBadge opens from a floating badge (not an `open*` event), so both are **manual-verify**
+      through the proven shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
+- [ ] Chunks 10+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
