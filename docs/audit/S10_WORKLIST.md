@@ -97,11 +97,14 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 - **Cluster E — wide tables / page-scroll → size='full': all ✅** (`4d4f3cc`). SecondaryScout
   results, ConsistencyEngine (2 shells), CommunityRoadmap, CFileAnalyzer, VAAITransparency,
   RecordSearch, MusterCall → size="full". See progress log for grouping detail.
-- **Cluster F — nested children (z-index care, migrate child → its own ResponsiveModal):**
-  MyPacket (4 nested z-60 + confirm), CAPSimulator (8 shells in one file), VKBTimeline,
-  VKBViewer, PainPainter (nested confirm), BackupManager (2 confirms), ClaimNavigator,
-  TacticalCalculator (nested @2507), DD214Analyzer→DD214FormBuilder (z-9999),
-  PublicationsLibrary→PublicationDetailsModal, Pathfinder→File-Drop-In.
+- **Cluster F — nested children (z-index care, migrate child → its own ResponsiveModal): all ✅**
+  (F1 `e603d00`, F2 `e1971b4`, F3 `bcc194a`, F4 `ed9413c`, F5 `885a9c5`, F6 `9cbfb74`,
+  F7 `eb43814`, F8 `5cc1556`, F9 `7e1fc4a`). MyPacket (4 nested z-60 + confirm), CAPSimulator
+  (7 shells in one file), VKBTimeline, VKBViewer, PainPainter (nested confirm), BackupManager
+  (2 confirms), ClaimNavigator, TacticalCalculator (nested @2507), DD214Analyzer→DD214FormBuilder
+  (z-9999), PublicationsLibrary→PublicationDetailsModal, Pathfinder→File-Drop-In, plus
+  CloudSyncManager + DbqBrowser/PreFillModal/DbqShareMenu (BackupManager-nested follow-ups
+  discovered during F3). See progress log for detail.
 - **Cluster G — graphic/SVG reflow (hardest; may need layout work, not just shell):**
   BodyMapSelector, WebOfConditions (force graph), EvidenceGapVisualizer, UserManual (two-pane
   sidebar must stack), BlueButtonXRay (dense tables), EvidenceTimeline.
@@ -122,6 +125,48 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster F migrated — all ✅ (F1 `e603d00` → F9 `7e1fc4a`; nine sub-commits, one per
+  surface group, e2e after each):** nested-children modals where a child overlay had to become
+  its own body-portaled ResponsiveModal to clear its parent shell. Stacking is now purely the
+  inline `zIndex` (every instance `createPortal`s to `document.body`): parents at the default
+  z-60, in-shell children at `zIndex={70}`, deeper children at `zIndex={80}`, and the
+  DD214/`z-[9999]` cases preserved verbatim.
+  1. **F1 (`e603d00`)** — made `useBodyScrollLock` **ref-counted** (a child no longer unlocks the
+     body behind a still-open parent; single-modal behavior unchanged) — the foundation for the
+     rest of the cluster. Migrated PublicationsLibraryModal (`size="2xl"`), PublicationDetailsModal
+     (child `zIndex={70}`), DD214FormBuilder (`size="xl"` `zIndex={9999}`, section nav in header
+     slot + Prev/Next/Save in footer slot). Publications Library → MODALS.
+  2. **F2 (`e1971b4`)** — VKB pair. VKBTimeline (dark `size="2xl"`) + VKBViewer (`size="2xl"`,
+     data-gated header/footer, dropped createPortal + useBodyScrollLock, w-64 sidebar reflows to a
+     horizontal scroller < sm); each `absolute inset-0` overlay (Comparison / LLM Context) became
+     its own `size="xl"` sibling. Both → MODALS; nested children open only via interaction.
+  3. **F3 (`bcc194a`)** — BackupManager (`size="xl"`; Confirm-Clear → `size="sm"` `zIndex={70}`
+     sibling with footer CTA) + PainPainter (dark `size="2xl"`; Save Map → `size="sm"`
+     `zIndex={70}` sibling). The CloudSyncManager + DbqBrowser launches were deliberately left
+     intact here for independent migration (→ F8/F9). Both parents → MODALS.
+  4. **F4 (`ed9413c`)** — ClaimNavigator nested Help (`size="lg"`, dark header, CTA in body; the
+     main Mission Control surface stays a correct full-bleed takeover) + Pathfinder pair
+     (PathfinderModal `size="2xl"`; File Drop-In child `size="md"` `zIndex={70}`). Pathfinder +
+     Claim Navigator → MODALS.
+  5. **F5 (`885a9c5`)** — MyPacket main (`size="2xl"`) + four nested viewers (Pain Map Detail /
+     Form Viewer / Statement Viewer `size="xl"`, Import Confirm `size="sm"`), all lifted to
+     `zIndex={70}`; packetContentRef wraps the body. My Packet → MODALS.
+  6. **F6 (`9cbfb74`)** — CAPSimulator: all seven mode-branch modals (intro / exam-prep /
+     exam-prep-detail / select-condition / flashcard / simulation / results) → the shell; two dark
+     branches carry their gradient via className; the results branch stays headerless with an
+     sr-only title + labelledBy. "C&P Simulator" → MODALS (opens in the intro branch).
+  7. **F7 (`eb43814`)** — TacticalCalculator main (`size="2xl"`, header with ShareButton /
+     ReportBugLink / close-X, footer kept as the last body element) + Edit Condition (`size="md"`
+     `zIndex={70}`, Cancel/Save in the footer slot). VAGovRatingPaster (z-100) + Edit Condition
+     are fragment siblings. The existing overflow probe moved into the F group (Edit Condition is
+     `editingCondition`-gated — no bare event, exercised via flow).
+  8. **F8 (`5cc1556`)** — CloudSyncManager (BackupManager-nested, permanently-dark green panel) →
+     `size="xl"` `zIndex={70}` with the gradient via className. Not e2e-listed (no bare event; the
+     `openCloudSyncManager` event mounts MultiCloudManager, not this).
+  9. **F9 (`7e1fc4a`)** — DbqBrowser (`size="xl"` `zIndex={70}`), its PreFillModal (`size="lg"`
+     `zIndex={80}`, Cancel/Continue in the footer slot) and DbqShareMenu (`size="md"`
+     `zIndex={80}`, now owns its own backdrop); removed BackupManager's fixed-inset wrapper around
+     `<DbqBrowser>`. All three are BackupManager-nested with no bare open* event → not e2e-listed.
 - **Cluster E migrated — all ✅ (commit `4d4f3cc`; type-check + 803 unit + 0 lint errors +
   105 full mobile e2e @360/390/768 chromium, no regression):** wide-table / page-scrolling
   tools (legacy `max-w-6xl`/`max-w-7xl`) → `size="full"` so they go full-bleed on phones and
