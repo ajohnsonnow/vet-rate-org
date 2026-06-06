@@ -1,13 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  speak,
-  previewVoice,
-  getBestVoice,
-  getAvailableVoices,
-} from "../utils/voiceEngine";
-import { getSupportPhrase, getBranchGreeting } from "../utils/toneMapper";
-import multilingualTone from "../config/multilingualTone.json";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useState } from "react";
+import { getBestVoice } from "../utils/voiceEngine";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * UnityLanguageTutor Component
@@ -23,7 +16,6 @@ import { useLanguage } from "../contexts/LanguageContext";
  * - Voice pronunciation guides
  */
 const UnityLanguageTutor = ({ isOpen = false, onClose, className = "" }) => {
-  const { t } = useLanguage();
   const [targetLang, setTargetLang] = useState("es");
   const [phraseCategory, setPhraseCategory] = useState("support");
   const [currentPhrase, setCurrentPhrase] = useState(null);
@@ -409,208 +401,211 @@ const UnityLanguageTutor = ({ isOpen = false, onClose, className = "" }) => {
     return progress[phraseKey] || 0;
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div
-        className={`bg-slate-900 border-2 border-indigo-500/50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col ${className}`}
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🌐</span>
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  Unity Language Tutor
-                </h2>
-                <p className="text-slate-400 text-sm">
-                  Learn the languages of your fellow veterans
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-slate-500 hover:text-white transition-colors p-2"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* Language & Category Selection */}
-        <div className="p-4 bg-slate-800/50 border-b border-slate-800">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Target Language */}
-            <div>
-              <label className="block text-xs text-slate-400 mb-2">
-                Learn This Language
-              </label>
-              <select
-                value={targetLang}
-                onChange={(e) => {
-                  setTargetLang(e.target.value);
-                  setCurrentPhrase(null);
-                }}
-                className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 focus:border-indigo-500 focus:outline-none"
-              >
-                {Object.entries(translations).map(([code, lang]) => (
-                  <option key={code} value={code}>
-                    {lang.flag} {lang.name} ({lang.nativeName})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Phrase Category */}
-            <div>
-              <label className="block text-xs text-slate-400 mb-2">
-                Phrase Category
-              </label>
-              <select
-                value={phraseCategory}
-                onChange={(e) => {
-                  setPhraseCategory(e.target.value);
-                  setCurrentPhrase(null);
-                }}
-                className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 focus:border-indigo-500 focus:outline-none"
-              >
-                {Object.entries(learningModules).map(([key, module]) => (
-                  <option key={key} value={key}>
-                    {module.icon} {module.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {!currentPhrase ? (
-            // Phrase List
-            <div className="space-y-2">
-              <h3 className="text-sm text-slate-400 mb-3">
-                {learningModules[phraseCategory].icon}{" "}
-                {learningModules[phraseCategory].title}
-              </h3>
-              {learningModules[phraseCategory].phrases.map((phrase) => {
-                const progress = getPhraseProgress(phrase.key);
-                const translation = getPhraseTranslation(phrase.key);
-
-                return (
-                  <button
-                    key={phrase.key}
-                    onClick={() => startLearning(phrase.key, phrase.en)}
-                    className="w-full p-4 bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-slate-700 hover:border-indigo-500/50 text-left transition-all group"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{phrase.en}</p>
-                        {translation && (
-                          <p className="text-indigo-400 text-sm mt-1">
-                            {translation.text}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {progress > 0 && (
-                          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
-                            ×{progress}
-                          </span>
-                        )}
-                        <span className="text-indigo-400 group-hover:translate-x-1 transition-transform">
-                          →
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            // Learning Card
-            <div className="bg-slate-800/50 rounded-xl border border-indigo-500/30 p-6">
-              {/* English */}
-              <div className="mb-6 text-center">
-                <p className="text-slate-400 text-sm mb-1">English</p>
-                <p className="text-2xl text-white font-bold">
-                  {currentPhrase.english}
-                </p>
-              </div>
-
-              {/* Target Language */}
-              <div className="mb-6 text-center bg-indigo-500/10 rounded-xl p-6 border border-indigo-500/20">
-                <p className="text-indigo-400 text-sm mb-2">
-                  {translations[targetLang].flag}{" "}
-                  {translations[targetLang].nativeName}
-                </p>
-                <p className="text-3xl text-white font-bold mb-3">
-                  {currentPhrase.target}
-                </p>
-                <p className="text-slate-400 text-sm italic">
-                  Phonetic: {currentPhrase.phonetic}
-                </p>
-              </div>
-
-              {/* Pronunciation Buttons */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={pronounceSlowly}
-                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  🐢 Slow
-                </button>
-                <button
-                  onClick={pronounceNormal}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  🗣️ Normal Speed
-                </button>
-              </div>
-
-              {/* Feedback */}
-              {feedback && (
-                <div
-                  className={`p-4 rounded-lg mb-4 ${
-                    feedback.type === "success"
-                      ? "bg-green-500/20 border border-green-500/30 text-green-400"
-                      : "bg-yellow-500/20 border border-yellow-500/30 text-yellow-400"
-                  }`}
-                >
-                  {feedback.message}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setCurrentPhrase(null)}
-                  className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={markLearned}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition-colors font-medium"
-                >
-                  ✓ I've Got It!
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-800/30">
-          <p className="text-xs text-slate-500 text-center">
-            🤝 Building unity through language • 100% Private • No data leaves
-            your device
+  const header = (
+    <div className="flex items-center justify-between border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">🌐</span>
+        <div>
+          <h2
+            id="unity-tutor-title"
+            className="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            Unity Language Tutor
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-slate-400">
+            Learn the languages of your fellow veterans
           </p>
         </div>
       </div>
+      <button
+        onClick={onClose}
+        aria-label="Close dialog"
+        className="p-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-500 dark:hover:text-white"
+      >
+        ✕
+      </button>
     </div>
+  );
+
+  const footer = (
+    <p className="text-center text-xs text-gray-600 dark:text-slate-500">
+      🤝 Building unity through language • 100% Private • No data leaves your
+      device
+    </p>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      header={header}
+      labelledBy="unity-tutor-title"
+      footer={footer}
+      className={`border-2 border-indigo-300 dark:border-indigo-500/50 ${className}`}
+    >
+      {/* Language & Category Selection */}
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Target Language */}
+        <div>
+          <label className="mb-2 block text-xs text-gray-600 dark:text-slate-400">
+            Learn This Language
+          </label>
+          <select
+            value={targetLang}
+            onChange={(e) => {
+              setTargetLang(e.target.value);
+              setCurrentPhrase(null);
+            }}
+            className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          >
+            {Object.entries(translations).map(([code, lang]) => (
+              <option key={code} value={code}>
+                {lang.flag} {lang.name} ({lang.nativeName})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Phrase Category */}
+        <div>
+          <label className="mb-2 block text-xs text-gray-600 dark:text-slate-400">
+            Phrase Category
+          </label>
+          <select
+            value={phraseCategory}
+            onChange={(e) => {
+              setPhraseCategory(e.target.value);
+              setCurrentPhrase(null);
+            }}
+            className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          >
+            {Object.entries(learningModules).map(([key, module]) => (
+              <option key={key} value={key}>
+                {module.icon} {module.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      {!currentPhrase ? (
+        // Phrase List
+        <div className="space-y-2">
+          <h3 className="mb-3 text-sm text-gray-600 dark:text-slate-400">
+            {learningModules[phraseCategory].icon}{" "}
+            {learningModules[phraseCategory].title}
+          </h3>
+          {learningModules[phraseCategory].phrases.map((phrase) => {
+            const progress = getPhraseProgress(phrase.key);
+            const translation = getPhraseTranslation(phrase.key);
+
+            return (
+              <button
+                key={phrase.key}
+                onClick={() => startLearning(phrase.key, phrase.en)}
+                className="group w-full rounded-xl border border-gray-200 bg-gray-100 p-4 text-left transition-all hover:border-indigo-400 hover:bg-gray-200 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-indigo-500/50 dark:hover:bg-slate-800"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {phrase.en}
+                    </p>
+                    {translation && (
+                      <p className="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
+                        {translation.text}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {progress > 0 && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-400">
+                        ×{progress}
+                      </span>
+                    )}
+                    <span className="text-indigo-600 transition-transform group-hover:translate-x-1 dark:text-indigo-400">
+                      →
+                    </span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        // Learning Card
+        <div className="rounded-xl border border-indigo-200 bg-gray-100 p-6 dark:border-indigo-500/30 dark:bg-slate-800/50">
+          {/* English */}
+          <div className="mb-6 text-center">
+            <p className="mb-1 text-sm text-gray-600 dark:text-slate-400">
+              English
+            </p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {currentPhrase.english}
+            </p>
+          </div>
+
+          {/* Target Language */}
+          <div className="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-6 text-center dark:border-indigo-500/20 dark:bg-indigo-500/10">
+            <p className="mb-2 text-sm text-indigo-600 dark:text-indigo-400">
+              {translations[targetLang].flag}{" "}
+              {translations[targetLang].nativeName}
+            </p>
+            <p className="mb-3 text-3xl font-bold text-gray-900 dark:text-white">
+              {currentPhrase.target}
+            </p>
+            <p className="text-sm italic text-gray-600 dark:text-slate-400">
+              Phonetic: {currentPhrase.phonetic}
+            </p>
+          </div>
+
+          {/* Pronunciation Buttons */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={pronounceSlowly}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-200 py-3 text-gray-800 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+            >
+              🐢 Slow
+            </button>
+            <button
+              onClick={pronounceNormal}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              🗣️ Normal Speed
+            </button>
+          </div>
+
+          {/* Feedback */}
+          {feedback && (
+            <div
+              className={`mb-4 rounded-lg p-4 ${
+                feedback.type === "success"
+                  ? "border border-green-300 bg-green-100 text-green-700 dark:border-green-500/30 dark:bg-green-500/20 dark:text-green-400"
+                  : "border border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/20 dark:text-yellow-400"
+              }`}
+            >
+              {feedback.message}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setCurrentPhrase(null)}
+              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              ← Back
+            </button>
+            <button
+              onClick={markLearned}
+              className="flex-1 rounded-lg bg-green-600 py-3 font-medium text-white transition-colors hover:bg-green-700"
+            >
+              ✓ I&apos;ve Got It!
+            </button>
+          </div>
+        </div>
+      )}
+    </ResponsiveModal>
   );
 };
 
