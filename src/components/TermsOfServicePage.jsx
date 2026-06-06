@@ -119,7 +119,7 @@ const TermsOfServicePage = ({ onClose }) => {
         {/* Section 1: Non-Accreditation */}
         <section className="border-l-4 border-blue-500 dark:border-blue-600 pl-6">
           <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-4">
-            1. Non-Accreditation Clause (38 U.S.C. � 5901)
+            1. Non-Accreditation Clause (38 U.S.C. § 5901)
           </h2>
           <div className="space-y-4 leading-relaxed">
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -132,10 +132,10 @@ const TermsOfServicePage = ({ onClose }) => {
               <ul className="list-disc list-inside space-y-1 mt-2 ml-4 text-gray-800 dark:text-gray-200">
                 <li>
                   An accredited Veterans Service Organization (VSO) under 38
-                  U.S.C. � 5902
+                  U.S.C. § 5902
                 </li>
                 <li>A licensed attorney or law firm</li>
-                <li>A VA-recognized claims agent under 38 C.F.R. � 14.627</li>
+                <li>A VA-recognized claims agent under 38 C.F.R. § 14.627</li>
                 <li>
                   A representative authorized to practice before the Department
                   of Veterans Affairs
