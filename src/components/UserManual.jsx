@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import { useState, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import { resetTourState, triggerTourRestart } from "./BootCampTour";
 import { getTotalToolCount } from "../data/toolkitData";
 import { PROJECT_STATS } from "../data/projectStats";
@@ -3991,6 +3992,7 @@ const renderContent = (content, onClose) => {
 
 const UserManual = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
+  const panelRef = useRef(null);
 
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
@@ -4156,19 +4158,20 @@ const UserManual = ({ onClose, onReportBug }) => {
         .slice(0, 10)
     : [];
 
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [onClose]);
+  // Two-pane layout keeps independent sidebar/content scroll, so it stays a
+  // hand-built dialog rather than the single-scroll-body ResponsiveModal.
+  useFocusTrap(panelRef, { active: true, onEscape: onClose });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
       {/* Main container */}
-      <div className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("userManual", "title")}
+        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden"
+      >
         {/* Mobile header */}
         <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
           <button
