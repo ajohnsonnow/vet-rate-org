@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 const BodyMapSelector = ({
   onSymptomUpdate,
@@ -544,41 +545,52 @@ const BodyMapSelector = ({
   };
 
   return (
-    <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 relative">
-      {/* Close X Button */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors z-10"
-          aria-label="Close"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* Header */}
-      <div className="mb-6 pr-12">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-2">
-          🎯 Somatic Target - Visual Pain Map
-        </h2>
-        <p className="text-gray-300 text-sm">
-          Click body parts OR select a body system below to log symptoms. We'll
-          translate your pain into VA medical terminology.
-        </p>
-      </div>
-
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="body-map-selector-title"
+      className="bg-gray-900 border border-yellow-500/30"
+      header={
+        <div className="bg-gray-900 border-b border-yellow-500/30 px-6 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2
+                id="body-map-selector-title"
+                className="text-2xl font-bold text-yellow-400 mb-1"
+              >
+                🎯 Somatic Target - Visual Pain Map
+              </h2>
+              <p className="text-gray-300 text-sm">
+                Click body parts OR select a body system below to log symptoms.
+                We'll translate your pain into VA medical terminology.
+              </p>
+            </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
+                aria-label="Close"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      }
+    >
       {/* Body System Category Selector */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -628,7 +640,7 @@ const BodyMapSelector = ({
       {/* Body Diagram */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* SVG Body Map */}
-        <div className="relative bg-gray-800 rounded-lg p-4 min-h-[500px] flex items-center justify-center">
+        <div className="relative bg-gray-800 rounded-lg p-4 min-h-[340px] sm:min-h-[500px] flex items-center justify-center">
           <svg
             viewBox="0 0 300 600"
             className="w-full max-w-xs"
@@ -1111,7 +1123,7 @@ const BodyMapSelector = ({
           <li>• Red zones show where you've logged symptoms</li>
         </ul>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

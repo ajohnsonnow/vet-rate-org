@@ -35,19 +35,13 @@ export default function BodyMappingCluster() {
   return (
     <Suspense fallback={null}>
       {showBodyMap && (
-        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8">
-            <div className="max-w-6xl mx-auto">
-              <BodyMapSelector
-                onClose={() => setShowBodyMap(false)}
-                onLogToSymptomLogger={() => {
-                  setShowBodyMap(false);
-                  openSymptomLogger();
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <BodyMapSelector
+          onClose={() => setShowBodyMap(false)}
+          onLogToSymptomLogger={() => {
+            setShowBodyMap(false);
+            openSymptomLogger();
+          }}
+        />
       )}
       {showPainPainter && (
         <PainPainter
