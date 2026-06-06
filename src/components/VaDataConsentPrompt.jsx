@@ -5,7 +5,8 @@
  */
 
 import React, { useState } from "react";
-import { Shield, Save, X, Lock, Database, FileText } from "lucide-react";
+import { Shield, Save, Lock, Database, FileText } from "lucide-react";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
   const [saveToPacket, setSaveToPacket] = useState(true);
@@ -18,15 +19,23 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
   const appealableIssuesCount = vaData?.appealableIssues?.length || 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <ResponsiveModal
+      isOpen
+      onClose={onSkip}
+      dismissable={false}
+      size="md"
+      zIndex={9999}
+      labelledBy="va-consent-title"
+      header={
+        <div className="border-b border-gray-200 bg-white px-6 py-5 dark:border-gray-700 dark:bg-gray-900">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
               <Shield className="text-blue-600 dark:text-blue-400" size={24} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2
+              id="va-consent-title"
+              className="text-2xl font-bold text-gray-900 dark:text-white"
+            >
               Save Your VA Data?
             </h2>
           </div>
@@ -35,9 +44,31 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             save it locally?
           </p>
         </div>
-
+      }
+      footer={
+        <div className="flex gap-3">
+          <button
+            onClick={() => onConsent({ saveToPacket, saveToVKB })}
+            disabled={!saveToPacket && !saveToVKB}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
+          >
+            <Save size={20} />
+            {saveToPacket || saveToVKB
+              ? "Save & Continue"
+              : "Select at least one option"}
+          </button>
+          <button
+            onClick={onSkip}
+            className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+          >
+            Skip
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-5">
         {/* Data Summary */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-900/50">
+        <div className="rounded-lg bg-gray-50 dark:bg-gray-900/50 p-4">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
             Available Data:
           </h3>
@@ -77,7 +108,7 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
         </div>
 
         {/* Storage Options */}
-        <div className="p-6 space-y-4">
+        <div className="space-y-4">
           <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
             <input
               type="checkbox"
@@ -117,7 +148,7 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
         </div>
 
         {/* Privacy Notice */}
-        <div className="mx-6 mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <Lock
               className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
@@ -136,28 +167,8 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             </div>
           </div>
         </div>
-
-        {/* Actions */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
-          <button
-            onClick={() => onConsent({ saveToPacket, saveToVKB })}
-            disabled={!saveToPacket && !saveToVKB}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <Save size={20} />
-            {saveToPacket || saveToVKB
-              ? "Save & Continue"
-              : "Select at least one option"}
-          </button>
-          <button
-            onClick={onSkip}
-            className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            Skip
-          </button>
-        </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

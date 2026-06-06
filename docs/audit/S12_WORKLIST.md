@@ -133,7 +133,19 @@ RedTeam (already on ResponsiveModal).
       `last_seen_version` trips it on boot) — green at 360/390/768. ShareButton's always-dark
       image-preview modal is deferred into a themed-modal cluster (Chunk 3+) where its
       forced-dark frame is handled alongside similar panels, to keep the canonical pattern clean.
-- [ ] Chunks 3+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 3 — migrate the non-dismissible gates (`dismissable=false`): **VaDataConsentPrompt**
+      (Shield+title+subtitle → custom header slot with `id="va-consent-title"`; Save & Continue /
+      Skip → sticky footer slot; Data Summary / Storage Options / Privacy Notice → body) and
+      **AtomicWipe ConfirmModal** (⚠️ header slot `id="atomic-wipe-title"`; Cancel / Confirm Wipe →
+      footer slot; delete-list + amber note → body). Both gain focus-trap + `role="dialog"` +
+      ESC-blocked for free. AtomicWipe's bespoke `isDark` ternaries were converted to the standard
+      `light dark:` pattern — verified theme-correct across all four themes because TBI/AAA are
+      handled by global `!important` overrides on base utility classes in `index.css`
+      (`html.tbi-comfort .bg-white`, `html.aaa-high-contrast body/*`), not Tailwind `dark:`. Added a
+      `mobile.spec.ts` block clicking the real AppShellTop trigger (`aria-label="Clear all local
+      data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
+      VaDataConsentPrompt is VA-OAuth-gated (no automatable trigger) → same shell, manual-verify only.
+- [ ] Chunks 4+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
