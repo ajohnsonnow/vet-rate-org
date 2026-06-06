@@ -253,6 +253,22 @@ RedTeam (already on ResponsiveModal).
       `React` import (automatic JSX runtime). **No `mobile.spec.ts` entry** — it mounts behind
       `showModal` state (prop/flow-gated, not an `open*` event), so **manual-verify** through the proven
       shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
+- [x] Chunk 11 — migrate **SharkRadar**'s modal wrapper (the rose/red contract & email scam scanner,
+      event-triggered via `openSharkRadar`). The wrapper is not in the component — it lives in
+      [QualityControlCluster.jsx](../../src/features/quality-control/QualityControlCluster.jsx), which is
+      why the earlier `src/components/**` `fixed inset-0` sweep missed it. Chunk 4 deliberately left this
+      one as a bespoke wrapper ("part of the tool's visual identity, not boilerplate"), but that rationale
+      conflated the rose/red gradient *identity* (fully preservable) with the dialog *a11y contract* the
+      wrapper lacked (no `role="dialog"`, no focus-trap, no ESC, no scroll-lock, `max-h-[90vh]` not dvh) —
+      exactly the S12 gap. Shed the `fixed inset-0` + `bg-white dark:bg-gray-800 max-w-6xl max-h-[90vh]`
+      card for `ResponsiveModal size="2xl"`; the rose→red→rose gradient bar (🦈 title + AI/BETA pills +
+      `ReportBugLink` + close) moves into the custom `header` slot intact (the `<h2>` gains
+      `id="shark-radar-title"` for `labelledBy`, close `aria-label` upgraded "Close" → "Close dialog"),
+      and the `overflow-y-auto flex-1 p-4` body collapses to `<SharkRadar />` as the shell scroll body.
+      No footer bar (close lives in the header), so no `footer` slot. The cluster's header doc-comment was
+      corrected to reflect the shell. **Has a `mobile.spec.ts` entry** (MODALS, overflow-only — no sticky
+      footer CTA): "Shark Radar" / `openSharkRadar`. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests
+      green, **9/9 Shark Radar mobile tests pass @360/390/768 × chromium/firefox/mobile-chrome**.
 - [ ] **Deferred this pass (examined, not mechanical — need their own focused chunk):**
       **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
       `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed

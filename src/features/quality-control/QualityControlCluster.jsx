@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
+import ResponsiveModal from "../../components/common/ResponsiveModal";
 
 const DecisionDecoder = lazy(() => import("../../components/DecisionDecoder"));
 const RiskAssessment = lazy(() => import("../../components/RiskAssessment"));
@@ -18,11 +19,11 @@ const SharkRadar = lazy(() => import("../../components/SharkRadar"));
  *   - RiskAssessment ("Poke the Bear" risk calculator)
  *   - EvidenceGapVisualizer (missing-evidence map)
  *   - NexusQualityAnalyzer (nexus-letter scoring against 18,609 BVAs)
- *   - SharkRadar (contract/email scam scanner — preserved custom wrapper)
+ *   - SharkRadar (contract/email scam scanner — rose/red ResponsiveModal)
  *
- * SharkRadar keeps its bespoke 60-line modal wrapper (rose/red gradient
- * header, ReportBugLink in header) because the wrapper is part of the
- * tool's visual identity, not boilerplate that can be normalized.
+ * SharkRadar's rose/red gradient header (with its ReportBugLink) is the tool's
+ * visual identity; it rides in ResponsiveModal's header slot so the dialog a11y
+ * contract (focus trap, ESC, scroll lock) applies without losing that identity.
  *
  * Bridges via App.jsx: openBugSquasher, openAISettings.
  *
@@ -88,20 +89,21 @@ export default function QualityControlCluster() {
         <NexusQualityAnalyzer onClose={() => setShowNexusQA(false)} />
       )}
       {showSharkRadar && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-          onClick={() => setShowSharkRadar(false)}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
+        <ResponsiveModal
+          isOpen
+          onClose={() => setShowSharkRadar(false)}
+          size="2xl"
+          labelledBy="shark-radar-title"
+          header={
+            <div className="bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🦈</span>
                   <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h2
+                      id="shark-radar-title"
+                      className="text-xl font-bold text-white flex items-center gap-2"
+                    >
                       Shark Radar
                       <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
                         AI
@@ -124,7 +126,7 @@ export default function QualityControlCluster() {
                   <button
                     onClick={() => setShowSharkRadar(false)}
                     className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label="Close"
+                    aria-label="Close dialog"
                   >
                     <svg
                       className="w-6 h-6"
@@ -143,11 +145,10 @@ export default function QualityControlCluster() {
                 </div>
               </div>
             </div>
-            <div className="overflow-y-auto flex-1 p-4">
-              <SharkRadar />
-            </div>
-          </div>
-        </div>
+          }
+        >
+          <SharkRadar />
+        </ResponsiveModal>
       )}
     </Suspense>
   );
