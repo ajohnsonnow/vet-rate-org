@@ -23,7 +23,7 @@ import SimulatorFeedback from "./SimulatorFeedback";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getCalculatorFunction } from "../utils/capSimulatorLogic";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import dbqLogicMap from "../data/dbq_logic_map.json";
 import disabilityDataFile from "../data/disabilityData.json";
 
@@ -139,9 +139,6 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
-
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Load saved packet and all conditions from localStorage
   useEffect(() => {
@@ -1751,15 +1748,13 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   // Intro screen
   if (mode === "intro") {
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cap-simulator-title"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
-          {/* Header - Fixed at top */}
-          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="cap-simulator-title"
+        header={
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
               {onReportBug && (
                 <ReportBugLink
@@ -1792,195 +1787,192 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               Turn the "Black Box" of the C&P Exam into an Open-Book Test
             </p>
           </div>
+        }
+      >
+        <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-4 sm:p-8 space-y-4 sm:space-y-6">
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-lg p-6">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              What is the C&P Exam Simulator?
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              The Compensation & Pension (C&P) exam can feel like a mystery. You
+              walk in not knowing what the doctor will ask, and you walk out not
+              knowing if you said the "right" things.{" "}
+              <strong>This tool removes that mystery.</strong>
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              This simulator uses the{" "}
+              <strong>exact rating criteria from 38 CFR Part 4</strong> for your
+              specific condition to present the "tipping point" questions - the
+              questions that determine whether you get 10%, 30%, 50%, or higher.
+            </p>
+          </div>
 
-          {/* Content - Scrollable */}
-          <div className="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
-            <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                What is the C&P Exam Simulator?
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                The Compensation & Pension (C&P) exam can feel like a mystery.
-                You walk in not knowing what the doctor will ask, and you walk
-                out not knowing if you said the "right" things.{" "}
-                <strong>This tool removes that mystery.</strong>
-              </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                This simulator uses the{" "}
-                <strong>exact rating criteria from 38 CFR Part 4</strong> for
-                your specific condition to present the "tipping point" questions
-                - the questions that determine whether you get 10%, 30%, 50%, or
-                higher.
-              </p>
+          {/* PRIMARY ACTION BUTTONS - Prominently placed after intro */}
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
+              🎯 Choose Your Mode
+            </h3>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button
+                onClick={() => setMode("select-condition")}
+                className="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+              >
+                <ClipboardList className="h-6 w-6" />
+                <div className="text-left">
+                  <div>Start Simulation</div>
+                  <div className="text-xs font-normal text-teal-200">
+                    Practice DBQ questions
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => setMode("exam-prep")}
+                className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+              >
+                <FileText className="h-6 w-6" />
+                <div className="text-left">
+                  <div>Exam Prep</div>
+                  <div className="text-xs font-normal text-emerald-200">
+                    See actual DBQ questions
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => setMode("flashcard")}
+                className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+              >
+                <BookOpen className="h-6 w-6" />
+                <div className="text-left">
+                  <div>Learn Terminology</div>
+                  <div className="text-xs font-normal text-cyan-200">
+                    Key terms & definitions
+                  </div>
+                </div>
+              </button>
             </div>
+          </div>
 
-            {/* PRIMARY ACTION BUTTONS - Prominently placed after intro */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
-                🎯 Choose Your Mode
-              </h3>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <button
-                  onClick={() => setMode("select-condition")}
-                  className="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-                >
-                  <ClipboardList className="h-6 w-6" />
-                  <div className="text-left">
-                    <div>Start Simulation</div>
-                    <div className="text-xs font-normal text-teal-200">
-                      Practice DBQ questions
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setMode("exam-prep")}
-                  className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-                >
-                  <FileText className="h-6 w-6" />
-                  <div className="text-left">
-                    <div>Exam Prep</div>
-                    <div className="text-xs font-normal text-emerald-200">
-                      See actual DBQ questions
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setMode("flashcard")}
-                  className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-                >
-                  <BookOpen className="h-6 w-6" />
-                  <div className="text-left">
-                    <div>Learn Terminology</div>
-                    <div className="text-xs font-normal text-cyan-200">
-                      Key terms & definitions
-                    </div>
-                  </div>
-                </button>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
+              <div className="text-teal-600 dark:text-teal-400 mb-3">
+                <ClipboardList className="h-8 w-8" />
               </div>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
-                <div className="text-teal-600 dark:text-teal-400 mb-3">
-                  <ClipboardList className="h-8 w-8" />
-                </div>
-                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  1. Simulation
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Answer condition-specific questions based on actual DBQ
-                  criteria
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
-                <div className="text-emerald-600 dark:text-emerald-400 mb-3">
-                  <AlertCircle className="h-8 w-8" />
-                </div>
-                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  2. Gap Analysis
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  See exactly what rating your answers align with and what's
-                  needed for higher ratings
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 rounded-lg p-5">
-                <div className="text-cyan-600 dark:text-cyan-400 mb-3">
-                  <BookOpen className="h-8 w-8" />
-                </div>
-                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  3. Preparation
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Get specific action items: what documents to bring, what to
-                  say, what NOT to say
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-5">
-              <div className="flex gap-3">
-                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                <div>
-                  <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
-                    The "Stop When It Hurts" Principle
-                  </h4>
-                  <p className="text-amber-800 dark:text-amber-100 text-sm">
-                    For conditions like back pain or knee pain, the simulator
-                    will teach you the most important exam tip:{" "}
-                    <strong>
-                      Range of Motion is measured to the point where pain STOPS
-                      you
-                    </strong>{" "}
-                    - not where you can force yourself to go. Many veterans
-                    unknowingly lower their ratings by "pushing through" during
-                    ROM testing.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
-                Comprehensive Condition Coverage:
-              </h3>
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                    {allConditions.length}
-                  </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
-                    Conditions with Simulations
-                  </div>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-                    15+
-                  </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
-                    Body Systems Covered
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    All 38 CFR Part 4 Subpart B
-                  </div>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                    100%
-                  </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
-                    FREE
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Always, no premium tiers
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                <strong>Body System-Specific Questions:</strong> Each simulation
-                generates questions tailored to the specific body system
-                (musculoskeletal, mental health, respiratory, neurological,
-                etc.) based on actual DBQ criteria and 38 CFR Part 4 rating
-                schedules. Questions target the specific symptoms, measurements,
-                and functional limitations examiners assess for your condition.
+              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                1. Simulation
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Answer condition-specific questions based on actual DBQ criteria
               </p>
             </div>
 
-            {/* Disclaimer */}
-            <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
-              <p className="text-xs text-gray-600 dark:text-gray-400 italic">
-                <strong>Disclaimer:</strong> This is a training tool, not legal
-                advice. Always tell the truth during your exam. The C&P
-                examiner's job is to document your condition accurately - be
-                honest about your worst days, not just your best days. This tool
-                is based on 38 CFR Part 4 as of January 2026.
+            <div className="bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
+              <div className="text-emerald-600 dark:text-emerald-400 mb-3">
+                <AlertCircle className="h-8 w-8" />
+              </div>
+              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                2. Gap Analysis
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                See exactly what rating your answers align with and what's
+                needed for higher ratings
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 rounded-lg p-5">
+              <div className="text-cyan-600 dark:text-cyan-400 mb-3">
+                <BookOpen className="h-8 w-8" />
+              </div>
+              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                3. Preparation
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Get specific action items: what documents to bring, what to say,
+                what NOT to say
               </p>
             </div>
           </div>
+
+          <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-5">
+            <div className="flex gap-3">
+              <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <div>
+                <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
+                  The "Stop When It Hurts" Principle
+                </h4>
+                <p className="text-amber-800 dark:text-amber-100 text-sm">
+                  For conditions like back pain or knee pain, the simulator will
+                  teach you the most important exam tip:{" "}
+                  <strong>
+                    Range of Motion is measured to the point where pain STOPS
+                    you
+                  </strong>{" "}
+                  - not where you can force yourself to go. Many veterans
+                  unknowingly lower their ratings by "pushing through" during
+                  ROM testing.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Comprehensive Condition Coverage:
+            </h3>
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                  {allConditions.length}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Conditions with Simulations
+                </div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  15+
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Body Systems Covered
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  All 38 CFR Part 4 Subpart B
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                  100%
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  FREE
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Always, no premium tiers
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              <strong>Body System-Specific Questions:</strong> Each simulation
+              generates questions tailored to the specific body system
+              (musculoskeletal, mental health, respiratory, neurological, etc.)
+              based on actual DBQ criteria and 38 CFR Part 4 rating schedules.
+              Questions target the specific symptoms, measurements, and
+              functional limitations examiners assess for your condition.
+            </p>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
+            <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+              <strong>Disclaimer:</strong> This is a training tool, not legal
+              advice. Always tell the truth during your exam. The C&P examiner's
+              job is to document your condition accurately - be honest about
+              your worst days, not just your best days. This tool is based on 38
+              CFR Part 4 as of January 2026.
+            </p>
+          </div>
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
@@ -2013,14 +2005,13 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     };
 
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="exam-prep-title"
-      >
-        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-cyan-500/30">
-          {/* Header */}
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="exam-prep-title"
+        className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-cyan-500/30"
+        header={
           <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -2051,105 +2042,100 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               ×
             </button>
           </div>
-
-          {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">📋</div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-cyan-300 mb-2">
-                      The Open Book Test
-                    </h2>
-                    <p className="text-gray-300 text-lg mb-4">
-                      Your C&P examiner isn't improvising - they're checking
-                      boxes on a standardized form called a{" "}
-                      <span className="font-bold text-white">
-                        Disability Benefits Questionnaire (DBQ)
-                      </span>
-                      .
-                    </p>
-                    <p className="text-gray-300">
-                      This tool shows you the{" "}
-                      <span className="font-bold text-cyan-300">
-                        exact questions
-                      </span>{" "}
-                      they'll ask and{" "}
-                      <span className="font-bold text-cyan-300">
-                        strategic tips
-                      </span>{" "}
-                      on how to answer honestly without underselling your
-                      symptoms.
-                    </p>
-                  </div>
-                </div>
+        }
+      >
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">📋</div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-cyan-300 mb-2">
+                  The Open Book Test
+                </h2>
+                <p className="text-gray-300 text-lg mb-4">
+                  Your C&P examiner isn't improvising - they're checking boxes
+                  on a standardized form called a{" "}
+                  <span className="font-bold text-white">
+                    Disability Benefits Questionnaire (DBQ)
+                  </span>
+                  .
+                </p>
+                <p className="text-gray-300">
+                  This tool shows you the{" "}
+                  <span className="font-bold text-cyan-300">
+                    exact questions
+                  </span>{" "}
+                  they'll ask and{" "}
+                  <span className="font-bold text-cyan-300">
+                    strategic tips
+                  </span>{" "}
+                  on how to answer honestly without underselling your symptoms.
+                </p>
               </div>
-
-              {/* Search Bar */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Search for your condition:
-                </label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="e.g., PTSD, Knee, Tinnitus, Migraine..."
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              {/* Condition List */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-200 mb-3">
-                  Select a condition ({filteredConditions.length} available):
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                  {filteredConditions.map((cond) => (
-                    <button
-                      key={cond.key}
-                      onClick={() => handleExamPrepConditionSelect(cond.key)}
-                      className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500 rounded-lg transition-all group"
-                    >
-                      <div className="font-semibold text-white group-hover:text-cyan-300">
-                        {cond.condition_name}
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        DC {cond.diagnostic_code} • {cond.cfr_reference}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {filteredConditions.length === 0 && (
-                <div className="text-center py-12 text-gray-400">
-                  <div className="text-4xl mb-4">🔍</div>
-                  <p>No conditions found matching "{searchTerm}"</p>
-                  <p className="text-sm mt-2">
-                    Try a different search term or browse all conditions above.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Search Bar */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Search for your condition:
+            </label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="e.g., PTSD, Knee, Tinnitus, Migraine..."
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+
+          {/* Condition List */}
+          <div>
+            <h3 className="text-lg font-bold text-gray-200 mb-3">
+              Select a condition ({filteredConditions.length} available):
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+              {filteredConditions.map((cond) => (
+                <button
+                  key={cond.key}
+                  onClick={() => handleExamPrepConditionSelect(cond.key)}
+                  className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500 rounded-lg transition-all group"
+                >
+                  <div className="font-semibold text-white group-hover:text-cyan-300">
+                    {cond.condition_name}
+                  </div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    DC {cond.diagnostic_code} • {cond.cfr_reference}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredConditions.length === 0 && (
+            <div className="text-center py-12 text-gray-400">
+              <div className="text-4xl mb-4">🔍</div>
+              <p>No conditions found matching "{searchTerm}"</p>
+              <p className="text-sm mt-2">
+                Try a different search term or browse all conditions above.
+              </p>
+            </div>
+          )}
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
   // Exam Prep Detail View - Shows DBQ questions and tips
   if (mode === "exam-prep-detail" && examPrepDBQ) {
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="exam-prep-detail-title"
-      >
-        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-cyan-500/30">
-          {/* Header */}
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="exam-prep-detail-title"
+        className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-cyan-500/30"
+        header={
           <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -2183,220 +2169,211 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               ×
             </button>
           </div>
-
-          {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-            <div className="space-y-6">
-              {/* Strategic Tips Section */}
-              {examPrepTips.length > 0 && (
-                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="text-3xl">💡</div>
-                    <div>
-                      <h3 className="text-xl font-bold text-yellow-300 mb-2">
-                        Strategic Tips for This Condition
-                      </h3>
-                      <p className="text-gray-300 text-sm">
-                        These tips help you answer honestly while ensuring the
-                        examiner understands the full impact of your condition.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {examPrepTips.map((tip) => (
-                      <div
-                        key={tip.key}
-                        className="bg-gray-900/50 rounded-lg p-4"
-                      >
-                        <h4 className="font-bold text-yellow-200 mb-2">
-                          ⚠️ {tip.title}
-                        </h4>
-                        <p className="text-gray-300 text-sm leading-relaxed">
-                          {tip.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+        }
+      >
+        <div className="space-y-6">
+          {/* Strategic Tips Section */}
+          {examPrepTips.length > 0 && (
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="text-3xl">💡</div>
+                <div>
+                  <h3 className="text-xl font-bold text-yellow-300 mb-2">
+                    Strategic Tips for This Condition
+                  </h3>
+                  <p className="text-gray-300 text-sm">
+                    These tips help you answer honestly while ensuring the
+                    examiner understands the full impact of your condition.
+                  </p>
                 </div>
-              )}
-
-              {/* Tipping Points / DBQ Questions Section */}
-              {examPrepDBQ.tipping_points &&
-                examPrepDBQ.tipping_points.length > 0 && (
-                  <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
-                    <h3 className="text-xl font-bold text-cyan-300 mb-4">
-                      📋 Questions the Examiner Will Ask
-                    </h3>
-                    <p className="text-gray-400 text-sm mb-6">
-                      These are the actual questions from the DBQ form. Click
-                      each one to see what the examiner is really looking for.
+              </div>
+              <div className="space-y-3">
+                {examPrepTips.map((tip) => (
+                  <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
+                    <h4 className="font-bold text-yellow-200 mb-2">
+                      ⚠️ {tip.title}
+                    </h4>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {tip.content}
                     </p>
-                    <div className="space-y-3">
-                      {examPrepDBQ.tipping_points.map((q, index) => (
-                        <div
-                          key={q.id}
-                          className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
-                        >
-                          <button
-                            onClick={() =>
-                              setExpandedQuestion(
-                                expandedQuestion === q.id ? null : q.id,
-                              )
-                            }
-                            className="w-full text-left p-4 flex items-start justify-between hover:bg-gray-750 transition-colors"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-start gap-3">
-                                <span className="text-cyan-400 font-bold shrink-0">
-                                  Q{index + 1}.
-                                </span>
-                                <span className="text-white font-medium">
-                                  {q.question}
-                                </span>
-                              </div>
-                              {q.required && (
-                                <span className="inline-block mt-2 text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">
-                                  Required Question
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-gray-500 text-xl ml-4">
-                              {expandedQuestion === q.id ? "−" : "+"}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tipping Points / DBQ Questions Section */}
+          {examPrepDBQ.tipping_points &&
+            examPrepDBQ.tipping_points.length > 0 && (
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-cyan-300 mb-4">
+                  📋 Questions the Examiner Will Ask
+                </h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  These are the actual questions from the DBQ form. Click each
+                  one to see what the examiner is really looking for.
+                </p>
+                <div className="space-y-3">
+                  {examPrepDBQ.tipping_points.map((q, index) => (
+                    <div
+                      key={q.id}
+                      className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden"
+                    >
+                      <button
+                        onClick={() =>
+                          setExpandedQuestion(
+                            expandedQuestion === q.id ? null : q.id,
+                          )
+                        }
+                        className="w-full text-left p-4 flex items-start justify-between hover:bg-gray-750 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-start gap-3">
+                            <span className="text-cyan-400 font-bold shrink-0">
+                              Q{index + 1}.
                             </span>
-                          </button>
+                            <span className="text-white font-medium">
+                              {q.question}
+                            </span>
+                          </div>
+                          {q.required && (
+                            <span className="inline-block mt-2 text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">
+                              Required Question
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-gray-500 text-xl ml-4">
+                          {expandedQuestion === q.id ? "−" : "+"}
+                        </span>
+                      </button>
 
-                          {expandedQuestion === q.id && (
-                            <div className="border-t border-gray-700 p-4 bg-gray-900/50 space-y-4">
-                              {/* Intent */}
-                              <div>
-                                <h4 className="text-sm font-bold text-yellow-300 mb-2">
-                                  🎯 What They're Really Looking For:
-                                </h4>
-                                <p className="text-gray-300 text-sm leading-relaxed">
-                                  {q.intent}
-                                </p>
-                              </div>
+                      {expandedQuestion === q.id && (
+                        <div className="border-t border-gray-700 p-4 bg-gray-900/50 space-y-4">
+                          {/* Intent */}
+                          <div>
+                            <h4 className="text-sm font-bold text-yellow-300 mb-2">
+                              🎯 What They're Really Looking For:
+                            </h4>
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                              {q.intent}
+                            </p>
+                          </div>
 
-                              {/* Definition */}
-                              {q.definition && (
-                                <div>
-                                  <h4 className="text-sm font-bold text-blue-300 mb-2">
-                                    📖 Official Definition:
-                                  </h4>
-                                  <p className="text-gray-300 text-sm leading-relaxed">
-                                    {q.definition}
-                                  </p>
-                                </div>
-                              )}
+                          {/* Definition */}
+                          {q.definition && (
+                            <div>
+                              <h4 className="text-sm font-bold text-blue-300 mb-2">
+                                📖 Official Definition:
+                              </h4>
+                              <p className="text-gray-300 text-sm leading-relaxed">
+                                {q.definition}
+                              </p>
+                            </div>
+                          )}
 
-                              {/* Answer Options */}
-                              {q.options && q.options.length > 0 && (
-                                <div>
-                                  <h4 className="text-sm font-bold text-green-300 mb-2">
-                                    ✅ Possible Answers:
-                                  </h4>
-                                  <div className="space-y-2">
-                                    {q.options.map((opt, i) => (
-                                      <div
-                                        key={i}
-                                        className="bg-gray-800 border border-gray-600 rounded p-3 flex items-start gap-3"
-                                      >
-                                        <div
-                                          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                            opt.weight >= 3
-                                              ? "bg-red-500/20 text-red-300"
-                                              : opt.weight >= 2
-                                                ? "bg-yellow-500/20 text-yellow-300"
-                                                : "bg-green-500/20 text-green-300"
-                                          }`}
-                                        >
-                                          {opt.weight >= 3
-                                            ? "⚠️"
-                                            : opt.weight >= 2
-                                              ? "⚡"
-                                              : "✓"}
-                                        </div>
-                                        <div className="flex-1">
-                                          <p className="text-white font-medium">
-                                            {opt.label}
-                                          </p>
-                                          {opt.weight > 0 && (
-                                            <p className="text-xs text-gray-400 mt-1">
-                                              Impact level: {opt.weight}/4
-                                            </p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
+                          {/* Answer Options */}
+                          {q.options && q.options.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-bold text-green-300 mb-2">
+                                ✅ Possible Answers:
+                              </h4>
+                              <div className="space-y-2">
+                                {q.options.map((opt, i) => (
+                                  <div
+                                    key={i}
+                                    className="bg-gray-800 border border-gray-600 rounded p-3 flex items-start gap-3"
+                                  >
+                                    <div
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                        opt.weight >= 3
+                                          ? "bg-red-500/20 text-red-300"
+                                          : opt.weight >= 2
+                                            ? "bg-yellow-500/20 text-yellow-300"
+                                            : "bg-green-500/20 text-green-300"
+                                      }`}
+                                    >
+                                      {opt.weight >= 3
+                                        ? "⚠️"
+                                        : opt.weight >= 2
+                                          ? "⚡"
+                                          : "✓"}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-white font-medium">
+                                        {opt.label}
+                                      </p>
+                                      {opt.weight > 0 && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                          Impact level: {opt.weight}/4
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
-
-              {/* Additional Notes Section */}
-              {examPrepDBQ.notes && (
-                <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
-                  <h4 className="font-bold text-blue-300 mb-2">
-                    📝 Important Notes:
-                  </h4>
-                  <p className="text-gray-300 text-sm">{examPrepDBQ.notes}</p>
-                </div>
-              )}
-
-              {/* Bottom CTA */}
-              <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-cyan-300 mb-3">
-                  Ready for Your Exam
-                </h3>
-                <p className="text-gray-300 mb-4">
-                  Now you know exactly what questions are coming. Walk in
-                  prepared, answer honestly, and don't undersell your symptoms.
-                  The examiner is checking boxes - make sure they check the
-                  right ones.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => {
-                      setMode("exam-prep");
-                      setExpandedQuestion(null);
-                    }}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                  >
-                    ← View Another Condition
-                  </button>
-                  <button
-                    onClick={() => setMode("intro")}
-                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
-                  >
-                    Back to Main
-                  </button>
+                  ))}
                 </div>
               </div>
+            )}
+
+          {/* Additional Notes Section */}
+          {examPrepDBQ.notes && (
+            <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
+              <h4 className="font-bold text-blue-300 mb-2">
+                📝 Important Notes:
+              </h4>
+              <p className="text-gray-300 text-sm">{examPrepDBQ.notes}</p>
+            </div>
+          )}
+
+          {/* Bottom CTA */}
+          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
+            <h3 className="text-lg font-bold text-cyan-300 mb-3">
+              Ready for Your Exam
+            </h3>
+            <p className="text-gray-300 mb-4">
+              Now you know exactly what questions are coming. Walk in prepared,
+              answer honestly, and don't undersell your symptoms. The examiner
+              is checking boxes - make sure they check the right ones.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => {
+                  setMode("exam-prep");
+                  setExpandedQuestion(null);
+                }}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                ← View Another Condition
+              </button>
+              <button
+                onClick={() => setMode("intro")}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
+              >
+                Back to Main
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
   // Condition selection screen
   if (mode === "select-condition") {
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cap-condition-select-title"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 rounded-t-lg relative">
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="cap-condition-select-title"
+        header={
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
             <button
               onClick={() => setMode("intro")}
               className="absolute top-4 left-4 text-white hover:text-gray-200"
@@ -2429,59 +2406,57 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               />
             </div>
           </div>
-
-          {/* Content */}
-          <div className="p-6 bg-gray-50 dark:bg-gray-900">
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-              Showing {filteredConditions.length} of {allConditions.length}{" "}
-              conditions
-            </div>
-            <div className="space-y-3 max-h-[500px] overflow-y-auto">
-              {filteredConditions.slice(0, 100).map((condition) => {
-                const dbqKey = Object.keys(dbqLogicMap).find(
-                  (key) =>
-                    dbqLogicMap[key].diagnostic_code ===
-                    condition.diagnosticCode,
-                );
-                const isPremium = !!dbqKey;
-
-                return (
-                  <button
-                    key={condition.id}
-                    onClick={() => handleSelectCondition(condition)}
-                    className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition text-left group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-teal-700 dark:group-hover:text-teal-400">
-                            {condition.conditionName}
-                          </h3>
-                          {isPremium && (
-                            <span className="px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full font-bold">
-                              DBQ-SPECIFIC
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          DC {condition.diagnosticCode} •{" "}
-                          {condition.ratingSchedule || "38 CFR § 4"}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {filteredConditions.length > 100 && (
-              <p className="text-sm text-gray-500 text-center mt-4">
-                Showing first 100 results. Use search to narrow down.
-              </p>
-            )}
+        }
+      >
+        <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6">
+          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            Showing {filteredConditions.length} of {allConditions.length}{" "}
+            conditions
           </div>
+          <div className="space-y-3 max-h-[500px] overflow-y-auto">
+            {filteredConditions.slice(0, 100).map((condition) => {
+              const dbqKey = Object.keys(dbqLogicMap).find(
+                (key) =>
+                  dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
+              );
+              const isPremium = !!dbqKey;
+
+              return (
+                <button
+                  key={condition.id}
+                  onClick={() => handleSelectCondition(condition)}
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition text-left group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-teal-700 dark:group-hover:text-teal-400">
+                          {condition.conditionName}
+                        </h3>
+                        {isPremium && (
+                          <span className="px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full font-bold">
+                            DBQ-SPECIFIC
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        DC {condition.diagnosticCode} •{" "}
+                        {condition.ratingSchedule || "38 CFR § 4"}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {filteredConditions.length > 100 && (
+            <p className="text-sm text-gray-500 text-center mt-4">
+              Showing first 100 results. Use search to narrow down.
+            </p>
+          )}
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
@@ -3219,71 +3194,70 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     );
 
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cap-terminology-title"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative flex-shrink-0">
-            <button
-              onClick={() => setMode("intro")}
-              className="absolute top-4 left-4 text-white hover:text-gray-200"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-white hover:text-gray-200"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div className="flex items-center gap-3 justify-center">
-              <BookOpen className="h-8 w-8" />
-              <h2 id="cap-terminology-title" className="text-2xl font-bold">
-                VA Claims Terminology
-              </h2>
-            </div>
-            <p className="text-emerald-100 text-center mt-2">
-              {totalTerms} essential terms from 38 CFR Part 4 and VA claims
-              process
-            </p>
-
-            {/* Search */}
-            <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
-              <input
-                type="text"
-                placeholder="Search terms..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
-              />
-            </div>
-
-            {/* Expand/Collapse buttons */}
-            <div className="flex justify-center gap-4 mt-3">
+      <>
+        <ResponsiveModal
+          isOpen
+          onClose={onClose}
+          size="xl"
+          labelledBy="cap-terminology-title"
+          header={
+            <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
               <button
-                onClick={expandAll}
-                className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
+                onClick={() => setMode("intro")}
+                className="absolute top-4 left-4 text-white hover:text-gray-200"
+                aria-label="Go back"
               >
-                <ChevronDown className="h-4 w-4" /> Expand All
+                <ChevronLeft className="h-6 w-6" />
               </button>
               <button
-                onClick={collapseAll}
-                className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
+                onClick={onClose}
+                className="absolute top-4 right-4 text-white hover:text-gray-200"
+                aria-label="Close"
               >
-                <ChevronRight className="h-4 w-4" /> Collapse All
+                <X className="h-6 w-6" />
               </button>
-            </div>
-          </div>
+              <div className="flex items-center gap-3 justify-center">
+                <BookOpen className="h-8 w-8" />
+                <h2 id="cap-terminology-title" className="text-2xl font-bold">
+                  VA Claims Terminology
+                </h2>
+              </div>
+              <p className="text-emerald-100 text-center mt-2">
+                {totalTerms} essential terms from 38 CFR Part 4 and VA claims
+                process
+              </p>
 
-          {/* Content - Scrollable */}
-          <div className="p-6 space-y-4 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
+              {/* Search */}
+              <div className="mt-4 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
+                <input
+                  type="text"
+                  placeholder="Search terms..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
+                />
+              </div>
+
+              {/* Expand/Collapse buttons */}
+              <div className="flex justify-center gap-4 mt-3">
+                <button
+                  onClick={expandAll}
+                  className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
+                >
+                  <ChevronDown className="h-4 w-4" /> Expand All
+                </button>
+                <button
+                  onClick={collapseAll}
+                  className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
+                >
+                  <ChevronRight className="h-4 w-4" /> Collapse All
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6 space-y-4">
             {searchTerm && (
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Showing {filteredTermsCount} of {totalTerms} terms matching "
@@ -3373,7 +3347,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               </p>
             </div>
           </div>
-        </div>
+        </ResponsiveModal>
 
         {/* Buy Me a Coffee - terminology studied */}
         <BuyMeCoffee
@@ -3382,7 +3356,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           context={{ term: flashcardTerm }}
           componentKey="cap-simulator"
         />
-      </div>
+      </>
     );
   }
 
@@ -3399,15 +3373,13 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
       currentCondition?.condition_name || selectedCondition?.conditionName;
 
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cap-question-title"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
-          {/* Header with Progress */}
-          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 rounded-t-lg relative">
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="cap-question-title"
+        header={
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
             <button
               onClick={() => setMode("select-condition")}
               className="absolute top-4 left-4 text-white hover:text-gray-200"
@@ -3438,114 +3410,113 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               />
             </div>
           </div>
+        }
+      >
+        <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6 space-y-6">
+          {/* Question */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border-2 border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              {currentQuestion.question}
+            </h3>
 
-          {/* Question Content */}
-          <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
-            {/* Question */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border-2 border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                {currentQuestion.question}
-              </h3>
+            {/* Intent explanation */}
+            <div className="bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-400 dark:border-teal-500 p-4 mb-4">
+              <div className="flex items-start gap-2">
+                <HelpCircle className="h-5 w-5 text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-teal-900 dark:text-teal-200 text-sm mb-1">
+                    Why this question matters:
+                  </h4>
+                  <p className="text-teal-800 dark:text-teal-100 text-sm">
+                    {currentQuestion.intent}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              {/* Intent explanation */}
-              <div className="bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-400 dark:border-teal-500 p-4 mb-4">
+            {/* Definition (if available) */}
+            {currentQuestion.definition && (
+              <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-400 dark:border-purple-500 p-4 mb-4">
                 <div className="flex items-start gap-2">
-                  <HelpCircle className="h-5 w-5 text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+                  <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-teal-900 dark:text-teal-200 text-sm mb-1">
-                      Why this question matters:
+                    <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
+                      CFR Definition:
                     </h4>
-                    <p className="text-teal-800 dark:text-teal-100 text-sm">
-                      {currentQuestion.intent}
+                    <p className="text-purple-800 dark:text-purple-100 text-sm">
+                      {currentQuestion.definition}
                     </p>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Definition (if available) */}
-              {currentQuestion.definition && (
-                <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-400 dark:border-purple-500 p-4 mb-4">
-                  <div className="flex items-start gap-2">
-                    <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
-                        CFR Definition:
-                      </h4>
-                      <p className="text-purple-800 dark:text-purple-100 text-sm">
-                        {currentQuestion.definition}
-                      </p>
-                    </div>
+          {/* Answer Options */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Select your answer:
+            </h4>
+            {currentQuestion.options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleAnswer(currentQuestion.id, option.value)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition ${
+                  currentAnswer === option.value
+                    ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30"
+                    : "border-gray-200 dark:border-gray-600 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                      currentAnswer === option.value
+                        ? "border-teal-500 bg-teal-500"
+                        : "border-gray-300 dark:border-gray-500"
+                    }`}
+                  >
+                    {currentAnswer === option.value && (
+                      <div className="w-full h-full rounded-full bg-white scale-50" />
+                    )}
                   </div>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">
+                    {option.label}
+                  </span>
                 </div>
-              )}
-            </div>
-
-            {/* Answer Options */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Select your answer:
-              </h4>
-              {currentQuestion.options.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleAnswer(currentQuestion.id, option.value)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition ${
-                    currentAnswer === option.value
-                      ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30"
-                      : "border-gray-200 dark:border-gray-600 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                        currentAnswer === option.value
-                          ? "border-teal-500 bg-teal-500"
-                          : "border-gray-300 dark:border-gray-500"
-                      }`}
-                    >
-                      {currentAnswer === option.value && (
-                        <div className="w-full h-full rounded-full bg-white scale-50" />
-                      )}
-                    </div>
-                    <span className="text-gray-700 dark:text-gray-200 font-medium">
-                      {option.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div className="flex gap-4 justify-between pt-4">
-              <button
-                onClick={handlePrevious}
-                disabled={currentQuestionIndex === 0}
-                className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-                  currentQuestionIndex === 0
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                    : "bg-gray-600 text-white hover:bg-gray-700"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
               </button>
+            ))}
+          </div>
 
-              <button
-                onClick={handleNext}
-                disabled={!canProceed}
-                className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-                  !canProceed
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                    : "bg-teal-600 text-white hover:bg-teal-700"
-                }`}
-              >
-                {isLastQuestion ? "Get Results" : "Next"}
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+          {/* Navigation */}
+          <div className="flex gap-4 justify-between pt-4">
+            <button
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0}
+              className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
+                currentQuestionIndex === 0
+                  ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+
+            <button
+              onClick={handleNext}
+              disabled={!canProceed}
+              className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
+                !canProceed
+                  ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                  : "bg-teal-600 text-white hover:bg-teal-700"
+              }`}
+            >
+              {isLastQuestion ? "Get Results" : "Next"}
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
@@ -3557,13 +3528,16 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
       currentCondition?.diagnostic_code || selectedCondition?.diagnosticCode;
 
     return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-        role="dialog"
-        aria-modal="true"
-        aria-label="C&P Exam Simulation Results"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain relative">
+      <>
+        <ResponsiveModal
+          isOpen
+          onClose={onClose}
+          size="2xl"
+          labelledBy="cap-results-title"
+        >
+          <h2 id="cap-results-title" className="sr-only">
+            C&P Exam Simulation Results
+          </h2>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white z-10"
@@ -3593,7 +3567,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               }
             />
           </div>
-        </div>
+        </ResponsiveModal>
 
         {/* Buy Me a Coffee - simulation completed */}
         <BuyMeCoffee
@@ -3605,7 +3579,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           }}
           componentKey="cap-simulator"
         />
-      </div>
+      </>
     );
   }
 
