@@ -55,9 +55,11 @@ const MobileNotice = () => {
     }
 
     // Tablet-only notice. The phone branch was removed in S10 — its
-    // "optimized for mobile" copy contradicted SmallScreenWarning. Small-screen
-    // messaging stays owned by SmallScreenWarning until the mobile suite is green
-    // across the top-20 surfaces (docs/SPRINT_PLAN_S9-S17.md, S10).
+    // "optimized for mobile" copy contradicted the old SmallScreenWarning,
+    // which has since been removed too (S10 gated deletion, once the mobile
+    // suite went green across the top-20 surfaces; docs/SPRINT_PLAN_S9-S17.md,
+    // S10). Phones now get no interstitial — the responsive layouts are the
+    // support.
     const checkDevice = () => {
       setDeviceType(isTablet() ? "tablet" : null);
     };
