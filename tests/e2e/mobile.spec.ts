@@ -26,6 +26,12 @@ const VIEWPORTS = [
 ];
 
 const MODALS = [
+  // Cluster F5 (S10): My Packet's main shell plus its four nested viewers (Pain
+  // Map Detail, Form Viewer, Statement Viewer, Import Confirm) migrated to the
+  // shell. The main modal keeps its actions in the header/body (no always-present
+  // footer CTA), so it asserts the overflow contract here. The four nested viewers
+  // lift to zIndex={70} above the z-60 main shell and open only after interaction
+  // (selecting a saved item / importing a file), so they are exercised via flows.
   { label: "My Packet", event: "openMyPacket" },
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
   { label: "Time Machine", event: "openTimeMachine" },
