@@ -28,6 +28,7 @@ import {
   useDoomPerformance,
 } from "../utils/easterEggs";
 import useFocusTrap from "../hooks/useFocusTrap";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 
 // Lazy load the heavy iframe only when activated
 const DoomFrame = lazy(() =>
@@ -195,6 +196,7 @@ const StressReliefDivision = () => {
   // ESC is intentionally left to the gameStarted-aware window handler below so
   // it can pass through to DOOM's own menu while the game is running.
   useFocusTrap(overlayRef, { active: isActive });
+  useBodyScrollLock(isActive);
 
   // Trigger glitch effect on activation
   useEffect(() => {

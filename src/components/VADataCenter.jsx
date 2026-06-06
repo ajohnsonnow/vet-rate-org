@@ -17,6 +17,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
 import useFocusTrap from "../hooks/useFocusTrap";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   isVaIntegrationConfigured,
   getVaConfigStatus,
@@ -236,6 +237,7 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
   // inline inside another shell, so it must not trap focus or handle ESC).
   const dialogRef = useRef(null);
   useFocusTrap(dialogRef, { active: !embeddedMode, onEscape: onClose });
+  useBodyScrollLock(!embeddedMode);
 
   // Saved data state
   const [savedRecords, setSavedRecords] = useState(null);
