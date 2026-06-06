@@ -362,8 +362,33 @@ dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`)
       re-verified at 360/390/768 through the proven shell. **No `mobile.spec.ts` entries** — all four
       are flow/prop-gated (AIAssistant bubble, DD214 analyzer, translate button, parent-mounted
       Tribunal), not `open*`-event modals, so they are manual-verify through the shell.
-- [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
-      forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
+- [x] Chunk 15 — migrate **CFileAnalyzer**'s nested **privacy-consent gate** (the last bespoke
+      `fixed inset-0` modal in the codebase). The 🔒 "Privacy & Data Handling" disclosure shown before
+      a C-file is processed had no `role="dialog"`/`aria-modal`/`aria-labelledby`, no focus trap, no
+      scroll lock and no ESC — it was a hand-rolled `bg-black/50` + `max-w-2xl max-h-[90vh]` card
+      nested over the already-migrated `size="full"` analyzer shell via a `z-[70]` wrapper. Migrated to
+      `ResponsiveModal size="lg" zIndex={70}` (kept above the parent shell's default z-60),
+      `onClose={() => setShowPrivacyConsent(false)}` so Cancel / ESC / backdrop all decline alike;
+      no gradient bar → `labelledBy="cfile-privacy-title"` points at the in-body `<h2>` (id added) and
+      the Cancel / "I Understand & Start" pair moved to the sticky `footer` slot (precedent: VoiceInput,
+      Chunk 9). Disclosure `<pre>` dark bg `gray-900`→`gray-800` so it stays inset against the shell's
+      `gray-900` body. Redundant `{showPrivacyConsent && <div z-[70]>}` wrapper dropped (the shell owns
+      its portal + `isOpen` gate). Gains focus-trap + `role="dialog"` + ESC/backdrop + ref-counted
+      scroll-lock for free. **No `mobile.spec.ts` entry** — the gate only appears after a file upload +
+      Analyze inside the host tool (not an `open*` event), so it is **manual-verify** through the proven
+      shell. Gate: ESLint 0 errors (pre-existing warnings only), `tsc` clean, 809 unit tests green.
+- [x] **Bespoke-modal inventory closed** (read-only `Explore` sweep, 2026-06-06). A full
+      `fixed inset-0` audit of `src/**/*.jsx` (16 hits) confirms the dialog-contract migration is
+      **complete**: the remaining hits are the `ResponsiveModal` shell itself, the Bucket A hand-applied
+      overlays (Header drawer/dropdowns, CrisisModal, AIConsentModal, GlobalCommandSearch, VADataCenter,
+      StressReliefDivision, AboutUs), `ZonkButton` (Chunk 13), and three non-dialog / intentional cases —
+      **ClaimNavigator** + **VaSandboxTest** are immersive full-screen tool shells (no-action, same
+      rationale as AdminPanel, Bucket D), and the leftover `fixed inset-0` spots in VKBTimeline /
+      ShareButton / ClaimNavigator are loading spinners and click-away backdrops, not dialogs. The
+      entire Bucket-B named tail (AICommandCenter, AdminLogin, BugLookup, DemoDataLoader, DoctorsPacket,
+      FeatureLookup, IntelligenceBriefing, LocalAIPanel, MultiCloudManager, QuickExitButton,
+      UnityLanguageTutor, WhatIfSandbox, ClaimStressTest) was verified **already on ResponsiveModal**
+      (migrated in S10 / earlier S12 chunks). **No bespoke modal remains.**
 - [x] Navigation — AboutUs **VersionDropUp** done (Chunk 13): it reveals a changelog _content_ panel,
       so it is a **disclosure**, not a menu — applied the APG disclosure pattern (`aria-expanded` on the
       trigger + ESC closes & restores focus to the trigger), **not** the worklist's earlier `role="menu"`

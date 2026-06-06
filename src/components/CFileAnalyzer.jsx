@@ -465,38 +465,45 @@ export default function CFileAnalyzer({
     </div>
   );
 
-  // Render privacy consent modal
+  // Privacy consent gate — nested over the main analyzer shell (zIndex 70 > the
+  // shell's 60). Dismissable: Cancel / ESC / backdrop all decline.
   const renderPrivacyConsent = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-            🔒 {t("cfileAnalyzer", "privacyDataHandling")}
-          </h2>
-
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-              {getCFilePrivacyDisclosure()}
-            </pre>
-          </div>
-
-          <div className="mt-6 flex gap-4">
-            <button
-              onClick={() => setShowPrivacyConsent(false)}
-              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              {t("cfileAnalyzer", "cancel")}
-            </button>
-            <button
-              onClick={handleConsentAndProcess}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              {t("cfileAnalyzer", "iUnderstandStart")}
-            </button>
-          </div>
+    <ResponsiveModal
+      isOpen={showPrivacyConsent}
+      onClose={() => setShowPrivacyConsent(false)}
+      size="lg"
+      zIndex={70}
+      labelledBy="cfile-privacy-title"
+      footer={
+        <div className="flex gap-4">
+          <button
+            onClick={() => setShowPrivacyConsent(false)}
+            className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t("cfileAnalyzer", "cancel")}
+          </button>
+          <button
+            onClick={handleConsentAndProcess}
+            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            {t("cfileAnalyzer", "iUnderstandStart")}
+          </button>
         </div>
+      }
+    >
+      <h2
+        id="cfile-privacy-title"
+        className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2"
+      >
+        🔒 {t("cfileAnalyzer", "privacyDataHandling")}
+      </h2>
+
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          {getCFilePrivacyDisclosure()}
+        </pre>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 
   // Render processing state
@@ -1089,9 +1096,7 @@ export default function CFileAnalyzer({
             ? renderDashboard()
             : renderUploadForm()}
       </ResponsiveModal>
-      {showPrivacyConsent && (
-        <div className="relative z-[70]">{renderPrivacyConsent()}</div>
-      )}
+      {renderPrivacyConsent()}
     </>
   );
 }
