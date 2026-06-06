@@ -129,12 +129,12 @@ RedTeam (already on ResponsiveModal).
 - The ~30 S10 ResponsiveModal-migrated modals (`MODALS`/`MIGRATED_MODALS` in
   [tests/e2e/mobile.spec.ts](../../tests/e2e/mobile.spec.ts)) — already covered by S10's green suite.
 
-## Tooling note (needs owner authorization before CI work)
+## Tooling note (owner-authorized 2026-06-06 — both done)
 
-- e2e axe needs **`@axe-core/playwright`** (not installed; `axe-core`/`vitest-axe`/`@axe-core/react`
-  are). Adding a dev dep.
-- **"Wire axe into CI"** = modifying `.github/workflows/ci.yml` → **explicit owner authorization
-  required** (standing constraint). Flagged; will ask before touching CI.
+- e2e axe needs **`@axe-core/playwright`** (was not installed; `axe-core`/`vitest-axe`/`@axe-core/react`
+  were). **Added** as a dev dep (`package.json`); `test:e2e:axe` script added.
+- **"Wire axe into CI"** = modifying `.github/workflows/ci.yml` (standing constraint). Owner
+  authorized this exact scope ("Authorize both") → **blocking `axe` job added**.
 
 ## Progress
 
@@ -158,7 +158,7 @@ RedTeam (already on ResponsiveModal).
       handled by global `!important` overrides on base utility classes in `index.css`
       (`html.tbi-comfort .bg-white`, `html.aaa-high-contrast body/*`), not Tailwind `dark:`. Added a
       `mobile.spec.ts` block clicking the real AppShellTop trigger (`aria-label="Clear all local
-  data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
+data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
       VaDataConsentPrompt is VA-OAuth-gated (no automatable trigger) → same shell, manual-verify only.
 - [x] Chunk 4 — migrate the event-triggerable BVA-data tool modals: **AppealsLaneAdvisor**
       (blue→cyan), **RemandRiskChecker** (amber→orange) and **NexusQualityAnalyzer**
@@ -202,7 +202,7 @@ RedTeam (already on ResponsiveModal).
       (DD214/PDF import review; rendered by DD214Analyzer) and **LanguageSuggestionModal**
       (`isOpen`-driven; rendered by LanguageSelector). ProfileImportConfirmModal shed its
       `fixed inset-0 z-[9999]` + `max-w-5xl max-h-[90vh]` card for `ResponsiveModal size="2xl"
-  zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
+zIndex={9999}` (`onClose={onCancel}`); its **three stacked top bars** (title + warning banner +
       Select-All/None controls) move into the custom `header` slot as a fragment so they stay pinned
       edge-to-edge (desktop unchanged), the four field-category sections become the scroll body
       (inner `flex-1 overflow-y-auto` wrapper flattened to avoid double-scroll), and the Cancel /
@@ -212,7 +212,7 @@ RedTeam (already on ResponsiveModal).
       CTA extracted to a `const footer` branching on `isSubmitted` (Generate-Request before → Suggest-
       More/Done after). The submit button moved to the sticky footer but stays wired to the in-body
       `<form>` via HTML5 `form="lang-suggestion-form"` (Enter-to-submit preserved); `if (!isOpen)
-  return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
+return null` removed (shell owns it via `isOpen`). Both shed redundant `useBodyScrollLock` and
       gain focus-trap + `role="dialog"` + ESC/backdrop dismiss for free. **No `mobile.spec.ts` entry** —
       both are prop/flow-gated, not event-triggerable, so **manual-verify** through the proven shell
       (precedent: VaDataConsentPrompt, Chunk 3; VAGovRatingPaster, Chunk 6). Gate: ESLint 0 errors,
@@ -244,7 +244,7 @@ RedTeam (already on ResponsiveModal).
       "won't ask again this session" caption move to the sticky `footer` slot. SecurityBadge's nested
       `SecurityModal` component (re-created on every render — would have remounted the shell, fighting the
       focus-trap, on each `activeTab` switch) was **inlined** at the render site as `ResponsiveModal
-  size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
+size="xl" zIndex={9999}` (`z-[9999]` preserved); the green→blue gradient bar **and** the tab strip
       move into the custom `header` slot as a fragment so both stay pinned, the `<h2>` gains
       `id="security-proof-title"` for `labelledBy`, the close `✕` `aria-label` is upgraded to
       "Close dialog", and the four tab-content components become the scroll body (its `p-6 dark:bg-gray-800`
@@ -256,13 +256,13 @@ RedTeam (already on ResponsiveModal).
 - [x] Chunk 10 — migrate **CommandersChecklist** `ChecklistModal` (the gamified claim-readiness
       progress tracker; modal mode only — its `isWidget` / `isEmbedded` render modes are untouched).
       Shed the `fixed inset-0` + `max-w-4xl max-h-[90vh] overflow-hidden` card for `ResponsiveModal
-  size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
+size="xl"`; the dynamic (percentage-keyed) gradient bar + the overall-progress sub-card move to
       the custom `header` slot (the `<h2>` gains `id="commanders-checklist-title"` for `labelledBy`,
       close `×` `aria-label` upgraded to "Close dialog"); the `p-6 overflow-y-auto max-h-[calc(...)]`
       content wrapper is flattened into the shell scroll body (status message + milestones grid + next
       steps + tips). The modal had **no footer bar** (close-only), so no `footer` slot. Removed two
       now-redundant pieces the shell owns: the parent's conditional `useBodyScrollLock(showModal &&
-  !isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
+!isWidget && !isEmbedded)` (+ its named import) and `ChecklistModal`'s own
       `window.addEventListener("keydown", …Escape)` effect — focus-trap + ref-counted scroll-lock +
       ESC/backdrop dismiss + `role="dialog"` now come from the shell. Dropped the now-unused default
       `React` import (automatic JSX runtime). **No `mobile.spec.ts` entry** — it mounts behind
@@ -325,7 +325,7 @@ RedTeam (already on ResponsiveModal).
       on the text, so the blocker was theming, not layout. Added `dark:` variants to the intro / step /
       note text (`text-gray-700→dark:text-gray-300`, `text-gray-800→dark:text-gray-200`,
       `text-blue-600→dark:text-blue-400`, the note box `bg-blue-50 border-blue-200 →
-  dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
+dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
       the modal to `ResponsiveModal size="sm"` (default dark-aware `title` header + close-X; gains
       focus-trap + `role="dialog"` + ESC/backdrop + scroll-lock for free; dropped the bespoke
       `fixed inset-0` + `bg-white max-w-md` card and its hand-rolled header/close). The same file's
@@ -343,25 +343,21 @@ RedTeam (already on ResponsiveModal).
       the trigger on close — acceptable for an easter egg; trap/ESC/scroll-lock are the real wins.
 - [x] Chunk 14 — the hard-redesign set (examined, not mechanical — each its own focused redesign,
       one commit apiece): **AIAssistant** Expanded view, **DocumentIntelligenceBriefing**,
-      **VeteranTranslator**, **TheTribunal**.
-      - **AIAssistant** (Expanded) → ResponsiveModal (`737357e`).
-      - **DocumentIntelligenceBriefing** (`a877298`) — the ~1300-line DD214 verifier had a sectioned
-        layout with full-width `border-t` dividers between Document-Info / fields / Options / Actions;
-        the shell's fixed `px-4 py-4` body would have inset those dividers, so the body was
-        restructured card-based (full-bleed `-m-4` wrapper, each section keeps its own padding/bg)
-        rather than a straight swap.
-      - **VeteranTranslator** (`783afa6`) — two-pane Human-to-Human translator; stacked
-        `flex-col md:flex-row` panes (`w-full md:w-1/2`, `md:h-[60vh]` independent scroll, divider
-        flips `border-b → md:border-r`), full-bleed `-m-4` body, custom gradient `header` slot +
-        status-bar `footer` slot.
-      - **TheTribunal** (`5f5f17e`) — mock-BVA chat; the bottom "Control Panel" (voice-status row +
-        two-column judge/mic controls + text input) was far too tall for a compact sticky footer on a
-        phone, so it was redesigned mobile-compact (voice-status row `hidden sm:flex`, grid stacks
-        `grid-cols-1 md:grid-cols-2`) and routed through the sticky `footer` slot
-        (`footer={showInstructions ? instructionsFooter : hearingFooter}` — Enter-CTA in setup mode,
-        controls in hearing mode). Header → custom slot with `id="the-tribunal-title"` + 44px close;
-        loading branch → small ResponsiveModal; bodies full-bleed `-m-4`; bubbles widen on phones
-        (`max-w-[85%] sm:max-w-[80%]`). Both shed `useBodyScrollLock` + default `React` import.
+      **VeteranTranslator**, **TheTribunal**. - **AIAssistant** (Expanded) → ResponsiveModal (`737357e`). - **DocumentIntelligenceBriefing** (`a877298`) — the ~1300-line DD214 verifier had a sectioned
+      layout with full-width `border-t` dividers between Document-Info / fields / Options / Actions;
+      the shell's fixed `px-4 py-4` body would have inset those dividers, so the body was
+      restructured card-based (full-bleed `-m-4` wrapper, each section keeps its own padding/bg)
+      rather than a straight swap. - **VeteranTranslator** (`783afa6`) — two-pane Human-to-Human translator; stacked
+      `flex-col md:flex-row` panes (`w-full md:w-1/2`, `md:h-[60vh]` independent scroll, divider
+      flips `border-b → md:border-r`), full-bleed `-m-4` body, custom gradient `header` slot +
+      status-bar `footer` slot. - **TheTribunal** (`5f5f17e`) — mock-BVA chat; the bottom "Control Panel" (voice-status row +
+      two-column judge/mic controls + text input) was far too tall for a compact sticky footer on a
+      phone, so it was redesigned mobile-compact (voice-status row `hidden sm:flex`, grid stacks
+      `grid-cols-1 md:grid-cols-2`) and routed through the sticky `footer` slot
+      (`footer={showInstructions ? instructionsFooter : hearingFooter}` — Enter-CTA in setup mode,
+      controls in hearing mode). Header → custom slot with `id="the-tribunal-title"` + 44px close;
+      loading branch → small ResponsiveModal; bodies full-bleed `-m-4`; bubbles widen on phones
+      (`max-w-[85%] sm:max-w-[80%]`). Both shed `useBodyScrollLock` + default `React` import.
       All four: ESLint 0 errors (pre-existing warnings only), `tsc` clean, 809 unit tests green;
       re-verified at 360/390/768 through the proven shell. **No `mobile.spec.ts` entries** — all four
       are flow/prop-gated (AIAssistant bubble, DD214 analyzer, translate button, parent-mounted
@@ -381,8 +377,25 @@ RedTeam (already on ResponsiveModal).
       (NVDA/Firefox, VoiceOver/Safari-iOS, TalkBack/Chrome-Android × landmarks, dialog contract,
       live regions, disclosure/menu, tooltips, tour, forms). DoD "SR checklist drafted" met; the
       owner-run pass is tracked in that doc's sign-off log.
-- [ ] Tests — Playwright trap/ESC/restore + axe (axe e2e needs `@axe-core/playwright` + CI → owner)
-- [ ] CI wiring — flagged for owner authorization
+- [x] Tests — **axe gate authored + hardened** → [tests/e2e/axe.spec.ts](../../tests/e2e/axe.spec.ts).
+      21 surfaces: home + 19 event-mountable modals + the first-visit DisclaimerSplash, gated on
+      **serious/critical** WCAG 2.0/2.1/2.2 A+AA only (`BLOCKING_IMPACTS`). Two flakiness root
+      causes fixed without greenwashing: (1) the splash contaminating sibling scans — which had
+      **masked a real `bg-amber-500` BETA-badge violation (2.14:1)** as "flaky→passed"; fixed by
+      suppressing the splash via `vetrate_disclaimer-acknowledged` in the returning-user fixture,
+      gating the splash by its own first-visit test, and the badge itself
+      (`bg-amber-500`→`bg-amber-700`, [DisclaimerSplash.jsx:91](../../src/components/DisclaimerSplash.jsx#L91));
+      (2) a StrictMode remount race where a heavy lazy dialog vanishes between visible-wait and
+      `analyze()` → "No elements found for include"; fixed with bounded re-open/reload retry loops
+      that retry **only** on that infra error string and re-throw anything else, so a real violation
+      always surfaces. Deterministic under CI config (`CI=1`, serial + 2 retries): **21 passed, 0
+      flaky, 0 failed**. Playwright trap/ESC/restore behaviour rides the unit-tested
+      `useFocusTrap`/`useBodyScrollLock` primitives + the S10 mobile suite.
+- [x] CI wiring — **blocking `axe` job added** to [.github/workflows/ci.yml](../../.github/workflows/ci.yml)
+      (owner-authorized scope: install `@axe-core/playwright` dev dep + add the axe job). Mirrors the
+      `mobile` gate (`needs: [build]`, chromium-only, uploads `playwright-report-axe`); runs
+      `npm run test:e2e:axe`. GitHub Actions sets `CI=true`, so it inherits the deterministic
+      serial+retry playwright config.
 
 ## Verification gate (per chunk)
 
