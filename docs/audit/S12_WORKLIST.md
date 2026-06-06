@@ -202,7 +202,24 @@ RedTeam (already on ResponsiveModal).
       both are prop/flow-gated, not event-triggerable, so **manual-verify** through the proven shell
       (precedent: VaDataConsentPrompt, Chunk 3; VAGovRatingPaster, Chunk 6). Gate: ESLint 0 errors,
       `tsc` clean, 809 unit tests green.
-- [ ] Chunks 8+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 8 — migrate the VA-Sandbox tool pair, both clean single-card standard modals rendered
+      by VaSandboxTest behind `show*` state: **ClaimEvidenceUpload** (blue→indigo→blue; DBQ/evidence
+      uploader) and **DbqFinder** (teal→emerald→teal; DBQ search, `size="xl"`). Each shed the
+      `fixed inset-0 z-50` + `max-w-2xl/4xl max-h-[90vh] overflow-hidden flex flex-col` card for
+      `ResponsiveModal` (ClaimEvidenceUpload `size="lg"`, DbqFinder `size="xl"`; both default z,
+      `onClose={onClose}`). The gradient bar with its absolutely-positioned `✕` (already
+      `aria-label`'d) moves verbatim into the custom `header` slot (h2 gains an `id` for
+      `labelledBy`); the scroll body's `flex-1 overflow-y-auto p-6` wrapper is flattened (shell owns
+      the single scroll region); and each one's real footer (Info/Sparkles caption + Close button)
+      is extracted to a `const footer` for the sticky `footer` slot. DbqFinder also shed its
+      redundant `useBodyScrollLock(true)`; ClaimEvidenceUpload never had one, so it **gains** proper
+      ref-counted scroll-lock for free, plus both get focus-trap + `role="dialog"` + ESC/backdrop
+      dismiss. ClaimEvidenceUpload's primary "Submit to VA Claim" CTA stays in the body (it was never
+      in the old footer — keeps desktop identical) and DbqFinder's search submit stays inline in the
+      search bar. **No `mobile.spec.ts` entry** — both are prop/`show*`-gated, not event-triggerable,
+      so **manual-verify** through the proven shell. Gate: ESLint 0 errors, `tsc` clean, 809 unit
+      tests green.
+- [ ] Chunks 9+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
