@@ -139,7 +139,7 @@ const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
   const capabilities = VisionSimulator.getCapabilities();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 pb-4">
         <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
@@ -164,9 +164,6 @@ const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Document Vision Simulator
-          </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             OCR + AI analysis (works in all browsers!)
           </p>
