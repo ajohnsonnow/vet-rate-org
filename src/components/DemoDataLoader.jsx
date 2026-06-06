@@ -7,14 +7,14 @@
  * Shows users what a "perfect" claim looks like before they start
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   saveClaim,
   saveStatement,
   clearAllClaims,
   getSavedClaims,
 } from "../utils/claimsStorage";
-import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
  * Demo data representing a complete, well-documented claim
@@ -322,7 +322,6 @@ export const clearDemoData = () => {
  * Shows a link/button to load example data with confirmation
  */
 const DemoDataLoader = ({ onDataLoaded, variant = "link" }) => {
-  const { t } = useLanguage();
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -354,19 +353,21 @@ const DemoDataLoader = ({ onDataLoaded, variant = "link" }) => {
   if (variant === "card") {
     return (
       <>
-        <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-lg p-4 mb-6">
+        <div className="mb-6 rounded-lg border border-blue-300 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-indigo-900/30">
           <div className="flex items-start gap-3">
             <span className="text-2xl">📋</span>
             <div className="flex-1">
-              <h3 className="font-bold text-white mb-1">New to Vet-Rate?</h3>
-              <p className="text-gray-300 text-sm mb-3">
+              <h3 className="mb-1 font-bold text-gray-900 dark:text-white">
+                New to Vet-Rate?
+              </h3>
+              <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
                 See what a <strong>complete, well-documented claim</strong>{" "}
                 looks like. Load our example packet to learn by example.
               </p>
               <button
                 onClick={handleLoadDemo}
                 disabled={loading}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -385,38 +386,46 @@ const DemoDataLoader = ({ onDataLoaded, variant = "link" }) => {
         </div>
 
         {/* Confirmation Modal */}
-        {showConfirm && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 border border-yellow-500/50 rounded-lg max-w-md w-full p-6">
-              <div className="text-center mb-4">
-                <span className="text-4xl">⚠️</span>
-              </div>
-              <h3 className="text-xl font-bold text-yellow-400 text-center mb-3">
-                Replace Current Data?
-              </h3>
-              <p className="text-gray-300 text-center mb-6">
-                Loading example data will{" "}
-                <strong className="text-red-400">overwrite</strong> your current
-                saved claims and statements. This cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-semibold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={performLoad}
-                  disabled={loading}
-                  className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-2 rounded font-semibold transition disabled:opacity-50"
-                >
-                  {loading ? "Loading..." : "Load Example"}
-                </button>
-              </div>
+        <ResponsiveModal
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          labelledBy="demo-confirm-card-title"
+          size="sm"
+          footer={
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 rounded bg-gray-200 py-2 font-semibold text-gray-800 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={performLoad}
+                disabled={loading}
+                className="flex-1 rounded bg-yellow-600 py-2 font-semibold text-white transition hover:bg-yellow-500 disabled:opacity-50"
+              >
+                {loading ? "Loading..." : "Load Example"}
+              </button>
             </div>
+          }
+        >
+          <div className="mb-4 text-center">
+            <span className="text-4xl">⚠️</span>
           </div>
-        )}
+          <h3
+            id="demo-confirm-card-title"
+            className="mb-3 text-center text-xl font-bold text-yellow-700 dark:text-yellow-400"
+          >
+            Replace Current Data?
+          </h3>
+          <p className="text-center text-gray-700 dark:text-gray-300">
+            Loading example data will{" "}
+            <strong className="text-red-600 dark:text-red-400">
+              overwrite
+            </strong>{" "}
+            your current saved claims and statements. This cannot be undone.
+          </p>
+        </ResponsiveModal>
       </>
     );
   }
@@ -427,7 +436,7 @@ const DemoDataLoader = ({ onDataLoaded, variant = "link" }) => {
       <button
         onClick={handleLoadDemo}
         disabled={loading}
-        className="text-blue-400 hover:text-blue-300 text-sm underline underline-offset-2 transition-colors disabled:opacity-50"
+        className="text-sm text-blue-600 underline underline-offset-2 transition-colors hover:text-blue-700 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300"
       >
         {loading
           ? "⏳ Loading..."
@@ -435,41 +444,48 @@ const DemoDataLoader = ({ onDataLoaded, variant = "link" }) => {
       </button>
 
       {/* Confirmation Modal */}
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 border border-yellow-500/50 rounded-lg max-w-md w-full p-6">
-            <div className="text-center mb-4">
-              <span className="text-4xl">⚠️</span>
-            </div>
-            <h3 className="text-xl font-bold text-yellow-400 text-center mb-3">
-              Replace Current Data?
-            </h3>
-            <p className="text-gray-300 text-center mb-6">
-              Loading example data will{" "}
-              <strong className="text-red-400">overwrite</strong> your current
-              saved claims and statements. This action cannot be undone.
-            </p>
-            <p className="text-gray-400 text-sm text-center mb-6">
-              💡 Tip: Use the Backup Manager to save your current data first.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-semibold transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={performLoad}
-                disabled={loading}
-                className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-2 rounded font-semibold transition disabled:opacity-50"
-              >
-                {loading ? "Loading..." : "Proceed"}
-              </button>
-            </div>
+      <ResponsiveModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        labelledBy="demo-confirm-link-title"
+        size="sm"
+        footer={
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="flex-1 rounded bg-gray-200 py-2 font-semibold text-gray-800 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={performLoad}
+              disabled={loading}
+              className="flex-1 rounded bg-yellow-600 py-2 font-semibold text-white transition hover:bg-yellow-500 disabled:opacity-50"
+            >
+              {loading ? "Loading..." : "Proceed"}
+            </button>
           </div>
+        }
+      >
+        <div className="mb-4 text-center">
+          <span className="text-4xl">⚠️</span>
         </div>
-      )}
+        <h3
+          id="demo-confirm-link-title"
+          className="mb-3 text-center text-xl font-bold text-yellow-700 dark:text-yellow-400"
+        >
+          Replace Current Data?
+        </h3>
+        <p className="mb-6 text-center text-gray-700 dark:text-gray-300">
+          Loading example data will{" "}
+          <strong className="text-red-600 dark:text-red-400">overwrite</strong>{" "}
+          your current saved claims and statements. This action cannot be
+          undone.
+        </p>
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          💡 Tip: Use the Backup Manager to save your current data first.
+        </p>
+      </ResponsiveModal>
     </>
   );
 };
