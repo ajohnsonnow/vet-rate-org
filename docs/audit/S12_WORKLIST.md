@@ -166,7 +166,24 @@ RedTeam (already on ResponsiveModal).
       ESC/backdrop dismiss for free. Added both to the `mobile.spec.ts` `MIGRATED_MODALS` array;
       they mount on `openBugSquasher` (SystemToolsCluster) / `openFeatureRequest` (FeedbackHub) —
       green at 360/390/768.
-- [ ] Chunks 6+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 6 — migrate the EASY embedded/flow-gated standard modals: **VAGovRatingPaster**
+      (blue→indigo; reused by 6+ host tools incl. TacticalCalculator/Pathfinder/RetroPayHunter) and
+      **HelperModeToggle ExplainerModal** (pink→rose→purple onboarding gate). Each shed the legacy
+      `fixed inset-0` + `max-w-3xl/2xl max-h-[90vh]` card for `ResponsiveModal` (VAGovRatingPaster
+      `size="xl" zIndex={100}` — it renders **over** a parent tool modal, so the high z-index is
+      preserved; ExplainerModal `size="lg" zIndex={9999}`). Gradient bars move to a custom `header`
+      slot (h2 now carries an `id` for `labelledBy`; `aria-label="Close"` added to VAGovRatingPaster's
+      `✕`). VAGovRatingPaster's action bar is **state-dependent** (Parse/Clear before parse →
+      Import/Start Over after) — extracted to a `const footer` that branches on `parsedResult` and
+      feeds the sticky `footer` slot; ExplainerModal's Not-Right-Now / Enable bar likewise. Both gain
+      focus-trap + `role="dialog"` + ESC/backdrop dismiss for free (ExplainerModal ESC → dismiss, not
+      enable). Also fixed two pre-existing **SC 4.1.2** button-name failures flagged by axe-linter in
+      the same file: the Helper Mode on/off `role="switch"` and the tooltips `role="switch"` had no
+      accessible name → added `aria-label`. **No `mobile.spec.ts` entry** — neither is event-triggerable
+      (VAGovRatingPaster is prop-driven, mounted by host tools; ExplainerModal is localStorage +
+      first-click gated), so both are **manual-verify** for mobile through the proven shell (precedent:
+      VaDataConsentPrompt, Chunk 3). Gate: ESLint 0 errors, `tsc` clean, 809 unit tests green.
+- [ ] Chunks 7+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
