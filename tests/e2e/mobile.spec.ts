@@ -215,6 +215,11 @@ const MIGRATED_MODALS = [
   // slot; CommunityRoadmap keeps its privacy note + Close in the footer slot.
   { label: "VA AI Transparency", event: "openVAAITransparency" },
   { label: "Community Roadmap", event: "openCommunityRoadmap" },
+  // Cluster H (S10): critic-added surfaces. TermsOfServicePage was a bespoke
+  // full-page legal shell (fixed-inset backdrop + min-h-screen panel); migrated
+  // to size="xl" with the red gradient bar in the header slot and its always-on
+  // Close CTA in the sticky-footer slot.
+  { label: "Terms of Service Page", event: "openTermsOfService" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
