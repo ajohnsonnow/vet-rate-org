@@ -382,7 +382,6 @@ for (const vp of VIEWPORTS) {
     test.beforeEach(async ({ page }) => {
       // Returning-user fixture: boot the app with every first-run overlay
       // already cleared so the only modal on screen is the one each test opens.
-      //   - small-screen-dismissed: skips the <640px SmallScreenWarning (z-100).
       //   - tos-accepted: skips the migrated ToS gate (now a role=dialog with a
       //     `.modal-footer` that the locators below would otherwise grab).
       //   - last_seen_version: ToS-accepted alone trips the What's New modal
@@ -390,7 +389,6 @@ for (const vp of VIEWPORTS) {
       //   - tour-completed: and 500ms after ToS, BootCampTour auto-starts; this
       //     skips it. The gates' own coverage lives in the "consent gates" block.
       await page.addInitScript((appVersion) => {
-        sessionStorage.setItem("vetrate-small-screen-dismissed", "true");
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
@@ -437,9 +435,6 @@ for (const vp of VIEWPORTS) {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript(() => {
-        sessionStorage.setItem("vetrate-small-screen-dismissed", "true");
-      });
       await page.goto("/");
     });
 

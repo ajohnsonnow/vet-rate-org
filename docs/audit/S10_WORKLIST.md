@@ -373,3 +373,34 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
   `backdropClassName` (commit `74ec944`) — is in place and backward-compatible (ContactUs/
   PrivacyPolicy plain-`title` path untouched). The consent gates are migrated; TimeMachine +
   the remaining rich-header modals (Clusters B–G) are the next targets, one cluster per commit.
+
+### S10 closeout workstreams (this session)
+
+- **Viewport detection consolidation (commit `f3c8259`):** the breakpoint px values
+  were extracted from `useBreakpoint.js` into a new framework-agnostic
+  [src/utils/breakpoints.js](../../src/utils/breakpoints.js) (`BREAKPOINTS` / `MOBILE_MAX`
+  / `DESKTOP_MIN` / pure `isMobileWidth`). The hook re-exports `BREAKPOINTS` (API stable);
+  the two non-React device utilities — `useDeviceCapability.js` and `dkbIndexedDB.js` —
+  now read `MOBILE_MAX` instead of each hardcoding `< 768`, killing the latent drift. Honest
+  scope note: of the 13 `innerWidth`/`matchMedia` hits the plan estimated, only these two
+  were width-threshold mobile checks; the rest are different concerns (the `prefers-*`
+  media-features in `ThemeContext`, the diagnostic `WxH` dumps in `bugReport*`/`debugDump`,
+  the drag-geometry math in `AIAssistant`, the scrollbar-width math in `useBodyScrollLock`,
+  the UA-regex/orientation reporting in `persistentStorage`, the `display-mode:standalone`
+  query in `PWAInstallButton`) and were intentionally left. The `640` outlier lived only in
+  `SmallScreenWarning`, resolved by its removal below. Value-identical (768 stays 768):
+  type-check + useBreakpoint unit 6/6 + mobile e2e 153/153 @360/390/768.
+- **Mobile CI gate (commit `50ca61e`):** added `test:e2e` and `test:e2e:mobile` package
+  scripts and a dedicated **blocking** `mobile` job in `.github/workflows/ci.yml` running
+  `tests/e2e/mobile.spec.ts` under the Pixel 5 `mobile-chrome` project (touch + mobile UA)
+  across 360/390/768. Split out from the full e2e job for at-a-glance, bisectable mobile
+  regressions — same rationale as the `red-team` gate. Verified green under both `chromium`
+  and `mobile-chrome` (153/153).
+- **SmallScreenWarning removed (gated deletion satisfied):** the gate — mobile suite green
+  across the top-20 surfaces at 360/390/768 — is met, so the component, its render in
+  `AppShellOverlays.jsx`, and the now-obsolete `vetrate-small-screen-dismissed` pre-dismissal
+  in both `mobile.spec.ts` `beforeEach` blocks were removed. The `consent gates` block now
+  boots with no pre-dismissal and stays green at sub-640 — proof the first-run flows work
+  with **no interstitial**. The `MobileNotice` comment was updated to reflect that small-screen
+  messaging is gone entirely (the responsive layouts are the support). Type-check + mobile
+  e2e 153/153.
