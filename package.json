@@ -51,6 +51,7 @@
     "test:red-team": "vitest run src/__tests__/red-team",
     "test:e2e": "playwright test",
     "test:e2e:mobile": "playwright test tests/e2e/mobile.spec.ts --project=mobile-chrome",
+    "test:e2e:axe": "playwright test tests/e2e/axe.spec.ts --project=chromium",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
     "preflight:fast": "node scripts/preflight.js --fast",
@@ -87,6 +88,7 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@axe-core/react": "^4.11.1",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
