@@ -12,20 +12,12 @@
  */
 
 import { useState, useEffect } from "react";
+import { BREAKPOINTS, MOBILE_MAX, DESKTOP_MIN } from "../utils/breakpoints";
 
-// Aligned with tailwind.config.js `screens` (px). `md` (768) is the
-// phone/tablet boundary used across the app.
-export const BREAKPOINTS = {
-  xs: 475,
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  "2xl": 1536,
-};
-
-const MOBILE_MAX = BREAKPOINTS.md; // < 768 === phone
-const DESKTOP_MIN = BREAKPOINTS.lg; // >= 1024 === desktop
+// Re-exported so existing `import { BREAKPOINTS } from ".../useBreakpoint"`
+// call sites keep working; the values now live in one framework-agnostic
+// module shared with the non-React device utilities.
+export { BREAKPOINTS };
 
 function readViewport() {
   if (typeof window === "undefined") {

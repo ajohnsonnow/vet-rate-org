@@ -8,6 +8,8 @@
  * @file dkbIndexedDB.js
  */
 
+import { MOBILE_MAX } from "./breakpoints";
+
 const DB_NAME = "VetRate_DKB";
 const DB_VERSION = 1;
 const STORE_NAME = "knowledge_base";
@@ -25,7 +27,7 @@ export const WEB_DATABASE_COUNT = 7988;
 export const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
   const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  const isSmallScreen = window.innerWidth < 768;
+  const isSmallScreen = window.innerWidth < MOBILE_MAX;
   const ua = navigator.userAgent.toLowerCase();
   const mobileKeywords = ["mobile", "android", "iphone", "ipad", "ipod"];
   const isMobileUA = mobileKeywords.some((keyword) => ua.includes(keyword));
