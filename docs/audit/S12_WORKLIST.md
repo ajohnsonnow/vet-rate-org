@@ -145,7 +145,17 @@ RedTeam (already on ResponsiveModal).
       `mobile.spec.ts` block clicking the real AppShellTop trigger (`aria-label="Clear all local
       data"`) → asserts the footer-CTA contract, then never touches Confirm — green at 360/390/768.
       VaDataConsentPrompt is VA-OAuth-gated (no automatable trigger) → same shell, manual-verify only.
-- [ ] Chunks 4+ — migrate remaining standard modals (batched by cluster)
+- [x] Chunk 4 — migrate the event-triggerable BVA-data tool modals: **AppealsLaneAdvisor**
+      (blue→cyan), **RemandRiskChecker** (amber→orange) and **NexusQualityAnalyzer**
+      (indigo→purple). Each shed the legacy `fixed inset-0` + `max-w-4xl max-h-[90vh]` shell for
+      `ResponsiveModal size="xl"` with its gradient bar in a custom `header` slot (now carrying an
+      `id` for `labelledBy` + `aria-label="Close"` on the `×`). All three are header-close-only
+      (toggles/results live in the scroll body, no always-present footer CTA) and gain focus-trap +
+      `role="dialog"` + ESC/backdrop dismiss for free. Added all three to the `mobile.spec.ts`
+      `MODALS` array (overflow contract) — they mount on `openAppealsLaneAdvisor` /
+      `openRemandRiskChecker` (AppealsToolsCluster) and `openNexusQualityAnalyzer`
+      (QualityControlCluster); green at 360/390/768.
+- [ ] Chunks 5+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
