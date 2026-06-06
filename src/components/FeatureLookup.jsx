@@ -10,8 +10,9 @@
  * Built by a fellow veteran. "Every idea counts."
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   Search,
   Lightbulb,
@@ -34,7 +35,6 @@ import {
   MessageSquare,
   Star,
 } from "lucide-react";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   getFeatureRequest,
   getAllFeatureRequests,
@@ -52,59 +52,66 @@ import {
 const PRIORITY_CONFIG = {
   critical: {
     icon: Zap,
-    color: "text-red-500",
-    bg: "bg-red-500/20",
+    color: "text-red-600 dark:text-red-400",
+    bg: "bg-red-100 dark:bg-red-500/20",
     label: "Critical",
   },
   high: {
     icon: Star,
-    color: "text-orange-500",
-    bg: "bg-orange-500/20",
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-100 dark:bg-orange-500/20",
     label: "High",
   },
   medium: {
     icon: Lightbulb,
-    color: "text-yellow-500",
-    bg: "bg-yellow-500/20",
+    color: "text-yellow-600 dark:text-yellow-400",
+    bg: "bg-yellow-100 dark:bg-yellow-500/20",
     label: "Medium",
   },
   low: {
     icon: MessageSquare,
-    color: "text-green-500",
-    bg: "bg-green-500/20",
+    color: "text-green-600 dark:text-green-400",
+    bg: "bg-green-100 dark:bg-green-500/20",
     label: "Low",
   },
 };
 
 // Status configuration
 const STATUS_CONFIG = {
-  new: { color: "text-blue-400", bg: "bg-blue-500/20", label: "New" },
+  new: {
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-100 dark:bg-blue-500/20",
+    label: "New",
+  },
   "under-review": {
-    color: "text-purple-400",
-    bg: "bg-purple-500/20",
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-100 dark:bg-purple-500/20",
     label: "Under Review",
   },
-  planned: { color: "text-amber-400", bg: "bg-amber-500/20", label: "Planned" },
+  planned: {
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-500/20",
+    label: "Planned",
+  },
   "in-progress": {
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/20",
+    color: "text-cyan-600 dark:text-cyan-400",
+    bg: "bg-cyan-100 dark:bg-cyan-500/20",
     label: "In Progress",
   },
   completed: {
-    color: "text-green-400",
-    bg: "bg-green-500/20",
+    color: "text-green-600 dark:text-green-400",
+    bg: "bg-green-100 dark:bg-green-500/20",
     label: "Completed",
   },
   declined: {
-    color: "text-slate-400",
-    bg: "bg-slate-500/20",
+    color: "text-slate-600 dark:text-slate-400",
+    bg: "bg-slate-200 dark:bg-slate-500/20",
     label: "Declined",
   },
 };
 
 export default function FeatureLookup({ onClose }) {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
@@ -332,98 +339,101 @@ export default function FeatureLookup({ onClose }) {
     );
   };
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col">
-      {/* Header */}
-      <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Lightbulb className="w-6 h-6 text-purple-500" />
-            <div>
-              <h1 className="text-lg font-bold text-white">
-                Feature Requests - Admin Lookup
-              </h1>
-              <p className="text-xs text-slate-400">
-                Search and manage feature requests
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Storage Status */}
-            <div
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                storageAvailable
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-red-500/20 text-red-400"
-              }`}
+  const header = (
+    <>
+      {/* Title row */}
+      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80">
+        <div className="flex min-w-0 items-center gap-3">
+          <Lightbulb className="h-6 w-6 flex-shrink-0 text-purple-500" />
+          <div className="min-w-0">
+            <h1
+              id="feature-lookup-title"
+              className="truncate text-lg font-bold text-gray-900 dark:text-white"
             >
-              <Database className="w-3 h-3" />
-              {storageAvailable ? "DB Online" : "Fallback Mode"}
-            </div>
-
-            <button
-              onClick={handleExport}
-              className="p-2 text-slate-400 hover:text-white transition-colors"
-              aria-label="Export All Requests"
-            >
-              <Download className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
+              Feature Requests - Admin Lookup
+            </h1>
+            <p className="truncate text-xs text-gray-500 dark:text-slate-400">
+              Search and manage feature requests
+            </p>
           </div>
         </div>
-      </header>
+
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {/* Storage Status */}
+          <div
+            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
+              storageAvailable
+                ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+            }`}
+          >
+            <Database className="h-3 w-3" />
+            {storageAvailable ? "DB Online" : "Fallback Mode"}
+          </div>
+
+          <button
+            onClick={handleExport}
+            className="p-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
+            aria-label="Export All Requests"
+          >
+            <Download className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-500 transition-colors hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
 
       {/* Search Bar */}
-      <div className="bg-slate-800/50 border-b border-slate-700 px-4 py-3">
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50">
         <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Enter Request ID (e.g., FEAT-MKNCUI1I) or search text..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
             />
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors"
+            className="rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
           >
             Search
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`rounded-lg p-2 transition-colors ${
               showFilters
                 ? "bg-purple-500 text-white"
-                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
             }`}
           >
-            <Filter className="w-5 h-5" />
+            <Filter className="h-5 w-5" />
           </button>
         </div>
 
         {/* Filters */}
         {showFilters && (
-          <div className="flex gap-4 mt-3 pt-3 border-t border-slate-700">
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-gray-200 pt-3 dark:border-slate-700">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Status:</span>
+              <span className="text-sm text-gray-600 dark:text-slate-400">
+                Status:
+              </span>
               <select
                 value={filters.status || ""}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, status: e.target.value || null }))
                 }
-                className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
               >
                 <option value="">All</option>
                 <option value="new">New</option>
@@ -435,7 +445,9 @@ export default function FeatureLookup({ onClose }) {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Priority:</span>
+              <span className="text-sm text-gray-600 dark:text-slate-400">
+                Priority:
+              </span>
               <select
                 value={filters.priority || ""}
                 onChange={(e) =>
@@ -444,7 +456,7 @@ export default function FeatureLookup({ onClose }) {
                     priority: e.target.value || null,
                   }))
                 }
-                className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
               >
                 <option value="">All</option>
                 <option value="critical">Critical</option>
@@ -455,334 +467,378 @@ export default function FeatureLookup({ onClose }) {
             </div>
             <button
               onClick={loadRequests}
-              className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300"
+              className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="h-4 w-4" />
               Apply Filters
             </button>
           </div>
         )}
       </div>
+    </>
+  );
 
-      {/* Stats Bar */}
-      {statistics && (
-        <div className="bg-slate-800/30 border-b border-slate-700 px-4 py-2 flex gap-6 text-sm">
-          <span className="text-slate-400">
-            Total:{" "}
-            <span className="text-white font-medium">{statistics.total}</span>
-          </span>
-          <span className="text-slate-400">
-            New:{" "}
-            <span className="text-blue-400 font-medium">
-              {statistics.byStatus.new}
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        header={header}
+        labelledBy="feature-lookup-title"
+        size="full"
+      >
+        {/* Stats Bar */}
+        {statistics && (
+          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/30">
+            <span className="text-gray-600 dark:text-slate-400">
+              Total:{" "}
+              <span className="font-medium text-gray-900 dark:text-white">
+                {statistics.total}
+              </span>
             </span>
-          </span>
-          <span className="text-slate-400">
-            Planned:{" "}
-            <span className="text-amber-400 font-medium">
-              {statistics.byStatus.planned}
+            <span className="text-gray-600 dark:text-slate-400">
+              New:{" "}
+              <span className="font-medium text-blue-600 dark:text-blue-400">
+                {statistics.byStatus.new}
+              </span>
             </span>
-          </span>
-          <span className="text-slate-400">
-            Critical:{" "}
-            <span className="text-red-400 font-medium">
-              {statistics.byPriority.critical}
+            <span className="text-gray-600 dark:text-slate-400">
+              Planned:{" "}
+              <span className="font-medium text-amber-600 dark:text-amber-400">
+                {statistics.byStatus.planned}
+              </span>
             </span>
-          </span>
-        </div>
-      )}
+            <span className="text-gray-600 dark:text-slate-400">
+              Critical:{" "}
+              <span className="font-medium text-red-600 dark:text-red-400">
+                {statistics.byPriority.critical}
+              </span>
+            </span>
+          </div>
+        )}
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden flex">
-        {/* Request List */}
-        <div
-          className={`${view === "list" ? "w-full" : "w-1/3"} border-r border-slate-700 overflow-y-auto`}
-        >
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
-            </div>
-          ) : error && requests.length === 0 ? (
-            <div className="p-8 text-center" role="alert" aria-live="polite">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-              <p className="text-red-400">{error}</p>
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="p-8 text-center">
-              <Lightbulb className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No feature requests found</p>
-              <p className="text-slate-500 text-sm mt-1">
-                Requests will appear here when users submit them
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-700">
-              {requests.map((request) => (
-                <button
-                  key={request.request_id}
-                  onClick={() => handleViewRequest(request)}
-                  className={`w-full p-4 text-left hover:bg-slate-700/30 transition-colors ${
-                    selectedRequest?.request_id === request.request_id
-                      ? "bg-slate-700/50"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-purple-400 text-sm">
-                          {request.request_id}
-                        </span>
-                        <StatusBadge status={request.status} />
+        {/* Main Content */}
+        <div className="flex flex-col md:flex-row">
+          {/* Request List */}
+          <div
+            className={
+              view === "detail"
+                ? "md:w-1/3 md:border-r md:border-gray-200 md:pr-2 dark:md:border-slate-700"
+                : "w-full"
+            }
+          >
+            {loading ? (
+              <div className="flex h-64 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+              </div>
+            ) : error && requests.length === 0 ? (
+              <div className="p-8 text-center" role="alert" aria-live="polite">
+                <AlertCircle className="mx-auto mb-3 h-12 w-12 text-red-500" />
+                <p className="text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            ) : requests.length === 0 ? (
+              <div className="p-8 text-center">
+                <Lightbulb className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-slate-600" />
+                <p className="text-gray-600 dark:text-slate-400">
+                  No feature requests found
+                </p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
+                  Requests will appear here when users submit them
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200 dark:divide-slate-700">
+                {requests.map((request) => (
+                  <button
+                    key={request.request_id}
+                    onClick={() => handleViewRequest(request)}
+                    className={`w-full p-4 text-left transition-colors hover:bg-gray-100 dark:hover:bg-slate-700/30 ${
+                      selectedRequest?.request_id === request.request_id
+                        ? "bg-gray-100 dark:bg-slate-700/50"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="font-mono text-sm text-purple-600 dark:text-purple-400">
+                            {request.request_id}
+                          </span>
+                          <StatusBadge status={request.status} />
+                        </div>
+                        <p className="truncate text-sm text-gray-900 dark:text-white">
+                          {request.title || "No title"}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <PriorityBadge priority={request.priority} />
+                          <span className="text-xs text-gray-500 dark:text-slate-500">
+                            {request.category}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-white text-sm truncate">
-                        {request.title || "No title"}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <PriorityBadge priority={request.priority} />
-                        <span className="text-slate-500 text-xs">
-                          {request.category}
-                        </span>
+                      <div className="whitespace-nowrap text-xs text-gray-500 dark:text-slate-500">
+                        {new Date(request.created_at).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="text-slate-500 text-xs whitespace-nowrap">
-                      {new Date(request.created_at).toLocaleDateString()}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Request Detail */}
+          {view === "detail" && selectedRequest && (
+            <div className="min-w-0 flex-1 border-t border-gray-200 pt-4 dark:border-slate-700 md:border-t-0 md:pl-4 md:pt-0">
+              <div className="mx-auto max-w-3xl space-y-4">
+                {/* Request Header */}
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="font-mono text-xl font-bold text-purple-600 dark:text-purple-400">
+                        {selectedRequest.request_id}
+                      </h2>
+                      <p className="mt-2 text-lg text-gray-900 dark:text-white">
+                        {selectedRequest.title}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+                        Created:{" "}
+                        {new Date(selectedRequest.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                      <PriorityBadge priority={selectedRequest.priority} />
+                      <StatusBadge status={selectedRequest.status} />
                     </div>
                   </div>
-                </button>
-              ))}
+
+                  {/* Action Buttons */}
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-200 pt-4 dark:border-slate-700">
+                    <button
+                      onClick={handleCopyRequest}
+                      className="flex items-center gap-1 rounded bg-gray-200 px-3 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      {copied ? "Copied!" : "Copy JSON"}
+                    </button>
+                    <button
+                      onClick={() => setShowStatusModal(true)}
+                      className="flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-purple-500"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Update Status
+                    </button>
+                    <button
+                      onClick={() => handleDelete(selectedRequest.request_id)}
+                      className="flex items-center gap-1 rounded bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <DetailSection title="Description" icon={FileText}>
+                  <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+                    {selectedRequest.description || "(No description provided)"}
+                  </p>
+                </DetailSection>
+
+                {/* Problem Solved */}
+                {selectedRequest.problemSolved && (
+                  <DetailSection
+                    title="Problem This Would Solve"
+                    icon={Lightbulb}
+                  >
+                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+                      {selectedRequest.problemSolved}
+                    </p>
+                  </DetailSection>
+                )}
+
+                {/* Proposed Solution */}
+                {selectedRequest.proposedSolution && (
+                  <DetailSection title="Proposed Solution" icon={Zap}>
+                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+                      {selectedRequest.proposedSolution}
+                    </p>
+                  </DetailSection>
+                )}
+
+                {/* Additional Context */}
+                {selectedRequest.additionalContext && (
+                  <DetailSection
+                    title="Additional Context"
+                    icon={MessageSquare}
+                  >
+                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+                      {selectedRequest.additionalContext}
+                    </p>
+                  </DetailSection>
+                )}
+
+                {/* Client Environment */}
+                <DetailSection title="Client Environment" icon={Monitor}>
+                  <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    <div>
+                      <span className="text-gray-500 dark:text-slate-500">
+                        Browser:
+                      </span>
+                      <span className="ml-2 break-all text-gray-700 dark:text-slate-300">
+                        {selectedRequest.systemInfo?.browser}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-slate-500">
+                        Screen:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-slate-300">
+                        {selectedRequest.systemInfo?.screenResolution}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-slate-500">
+                        Module:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-slate-300">
+                        {selectedRequest.module}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-slate-500">
+                        Category:
+                      </span>
+                      <span className="ml-2 text-gray-700 dark:text-slate-300">
+                        {selectedRequest.category}
+                      </span>
+                    </div>
+                  </div>
+                </DetailSection>
+
+                {/* Review Notes */}
+                {selectedRequest.review_notes && (
+                  <DetailSection title="Review Notes" icon={CheckCircle}>
+                    <p className="whitespace-pre-wrap text-purple-700 dark:text-purple-400">
+                      {selectedRequest.review_notes}
+                    </p>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-slate-500">
+                      Reviewed:{" "}
+                      {new Date(selectedRequest.reviewed_at).toLocaleString()}
+                    </p>
+                  </DetailSection>
+                )}
+
+                {/* Audit Log */}
+                {auditLog.length > 0 && (
+                  <DetailSection title="Audit Log" icon={History}>
+                    <div className="space-y-2">
+                      {auditLog.map((entry, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-gray-600 dark:text-slate-400">
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {entry.action}
+                            </span>
+                            {" by "}
+                            {entry.accessor}
+                            {entry.details && (
+                              <span className="text-gray-500 dark:text-slate-500">
+                                {" "}
+                                - {entry.details}
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-gray-500 dark:text-slate-500">
+                            {new Date(entry.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </DetailSection>
+                )}
+              </div>
             </div>
           )}
         </div>
-
-        {/* Request Detail */}
-        {view === "detail" && selectedRequest && (
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="max-w-3xl mx-auto space-y-4">
-              {/* Request Header */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold font-mono text-purple-400">
-                      {selectedRequest.request_id}
-                    </h2>
-                    <p className="text-white text-lg mt-2">
-                      {selectedRequest.title}
-                    </p>
-                    <p className="text-slate-400 text-sm mt-1">
-                      Created:{" "}
-                      {new Date(selectedRequest.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <PriorityBadge priority={selectedRequest.priority} />
-                    <StatusBadge status={selectedRequest.status} />
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700">
-                  <button
-                    onClick={handleCopyRequest}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white transition-colors"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                    {copied ? "Copied!" : "Copy JSON"}
-                  </button>
-                  <button
-                    onClick={() => setShowStatusModal(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-sm text-white transition-colors"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Update Status
-                  </button>
-                  <button
-                    onClick={() => handleDelete(selectedRequest.request_id)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded text-sm text-white transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              {/* Description */}
-              <DetailSection title="Description" icon={FileText}>
-                <p className="text-slate-300 whitespace-pre-wrap">
-                  {selectedRequest.description || "(No description provided)"}
-                </p>
-              </DetailSection>
-
-              {/* Problem Solved */}
-              {selectedRequest.problemSolved && (
-                <DetailSection
-                  title="Problem This Would Solve"
-                  icon={Lightbulb}
-                >
-                  <p className="text-slate-300 whitespace-pre-wrap">
-                    {selectedRequest.problemSolved}
-                  </p>
-                </DetailSection>
-              )}
-
-              {/* Proposed Solution */}
-              {selectedRequest.proposedSolution && (
-                <DetailSection title="Proposed Solution" icon={Zap}>
-                  <p className="text-slate-300 whitespace-pre-wrap">
-                    {selectedRequest.proposedSolution}
-                  </p>
-                </DetailSection>
-              )}
-
-              {/* Additional Context */}
-              {selectedRequest.additionalContext && (
-                <DetailSection title="Additional Context" icon={MessageSquare}>
-                  <p className="text-slate-300 whitespace-pre-wrap">
-                    {selectedRequest.additionalContext}
-                  </p>
-                </DetailSection>
-              )}
-
-              {/* Client Environment */}
-              <DetailSection title="Client Environment" icon={Monitor}>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-slate-500">Browser:</span>
-                    <span className="text-slate-300 ml-2 break-all">
-                      {selectedRequest.systemInfo?.browser}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Screen:</span>
-                    <span className="text-slate-300 ml-2">
-                      {selectedRequest.systemInfo?.screenResolution}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Module:</span>
-                    <span className="text-slate-300 ml-2">
-                      {selectedRequest.module}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Category:</span>
-                    <span className="text-slate-300 ml-2">
-                      {selectedRequest.category}
-                    </span>
-                  </div>
-                </div>
-              </DetailSection>
-
-              {/* Review Notes */}
-              {selectedRequest.review_notes && (
-                <DetailSection title="Review Notes" icon={CheckCircle}>
-                  <p className="text-purple-400 whitespace-pre-wrap">
-                    {selectedRequest.review_notes}
-                  </p>
-                  <p className="text-slate-500 text-xs mt-2">
-                    Reviewed:{" "}
-                    {new Date(selectedRequest.reviewed_at).toLocaleString()}
-                  </p>
-                </DetailSection>
-              )}
-
-              {/* Audit Log */}
-              {auditLog.length > 0 && (
-                <DetailSection title="Audit Log" icon={History}>
-                  <div className="space-y-2">
-                    {auditLog.map((entry, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-slate-400">
-                          <span className="font-medium text-white">
-                            {entry.action}
-                          </span>
-                          {" by "}
-                          {entry.accessor}
-                          {entry.details && (
-                            <span className="text-slate-500">
-                              {" "}
-                              - {entry.details}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-slate-500">
-                          {new Date(entry.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </DetailSection>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
+      </ResponsiveModal>
 
       {/* Status Update Modal */}
-      {showStatusModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-white mb-4">Update Status</h3>
-            <label className="block text-sm text-slate-400 mb-2">
-              New Status:
-            </label>
-            <select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value)}
-              className="w-full mb-4 bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+      <ResponsiveModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        title="Update Status"
+        size="sm"
+        zIndex={70}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowStatusModal(false)}
+              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
             >
-              <option value="">Select status...</option>
-              <option value="new">New</option>
-              <option value="under-review">Under Review</option>
-              <option value="planned">Planned</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="declined">Declined</option>
-            </select>
-            <label className="block text-sm text-slate-400 mb-2">
-              Review Notes:
-            </label>
-            <textarea
-              value={reviewNotes}
-              onChange={(e) => setReviewNotes(e.target.value)}
-              placeholder="Add notes about this status change (optional)"
-              className="w-full h-32 bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setShowStatusModal(false)}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateStatus}
-                disabled={updating || !newStatus}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                {updating ? "Saving..." : "Update Status"}
-              </button>
-            </div>
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdateStatus}
+              disabled={updating || !newStatus}
+              className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-500 disabled:opacity-50"
+            >
+              {updating ? "Saving..." : "Update Status"}
+            </button>
           </div>
-        </div>
-      )}
-    </div>
+        }
+      >
+        <label
+          htmlFor="feature-new-status"
+          className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
+        >
+          New Status:
+        </label>
+        <select
+          id="feature-new-status"
+          value={newStatus}
+          onChange={(e) => setNewStatus(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white"
+        >
+          <option value="">Select status...</option>
+          <option value="new">New</option>
+          <option value="under-review">Under Review</option>
+          <option value="planned">Planned</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="declined">Declined</option>
+        </select>
+        <label
+          htmlFor="feature-review-notes"
+          className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
+        >
+          Review Notes:
+        </label>
+        <textarea
+          id="feature-review-notes"
+          value={reviewNotes}
+          onChange={(e) => setReviewNotes(e.target.value)}
+          placeholder="Add notes about this status change (optional)"
+          className="h-32 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
+        />
+      </ResponsiveModal>
+    </>
   );
 }
 
 // Helper component for detail sections
 const DetailSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700 bg-slate-800/50">
-      <Icon className="w-4 h-4 text-slate-400" />
-      <h3 className="font-medium text-white text-sm">{title}</h3>
+  <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/50">
+    <div className="flex items-center gap-2 border-b border-gray-200 bg-gray-100 px-4 py-2 dark:border-slate-700 dark:bg-slate-800/50">
+      <Icon className="h-4 w-4 text-gray-500 dark:text-slate-400" />
+      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+        {title}
+      </h3>
     </div>
     <div className="p-4">{children}</div>
   </div>
