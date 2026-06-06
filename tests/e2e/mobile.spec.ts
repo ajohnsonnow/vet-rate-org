@@ -149,6 +149,19 @@ const MODALS = [
   // condition's edit action (editingCondition gate, no bare event), so it is
   // exercised via that flow. VAGovRatingPaster already paints at z-100.
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
+  // Cluster G1 (S10): three standalone visualizers migrated to the shell. All
+  // three keep an always-visible close-X in a custom header slot and have no
+  // always-present sticky-footer CTA (their actions are header-close-only or
+  // in-body/conditional), so they assert the overflow contract here.
+  // WebOfConditions pairs a light yellow header slot with a permanently-dark
+  // gray-900 full-bleed body and a responsive flex-col->sm:flex-row graph/panel
+  // stack. EvidenceGapVisualizer is a permanently-dark purple modal whose 38 CFR
+  // disclaimer sits as the last body element (not the light footer slot).
+  // BlueButtonXRay is a standard light/dark modal whose CTAs surface in-body only
+  // after a Blue Button file is parsed (conditional, no fresh-open footer CTA).
+  { label: "Web of Conditions", event: "openWebOfConditions" },
+  { label: "Evidence Gap Visualizer", event: "openEvidenceGapVisualizer" },
+  { label: "Blue Button X-Ray", event: "openBlueButtonXRay" },
 ];
 
 /**
