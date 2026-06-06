@@ -490,7 +490,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     // ═══════════════════════════════════════════════════════════════════
     // GENITOURINARY SYSTEM (§§ 4.115-4.115b)
     // ═══════════════════════════════════════════════════════════════════
-    "� Genitourinary System (DC 7500-7542)": [
+    "🫘 Genitourinary System (DC 7500-7542)": [
       "Kidney Disease, Chronic (DC 7530-7541)",
       "Renal Dysfunction (DC 7500-7509)",
       "Kidney, Removal of One (DC 7500)",
