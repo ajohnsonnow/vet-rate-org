@@ -634,7 +634,7 @@ export default function Pathfinder({
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
       setError(t("pathfinder", "errorNoAI"));
-      setShowAISettings(true);
+      onOpenAISettings?.();
       return;
     }
 

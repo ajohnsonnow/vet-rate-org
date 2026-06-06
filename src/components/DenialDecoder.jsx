@@ -145,7 +145,7 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
       setError(
         "No AI available. Please configure an API key or enable Local AI in settings.",
       );
-      setShowAISettings(true);
+      onOpenAISettings?.();
       setStep("upload");
       return;
     }
