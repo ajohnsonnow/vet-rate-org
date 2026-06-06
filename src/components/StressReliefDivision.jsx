@@ -14,12 +14,20 @@
  * @author Vet-Rate.org Stress Relief Division
  */
 
-import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  Suspense,
+  lazy,
+} from "react";
 import {
   useIDDQD,
   useGamepadBridge,
   useDoomPerformance,
 } from "../utils/easterEggs";
+import useFocusTrap from "../hooks/useFocusTrap";
 
 // Lazy load the heavy iframe only when activated
 const DoomFrame = lazy(() =>
@@ -181,6 +189,12 @@ const StressReliefDivision = () => {
   const { isConnected: isControllerConnected, controllerName } =
     useGamepadBridge(isActive);
   const { fps } = useDoomPerformance(gameStarted);
+  const overlayRef = useRef(null);
+
+  // Trap Tab focus inside the overlay and restore it to the opener on close.
+  // ESC is intentionally left to the gameStarted-aware window handler below so
+  // it can pass through to DOOM's own menu while the game is running.
+  useFocusTrap(overlayRef, { active: isActive });
 
   // Trigger glitch effect on activation
   useEffect(() => {
@@ -231,8 +245,10 @@ const StressReliefDivision = () => {
 
       {/* Main Overlay */}
       <div
+        ref={overlayRef}
         className={`fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 transition-opacity duration-300 ${showGlitch ? "animate-crt-glitch" : ""}`}
         role="dialog"
+        aria-modal="true"
         aria-label="Stress Relief Division - Doom Easter Egg"
       >
         {/* Header with close button */}

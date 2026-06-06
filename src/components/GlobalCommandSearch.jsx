@@ -23,6 +23,7 @@ import React, {
 } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import disabilityData from "../data/disabilityData.json";
 
 // Extract diagnostic codes from disability data for quick search
@@ -230,6 +231,17 @@ export default function GlobalCommandSearch({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   const resultsRef = useRef(null);
+  const dialogRef = useRef(null);
+
+  // Trap Tab focus inside the palette and restore it to the opener on close.
+  // Declared before the input-focus effect below so it captures the opener as
+  // the restore target. autoFocus is off — the effect below owns initial focus
+  // (the search input); ESC routes through here so it works from any result row.
+  useFocusTrap(dialogRef, {
+    active: isOpen,
+    autoFocus: false,
+    onEscape: onClose,
+  });
 
   // Focus input when opened
   useEffect(() => {
@@ -317,10 +329,8 @@ export default function GlobalCommandSearch({
         e.preventDefault();
         handleSelect(selectedIndex);
         break;
-      case "Escape":
-        e.preventDefault();
-        onClose();
-        break;
+      // Escape is handled by useFocusTrap (onEscape) so it also closes the
+      // palette when focus has moved off the input to a result row.
     }
   };
 
@@ -352,6 +362,7 @@ export default function GlobalCommandSearch({
 
       {/* Search Modal */}
       <div
+        ref={dialogRef}
         className={`
           relative w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden
           ${isDark || isTbiComfort ? "bg-gray-900 border border-gray-700" : "bg-white border border-slate-200"}

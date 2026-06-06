@@ -8,9 +8,10 @@
  * until veteran connects with crisis support.
  */
 
-import React from "react";
+import React, { useRef } from "react";
 import { CRISIS_RESOURCES, getCrisisMessage } from "../utils/crisisInterceptor";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -22,9 +23,15 @@ import { useLanguage } from "../contexts/LanguageContext";
  */
 const CrisisModal = ({ severity = "high", source = "application" }) => {
   const { t } = useLanguage();
+  const containerRef = useRef(null);
 
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
+
+  // Trap keyboard focus inside the crisis resources. onEscape is intentionally
+  // omitted: this alertdialog is non-dismissible by design, so ESC must not
+  // close it. autoFocus lands the keyboard user on the Call button.
+  useFocusTrap(containerRef, { active: true });
 
   const message = getCrisisMessage(severity);
 
@@ -40,6 +47,7 @@ const CrisisModal = ({ severity = "high", source = "application" }) => {
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-[9999] bg-red-900 flex items-center justify-center p-4 overflow-hidden"
       role="alertdialog"
       aria-modal="true"

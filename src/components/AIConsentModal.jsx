@@ -5,10 +5,11 @@
  * sending any data to the AI service (Google Gemini).
  */
 
-import React from "react";
+import React, { useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getAIDataDisclosure } from "../utils/aiStatementHelper";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 
 const AIConsentModal = ({
   isOpen,
@@ -17,7 +18,12 @@ const AIConsentModal = ({
   statementType = "personal", // 'personal', 'buddy', or 'ptsd'
 }) => {
   const { t } = useLanguage();
+  const containerRef = useRef(null);
   useBodyScrollLock(isOpen);
+
+  // Trap keyboard focus inside the consent dialog; ESC declines (uses the
+  // standard local template) and restores focus to the opener on close.
+  useFocusTrap(containerRef, { active: isOpen, onEscape: onCancel });
 
   if (!isOpen) return null;
 
@@ -31,6 +37,7 @@ const AIConsentModal = ({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
