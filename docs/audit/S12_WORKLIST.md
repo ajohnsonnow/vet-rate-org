@@ -389,8 +389,24 @@ dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`)
       `analyze()` → "No elements found for include"; fixed with bounded re-open/reload retry loops
       that retry **only** on that infra error string and re-throw anything else, so a real violation
       always surfaces. Deterministic under CI config (`CI=1`, serial + 2 retries): **21 passed, 0
-      flaky, 0 failed**. Playwright trap/ESC/restore behaviour rides the unit-tested
-      `useFocusTrap`/`useBodyScrollLock` primitives + the S10 mobile suite.
+      flaky, 0 failed**.
+- [x] Tests — **dialog-contract + skip-link gate authored** →
+      [tests/e2e/dialog-contract.spec.ts](../../tests/e2e/dialog-contract.spec.ts). The DoD's
+      "every modal trappable + ESC + restore (Playwright); skip-link keyboard-reachable" proven
+      end-to-end in the live app (the `useFocusTrap` cycle/restore mechanics are also unit-tested in
+      [useFocusTrap.test.jsx](../../src/hooks/useFocusTrap.test.jsx)). Covers: (1) four representative
+      dismissable ResponsiveModal surfaces (Community Roadmap / Workflow Guide / Decision Decoder /
+      VSO Finder) — focus enters the dialog on open, 6 Tabs stay trapped inside, ESC closes, focus
+      **restores to the opener**; (2) the non-dismissable first-visit DisclaimerSplash **ignores
+      ESC** (safety gate, SC 2.1.2); (3) the skip link is keyboard-reachable near the top of the tab
+      order (it is the 2nd Tab stop — a header control precedes it — so the test Tabs forward until it
+      lands, bounded to 4), becomes visible on focus (`focus:not-sr-only` gives it real dimensions),
+      and Enter jumps to `#main-content` (SC 2.4.1). Root-caused and fixed a cold-start focus flake:
+      the returning-user fixture now settles `networkidle` + waits for the lazy home chunks before any
+      focus interaction, and `openModalByEvent` settles `networkidle` + polls focus-in-dialog so the
+      restore assertion never races React.lazy's Suspense remount. Deterministic under CI config
+      (`CI=1`): **18 passed, 0 flaky** across chromium/firefox/mobile-chrome (and `--repeat-each=3` on
+      chromium). Picked up by the existing full `e2e` CI job (runs every spec across every project).
 - [x] CI wiring — **blocking `axe` job added** to [.github/workflows/ci.yml](../../.github/workflows/ci.yml)
       (owner-authorized scope: install `@axe-core/playwright` dev dep + add the axe job). Mirrors the
       `mobile` gate (`needs: [build]`, chromium-only, uploads `playwright-report-axe`); runs
