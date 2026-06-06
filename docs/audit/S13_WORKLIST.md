@@ -1,8 +1,8 @@
 # S13 Worklist — ESLint hardening + type-check gate
 
 > Cycle S9–S17, Sprint 13 ([SPRINT_PLAN_S9-S17.md](../SPRINT_PLAN_S9-S17.md), row S13).
-> Status: **in progress**. Branch `audit/s9-mobile-safety-net`, local commits only — no
-> push/PR until the owner authorizes (standing instruction).
+> Status: **complete** (commit `2cd5b5a`). Branch `audit/s9-mobile-safety-net`, local commits
+> only — no push/PR until the owner authorizes (standing instruction).
 
 ## Goal (S13 Definition of Done)
 
@@ -119,7 +119,7 @@ a blind edit. Left at "warn"; do not ratchet `no-dupe-keys` to "error" until res
 - [x] `npm run lint` → 0 errors (exit 0); jsx-a11y + react-hooks loaded; zero-backlog
       recommended rules + `rules-of-hooks` at error.
 - [x] `npm run type-check` → 0 errors (exit 0).
-- [ ] `ci.yml` `type-check` job added (YAML validated) + commit.
+- [x] `ci.yml` `type-check` job added (YAML validated) + committed (`2cd5b5a`).
 
 ## Out of S13 scope (documented backlog → fast-follow / later sprints)
 
