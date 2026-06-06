@@ -657,7 +657,7 @@ const DemoDashboard = ({ onClose }) => {
       </div>
 
       {/* Status Summary Bar */}
-      <div className="mt-6 grid grid-cols-5 gap-3">
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
         <div className="bg-green-500/20 border border-green-400/30 rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-green-300">{counts.success}</p>
           <p className="text-xs text-green-200 mt-1">Active</p>

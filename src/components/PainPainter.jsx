@@ -1481,7 +1481,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                     </span>
                   </div>
                   <div
-                    className="grid grid-cols-4 gap-2"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-2"
                     role="group"
                     aria-label="Body view selector"
                   >
