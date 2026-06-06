@@ -478,4 +478,39 @@ for (const vp of VIEWPORTS) {
       expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
     });
   });
+
+  // What's New (S12): migrated to ResponsiveModal with a custom gradient header
+  // slot + the "Roger That" CTA in the sticky-footer slot. Unlike the modals
+  // above it is not opened by an event — useUpdateOrchestrator auto-shows it on
+  // boot when TOS is accepted but the current version is unseen — so it gets its
+  // own setup (stale last_seen_version) and asserts the footer-CTA contract.
+  test.describe(`What's New @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      // Accept TOS and skip the tour, but leave last_seen_version stale so the
+      // What's New modal trips on mount (useUpdateOrchestrator).
+      await page.addInitScript(() => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", "0.0.0");
+        localStorage.setItem("vetrate-tour-completed", "true");
+      });
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    test("What's New modal keeps its CTA in view", async ({ page }) => {
+      await expect
+        .poll(async () => (await inspectResponsiveModal(page)).found, {
+          timeout: 6000,
+        })
+        .toBe(true);
+
+      const m = await inspectResponsiveModal(page);
+      expect(m.overflow).toBeLessThanOrEqual(1);
+      expect(m.hasButton).toBe(true);
+      expect(m.ctaInViewport).toBe(true);
+      expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+    });
+  });
 }

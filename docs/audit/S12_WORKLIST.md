@@ -126,7 +126,13 @@ RedTeam (already on ResponsiveModal).
 - [x] Chunk 1 — hand-apply safety-critical/partial (CrisisModal, AIConsentModal, VADataCenter,
       AboutUs, DoomOverlay, GlobalCommandSearch) — trap + ESC (where dismissable) + restore;
       VADataCenter also got the full role/aria contract the audit wrongly assumed present
-- [ ] Chunk 2 — establish ResponsiveModal migration pattern (1–2 representative modals) + verify
+- [x] Chunk 2 — establish ResponsiveModal migration pattern: migrated **WhatsNewModal** to
+      ResponsiveModal (custom gradient `header` slot + "Roger That" CTA in the sticky `footer`
+      slot, `data-whats-new-modal` hook preserved for [BootCampTour](../../src/components/BootCampTour.jsx#L205),
+      `whatsNewClosed` event preserved). Added a dedicated `mobile.spec.ts` block (stale
+      `last_seen_version` trips it on boot) — green at 360/390/768. ShareButton's always-dark
+      image-preview modal is deferred into a themed-modal cluster (Chunk 3+) where its
+      forced-dark frame is handled alongside similar panels, to keep the canonical pattern clean.
 - [ ] Chunks 3+ — migrate remaining standard modals (batched by cluster)
 - [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
