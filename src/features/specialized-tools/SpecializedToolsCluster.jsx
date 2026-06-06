@@ -14,11 +14,8 @@ const RetroPayHunter = lazy(() => import("../../components/RetroPayHunter"));
  * the thematic clusters but share the same minimal callback shape:
  *   - FOIAGenerator ("The Keysmith" — FOIA request builder)
  *   - MillionDollarDashboard (shock-and-awe lifetime-value visualizer)
- *   - EvidenceTimeline (Continuity Thread — preserved custom wrapper)
+ *   - EvidenceTimeline (Continuity Thread — owns its ResponsiveModal chrome)
  *   - RetroPayHunter (effective-date back-pay calculator)
- *
- * EvidenceTimeline keeps its bespoke max-w-6xl + max-h-[90vh] wrapper
- * because the inner component does not own its own modal chrome.
  *
  * Bridges via App.jsx: openBugSquasher, openAISettings.
  *
@@ -73,14 +70,10 @@ export default function SpecializedToolsCluster() {
         />
       )}
       {showTimeline && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
-          <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <EvidenceTimeline
-              onClose={() => setShowTimeline(false)}
-              onReportBug={reportBug(setShowTimeline)}
-            />
-          </div>
-        </div>
+        <EvidenceTimeline
+          onClose={() => setShowTimeline(false)}
+          onReportBug={reportBug(setShowTimeline)}
+        />
       )}
       {showRetro && (
         <RetroPayHunter

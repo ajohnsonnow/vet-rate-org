@@ -162,6 +162,24 @@ const MODALS = [
   { label: "Web of Conditions", event: "openWebOfConditions" },
   { label: "Evidence Gap Visualizer", event: "openEvidenceGapVisualizer" },
   { label: "Blue Button X-Ray", event: "openBlueButtonXRay" },
+  // Cluster G2 (S10): two embedded full-page components whose modal chrome used
+  // to live in their cluster wrappers (BodyMappingCluster / SpecializedToolsCluster)
+  // now own a ResponsiveModal directly; the wrappers render them bare. Both are
+  // permanently-dark, header-close-only (close-X in a custom header slot) with
+  // only conditional in-body CTAs, so they assert the overflow contract here.
+  // BodyMapSelector's SVG container drops to min-h-[340px] on phones; its
+  // "Log to Symptom Logger" CTA surfaces only after a zone is picked.
+  // EvidenceTimeline's canvas is w-full/maxWidth:100% so it scales without
+  // overflow; its export CTA appears only once events exist.
+  { label: "Body Map Selector", event: "openBodyMapSelector" },
+  { label: "Evidence Timeline", event: "openEvidenceTimeline" },
+  // UserManual is a two-pane (sidebar + content) independent-scroll layout that
+  // does not fit the single-scroll ResponsiveModal body; it keeps its bespoke
+  // shell (already flex-col-stacks on phones with a mobile header + sidebar
+  // toggle, locks body scroll, and closes on ESC). It asserts the overflow
+  // contract here as-is; a full shell swap is intentionally deferred to avoid
+  // regressing the desktop two-pane scroll.
+  { label: "User Manual", event: "openUserManual" },
 ];
 
 /**
