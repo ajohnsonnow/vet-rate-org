@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReportBugLink from "./ReportBugLink";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import {
   PROJECT_STATS,
   FORMATTED_STATS,
@@ -180,6 +181,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
+  // Trap focus inside the dialog, close on ESC, restore focus on teardown.
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, { active: true, onEscape: onClose });
+
   // Get color schemas
   const { getModalClasses, getColorClass, colors } = useColorSchemas();
   const modalClasses = getModalClasses();
@@ -199,6 +204,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
 
   return (
     <div
+      ref={dialogRef}
       className={modalClasses.backdrop}
       role="dialog"
       aria-modal="true"

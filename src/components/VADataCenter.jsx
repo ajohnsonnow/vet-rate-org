@@ -14,8 +14,9 @@
  * API Key Access: Facilities, Forms, Benefits Reference Data
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
+import useFocusTrap from "../hooks/useFocusTrap";
 import {
   isVaIntegrationConfigured,
   getVaConfigStatus,
@@ -230,6 +231,11 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
   // Configuration status
   const configStatus = getVaConfigStatus();
   const isConfigured = isVaIntegrationConfigured();
+
+  // Dialog focus management — only when shown as a modal (embeddedMode renders
+  // inline inside another shell, so it must not trap focus or handle ESC).
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, { active: !embeddedMode, onEscape: onClose });
 
   // Saved data state
   const [savedRecords, setSavedRecords] = useState(null);
@@ -1302,6 +1308,10 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
       }
     >
       <div
+        ref={dialogRef}
+        role={embeddedMode ? undefined : "dialog"}
+        aria-modal={embeddedMode ? undefined : "true"}
+        aria-labelledby={embeddedMode ? undefined : "va-data-center-title"}
         className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full ${
           embeddedMode
             ? ""
@@ -1316,7 +1326,10 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
                 <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2
+                  id="va-data-center-title"
+                  className="text-xl font-bold text-gray-900 dark:text-white"
+                >
                   VA Data Center
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1326,6 +1339,7 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
             </div>
             <button
               onClick={onClose}
+              aria-label="Close VA Data Center"
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <XCircle className="w-6 h-6 text-gray-500" />
