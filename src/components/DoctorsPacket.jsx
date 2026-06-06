@@ -7,19 +7,14 @@
  * get nexus letters from their private physicians.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   generateDoctorsPacket,
   formatDoctorLetter,
   getNexusLogicPrivacyDisclosure,
 } from "../utils/nexusLogicGenerator";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import ResponsiveModal from "./common/ResponsiveModal";
+import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import ToolCardButton from "./ToolCardButton";
@@ -27,7 +22,7 @@ import ToolCardButton from "./ToolCardButton";
 // Icons
 const BrainIcon = () => (
   <svg
-    className="w-5 h-5"
+    className="h-5 w-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -43,7 +38,7 @@ const BrainIcon = () => (
 
 const DocumentIcon = () => (
   <svg
-    className="w-5 h-5"
+    className="h-5 w-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -59,7 +54,7 @@ const DocumentIcon = () => (
 
 const DownloadIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -75,7 +70,7 @@ const DownloadIcon = () => (
 
 const PrintIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -91,7 +86,7 @@ const PrintIcon = () => (
 
 const CheckIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -107,7 +102,7 @@ const CheckIcon = () => (
 
 const InfoIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -123,7 +118,7 @@ const InfoIcon = () => (
 
 const AlertIcon = () => (
   <svg
-    className="w-5 h-5"
+    className="h-5 w-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -139,7 +134,7 @@ const AlertIcon = () => (
 
 const LinkIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -155,7 +150,7 @@ const LinkIcon = () => (
 
 const SparklesIcon = () => (
   <svg
-    className="w-5 h-5"
+    className="h-5 w-5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -175,13 +170,13 @@ const SparklesIcon = () => (
 const getStrengthColor = (strength) => {
   switch (strength?.toLowerCase()) {
     case "strong":
-      return "bg-green-500/20 text-green-300 border-green-500/30";
+      return "bg-green-100 text-green-700 border-green-300 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30";
     case "moderate":
-      return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+      return "bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30";
     case "weak":
-      return "bg-red-500/20 text-red-300 border-red-500/30";
+      return "bg-red-100 text-red-700 border-red-300 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30";
     default:
-      return "bg-gray-500/20 text-gray-300 border-gray-500/30";
+      return "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30";
   }
 };
 
@@ -197,8 +192,6 @@ export default function DoctorsPacket({
   existingCitations = null,
   onOpenAISettings,
 }) {
-  const { t } = useLanguage();
-
   // State
   const [step, setStep] = useState("consent"); // consent, input, loading, result, error
   const [primaryCondition, setPrimaryCondition] = useState(initialPrimary);
@@ -206,13 +199,8 @@ export default function DoctorsPacket({
     useState(initialSecondary);
   const [packetData, setPacketData] = useState(null);
   const [error, setError] = useState(null);
-  const [hasConsented, setHasConsented] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(isOpen);
 
   // Load API key and set initial values
   useEffect(() => {
@@ -223,19 +211,9 @@ export default function DoctorsPacket({
 
     // Check for existing consent
     const consent = localStorage.getItem("vetrate_ai_consent");
-    if (consent === "true") {
-      setHasConsented(true);
-      if (initialPrimary && initialSecondary) {
-        setStep("input");
-      }
+    if (consent === "true" && initialPrimary && initialSecondary) {
+      setStep("input");
     }
-
-    // Update AI status periodically
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, [initialPrimary, initialSecondary]);
 
   // Update conditions when props change
@@ -247,14 +225,7 @@ export default function DoctorsPacket({
   // Handle consent
   const handleConsent = () => {
     localStorage.setItem("vetrate_ai_consent", "true");
-    setHasConsented(true);
     setStep("input");
-  };
-
-  // Save API key
-  const handleSaveKey = (key) => {
-    localStorage.setItem("vetrate_gemini_key", key);
-    setApiKey(key);
   };
 
   // Generate the packet
@@ -339,7 +310,7 @@ ${"=".repeat(60)}
 RISK FACTORS
 ${"=".repeat(60)}
 
-${packetData.data.risk_factors?.map((r, i) => `• ${r}`).join("\n") || "None provided"}
+${packetData.data.risk_factors?.map((r) => `• ${r}`).join("\n") || "None provided"}
 
 ${"=".repeat(60)}
 PHYSICIAN TEMPLATE LETTER
@@ -357,8 +328,8 @@ ${"=".repeat(60)}
 DISCLAIMER
 ${"=".repeat(60)}
 
-This document is provided for informational purposes only and does not constitute 
-medical advice, diagnosis, or treatment. A qualified physician must review this 
+This document is provided for informational purposes only and does not constitute
+medical advice, diagnosis, or treatment. A qualified physician must review this
 information and make their own independent medical determination.
 
 Generated: ${new Date().toLocaleString()}
@@ -378,498 +349,519 @@ Vet-Rate.org - Helping Veterans Win Claims`;
     window.print();
   };
 
-  if (!isOpen) return null;
+  const header = (
+    <div className="flex items-center justify-between border-b border-violet-700 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 px-6 py-4">
+      <div className="flex items-center gap-3">
+        <div className="rounded-lg bg-white/20 p-2 text-white">
+          <SparklesIcon />
+        </div>
+        <div>
+          <h2
+            id="doctors-packet-title"
+            className="flex items-center gap-2 text-xl font-bold text-white"
+          >
+            Doctor&apos;s Packet Generator
+            <span className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              AI
+            </span>
+            <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              BETA
+            </span>
+          </h2>
+          <p className="text-sm text-violet-100">
+            AI-powered medical nexus research
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <LLMRecommendationBadge toolId="doctors-packet" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+        <button
+          onClick={onClose}
+          className="rounded-lg p-2 text-white transition-colors hover:bg-white/20 hover:text-gray-200"
+          aria-label="Close dialog"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-purple-500/20">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-violet-700 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <SparklesIcon />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                Doctor's Packet Generator
-                <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                  AI
-                </span>
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                  BETA
-                </span>
-              </h2>
-              <p className="text-sm text-violet-100">
-                AI-powered medical nexus research
-              </p>
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      header={header}
+      labelledBy="doctors-packet-title"
+      size="xl"
+      className="border border-purple-500/20"
+    >
+      {/* Step: Consent */}
+      {step === "consent" && (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-500/20 dark:bg-purple-900/20">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 rounded-lg bg-purple-100 p-2 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300">
+                <BrainIcon />
+              </div>
+              <div>
+                <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
+                  What This Tool Does
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                  The Doctor&apos;s Packet Generator uses AI to research the{" "}
+                  <span className="font-medium text-purple-600 dark:text-purple-300">
+                    medical mechanism
+                  </span>{" "}
+                  linking your service-connected condition to a claimed
+                  secondary condition. It creates a comprehensive research brief
+                  that you can present to your private physician.
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <LLMRecommendationBadge toolId="doctors-packet" />
-            <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-500/20 dark:bg-green-900/20">
+              <h4 className="mb-3 flex items-center gap-2 font-semibold text-green-700 dark:text-green-300">
+                <CheckIcon /> Includes
+              </h4>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-green-600 dark:text-green-400">
+                    •
+                  </span>
+                  Medical mechanism explanation
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-green-600 dark:text-green-400">
+                    •
+                  </span>
+                  Pathophysiological pathways
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-green-600 dark:text-green-400">
+                    •
+                  </span>
+                  Literature/study references
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-green-600 dark:text-green-400">
+                    •
+                  </span>
+                  Physician template letter
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-900/20">
+              <h4 className="mb-3 flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-300">
+                <AlertIcon /> Important Notes
+              </h4>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-amber-600 dark:text-amber-400">
+                    •
+                  </span>
+                  This is <strong>research</strong>, not a diagnosis
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-amber-600 dark:text-amber-400">
+                    •
+                  </span>
+                  Doctor must review and sign
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-amber-600 dark:text-amber-400">
+                    •
+                  </span>
+                  Uses your free Gemini API key
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-amber-600 dark:text-amber-400">
+                    •
+                  </span>
+                  No personal data is sent
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowPrivacy(!showPrivacy)}
+            className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+          >
+            <InfoIcon /> {showPrivacy ? "Hide" : "View"} Privacy Details
+          </button>
+
+          {showPrivacy && (
+            <div className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800/50 dark:text-gray-300">
+              {getNexusLogicPrivacyDisclosure()}
+            </div>
+          )}
+
+          <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="p-2 text-white hover:text-gray-200 hover:bg-white/20 rounded-lg transition-colors"
+              className="flex-1 rounded-lg bg-gray-200 px-4 py-3 text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              Cancel
+            </button>
+            <ToolCardButton
+              className="flex-1"
+              type="button"
+              onClick={handleConsent}
+            >
+              <CheckIcon /> I Understand, Continue
+            </ToolCardButton>
+          </div>
+        </div>
+      )}
+
+      {/* Step: Input */}
+      {step === "input" && (
+        <div className="space-y-6">
+          {/* AI Setup Message */}
+          {!isAnyAIAvailable() && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-600/50 dark:bg-amber-900/30">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">💡</span>
+                <div className="text-sm text-amber-800 dark:text-amber-100">
+                  <p className="mb-1 font-semibold">AI Required for Analysis</p>
+                  <p className="text-amber-700 dark:text-amber-200">
+                    Click the <strong>AI Status button</strong> in the header
+                    above to load your secure Local AI (100% private) or enter
+                    your Gemini API key.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Conditions */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Primary Condition (Service-Connected)
+            </label>
+            <input
+              type="text"
+              value={primaryCondition}
+              onChange={(e) => setPrimaryCondition(e.target.value)}
+              placeholder="e.g., PTSD, Lumbar Strain, Diabetes Type II"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            />
+          </div>
+
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
+              <LinkIcon />
+              <span className="text-sm">causes or aggravates</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Secondary Condition (Claimed)
+            </label>
+            <input
+              type="text"
+              value={secondaryCondition}
+              onChange={(e) => setSecondaryCondition(e.target.value)}
+              placeholder="e.g., Sleep Apnea, Radiculopathy, Hypertension"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-900/20 dark:text-red-300">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-gray-200 px-4 py-3 text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <ToolCardButton
+              className="flex-1"
+              type="button"
+              onClick={handleGenerate}
+              disabled={
+                !apiKey ||
+                !primaryCondition.trim() ||
+                !secondaryCondition.trim()
+              }
+            >
+              <SparklesIcon /> Generate Doctor&apos;s Packet
+            </ToolCardButton>
+          </div>
+        </div>
+      )}
+
+      {/* Step: Loading */}
+      {step === "loading" && (
+        <div className="flex flex-col items-center justify-center space-y-6 py-16">
+          <div className="relative">
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-purple-500/20">
+              <div className="absolute left-0 top-0 h-full w-full rounded-full border-4 border-transparent border-t-purple-500"></div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center text-purple-500">
+              <BrainIcon />
+            </div>
+          </div>
+          <div className="text-center">
+            <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+              Researching Medical Connection...
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Analyzing pathophysiological pathways between
+              <br />
+              <span className="text-purple-600 dark:text-purple-300">
+                {primaryCondition}
+              </span>{" "}
+              and{" "}
+              <span className="text-purple-600 dark:text-purple-300">
+                {secondaryCondition}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Step: Error */}
+      {step === "error" && (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-500/20 dark:bg-red-900/20">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-500 dark:bg-red-500/20">
+              <AlertIcon />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold text-red-700 dark:text-red-300">
+              No Medical Link Found
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300">{error}</p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-gray-200 px-4 py-3 text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Close
+            </button>
+            <ToolCardButton
+              className="flex-1"
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep("input");
+              }}
+            >
+              Try Different Conditions
+            </ToolCardButton>
+          </div>
+        </div>
+      )}
+
+      {/* Step: Result */}
+      {step === "result" && packetData && (
+        <div className="space-y-6 print:bg-white print:text-black">
+          {/* Success Header */}
+          <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
+            <div className="flex items-center gap-3">
+              <div
+                className={`rounded-full border px-3 py-1 text-sm font-medium ${getStrengthColor(packetData.data.strength)}`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+                {packetData.data.strength?.toUpperCase()} LINK
+              </div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Generated {new Date().toLocaleTimeString()}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+              >
+                <PrintIcon /> Print
+              </button>
+              <button
+                onClick={handleDownloadTxt}
+                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm text-white transition-colors hover:bg-purple-500"
+              >
+                <DownloadIcon /> Download TXT
+              </button>
+            </div>
+          </div>
+
+          {/* Conditions Summary */}
+          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-500/20 dark:bg-gradient-to-r dark:from-purple-900/30 dark:to-indigo-900/30 print:border print:border-black print:bg-gray-100">
+            <div className="flex items-center gap-4 text-center">
+              <div className="flex-1 rounded-lg bg-gray-100 p-3 dark:bg-gray-800/50 print:bg-gray-200">
+                <div className="mb-1 text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
+                  Primary (Service-Connected)
+                </div>
+                <div className="font-semibold text-gray-900 dark:text-white print:text-black">
+                  {primaryCondition}
+                </div>
+              </div>
+              <div className="text-purple-600 dark:text-purple-400 print:text-black">
+                <LinkIcon />
+              </div>
+              <div className="flex-1 rounded-lg bg-gray-100 p-3 dark:bg-gray-800/50 print:bg-gray-200">
+                <div className="mb-1 text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
+                  Secondary (Claimed)
+                </div>
+                <div className="font-semibold text-gray-900 dark:text-white print:text-black">
+                  {secondaryCondition}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mechanism Summary */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-600 dark:bg-gray-800/50 print:border-black print:bg-gray-100">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold text-gray-900 dark:text-white print:text-black">
+              <BrainIcon /> Medical Mechanism
+            </h3>
+            <p className="leading-relaxed text-gray-700 dark:text-gray-300 print:text-black">
+              {packetData.data.mechanism_summary}
+            </p>
+          </div>
+
+          {/* Key Pathways */}
+          {packetData.data.key_pathways?.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-600 dark:bg-gray-800/50 print:border-black print:bg-gray-100">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white print:text-black">
+                Pathophysiological Pathways
+              </h3>
+              <ul className="space-y-3">
+                {packetData.data.key_pathways.map((pathway, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-gray-700 dark:text-gray-300 print:text-black"
+                  >
+                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 print:bg-gray-200 print:text-black">
+                      {i + 1}
+                    </span>
+                    {pathway}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Literature Topics */}
+          {packetData.data.literature_topics?.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-600 dark:bg-gray-800/50 print:border-black print:bg-gray-100">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white print:text-black">
+                Supporting Medical Literature
+              </h3>
+              <ul className="space-y-2">
+                {packetData.data.literature_topics.map((topic, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
+                  >
+                    <DocumentIcon />
+                    {topic}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Risk Factors */}
+          {packetData.data.risk_factors?.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/20 dark:bg-amber-900/20 print:border-black print:bg-gray-100">
+              <h3 className="mb-3 font-semibold text-amber-700 dark:text-amber-300 print:text-black">
+                Relevant Risk Factors
+              </h3>
+              <ul className="space-y-2">
+                {packetData.data.risk_factors.map((factor, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
+                  >
+                    <span className="text-amber-600 dark:text-amber-400 print:text-black">
+                      •
+                    </span>
+                    {factor}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Doctor's Template */}
+          <div className="rounded-xl border border-green-200 bg-green-50 p-5 dark:border-green-500/20 dark:bg-green-900/20 print:border-black print:bg-gray-100">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold text-green-700 dark:text-green-300 print:text-black">
+              <DocumentIcon /> Physician Template Letter
+            </h3>
+            <div className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-100 p-4 font-mono text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-200 print:border-black print:bg-white print:text-black">
+              {formatDoctorLetter(
+                packetData.data,
+                primaryCondition,
+                secondaryCondition,
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          {packetData.data.notes && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50 print:border-black print:bg-gray-100">
+              <h4 className="mb-2 flex items-center gap-2 font-semibold text-gray-900 dark:text-white print:text-black">
+                <InfoIcon /> Important Notes
+              </h4>
+              <p className="text-sm text-gray-700 dark:text-gray-300 print:text-black">
+                {packetData.data.notes}
+              </p>
+            </div>
+          )}
+
+          {/* Disclaimer */}
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-400 print:border-black print:text-gray-600">
+            <strong>Disclaimer:</strong> This document is provided for
+            informational purposes only and does not constitute medical advice,
+            diagnosis, or treatment. A qualified physician must review this
+            information and make their own independent medical determination.
+            Generated by Vet-Rate.org.
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 print:hidden">
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-gray-200 px-4 py-3 text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                setPacketData(null);
+                setStep("input");
+              }}
+              className="flex-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 font-medium text-white transition-all hover:from-purple-500 hover:to-indigo-500"
+            >
+              Generate Another Packet
             </button>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          {/* Step: Consent */}
-          {step === "consent" && (
-            <div className="space-y-6">
-              <div className="p-4 bg-purple-900/20 rounded-xl border border-purple-500/20">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-500/20 rounded-lg mt-1">
-                    <BrainIcon />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-2">
-                      What This Tool Does
-                    </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      The Doctor's Packet Generator uses AI to research the{" "}
-                      <span className="text-purple-300 font-medium">
-                        medical mechanism
-                      </span>{" "}
-                      linking your service-connected condition to a claimed
-                      secondary condition. It creates a comprehensive research
-                      brief that you can present to your private physician.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 bg-green-900/20 rounded-xl border border-green-500/20">
-                  <h4 className="font-semibold text-green-300 flex items-center gap-2 mb-3">
-                    <CheckIcon /> Includes
-                  </h4>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-1">•</span>
-                      Medical mechanism explanation
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-1">•</span>
-                      Pathophysiological pathways
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-1">•</span>
-                      Literature/study references
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-green-400 mt-1">•</span>
-                      Physician template letter
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="p-4 bg-amber-900/20 rounded-xl border border-amber-500/20">
-                  <h4 className="font-semibold text-amber-300 flex items-center gap-2 mb-3">
-                    <AlertIcon /> Important Notes
-                  </h4>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-1">•</span>
-                      This is <strong>research</strong>, not a diagnosis
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-1">•</span>
-                      Doctor must review and sign
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-1">•</span>
-                      Uses your free Gemini API key
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-1">•</span>
-                      No personal data is sent
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowPrivacy(!showPrivacy)}
-                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-2"
-              >
-                <InfoIcon /> {showPrivacy ? "Hide" : "View"} Privacy Details
-              </button>
-
-              {showPrivacy && (
-                <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-600 text-sm text-gray-300 whitespace-pre-wrap">
-                  {getNexusLogicPrivacyDisclosure()}
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <ToolCardButton
-                  className="flex-1"
-                  type="button"
-                  onClick={handleConsent}
-                >
-                  <CheckIcon /> I Understand, Continue
-                </ToolCardButton>
-              </div>
-            </div>
-          )}
-
-          {/* Step: Input */}
-          {step === "input" && (
-            <div className="space-y-6">
-              {/* AI Setup Message */}
-              {!isAnyAIAvailable() && (
-                <div className="p-4 bg-amber-900/30 rounded-xl border border-amber-600/50">
-                  <div className="flex items-start gap-3">
-                    <span className="text-xl">💡</span>
-                    <div className="text-sm text-amber-100">
-                      <p className="font-semibold mb-1">
-                        AI Required for Analysis
-                      </p>
-                      <p className="text-amber-200">
-                        Click the <strong>AI Status button</strong> in the
-                        header above to load your secure Local AI (100% private)
-                        or enter your Gemini API key.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Conditions */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Primary Condition (Service-Connected)
-                </label>
-                <input
-                  type="text"
-                  value={primaryCondition}
-                  onChange={(e) => setPrimaryCondition(e.target.value)}
-                  placeholder="e.g., PTSD, Lumbar Strain, Diabetes Type II"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex items-center justify-center">
-                <div className="flex items-center gap-2 text-purple-400">
-                  <LinkIcon />
-                  <span className="text-sm">causes or aggravates</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Secondary Condition (Claimed)
-                </label>
-                <input
-                  type="text"
-                  value={secondaryCondition}
-                  onChange={(e) => setSecondaryCondition(e.target.value)}
-                  placeholder="e.g., Sleep Apnea, Radiculopathy, Hypertension"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              {error && (
-                <div className="p-4 bg-red-900/20 rounded-xl border border-red-500/20 text-red-300 text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <ToolCardButton
-                  className="flex-1"
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={
-                    !apiKey ||
-                    !primaryCondition.trim() ||
-                    !secondaryCondition.trim()
-                  }
-                >
-                  <SparklesIcon /> Generate Doctor's Packet
-                </ToolCardButton>
-              </div>
-            </div>
-          )}
-
-          {/* Step: Loading */}
-          {step === "loading" && (
-            <div className="flex flex-col items-center justify-center py-16 space-y-6">
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-purple-500/20 rounded-full animate-spin">
-                  <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-purple-500 rounded-full"></div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <BrainIcon />
-                </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Researching Medical Connection...
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Analyzing pathophysiological pathways between
-                  <br />
-                  <span className="text-purple-300">
-                    {primaryCondition}
-                  </span>{" "}
-                  and{" "}
-                  <span className="text-purple-300">{secondaryCondition}</span>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step: Error */}
-          {step === "error" && (
-            <div className="space-y-6">
-              <div className="p-6 bg-red-900/20 rounded-xl border border-red-500/20 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
-                  <AlertIcon />
-                </div>
-                <h3 className="text-xl font-semibold text-red-300 mb-2">
-                  No Medical Link Found
-                </h3>
-                <p className="text-gray-300 text-sm">{error}</p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-                <ToolCardButton
-                  className="flex-1"
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setStep("input");
-                  }}
-                >
-                  Try Different Conditions
-                </ToolCardButton>
-              </div>
-            </div>
-          )}
-
-          {/* Step: Result */}
-          {step === "result" && packetData && (
-            <div className="space-y-6 print:text-black print:bg-white">
-              {/* Success Header */}
-              <div className="flex items-center justify-between flex-wrap gap-4 print:hidden">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`px-3 py-1 rounded-full border text-sm font-medium ${getStrengthColor(packetData.data.strength)}`}
-                  >
-                    {packetData.data.strength?.toUpperCase()} LINK
-                  </div>
-                  <span className="text-gray-400 text-sm">
-                    Generated {new Date().toLocaleTimeString()}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handlePrint}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
-                  >
-                    <PrintIcon /> Print
-                  </button>
-                  <button
-                    onClick={handleDownloadTxt}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
-                  >
-                    <DownloadIcon /> Download TXT
-                  </button>
-                </div>
-              </div>
-
-              {/* Conditions Summary */}
-              <div className="p-4 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-500/20 print:border-black print:border print:bg-gray-100">
-                <div className="flex items-center gap-4 text-center">
-                  <div className="flex-1 p-3 bg-gray-800/50 rounded-lg print:bg-gray-200">
-                    <div className="text-xs text-gray-400 print:text-gray-600 mb-1">
-                      Primary (Service-Connected)
-                    </div>
-                    <div className="font-semibold text-white print:text-black">
-                      {primaryCondition}
-                    </div>
-                  </div>
-                  <div className="text-purple-400 print:text-black">
-                    <LinkIcon />
-                  </div>
-                  <div className="flex-1 p-3 bg-gray-800/50 rounded-lg print:bg-gray-200">
-                    <div className="text-xs text-gray-400 print:text-gray-600 mb-1">
-                      Secondary (Claimed)
-                    </div>
-                    <div className="font-semibold text-white print:text-black">
-                      {secondaryCondition}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mechanism Summary */}
-              <div className="p-5 bg-gray-800/50 rounded-xl border border-gray-600 print:bg-gray-100 print:border-black">
-                <h3 className="font-semibold text-white print:text-black mb-3 flex items-center gap-2">
-                  <BrainIcon /> Medical Mechanism
-                </h3>
-                <p className="text-gray-300 print:text-black leading-relaxed">
-                  {packetData.data.mechanism_summary}
-                </p>
-              </div>
-
-              {/* Key Pathways */}
-              {packetData.data.key_pathways?.length > 0 && (
-                <div className="p-5 bg-gray-800/50 rounded-xl border border-gray-600 print:bg-gray-100 print:border-black">
-                  <h3 className="font-semibold text-white print:text-black mb-3">
-                    Pathophysiological Pathways
-                  </h3>
-                  <ul className="space-y-3">
-                    {packetData.data.key_pathways.map((pathway, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-3 text-gray-300 print:text-black"
-                      >
-                        <span className="flex-shrink-0 w-6 h-6 bg-purple-500/20 print:bg-gray-200 rounded-full flex items-center justify-center text-purple-300 print:text-black text-sm font-medium">
-                          {i + 1}
-                        </span>
-                        {pathway}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Literature Topics */}
-              {packetData.data.literature_topics?.length > 0 && (
-                <div className="p-5 bg-gray-800/50 rounded-xl border border-gray-600 print:bg-gray-100 print:border-black">
-                  <h3 className="font-semibold text-white print:text-black mb-3">
-                    Supporting Medical Literature
-                  </h3>
-                  <ul className="space-y-2">
-                    {packetData.data.literature_topics.map((topic, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-gray-300 print:text-black text-sm"
-                      >
-                        <DocumentIcon />
-                        {topic}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Risk Factors */}
-              {packetData.data.risk_factors?.length > 0 && (
-                <div className="p-5 bg-amber-900/20 rounded-xl border border-amber-500/20 print:bg-gray-100 print:border-black">
-                  <h3 className="font-semibold text-amber-300 print:text-black mb-3">
-                    Relevant Risk Factors
-                  </h3>
-                  <ul className="space-y-2">
-                    {packetData.data.risk_factors.map((factor, i) => (
-                      <li
-                        key={i}
-                        className="text-gray-300 print:text-black text-sm flex items-start gap-2"
-                      >
-                        <span className="text-amber-400 print:text-black">
-                          •
-                        </span>
-                        {factor}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Doctor's Template */}
-              <div className="p-5 bg-green-900/20 rounded-xl border border-green-500/20 print:bg-gray-100 print:border-black">
-                <h3 className="font-semibold text-green-300 print:text-black mb-3 flex items-center gap-2">
-                  <DocumentIcon /> Physician Template Letter
-                </h3>
-                <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700 print:bg-white print:border-black font-mono text-sm text-gray-200 print:text-black whitespace-pre-wrap">
-                  {formatDoctorLetter(
-                    packetData.data,
-                    primaryCondition,
-                    secondaryCondition,
-                  )}
-                </div>
-              </div>
-
-              {/* Notes */}
-              {packetData.data.notes && (
-                <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-600 print:bg-gray-100 print:border-black">
-                  <h4 className="font-semibold text-white print:text-black mb-2 flex items-center gap-2">
-                    <InfoIcon /> Important Notes
-                  </h4>
-                  <p className="text-gray-300 print:text-black text-sm">
-                    {packetData.data.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Disclaimer */}
-              <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700 text-xs text-gray-400 print:text-gray-600 print:border-black">
-                <strong>Disclaimer:</strong> This document is provided for
-                informational purposes only and does not constitute medical
-                advice, diagnosis, or treatment. A qualified physician must
-                review this information and make their own independent medical
-                determination. Generated by Vet-Rate.org.
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 print:hidden">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setPacketData(null);
-                    setStep("input");
-                  }}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-medium transition-all"
-                >
-                  Generate Another Packet
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      )}
+    </ResponsiveModal>
   );
 }
