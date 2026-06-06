@@ -512,7 +512,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             🗺️ {t("tools", "claimNavigator")}
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded animate-pulse">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded animate-pulse">
                               {t("common", "new").toUpperCase()}
                             </span>
                           </span>
@@ -577,7 +577,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             🎖️ BDD Builder
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                               NEW
                             </span>
                           </span>
@@ -915,7 +915,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             💼 {t("tools", "tdiuBuilder")}
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                               100%
                             </span>
                           </span>
@@ -1280,7 +1280,7 @@ function Header({
           {/* Community Roadmap Button */}
           <button
             onClick={onCommunityRoadmapClick}
-            className="inline-flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
+            className="inline-flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
             aria-label="Community Roadmap"
           >
             <svg
@@ -1303,7 +1303,7 @@ function Header({
           {/* Feature Request Button */}
           <button
             onClick={onFeatureRequestClick}
-            className="inline-flex items-center justify-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
+            className="inline-flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
             aria-label={t("buttons", "featureRequest")}
           >
             <svg

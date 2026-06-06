@@ -849,7 +849,7 @@ html.dark .bg-gray-100 {
   background-color: #1a3d2e !important; /* forest green-800 */
 }
 
-html.dark .text-gray-900:not(.dark\:text-gray-900) {
+html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -1329,7 +1329,7 @@ html.dark .hover\:border-indigo-300:hover {
 }
 
 /* Gray text in dark mode */
-html.dark .text-gray-900:not(.dark\:text-gray-900) {
+html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -1353,14 +1353,14 @@ html.dark .text-gray-500 {
 html.dark
   a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
     .bg-green-600
-  ):not(.bg-sky-600) {
+  ):not(.bg-sky-600):not(.bg-amber-700) {
   color: #93c5fd;
 }
 
 html.dark
   a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
     .bg-green-600
-  ):not(.bg-sky-600):hover {
+  ):not(.bg-sky-600):not(.bg-amber-700):hover {
   color: #bfdbfe;
 }
 

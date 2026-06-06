@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vet-Rate.org - Cloud Sync Manager Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
@@ -242,7 +242,7 @@ const CloudSyncManager = ({ onClose }) => {
             <div>
               <h2 className="text-xl font-bold text-blue-300 mb-2">
                 Your Data, Your Cloud, Zero Liability{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                   BETA
                 </span>
               </h2>

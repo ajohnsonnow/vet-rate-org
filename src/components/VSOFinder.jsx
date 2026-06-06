@@ -259,7 +259,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   className="text-2xl sm:text-3xl font-bold"
                 >
                   {t("vsoFinder", "title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     {t("common", "beta")}
                   </span>
                 </h2>

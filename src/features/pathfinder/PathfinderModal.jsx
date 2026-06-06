@@ -80,7 +80,7 @@ export default function PathfinderModal() {
                   <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
                     AI
                   </span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                     BETA
                   </span>
                 </h2>

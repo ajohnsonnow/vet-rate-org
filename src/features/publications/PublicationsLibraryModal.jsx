@@ -38,7 +38,7 @@ export default function PublicationsLibraryModal() {
             className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
           >
             📚 Publications Library{" "}
-            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               BETA
             </span>
           </h2>

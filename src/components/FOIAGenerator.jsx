@@ -467,6 +467,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="First Name"
               value={formData.firstName}
               onChange={(e) => updateField("firstName", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -479,6 +480,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="Last Name"
               value={formData.lastName}
               onChange={(e) => updateField("lastName", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -494,6 +496,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="Last 4 of SSN"
               value={formData.ssn}
               onChange={(e) =>
                 updateField(
@@ -513,6 +516,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="date"
+              aria-label="Date of Birth"
               value={formData.dob}
               onChange={(e) => updateField("dob", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -527,6 +531,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           </label>
           <input
             type="text"
+            aria-label="VA File Number"
             value={formData.vaFileNumber}
             onChange={(e) => updateField("vaFileNumber", e.target.value)}
             placeholder="Leave blank if same as SSN"
@@ -546,6 +551,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           </label>
           <input
             type="text"
+            aria-label="Street Address"
             value={formData.address}
             onChange={(e) => updateField("address", e.target.value)}
             className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -560,6 +566,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="City"
               value={formData.city}
               onChange={(e) => updateField("city", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -572,6 +579,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="State"
               value={formData.state}
               onChange={(e) =>
                 updateField("state", e.target.value.toUpperCase().slice(0, 2))
@@ -588,6 +596,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="text"
+              aria-label="ZIP Code"
               value={formData.zip}
               onChange={(e) =>
                 updateField(
@@ -609,6 +618,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="tel"
+              aria-label="Phone Number"
               value={formData.phone}
               onChange={(e) => updateField("phone", e.target.value)}
               placeholder="(XXX) XXX-XXXX"
@@ -622,6 +632,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </label>
             <input
               type="email"
+              aria-label="Email Address"
               value={formData.email}
               onChange={(e) => updateField("email", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -797,6 +808,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                 </label>
                 <input
                   type="month"
+                  aria-label="Date range start (month and year)"
                   value={formData.startDate}
                   onChange={(e) => updateField("startDate", e.target.value)}
                   className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -808,6 +820,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                 </label>
                 <input
                   type="month"
+                  aria-label="Date range end (month and year)"
                   value={formData.endDate}
                   onChange={(e) => updateField("endDate", e.target.value)}
                   className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -1166,7 +1179,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                     className="text-xl font-bold text-white"
                   >
                     The Keysmith{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                       BETA
                     </span>
                   </h2>

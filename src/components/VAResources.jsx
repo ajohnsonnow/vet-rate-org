@@ -449,7 +449,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                 <Globe className="h-8 w-8" />
                 <h2 id="va-resources-title" className="text-3xl font-bold">
                   {t("vaResources.title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     {t("common.beta")}
                   </span>
                 </h2>

@@ -113,7 +113,13 @@ export default function ResponsiveModal({
           )
         )}
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+        {/* tabIndex=0 gives keyboard users arrow-key access to the scroll region
+            even when a modal's body holds no focusable control (axe
+            scrollable-region-focusable). */}
+        <div
+          tabIndex={0}
+          className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+        >
           {children}
         </div>
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { triggerBlobDownload } from "../utils/sanitize";
 import {
@@ -6035,7 +6035,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           📋 {t("formsHelper", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
             {t("formsHelper", "beta")}
           </span>
         </h2>

@@ -929,7 +929,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                 >
                   Symptom Logger
                   <AIStatusBadge status={aiStatus} />
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                     BETA
                   </span>
                 </h2>
@@ -1104,6 +1104,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   </label>
                   <input
                     type="date"
+                    aria-label="Date"
                     value={newLog.date}
                     onChange={(e) =>
                       setNewLog((prev) => ({ ...prev, date: e.target.value }))
@@ -1117,6 +1118,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   </label>
                   <input
                     type="time"
+                    aria-label="Time"
                     value={newLog.time}
                     onChange={(e) =>
                       setNewLog((prev) => ({ ...prev, time: e.target.value }))
@@ -1132,6 +1134,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   </label>
                   <input
                     type="range"
+                    aria-label="Severity, 1 to 10"
                     min="1"
                     max="10"
                     value={newLog.severity}
@@ -1205,6 +1208,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                     </label>
                     <input
                       type="range"
+                      aria-label="Pain scale, 0 to 10"
                       min="0"
                       max="10"
                       value={newLog.painScale}
@@ -1260,6 +1264,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                     🌤️ Weather (optional)
                   </label>
                   <select
+                    aria-label="Weather"
                     value={newLog.weather}
                     onChange={(e) =>
                       setNewLog((prev) => ({
@@ -1291,6 +1296,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   </label>
                   <input
                     type="range"
+                    aria-label="Stress level, 0 to 10"
                     min="0"
                     max="10"
                     value={newLog.stressLevel}

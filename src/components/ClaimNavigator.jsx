@@ -1029,7 +1029,7 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
             <h2 className="text-xl font-bold text-white flex items-center gap-3">
               <Target className="w-6 h-6 text-amber-500" />
               Claim Triage Wizard{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                 BETA
               </span>
             </h2>

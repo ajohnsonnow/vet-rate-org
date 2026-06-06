@@ -78,7 +78,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
                 href="https://www.goatcounter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 GoatCounter
               </a>
@@ -109,7 +109,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
                 href="https://www.goatcounter.com/help/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 {t("privacyPolicy", "analyticsGDPR").split(".")[1]?.trim() ||
                   "Read their privacy policy"}

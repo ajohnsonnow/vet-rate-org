@@ -243,7 +243,7 @@ const DbqFinder = ({ onClose }) => {
             <div>
               <h2 id="dbq-finder-title" className="text-2xl font-bold">
                 {t("dbqFinder", "title")}{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                   {t("common", "beta")}
                 </span>
               </h2>

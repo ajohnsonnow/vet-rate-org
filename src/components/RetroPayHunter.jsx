@@ -602,7 +602,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
                 AI
               </span>
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                 BETA
               </span>
             </h2>

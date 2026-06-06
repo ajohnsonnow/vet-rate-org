@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
@@ -1199,7 +1199,7 @@ Return ONLY the JSON object, no explanation.`,
                   className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
                 >
                   📁 {t("myPacketSection.title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     BETA
                   </span>
                 </h2>

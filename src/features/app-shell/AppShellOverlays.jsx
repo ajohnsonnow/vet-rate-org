@@ -20,7 +20,7 @@ export default function AppShellOverlays({ userConditions }) {
   return (
     <>
       <CrisisListener />
-      <QuickExitButton position="bottom-left" variant="subtle" />
+      <QuickExitButton position="floating" variant="subtle" />
       <SecurityBadge />
       <MobileBottomNavWrapper userConditions={userConditions} />
     </>
