@@ -1913,7 +1913,7 @@ const TacticalCalculator = ({
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t("tacticalCalc", "newRatingPercentage")}
                       </label>
-                      <div className="grid grid-cols-6 gap-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                         {ratingOptions
                           .filter((r) => r > 0)
                           .map((r) => (
