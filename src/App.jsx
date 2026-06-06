@@ -34,6 +34,8 @@ import { useDisabilitySearch } from "./features/search/useDisabilitySearch";
 import { useAppStateSnapshot } from "./features/feedback/useAppStateSnapshot";
 import AIAssistantBubble from "./features/ai-assistant/AIAssistantBubble";
 import AppFooter from "./features/footer/AppFooter";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import CrashCanary from "./debug/CrashCanary";
 import "./index.css";
 
 function App() {
@@ -93,19 +95,22 @@ function App() {
         context={{ count: results.length, query: searchTerm }}
       />
 
-      <HomeMain
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        results={results}
-        selectedResult={selectedResult}
-        setSelectedResult={setSelectedResult}
-        isLoading={isLoading}
-        error={error}
-        setHasSearched={setHasSearched}
-        handleClearSearch={handleClearSearch}
-        handleBuildStatementFromSearch={handleBuildStatementFromSearch}
-        handleSecondaryConditionClick={handleSecondaryConditionClick}
-      />
+      <ErrorBoundary name="Home">
+        <HomeMain
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          results={results}
+          selectedResult={selectedResult}
+          setSelectedResult={setSelectedResult}
+          isLoading={isLoading}
+          error={error}
+          setHasSearched={setHasSearched}
+          handleClearSearch={handleClearSearch}
+          handleBuildStatementFromSearch={handleBuildStatementFromSearch}
+          handleSecondaryConditionClick={handleSecondaryConditionClick}
+        />
+        {import.meta.env.DEV && <CrashCanary />}
+      </ErrorBoundary>
 
       {/* Floating Bug Report Button */}
       <FloatingBugButton
@@ -134,7 +139,9 @@ function App() {
 export default function AppWrapper() {
   return (
     <AppProviders>
-      <App />
+      <ErrorBoundary level="app" name="Vet-Rate.org">
+        <App />
+      </ErrorBoundary>
     </AppProviders>
   );
 }
