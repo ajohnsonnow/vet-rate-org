@@ -686,13 +686,12 @@ const VAResources = ({ onClose, onReportBug }) => {
         </div>
       </ResponsiveModal>
 
-      {/* Regulations Reference Modal */}
+      {/* Regulations Reference Modal — portals to document.body and lifts
+          itself above this shell via zIndex={70}; no wrapper needed. */}
       {showRegulationsReference && (
-        <div className="relative z-[70]">
-          <RegulationsReference
-            onClose={() => setShowRegulationsReference(false)}
-          />
-        </div>
+        <RegulationsReference
+          onClose={() => setShowRegulationsReference(false)}
+        />
       )}
     </>
   );
