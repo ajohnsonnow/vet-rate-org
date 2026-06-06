@@ -140,6 +140,39 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Grid mobile workstream — reporting-only detector + per-severity apply ✅
+  (`8e7b931`→`da3a205` detector; `7ea0c60` high; `e9a34f3` medium; `cc21391` ambiguous):**
+  the codemod-assisted, human-reviewed grid pass (plan Layer 3, "never bulk auto-commit").
+  - **Detector (`scripts/grid-mobile-audit.mjs`, reporting-only):** className-anchored,
+    string-aware (balanced-brace for cn()/clsx()/ternary; skips single-quoted strings so
+    JSX apostrophes — you're, don't — can't be mistaken for delimiters). Classifies each
+    unprefixed `grid-cols-N` (N≥2 = what a 360px phone renders) by mobile column count:
+    **high** 4+, **medium** 3, **low** 2; plus an `already-responsive` flag and a bounded
+    **subtree col-span scan** (next ~900 chars) that demotes fixed-child layouts to
+    ambiguous. `da3a205` fixed a real gap in `8e7b931`: child col-spans (on the grid's
+    *children*, not its own className) were mislabeled clean. Emits
+    `docs/audit/grid-mobile-worklist.{json,md}`. **72 findings / 49 files — 69 clean
+    (3 high, 10 medium, 56 low) + 3 ambiguous.**
+  - **High (`7ea0c60`)** — 3 genuine content grids; content-aware ladders (1-col would
+    waste space for small chips/cards): DemoDashboard `grid-cols-5 → 2/3/5`, PainPainter
+    `grid-cols-4 → 2/sm:4`, TacticalCalculator `grid-cols-6 → 3/sm:6`. e2e 153/153.
+  - **Medium (`e9a34f3`)** — 7 of 10 `grid-cols-3` grids fixed (stack for cards-with-desc /
+    form toggles: CFileClaimsCards, MillionDollarDashboard → `1/sm:3`; two-up for text
+    chips: AIModelQuickLoad, KnowledgeBaseStatus, SymptomLogger, TheTribunal,
+    TokenLimitConfig → `2/sm:3`). **Reviewed & kept** (acceptable at 360px): LanguageSelector
+    L527 (3 even short-label buttons), PresetSelector L78 (`text-xs` info pairs that fit),
+    TacticalCalculator L930 (3 compact number stat cards). e2e 153/153.
+  - **Ambiguous (`cc21391`)** — FOIAGenerator L556 address row hand-fixed
+    (`grid-cols-6` + col-span-3/1/2 → `grid-cols-2 sm:grid-cols-6` with responsive col-spans;
+    phone = City full / State|ZIP). **MyPacket L3281 reviewed & kept** — already a deliberate
+    `grid-cols-2 sm:flex` responsive layout (the col-span-2 select is intentional). e2e 153/153.
+  - **Low bucket (56 × `grid-cols-2`):** intentionally NOT mass-rewritten — 2 columns on a
+    360px phone is generally acceptable and many already carry an `sm:/md:` up-ladder (the
+    base IS the deliberate mobile layout). Per-site only if a future visual check flags one.
+  - **Deferred (structural two-pane, not a grid-prefix fix):** **WhatIfSandbox L369** —
+    `grid grid-cols-4 h-[calc(90vh-250px)]` is a desktop drag-drop sidebar+canvas (col-span-1
+    library + canvas, fixed height); needs a real mobile redesign (tabs / collapsible pane),
+    same class as the deferred UserManual/FeatureLookup/BugLookup two-pane shells.
 - **Cluster H migrated — all ✅ (H1 `d7ad28e`, H2 `9585dff`, H3 `97906b2`; three sub-commits,
   e2e after each where listable):** the critic-added surfaces surfaced during the Cluster G review.
   Full mobile suite grew 147 → 153 (+6 = 2 new event-listable labels × 3 viewports; H3 is opened
