@@ -269,6 +269,24 @@ RedTeam (already on ResponsiveModal).
       corrected to reflect the shell. **Has a `mobile.spec.ts` entry** (MODALS, overflow-only — no sticky
       footer CTA): "Shark Radar" / `openSharkRadar`. Gate: ESLint 0 errors, `tsc` clean, 809 unit tests
       green, **9/9 Shark Radar mobile tests pass @360/390/768 × chromium/firefox/mobile-chrome**.
+- [x] Bucket A (hand-apply a11y — overlays where a ResponsiveModal swap would be *wrong*: a crisis
+      alertdialog, a command palette, nav disclosure menus, a fullscreen game). **Audit found most
+      already compliant** from the S9 primitives pass: **CrisisModal** (`role="alertdialog"`, aria-modal,
+      aria-labelledby + aria-describedby, focus-trap with ESC intentionally blocked since it is
+      non-dismissible, scroll-lock, `aria-live` announcement), **AIConsentModal**, **AboutUs** main, and
+      **GlobalCommandSearch** (`role="dialog"` + `aria-label="Quick search"` + trap + ESC + scroll-lock)
+      already carry the full contract — no change. Gaps closed this chunk: **VADataCenter** and
+      **StressReliefDivision** (DOOM easter-egg) each had the trap + dialog semantics but no background
+      scroll-lock → added `useBodyScrollLock` (gated on `!embeddedMode` / `isActive`). **Header mobile
+      drawer** was a themed slide-in overlay with no dialog semantics → added `role="dialog"` +
+      `aria-modal` + `aria-labelledby="mobile-menu-title"`, a `mobileMenuRef` focus-trap (ESC closes,
+      focus restores to the hamburger) and `useBodyScrollLock(showMobileMenu)`; dropped the now-unused
+      default `React` import (automatic JSX runtime). The Header **Tools/Resources dropdowns** already
+      expose `aria-expanded` + `aria-haspopup` with click-away close (disclosure pattern, not trapped) —
+      no change. **No `mobile.spec.ts` entry** — none are `open*`-event modals (the drawer opens from the
+      hamburger; the rest are flow/prop-gated), so **manual-verify**; the drawer's trap/ESC/restore reuses
+      the unit-tested `useFocusTrap` / `useBodyScrollLock` primitives. Gate: ESLint 0 errors, `tsc` clean,
+      809 unit tests green.
 - [ ] **Deferred this pass (examined, not mechanical — need their own focused chunk):**
       **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
       `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed
@@ -282,8 +300,9 @@ RedTeam (already on ResponsiveModal).
       (a small theming fix) before migration. **ZonkButton** reward card — panel background is a
       dynamic celebratory color (`getColorClasses`), not the standard `bg-white dark:bg-gray-*`; a
       deliberate non-standard design, hand-apply only.
-- [ ] Chunks 11+ — migrate remaining standard modals (batched by cluster)
-- [ ] Navigation — Header drawer + Tools/Resources dropdowns + AboutUs VersionDropUp
+- [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
+      forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
+- [ ] Navigation — AboutUs VersionDropUp (Header drawer + Tools/Resources dropdowns done in Bucket A)
 - [ ] Passive/aria — PWA banners, Toast, MobileBottomNav, AccessibilityMenu
 - [ ] Tests — Playwright trap/ESC/restore + axe; SR manual checklist
 - [ ] CI wiring — flagged for owner authorization

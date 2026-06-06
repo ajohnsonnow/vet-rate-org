@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AccessibilityMenu from "./AccessibilityMenu";
 import LanguageSelector from "./LanguageSelector";
 import HelperModeToggle from "./HelperModeToggle";
@@ -10,6 +10,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useHelperMode } from "../contexts/HelperModeContext";
 import { hasUnsavedChanges } from "../utils/dataPersistence";
 import { useColorSchemas } from "../hooks/useColorSchemas";
+import useFocusTrap from "../hooks/useFocusTrap";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { useLanguage } from "../contexts/LanguageContext";
 
 function Header({
@@ -82,6 +84,16 @@ function Header({
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [shouldPulseBackup, setShouldPulseBackup] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  // The mobile drawer is a modal overlay, so lock background scroll and trap
+  // focus while it is open (ESC closes it). The desktop Tools/Resources menus
+  // are disclosure dropdowns (aria-expanded + click-away), not trapped.
+  useBodyScrollLock(showMobileMenu);
+  useFocusTrap(mobileMenuRef, {
+    active: showMobileMenu,
+    onEscape: () => setShowMobileMenu(false),
+  });
 
   // Check for unsaved changes periodically
   useEffect(() => {
@@ -1319,13 +1331,19 @@ function Header({
             onClick={() => setShowMobileMenu(false)}
           >
             <div
+              ref={mobileMenuRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mobile-menu-title"
               className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Mobile Menu Header */}
               <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10">
                 <div>
-                  <h2 className="text-lg font-bold">Menu</h2>
+                  <h2 id="mobile-menu-title" className="text-lg font-bold">
+                    Menu
+                  </h2>
                   <p className="text-xs text-white/80">39 Pro Tools</p>
                 </div>
                 <button
