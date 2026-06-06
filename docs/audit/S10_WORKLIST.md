@@ -105,9 +105,16 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
   (z-9999), PublicationsLibrary→PublicationDetailsModal, Pathfinder→File-Drop-In, plus
   CloudSyncManager + DbqBrowser/PreFillModal/DbqShareMenu (BackupManager-nested follow-ups
   discovered during F3). See progress log for detail.
-- **Cluster G — graphic/SVG reflow (hardest; may need layout work, not just shell):**
-  BodyMapSelector, WebOfConditions (force graph), EvidenceGapVisualizer, UserManual (two-pane
-  sidebar must stack), BlueButtonXRay (dense tables), EvidenceTimeline.
+- **Cluster G — graphic/SVG reflow (hardest; may need layout work, not just shell): all ✅**
+  (G1 `8f6c787`, G2 `6cc8794`). G1 = the three standalone visualizers (WebOfConditions force
+  graph → responsive graph/panel stack, EvidenceGapVisualizer, BlueButtonXRay dense tables).
+  G2 = the two embedded full-page components whose chrome lived in cluster wrappers
+  (BodyMapSelector → SVG container drops to min-h-[340px] on phones; EvidenceTimeline → canvas
+  stays w-full/maxWidth:100%). UserManual is **intentionally NOT shell-migrated** — its two-pane
+  (sidebar + content) independent-scroll layout does not fit the single-scroll ResponsiveModal
+  body and it is already mobile-responsive (flex-col stack + mobile header + sidebar toggle +
+  scroll lock + ESC); it passes the overflow contract as-is, so a full swap is deferred to avoid
+  regressing the desktop two-pane scroll. See progress log for detail.
 - **Critic-added surfaces to fold in:** RegulationsReference (opened via VAResources state, not
   an event), TermsOfServicePage (full-page variant ≠ TermsOfServiceModal), VisionSimulator
   (AppModals:126), StressReliefDivision (z-9999 easter egg), FeatureLookup/BugLookup (admin shells).
@@ -125,6 +132,34 @@ backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend
 
 ## S10 progress (live)
 
+- **Cluster G migrated — all ✅ (G1 `8f6c787`, G2 `6cc8794`; two sub-commits, e2e after each):**
+  the graphic/SVG-reflow modals — the cluster flagged as hardest because several needed internal
+  layout work, not just a shell swap. Full mobile suite grew 129 → 147 (+18 = 6 new modal labels
+  × 3 viewports).
+  1. **G1 (`8f6c787`)** — the three **standalone** visualizers (own their chrome, opened via bare
+     events). **WebOfConditions**: light yellow header slot over a permanently-dark `gray-900`
+     full-bleed body; the force-graph/details pane now stacks `flex-col → sm:flex-row`
+     (`w-full → sm:w-80`) and dimensions track `containerRef` + a resize listener so the graph
+     reflows on a phone. **EvidenceGapVisualizer**: permanently-dark purple modal (opaque gradient
+     via `className`); the 38 CFR disclaimer de-stickied into the body as the last element (a dark
+     panel avoids the light footer slot). **BlueButtonXRay**: standard light/dark modal; dropped
+     the `overflow-y-auto flex-1` body wrapper (kept the inner `max-w-4xl mx-auto`); CTAs surface
+     in-body only after a Blue Button file parses. All three: header-close-only / no fresh-open
+     footer CTA → MODALS (overflow probe).
+  2. **G2 (`6cc8794`)** — the two **embedded** full-page components whose modal chrome used to live
+     in their cluster wrappers. **BodyMapSelector** (was wrapped by BodyMappingCluster in a
+     `fixed inset-0` + `min-h-screen` + `max-w-6xl` backdrop) now owns a `size="2xl"` dark shell;
+     its title/description/close-X moved into a custom header slot and the SVG container drops to
+     `min-h-[340px] sm:min-h-[500px]` so the body map fits a phone. **EvidenceTimeline** (was
+     wrapped by SpecializedToolsCluster in a `max-w-6xl max-h-[90vh]` backdrop) now owns a
+     `size="2xl"` dark shell; the slate gradient bar moved into the header slot, the duplicate
+     in-body `h2` was dropped, and the canvas stays `w-full`/`maxWidth:100%` so it scales without
+     overflow. Both wrappers now render the component bare. **UserManual** was deliberately left on
+     its bespoke two-pane shell — a sidebar + content **independent-scroll** layout that the
+     single-scroll ResponsiveModal body cannot host without regressing the desktop two-pane scroll;
+     it is already mobile-responsive (flex-col stack, mobile header + sidebar toggle, body-scroll
+     lock, ESC) and was verified to pass the overflow contract as-is. All three G2 labels →
+     MODALS.
 - **Cluster F migrated — all ✅ (F1 `e603d00` → F9 `7e1fc4a`; nine sub-commits, one per
   surface group, e2e after each):** nested-children modals where a child overlay had to become
   its own body-portaled ResponsiveModal to clear its parent shell. Stacking is now purely the
