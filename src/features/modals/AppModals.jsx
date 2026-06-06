@@ -32,13 +32,26 @@ import AdminPanel from "../../components/AdminPanel";
 import PWAInstallButton from "../../components/PWAInstallButton";
 import TermsOfServiceModal from "../../components/TermsOfServiceModal";
 import LoadingBunker from "../../components/LoadingBunker";
+import ErrorBoundary from "../../components/common/ErrorBoundary";
 import { dispatchToolById } from "../../utils/dispatchToolById";
+
+/**
+ * Cluster — wraps a single modal cluster in its own ErrorBoundary so a crash
+ * in one tool shows an inline fallback instead of taking down its siblings or
+ * the main app shell (docs/SPRINT_PLAN_S9-S17.md, S11). Module-scoped so it is
+ * a stable component type across renders.
+ */
+function Cluster({ name, children }) {
+  return <ErrorBoundary name={name}>{children}</ErrorBoundary>;
+}
 
 /**
  * AppModals — all lazy modal clusters mounted under a single
  * <Suspense> boundary (audit #28, B21). Each child either has its
  * own `open*` window-event listener or takes a callback prop; first
  * open triggers its chunk fetch with <LoadingBunker /> as fallback.
+ * Each cluster is additionally isolated behind its own ErrorBoundary
+ * (audit S11) so a single tool's crash can't blank the rest.
  *
  * Props:
  *   - userConditions / setUserConditions: passed to DiscoverCluster
@@ -60,79 +73,143 @@ export default function AppModals({
   return (
     <Suspense fallback={<LoadingBunker />}>
       {/* Legal/info modals — Privacy, About, Contact, Terms */}
-      <LegalPages />
+      <Cluster name="Legal & Info">
+        <LegalPages />
+      </Cluster>
 
-      <DiscoverCluster
-        userConditions={userConditions}
-        setUserConditions={setUserConditions}
-      />
+      <Cluster name="Discover Tools">
+        <DiscoverCluster
+          userConditions={userConditions}
+          setUserConditions={setUserConditions}
+        />
+      </Cluster>
 
-      <MyPacketModal />
+      <Cluster name="My Packet">
+        <MyPacketModal />
+      </Cluster>
 
-      <PublicationsLibraryModal />
+      <Cluster name="Publications Library">
+        <PublicationsLibraryModal />
+      </Cluster>
 
-      <EvidenceInvestigationCluster />
+      <Cluster name="Evidence Investigation">
+        <EvidenceInvestigationCluster />
+      </Cluster>
 
-      <MusterCallFlow
-        onOpenDD214Analyzer={() =>
-          window.dispatchEvent(new CustomEvent("openDD214Analyzer"))
-        }
-      />
+      <Cluster name="Muster Call">
+        <MusterCallFlow
+          onOpenDD214Analyzer={() =>
+            window.dispatchEvent(new CustomEvent("openDD214Analyzer"))
+          }
+        />
+      </Cluster>
 
-      <KnowledgeCluster />
+      <Cluster name="Knowledge Base">
+        <KnowledgeCluster />
+      </Cluster>
 
-      <VKBTimelineModal />
+      <Cluster name="VKB Timeline">
+        <VKBTimelineModal />
+      </Cluster>
 
-      <QualityControlCluster />
+      <Cluster name="Quality Control">
+        <QualityControlCluster />
+      </Cluster>
 
-      <PathfinderModal />
+      <Cluster name="Pathfinder">
+        <PathfinderModal />
+      </Cluster>
 
-      <ClaimNavigatorModal />
+      <Cluster name="Claim Navigator">
+        <ClaimNavigatorModal />
+      </Cluster>
 
-      <SystemToolsCluster getAppState={getAppState} />
+      <Cluster name="System Tools">
+        <SystemToolsCluster getAppState={getAppState} />
+      </Cluster>
 
-      <FeedbackHub getAppState={getAppState} />
+      <Cluster name="Feedback">
+        <FeedbackHub getAppState={getAppState} />
+      </Cluster>
 
       {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
-      <AdminLogin />
-      <AdminPanel />
+      <Cluster name="Admin Login">
+        <AdminLogin />
+      </Cluster>
+      <Cluster name="Admin Panel">
+        <AdminPanel />
+      </Cluster>
 
-      <ClaimPrepCluster onToolSelect={dispatchToolById} />
+      <Cluster name="Claim Prep">
+        <ClaimPrepCluster onToolSelect={dispatchToolById} />
+      </Cluster>
 
-      <VaDemoTools />
+      <Cluster name="VA Demo Tools">
+        <VaDemoTools />
+      </Cluster>
 
-      <AdversarialTestingCluster />
+      <Cluster name="Adversarial Testing">
+        <AdversarialTestingCluster />
+      </Cluster>
 
-      <CalculateCluster />
+      <Cluster name="Calculate Tools">
+        <CalculateCluster />
+      </Cluster>
 
-      <BlueButtonXRayModal />
+      <Cluster name="Blue Button X-Ray">
+        <BlueButtonXRayModal />
+      </Cluster>
 
-      <SpecializedToolsCluster />
+      <Cluster name="Specialized Tools">
+        <SpecializedToolsCluster />
+      </Cluster>
 
-      <MaximizeRatingCluster />
+      <Cluster name="Maximize Rating">
+        <MaximizeRatingCluster />
+      </Cluster>
 
-      <AITransparencyCluster />
+      <Cluster name="AI Transparency">
+        <AITransparencyCluster />
+      </Cluster>
 
-      <AppealsToolsCluster />
+      <Cluster name="Appeals Tools">
+        <AppealsToolsCluster />
+      </Cluster>
 
-      <DecisionToolsCluster />
+      <Cluster name="Decision Tools">
+        <DecisionToolsCluster />
+      </Cluster>
 
-      <BodyMappingCluster />
+      <Cluster name="Body Mapping">
+        <BodyMappingCluster />
+      </Cluster>
 
-      <ResourcesCluster />
+      <Cluster name="Resources">
+        <ResourcesCluster />
+      </Cluster>
 
-      <DataManagementCluster />
+      <Cluster name="Data Management">
+        <DataManagementCluster />
+      </Cluster>
 
-      <VisionSimulator />
+      <Cluster name="Vision Simulator">
+        <VisionSimulator />
+      </Cluster>
 
-      <PWAInstallButton />
+      <Cluster name="Install">
+        <PWAInstallButton />
+      </Cluster>
 
-      <TermsOfServiceModal />
+      <Cluster name="Terms of Service">
+        <TermsOfServiceModal />
+      </Cluster>
 
       {updateBanner}
       {whatsNewModal}
 
-      <WorkflowGuidesCluster onToolSelect={dispatchToolById} />
+      <Cluster name="Workflow Guides">
+        <WorkflowGuidesCluster onToolSelect={dispatchToolById} />
+      </Cluster>
     </Suspense>
   );
 }
