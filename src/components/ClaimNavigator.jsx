@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
@@ -1850,109 +1851,117 @@ const EvidenceSection = ({
 // ============================================
 const HelpModal = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 z-60 flex items-center justify-center p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="lg"
+      className="!bg-slate-800 border border-slate-700"
+      labelledBy="claimnav-help-title"
+      header={
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800">
+          <h2 id="claimnav-help-title" className="text-lg font-bold text-white">
             How to Use Claim Navigator
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-slate-400 hover:text-white"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              🎯 The "Big 3" Evidence
-            </h3>
-            <p className="text-slate-300 text-sm">
-              Every successful VA claim needs three things:
-            </p>
-            <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
-              <li>
-                <strong className="text-white">Current Diagnosis</strong> - A
-                doctor says you have this condition
-              </li>
-              <li>
-                <strong className="text-white">In-Service Event</strong> -
-                Something happened during service
-              </li>
-              <li>
-                <strong className="text-white">Nexus Letter</strong> - A doctor
-                links your condition to service
-              </li>
-            </ul>
-          </section>
+      }
+    >
+      <div className="space-y-6">
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">
+            🎯 The "Big 3" Evidence
+          </h3>
+          <p className="text-slate-300 text-sm">
+            Every successful VA claim needs three things:
+          </p>
+          <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
+            <li>
+              <strong className="text-white">Current Diagnosis</strong> - A
+              doctor says you have this condition
+            </li>
+            <li>
+              <strong className="text-white">In-Service Event</strong> -
+              Something happened during service
+            </li>
+            <li>
+              <strong className="text-white">Nexus Letter</strong> - A doctor
+              links your condition to service
+            </li>
+          </ul>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              ⚠️ Critical Deadlines
-            </h3>
-            <p className="text-slate-300 text-sm">
-              The Claim Navigator tracks two critical 1-year deadlines:
-            </p>
-            <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
-              <li>
-                <strong className="text-white">Intent to File (ITF)</strong> -
-                You have 1 year to submit your full claim after filing an ITF
-              </li>
-              <li>
-                <strong className="text-white">Appeal Deadline</strong> - You
-                have 1 year from a decision to appeal
-              </li>
-            </ul>
-            <p className="text-red-400 text-sm mt-2">
-              Missing these deadlines can cost you years of backpay!
-            </p>
-          </section>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">
+            ⚠️ Critical Deadlines
+          </h3>
+          <p className="text-slate-300 text-sm">
+            The Claim Navigator tracks two critical 1-year deadlines:
+          </p>
+          <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
+            <li>
+              <strong className="text-white">Intent to File (ITF)</strong> - You
+              have 1 year to submit your full claim after filing an ITF
+            </li>
+            <li>
+              <strong className="text-white">Appeal Deadline</strong> - You have
+              1 year from a decision to appeal
+            </li>
+          </ul>
+          <p className="text-red-400 text-sm mt-2">
+            Missing these deadlines can cost you years of backpay!
+          </p>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              🛤️ Claim Types
-            </h3>
-            <ul className="space-y-2 text-slate-400 text-sm">
-              <li>
-                <strong className="text-white">Original</strong> - First time
-                filing for this condition
-              </li>
-              <li>
-                <strong className="text-white">Increase</strong> - Your rated
-                condition got worse
-              </li>
-              <li>
-                <strong className="text-white">Secondary</strong> - New
-                condition caused by a rated condition
-              </li>
-              <li>
-                <strong className="text-white">Supplemental</strong> - Denied
-                but have new evidence
-              </li>
-              <li>
-                <strong className="text-white">HLR</strong> - VA made an error
-                (no new evidence)
-              </li>
-            </ul>
-          </section>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">🛤️ Claim Types</h3>
+          <ul className="space-y-2 text-slate-400 text-sm">
+            <li>
+              <strong className="text-white">Original</strong> - First time
+              filing for this condition
+            </li>
+            <li>
+              <strong className="text-white">Increase</strong> - Your rated
+              condition got worse
+            </li>
+            <li>
+              <strong className="text-white">Secondary</strong> - New condition
+              caused by a rated condition
+            </li>
+            <li>
+              <strong className="text-white">Supplemental</strong> - Denied but
+              have new evidence
+            </li>
+            <li>
+              <strong className="text-white">HLR</strong> - VA made an error (no
+              new evidence)
+            </li>
+          </ul>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">💾 Your Data</h3>
-            <p className="text-slate-300 text-sm">
-              All your claim data is stored locally on your device. Nothing is
-              sent to any server. Use the Export/Import buttons to back up your
-              data.
-            </p>
-          </section>
-        </div>
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={onClose}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium py-2 rounded-lg transition-colors"
-          >
-            Got It
-          </button>
-        </div>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">💾 Your Data</h3>
+          <p className="text-slate-300 text-sm">
+            All your claim data is stored locally on your device. Nothing is
+            sent to any server. Use the Export/Import buttons to back up your
+            data.
+          </p>
+        </section>
       </div>
-    </div>
+      <div className="pt-4">
+        <button
+          onClick={onClose}
+          className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium py-2 rounded-lg transition-colors"
+        >
+          Got It
+        </button>
+      </div>
+    </ResponsiveModal>
   );
 };
 

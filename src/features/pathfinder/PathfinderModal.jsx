@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
+import ResponsiveModal from "../../components/common/ResponsiveModal";
 
 const Pathfinder = lazy(() => import("../../components/Pathfinder"));
 
@@ -35,8 +36,6 @@ export default function PathfinderModal() {
     return () => window.removeEventListener("openPathfinder", handler);
   }, []);
 
-  if (!open) return null;
-
   const close = () => {
     setInitialConditions(null);
     setOpen(false);
@@ -62,20 +61,21 @@ export default function PathfinderModal() {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={close}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex-shrink-0 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
+    <ResponsiveModal
+      isOpen={open}
+      onClose={close}
+      size="2xl"
+      labelledBy="pathfinder-modal-title"
+      header={
+        <div className="bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🧭</span>
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2
+                  id="pathfinder-modal-title"
+                  className="text-xl font-bold text-white flex items-center gap-2"
+                >
                   The Pathfinder
                   <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
                     AI
@@ -120,18 +120,17 @@ export default function PathfinderModal() {
             </div>
           </div>
         </div>
-        <div className="overflow-y-auto flex-1 p-4">
-          <Suspense fallback={null}>
-            <Pathfinder
-              onNavigate={handleNavigate}
-              onOpenAISettings={() =>
-                window.dispatchEvent(new CustomEvent("openAISettings"))
-              }
-              initialConditions={initialConditions}
-            />
-          </Suspense>
-        </div>
-      </div>
-    </div>
+      }
+    >
+      <Suspense fallback={null}>
+        <Pathfinder
+          onNavigate={handleNavigate}
+          onOpenAISettings={() =>
+            window.dispatchEvent(new CustomEvent("openAISettings"))
+          }
+          initialConditions={initialConditions}
+        />
+      </Suspense>
+    </ResponsiveModal>
   );
 }
