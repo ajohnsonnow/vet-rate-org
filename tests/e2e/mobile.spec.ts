@@ -186,6 +186,16 @@ const MODALS = [
   // and h3. Close lives in the shell's sticky header (no fresh-open footer CTA),
   // so it asserts the overflow contract here.
   { label: "Vision Simulator", event: "openVisionSimulator" },
+  // Cluster S12: three BVA-data tool modals migrated from the legacy
+  // `max-w-4xl + max-h-[90vh]` pattern to the shell (size="xl"), each with its
+  // gradient bar (blue/amber/indigo) in a custom header slot carrying an
+  // always-visible close-X. None has an always-present sticky-footer CTA — their
+  // toggles/results live in the scroll body — so they assert the overflow
+  // contract here. AppealsLaneAdvisor + RemandRiskChecker mount on their events
+  // via AppealsToolsCluster; NexusQualityAnalyzer via QualityControlCluster.
+  { label: "Appeals Lane Advisor", event: "openAppealsLaneAdvisor" },
+  { label: "Remand Risk Checker", event: "openRemandRiskChecker" },
+  { label: "Nexus Quality Analyzer", event: "openNexusQualityAnalyzer" },
 ];
 
 /**
