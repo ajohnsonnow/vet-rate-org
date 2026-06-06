@@ -8,16 +8,13 @@
  * Drag-and-drop interface for testing combined rating calculations
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 
 export default function WhatIfSandbox({ onClose }) {
   const { t } = useLanguage();
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
 
   const [currentConditions, setCurrentConditions] = useState([]);
   const [availableConditions, setAvailableConditions] = useState([]);
@@ -273,6 +270,16 @@ export default function WhatIfSandbox({ onClose }) {
     }
   };
 
+  const addCondition = (condition) => {
+    setCurrentConditions((prev) => [
+      ...prev,
+      {
+        ...condition,
+        id: `${condition.name}-${condition.rating}-${Date.now()}-${Math.random()}`,
+      },
+    ]);
+  };
+
   const removeCondition = (id) => {
     setCurrentConditions(currentConditions.filter((c) => c.id !== id));
   };
@@ -303,239 +310,255 @@ export default function WhatIfSandbox({ onClose }) {
     return "text-green-600 dark:text-green-400";
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">
-                🎯 The What-If Sandbox{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                  BETA
-                </span>
-              </h2>
-              <p className="text-white/90">
-                Visual drag-and-drop scenario planner with real-time VA math
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* Result Display */}
-          <div
-            className={`mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-6 transition-all duration-300 ${
-              isAnimating ? "scale-105" : "scale-100"
-            }`}
+  const header = (
+    <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 text-white sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2
+            id="whatif-sandbox-title"
+            className="mb-1 text-xl font-bold sm:mb-2 sm:text-3xl"
           >
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-white/75 mb-1">Combined VA Rating</p>
-                <p
-                  className={`text-5xl font-bold transition-all duration-300 ${
-                    isAnimating ? "scale-110" : "scale-100"
-                  }`}
-                >
-                  {combinedRating}%
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-white/75 mb-1">
-                  Monthly Compensation
-                </p>
-                <p
-                  className={`text-5xl font-bold transition-all duration-300 ${
-                    isAnimating ? "scale-110 text-green-300" : "scale-100"
-                  }`}
-                >
-                  ${monthlyPay.toFixed(2)}
-                </p>
-                <p className="text-xs text-white/60 mt-1">
-                  2025 rates (no dependents)
-                </p>
-              </div>
-            </div>
-          </div>
+            🎯 The What-If Sandbox{" "}
+            <span className="rounded bg-amber-500 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+              BETA
+            </span>
+          </h2>
+          <p className="text-sm text-white/90 sm:text-base">
+            Visual drag-and-drop scenario planner with real-time VA math
+          </p>
         </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-2xl font-bold text-white hover:text-gray-200"
+          aria-label="Close dialog"
+        >
+          ×
+        </button>
+      </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-4 h-[calc(90vh-250px)]">
-          {/* Sidebar - Available Conditions */}
-          <div className="col-span-1 border-r border-gray-300 dark:border-gray-700 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">
-              📦 Condition Library
-            </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
-              Drag conditions to the canvas →
+      {/* Result Display */}
+      <div
+        className={`mt-4 rounded-lg bg-white/10 p-4 backdrop-blur-sm transition-all duration-300 sm:p-6 ${
+          isAnimating ? "scale-105" : "scale-100"
+        }`}
+      >
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          <div>
+            <p className="mb-1 text-xs text-white/75 sm:text-sm">
+              Combined VA Rating
             </p>
-
-            {/* Group by category */}
-            {[
-              "mental",
-              "musculoskeletal",
-              "neurological",
-              "respiratory",
-              "cardiovascular",
-              "digestive",
-              "endocrine",
-              "auditory",
-            ].map((category) => {
-              const categoryConditions = availableConditions.filter(
-                (c) => c.category === category,
-              );
-              if (categoryConditions.length === 0) return null;
-
-              return (
-                <div key={category} className="mb-4">
-                  <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase">
-                    {category}
-                  </h4>
-                  <div className="space-y-1">
-                    {categoryConditions.map((condition) => (
-                      <div
-                        key={condition.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, condition)}
-                        className={`${getCategoryColor(condition.category)} text-white p-2 rounded cursor-move text-xs hover:opacity-80 transition-opacity flex justify-between items-center`}
-                      >
-                        <span>{condition.name}</span>
-                        <span className="font-bold">{condition.rating}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            <p
+              className={`text-3xl font-bold transition-all duration-300 sm:text-5xl ${
+                isAnimating ? "scale-110" : "scale-100"
+              }`}
+            >
+              {combinedRating}%
+            </p>
           </div>
-
-          {/* Canvas - Current Scenario */}
-          <div className="col-span-3 p-6 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                🎨 Current Scenario ({currentConditions.length} conditions)
-              </h3>
-              <div className="flex gap-2">
-                {hasMyRatings() && (
-                  <button
-                    onClick={handleLoadMyRatings}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"
-                  >
-                    📊 Load My Ratings
-                  </button>
-                )}
-                {currentConditions.length > 0 && (
-                  <button
-                    onClick={clearAll}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {currentConditions.length === 0 ? (
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDropOnCanvas}
-                className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center"
-              >
-                <div className="text-6xl mb-4">👈</div>
-                <h4 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">
-                  Drag Conditions Here
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Build your scenario by dragging conditions from the library
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                  Watch the combined rating and monthly pay update in real-time!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {currentConditions.map((condition, index) => (
-                  <div key={condition.id}>
-                    {hoveredIndex === index && (
-                      <div
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDrop={(e) => handleDrop(e, index)}
-                        className="h-12 border-2 border-dashed border-blue-400 rounded-lg bg-blue-50 dark:bg-blue-900/20 mb-2"
-                      />
-                    )}
-                    <div
-                      className={`${getCategoryColor(condition.category)} text-white p-4 rounded-lg flex justify-between items-center`}
-                    >
-                      <div>
-                        <span className="font-bold text-lg">
-                          {condition.name}
-                        </span>
-                        <span className="ml-3 text-sm opacity-75 capitalize">
-                          ({condition.category})
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl font-bold">
-                          {condition.rating}%
-                        </span>
-                        <button
-                          onClick={() => removeCondition(condition.id)}
-                          className="bg-white/20 hover:bg-white/30 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-                          aria-label="Remove condition"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Bilateral Bonus Indicator */}
-            {(hasMatchingBilateral("Knee") ||
-              hasMatchingBilateral("Shoulder")) && (
-              <div className="mt-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-4 rounded">
-                <h4 className="font-bold text-green-800 dark:text-green-300 mb-2 flex items-center gap-2">
-                  <span>🎖️</span> Bilateral Factor Applied!
-                </h4>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  {hasMatchingBilateral("Knee") &&
-                    "Both knees rated: 10% bonus applied."}
-                  {hasMatchingBilateral("Shoulder") &&
-                    " Both shoulders rated: 10% bonus applied."}
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                  38 CFR § 4.26 - Bilateral factor increases combined rating by
-                  10%
-                </p>
-              </div>
-            )}
-
-            {/* Info Box */}
-            <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded">
-              <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
-                💡 How This Works:
-              </h4>
-              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                <li>• Drag conditions from the library to build scenarios</li>
-                <li>• Combined rating uses official VA math (38 CFR Part 4)</li>
-                <li>
-                  • Bilateral factor automatically applied when both sides rated
-                </li>
-                <li>• Monthly pay reflects 2025 compensation rates</li>
-                <li>• Test "what-if" scenarios before filing claims</li>
-              </ul>
-            </div>
+          <div>
+            <p className="mb-1 text-xs text-white/75 sm:text-sm">
+              Monthly Compensation
+            </p>
+            <p
+              className={`text-3xl font-bold transition-all duration-300 sm:text-5xl ${
+                isAnimating ? "scale-110 text-green-300" : "scale-100"
+              }`}
+            >
+              ${monthlyPay.toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs text-white/60">
+              2025 rates (no dependents)
+            </p>
           </div>
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      labelledBy="whatif-sandbox-title"
+      size="2xl"
+    >
+      {/* Main Content */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-0">
+        {/* Sidebar - Available Conditions */}
+        <div className="md:col-span-1 md:max-h-[55vh] md:overflow-y-auto md:border-r md:border-gray-300 md:pr-3 dark:md:border-gray-700">
+          <h3 className="mb-3 text-lg font-bold text-gray-800 dark:text-white">
+            📦 Condition Library
+          </h3>
+          <p className="mb-4 text-xs text-gray-600 dark:text-gray-400">
+            Tap a condition to add it (or drag it on desktop).
+          </p>
+
+          {/* Group by category */}
+          {[
+            "mental",
+            "musculoskeletal",
+            "neurological",
+            "respiratory",
+            "cardiovascular",
+            "digestive",
+            "endocrine",
+            "auditory",
+          ].map((category) => {
+            const categoryConditions = availableConditions.filter(
+              (c) => c.category === category,
+            );
+            if (categoryConditions.length === 0) return null;
+
+            return (
+              <div key={category} className="mb-4">
+                <h4 className="mb-2 text-xs font-semibold uppercase text-gray-700 dark:text-gray-300">
+                  {category}
+                </h4>
+                <div className="space-y-1">
+                  {categoryConditions.map((condition) => (
+                    <button
+                      type="button"
+                      key={condition.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, condition)}
+                      onClick={() => addCondition(condition)}
+                      className={`${getCategoryColor(condition.category)} flex w-full cursor-move items-center justify-between rounded p-2 text-xs text-white transition-opacity hover:opacity-80`}
+                      aria-label={`Add ${condition.name} at ${condition.rating}%`}
+                    >
+                      <span>{condition.name}</span>
+                      <span className="font-bold">{condition.rating}%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Canvas - Current Scenario */}
+        <div className="border-t border-gray-200 pt-4 dark:border-gray-700 md:col-span-3 md:max-h-[55vh] md:overflow-y-auto md:border-t-0 md:pl-4 md:pt-0">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+              🎨 Current Scenario ({currentConditions.length} conditions)
+            </h3>
+            <div className="flex gap-2">
+              {hasMyRatings() && (
+                <button
+                  onClick={handleLoadMyRatings}
+                  className="rounded bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700"
+                >
+                  📊 Load My Ratings
+                </button>
+              )}
+              {currentConditions.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="rounded bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+
+          {currentConditions.length === 0 ? (
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDropOnCanvas}
+              className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center dark:border-gray-600"
+            >
+              <div className="mb-4 text-5xl">➕</div>
+              <h4 className="mb-2 text-xl font-bold text-gray-700 dark:text-gray-300">
+                Build Your Scenario
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Tap a condition in the library to add it (or drag it here on
+                desktop).
+              </p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+                Watch the combined rating and monthly pay update in real-time!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {currentConditions.map((condition, index) => (
+                <div key={condition.id}>
+                  {hoveredIndex === index && (
+                    <div
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      className="mb-2 h-12 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                    />
+                  )}
+                  <div
+                    className={`${getCategoryColor(condition.category)} flex items-center justify-between rounded-lg p-4 text-white`}
+                  >
+                    <div className="min-w-0">
+                      <span className="text-lg font-bold">
+                        {condition.name}
+                      </span>
+                      <span className="ml-3 text-sm capitalize opacity-75">
+                        ({condition.category})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl font-bold">
+                        {condition.rating}%
+                      </span>
+                      <button
+                        onClick={() => removeCondition(condition.id)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
+                        aria-label="Remove condition"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Bilateral Bonus Indicator */}
+          {(hasMatchingBilateral("Knee") ||
+            hasMatchingBilateral("Shoulder")) && (
+            <div className="mt-4 rounded border-l-4 border-green-400 bg-green-50 p-4 dark:bg-green-900/20">
+              <h4 className="mb-2 flex items-center gap-2 font-bold text-green-800 dark:text-green-300">
+                <span>🎖️</span> Bilateral Factor Applied!
+              </h4>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                {hasMatchingBilateral("Knee") &&
+                  "Both knees rated: 10% bonus applied."}
+                {hasMatchingBilateral("Shoulder") &&
+                  " Both shoulders rated: 10% bonus applied."}
+              </p>
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                38 CFR § 4.26 - Bilateral factor increases combined rating by
+                10%
+              </p>
+            </div>
+          )}
+
+          {/* Info Box */}
+          <div className="mt-6 rounded border-l-4 border-blue-400 bg-blue-50 p-4 dark:bg-blue-900/20">
+            <h4 className="mb-2 font-bold text-blue-800 dark:text-blue-300">
+              💡 How This Works:
+            </h4>
+            <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
+              <li>
+                • Tap or drag conditions from the library to build scenarios
+              </li>
+              <li>• Combined rating uses official VA math (38 CFR Part 4)</li>
+              <li>
+                • Bilateral factor automatically applied when both sides rated
+              </li>
+              <li>• Monthly pay reflects 2025 compensation rates</li>
+              <li>• Test "what-if" scenarios before filing claims</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </ResponsiveModal>
   );
 }
