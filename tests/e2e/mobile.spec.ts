@@ -180,6 +180,12 @@ const MODALS = [
   // contract here as-is; a full shell swap is intentionally deferred to avoid
   // regressing the desktop two-pane scroll.
   { label: "User Manual", event: "openUserManual" },
+  // Cluster H (S10): VisionSimulator's wrapper dropped its bespoke backdrop +
+  // max-w-2xl + floating corner-X for the shell's default title bar (size="lg",
+  // title="Document Vision Simulator"); its panel lost the duplicate card chrome
+  // and h3. Close lives in the shell's sticky header (no fresh-open footer CTA),
+  // so it asserts the overflow contract here.
+  { label: "Vision Simulator", event: "openVisionSimulator" },
 ];
 
 /**
