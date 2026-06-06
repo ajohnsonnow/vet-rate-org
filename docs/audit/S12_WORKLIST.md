@@ -63,7 +63,7 @@ editing** — the audit is the map and priority, not a license to edit blind.
 | `Header` Tools dropdown | `role="menu"` + ESC + focus mgmt | medium |
 | `Header` Resources dropdown | `role="menu"` + ESC + focus mgmt | medium |
 | `AboutUs` main modal | `useFocusTrap` + ESC (semantics present) | medium |
-| `AboutUs` VersionDropUp | `role="menu"` + ESC + `aria-haspopup`/`expanded` | low |
+| `AboutUs` VersionDropUp | disclosure: `aria-expanded` + ESC + focus-restore (NOT `role="menu"`) | low |
 | `AIConsentModal` | `useFocusTrap` + ESC (aria-modal already there) | high (cheap) |
 | `VADataCenter` Primary | `useFocusTrap` + focus-restore (role/aria/portal present) | medium |
 | `StressReliefDivision` DoomOverlay | `useFocusTrap` + `aria-modal` | medium |
@@ -88,10 +88,13 @@ SharkRadar.
 ProfileImportConfirmModal → DbqFinder → DoctorsPacket → VAGovRatingPaster → VeteranTranslator →
 WhatsNewModal → ShareButton → RemandRiskChecker.
 
-### C. Passive — aria only (2)
+### C. Passive — aria only (2) — DONE (Chunk 13)
 
-- `PWAInstallButton` Desktop Install Prompt → `role="region"` + `aria-label`.
-- `PWAInstallButton` Mobile Install Banner → `role="status"` + `aria-live="polite"` + `aria-label`.
+- `PWAInstallButton` Desktop Install Prompt → `role="region"` + `aria-label="Install Vet-Rate"`. ✔
+- `PWAInstallButton` Mobile Install Banner → `role="status"` + `aria-live="polite"`. ✔ (Dropped
+  the prescribed `aria-label` — on a live region an `aria-label` is not announced and can suppress
+  the content announcement; the banner's own text is what should be read.) Both dismiss `×` buttons
+  also gained `aria-label="Dismiss install prompt"` (were unnamed — SC 4.1.2).
 
 ### D. No action (6, verified)
 
@@ -305,22 +308,42 @@ RedTeam (already on ResponsiveModal).
       focus rings) → no change. **Note:** full screen-reader confirmation (NVDA/VoiceOver/TalkBack) of
       the announce behaviour is a manual-checklist item (cannot be verified in CI). Gate: ESLint 0
       errors, `tsc` clean, 809 unit tests green.
-- [ ] **Deferred this pass (examined, not mechanical — need their own focused chunk):**
+- [x] Chunk 13 — the two light-only/non-standard surfaces from the prior pass's "deferred" list.
+      **PWAInstallButton** iOS-install instructions: its `bg-white` panel had **no `dark:` variants**
+      on the text, so the blocker was theming, not layout. Added `dark:` variants to the intro / step /
+      note text (`text-gray-700→dark:text-gray-300`, `text-gray-800→dark:text-gray-200`,
+      `text-blue-600→dark:text-blue-400`, the note box `bg-blue-50 border-blue-200 →
+      dark:bg-blue-950/40 dark:border-blue-800`, `text-blue-900→dark:text-blue-200`), **then** migrated
+      the modal to `ResponsiveModal size="sm"` (default dark-aware `title` header + close-X; gains
+      focus-trap + `role="dialog"` + ESC/backdrop + scroll-lock for free; dropped the bespoke
+      `fixed inset-0` + `bg-white max-w-md` card and its hand-rolled header/close). The same file's
+      **Bucket C** banners were handled here too (see Bucket C above). **No `mobile.spec.ts` entry** —
+      the iOS sheet is gated by `isIOS` + a click on the install banner, not an `open*` event, so it is
+      **manual-verify** through the proven shell.
+      **ZonkButton** reward card (morale easter egg): its panel background is a *dynamic celebratory*
+      color (`getColorClasses` → `bg-{green|blue|purple|indigo|teal}-50` pastel with `text-*-900`),
+      which reads correctly on both themes and is deliberate identity — a ResponsiveModal swap (forced
+      `bg-white dark:bg-gray-900`) would destroy it. So **hand-applied** the dialog contract instead:
+      `role="dialog"` + `aria-modal` + `aria-labelledby="zonk-title"` (id added to the `<h2>`), a
+      `zonkRef` focus-trap (ESC closes), and `useBodyScrollLock(showZonk)`; dropped the now-unused
+      default `React` import (automatic JSX runtime). Minor known limit: the opener ("DISMISSED") button
+      unmounts while the modal is open (`{!showZonk && …}`), so focus restores to `<body>` rather than
+      the trigger on close — acceptable for an easter egg; trap/ESC/scroll-lock are the real wins.
+- [ ] **Still deferred (examined, not mechanical — need their own focused chunk):**
       **DocumentIntelligenceBriefing** (~1300-line DD214 verifier) — sectioned layout with full-width
       `border-t` dividers between Document-Info / fields / Options / Actions; the shell's fixed
       `px-4 py-4` body would inset those dividers → needs a card-based body restructure, not a swap.
       **TheTribunal** (mock-BVA chat) — properly themed and header/body/footer-shaped, but its bottom
       "Control Panel" (voice-status row + two-column judge/mic controls + text input) is far too tall
       for a compact sticky footer on a phone; needs a mobile-compact control redesign first (same
-      bucket as VeteranTranslator's two-pane). **PWAInstallButton** iOS-install instructions —
-      panel is `bg-white` with **no `dark:` variants** on its text; moving onto the themed
-      (`dark:bg-gray-900`) shell would put dark text on a dark panel → needs dark-mode variants added
-      (a small theming fix) before migration. **ZonkButton** reward card — panel background is a
-      dynamic celebratory color (`getColorClasses`), not the standard `bg-white dark:bg-gray-*`; a
-      deliberate non-standard design, hand-apply only.
+      bucket as VeteranTranslator's two-pane).
 - [ ] Chunks 12+ — remaining modals need a decision, not a mechanical swap (see "Deferred" above +
       forced-dark theming-strategy group below) — the clean standard-modal set is exhausted
-- [ ] Navigation — AboutUs VersionDropUp (Header drawer + Tools/Resources dropdowns done in Bucket A)
+- [x] Navigation — AboutUs **VersionDropUp** done (Chunk 13): it reveals a changelog *content* panel,
+      so it is a **disclosure**, not a menu — applied the APG disclosure pattern (`aria-expanded` on the
+      trigger + ESC closes & restores focus to the trigger), **not** the worklist's earlier `role="menu"`
+      / `aria-haspopup` note (which would misrepresent informational content as a command menu). Header
+      drawer + Tools/Resources dropdowns were done in Bucket A.
 - [x] Passive/aria — AccessibilityMenu (dangling `aria-labelledby` fixed), Toast (severity-aware
       live region + atomic re-announce removed), UpdateBanner + MobileNotice (`role="status"`),
       MobileBottomNav (already compliant). PWAInstallButton banners (Bucket C) ride the
