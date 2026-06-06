@@ -130,6 +130,17 @@ const MODALS = [
   // are exercised via those flows.
   { label: "Pathfinder", event: "openPathfinder" },
   { label: "Claim Navigator", event: "openClaimNavigator" },
+  // Cluster F6 (S10): CAPSimulator is a single-file state machine — its seven
+  // mode branches (intro, exam-prep, exam-prep-detail, select-condition,
+  // flashcard, simulation, results) each render their own ResponsiveModal. A bare
+  // openCAPSimulator opens the default "intro" branch; every branch keeps its
+  // actions in the header/body (no shell footer CTA), so it asserts the overflow
+  // contract here. The two dark branches (exam-prep, exam-prep-detail) carry an
+  // opaque gradient via className. The six deeper branches need state (a picked
+  // condition / an answered question / a completed run) to reach, so they are
+  // exercised via those flows; the flashcard + results BuyMeCoffee popups are
+  // fragment siblings of the shell.
+  { label: "C&P Simulator", event: "openCAPSimulator" },
 ];
 
 /**
