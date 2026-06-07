@@ -207,7 +207,7 @@ const MultiCloudManager = ({ onClose }) => {
 
         // Store key locally if no passphrase
         if (keyExport) {
-          storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
+          await storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
         }
 
         setStatus("Uploading encrypted backup...");
@@ -270,7 +270,9 @@ const MultiCloudManager = ({ onClose }) => {
       // Check if it's encrypted
       if (isEncryptedBackup(data)) {
         // Try local key first
-        const localKey = getLocalKey(`${selectedProvider}_${backup.name}`);
+        const localKey = await getLocalKey(
+          `${selectedProvider}_${backup.name}`,
+        );
 
         if (localKey) {
           setStatus("Decrypting backup...");

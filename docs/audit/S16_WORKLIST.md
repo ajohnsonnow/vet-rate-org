@@ -1,9 +1,11 @@
 # S16 Worklist — local-first security residuals (piiScrubber + lhci portion)
 
 > Cycle S9–S17, Sprint 16 ([SPRINT_PLAN_S9-S17.md](../SPRINT_PLAN_S9-S17.md), row S16).
-> Status: **partial — piiScrubber + lhci complete** (commits `dcd2d5b`, `e21d876`,
-> `d3f449b`, plus this docs commit). **Key-rotation + device-deauthorization remain
-> owner-gated** and are intentionally not started (see *Honest limits*).
+> Status: **piiScrubber + lhci complete** (commits `dcd2d5b`, `e21d876`, `d3f449b`,
+> `d07a420`). **Owner approved all design picks 2026-06-06** ([S16_ROTATION_DEAUTH_DESIGN.md](S16_ROTATION_DEAUTH_DESIGN.md) §6):
+> commit **E** (`3038cf6`) shipped the crypto safety net; commit **F** ships the
+> at-rest device-passphrase keystore (this section, *Commit F* below). **Commit G —
+> deauth UI + cloudSync default-key retirement — remains** (see *Honest limits*).
 > Branch `audit/s9-mobile-safety-net`, local commits only — no push/PR until the
 > owner authorizes (standing instruction).
 
@@ -73,6 +75,31 @@ zero-knowledge constraints forbid. See *Honest limits*.
 | [docs/SPRINT_PLAN_S9-S17.md](../SPRINT_PLAN_S9-S17.md) | Progress Log entry dated 2026-06-06 for the S16 piiScrubber + lhci portion, noting rotation/deauth paused at the owner gate | Sprint-plan ledger of record. |
 | [docs/audit/S16_WORKLIST.md](S16_WORKLIST.md) | This file | Evidence doc for the sprint. |
 
+## Commit F — at-rest device-passphrase keystore (2026-06-06)
+
+Implements the **at-rest key-protection** half of the owner-approved design
+([S16_ROTATION_DEAUTH_DESIGN.md](S16_ROTATION_DEAUTH_DESIGN.md) §4, commit F in §8).
+Custody only — the `VR_ENC_V3`/`VS3` wire format and all 10 AAD test pins are untouched.
+
+| File | Change | Why |
+|---|---|---|
+| [src/utils/cloudEncryption.js](../../src/utils/cloudEncryption.js) | New opt-in keystore: `deriveKEK` (PBKDF2-SHA256 600k → non-extractable **AES-KW** key), `enableDevicePassphrase`/`unlockDeviceKeystore`/`lockDeviceKeystore`/`rotateDevicePassphrase`/`wipeLocalKeystore`/`completePendingRotation` + `isDevicePassphraseEnabled`/`isKeystoreUnlocked`/`listBackupKeyIds`. `storeLocalKey`/`getLocalKey` wrap/unwrap the per-backup DEK under the session KEK (`vet_rate_wrapped_key_*`), with lazy crash-safe migration of legacy plaintext (wrap → verify → then delete). | Removes the raw DEK from plaintext `localStorage`. AES-KW's RFC 3394 integrity check makes a wrong-KEK unwrap throw — reused as the passphrase verifier (`vet_rate_kek_verifier`). Rotation is all-or-nothing via a temp-slot + commit-marker journal; `completePendingRotation` forward-recovers an interruption. |
+| [src/components/MultiCloudManager.jsx](../../src/components/MultiCloudManager.jsx), [src/utils/multiCloudStorage.js](../../src/utils/multiCloudStorage.js) | `await` added to all 6 `storeLocalKey`/`getLocalKey` call sites. | `storeLocalKey`/`getLocalKey` are now async (see *correction* below); every call site was already inside an async function, so the change is mechanical. |
+| [src/utils/debugDump.js](../../src/utils/debugDump.js) | `createDebugDump` redacts the value of `vet_rate_backup_key_*`, `vet_rate_wrapped_key_*`, `vet_rate_kek_*`, `vet_rate_rotating_key_*`, and `vetrate_gemini_key` to `"[REDACTED]"` (key name + real size still reported). | Closes the one-click full-localStorage egress for wrapped keys, KEK salt/verifier, and the third-party Gemini key. |
+| [src/__tests__/utils/cloudKeystore.test.js](../../src/__tests__/utils/cloudKeystore.test.js), [src/__tests__/utils/debugDumpRedaction.test.js](../../src/__tests__/utils/debugDumpRedaction.test.js) | 10 new cases: KEK roundtrip, wrong-passphrase reject, enable-migrates-plaintext, legacy passthrough when disabled, lazy migrate (verify-then-delete), locked-store write refusal, rotation all-or-nothing, **interrupted-rotation forward recovery** (fault-injected phase-2 crash), `wipeLocalKeystore`, and debugDump redaction. | Proves the crash-safety and custody invariants end-to-end, not just that the functions exist. |
+| [docs/CRYPTO_AUDIT.md](../CRYPTO_AUDIT.md) | New §2 inventory row for the AES-KW keystore; §7 AES-KW bullet marked **shipped (commit F)**; status + footer updated. | Re-audit trigger: a new `crypto.subtle.*` (AES-KW `deriveKey`/`wrapKey`/`unwrapKey`) call site must be catalogued. |
+
+**Correction to the approved design (§4/§5 "synchronous" claim).** The design doc
+argued that keeping the keystore in `localStorage` lets `getLocalKey`/`storeLocalKey`
+stay **synchronous**, avoiding a sync→async rewrite of the 6 call sites. That benefit
+is **not achievable**: Web Crypto `unwrapKey` is inherently async, so the wrapped read
+path forces `getLocalKey` async regardless of the storage backend. The functions are
+now async and the 6 call sites take `await`. The *real* (still-valid) reason to stay in
+`localStorage` over IndexedDB holds: no eviction risk, `AtomicWipe` already clears it,
+and no `navigator.storage.persist()` is needed. The call sites were already inside async
+functions, so the rewrite is mechanical and behavior-preserving. The design doc's §4/§5
+carry an inline correction note pointing here.
+
 ## Verification
 
 | Gate | Result |
@@ -84,17 +111,18 @@ zero-knowledge constraints forbid. See *Honest limits*.
 
 ## Honest limits / out of scope
 
-- **Key-rotation + device-deauthorization are NOT implemented in this commit.** They
-  are the larger half of the S16 DoD and are deliberately **paused at a design gate**.
-  The local-first crypto surface has two divergent stacks
-  ([src/utils/cloudEncryption.js](../../src/utils/cloudEncryption.js) AAD
-  `vetrate.cloud-encryption.v3`, [src/services/cloudSync.js](../../src/services/cloudSync.js)
-  AAD `vetrate.cloud-sync.v3` with a hardcoded-key fallback), backup keys sit
-  **unwrapped** in plaintext `localStorage`, and there is **no device identity, KEK,
-  or `wrapKey`/`unwrapKey`** anywhere. Designing rotation/deauth on top of that
-  requires owner decisions on the threat model and device-identity scope; writing the
-  crypto first would be guessing at a security boundary, which the zero-knowledge
-  constraints forbid. Deferred to owner-gated follow-up commits.
+- **The at-rest wrap + local rotation are implemented (commit F); the deauth UI +
+  cloudSync fallback retirement are NOT (commit G).** Owner decisions landed
+  2026-06-06, unblocking the gate. Commit F adds the passphrase-anchored AES-KW
+  keystore, `wrapKey`/`unwrapKey`, and `rotateDevicePassphrase`/`wipeLocalKeystore`
+  primitives in [src/utils/cloudEncryption.js](../../src/utils/cloudEncryption.js)
+  (see *Commit F* above). Still open for **commit G**: the user-facing "Change backup
+  passphrase" / "Deauthorize this device" flow (typed-confirm + per-backup warning),
+  the self-deauth orchestrator that calls `wipeLocalKeystore`, and retiring the
+  `cloudSync` `vet-rate-default-key`/email fallback (Q-LEGACY-DRIVE: forbid new writes,
+  keep last-resort decrypt). Rotation is also **not retroactive** and there is **no
+  device identity / multi-device** in this cut (Q-DEVICE-SCOPE: single-device +
+  passphrase portability) — both honest limits that hold by design.
 - **lhci LCP / TBT / `categories:performance` stay at `warn`, not `error`.** Promotion
   needs a trustworthy CI throttled-mobile baseline, and one does not exist: this
   branch is local-only / never pushed, so the CI Lighthouse job has **never run**, and
