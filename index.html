@@ -29,6 +29,22 @@
       name="description"
       content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans."
     />
+    <!-- SEO + social cards. The brandingPlugin (vite.config.js) rewrites the
+         origin, title, description, logo filename and app name per brand at build. -->
+    <link rel="canonical" href="https://vet-rate.org/" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Vet-Rate.org" />
+    <meta property="og:url" content="https://vet-rate.org/" />
+    <meta property="og:title" content="Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE" />
+    <meta property="og:description" content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans." />
+    <meta property="og:image" content="https://vet-rate.org/images/Vet-Rate-org-logo-official.png" />
+    <meta property="og:image:alt" content="VA disability claims toolkit logo" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE" />
+    <meta name="twitter:description" content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans." />
+    <meta name="twitter:image" content="https://vet-rate.org/images/Vet-Rate-org-logo-official.png" />
+
     <!-- Progressive enhancement: theme-color for Android Chrome/Safari/Edge address bar -->
     <!-- Unsupported browsers (Firefox) safely ignore this meta tag -->
     <!-- htmlhint meta[name=theme-color]:false -->
@@ -40,7 +56,14 @@
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/images/Vet-Rate-org-logo-official.png" />
     <link rel="shortcut icon" type="image/png" href="/images/Vet-Rate-org-logo-official.png" />
-    <link rel="apple-touch-icon" href="/images/Vet-Rate-org-logo-official.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-180.png" />
+
+    <!-- iOS standalone PWA hints. status-bar-style "default" keeps content below
+         the notch/status bar (avoids overlap on surfaces without safe-top). -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Vet-Rate.org" />
 
     <!-- Preload the LCP hero (Header + splash logo) so it paints without waiting on the JS bundle. -->
     <link
