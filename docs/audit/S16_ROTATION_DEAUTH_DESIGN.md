@@ -95,6 +95,16 @@ Per-design verdicts: minimal-honest = **viable-with-changes** (basis); kek-wrapp
 viable-with-changes (graft redaction); device-identity = viable-with-changes but
 **rejected** (achieves_deauth=false + the AtomicWipe/eviction data-loss traps).
 
+> **Implementation correction (commit F, 2026-06-06).** The "keeps
+> `getLocalKey`/`storeLocalKey` **synchronous**" benefit above (and §5 point 3) is
+> **not achievable**: Web Crypto `unwrapKey` is inherently async, so the wrapped read
+> path forces `getLocalKey` async regardless of localStorage-vs-IndexedDB. The
+> functions are now async and all 6 call sites take `await` — mechanical, since each was
+> already inside an async function, so the silent-restore-regression risk does not
+> materialize. The *other* reasons to keep the store in localStorage (no eviction,
+> `AtomicWipe` already clears it, no `navigator.storage.persist()`) still hold. See
+> [S16_WORKLIST.md](S16_WORKLIST.md) → *Commit F*.
+
 ---
 
 ## 5. Backward-compat invariant (load-bearing)
@@ -108,8 +118,9 @@ wire format.
 2. `decryptFromCloud` raw-key branch unmodified — wrapped DEK is unwrapped then exported
    back to base64 for that one call (key transits JS heap during active decrypt anyway;
    wrapping protects *at rest*).
-3. Legacy plaintext keys: `getLocalKey` stays sync; lazy idempotent migration writes
-   `vet_rate_wrapped_key_*` → verifies unwrap → *then* deletes plaintext (crash-safe).
+3. Legacy plaintext keys: `getLocalKey` is async (see §4 correction); lazy idempotent
+   migration writes `vet_rate_wrapped_key_*` → verifies unwrap → *then* deletes
+   plaintext (crash-safe).
 4. cloudSync fallback retired per Q-LEGACY-DRIVE (safe default: forbid new writes, keep
    last-resort decrypt).
 5. Rotation keeps OLD+NEW wrapped blobs side-by-side, swaps KEK meta **last**, GCs old →
