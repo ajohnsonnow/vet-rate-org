@@ -71,10 +71,46 @@ function brandingPlugin() {
   };
 }
 
+// Emit brand-aware robots.txt + sitemap.xml into the build output. Both brands
+// ship the same public/ dir to different outDirs, so these can't be static
+// files — the absolute origin must match the brand being built.
+function seoFilesPlugin() {
+  const brandMode = process.env.VITE_BRAND_MODE || "vetrate";
+  const brand = BRAND_CONFIGS[brandMode] || BRAND_CONFIGS.vetrate;
+  const origin = brand.url;
+  // Indexable surfaces only — the offline shell and the vision test page are
+  // intentionally excluded.
+  const paths = [
+    "/",
+    "/faq.html",
+    "/support.html",
+    "/terms-of-service.html",
+    "/privacy-policy.html",
+  ];
+
+  return {
+    name: "seo-files",
+    generateBundle() {
+      const robots = `User-agent: *\nAllow: /\n\nSitemap: ${origin}/sitemap.xml\n`;
+      const urls = paths
+        .map((p) => `  <url>\n    <loc>${origin}${p}</loc>\n  </url>`)
+        .join("\n");
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+      this.emitFile({ type: "asset", fileName: "robots.txt", source: robots });
+      this.emitFile({
+        type: "asset",
+        fileName: "sitemap.xml",
+        source: sitemap,
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     react(),
     brandingPlugin(),
+    seoFilesPlugin(),
     ANALYZE &&
       visualizer({
         filename: "dist/bundle-report.html",
