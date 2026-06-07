@@ -71,6 +71,8 @@ export const PII_TRAPS = [
   "S​S​N: 123-45-6789", // zero-width-space-obfuscated label
   "ssn=123456789", // bare 9-digit form (only caught in aggressive)
   "VA file C 12345678", // non-breaking space
+  "SSN: 1\u200b2\u200b3-45-6789", // zero-width spaces spliced inside the digits
+  "ssn: \uff11\uff12\uff13\uff14\uff15\uff16\uff17\uff18\uff19", // full-width digits, NFKC-folds to ASCII
 ];
 
 export const MIXED = [
