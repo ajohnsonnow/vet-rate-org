@@ -198,6 +198,87 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  cwv:
+    name: Core Web Vitals Gate (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/cwv.spec.ts under the Pixel 5
+    # mobile-chrome project: reads the app's native window.__VITALS__ buffer
+    # (src/utils/webVitals.js) and asserts CLS <= 0.1 on the home surface plus
+    # the AboutUs gallery's aspect-ratio reservation — the S14 Definition of
+    # Done (docs/SPRINT_PLAN_S9-S17.md; docs/audit/S14_WORKLIST.md). CLS is
+    # layout-driven and deterministic, so it hard-gates here; the throttled
+    # LCP/INP/TBT budgets live in the lighthouse job below. Kept separate from
+    # the full e2e job so a vitals regression is visible at a glance.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Core Web Vitals gate (blocking)
+        run: npm run test:e2e:cwv
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-cwv
+          path: playwright-report/
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse Mobile Gate (Core Web Vitals)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Lighthouse-CI on the built SPA, served via `vite preview`, under
+    # Lighthouse's default mobile form factor with simulated throttling — the
+    # explicitly-deferred piece of AUDIT_FINDINGS #33 (docs/SPRINT_PLAN_S9-S17.md,
+    # S14). lighthouserc.json hard-asserts CLS <= 0.1 and warns on LCP / TBT /
+    # perf-score: the same informational->strict ratchet the bundle-budget gate
+    # (scripts/check-bundle-budget.mjs) uses — the warn budgets are ratcheted to
+    # error once CI establishes a stable throttled-mobile baseline (tracked in
+    # docs/audit/S14_WORKLIST.md). @lhci/cli is installed globally (the standard
+    # lhci CI pattern) rather than as a devDependency. Chrome ships on the
+    # ubuntu-latest runner, which lhci's chrome-launcher discovers automatically.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.15.1
+
+      - name: Run Lighthouse CI (mobile, blocking on CLS)
+        run: lhci autorun
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report/
+          retention-days: 14
+
   red-team:
     name: Red-Team Suite (LLM defenses)
     runs-on: ubuntu-latest
