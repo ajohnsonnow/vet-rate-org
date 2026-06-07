@@ -431,6 +431,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   src="/images/Anth.jpg"
                   alt="Veteran in military uniform"
                   className="w-48 h-auto rounded-lg shadow-lg border-2 border-gray-300 dark:border-gray-600"
+                  width={435}
+                  height={604}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2 italic">
                   SGT Johnson, 92Y20
@@ -484,6 +488,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/ReadyForHerCloseup.jpg"
                           alt="Luna the calico cat - portrait"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={1750}
+                          height={2048}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Ready for her closeup 📷
@@ -494,6 +502,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/Kitty_Coder.jpg"
                           alt="Luna supervising coding at the workstation"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={2048}
+                          height={1536}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Supervising the code 💻
@@ -504,6 +516,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/NaptimeLuna.jpg"
                           alt="Luna taking a well-deserved nap"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={2048}
+                          height={1536}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Quality assurance testing 😴

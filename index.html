@@ -42,6 +42,14 @@
     <link rel="shortcut icon" type="image/png" href="/images/Vet-Rate-org-logo-official.png" />
     <link rel="apple-touch-icon" href="/images/Vet-Rate-org-logo-official.png" />
 
+    <!-- Preload the LCP hero (Header + splash logo) so it paints without waiting on the JS bundle. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/images/Vet-Rate-org-logo-official.png"
+      fetchpriority="high"
+    />
+
     <!-- PWA manifest — installable + offline shell (closes AUDIT_FINDINGS #27). -->
     <link rel="manifest" href="/manifest.json" />
     
