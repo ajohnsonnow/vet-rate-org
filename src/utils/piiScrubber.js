@@ -11,16 +11,20 @@
  *   - EDIPI / DOD ID (10 digits)
  *   - MRN (medical record number)
  *
- * Sprint 3 hardening (commit forthcoming):
- *   - Pattern application reordered longest-first to prevent the SSN
- *     9-digit catchall from consuming VA files / phones / EDIPIs.
- *   - `containsPII` / `analyzePII` now reset `lastIndex` before each `.test()`
+ * Hardening notes:
+ *   - Pattern application is ordered longest-first so the SSN 9-digit
+ *     catchall can't consume VA files / phones / EDIPIs.
+ *   - `containsPII` / `analyzePII` reset `lastIndex` before each `.test()`
  *     call (the /g flag makes `.test()` stateful — a known JS gotcha that
  *     caused intermittent false negatives).
- *   - `scrubAndSpotlight()` added for the prompt-assembly path: scrubs PII
- *     and wraps the result in `<untrusted_content>…</untrusted_content>` so
+ *   - `scrubAndSpotlight()` is the prompt-assembly path: it scrubs PII and
+ *     wraps the result in `<untrusted_content>…</untrusted_content>` so
  *     downstream LLM prompts can rely on the delimiter to treat the content
  *     as data, not instruction (lethal-trifecta defense).
+ *   - Input is normalized before scanning (zero-width / soft-hyphen strip +
+ *     NFKC) so unicode obfuscation — zero-width chars splitting a number,
+ *     full-width digits, NBSP separators — can't slip PII past the ASCII
+ *     regexes. See `normalizeForScan`.
  */
 
 const SPOTLIGHT_OPEN = "<untrusted_content>";
@@ -91,6 +95,22 @@ const reset = (re) => {
   return re;
 };
 
+// Zero-width and soft-hyphen characters an attacker can splice inside a number
+// (e.g. "1<ZWSP>23-45-6789") to break the ASCII regexes without changing how
+// the string renders. Stripped before scanning.
+const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF\u2060\u00AD]/g;
+
+/**
+ * Normalize text before PII scanning so unicode obfuscation can't slip a number
+ * past the ASCII-only patterns. Two O(n) passes: strip invisible separators,
+ * then NFKC-fold (full-width digits → ASCII, NBSP → space, compatibility forms
+ * decomposed). NFKC is identity on plain ASCII, so existing behavior is intact.
+ * @param {string} text
+ * @returns {string}
+ */
+const normalizeForScan = (text) =>
+  text.replace(INVISIBLE_CHARS, "").normalize("NFKC");
+
 /**
  * Scrub PII from text.
  * @param {string} text
@@ -119,7 +139,7 @@ export const scrubPII = (text, options = {}) => {
     customPatterns = [],
   } = options;
 
-  let scrubbed = text;
+  let scrubbed = normalizeForScan(text);
   const details = [];
   let piiFound = false;
 

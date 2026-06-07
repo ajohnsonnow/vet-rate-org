@@ -81,7 +81,9 @@ export async function answer(question, deps, opts = {}) {
   const { topK = 4, threshold = 0.35 } = opts;
   const retrieve = deps.retrieve || ragQuery;
 
-  const cleanQuery = scrubPII(question || "", { redactionLevel: "high" });
+  const cleanQuery = scrubPII(question || "", {
+    aggressive: true,
+  }).scrubbedText;
   const { chunks } = await retrieve(cleanQuery, { topK, threshold });
 
   if (!chunks || chunks.length === 0) {
