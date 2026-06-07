@@ -9,6 +9,7 @@ const ANALYZE = process.env.ANALYZE === "true";
 const BRAND_CONFIGS = {
   vetrate: {
     appName: "Vet-Rate.org",
+    url: "https://vet-rate.org",
     title:
       "Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE",
     description:
@@ -19,6 +20,7 @@ const BRAND_CONFIGS = {
   },
   supplylocker: {
     appName: "Supply Locker",
+    url: "https://supplylocker.vet",
     title:
       "Supply Locker | Premium VA Claims Toolkit - 39 Pro Tools · Rating Calculator · AI Analysis",
     description:
@@ -37,21 +39,34 @@ function brandingPlugin() {
   return {
     name: "branding-transform",
     transformIndexHtml(html) {
-      return html
-        .replace(/<title>.*?<\/title>/, `<title>${brand.title}</title>`)
-        .replace(
-          /content="Vet-Rate\.org[^"]*"/,
-          `content="${brand.description}"`,
-        )
-        .replace(
-          /Vet-Rate-org-logo-official\.png/g,
-          brand.logo.replace("/images/", ""),
-        )
-        .replace(/#003f87/g, brand.themeColor)
-        .replace(
-          /vet-rate-org\.goatcounter\.com\/count/g,
-          brand.analytics.replace("https://", ""),
-        );
+      return (
+        html
+          .replace(/<title>.*?<\/title>/, `<title>${brand.title}</title>`)
+          // Page title reused by og:title / twitter:title
+          .replace(
+            /content="Vet-Rate\.org \| Complete VA Claims Arsenal[^"]*"/g,
+            `content="${brand.title}"`,
+          )
+          // Meta + og + twitter description (the long "arsenal" blurb)
+          .replace(
+            /content="Vet-Rate\.org - Your complete VA claims arsenal[^"]*"/g,
+            `content="${brand.description}"`,
+          )
+          // og:site_name + apple-mobile-web-app-title (the exact short name)
+          .replace(/content="Vet-Rate\.org"/g, `content="${brand.appName}"`)
+          // Logo asset filename (favicon, preload, og:image, twitter:image)
+          .replace(
+            /Vet-Rate-org-logo-official\.png/g,
+            brand.logo.replace("/images/", ""),
+          )
+          .replace(/#003f87/g, brand.themeColor)
+          // Canonical / og:url / og:image / twitter origin
+          .replace(/https:\/\/vet-rate\.org/g, brand.url)
+          .replace(
+            /vet-rate-org\.goatcounter\.com\/count/g,
+            brand.analytics.replace("https://", ""),
+          )
+      );
     },
   };
 }
