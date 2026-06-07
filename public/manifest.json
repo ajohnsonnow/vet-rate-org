@@ -2,7 +2,11 @@
   "name": "Vet-Rate.org",
   "short_name": "Vet-Rate",
   "description": "Complete VA disability claims toolkit built by veterans, for veterans. 39 professional tools including rating calculator, AI analysis, nexus builder, and claim prep guides.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#003f87",
@@ -12,69 +16,46 @@
       "src": "/images/logo192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/logo512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/logo-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["health", "utilities", "productivity"],
-  "screenshots": [
-    {
-      "src": "/images/screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/images/screenshot-mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Search Conditions",
       "short_name": "Search",
       "description": "Search VA disability conditions and ratings",
-      "url": "/?action=search",
-      "icons": [
-        {
-          "src": "/images/icon-search.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/?action=search"
     },
     {
       "name": "My Packet",
       "short_name": "Packet",
       "description": "View your saved claim packets",
-      "url": "/?action=packet",
-      "icons": [
-        {
-          "src": "/images/icon-packet.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/?action=packet"
     },
     {
       "name": "Nexus Builder",
       "short_name": "Nexus",
       "description": "Generate medical nexus letters",
-      "url": "/?action=nexus",
-      "icons": [
-        {
-          "src": "/images/icon-nexus.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/?action=nexus"
     }
   ],
   "prefer_related_applications": false
