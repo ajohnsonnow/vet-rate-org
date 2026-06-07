@@ -3,7 +3,7 @@
 > Closes the gap surfaced in [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 17
 > (threat-modeling-best-practices, gap/high → S3). Living document — update
 > alongside any new external integration, new untrusted-input surface, or new
-> AI capability. Last review: 2026-05-14.
+> AI capability. Last review: 2026-06-06.
 
 ---
 
@@ -197,9 +197,15 @@ here so they're not lost.
 5. **No CSRF state verification audit yet on the VA OAuth callback path
    beyond `state` param matching.** Re-audit when the API is re-enabled.
 
-6. **`piiScrubber` is regex-based and best-effort.** Adversarial inputs
-   that obfuscate (e.g., zero-width chars in SSNs) may slip past. Hardening
-   tracked in Sprint 4 + ongoing.
+6. **`piiScrubber` is regex-based and best-effort.** ~~Adversarial inputs
+   that obfuscate (e.g., zero-width chars in SSNs) may slip past.~~
+   **Hardened (S16):** inputs are normalized before scanning via
+   `normalizeForScan` — invisible-char strip (zero-width / soft-hyphen) +
+   NFKC fold — so zero-width-spliced, full-width, and NBSP-separated PII is
+   folded to ASCII before the regexes run; 5 red-team `PII_TRAPS` guard the
+   regression (`dcd2d5b`, `e21d876`). It remains regex-based and best-effort
+   by design — novel obfuscation outside the normalization set can still
+   slip past — so the dual-LLM extractor isolation (§5) stays the backstop.
 
 7. **DKB integrity is trust-on-first-use.** Sprint 6's RAG manifest carries
    content hashes, but the initial bundle is shipped with the build — a
