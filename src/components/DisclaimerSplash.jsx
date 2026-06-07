@@ -45,6 +45,10 @@ function DisclaimerSplash({ onAcknowledge }) {
               src={BRAND.logo}
               alt={`${BRAND.appName} Logo`}
               className="h-full w-full object-cover rounded-full"
+              width={96}
+              height={96}
+              fetchPriority="high"
+              decoding="async"
             />
           </div>
           <h1

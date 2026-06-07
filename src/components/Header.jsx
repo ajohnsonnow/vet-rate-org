@@ -222,6 +222,10 @@ function Header({
                 src="/images/Vet-Rate-org-logo-official.png"
                 alt="Vet-Rate.org Logo"
                 className="h-full w-full object-cover"
+                width={80}
+                height={80}
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
             <div className="flex-shrink-0">
