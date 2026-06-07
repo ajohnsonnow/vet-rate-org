@@ -1353,10 +1353,12 @@ export const LocalAIProvider = ({ children }) => {
   const value = {
     // Status
     webGPUStatus,
+    setWebGPUStatus,
     isLoading,
     loadProgress,
     isReady,
     error,
+    setError,
     isGenerating,
 
     // Model
@@ -1395,10 +1397,12 @@ export const LocalAIProvider = ({ children }) => {
 const LocalAIPanel = ({ onClose, onReportBug }) => {
   const {
     webGPUStatus,
+    setWebGPUStatus,
     isLoading,
     loadProgress,
     isReady,
     error,
+    setError,
     isGenerating,
     selectedModel,
     setSelectedModel,
@@ -1564,12 +1568,8 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
         );
 
         if (shouldReload) {
-          // Unload current model first
-          await handleUnload();
-          // Small delay to ensure cleanup
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          // Load model with new GPU
-          await handleLoadModel(selectedModel.id);
+          // switchModel unloads the current engine, then loads the new one
+          await switchModel(selectedModel.id);
         }
       }
 

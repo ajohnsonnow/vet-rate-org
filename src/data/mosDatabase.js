@@ -231,7 +231,6 @@ export const CODE_ALIASES = {
   // Flight Engineer
   "1A1X1": "1A1X1", // Current
   "1A1X1A": "1A1X1", // With suffix
-  "1A031": "1A1X1", // Skill level
 
   // Intelligence changes
   20831: "1N0X1", // Intelligence Applications Specialist
@@ -252,8 +251,6 @@ export const CODE_ALIASES = {
   "3D031": "1D7X1", // Knowledge Operations Management
   "3D131": "1D7X1", // Client Systems
   "3D1X1": "1D7X1", // Client Systems
-  "3D0X2": "1D7X1", // Cyber Systems Operations
-  "3D0X3": "1D7X1", // Cyber Surety
   "1B431": "1B4X1", // Cyber Warfare skill level
 
   // Maintenance historical expanded
@@ -548,8 +545,8 @@ export const CODE_ALIASES = {
   // Yeoman
   YN: "YN", // Retained
 
-  // Storekeeper (CG kept longer than Navy)
-  SK: "SK", // Coast Guard retained SK (different from Navy LS)
+  // Storekeeper: Navy SK merged into LS (2009, see Navy aliases above);
+  // Coast Guard Storekeeper is the separate SK_CG entry in MOS_DATABASE.
 
   // Port Security Specialist → Maritime Enforcement
   PS: "ME", // Port Security Specialist merged into ME (2010)

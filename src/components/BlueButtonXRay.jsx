@@ -387,7 +387,6 @@ export default function BlueButtonXRay({
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
-      standardFontDataUrl: STANDARD_FONT_DATA_URL,
     }).promise;
     let fullText = "";
 
