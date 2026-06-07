@@ -103,15 +103,14 @@ describe("Red team — URL bait stripped from LLM output", () => {
 
 describe("Red team — PII traps", () => {
   it.each(PII_TRAPS)("piiScrubber catches obfuscated PII: %s", (payload) => {
-    // We accept that the basic mode may miss zero-width / NBSP-obfuscated
-    // PII. Aggressive mode + the dual-LLM extractor refusing to echo content
-    // verbatim is the defense-in-depth backstop. Document the current state.
+    // normalizeForScan strips zero-width/soft-hyphen separators and NFKC-folds
+    // full-width digits to ASCII before the patterns run, so aggressive mode
+    // must redact every obfuscated SSN form here — no surviving 9-digit run.
     const result = scrubPII(payload, { aggressive: true });
-    // At minimum the scrubber should not crash and should return a string.
     expect(typeof result.scrubbedText).toBe("string");
-    // Most obfuscated payloads still contain enough plaintext digits to
-    // trigger SOMETHING. If a specific payload slips both modes, it's a
-    // tracked gap (THREAT_MODEL.md §7 issue #6).
+    expect(result.piiFound).toBe(true);
+    expect(result.scrubbedText).not.toMatch(/\d{3}-\d{2}-\d{4}/);
+    expect(result.scrubbedText).not.toMatch(/\d{9}/);
   });
 
   it("scrubAndSpotlight wraps + scrubs in one call", () => {
