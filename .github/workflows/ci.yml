@@ -236,6 +236,46 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  pwa:
+    name: PWA + SEO Gate (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/pwa.spec.ts under the chromium
+    # project: asserts the web app manifest is linked, parses, and every icon
+    # it declares loads as a real PNG (guards the S15 broken-icon fix); the
+    # SEO / Open Graph / Twitter meta are present, brand-correct and PII-free;
+    # and the hand-rolled service worker serves the app shell offline — the S15
+    # Definition of Done (docs/SPRINT_PLAN_S9-S17.md; docs/audit/S15_WORKLIST.md).
+    # The SW is registered manually in-test because the app only registers it in
+    # PROD (src/main.jsx), so it never auto-registers on the dev server. Kept
+    # separate from the full e2e job so a PWA/SEO regression is visible at a
+    # glance and bisectable from CI output.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run PWA + SEO gate (blocking)
+        run: npm run test:e2e:pwa
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pwa
+          path: playwright-report/
+          retention-days: 14
+
   lighthouse:
     name: Lighthouse Mobile Gate (Core Web Vitals)
     runs-on: ubuntu-latest
