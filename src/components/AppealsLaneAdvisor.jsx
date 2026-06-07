@@ -30,8 +30,13 @@ const AppealsLaneAdvisor = ({ onClose }) => {
   const [showEffectiveDate, setShowEffectiveDate] = useState(false);
 
   const recommendation = useMemo(() => {
-    const { hasNewEvidence, raterMadeError, timeSinceDenial, complexity } =
-      answers;
+    const {
+      hasNewEvidence,
+      raterMadeError,
+      timeSinceDenial,
+      complexity,
+      priorAppeals,
+    } = answers;
 
     // Not enough answers yet
     if (hasNewEvidence === null) return null;

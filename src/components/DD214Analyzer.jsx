@@ -729,7 +729,7 @@ const DD214Analyzer = ({
       `🔍 Analysis mode: ${useVisionAnalysis ? "VISION (direct image)" : "TEXT (OCR/extraction)"}`,
     );
     console.log(
-      `   hasVisionModel: ${hasVisionModel}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`,
+      `   hasVisionModel: ${isSmolVLMSupported()}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`,
     );
 
     // If no text has been extracted, prompt user to run OCR

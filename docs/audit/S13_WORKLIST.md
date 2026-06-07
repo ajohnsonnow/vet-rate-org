@@ -90,10 +90,11 @@ selection.
 Triage of the pre-existing `no-undef` backlog surfaced **real latent runtime bugs**, not
 style noise. These were already `no-undef:"warn"` before S13 (not newly introduced) and
 `tsc --noEmit` does **not** catch them (`checkJs:false`). The 3 `setShowAISettings` crashes
-were **fixed** in this sprint because the correct behavior was unambiguous from the
-codebase's own convention (not a guess — see below). The rest remain a documented fast-follow
-backlog: several need intended-UX/domain judgment. Left at "warn"; do **not** ratchet
-`no-undef` to "error" until drained.
+were fixed first; a dedicated **fast-follow** (`fix(s13)` on this branch) then closed the
+remaining 7 real bugs, each by following the file's own convention (not guesswork). Lint
+`no-undef` is now **2** — both the documented worker `gc` false-positives (guarded by
+`typeof gc !== "undefined"`, V8 `--expose-gc`), left as-is. `no-undef` stays at "warn" (the
+two `gc` entries are intentional, not drainable).
 
 **Fixed (3 of the cluster) — `setShowAISettings` → `onOpenAISettings?.()`.** CFileAnalyzer,
 DenialDecoder, and Pathfinder each already **receive** an `onOpenAISettings` prop (wired by
@@ -107,21 +108,32 @@ to the prop they already own. Convention-following, not guesswork; lint `no-unde
 | [CFileAnalyzer.jsx:162](../../src/components/CFileAnalyzer.jsx#L162) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
 | [DenialDecoder.jsx:148](../../src/components/DenialDecoder.jsx#L148) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
 | [Pathfinder.jsx:637](../../src/components/Pathfinder.jsx#L637) | `setShowAISettings` | **FIXED** → `onOpenAISettings?.()`. |
-| [LocalAIPanel.jsx:1558](../../src/components/LocalAIPanel.jsx#L1558) | `setWebGPUStatus` | undefined setter cluster — needs read of intended state wiring. |
-| [LocalAIPanel.jsx:1568](../../src/components/LocalAIPanel.jsx#L1568) | `handleUnload` | undefined handler. |
-| [LocalAIPanel.jsx:1572](../../src/components/LocalAIPanel.jsx#L1572) | `handleLoadModel` | undefined handler. |
-| [LocalAIPanel.jsx:2704](../../src/components/LocalAIPanel.jsx#L2704) | `setError` | undefined setter. |
-| [DD214Analyzer.jsx:732](../../src/components/DD214Analyzer.jsx#L732) | `hasVisionModel` | undefined identifier. |
-| [AppealsLaneAdvisor.jsx:91](../../src/components/AppealsLaneAdvisor.jsx#L91) | `priorAppeals` | undefined identifier. |
-| [BlueButtonXRay.jsx:390](../../src/components/BlueButtonXRay.jsx#L390) | `STANDARD_FONT_DATA_URL` | undefined constant. |
-| [florence-ocr-worker.js:385](../../src/workers/florence-ocr-worker.js#L385), [smolvlm-worker.js:260](../../src/workers/smolvlm-worker.js#L260) | `gc` | likely intentional optional `global.gc()` in a worker — verify before touching (may be a legit env global, not a bug). |
+| [LocalAIPanel.jsx](../../src/components/LocalAIPanel.jsx) | `setWebGPUStatus`, `setError` | **FIXED** — provider/consumer scope split: both setters existed on the Provider's `useState` but were absent from the exposed context `value`, so the consumer that called them threw. Added both to the `value` object **and** the consumer destructure. |
+| [LocalAIPanel.jsx](../../src/components/LocalAIPanel.jsx) | `handleUnload`, `handleLoadModel` | **FIXED** — the `handleGPUSelected` reload branch called two handlers that don't exist in scope. Replaced the `handleUnload()` → 500 ms wait → `handleLoadModel(id)` sequence with the in-scope `await switchModel(id)` (which unloads then re-initializes). |
+| [DD214Analyzer.jsx:732](../../src/components/DD214Analyzer.jsx#L732) | `hasVisionModel` | **FIXED** — a `console.log` referenced an undefined name; switched to the in-scope `isSmolVLMSupported()` (the real vision-capability check, already imported). |
+| [AppealsLaneAdvisor.jsx:91](../../src/components/AppealsLaneAdvisor.jsx#L91) | `priorAppeals` | **FIXED** — used in the lane-scoring `useMemo` but never destructured from `answers` (which already holds `priorAppeals`). Added it to the destructure; `useMemo` dep is `[answers]`, unchanged. |
+| [BlueButtonXRay.jsx:390](../../src/components/BlueButtonXRay.jsx#L390) | `STANDARD_FONT_DATA_URL` | **FIXED** — `getDocument({ standardFontDataUrl: STANDARD_FONT_DATA_URL })` referenced an undefined constant → threw on every PDF extraction. Removed the option (optional for text extraction via `getTextContent`); behavior-preserving + restores the function. |
+| [florence-ocr-worker.js:385](../../src/workers/florence-ocr-worker.js#L385), [smolvlm-worker.js:260](../../src/workers/smolvlm-worker.js#L260) | `gc` | **FALSE POSITIVE (left as-is)** — guarded by `typeof gc !== "undefined"`; `gc` is the V8 `--expose-gc` global. Not a bug. These are the 2 remaining `no-undef` warnings. |
 
-### `no-dupe-keys` (correctness, pre-existing) — 4 sites, all in one data file
+### `no-dupe-keys` (correctness, pre-existing) — 4 sites, all in one data file — **RESOLVED**
 
-[mosDatabase.js](../../src/data/mosDatabase.js): duplicate keys `1A031` (L243), `3D0X2`
-(L312), `3D0X3` (L313), `SK` (L552). A duplicate object key silently drops the earlier
-value. Fix needs MOS-code domain judgment (which definition is canonical) → fast-follow, not
-a blind edit. Left at "warn"; do not ratchet `no-dupe-keys` to "error" until resolved.
+[mosDatabase.js](../../src/data/mosDatabase.js) `CODE_ALIASES` (a flat `alias → primaryCode`
+crosswalk): duplicate keys `1A031`, `3D0X2`, `3D0X3`, `SK`. JS silently keeps the **last**
+duplicate. Resolution was **not** a blind edit nor a guess — it used the consumer-existence
+test: `searchMOS` (line ~9383) only yields a result when `MOS_DATABASE[primaryCode]` exists,
+and its `MOS_DATABASE[*].aliases` loop runs **first** and `seen`-dedupes. A `CODE_ALIASES`
+value that is not a `MOS_DATABASE` key is therefore a **dead** mapping. Each fix removes the
+dead/erroneous shadowed duplicate, verified to have **zero observable consumer effect**:
+
+| key | duplicates | resolution | why |
+|---|---|---|---|
+| `1A031` | `→1A1X1` (Flight Engineer) vs `→1A0X1` (Boom Operator) | removed `→1A1X1` | `1A031` is the SL-3 of `1A0X1` (In-Flight Refueling/Boom), **not** `1A1X1` (whose SL-3 is `1A131`). Kept the domain-honest Boom Operator label. Neither target is in `MOS_DATABASE` yet, so the search result is unchanged (nothing); the missing `1A0X1`/Boom Operator entry is a data-completeness backlog item. |
+| `3D0X2` | `→1D7X1` (AF, **dead**) vs `→5C0X1` (USSF, live @L8667) | removed `→1D7X1` | runtime already kept the live USSF mapping; AF target not modeled. |
+| `3D0X3` | `→1D7X1` (AF, **dead**) vs `→5C0X1` (USSF, live @L8667) | removed `→1D7X1` | same as `3D0X2`. |
+| `SK` | `→LS` (Navy, live @L2290) vs `→SK` (**dead**) | removed `→SK` | bare "SK" already resolves to LS via `MOS_DATABASE["LS"].aliases` (Navy Storekeeper merged to LS, 2009); Coast Guard Storekeeper is the separate `SK_CG` entry (@L7652). The `→SK` target had no `MOS_DATABASE` entry (dead). |
+
+Lint `no-dupe-keys` is now **0**. All 809 unit tests still pass. `no-dupe-keys` can be
+ratcheted to "error" in a future sprint (left at "warn" here to avoid scope creep).
 
 ## Verification
 
@@ -132,10 +144,10 @@ a blind edit. Left at "warn"; do not ratchet `no-dupe-keys` to "error" until res
 
 ## Out of S13 scope (documented backlog → fast-follow / later sprints)
 
-- `no-undef` cluster (above) — 3 `setShowAISettings` crashes fixed in this sprint; the
-  remaining 9 (LocalAIPanel handler/setter cluster, `hasVisionModel`, `priorAppeals`,
-  `STANDARD_FONT_DATA_URL`, worker `gc`) are a dedicated bug-fix fast-follow needing per-site
-  investigation.
-- `no-dupe-keys` in `mosDatabase.js` — MOS-code dedupe with domain judgment.
+- `no-undef` cluster (above) — **closed**: 3 `setShowAISettings` crashes + 7 fast-follow bugs
+  fixed; the only 2 remaining are the worker `gc` false-positives (intentional, documented).
+- `no-dupe-keys` in `mosDatabase.js` — **closed** (4/4 resolved via the consumer-existence
+  test; see table above). One follow-on data-completeness item: add a `1A0X1`/Boom Operator
+  entry to `MOS_DATABASE` so `1A031` resolves.
 - `no-console` → "error" ratchet — deferred to **S17** (after `console.*` → `logger`).
 - jsx-a11y + `exhaustive-deps` backlog drain — incremental; ratchet each rule to error once 0.
