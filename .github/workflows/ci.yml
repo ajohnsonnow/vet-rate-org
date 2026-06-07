@@ -283,13 +283,17 @@ jobs:
     # Lighthouse-CI on the built SPA, served via `vite preview`, under
     # Lighthouse's default mobile form factor with simulated throttling — the
     # explicitly-deferred piece of AUDIT_FINDINGS #33 (docs/SPRINT_PLAN_S9-S17.md,
-    # S14). lighthouserc.json hard-asserts CLS <= 0.1 and warns on LCP / TBT /
-    # perf-score: the same informational->strict ratchet the bundle-budget gate
-    # (scripts/check-bundle-budget.mjs) uses — the warn budgets are ratcheted to
-    # error once CI establishes a stable throttled-mobile baseline (tracked in
-    # docs/audit/S14_WORKLIST.md). @lhci/cli is installed globally (the standard
-    # lhci CI pattern) rather than as a devDependency. Chrome ships on the
-    # ubuntu-latest runner, which lhci's chrome-launcher discovers automatically.
+    # S14). lighthouserc.json hard-asserts CLS <= 0.1 and the SEO category
+    # (>= 0.9, promoted S16 — measured 1.00 over 3 runs in S15, and SEO audits are
+    # deterministic from the built HTML, so the baseline is stable regardless of
+    # throttling). LCP / TBT / perf-score remain warn: the same informational->
+    # strict ratchet the bundle-budget gate (scripts/check-bundle-budget.mjs)
+    # uses — those budgets ratchet to error once CI establishes a stable
+    # throttled-mobile baseline (this branch is local-only, so the CI Lighthouse
+    # job has not yet produced one; tracked in docs/audit/S14_WORKLIST.md). @lhci/cli
+    # is installed globally (the standard lhci CI pattern) rather than as a
+    # devDependency. Chrome ships on the ubuntu-latest runner, which lhci's
+    # chrome-launcher discovers automatically.
     steps:
       - uses: actions/checkout@v4
 
@@ -308,7 +312,7 @@ jobs:
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli@0.15.1
 
-      - name: Run Lighthouse CI (mobile, blocking on CLS)
+      - name: Run Lighthouse CI (mobile, blocking on CLS + SEO)
         run: lhci autorun
 
       - name: Upload Lighthouse report
