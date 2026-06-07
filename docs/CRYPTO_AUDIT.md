@@ -4,9 +4,9 @@
 >
 > Companion to [COMPLIANCE_STRATEGY.md](./COMPLIANCE_STRATEGY.md) (PW.4 — reuse well-secured crypto) and [THREAT_MODEL.md](./THREAT_MODEL.md). Closes finding #13 in [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md).
 
-**Audit date:** 2026-05-15
+**Audit date:** 2026-05-15 (re-audited 2026-06-06, S16)
 **Auditor:** Anthony Johnson (engineering)
-**Status:** Two real flaws fixed (PBKDF2 iterations + static-salt regression). Residual items documented below.
+**Status:** Two real flaws fixed (PBKDF2 iterations + static-salt regression). **S16 re-audit (2026-06-06):** an at-rest key-custody scope was added — the AES-KW decision in §7 is reversed and slated for implementation (see THREAT_MODEL §7 #8–#10 and [audit/S16_ROTATION_DEAUTH_DESIGN.md](./audit/S16_ROTATION_DEAUTH_DESIGN.md)). Residual items documented below.
 
 ---
 
@@ -139,7 +139,7 @@ The sniffer `_hasMagic(bytes)` reads the first 4 bytes. If they match `VS2\0`, V
 ## 7. What we explicitly chose not to add
 
 - **Argon2id / scrypt.** Argon2id is the modern recommendation, but the only browser-side path is a WASM bundle (≥250 KB) loaded into a service worker. The cost-benefit didn't justify the bundle hit at our scale; PBKDF2-SHA256 at 600k iterations matches OWASP 2023's accepted alternative for PBKDF2. Revisit if a future ASVS L2 push requires Argon2id.
-- **Key wrapping (RFC 3394, AES-KW).** Our generated-key path uses raw export rather than wrapping. AES-KW would be an additional 32-byte wrap. We chose raw export because the exported key is stored on-device only (`storeLocalKey` in localStorage, never sent to cloud) — there is no transport surface that AES-KW would protect.
+- **Key wrapping (RFC 3394, AES-KW). (Rationale REVERSED S16, 2026-06-06 — now slated for adoption.)** The S8 stance was: the generated key is stored on-device only, so there is no *transport* surface for AES-KW to protect. The S16 re-audit corrects the framing — the real threat is **at rest**: the raw AES key sits **unwrapped** in plaintext `localStorage` (`storeLocalKey`), readable by any XSS, a shared-device user, or the one-click full-localStorage export in [`debugDump.js`](../src/utils/debugDump.js#L60-L64). Wrapping the DEK under a passphrase-anchored KEK (AES-KW) closes that and, unlike a transport wrap, also enables **key-rotation** (re-wrap the DEK, no ciphertext re-encryption) and **local device-deauth** (wipe the wrapped material). Design: [audit/S16_ROTATION_DEAUTH_DESIGN.md](./audit/S16_ROTATION_DEAUTH_DESIGN.md); implementation in S16 commits F/G. See THREAT_MODEL §7 residuals #8–#10.
 - **Authenticated additional data (AAD) on AES-GCM. (Shipped B24, 2026-05-15.)** New writes bind AAD per-envelope so a ciphertext from one envelope cannot be decrypted as if it came from another, even with the same key. Two new envelope versions: [cloudEncryption.js](../src/utils/cloudEncryption.js) `VR_ENC_V3` — AAD = UTF-8 `"vetrate.cloud-encryption.v3"`; [cloudSync.js](../src/utils/cloudSync.js) `VS3\0` magic — AAD = UTF-8 `"vetrate.cloud-sync.v3"`. Decrypt paths still accept V1 + V2 envelopes without AAD so existing user backups keep working. A V3 ciphertext relabeled as V2 fails the GCM tag check; a tampered ciphertext fails; a cross-context paste (cloud-encryption ciphertext fed to cloud-sync or vice versa) fails. Tests: [cloudEncryptionAAD.test.js](../src/__tests__/utils/cloudEncryptionAAD.test.js) + [cloudSyncAAD.test.js](../src/__tests__/utils/cloudSyncAAD.test.js) (10 cases covering roundtrip, downgrade, tamper, legacy regression).
 - **HKDF.** We derive directly from passphrase via PBKDF2 to a single AES-GCM key. We don't derive sub-keys via HKDF because we only need one symmetric key per ciphertext.
 
@@ -154,7 +154,8 @@ Re-open this document if any of these happen:
 - A WebAuthn / passkeys integration lands (introduces a new key-management surface).
 - A server-side data plane is introduced (changes the threat model substantially — see [COMPLIANCE_STRATEGY.md](./COMPLIANCE_STRATEGY.md) re-evaluation triggers).
 - A practical attack against PBKDF2-SHA256 below 600k iterations is published.
+- The at-rest key-custody surface changes (e.g. key wrapping, rotation, or device-deauth lands or is revised) — track via [audit/S16_ROTATION_DEAUTH_DESIGN.md](./audit/S16_ROTATION_DEAUTH_DESIGN.md).
 
 ---
 
-*Owner: Anthony Johnson. Last updated 2026-05-15. Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 13 — moved to compliant in B24 after shipping AAD-bound AES-GCM on both cloud-encryption (`VR_ENC_V3`) and cloud-sync (`VS3\0` magic) envelopes.*
+*Owner: Anthony Johnson. Last updated 2026-06-06 (S16 re-audit: at-rest key-wrapping scope reopened — §7 AES-KW reversed). Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 13 — moved to compliant in B24 after shipping AAD-bound AES-GCM on both cloud-encryption (`VR_ENC_V3`) and cloud-sync (`VS3\0` magic) envelopes.*

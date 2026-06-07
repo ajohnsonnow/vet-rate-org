@@ -80,4 +80,41 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
     const decrypted = await decryptData(b64, password);
     expect(decrypted).toBe(plaintext);
   });
+
+  it("legacy V1 envelope (no magic, fixed salt, 100k iters) still decrypts (regression safety)", async () => {
+    // Oldest backups: no magic prefix, fixed salt "vet-rate-salt-v1", 100k
+    // iterations, no AAD — layout iv[12] || ciphertext. Pins the cloudSync.js
+    // V1 fallback path before any refactor near _deriveKey.
+    const password = "passphrase";
+    const plaintext = "ancient backup";
+    const enc = new TextEncoder();
+    const salt = enc.encode("vet-rate-salt-v1");
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const km = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+      km,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"],
+    );
+    const ct = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      enc.encode(plaintext),
+    );
+    const out = new Uint8Array(iv.length + ct.byteLength);
+    out.set(iv, 0);
+    out.set(new Uint8Array(ct), iv.length);
+    const b64 = btoa(String.fromCharCode(...out));
+
+    const decrypted = await decryptData(b64, password);
+    expect(decrypted).toBe(plaintext);
+  });
 });

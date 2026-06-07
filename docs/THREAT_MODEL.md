@@ -211,6 +211,34 @@ here so they're not lost.
    content hashes, but the initial bundle is shipped with the build — a
    poisoned bundle could land before the user could verify.
 
+8. **Backup data-encryption keys sit unwrapped in plaintext `localStorage`.**
+   cloudEncryption's no-passphrase path exports the raw AES-256 key and stores
+   it under `vet_rate_backup_key_*` (`storeLocalKey`) with no wrapping. Any
+   localStorage read (XSS, shared device) or the one-click full-localStorage
+   export in `debugDump.js` yields the decryption key. **Recognized S16** —
+   this reverses [CRYPTO_AUDIT §7](./CRYPTO_AUDIT.md)'s prior "no transport
+   surface" rationale for skipping AES-KW; the real threat is at-rest, not
+   transport. Being addressed by a passphrase-anchored KEK that wraps the DEK
+   plus `debugDump` redaction (S16 commit F; design
+   [S16_ROTATION_DEAUTH_DESIGN.md](./audit/S16_ROTATION_DEAUTH_DESIGN.md)).
+
+9. **cloudSync falls back to a hardcoded low-entropy key.** With no passphrase,
+   `saveBackupToGoogleDrive` / `restoreBackupFromGoogleDrive` derive the key
+   from `currentUser?.email || "vet-rate-default-key"` — a public/static value
+   ([cloudSync.js:430](../src/utils/cloudSync.js#L430), [:501](../src/utils/cloudSync.js#L501)).
+   **Recognized S16.** Being addressed by forbidding the fallback for new writes
+   while keeping it as a last-resort decrypt for existing backups (S16 commit G,
+   per Q-LEGACY-DRIVE).
+
+10. **Sign-out is OAuth-only; crypto keys are never revoked, and no
+    key-rotation or device-deauthorization path exists.**
+    `signOutOfGoogleDrive` revokes the OAuth token and clears the session token
+    but leaves all backup key material valid on the device. **Recognized S16.**
+    Being addressed by local self-deauth (wipe key material + OAuth revoke) and
+    passphrase-KEK rotation (S16 commits F/G). Honest limit: a no-server design
+    cannot remotely revoke another device — deauth is local + rotate-to-exclude
+    only.
+
 ---
 
 ## 8. Update procedure
