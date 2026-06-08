@@ -36,11 +36,13 @@ import {
   storeLocalKey,
   getLocalKey,
   isCryptoAvailable,
+  unlockDeviceKeystore,
 } from "../utils/cloudEncryption";
 import { exportAllData, importAllData } from "../utils/storage";
 
 import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
+import DeviceKeystorePanel from "./DeviceKeystorePanel";
 
 const MultiCloudManager = ({ onClose }) => {
   // UI State
@@ -70,6 +72,12 @@ const MultiCloudManager = ({ onClose }) => {
   const [showPassphraseModal, setShowPassphraseModal] = useState(false);
   const [pendingRestore, setPendingRestore] = useState(null);
   const [restorePassphrase, setRestorePassphrase] = useState("");
+
+  // Device-keystore unlock modal (a wrapped backup key needs the device
+  // passphrase before a locked restore can proceed).
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [pendingUnlock, setPendingUnlock] = useState(null);
+  const [unlockPassphrase, setUnlockPassphrase] = useState("");
 
   // Initialize Google Drive on mount
   useEffect(() => {
@@ -295,7 +303,39 @@ const MultiCloudManager = ({ onClose }) => {
       await importAllData(data);
       setStatus("✅ Backup restored successfully! Refresh to see changes.");
     } catch (err) {
+      // A wrapped backup key whose device keystore is locked: prompt for the
+      // device passphrase, then retry this same restore. Mirrors the
+      // PASSPHRASE_REQUIRED branch above. getLocalKey throws this bare sentinel.
+      if (err.message === "KEYSTORE_LOCKED") {
+        setPendingUnlock(backup);
+        setShowUnlockModal(true);
+        return; // finally still clears the loading flag
+      }
       setError(`Restore failed: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Unlock the device keystore, then retry the restore that hit KEYSTORE_LOCKED.
+  const handleUnlockAndRestore = async () => {
+    if (!unlockPassphrase) {
+      setError("Please enter your device passphrase");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await unlockDeviceKeystore(unlockPassphrase);
+      const backup = pendingUnlock;
+      setShowUnlockModal(false);
+      setUnlockPassphrase("");
+      setPendingUnlock(null);
+      if (backup) await handleRestore(backup);
+    } catch (err) {
+      setError(`Unlock failed: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -972,7 +1012,7 @@ const MultiCloudManager = ({ onClose }) => {
                         ✓
                       </span>
                       <span>
-                        <strong>PBKDF2</strong> - 100,000 iterations for
+                        <strong>PBKDF2</strong> - 600,000 iterations for
                         passphrase-based keys (OWASP recommended)
                       </span>
                     </li>
@@ -997,6 +1037,25 @@ const MultiCloudManager = ({ onClose }) => {
                   </ul>
                 </div>
               </div>
+
+              {/* Device Keystore Management */}
+              <DeviceKeystorePanel
+                onDeauthorize={async () => {
+                  await signOutOfGoogleDrive();
+                  disconnectProvider("dropbox");
+                  disconnectProvider("onedrive");
+                  setProviderStates({
+                    google_drive: {
+                      connected: false,
+                      user: null,
+                      initialized: false,
+                    },
+                    dropbox: { connected: false, user: null },
+                    onedrive: { connected: false, user: null },
+                  });
+                  setBackups([]);
+                }}
+              />
 
               {/* Crypto API Status */}
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
@@ -1212,6 +1271,55 @@ const MultiCloudManager = ({ onClose }) => {
           value={restorePassphrase}
           onChange={(e) => setRestorePassphrase(e.target.value)}
           placeholder="Enter backup passphrase"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          /* eslint-disable-next-line jsx-a11y/no-autofocus */
+          autoFocus
+        />
+      </ResponsiveModal>
+
+      {/* Device-keystore unlock modal — shown when a restore hits KEYSTORE_LOCKED */}
+      <ResponsiveModal
+        isOpen={showUnlockModal}
+        onClose={() => {
+          setShowUnlockModal(false);
+          setPendingUnlock(null);
+          setUnlockPassphrase("");
+        }}
+        title="🔒 Unlock Device Keystore"
+        size="sm"
+        zIndex={70}
+        footer={
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowUnlockModal(false);
+                setPendingUnlock(null);
+                setUnlockPassphrase("");
+              }}
+              className="flex-1 rounded-lg bg-gray-200 py-2 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUnlockAndRestore}
+              disabled={!unlockPassphrase || isLoading}
+              className="flex-1 rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+            >
+              Unlock & Restore
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">
+          This backup was encrypted with a device-bound key. Enter your device
+          passphrase to unlock the keystore and continue restoring.
+        </p>
+        <input
+          type="password"
+          value={unlockPassphrase}
+          onChange={(e) => setUnlockPassphrase(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleUnlockAndRestore()}
+          placeholder="Enter device passphrase"
           className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
           /* eslint-disable-next-line jsx-a11y/no-autofocus */
           autoFocus

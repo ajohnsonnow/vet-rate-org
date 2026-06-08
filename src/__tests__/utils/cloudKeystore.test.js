@@ -9,6 +9,9 @@ import {
   wipeLocalKeystore,
   isDevicePassphraseEnabled,
   isKeystoreUnlocked,
+  isDeviceKeystoreLocked,
+  exportRecoveryBundle,
+  importRecoveryBundle,
 } from "../../utils/cloudEncryption";
 
 // Stable storage keys the keystore writes (asserted directly so a rename here
@@ -427,5 +430,82 @@ describe("cloudEncryption — Web Locks rotation serialization (S16 deferred)", 
     expect(await getLocalKey("k")).toBe(dek);
     lockDeviceKeystore();
     await expect(unlockDeviceKeystore("second")).rejects.toThrow();
+  });
+});
+
+describe("cloudEncryption — recovery bundle + lock state (S16 commit G)", () => {
+  it("isDeviceKeystoreLocked is true only when enabled AND locked", async () => {
+    expect(isDeviceKeystoreLocked()).toBe(false); // not enabled
+    await enableDevicePassphrase("pw");
+    expect(isDeviceKeystoreLocked()).toBe(false); // enabled + unlocked
+    lockDeviceKeystore();
+    expect(isDeviceKeystoreLocked()).toBe(true); // enabled + locked
+  });
+
+  it("exportRecoveryBundle throws when no passphrase is enabled", async () => {
+    await expect(exportRecoveryBundle()).rejects.toThrow(/not enabled/i);
+  });
+
+  it("round-trips through export → deauth-wipe → import → unlock (recovery)", async () => {
+    await enableDevicePassphrase("pw");
+    const dekA = makeDEK();
+    const dekB = makeDEK();
+    await storeLocalKey("a", dekA);
+    await storeLocalKey("b", dekB);
+
+    const bundle = await exportRecoveryBundle();
+    expect(bundle.format).toBe("vetrate.keystore-recovery");
+    expect(Object.keys(bundle.wrappedKeys).sort()).toEqual(["a", "b"]);
+
+    // Simulate a wiped / fresh device: no keystore material survives.
+    wipeLocalKeystore();
+    expect(isDevicePassphraseEnabled()).toBe(false);
+
+    const imported = await importRecoveryBundle(bundle);
+    expect(imported).toBe(2);
+    expect(isDevicePassphraseEnabled()).toBe(true);
+    expect(isKeystoreUnlocked()).toBe(false); // imported locked
+
+    await expect(unlockDeviceKeystore("pw")).resolves.toBe(true);
+    expect(await getLocalKey("a")).toBe(dekA);
+    expect(await getLocalKey("b")).toBe(dekB);
+  });
+
+  it("importRecoveryBundle refuses to overwrite a live keystore", async () => {
+    await enableDevicePassphrase("pw");
+    const bundle = await exportRecoveryBundle();
+    await expect(importRecoveryBundle(bundle)).rejects.toThrow(/already has/i);
+  });
+
+  it("importRecoveryBundle rejects a malformed bundle", async () => {
+    await expect(importRecoveryBundle({ format: "nope" })).rejects.toThrow(
+      /valid/i,
+    );
+    await expect(importRecoveryBundle(null)).rejects.toThrow(/valid/i);
+  });
+
+  it("exportRecoveryBundle excludes un-wrapped plaintext keys", async () => {
+    await enableDevicePassphrase("pw");
+    await storeLocalKey("wrapped1", makeDEK());
+    // A crash-left plaintext key the keystore has not migrated yet.
+    localStorage.setItem(PLAINTEXT + "plain1", makeDEK());
+
+    const bundle = await exportRecoveryBundle();
+    expect(Object.keys(bundle.wrappedKeys)).toContain("wrapped1");
+    expect(Object.keys(bundle.wrappedKeys)).not.toContain("plain1");
+  });
+
+  it("a tampered verifier in the bundle fails unlock after import (not a brick)", async () => {
+    await enableDevicePassphrase("pw");
+    await storeLocalKey("a", makeDEK());
+    const bundle = await exportRecoveryBundle();
+    // Corrupt the verifier to a valid-length-but-garbage 40-byte blob.
+    bundle.verifier = btoa("0123456789abcdef0123456789abcdef01234567");
+    delete bundle.verifierTag; // drop the integrity tag so the wrong-passphrase path runs
+
+    wipeLocalKeystore();
+    await importRecoveryBundle(bundle);
+    await expect(unlockDeviceKeystore("pw")).rejects.toThrow();
+    expect(isKeystoreUnlocked()).toBe(false);
   });
 });

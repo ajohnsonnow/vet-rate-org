@@ -426,6 +426,32 @@ export async function decryptData(encryptedBase64, password) {
   return decoder.decode(plain);
 }
 
+// The hardcoded last-resort key older backups may have been encrypted under.
+// Retired for WRITES (it is low-entropy and shared across every install) but
+// kept for RESTORE so those existing backups still open. See the S16 design,
+// Q-LEGACY-DRIVE: "forbid new writes, keep last-resort decrypt indefinitely".
+export const LEGACY_DEFAULT_KEY = "vet-rate-default-key";
+
+// Key for a NEW write: the user's passphrase, else their account email. The
+// shared default key is refused — a new backup must bind to something
+// user-specific, never the global constant — so a write with neither a
+// passphrase nor a signed-in email throws instead of silently using it.
+export function selectWriteKey(password, user) {
+  const key = password || user?.email;
+  if (!key) {
+    throw new Error(
+      "No encryption key available for this backup. Provide a passphrase or sign in before backing up.",
+    );
+  }
+  return key;
+}
+
+// Key for RESTORE: the same preference, but fall back to the legacy default so a
+// backup written under it before the retirement still decrypts.
+export function selectRestoreKey(password, user) {
+  return password || user?.email || LEGACY_DEFAULT_KEY;
+}
+
 /**
  * Save backup to Google Drive
  */
@@ -435,9 +461,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
       throw new Error("Not signed in to Google Drive");
     }
 
-    // Use email as default encryption key
-    const encryptionKey =
-      password || currentUser?.email || "vet-rate-default-key";
+    const encryptionKey = selectWriteKey(password, currentUser);
 
     const jsonData = JSON.stringify(data);
     const encryptedData = await encryptData(jsonData, encryptionKey);
@@ -508,8 +532,7 @@ export async function listBackupsFromGoogleDrive() {
  */
 export async function restoreBackupFromGoogleDrive(fileId, password = null) {
   try {
-    const encryptionKey =
-      password || currentUser?.email || "vet-rate-default-key";
+    const encryptionKey = selectRestoreKey(password, currentUser);
 
     const response = await window.gapi.client.drive.files.get({
       fileId: fileId,

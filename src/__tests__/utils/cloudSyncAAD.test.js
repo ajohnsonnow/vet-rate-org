@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { encryptData, decryptData } from "../../utils/cloudSync";
+import {
+  encryptData,
+  decryptData,
+  selectWriteKey,
+  selectRestoreKey,
+  LEGACY_DEFAULT_KEY,
+} from "../../utils/cloudSync";
 
 describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
   it("encrypts to VS3 envelope and roundtrips", async () => {
@@ -116,5 +122,31 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
 
     const decrypted = await decryptData(b64, password);
     expect(decrypted).toBe(plaintext);
+  });
+});
+
+describe("cloudSync — key selection (S16 commit G, default-key retirement)", () => {
+  it("selectWriteKey prefers the passphrase, then the account email", () => {
+    expect(selectWriteKey("pp", { email: "vet@example.com" })).toBe("pp");
+    expect(selectWriteKey(null, { email: "vet@example.com" })).toBe(
+      "vet@example.com",
+    );
+  });
+
+  it("selectWriteKey refuses the legacy default key (throws with no passphrase or email)", () => {
+    expect(() => selectWriteKey(null, null)).toThrow(/passphrase|sign in/i);
+    expect(() => selectWriteKey("", { email: "" })).toThrow();
+    expect(() => selectWriteKey(undefined, undefined)).toThrow();
+    // A user with no email must throw, never silently fall back to the constant.
+    expect(() => selectWriteKey(null, {})).toThrow();
+  });
+
+  it("selectRestoreKey keeps the legacy default as a last resort", () => {
+    expect(selectRestoreKey("pp", { email: "vet@example.com" })).toBe("pp");
+    expect(selectRestoreKey(null, { email: "vet@example.com" })).toBe(
+      "vet@example.com",
+    );
+    expect(selectRestoreKey(null, null)).toBe(LEGACY_DEFAULT_KEY);
+    expect(selectRestoreKey(null, {})).toBe(LEGACY_DEFAULT_KEY);
   });
 });
