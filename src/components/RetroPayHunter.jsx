@@ -175,7 +175,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         },
         vkbMergeData: {
           aiInsights: {
-            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, ${cueAlerts?.length || 0} potential CUE issues`,
+            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, est. $${calculateTotals().total.toLocaleString("en-US", { minimumFractionDigits: 2 })}; ${cueAlerts?.length || 0} potential CUE issues`,
             bilateralFactorIssue: bilateralCheck?.applicable || false,
           },
         },
