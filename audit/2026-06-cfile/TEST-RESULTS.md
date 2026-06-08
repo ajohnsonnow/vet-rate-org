@@ -344,7 +344,40 @@ Full suite total (all specs, all projects): **731/737** pass (prior 730/736 + 1 
 
 ## Sprint 4 — Privacy & security audit
 
-> To be populated after Sprint 4 execution.
+### Gate results
+
+| Check | Result | Notes |
+|---|---|---|
+| `npm audit` | PASS | 0 vulnerabilities |
+| `npm run test:red-team` | PASS | 48/48 pass |
+| `piiScrubber.js` review | PASS | SSN, VA file, EDIPI, MRN, email, phone, DOB, address; NFKC normalization against unicode obfuscation |
+| Gemini default-off | PASS | BYOK only — no provider enabled by default; confirmed in LanguageContext.jsx:16470 |
+| Atomic Wipe coverage | PASS | Clears localStorage, sessionStorage, cookies, all IndexedDB (modern API + named-DB fallback), Cache Storage, Service Workers |
+| BugSquasher endpoint | FIXED | Was hardcoded `formsubmit.co/Anth@StructuredForGrowth.com`; now reads `VITE_BUG_REPORT_ENDPOINT` (empty = send disabled) |
+| BugSquasher PII guard | FIXED | `scrubPII()` applied to all free-text fields + `full_report` before remote send |
+
+### Findings
+
+**F4-1 — BugSquasher hardcoded endpoint (FIXED)**
+
+`src/components/BugSquasher.jsx:22` contained a hardcoded `formsubmit.co` URL pointing to the developer's email. Any build shipped to production would silently send bug reports (including the full formatted report with console logs and app state) to a third-party email relay without operator control.
+
+Fix: endpoint moved to `import.meta.env.VITE_BUG_REPORT_ENDPOINT ?? ""`. Send block is skipped entirely when the variable is empty. Documented in `.env.example`.
+
+**F4-2 — No PII scrub before formsubmit.co send (FIXED)**
+
+The `full_report` field sent to formsubmit.co contained: user-typed free-text (description, steps, expected/actual behavior, additional context), console logs captured via `initializeErrorCapture()`, and localStorage condition names. Console logs are captured without keyword filtering for `console.error`/`console.warn`, creating a potential vector for accidental PII egress if any code path logs sensitive values.
+
+Fix: `scrubPII()` from `piiScrubber.js` applied to all five free-text fields and `full_report` before payload construction.
+
+**F4-3 — `getStorageInfo()` leaks condition names (LOW / accepted)**
+
+`bugReportUtils.js:311` serializes `savedClaimConditions: claimsData.map(c => ({ condition: c.conditionName, ... }))`. Condition names are not PII under this project's definition. Accepted — no change needed.
+
+### Fixes committed
+
+- `src/components/BugSquasher.jsx` — env-configurable endpoint + PII scrub
+- `.env.example` — `VITE_BUG_REPORT_ENDPOINT` documented
 
 ---
 
