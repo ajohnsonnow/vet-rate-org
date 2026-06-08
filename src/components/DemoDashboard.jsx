@@ -12,7 +12,7 @@
  * - Professional presentation mode
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
 import {
   getServiceHistory,
@@ -39,13 +39,11 @@ import { useLanguage } from "../contexts/LanguageContext";
 import {
   Shield,
   FileText,
-  RefreshCw,
   LogIn,
   LogOut,
   User,
   ChevronDown,
   ChevronUp,
-  Code,
   CheckCircle,
   Clock,
   XCircle,
@@ -53,8 +51,6 @@ import {
   AlertCircle,
   MapPin,
   Database,
-  Building2,
-  FileType,
   Briefcase,
   Medal,
   Lock,
@@ -74,6 +70,7 @@ import {
 // =============================================================================
 
 const DemoDashboard = ({ onClose }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const {
@@ -119,6 +116,8 @@ const DemoDashboard = ({ onClose }) => {
 
   // UI States
   const [showRawJson, setShowRawJson] = useState({});
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [activeTab, setActiveTab] = useState("status"); // 'status', 'oauth', 'opendata'
   const [isRunningTests, setIsRunningTests] = useState(false);
 

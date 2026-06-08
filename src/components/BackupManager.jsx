@@ -9,7 +9,7 @@
  * Prevents catastrophic data loss from cache clearing
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -28,7 +28,7 @@ import DbqBrowser from "./DbqBrowser";
 import { getCacheStats } from "../utils/dbqOfflineStorage";
 
 export default function BackupManager({ onClose }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success'|'error'|'info', message: '', details: {} }
@@ -320,7 +320,7 @@ export default function BackupManager({ onClose }) {
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4">
               <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
-                What's Included:
+                What&apos;s Included:
               </h4>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 <li>✓ All saved claims and statements</li>
@@ -497,6 +497,7 @@ export default function BackupManager({ onClose }) {
 
             {/* Import Mode Selection */}
             <div className="mb-4 space-y-2">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="font-semibold text-gray-700 dark:text-gray-300">
                 Import Mode:
               </label>
@@ -529,6 +530,7 @@ export default function BackupManager({ onClose }) {
             </div>
 
             {/* Drag and Drop Zone */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}

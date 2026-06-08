@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReportBugLink from "./ReportBugLink";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -180,7 +180,7 @@ const VersionDropUp = () => {
 
           {/* Header - at bottom since it's flipped */}
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-b-lg sticky bottom-0">
-            <h3 className="font-bold text-lg">What's New</h3>
+            <h3 className="font-bold text-lg">What&apos;s New</h3>
             <p className="text-emerald-100 text-xs">Version {version}</p>
           </div>
         </div>
@@ -265,7 +265,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
 
             <div className="font-mono text-gray-300 space-y-4 text-sm leading-relaxed">
               <p className="text-center text-lg text-white font-semibold">
-                "{t("about", "builtByVeteranForVeterans")}"
+                &quot;{t("about", "builtByVeteranForVeterans")}&quot;
               </p>
 
               <p>{t("about", "promiseIntro")}</p>
@@ -583,8 +583,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
                         80+ Titanium
                       </p>
                       <p>
-                        <strong>Displays:</strong> Asus ProArt PA329CV 32" 4K +
-                        PA279CRV 27" 4K + Caperave CU17 17.3" 4K
+                        <strong>Displays:</strong> Asus ProArt PA329CV 32&quot;
+                        4K + PA279CRV 27&quot; 4K + Caperave CU17 17.3&quot; 4K
                       </p>
                       <p className="pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
                         <strong>eGPU:</strong> Asus Dual GeForce RTX 5060 Ti OC

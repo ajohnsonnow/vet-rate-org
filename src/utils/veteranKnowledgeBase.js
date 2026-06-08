@@ -46,6 +46,7 @@ const openVKBDatabase = () => {
 
     request.onsuccess = () => {
       vkbDB = request.result;
+      // eslint-disable-next-line no-console
       console.log("✅ VKB IndexedDB opened successfully");
       resolve(vkbDB);
     };
@@ -61,6 +62,7 @@ const openVKBDatabase = () => {
         vkbStore.createIndex("lastUpdated", "metadata.lastUpdated", {
           unique: false,
         });
+        // eslint-disable-next-line no-console
         console.log("✅ VKB object store created");
       }
     };
@@ -194,6 +196,7 @@ export const loadVKB = async () => {
     return new Promise((resolve) => {
       request.onsuccess = () => {
         if (request.result) {
+          // eslint-disable-next-line no-console
           console.log("📂 Loaded VKB from IndexedDB");
           // Cache metadata in localStorage for quick access
           try {
@@ -210,6 +213,7 @@ export const loadVKB = async () => {
           resolve(request.result);
         } else {
           // Try localStorage for legacy data
+          // eslint-disable-next-line no-console
           console.log("📂 No IndexedDB VKB, checking localStorage...");
           try {
             const stored = localStorage.getItem(VKB_STORAGE_KEY);
@@ -217,10 +221,12 @@ export const loadVKB = async () => {
               const parsed = JSON.parse(stored);
               if (parsed.overflow || parsed.source === "indexeddb") {
                 // This is just metadata, initialize new VKB
+                // eslint-disable-next-line no-console
                 console.log("📂 Found metadata only, initializing fresh VKB");
                 resolve(initializeVKB());
               } else {
                 // Legacy full VKB, migrate to IndexedDB
+                // eslint-disable-next-line no-console
                 console.log(
                   "📂 Migrating legacy localStorage VKB to IndexedDB",
                 );
@@ -275,6 +281,7 @@ export const saveVKB = async (vkb) => {
     const sizeInBytes = new Blob([vkbString]).size;
     const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
 
+    // eslint-disable-next-line no-console
     console.log(
       `💾 Saving VKB to IndexedDB (${sizeInMB}MB, ${vkb.metadata.documentCount} documents)`,
     );
@@ -287,6 +294,7 @@ export const saveVKB = async (vkb) => {
 
     return new Promise((resolve) => {
       request.onsuccess = () => {
+        // eslint-disable-next-line no-console
         console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
 
         // Cache metadata in localStorage for quick access
@@ -301,6 +309,7 @@ export const saveVKB = async (vkb) => {
           );
         } catch (lsErr) {
           // LocalStorage full, but that's OK - data is in IndexedDB
+          // eslint-disable-next-line no-console
           console.log(
             "💡 localStorage full, metadata not cached (data safe in IndexedDB)",
           );

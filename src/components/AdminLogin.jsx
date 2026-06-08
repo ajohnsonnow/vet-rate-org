@@ -157,6 +157,7 @@ export default function AdminLogin() {
         <div className="space-y-4">
           {/* PIN Input */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">
               Admin PIN
             </label>

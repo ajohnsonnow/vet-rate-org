@@ -13,7 +13,7 @@ import {
   getAllStatements,
 } from "../utils/claimsStorage";
 import { getVeteranProfile, getSavedForms } from "../utils/veteranProfile";
-import { isAnyAIAvailable, generateAI } from "../utils/unifiedAIService";
+import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import ReportBugLink from "./ReportBugLink";
 import VoiceInputButton from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -28,7 +28,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
   const [savedClaims, setSavedClaims] = useState([]);
   const [savedStatements, setSavedStatements] = useState([]);
   const [savedForms, setSavedForms] = useState([]);
-  const [veteranProfile, setVeteranProfile] = useState({});
+  const [_veteranProfile, setVeteranProfile] = useState({});
   const [showPacketSelector, setShowPacketSelector] = useState(false);
   const [selectedPacketItem, setSelectedPacketItem] = useState(null);
 
@@ -693,6 +693,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
 
                   {/* Practice Answer */}
                   <div>
+                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                     <label className="mb-1 block text-sm text-gray-600 dark:text-gray-400">
                       Your Practice Answer (use microphone to speak):
                     </label>
@@ -749,8 +750,8 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                 Somatic Target tool)
               </li>
               <li>
-                • Ensure your nexus letter includes "at least as likely as not"
-                language
+                • Ensure your nexus letter includes &quot;at least as likely as
+                not&quot; language
               </li>
               <li>• Have a VSO or attorney review your final packet</li>
               <li>

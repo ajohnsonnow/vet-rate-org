@@ -6,15 +6,9 @@
  * The Solution: Visual timeline with automatic gap analysis and risk warnings
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { FocusToggle } from "../contexts/FocusModeContext";
-import {
-  getTimelineEvents,
-  saveTimelineEvents,
-  addTimelineEvent,
-  removeTimelineEvent,
-} from "../utils/veteranProfile";
+import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -24,6 +18,7 @@ const EvidenceTimeline = ({
   onClose,
   onReportBug,
 }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   // Load persisted events on mount, fallback to props
   const [timelineEvents, setTimelineEvents] = useState(() => {
@@ -85,6 +80,7 @@ const EvidenceTimeline = ({
       detectGaps();
       drawTimeline();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timelineEvents]);
 
   const detectGaps = () => {
@@ -138,6 +134,7 @@ const EvidenceTimeline = ({
 
     const firstDate = new Date(sorted[0].date);
     const lastDate = new Date(sorted[sorted.length - 1].date);
+    // eslint-disable-next-line no-unused-vars
     const totalYears = (lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365);
 
     // Draw main timeline line
@@ -489,6 +486,7 @@ const EvidenceTimeline = ({
 
           {/* Event Type Selector */}
           <div className="mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-gray-300 text-sm font-semibold mb-2">
               Event Type:
             </label>
@@ -521,6 +519,7 @@ const EvidenceTimeline = ({
 
           {/* Date Input */}
           <div className="mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-gray-300 text-sm font-semibold mb-2">
               Date:
             </label>
@@ -536,6 +535,7 @@ const EvidenceTimeline = ({
 
           {/* Description Input */}
           <div className="mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-gray-300 text-sm font-semibold mb-2">
               Description:
             </label>

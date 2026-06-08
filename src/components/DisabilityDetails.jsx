@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PDFButton from "./PDFButton";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -12,7 +12,7 @@ function DisabilityDetails({
   onBuildStatement,
   onSecondaryConditionClick,
 }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [expandedSection, setExpandedSection] = useState("documentation");
   const [isSaved, setIsSaved] = useState(
     isClaimSaved(result.conditionName, null),
@@ -473,9 +473,10 @@ function DisabilityDetails({
                 <strong>Note:</strong> Veterans must provide medical evidence
                 establishing a nexus (medical link) between their
                 service-connected condition and any secondary condition. This
-                requires a medical opinion stating it is "at least as likely as
-                not" (50% or greater probability) that the secondary condition
-                is related to the service-connected disability.
+                requires a medical opinion stating it is &quot;at least as
+                likely as not&quot; (50% or greater probability) that the
+                secondary condition is related to the service-connected
+                disability.
               </p>
             </div>
           )}

@@ -49,6 +49,7 @@ export function useUpdateOrchestrator() {
     const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
 
     if (tosAccepted && lastSeenVersion !== APP_VERSION) {
+      // eslint-disable-next-line no-console
       console.log(
         `📰 New version detected: ${APP_VERSION} (last seen: ${lastSeenVersion || "none"})`,
       );
@@ -61,6 +62,7 @@ export function useUpdateOrchestrator() {
     }
 
     startUpdateChecker((updateInfo) => {
+      // eslint-disable-next-line no-console
       console.log("🆕 Update available:", updateInfo);
       setUpdateAvailable(updateInfo);
       setShowUpdateBanner(true);
@@ -75,6 +77,7 @@ export function useUpdateOrchestrator() {
       const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
       if (lastSeenVersion === APP_VERSION) return;
 
+      // eslint-disable-next-line no-console
       console.log(
         `📰 TOS accepted - showing What's New for version ${APP_VERSION}`,
       );

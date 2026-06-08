@@ -90,10 +90,12 @@ class GPUDiscoveryEngine {
     if (!this.webglInfo) {
       this.webglInfo = getWebGLGPUInfo();
       if (this.webglInfo) {
+        // eslint-disable-next-line no-console
         console.log(
           `🎮 WebGL detected: ${this.webglInfo.renderer} (${this.webglInfo.vendor})`,
         );
         if (this.webglInfo.vram) {
+          // eslint-disable-next-line no-console
           console.log(`🎮 WebGL VRAM: ${this.webglInfo.vram} GB`);
         }
       }
@@ -105,7 +107,7 @@ class GPUDiscoveryEngine {
       undefined, // Default fallback
     ];
 
-    const foundAdapters = [];
+    const _foundAdapters = [];
 
     // Run requests in parallel
     const promises = hints.map(async (powerPreference) => {
@@ -150,7 +152,9 @@ class GPUDiscoveryEngine {
         // This prevents misidentifying multiple GPUs with the same name
         if (this.adapters.size === 0) {
           gpuName = this.webglInfo.renderer;
+          // eslint-disable-next-line no-unused-vars
           usedWebGLFallback = true;
+          // eslint-disable-next-line no-console
           console.log(`🎮 Using WebGL name (first GPU): ${gpuName}`);
         } else {
           // For additional GPUs, construct a unique name based on hint
@@ -165,6 +169,7 @@ class GPUDiscoveryEngine {
             ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}`
             : "";
           gpuName = `${vendorName}${archName} GPU (${hintLabel})`;
+          // eslint-disable-next-line no-console
           console.log(`🎮 Using constructed name (additional GPU): ${gpuName}`);
         }
       }
@@ -188,6 +193,7 @@ class GPUDiscoveryEngine {
       const id = `${vendor}-${arch}-${device}-${description}`;
 
       if (!this.adapters.has(id)) {
+        // eslint-disable-next-line no-console
         console.log(
           `🎮 Found GPU: ${gpuName} (${vendor}, ${arch}) via ${hint || "default"}`,
         );
@@ -211,6 +217,7 @@ class GPUDiscoveryEngine {
     }
 
     const adapterList = Array.from(this.adapters.values());
+    // eslint-disable-next-line no-console
     console.log(`🎮 Total unique GPUs detected: ${adapterList.length}`);
 
     return adapterList;
@@ -265,6 +272,7 @@ class GPUDiscoveryEngine {
 
     // If force reinit is requested, we need to get a completely fresh adapter
     if (options.forceReinit) {
+      // eslint-disable-next-line no-console
       console.log("🎮 Force reinitializing WebGPU device...");
 
       // Destroy the old device properly
@@ -303,6 +311,7 @@ class GPUDiscoveryEngine {
       this.selectedAdapter === target.adapter &&
       !options.forceReinit
     ) {
+      // eslint-disable-next-line no-console
       console.log(
         `🎮 [Vet-Rate GPU] Already locked to: ${target.info.displayName}`,
       );
@@ -316,6 +325,7 @@ class GPUDiscoveryEngine {
       this.selectedAdapter === target.adapter &&
       !options.forceReinit
     ) {
+      // eslint-disable-next-line no-console
       console.log(
         `🎮 [Vet-Rate GPU] Waiting for initialization to complete...`,
       );
@@ -354,9 +364,11 @@ class GPUDiscoveryEngine {
         // Experimental features - DISABLED by default for stability
         const experimentalMode = false; // Disabled until custom model compilation complete
         if (experimentalMode) {
+          // eslint-disable-next-line no-console
           console.log(
             "⚡ Experimental WebGPU mode enabled - attempting to use experimental features",
           );
+          // eslint-disable-next-line no-console
           console.log(
             "⚡ Available adapter features:",
             Array.from(availableFeatures).join(", "),
@@ -410,6 +422,7 @@ class GPUDiscoveryEngine {
               requiredFeatures.push("chromium_experimental_subgroup_matrix");
             }
 
+            // eslint-disable-next-line no-console
             console.log(
               `⚡ Requesting experimental features: ${requiredFeatures.filter((f) => f.includes("experimental") || f.includes("subgroup")).join(", ") || "none available"}`,
             );
@@ -425,6 +438,7 @@ class GPUDiscoveryEngine {
         if (adapterLimits.maxComputeInvocationsPerWorkgroup >= 1024) {
           requiredLimits.maxComputeInvocationsPerWorkgroup =
             adapterLimits.maxComputeInvocationsPerWorkgroup;
+          // eslint-disable-next-line no-console
           console.log(
             `🎮 Requesting maxComputeInvocationsPerWorkgroup: ${requiredLimits.maxComputeInvocationsPerWorkgroup}`,
           );
@@ -490,8 +504,10 @@ class GPUDiscoveryEngine {
           }
         }
 
+        // eslint-disable-next-line no-console
         console.log(`🎮 [Vet-Rate GPU] Locked to: ${target.info.displayName}`);
         if (requiredFeatures.length > 0) {
+          // eslint-disable-next-line no-console
           console.log(
             `🎮 [Vet-Rate GPU] Enabled features: ${requiredFeatures.join(", ")}`,
           );
@@ -529,6 +545,7 @@ class GPUDiscoveryEngine {
   async autoSelectBest() {
     // If we already have a valid device, return it (prevents React strict mode double-init)
     if (this.device) {
+      // eslint-disable-next-line no-console
       console.log("🎮 Device already initialized, reusing existing device");
       return this.device;
     }
@@ -542,6 +559,7 @@ class GPUDiscoveryEngine {
     // Try to restore previous selection
     const savedId = localStorage.getItem("vet_rate_selected_gpu");
     if (savedId && this.adapters.has(savedId)) {
+      // eslint-disable-next-line no-console
       console.log("🎮 Restoring previous GPU selection");
       try {
         return await this.selectAdapter(savedId);
@@ -563,6 +581,7 @@ class GPUDiscoveryEngine {
     const best =
       adapters.find((a) => a.tier === "High Performance") || adapters[0];
     if (best) {
+      // eslint-disable-next-line no-console
       console.log("🎮 Auto-selecting best available GPU");
       try {
         return await this.selectAdapter(best.id);

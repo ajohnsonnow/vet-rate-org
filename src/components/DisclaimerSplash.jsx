@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Shield, Lock, Sparkles } from "lucide-react";
 import { PROJECT_STATS } from "../data/projectStats";
 import { getTotalToolCount } from "../data/toolkitData";
@@ -98,8 +98,8 @@ function DisclaimerSplash({ onAcknowledge }) {
             </h3>
             <div className="space-y-2 text-sm text-amber-900 dark:text-amber-100">
               <p className="leading-relaxed">
-                "Monty always told me to take care of my guys... and y'all are
-                my guys."
+                &quot;Monty always told me to take care of my guys... and
+                y&apos;all are my guys.&quot;
               </p>
               <p className="text-xs text-amber-800 dark:text-amber-300 mt-3">
                 🏗️ Every tool is marked BETA. Expect improvements, updates, and

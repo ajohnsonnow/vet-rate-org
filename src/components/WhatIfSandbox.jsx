@@ -14,7 +14,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 
 export default function WhatIfSandbox({ onClose }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [currentConditions, setCurrentConditions] = useState([]);
   const [availableConditions, setAvailableConditions] = useState([]);
@@ -103,10 +103,12 @@ export default function WhatIfSandbox({ onClose }) {
 
     // Load saved claims if any
     loadCurrentClaims();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     calculateCombinedRating();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentConditions]);
 
   const loadCurrentClaims = () => {
@@ -303,7 +305,7 @@ export default function WhatIfSandbox({ onClose }) {
     return colors[category] || "bg-gray-500";
   };
 
-  const getRatingColor = (rating) => {
+  const _getRatingColor = (rating) => {
     if (rating >= 70) return "text-red-600 dark:text-red-400";
     if (rating >= 50) return "text-orange-600 dark:text-orange-400";
     if (rating >= 30) return "text-yellow-600 dark:text-yellow-400";
@@ -554,7 +556,7 @@ export default function WhatIfSandbox({ onClose }) {
                 • Bilateral factor automatically applied when both sides rated
               </li>
               <li>• Monthly pay reflects 2025 compensation rates</li>
-              <li>• Test "what-if" scenarios before filing claims</li>
+              <li>• Test &quot;what-if&quot; scenarios before filing claims</li>
             </ul>
           </div>
         </div>

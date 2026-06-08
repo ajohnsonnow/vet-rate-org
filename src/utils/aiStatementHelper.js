@@ -38,7 +38,7 @@ export const isAIAvailable = () => {
  * Get the configured API key (localStorage takes priority)
  * @deprecated Use unified AI service instead
  */
-const getApiKey = () => {
+const _getApiKey = () => {
   // Check localStorage first (BYOK)
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
@@ -1112,7 +1112,7 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
  *
  * ⚠️ This generates AI content - not verified state data
  */
-const buildStateBenefitsPrompt = (state, rating) => {
+const _buildStateBenefitsPrompt = (state, rating) => {
   return `You are a State Veterans Benefits Expert.
 User Input: "${state}, ${rating}"
 
@@ -1183,7 +1183,7 @@ Important:
 export const searchStateBenefits = async (state, rating) => {
   try {
     // Import the real state benefits database
-    const { searchBenefitsByRating, getStateBenefits, getAllStateData } =
+    const { searchBenefitsByRating, getStateBenefits, _getAllStateData } =
       await import("../data/stateBenefits.js");
 
     // Convert state name to code if needed
@@ -1571,6 +1571,7 @@ const smartTruncateForAI = (text, maxTokens = 1200) => {
 
   const truncatedText = `${firstPartClean.trim()}\n\n[... Document truncated for AI processing - middle section omitted ...]\n\n${lastPartClean.trim()}`;
 
+  // eslint-disable-next-line no-console
   console.log(
     `📏 Smart truncation: ${originalTokens} tokens → ~${estimateTokenCount(truncatedText)} tokens`,
   );
@@ -1587,7 +1588,7 @@ const smartTruncateForAI = (text, maxTokens = 1200) => {
  * Build prompt for decision decoding
  * Now with smart truncation to prevent context overflow
  */
-const buildDecisionDecoderPrompt = (decisionText, truncationInfo = null) => {
+const buildDecisionDecoderPrompt = (decisionText, _truncationInfo = null) => {
   return `You are a VA Claims Appeals Expert who translates confusing VA decision letters into plain English.
 
 A veteran received this VA decision and doesn't understand what it means:
@@ -1668,6 +1669,7 @@ export const decodeDecision = async (decisionText) => {
   const truncation = smartTruncateForAI(decisionText, 1200);
 
   if (truncation.wasTruncated) {
+    // eslint-disable-next-line no-console
     console.log(
       `📏 Decision text truncated: ${truncation.originalTokens} → ${truncation.truncatedTokens} tokens`,
     );

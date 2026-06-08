@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   useTheme,
@@ -24,8 +24,8 @@ export default function AccessibilityMenu() {
   const {
     theme,
     setTheme,
-    toggleTheme,
-    isDark,
+    _toggleTheme,
+    _isDark,
     isTbiComfort,
     isAaaContrast,
     colorBlindMode,

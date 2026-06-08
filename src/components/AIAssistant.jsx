@@ -24,8 +24,6 @@ import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";
 import { autoSummarizeIfLong } from "../utils/redditSummarizer";
-import { loadVKB, generateLLMContext } from "../utils/veteranKnowledgeBase";
-import { generatePacketContext } from "../utils/myPacketManager";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
 const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
@@ -158,6 +156,7 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
         window.removeEventListener("mouseup", handleMouseUp);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, dragOffset, position]);
 
   // Listen for tour start event to close Navigator (prevents blocking tour elements)
@@ -194,6 +193,7 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
       ]);
       localStorage.setItem("vet_rate_ai_assistant_welcomed", "true");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Build context-aware system prompt
@@ -411,7 +411,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
     } else {
       // When expanding, reposition so the Navigator appears above the button
       // Navigator height is 600px, so position it anchored at the bottom
-      setPosition((prev) => ({
+      setPosition((_prev) => ({
         x: 16, // Keep at left edge
         y: Math.max(16, window.innerHeight - 600 - 16), // Anchor at bottom with 16px margin, but not above viewport
       }));
@@ -421,7 +421,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   if (isMinimized) {
     return (
       <button
-        onClick={(e) => {
+        onClick={(_e) => {
           // Only restore if not dragging
           if (!isDragging) {
             setIsMinimized(false);
@@ -467,7 +467,11 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {/* AI Status Button */}
           {onOpenAISettings && (
-            <div onClick={(e) => e.stopPropagation()}>
+            <div
+              onClick={(e) =>
+                e.stopPropagation()
+              } /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+            >
               <AIStatusBadge
                 onClick={onOpenAISettings}
                 className="text-sm"
@@ -841,7 +845,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   }
 
   return (
-    <div
+    <div /* eslint-disable-line jsx-a11y/no-static-element-interactions */
       id="tour-ai-navigator-expanded"
       ref={containerRef}
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
@@ -868,7 +872,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* AI Status Button */}
           {onOpenAISettings && (
-            <div
+            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
               className="pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >

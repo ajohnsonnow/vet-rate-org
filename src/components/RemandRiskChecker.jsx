@@ -7,11 +7,10 @@
  * Based on top remand reasons from 18,609 BVA decisions.
  */
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   TOP_REMAND_REASONS,
   TOP_DENIAL_REASONS,
-  EXAM_DEFICIENCIES,
   BVA_OVERALL_OUTCOMES,
   getPersistenceMessage,
 } from "../data/bvaSuccessData";
@@ -134,6 +133,7 @@ const RemandRiskChecker = ({ onClose }) => {
       gaps,
       isComplete: answeredCount === totalQuestions,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers]);
 
   const persistenceMsg = getPersistenceMessage(priorDenials);
@@ -206,6 +206,7 @@ const RemandRiskChecker = ({ onClose }) => {
 
         {/* Prior Denials Input */}
         <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">
             How many times has this claim been previously denied? (0 if first
             time)
@@ -384,7 +385,7 @@ const RemandRiskChecker = ({ onClose }) => {
                 </div>
                 <p className="text-sm text-green-600 dark:text-green-500 mt-1">
                   Based on BVA decision patterns, your claim appears
-                  well-documented. You've addressed the most common remand
+                  well-documented. You&apos;ve addressed the most common remand
                   reasons.
                 </p>
               </div>

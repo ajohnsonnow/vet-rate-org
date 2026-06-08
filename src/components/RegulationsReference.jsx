@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   X,
   ExternalLink,
@@ -59,7 +59,7 @@ const _getEcfrUrl = (() => {
  * their rights, the claims process, evidence standards, effective dates, and appeal options.
  */
 const RegulationsReference = ({ onClose }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [expandedCategories, setExpandedCategories] = useState({
     "reasonable-doubt": true, // Open the most important one by default
@@ -109,7 +109,7 @@ const RegulationsReference = ({ onClose }) => {
     (reg.veteranTip &&
       reg.veteranTip.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const getCategoryIcon = (iconName) => {
+  const _getCategoryIcon = (iconName) => {
     const icons = {
       "\u{1F4D6}": <BookOpen className="h-5 w-5" />,
       "\u2696\uFE0F": <Scale className="h-5 w-5" />,
@@ -353,7 +353,7 @@ const RegulationsReference = ({ onClose }) => {
 
                             {reg.importantQuote && (
                               <blockquote className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-100/50 dark:bg-blue-800/30 rounded-r italic text-sm text-gray-700 dark:text-gray-300 mb-3">
-                                "{reg.importantQuote}"
+                                &quot;{reg.importantQuote}&quot;
                               </blockquote>
                             )}
 
@@ -427,7 +427,7 @@ const RegulationsReference = ({ onClose }) => {
               <Gavel className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-bold text-purple-800 dark:text-purple-200">
-                  Board of Veterans' Appeals (BVA)
+                  Board of Veterans&apos; Appeals (BVA)
                 </h3>
                 <p className="text-sm text-purple-700 dark:text-purple-300">
                   {title38Regulations.bvaAppeals?.description ||
@@ -920,7 +920,7 @@ const RegulationsReference = ({ onClose }) => {
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             These common mistakes cost veterans time, money, and benefits. Learn
-            from others' experiences.
+            from others&apos; experiences.
           </p>
 
           <div className="space-y-4">
@@ -963,7 +963,7 @@ const RegulationsReference = ({ onClose }) => {
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
-              38 CFR Title 38 - Pensions, Bonuses, and Veterans' Relief
+              38 CFR Title 38 - Pensions, Bonuses, and Veterans&apos; Relief
               (eCFR.gov)
             </a>
           </p>

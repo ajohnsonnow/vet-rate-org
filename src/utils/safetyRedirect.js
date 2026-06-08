@@ -133,6 +133,7 @@ export const initializePanicKey = () => {
   // Add listener
   window.addEventListener("keydown", handleEscapeKey);
 
+  // eslint-disable-next-line no-console
   console.log("🛡️ Panic key initialized (triple-tap Escape to exit)");
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -139,7 +139,7 @@ const URGENCY_COLORS = {
 };
 
 const LegislativeWatchdog = ({ onClose, onReportBug }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [federalRegisterDocs, setFederalRegisterDocs] = useState([]);
@@ -147,7 +147,7 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
   const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'proposed', 'active', 'urgent'
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [showAISettings, setShowAISettings] = useState(false);
+  const [_showAISettings, _setShowAISettings] = useState(false);
   const [analyzingDoc, setAnalyzingDoc] = useState(null);
   const [aiAnalysis, setAIAnalysis] = useState({});
 
@@ -441,7 +441,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                 When the VA <strong>proposes changes to rating criteria</strong>{" "}
                 (like Tinnitus or Sleep Apnea), veterans who file{" "}
                 <strong>BEFORE the change</strong> often keep their current
-                rating. Don't get caught off guard-
+                rating. Don&apos;t get caught off guard-
                 <strong>file early if you see changes coming</strong>.
               </p>
             </div>
@@ -728,8 +728,8 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
             <span>🔒</span>
             <p className="text-xs text-green-700 dark:text-green-300">
               <strong>Air-Gapped from the VA:</strong> This tool only reads
-              public information. The VA cannot see what you're researching.
-              Your browsing here is completely private.
+              public information. The VA cannot see what you&apos;re
+              researching. Your browsing here is completely private.
             </p>
           </div>
         </div>

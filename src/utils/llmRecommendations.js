@@ -10,7 +10,6 @@
  * All agents are fine-tuned on official VA regulations and procedures.
  */
 
-import { SWARM_AGENTS, TOOL_AGENT_MAP } from "./diamondSwarm";
 import { PROJECT_STATS } from "../data/projectStats";
 
 /**

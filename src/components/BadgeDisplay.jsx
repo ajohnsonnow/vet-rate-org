@@ -14,10 +14,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {
-  ALL_BADGES,
   BADGE_GROUPS,
   BADGE_PLACEMENT,
-  parseDD214Badges,
   calculateOverseasBars,
   calculateServiceStripes,
 } from "../data/badgeData";
@@ -309,6 +307,7 @@ const OverseasBars = ({ count, type = "wartime", size = "md" }) => {
 
   const barHeight = size === "sm" ? 4 : size === "md" ? 6 : 8;
   const barWidth = size === "sm" ? 30 : size === "md" ? 40 : 50;
+  // eslint-disable-next-line no-unused-vars
   const gap = 3;
 
   return (

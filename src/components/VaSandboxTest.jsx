@@ -60,14 +60,11 @@ import {
   LogIn,
   LogOut,
   User,
-  Calendar,
-  Award,
   ChevronDown,
   ChevronUp,
   Code,
   CheckCircle,
   Clock,
-  XCircle,
   Loader2,
   ExternalLink,
   Info,
@@ -176,6 +173,7 @@ const VaSandboxTest = ({ onClose }) => {
     VA_BENEFITS_REF_API_KEY &&
     VA_BENEFITS_REF_API_KEY !== "your_benefits_api_key_here",
   );
+  // eslint-disable-next-line no-unused-vars
   const isApiKeyConfigured = isFacilitiesApiKeyConfigured; // Backward compatibility
 
   // =========================================================================
@@ -189,6 +187,7 @@ const VaSandboxTest = ({ onClose }) => {
     fetchClaims();
     fetchAppealableIssues();
     fetchAppealsStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   // Auto-fetch user data when authenticated
@@ -761,7 +760,7 @@ const VaSandboxTest = ({ onClose }) => {
                   {getTestStatusIcon("forms")}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Search: "21-526EZ"
+                  Search: &quot;21-526EZ&quot;
                 </p>
 
                 <button

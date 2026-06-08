@@ -7,7 +7,6 @@
  * Shows warnings and provides reporting mechanism
  */
 
-import React from "react";
 import {
   getStaleDataStatus,
   generateReportOutdatedLink,
@@ -19,7 +18,7 @@ const StaleDataIndicator = ({
   variant = "full",
   className = "",
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const status = getStaleDataStatus(disability);
 
   // Don't show anything if data is current

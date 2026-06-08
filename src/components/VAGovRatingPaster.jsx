@@ -4,11 +4,10 @@
  * Used across multiple tools: TacticalCalculator, Pathfinder, RetroPayHunter, etc.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   parseVAGovRatings,
   validateParsedRatings,
-  formatParsedRatings,
   EXAMPLE_VA_GOV_TEXT,
 } from "../utils/vaGovRatingParser";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -19,6 +18,7 @@ export default function VAGovRatingPaster({
   onClose,
   showExample = true,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [pasteText, setPasteText] = useState("");
   const [parsedResult, setParsedResult] = useState(null);
@@ -199,10 +199,10 @@ export default function VAGovRatingPaster({
                   VA.gov Rating Page
                 </a>
               </li>
-              <li>Scroll to "Your individual ratings" section</li>
+              <li>Scroll to &quot;Your individual ratings&quot; section</li>
               <li>Select and copy the entire list (Ctrl+A then Ctrl+C)</li>
               <li>Paste it in the box below (Ctrl+V)</li>
-              <li>Click "Parse Ratings" to import</li>
+              <li>Click &quot;Parse Ratings&quot; to import</li>
             </ol>
             <button
               onClick={() => setShowInstructions(false)}
@@ -217,6 +217,7 @@ export default function VAGovRatingPaster({
           <>
             {/* Paste Area */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Paste Your Ratings Here
               </label>
@@ -287,7 +288,8 @@ export default function VAGovRatingPaster({
                 {parsedResult.serviceConnected.length === 1 ? "" : "s"}
               </h3>
               <p className="text-sm text-green-700 dark:text-green-300">
-                Review the conditions below and click "Import" to add them.
+                Review the conditions below and click &quot;Import&quot; to add
+                them.
               </p>
             </div>
 

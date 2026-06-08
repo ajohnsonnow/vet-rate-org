@@ -11,14 +11,13 @@
  * Tab 3: Mobile Handoff (AirDrop/Share)
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   generateDraftDbq,
   downloadPdfBlob,
   createEncryptedZip,
   sharePdfNatively,
   copyDbqSummaryToClipboard,
-  getSubjectiveQuestions,
 } from "../utils/pdfDbqFiller";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -32,6 +31,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
  * @param {function} props.onClose - Callback when menu is closed
  */
 export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("download");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -242,7 +242,8 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
             <span className="font-semibold">Form:</span> {formTitle || formId}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            ⚠️ All documents include "DRAFT" watermark for physician review
+            ⚠️ All documents include &quot;DRAFT&quot; watermark for physician
+            review
           </p>
         </div>
 
@@ -292,8 +293,8 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                   saving to your records before your appointment.
                 </p>
                 <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
-                  <li>✓ Includes "DRAFT" watermark on all pages</li>
-                  <li>✓ Red banner: "For Physician Review Only"</li>
+                  <li>✓ Includes &quot;DRAFT&quot; watermark on all pages</li>
+                  <li>✓ Red banner: &quot;For Physician Review Only&quot;</li>
                   <li>✓ Your responses pre-filled in subjective sections</li>
                 </ul>
               </div>
@@ -333,6 +334,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
               </div>
 
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Set a Password
                 </label>
@@ -389,7 +391,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                 {canNativeShare && (
                   <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                     <li>✓ Perfect for in-person appointments</li>
-                    <li>✓ AirDrop to doctor's iPad instantly</li>
+                    <li>✓ AirDrop to doctor&apos;s iPad instantly</li>
                     <li>✓ Or send via text/email from your phone</li>
                   </ul>
                 )}

@@ -93,12 +93,13 @@ export const migrateUserData = () => {
   try {
     // Get user's current schema version
     const userSchemaVersion = localStorage.getItem(SCHEMA_STORAGE_KEY);
-    const userAppVersion = localStorage.getItem(VERSION_STORAGE_KEY);
+    const _userAppVersion = localStorage.getItem(VERSION_STORAGE_KEY);
 
     result.previousVersion = userSchemaVersion || "none";
 
     // First time user - no migration needed
     if (!userSchemaVersion) {
+      // eslint-disable-next-line no-console
       console.log(
         "🆕 First-time user detected. Initializing at current schema version.",
       );
@@ -109,11 +110,13 @@ export const migrateUserData = () => {
 
     // Already on current version - no migration needed
     if (compareVersions(userSchemaVersion, SCHEMA_VERSION) >= 0) {
+      // eslint-disable-next-line no-console
       console.log("✅ User data is current. No migration needed.");
       return result;
     }
 
     // User has old data - run migrations
+    // eslint-disable-next-line no-console
     console.log(
       `🔄 Migrating user data from v${userSchemaVersion} to v${SCHEMA_VERSION}`,
     );
@@ -129,6 +132,7 @@ export const migrateUserData = () => {
     // Execute migrations in order
     for (const migration of migrationsToRun) {
       try {
+        // eslint-disable-next-line no-console
         console.log(`  ⚙️ Running migration: ${migration.description}`);
         migration.migrate();
         result.migrationsRun.push({
@@ -150,6 +154,7 @@ export const migrateUserData = () => {
     if (result.success) {
       localStorage.setItem(SCHEMA_STORAGE_KEY, SCHEMA_VERSION);
       localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
+      // eslint-disable-next-line no-console
       console.log(`✅ Migration complete! Now at v${SCHEMA_VERSION}`);
     } else {
       console.error("❌ Some migrations failed. User may experience issues.");

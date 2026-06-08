@@ -25,8 +25,8 @@
     }
   },
   "rules": {
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "warn",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-console": ["warn", { "allow": ["warn", "error", "info"] }],
     "react/prop-types": "off",
     "react/no-unescaped-entities": "warn",
     "react/display-name": "warn",

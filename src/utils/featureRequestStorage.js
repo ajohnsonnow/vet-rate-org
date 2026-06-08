@@ -146,6 +146,7 @@ export const saveFeatureRequest = async (requestData) => {
           accessor: "user",
         });
 
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Feature request ${request.request_id} saved successfully`,
         );
@@ -514,6 +515,7 @@ export const saveFeatureToLocalStorage = (requestData) => {
       created_at: requestData.created_at || new Date().toISOString(),
     });
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(existing));
+    // eslint-disable-next-line no-console
     console.log("Feature request saved to localStorage fallback");
   } catch (error) {
     console.error("Failed to save to localStorage:", error);

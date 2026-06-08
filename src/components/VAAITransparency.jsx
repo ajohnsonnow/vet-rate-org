@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   X,
   ExternalLink,
@@ -29,7 +29,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * from department.va.gov/ai/
  */
 const VAAITransparency = ({ onClose }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -224,7 +224,7 @@ const VAAITransparency = ({ onClose }) => {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700">
         <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-500" />
-          VA's AI Vision
+          VA&apos;s AI Vision
         </h4>
         <div className="space-y-3 text-gray-700 dark:text-gray-300">
           <p className="leading-relaxed">
@@ -232,8 +232,9 @@ const VAAITransparency = ({ onClose }) => {
               For Veterans:
             </strong>{" "}
             AI-powered digital assistants for scheduling appointments and
-            submitting forms, faster claim processing ("minutes not months"),
-            and improved healthcare diagnosis and treatment recommendations.
+            submitting forms, faster claim processing (&quot;minutes not
+            months&quot;), and improved healthcare diagnosis and treatment
+            recommendations.
           </p>
           <p className="leading-relaxed">
             <strong className="text-green-600 dark:text-green-400">
@@ -496,8 +497,8 @@ const VAAITransparency = ({ onClose }) => {
         </h4>
         <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
           VA takes veteran privacy seriously. All AI systems must pass rigorous
-          security reviews and follow strict federal requirements. Here's how
-          your data is protected:
+          security reviews and follow strict federal requirements. Here&apos;s
+          how your data is protected:
         </p>
 
         <div className="space-y-4">
@@ -571,7 +572,7 @@ const VAAITransparency = ({ onClose }) => {
         <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-r-lg">
           <h5 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
-            VA's Generative AI Policy
+            VA&apos;s Generative AI Policy
           </h5>
           <div className="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
             <p>
@@ -610,7 +611,7 @@ const VAAITransparency = ({ onClose }) => {
             <FileText className="h-12 w-12 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
             <div>
               <h5 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                227 AI Systems in VA's Public Inventory
+                227 AI Systems in VA&apos;s Public Inventory
               </h5>
               <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                 VA publishes a comprehensive inventory of all artificial
@@ -715,7 +716,7 @@ const VAAITransparency = ({ onClose }) => {
                 VA AI Strategy Document
               </div>
               <div className="text-sm text-blue-700 dark:text-blue-300">
-                VA's 5 priority areas for AI adoption
+                VA&apos;s 5 priority areas for AI adoption
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -751,7 +752,7 @@ const VAAITransparency = ({ onClose }) => {
                 Generative AI Guidance
               </div>
               <div className="text-sm text-green-700 dark:text-green-300">
-                VA's policies for AI chatbot usage
+                VA&apos;s policies for AI chatbot usage
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -783,8 +784,8 @@ const VAAITransparency = ({ onClose }) => {
             Provide Feedback to VA
           </h5>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-            Have concerns or questions about VA's AI systems? The VA AI team
-            collects feedback to improve transparency and address veteran
+            Have concerns or questions about VA&apos;s AI systems? The VA AI
+            team collects feedback to improve transparency and address veteran
             concerns.
           </p>
           <a

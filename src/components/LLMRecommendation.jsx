@@ -6,7 +6,7 @@
  * is best suited for the tool they're using.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getToolRecommendation,
@@ -18,7 +18,7 @@ import { getAIStatus, AI_MODES } from "../utils/unifiedAIService";
  * Compact badge showing current model and recommendation
  */
 export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [aiStatus, setAiStatus] = useState(getAIStatus());
 

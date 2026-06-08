@@ -4,13 +4,13 @@
  * Generates a detailed feature request that can be passed to developers
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
-  const { t, language, getCurrentLanguage } = useLanguage();
+  const { _t, language, getCurrentLanguage } = useLanguage();
   const currentLang = getCurrentLanguage();
 
   const [languages, setLanguages] = useState([
@@ -60,7 +60,7 @@ const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
       return null;
     }
 
-    const timestamp = new Date().toISOString();
+    const _timestamp = new Date().toISOString();
     const regionById = Object.fromEntries(regions.map((r) => [r.id, r.name]));
 
     const request = `
@@ -275,6 +275,7 @@ Verify translations with native speakers for accuracy!
 
           {/* Languages */}
           <div className="space-y-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
               Languages to Add
             </label>
@@ -360,6 +361,7 @@ Verify translations with native speakers for accuracy!
 
           {/* Contact */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
               Contact Email (optional)
             </label>
@@ -377,6 +379,7 @@ Verify translations with native speakers for accuracy!
 
           {/* Notes */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
               Additional Notes
             </label>

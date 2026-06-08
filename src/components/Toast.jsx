@@ -4,7 +4,7 @@
  * Military-themed messaging for veteran users
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   AlertCircle,
@@ -39,7 +39,7 @@ const Toast = ({
   onClose,
   onAction,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isExiting, setIsExiting] = useState(false);
 
   // Errors, warnings, and network drops interrupt (assertive); success/info
@@ -57,6 +57,7 @@ const Toast = ({
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   const handleClose = () => {

@@ -12,11 +12,10 @@
  * - Visual markers for most recent documents
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   getAllDocumentsByCategory,
-  getDocumentFromVKB,
   compareDocumentVersions,
   removeDocumentFromVKB,
 } from "../utils/veteranKnowledgeBase";
@@ -85,7 +84,7 @@ const VKBTimeline = ({ onDocumentClick, onClose }) => {
     if (!documentsByCategory) return [];
 
     let allDocs = [];
-    Object.entries(documentsByCategory).forEach(([category, data]) => {
+    Object.entries(documentsByCategory).forEach(([_category, data]) => {
       allDocs = [...allDocs, ...data.documents];
     });
 
@@ -193,6 +192,7 @@ const VKBTimeline = ({ onDocumentClick, onClose }) => {
             {/* Filters */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="text-sm text-slate-400">Filter:</label>
                 <select
                   value={filterCategory}
@@ -210,6 +210,7 @@ const VKBTimeline = ({ onDocumentClick, onClose }) => {
               </div>
 
               <div className="flex items-center space-x-2">
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="text-sm text-slate-400">Sort:</label>
                 <select
                   value={sortOrder}
@@ -245,7 +246,7 @@ const VKBTimeline = ({ onDocumentClick, onClose }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredDocs.map((doc, index) => {
+            {filteredDocs.map((doc, _index) => {
               const isSelected = selectedDocs.find((d) => d.id === doc.id);
               const categoryData = Object.values(documentsByCategory).find(
                 (cat) => cat.documents.find((d) => d.id === doc.id),

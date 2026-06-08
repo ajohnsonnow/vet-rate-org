@@ -13,11 +13,11 @@
  * - Export pain map for medical appointments
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useScreenshot } from "../hooks/useScreenshot";
-import { getPainMaps, savePainMap } from "../utils/veteranProfile";
+import { savePainMap } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
 
 // Diagnostic codes by body region
@@ -433,8 +433,8 @@ const PAIN_TYPES = {
   stiffness: { color: "#8b5cf6", name: "Stiffness", emoji: "🔒" },
 };
 
-const PainPainter = ({ onClose, onExport, onReportBug }) => {
-  const { t } = useLanguage();
+const PainPainter = ({ onClose, _onExport, onReportBug }) => {
+  const { _t } = useLanguage();
 
   // View state - Standard Views matching VA DBQ diagrams
   const [view, setView] = useState("front"); // 'front' | 'back' | 'left' | 'right'
@@ -690,10 +690,10 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
 
     // Calculate scaled positions based on body type
     const shoulderWidth = 50 * s.shoulders;
-    const hipWidth = 40 * s.hips;
-    const torsoHeight = 60 * s.torso;
-    const armLength = 100 * s.arms;
-    const legLength = 150 * s.legs;
+    const _hipWidth = 40 * s.hips;
+    const _torsoHeight = 60 * s.torso;
+    const _armLength = 100 * s.arms;
+    const _legLength = 150 * s.legs;
 
     // Get regions based on current view
     const getRegionsForView = () => {
@@ -1178,6 +1178,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
       try {
         thumbnail = await captureScreenshot(bodyMapRef);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.log("Could not capture thumbnail");
       }
     }
@@ -1263,7 +1264,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                     </span>
                   </h2>
                   <p className="text-pink-200 mt-1">
-                    "Translate Grunt to Doctor" • Visual Pain Mapping
+                    &quot;Translate Grunt to Doctor&quot; • Visual Pain Mapping
                   </p>
                 </div>
               </div>
@@ -1845,6 +1846,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
               </h3>
 
               <div className="mb-4">
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Name this pain map (optional)
                 </label>

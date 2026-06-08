@@ -10,13 +10,7 @@
  * clicking any node shows the nexus logic connecting them.
  */
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -524,7 +518,7 @@ const CONDITION_WEB = {
 /**
  * Get all unique conditions for the visualization
  */
-const getAllConditions = () => {
+const _getAllConditions = () => {
   const conditions = new Set();
   Object.keys(CONDITION_WEB).forEach((primary) => {
     conditions.add(primary);
@@ -695,7 +689,7 @@ export default function WebOfConditions({
   onSelectCondition,
   onReportBug,
 }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });

@@ -14,7 +14,7 @@
  * Note: VA forms are still generated in English (VA requirement)
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSuggestionModal from "./LanguageSuggestionModal";
 import VeteranTranslator from "./VeteranTranslator";
@@ -158,6 +158,7 @@ const LanguageSelector = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white 
                            placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                /* eslint-disable-next-line jsx-a11y/no-autofocus */
                 autoFocus
               />
             </div>
@@ -275,7 +276,7 @@ const LanguageSelector = ({
 
               {filteredLanguages.length === 0 && (
                 <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                  No languages found for "{searchTerm}"
+                  No languages found for &quot;{searchTerm}&quot;
                 </div>
               )}
             </div>
@@ -438,6 +439,7 @@ const LanguageSelector = ({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white 
                          placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+              /* eslint-disable-next-line jsx-a11y/no-autofocus */
               autoFocus
             />
             <p className="text-xs text-gray-500 mt-2">
@@ -517,7 +519,7 @@ const LanguageSelector = ({
 
             {filteredLanguages.length === 0 && (
               <div className="px-4 py-8 text-center text-gray-500">
-                No languages found for "{searchTerm}"
+                No languages found for &quot;{searchTerm}&quot;
               </div>
             )}
           </div>

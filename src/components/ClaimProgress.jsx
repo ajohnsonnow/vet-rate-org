@@ -12,7 +12,7 @@
  * Built by a fellow veteran. "Know when you're ready to file."
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckCircle,
   AlertCircle,
@@ -20,17 +20,14 @@ import {
   FileText,
   Stethoscope,
   Link as LinkIcon,
-  Map,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Integration bridge for ClaimNavigator sync
-import {
-  getBigThreeStatus,
-  dispatchNavigatorUpdate,
-} from "../utils/claimIntegration";
+import { getBigThreeStatus } from "../utils/claimIntegration";
 
 const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [completeness, setCompleteness] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
@@ -62,6 +59,7 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
       window.removeEventListener("claimNavigatorUpdate", handleNavigatorUpdate);
       window.removeEventListener("bigThreeUpdate", handleBigThreeUpdate);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conditionCode, conditionName]);
 
   const calculateCompleteness = () => {
@@ -254,7 +252,7 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
             <AlertCircle className="w-8 h-8 text-current mx-auto mb-2 opacity-70" />
             <p className="font-bold text-current">In Progress</p>
             <p className="text-sm opacity-90 mt-1">
-              You're making progress, but your claim needs more evidence.
+              You&apos;re making progress, but your claim needs more evidence.
             </p>
           </div>
         )}
@@ -318,7 +316,7 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
       <div className="mt-6 pt-6 border-t border-gray-200">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-xs text-blue-900">
-            <strong>The "Holy Trinity" of VA Claims:</strong>
+            <strong>The &quot;Holy Trinity&quot; of VA Claims:</strong>
           </p>
           <ul className="text-xs text-blue-800 mt-2 space-y-1 ml-4 list-disc">
             <li>
@@ -333,8 +331,8 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
             </li>
           </ul>
           <p className="text-xs text-blue-800 mt-3">
-            All three are required for a successful claim. Don't file until you
-            hit 100%.
+            All three are required for a successful claim. Don&apos;t file until
+            you hit 100%.
           </p>
         </div>
       </div>

@@ -191,6 +191,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             adapterInfo = await adapter.requestAdapterInfo();
           }
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log("Could not get adapter info");
         }
 

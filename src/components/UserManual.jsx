@@ -2,10 +2,8 @@
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { useFocusTrap } from "../hooks/useFocusTrap";
-import { resetTourState, triggerTourRestart } from "./BootCampTour";
-import { getTotalToolCount } from "../data/toolkitData";
+import { triggerTourRestart } from "./BootCampTour";
 import { PROJECT_STATS } from "../data/projectStats";
-import { getDisabilityCount } from "../utils/disabilityCount";
 import { sanitizeUrl } from "../utils/sanitize";
 
 // Navigation structure matching the docs - organized by category
@@ -3908,6 +3906,7 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("> ")) {
       flushList();
       flushTable();
+      // eslint-disable-next-line no-unused-vars
       inBlockquote = true;
       blockquoteContent.push(line.slice(2));
       continue;
@@ -3917,6 +3916,7 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("|")) {
       flushList();
       flushBlockquote();
+      // eslint-disable-next-line no-unused-vars
       inTable = true;
       const cells = line.split("|").filter((cell) => cell.trim() !== "");
       tableRows.push(cells);
@@ -4151,7 +4151,7 @@ const UserManual = ({ onClose, onReportBug }) => {
   const searchResults = searchQuery.trim()
     ? Object.entries(documentationContent)
         .filter(
-          ([id, content]) =>
+          ([_id, content]) =>
             content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             content.content.toLowerCase().includes(searchQuery.toLowerCase()),
         )

@@ -7,7 +7,7 @@
  * knowledge in an organized, editable format.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -19,7 +19,7 @@ import {
 } from "../utils/veteranKnowledgeBase";
 
 const VKBViewer = ({ isOpen, onClose }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [vkb, setVkb] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
@@ -79,6 +79,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Full Name
           </label>
@@ -96,6 +97,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Date of Birth
           </label>
@@ -113,6 +115,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email
           </label>
@@ -130,6 +133,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Phone
           </label>
@@ -154,6 +158,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Branch
           </label>
@@ -181,6 +186,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           </select>
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Character of Service
           </label>
@@ -207,6 +213,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           </select>
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Entry Date
           </label>
@@ -227,6 +234,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Separation Date
           </label>

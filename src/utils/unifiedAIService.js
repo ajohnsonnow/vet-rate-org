@@ -46,7 +46,7 @@ const getAISystemPrompts = async () => {
 // Storage keys
 const AI_MODE_KEY = "vet_rate_ai_mode"; // 'cloud' | 'local' | 'swarm'
 const GEMINI_KEY = "vetrate_gemini_key";
-const LOCAL_MODEL_KEY = "vet_rate_local_ai_model";
+const _LOCAL_MODEL_KEY = "vet_rate_local_ai_model";
 const TOKEN_LIMIT_KEY = "vetrate_token_limit_config";
 
 // Cloud AI endpoint (fallback only)
@@ -60,6 +60,7 @@ let swarmEngine = null;
 let swarmReady = false;
 let swarmGenerating = false;
 let swarmInitializingState = false;
+// eslint-disable-next-line no-unused-vars
 let swarmCurrentAgent = null;
 
 // 🌐 Wllama state (browser WASM inference)
@@ -90,6 +91,7 @@ let generationLock = null;
 const acquireGenerationLock = async () => {
   // Wait for any existing lock to release
   while (generationLock) {
+    // eslint-disable-next-line no-console
     console.log("⏳ Waiting for previous generation to complete...");
     await generationLock;
   }
@@ -296,6 +298,7 @@ export const registerSwarmEngine = (
   swarmReady = ready;
   swarmInitializingState = initializing;
   swarmCurrentAgent = agentId;
+  // eslint-disable-next-line no-console
   console.log(
     `🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`,
   );
@@ -321,6 +324,7 @@ export const registerLocalAIEngine = (
   localAIInitializing = initializing;
   localAIModelId = modelId;
   localAIIsVisionModel = isVisionModel;
+  // eslint-disable-next-line no-console
   console.log(
     `📝 Legacy Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`,
   );
@@ -360,6 +364,7 @@ export const registerLocalAIEngine = (
  */
 export const unloadLocalAI = async () => {
   if (!localAIEngine) {
+    // eslint-disable-next-line no-console
     console.log("No local AI engine to unload");
     return false;
   }
@@ -368,9 +373,11 @@ export const unloadLocalAI = async () => {
     // MLC WebLLM engines have a terminate() method
     if (typeof localAIEngine.unload === "function") {
       await localAIEngine.unload();
+      // eslint-disable-next-line no-console
       console.log("Local AI engine unloaded via unload()");
     } else if (typeof localAIEngine.terminate === "function") {
       await localAIEngine.terminate();
+      // eslint-disable-next-line no-console
       console.log("Local AI engine terminated");
     }
 
@@ -382,6 +389,7 @@ export const unloadLocalAI = async () => {
     localAIModelId = null;
     localAIIsVisionModel = false;
 
+    // eslint-disable-next-line no-console
     console.log("✅ Local AI unloaded successfully");
     return true;
   } catch (err) {
@@ -500,12 +508,14 @@ export const initializeWllama = async (
   onProgress = null,
 ) => {
   if (wllamaInitializing) {
+    // eslint-disable-next-line no-console
     console.log("🌐 Wllama already initializing...");
     return false;
   }
 
   try {
     wllamaInitializing = true;
+    // eslint-disable-next-line no-console
     console.log(`🌐 Initializing Wllama with ${modelName}...`);
 
     const result = await wllamaService.initializeWllama(modelName, onProgress);
@@ -513,6 +523,7 @@ export const initializeWllama = async (
     if (result.success) {
       wllamaReady = true;
       wllamaCurrentModel = modelName;
+      // eslint-disable-next-line no-console
       console.log(`🌐 Wllama ready with ${modelName}`);
     } else {
       console.error("🌐 Wllama init failed:", result.error);
@@ -544,19 +555,23 @@ export const checkLocalServer = async (force = false) => {
   }
 
   try {
+    // eslint-disable-next-line no-console
     console.log("🖥️ Checking local llama.cpp server...");
     const health = await localServerClient.checkServerHealth();
     localServerAvailable = health.available;
     localServerChecked = true;
 
     if (health.available) {
+      // eslint-disable-next-line no-console
       console.log(`🖥️ Local server available: ${health.model || "ready"}`);
     } else {
+      // eslint-disable-next-line no-console
       console.log("🖥️ Local server not available");
     }
 
     return localServerAvailable;
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.log("🖥️ Local server check failed:", err.message);
     localServerAvailable = false;
     localServerChecked = true;
@@ -667,7 +682,7 @@ const generateWithCloudAI = async (prompt, options = {}) => {
   }
 
   // 💎 Build comprehensive system prompt with DKB context injection
-  const { buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
+  const { _buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
     await getAISystemPrompts();
 
   // Get base system prompt
@@ -689,6 +704,7 @@ const generateWithCloudAI = async (prompt, options = {}) => {
       });
       if (dkbContext) {
         defaultSystemPrompt += dkbContext;
+        // eslint-disable-next-line no-console
         console.log(
           "[Gemini] 💎 DKB context injected for enhanced VA knowledge",
         );
@@ -919,6 +935,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
       });
       if (dkbContext) {
         enhancedPrompt = scrubbedPrompt + dkbContext;
+        // eslint-disable-next-line no-console
         console.log(
           "[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access",
         );
@@ -954,6 +971,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     agentId = taskToAgent[taskType] || "auditor";
   }
 
+  // eslint-disable-next-line no-console
   console.log(
     `🎖️ Warrant Council: Using ${agentId.toUpperCase()} agent for ${taskType || toolId || "general"} task`,
   );
@@ -983,7 +1001,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
  */
 const generateWithWllama = async (prompt, options = {}) => {
   const {
-    taskType = "general",
+    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
@@ -1017,6 +1035,7 @@ const generateWithWllama = async (prompt, options = {}) => {
       });
       if (dkbContext) {
         enhancedPrompt = scrubbedPrompt + dkbContext;
+        // eslint-disable-next-line no-console
         console.log("[Wllama] 💎 DKB context injected");
       }
     } catch (dkbError) {
@@ -1025,6 +1044,7 @@ const generateWithWllama = async (prompt, options = {}) => {
   }
 
   try {
+    // eslint-disable-next-line no-console
     console.log(
       `🌐 Wllama: Generating with ${wllamaCurrentModel || "auditor"} model...`,
     );
@@ -1051,7 +1071,7 @@ const generateWithWllama = async (prompt, options = {}) => {
  */
 const generateWithLocalServer = async (prompt, options = {}) => {
   const {
-    taskType = "general",
+    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
@@ -1088,6 +1108,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
       });
       if (dkbContext) {
         enhancedPrompt = scrubbedPrompt + dkbContext;
+        // eslint-disable-next-line no-console
         console.log("[LocalServer] 💎 DKB context injected");
       }
     } catch (dkbError) {
@@ -1099,6 +1120,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
   }
 
   try {
+    // eslint-disable-next-line no-console
     console.log("🖥️ Local Server: Generating via llama.cpp API...");
 
     const result = await localServerClient.chatCompletion(enhancedPrompt, {
@@ -1124,6 +1146,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
 const generateWithLocalAI = async (prompt, options = {}) => {
   // First try Warrant Council if available
   if (isDiamondSwarmReady()) {
+    // eslint-disable-next-line no-console
     console.log(
       "🎖️ Routing to Warrant Council (upgraded from legacy local AI)",
     );
@@ -1183,6 +1206,7 @@ const generateWithLocalAI = async (prompt, options = {}) => {
       });
       if (dkbContext) {
         defaultSystemPrompt += dkbContext;
+        // eslint-disable-next-line no-console
         console.log(
           "[LocalAI] 💎 DKB context injected - local model now has VA knowledge base access",
         );
@@ -1275,7 +1299,7 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
     const gibberishPatterns = [
       /(\.{3,}\s*){5,}/, // Multiple ellipsis sequences
-      /(["\"]\s*){5,}/, // Multiple quote sequences
+      /([""]\s*){5,}/, // Multiple quote sequences
       /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
       /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
     ];
@@ -1293,7 +1317,7 @@ const generateWithLocalAI = async (prompt, options = {}) => {
             !lower.includes("confuse") &&
             !lower.includes("unclear") &&
             line.length > 20 &&
-            !/^[\s\"\'\.\\,\!\?]+$/.test(line)
+            !/^[\s"'.\\,!?]+$/.test(line)
           );
         });
         if (meaningfulLines.length > 0) {
@@ -1370,12 +1394,14 @@ const generateWithLocalAI = async (prompt, options = {}) => {
       return cleanResponse(fullResponse);
     } else {
       // Non-streaming response
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Local AI generation config:",
         JSON.stringify(generationConfig, null, 2).substring(0, 500),
       );
       const response =
         await localAIEngine.chat.completions.create(generationConfig);
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Local AI raw response:",
         JSON.stringify(response, null, 2).substring(0, 1000),
@@ -1397,6 +1423,7 @@ const generateWithLocalAI = async (prompt, options = {}) => {
         );
       }
 
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Local AI rawContent:",
         rawContent.substring(0, 500) || "(empty)",
@@ -1500,6 +1527,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log(
     `🖼️ generateAIWithImage: ${images.length} image(s), prompt: ${prompt.substring(0, 100)}...`,
   );
@@ -1550,6 +1578,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
       content: contentParts,
     });
 
+    // eslint-disable-next-line no-console
     console.log(
       "🖼️ Vision request - messages structure:",
       JSON.stringify(
@@ -1580,6 +1609,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
     localAIGenerating = false;
     const rawContent = response.choices[0]?.message?.content || "";
+    // eslint-disable-next-line no-console
     console.log(
       "🖼️ Vision model response:",
       rawContent.substring(0, 500) || "(empty)",
@@ -1786,6 +1816,7 @@ const generateAIInternal = async (prompt, options = {}) => {
       text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.SWARM;
       agentUsed = getCurrentAgent() || "auditor";
+      // eslint-disable-next-line no-console
       console.log(
         `🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`,
       );
@@ -1794,6 +1825,7 @@ const generateAIInternal = async (prompt, options = {}) => {
       text = await generateWithWllama(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.WLLAMA;
       agentUsed = wllamaCurrentModel || "auditor";
+      // eslint-disable-next-line no-console
       console.log(
         `🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`,
       );
@@ -1801,6 +1833,7 @@ const generateAIInternal = async (prompt, options = {}) => {
       // 🖥️ Local Server - llama.cpp API
       text = await generateWithLocalServer(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL_SERVER;
+      // eslint-disable-next-line no-console
       console.log("🖥️ Generated with local llama.cpp server");
     } else if (useLocal && isLocalAIReady()) {
       // Legacy local AI (fallback)
@@ -1906,6 +1939,7 @@ const generateAIInternal = async (prompt, options = {}) => {
 
       // Try Cloud AI (Gemini has 1M token context window)
       if (isCloudAIAvailable() && !options.noFallback) {
+        // eslint-disable-next-line no-console
         console.log("☁️ Auto-falling back to Cloud AI for large document...");
         try {
           const text = await generateWithCloudAI(fullPrompt, {

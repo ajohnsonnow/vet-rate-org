@@ -130,6 +130,7 @@ export const saveAnalysisResults = async ({
         analyzedAt: timestamp,
       },
     });
+    // eslint-disable-next-line no-console
     console.log(
       `[VeteranContextProvider] ✅ Saved ${toolName} results to My Packet`,
     );
@@ -144,6 +145,7 @@ export const saveAnalysisResults = async ({
   try {
     if (vkbDocument) {
       await addDocumentToVKB(vkbDocument);
+      // eslint-disable-next-line no-console
       console.log(
         `[VeteranContextProvider] ✅ Saved ${toolName} document to VKB`,
       );
@@ -202,6 +204,7 @@ export const saveAnalysisResults = async ({
         }
         vkb.lastUpdated = timestamp;
         await saveVKB(vkb);
+        // eslint-disable-next-line no-console
         console.log(
           `[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`,
         );

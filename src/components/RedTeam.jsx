@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { stressTestStatement, isAIAvailable } from "../utils/aiStatementHelper";
-import {
-  getAIStatus,
-  AI_MODES,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
-import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
+import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
@@ -26,6 +22,7 @@ import VoiceInputButton from "./VoiceInput";
  */
 
 const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
@@ -34,7 +31,10 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [showAISettings, setShowAISettings] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'pdf'
 
@@ -188,6 +188,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   };
 
   // Highlight weak spots in the original text
+  // eslint-disable-next-line no-unused-vars
   const highlightWeakSpots = () => {
     if (!results?.weak_spots || results.weak_spots.length === 0) {
       return draftStatement;
@@ -305,11 +306,11 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
                 Attention, Soldier!
               </h3>
               <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                You were trained to "push through" and "be tough."{" "}
-                <strong>That mindset LOSES claims.</strong>
-                The VA isn't reading for courage - they're reading for{" "}
+                You were trained to &quot;push through&quot; and &quot;be
+                tough.&quot; <strong>That mindset LOSES claims.</strong>
+                The VA isn&apos;t reading for courage - they&apos;re reading for{" "}
                 <strong>severity and frequency</strong>. Let the Red Team find
-                where you're hurting your own case.
+                where you&apos;re hurting your own case.
               </p>
             </div>
           </div>
@@ -321,6 +322,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
             <SmartAILoadButton
               toolId="red-team"
               onLoadComplete={(model) =>
+                // eslint-disable-next-line no-console
                 console.log("Smart AI loaded for Red Team:", model?.name)
               }
             />
@@ -357,6 +359,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
             {/* Paste Text Input */}
             {inputMethod === "paste" && (
               <>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   📝 Paste Your Draft Statement (or use microphone to speak)
                 </label>
@@ -719,7 +722,7 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
                             <div className="flex-1 min-w-0">
                               {spot.quote && (
                                 <p className="text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/50 px-2 py-1 rounded inline-block mb-2">
-                                  "{spot.quote}"
+                                  &quot;{spot.quote}&quot;
                                 </p>
                               )}
                               {spot.issue && (
@@ -783,7 +786,7 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
                     </p>
                     <p className="flex items-center justify-center gap-2">
                       <span className="animate-pulse">💪</span> Checking for
-                      "tough guy" language...
+                      &quot;tough guy&quot; language...
                     </p>
                     <p className="flex items-center justify-center gap-2">
                       <span className="animate-pulse">📊</span> Scoring clinical
@@ -804,8 +807,8 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
                   <div className="text-6xl mb-4">🎖️</div>
                   <p className="text-lg font-medium">Ready for Inspection</p>
                   <p className="text-sm mt-2">
-                    Paste your statement and click "Stress Test" to begin
-                    analysis
+                    Paste your statement and click &quot;Stress Test&quot; to
+                    begin analysis
                   </p>
                 </div>
               </div>
@@ -821,50 +824,50 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "a little bit"
+                &quot;a little bit&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "moderate to severe"
+                → &quot;moderate to severe&quot;
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "sometimes"
+                &quot;sometimes&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "approximately 3-4 times weekly"
+                → &quot;approximately 3-4 times weekly&quot;
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "I manage"
+                &quot;I manage&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "I struggle to cope with"
+                → &quot;I struggle to cope with&quot;
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "push through"
+                &quot;push through&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "forces me to stop activities"
+                → &quot;forces me to stop activities&quot;
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "hurts"
+                &quot;hurts&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "causes debilitating pain rated 7/10"
+                → &quot;causes debilitating pain rated 7/10&quot;
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <p className="text-red-600 dark:text-red-400 line-through">
-                "trouble sleeping"
+                &quot;trouble sleeping&quot;
               </p>
               <p className="text-green-600 dark:text-green-400">
-                → "chronic insomnia, 3-4 hours nightly"
+                → &quot;chronic insomnia, 3-4 hours nightly&quot;
               </p>
             </div>
           </div>

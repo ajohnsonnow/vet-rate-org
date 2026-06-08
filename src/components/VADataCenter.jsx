@@ -14,7 +14,7 @@
  * API Key Access: Facilities, Forms, Benefits Reference Data
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
 import useFocusTrap from "../hooks/useFocusTrap";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
@@ -51,7 +51,6 @@ import {
   Shield,
   Database,
   FileText,
-  MapPin,
   Gavel,
   Medal,
   Clock,
@@ -75,10 +74,8 @@ import {
   ListChecks,
   BookOpen,
   User,
-  Calendar,
   AlertCircle,
   Check,
-  HelpCircle,
 } from "lucide-react";
 
 // ============================================================================
@@ -388,6 +385,7 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     if (isAuthenticated && accessToken) {
       fetchAllSelected();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, accessToken]);
 
   // =========================================================================

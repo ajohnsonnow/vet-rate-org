@@ -9,7 +9,7 @@
  * Privacy: Text extraction happens locally. AI analysis uses your configured AI (Local or Cloud).
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -55,7 +55,7 @@ RESPOND IN JSON ONLY:
 {"conditions":[{"name":"ConditionName","dateFound":"Date","isClaimable":true,"category":"Category"}],"summary":"Brief summary"}`;
 
 // Legacy constant for backward compatibility
-const BLUE_BUTTON_AI_PROMPT =
+const _BLUE_BUTTON_AI_PROMPT =
   BLUE_BUTTON_AI_PROMPT_HEADER +
   `[DOCUMENT TEXT HERE]` +
   BLUE_BUTTON_AI_PROMPT_FOOTER;
@@ -64,7 +64,7 @@ const BLUE_BUTTON_AI_PROMPT =
  * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
  * These vary based on the export format (text vs PDF)
  */
-const PROBLEM_LIST_PATTERNS = [
+const _PROBLEM_LIST_PATTERNS = [
   // VA Blue Button common headers
   /(?:VA\s*)?Problem\s*List[:\s]*\n/gi,
   /Active\s*Problems?[:\s]*\n/gi,
@@ -80,15 +80,15 @@ const PROBLEM_LIST_PATTERNS = [
  * Patterns to extract individual diagnoses from the problem list
  * Handles various Blue Button formats
  */
-const DIAGNOSIS_PATTERNS = [
+const _DIAGNOSIS_PATTERNS = [
   // Format: "Condition Name - Date" or "Condition Name (Date)"
-  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})/gm,
+  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})/gm,
   // Format: "ICD-10: Code - Description"
   /(?:ICD[-\s]*10[:\s]*)?([A-Z]\d{2}(?:\.\d{1,4})?)\s*[-–—:]\s*(.+?)(?:\n|$)/gi,
   // Format: Simple "Condition Name" on its own line
-  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}))?$/gm,
+  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}))?$/gm,
   // Format: "Date: Condition" or "Date - Condition"
-  /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm,
+  /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm,
 ];
 
 /**
@@ -210,7 +210,7 @@ export default function BlueButtonXRay({
   onOpenAISettings,
   onReportBug,
 }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // AI status state
   const [aiStatus, setAIStatus] = useState(getAIStatus());
@@ -279,6 +279,7 @@ export default function BlueButtonXRay({
       });
 
       setSavedToVKB(true);
+      // eslint-disable-next-line no-console
       console.log("✅ Blue Button saved to VKB (My Packet)");
 
       // Also save to My Packet permanent archive
@@ -297,6 +298,7 @@ export default function BlueButtonXRay({
           ocrMethod: "text_extraction",
           tags: ["blue_button", "medical"],
         });
+        // eslint-disable-next-line no-console
         console.log("📁 Blue Button archived in My Packet");
       } catch (pktErr) {
         console.warn("My Packet save failed (non-fatal):", pktErr.message);
@@ -375,7 +377,7 @@ export default function BlueButtonXRay({
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(new Error("Failed to read text file"));
+      reader.onerror = (_e) => reject(new Error("Failed to read text file"));
       reader.readAsText(file);
     });
   };
@@ -404,7 +406,7 @@ export default function BlueButtonXRay({
   /**
    * Parse the text to find Problem List section and extract diagnoses
    */
-  const parseBlueButtonText = (text) => {
+  const _parseBlueButtonText = (text) => {
     // Validate input
     if (!text || typeof text !== "string") {
       console.error("parseBlueButtonText received invalid input:", typeof text);
@@ -462,7 +464,7 @@ export default function BlueButtonXRay({
 
       // Check for date patterns
       const dateMatch = trimmedLine.match(
-        /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i,
+        /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i,
       );
       if (dateMatch) {
         dateFound = dateMatch[1];
@@ -684,12 +686,14 @@ export default function BlueButtonXRay({
       return formatConditionsResponse(parsed);
     } else {
       // Text is too large - process in chunks
+      // eslint-disable-next-line no-console
       console.log(
         `📄 Large document detected (${textTokens} tokens). Chunking for processing...`,
       );
       setProcessingStage(`Large document - processing in multiple parts...`);
 
       const chunks = chunkText(text, maxTextTokens);
+      // eslint-disable-next-line no-console
       console.log(`Split into ${chunks.length} chunks`);
 
       const allConditions = [];
@@ -737,6 +741,7 @@ export default function BlueButtonXRay({
               parsed.conditions &&
               Array.isArray(parsed.conditions)
             ) {
+              // eslint-disable-next-line no-console
               console.log(
                 `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
               );
@@ -750,12 +755,14 @@ export default function BlueButtonXRay({
 
             // If this was the last attempt, try regex fallback
             if (attempt === MAX_RETRIES - 1) {
+              // eslint-disable-next-line no-console
               console.log(
                 `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
               );
               const fallbackConditions = extractConditionsFromText(chunkText);
 
               if (fallbackConditions.length > 0) {
+                // eslint-disable-next-line no-console
                 console.log(
                   `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
                 );
@@ -823,6 +830,7 @@ export default function BlueButtonXRay({
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log(
         `Found ${allConditions.length} total conditions, ${uniqueConditions.length} unique`,
       );
@@ -873,6 +881,7 @@ export default function BlueButtonXRay({
         parsed = JSON.parse(cleanResponse);
       } catch (jsonErr) {
         // AGGRESSIVE JSON REPAIR - we need this to work!
+        // eslint-disable-next-line no-console
         console.log("💡 Attempting advanced JSON repair...");
         let repaired = cleanResponse;
 
@@ -889,6 +898,7 @@ export default function BlueButtonXRay({
           if (afterLast.length > 0 && !afterLast.match(/^[}\]]*$/)) {
             // Truncate to last valid JSON structure
             repaired = repaired.substring(0, lastValidPos + 1);
+            // eslint-disable-next-line no-console
             console.log("🔧 Removed trailing garbage");
           }
         }
@@ -896,6 +906,7 @@ export default function BlueButtonXRay({
         // Strategy 2: Handle truncated strings (very common with token limits)
         const quoteCount = (repaired.match(/"/g) || []).length;
         if (quoteCount % 2 !== 0) {
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Detected unmatched quotes - finding last complete object",
           );
@@ -912,6 +923,7 @@ export default function BlueButtonXRay({
             if (match) {
               const cutPosition = match.index;
               repaired = repaired.substring(0, cutPosition);
+              // eslint-disable-next-line no-console
               console.log(
                 `🔧 Cut at position ${cutPosition} to remove incomplete content`,
               );
@@ -926,6 +938,7 @@ export default function BlueButtonXRay({
         const openBrackets = (repaired.match(/\[/g) || []).length;
         const closeBrackets = (repaired.match(/\]/g) || []).length;
 
+        // eslint-disable-next-line no-console
         console.log(
           `🔧 Brackets: ${openBrackets} open, ${closeBrackets} close | Braces: ${openBraces} open, ${closeBraces} close`,
         );
@@ -933,6 +946,7 @@ export default function BlueButtonXRay({
         // Close arrays first (conditions array)
         if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
           const missing = openBrackets - closeBrackets;
+          // eslint-disable-next-line no-console
           console.log(`🔧 Adding ${missing} closing brackets`);
           for (let i = 0; i < missing; i++) {
             repaired += "]";
@@ -943,6 +957,7 @@ export default function BlueButtonXRay({
         const currentCloseBraces = (repaired.match(/}/g) || []).length;
         const neededBraces = openBraces - currentCloseBraces;
         if (neededBraces > 0) {
+          // eslint-disable-next-line no-console
           console.log(`🔧 Adding ${neededBraces} closing braces`);
           for (let i = 0; i < neededBraces; i++) {
             repaired += "}";
@@ -952,8 +967,10 @@ export default function BlueButtonXRay({
         // Strategy 4: If still failing, try to extract just the conditions array
         try {
           parsed = JSON.parse(repaired);
+          // eslint-disable-next-line no-console
           console.log("✅ Repaired JSON successfully");
         } catch (stillFailing) {
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Standard repair failed, trying to extract conditions array directly...",
           );
@@ -981,6 +998,7 @@ export default function BlueButtonXRay({
 
             try {
               parsed = JSON.parse(reconstructed);
+              // eslint-disable-next-line no-console
               console.log("✅ Extracted conditions array successfully");
             } catch {
               throw jsonErr; // Give up, rethrow original
@@ -1058,9 +1076,11 @@ export default function BlueButtonXRay({
         !rawText.includes("error") &&
         !rawText.includes("Error")
       ) {
+        // eslint-disable-next-line no-console
         console.log("💡 Attempting text fallback extraction...");
         const extractedConditions = extractConditionsFromText(rawText);
         if (extractedConditions.length > 0) {
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
           );
@@ -1298,6 +1318,7 @@ export default function BlueButtonXRay({
             sourceFile: file.name,
           });
           setSavedToVKB(true);
+          // eslint-disable-next-line no-console
           console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
         } catch (vkbErr) {
           console.warn(
@@ -1474,6 +1495,7 @@ export default function BlueButtonXRay({
               <SmartAILoadButton
                 toolId="bluebutton-xray"
                 onLoadComplete={(model) =>
+                  // eslint-disable-next-line no-console
                   console.log(
                     "Smart AI loaded for BlueButton XRay:",
                     model?.name,
@@ -1493,10 +1515,10 @@ export default function BlueButtonXRay({
                     Large Files? No Problem!
                   </h3>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-                    Got a big medical record? Don't worry! The system
+                    Got a big medical record? Don&apos;t worry! The system
                     automatically handles large Blue Button files by breaking
                     them into smaller sections and combining the results.{" "}
-                    <strong>You don't need to do anything special.</strong>
+                    <strong>You don&apos;t need to do anything special.</strong>
                   </p>
                   <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
                     📄 Files of any size work • ⚡ Processing time depends on
@@ -1515,6 +1537,7 @@ export default function BlueButtonXRay({
               </h3>
 
               {/* Drop Zone */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div
                 className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
                   isDragging
@@ -1643,20 +1666,21 @@ export default function BlueButtonXRay({
                   <li>Sign in with your Login.gov or ID.me account</li>
                   <li>
                     <strong>Step 1:</strong> Select date range (choose{" "}
-                    <strong>"All Time"</strong> for complete history)
+                    <strong>&quot;All Time&quot;</strong> for complete history)
                   </li>
                   <li>
                     <strong>Step 2:</strong> Check{" "}
-                    <strong>"Select all VA records"</strong> (includes all
-                    conditions, labs, meds)
+                    <strong>&quot;Select all VA records&quot;</strong> (includes
+                    all conditions, labs, meds)
                   </li>
                   <li>
-                    <strong>Step 3:</strong> Choose <strong>"Text file"</strong>{" "}
-                    format (works best with X-Ray)
+                    <strong>Step 3:</strong> Choose{" "}
+                    <strong>&quot;Text file&quot;</strong> format (works best
+                    with X-Ray)
                   </li>
                   <li>
-                    Click <strong>"Download report"</strong> and drop the file
-                    in here
+                    Click <strong>&quot;Download report&quot;</strong> and drop
+                    the file in here
                   </li>
                 </ol>
               </div>
@@ -1754,7 +1778,7 @@ export default function BlueButtonXRay({
 
                 <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
                   {extractedConditions.map((condition) => (
-                    <div
+                    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
                       key={condition.id}
                       className={`p-4 cursor-pointer transition-colors ${
                         condition.selected
@@ -1803,7 +1827,7 @@ export default function BlueButtonXRay({
                           </div>
                           {condition.rawName !== condition.standardizedName && (
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                              From record: "{condition.rawName}"
+                              From record: &quot;{condition.rawName}&quot;
                             </p>
                           )}
                           {condition.dateFound && (
@@ -1922,7 +1946,7 @@ export default function BlueButtonXRay({
                   </p>
                   <p className="text-blue-300/70 text-sm">
                     This AI-powered tool scans your Blue Button records,
-                    extracts diagnoses, and cross-references VA's rating
+                    extracts diagnoses, and cross-references VA&apos;s rating
                     schedule - all locally in your browser. Help fund the
                     servers and development that make this possible.
                   </p>

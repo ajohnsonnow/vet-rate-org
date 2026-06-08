@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -151,7 +151,7 @@ const VoiceInputButton = ({
   showLabel = false,
   showPrivacyHint = true,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
   const [showSafetyPrompt, setShowSafetyPrompt] = useState(false);
   const [hasConfirmedSafety, setHasConfirmedSafety] = useState(() => {
@@ -360,11 +360,11 @@ const VoiceInputButton = ({
                   onClick={handleSafetyConfirm}
                   className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
-                  Yes, I'm Safe
+                  Yes, I&apos;m Safe
                 </button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                We won't ask again this session
+                We won&apos;t ask again this session
               </p>
             </>
           }
@@ -394,7 +394,7 @@ const VoiceInputButton = ({
           </div>
 
           <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            You're about to speak aloud about your health conditions.
+            You&apos;re about to speak aloud about your health conditions.
             <strong className="text-gray-800 dark:text-white">
               {" "}
               Are you in a private place

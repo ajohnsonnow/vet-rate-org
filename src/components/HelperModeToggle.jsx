@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import { useState } from "react";
 import { useHelperMode, TERMINOLOGY } from "../contexts/HelperModeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -14,7 +14,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
  */
 
 const HelperModeToggle = ({ compact = false }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const {
     isHelperMode,
     toggleHelperMode,
@@ -138,9 +138,9 @@ const HelperModeToggle = ({ compact = false }) => {
             </div>
 
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              <strong>"I am helping a Veteran."</strong> Enable this mode to
-              simplify military/VA jargon into plain English. Perfect for
-              spouses, family members, or caregivers navigating the claims
+              <strong>&quot;I am helping a Veteran.&quot;</strong> Enable this
+              mode to simplify military/VA jargon into plain English. Perfect
+              for spouses, family members, or caregivers navigating the claims
               process.
             </p>
 
@@ -302,10 +302,10 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
             <span>👥</span> Who Is This For?
           </h3>
           <p className="text-gray-700 dark:text-gray-300">
-            <strong>"I am helping a Veteran."</strong> Many veterans rely on
-            spouses, adult children, or caregivers to help navigate the VA
-            claims process. This mode makes the site easier for non-veterans to
-            use.
+            <strong>&quot;I am helping a Veteran.&quot;</strong> Many veterans
+            rely on spouses, adult children, or caregivers to help navigate the
+            VA claims process. This mode makes the site easier for non-veterans
+            to use.
           </p>
         </div>
 

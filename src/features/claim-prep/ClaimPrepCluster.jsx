@@ -78,6 +78,7 @@ export default function ClaimPrepCluster({ onToolSelect }) {
         <MOSHazardMatcher
           onClose={() => setShowMOS(false)}
           onAddToPathfinder={(conditions) => {
+            // eslint-disable-next-line no-console
             console.log("Add to pathfinder:", conditions);
             setShowMOS(false);
           }}
@@ -88,6 +89,7 @@ export default function ClaimPrepCluster({ onToolSelect }) {
         <WebOfConditions
           onClose={() => setShowWeb(false)}
           onSelectCondition={(condition) => {
+            // eslint-disable-next-line no-console
             console.log("Selected condition:", condition);
           }}
           onReportBug={reportBug(setShowWeb)}

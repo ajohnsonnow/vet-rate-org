@@ -13,8 +13,8 @@ export default function ActiveDevBanner() {
         <span className="animate-pulse text-lg">🎖️</span>
         <span className="font-semibold">ACTIVE DEVELOPMENT:</span>
         <span>
-          We're on a ruck march bringing code improvements to you! Save your
-          work often.
+          We&apos;re on a ruck march bringing code improvements to you! Save
+          your work often.
         </span>
         <span className="animate-pulse text-lg">🎖️</span>
       </div>

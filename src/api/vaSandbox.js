@@ -39,6 +39,7 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
   assertVaApiEnabled();
   const url = `${SANDBOX_BASE}${endpoint}`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Fetching: ${url}`);
 
   const response = await fetch(url, {
@@ -97,7 +98,9 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
 
   const url = `${SANDBOX_BASE}${endpoint}`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Fetching (API Key): ${url}`);
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Using API Key: ${apiKey.substring(0, 8)}...`);
 
   const response = await fetch(url, {
@@ -109,6 +112,7 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
     },
   });
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Response status: ${response.status}`);
 
   if (response.status === 401 || response.status === 403) {
@@ -217,6 +221,7 @@ export async function uploadClaimDocument(
 
   const url = `${SANDBOX_BASE}/services/claims/v2/veterans/me/claims/${claimId}/documents`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Uploading document to claim ${claimId}`);
 
   const formData = new FormData();

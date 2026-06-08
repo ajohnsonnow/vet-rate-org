@@ -12,7 +12,7 @@
  * - Accessible (screen reader support)
  */
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 export const ToastContext = createContext();
 
@@ -40,6 +40,7 @@ export const ToastProvider = ({ children }) => {
     }
 
     return id;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const removeToast = useCallback((id) => {

@@ -40,6 +40,7 @@ export function useBootSequence() {
     initializeErrorCapture();
     initializeCompassionateVoice();
     setupBeforeUnloadWarning();
+    // eslint-disable-next-line no-console
     console.log("🎙️ Compassionate Voice System initialized");
   }, []);
 
@@ -70,6 +71,7 @@ export function useBootSequence() {
         const shouldMigrate = await needsMigration();
 
         if (shouldMigrate) {
+          // eslint-disable-next-line no-console
           console.log(
             "🔄 IndexedDB Migration: Migrating data from localStorage...",
           );
@@ -78,11 +80,13 @@ export function useBootSequence() {
           const migrationResult = await migrateFromLocalStorage();
 
           if (migrationResult.success) {
+            // eslint-disable-next-line no-console
             console.log(
               "✅ IndexedDB Migration: Successfully migrated",
               migrationResult.itemsMigrated,
               "items",
             );
+            // eslint-disable-next-line no-console
             console.log("   Migrated keys:", migrationResult.keysProcessed);
           } else {
             console.error(
@@ -93,6 +97,7 @@ export function useBootSequence() {
 
           setIsMigrating(false);
         } else {
+          // eslint-disable-next-line no-console
           console.log(
             "✅ IndexedDB Migration: Already complete, using IndexedDB",
           );
@@ -113,8 +118,10 @@ export function useBootSequence() {
 
       try {
         const persistentResult = await initPersistentStorage();
+        // eslint-disable-next-line no-console
         console.log("🛡️ Persistent Storage: Initialized", persistentResult);
         if (persistentResult.hasUnsavedChanges) {
+          // eslint-disable-next-line no-console
           console.log(
             "⚠️ Found unsaved changes from previous session - will auto-save",
           );
@@ -128,6 +135,7 @@ export function useBootSequence() {
 
       try {
         await initAutoBackup();
+        // eslint-disable-next-line no-console
         console.log(
           "💾 Auto-Backup: System initialized - all data will be backed up after every action",
         );
@@ -138,10 +146,12 @@ export function useBootSequence() {
         );
       }
 
+      // eslint-disable-next-line no-console
       console.log("🛡️ LIVE OPS: Initializing protection systems...");
       const migrationResult = migrateUserData();
 
       if (migrationResult.migrationsRun.length > 0) {
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Ran ${migrationResult.migrationsRun.length} migration(s):`,
           migrationResult.migrationsRun,

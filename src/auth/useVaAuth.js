@@ -83,6 +83,7 @@ function saveTokens(tokenResponse) {
     );
   }
 
+  // eslint-disable-next-line no-console
   console.log(
     "[VA Auth] Tokens saved, expires at:",
     new Date(expiresAt).toLocaleString(),
@@ -105,6 +106,7 @@ function clearTokens() {
   sessionStorage.removeItem(STORAGE_KEYS.USER_INFO);
   sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
   sessionStorage.removeItem(STORAGE_KEYS.STATE);
+  // eslint-disable-next-line no-console
   console.log("[VA Auth] Tokens cleared");
 }
 
@@ -133,11 +135,13 @@ export function useVaAuth() {
     initRef.current = true;
 
     const checkAuth = async () => {
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Checking existing authentication...");
 
       const { accessToken: storedToken, expiry } = getStoredTokens();
 
       if (storedToken && !isTokenExpired(expiry)) {
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Found valid token");
         setAccessToken(storedToken);
         setIsAuthenticated(true);
@@ -161,6 +165,7 @@ export function useVaAuth() {
           console.warn("[VA Auth] Failed to fetch user info:", err.message);
         }
       } else if (storedToken && isTokenExpired(expiry)) {
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Token expired, attempting refresh...");
         const { refreshToken } = getStoredTokens();
         if (refreshToken) {
@@ -174,6 +179,7 @@ export function useVaAuth() {
           clearTokens();
         }
       } else {
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] No valid authentication found");
       }
 
@@ -208,6 +214,7 @@ export function useVaAuth() {
     if (!isVaApiEnabled()) {
       throw new VaApiDisabledError();
     }
+    // eslint-disable-next-line no-console
     console.log("[VA Auth] Refreshing access token...");
 
     const response = await fetch(VA_ENDPOINTS.token, {
@@ -270,7 +277,9 @@ export function useVaAuth() {
       sessionStorage.setItem(STORAGE_KEYS.CODE_VERIFIER, codeVerifier);
       sessionStorage.setItem(STORAGE_KEYS.STATE, state);
 
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Starting OAuth flow...");
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Redirect URI:", VA_AUTH_CONFIG.redirectUri);
 
       // Build authorization URL
@@ -283,6 +292,7 @@ export function useVaAuth() {
       authUrl.searchParams.set("code_challenge", codeChallenge);
       authUrl.searchParams.set("code_challenge_method", "S256");
 
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Redirecting to:", authUrl.toString());
 
       // Redirect to VA.gov
@@ -340,6 +350,7 @@ export function useVaAuth() {
         );
       }
 
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Exchanging code for tokens...");
 
       // Exchange code for tokens
@@ -371,6 +382,7 @@ export function useVaAuth() {
       }
 
       const tokenResponse = await response.json();
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Token exchange successful");
 
       // Save tokens
@@ -432,6 +444,7 @@ export function useVaAuth() {
               client_id: VA_AUTH_CONFIG.clientId,
             }),
           });
+          // eslint-disable-next-line no-console
           console.log("[VA Auth] Token revoked");
         } catch (err) {
           console.warn("[VA Auth] Token revocation failed:", err.message);

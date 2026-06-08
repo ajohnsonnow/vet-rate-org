@@ -7,7 +7,7 @@
  * User verifies extracted data before saving to VKB
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { formatFileSize } from "../utils/ocr";
@@ -97,6 +97,7 @@ const VerifiableField = ({
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              /* eslint-disable-next-line jsx-a11y/no-autofocus */
               autoFocus
             />
             <div className="flex gap-2">
@@ -645,7 +646,7 @@ const AddMissingFieldPanel = ({
  * Main Document Intelligence Briefing Modal
  */
 export default function DocumentIntelligenceBriefing({
-  document,
+  _document,
   extractionResult,
   conflicts: providedConflicts = [],
   onVerify,
@@ -685,9 +686,12 @@ export default function DocumentIntelligenceBriefing({
 
   // Debug logging to trace data flow
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log("🛡️ SigInt Briefing received extractedData:", extractedData);
+    // eslint-disable-next-line no-console
     console.log("🛡️ SigInt Briefing classification:", classification);
     if (isMultiDocument) {
+      // eslint-disable-next-line no-console
       console.log(`🛡️ Multiple documents detected: ${totalDocuments} DD214(s)`);
     }
   }, [extractedData, classification, isMultiDocument, totalDocuments]);
@@ -696,6 +700,7 @@ export default function DocumentIntelligenceBriefing({
   useEffect(() => {
     const loadConflicts = async () => {
       if (currentData && classification?.type) {
+        // eslint-disable-next-line no-console
         console.log(
           "🛡️ Processing document",
           isMultiDocument ? `${currentDocIndex + 1}/${totalDocuments}` : "1/1",
@@ -740,11 +745,13 @@ export default function DocumentIntelligenceBriefing({
           }
         }
 
+        // eslint-disable-next-line no-console
         console.log("🛡️ Filtered fields:", Object.keys(filtered));
         setFilteredData(filtered);
 
         // Group by category
         const grouped = groupFieldsByCategory(filtered, classification.type);
+        // eslint-disable-next-line no-console
         console.log("🛡️ Grouped fields:", grouped);
         setGroupedFields(grouped);
       }
@@ -771,6 +778,7 @@ export default function DocumentIntelligenceBriefing({
 
   // Delete a field that was incorrectly extracted by OCR
   const handleFieldDelete = (field) => {
+    // eslint-disable-next-line no-console
     console.log(`🗑️ Deleting incorrectly extracted field: ${field}`);
     // Remove from filteredData (what's displayed)
     setFilteredData((prev) => {
@@ -799,6 +807,7 @@ export default function DocumentIntelligenceBriefing({
 
   // Delete a single item from an array field (e.g., one award from awards list)
   const handleArrayItemDelete = (field, indexToDelete) => {
+    // eslint-disable-next-line no-console
     console.log(`🗑️ Deleting item ${indexToDelete} from array field: ${field}`);
 
     setFilteredData((prev) => {
@@ -1118,7 +1127,7 @@ export default function DocumentIntelligenceBriefing({
             {/* Apologetic Header */}
             <div className="text-4xl mb-3">😔</div>
             <h4 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-3">
-              We're Sorry - We Couldn't Read This DD214
+              We&apos;re Sorry - We Couldn&apos;t Read This DD214
             </h4>
 
             {/* Empathetic Explanation */}
@@ -1129,8 +1138,8 @@ export default function DocumentIntelligenceBriefing({
                 faded or degraded for our OCR technology to read reliably.
               </p>
               <p className="font-medium">
-                This is <strong>not your fault</strong> - it's a limitation of
-                working with aged documents.
+                This is <strong>not your fault</strong> - it&apos;s a limitation
+                of working with aged documents.
               </p>
             </div>
 
@@ -1143,8 +1152,9 @@ export default function DocumentIntelligenceBriefing({
                 <li className="flex gap-2">
                   <span className="text-green-600 dark:text-green-400">✓</span>
                   <span>
-                    <strong>Manual Entry:</strong> Use the "Enter DD214 Fields
-                    Manually" panel below to enter your information by hand.
+                    <strong>Manual Entry:</strong> Use the &quot;Enter DD214
+                    Fields Manually&quot; panel below to enter your information
+                    by hand.
                   </span>
                 </li>
                 <li className="flex gap-2">

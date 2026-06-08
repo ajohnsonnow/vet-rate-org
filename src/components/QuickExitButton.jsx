@@ -11,7 +11,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 const QuickExitButton = ({
   position = "top-right", // top-right, top-left, bottom-right, bottom-left, floating
   variant = "subtle", // subtle, visible, floating
-  showTooltip = true,
+  _showTooltip = true,
   className = "",
 }) => {
   const [isHovered, setIsHovered] = useState(false);

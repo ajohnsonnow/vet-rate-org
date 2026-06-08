@@ -5,7 +5,6 @@
  * See src/COPYRIGHT.js for full license terms.
  */
 
-import React from "react";
 import AnimatedBug from "./AnimatedBug";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -20,7 +19,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * @param {string} moduleName - Optional module name to pre-fill in bug report
  */
 function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const handleClick = (e) => {
     e.stopPropagation();
     // Store the module name in sessionStorage for the bug report

@@ -55,6 +55,7 @@ const MONITORED_STORAGE_KEYS = [
 let backupTimer = null;
 let backupInProgress = false;
 let backupListeners = [];
+// eslint-disable-next-line no-unused-vars
 let lastBackupTime = null;
 
 // ============================================================================
@@ -456,6 +457,7 @@ export const startAutoBackup = () => {
     }
   };
 
+  // eslint-disable-next-line no-console
   console.log("✅ Auto-backup system started");
 };
 
@@ -581,6 +583,7 @@ export const initAutoBackup = async () => {
       await performBackup("auto");
     }
 
+    // eslint-disable-next-line no-console
     console.log("✅ Auto-backup system initialized");
   } catch (error) {
     console.error("Error initializing auto-backup:", error);

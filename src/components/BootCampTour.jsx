@@ -165,7 +165,7 @@ const tourStyles = `
 
 const BootCampTour = ({ forceShow = false, onComplete }) => {
   const { t } = useLanguage();
-  const [tourDriver, setTourDriver] = useState(null);
+  const [_tourDriver, setTourDriver] = useState(null);
 
   useEffect(() => {
     // Inject custom styles
@@ -187,6 +187,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 
     window.addEventListener("restartTour", handleRestartTour);
     return () => window.removeEventListener("restartTour", handleRestartTour);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -205,6 +206,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       const whatsNewModal = document.querySelector("[data-whats-new-modal]");
       if (whatsNewModal) {
         // What's New is showing, wait for it to close
+        // eslint-disable-next-line no-console
         console.log("🎯 Tour: Waiting for What's New to close...");
         const handleWhatsNewClosed = () => {
           window.removeEventListener("whatsNewClosed", handleWhatsNewClosed);
@@ -242,6 +244,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
     }, 500);
 
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceShow]);
 
   const startTour = () => {
@@ -539,7 +542,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
   };
 
   // Function to manually start tour (exposed via ref or context if needed)
-  const restartTour = () => {
+  const _restartTour = () => {
     startTour();
   };
 

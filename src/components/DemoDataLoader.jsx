@@ -283,6 +283,7 @@ export const loadDemoData = () => {
       JSON.stringify(DEMO_VETERAN_DATA.profile),
     );
 
+    // eslint-disable-next-line no-console
     console.log("✅ Demo data loaded successfully");
     return true;
   } catch (error) {

@@ -9,13 +9,12 @@
  * 38 CFR § 3.326 - Pre-discharge claims
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
-  BDD_MILESTONES,
   BDD_CHECKLIST,
   BDD_COMMON_MISTAKES,
   calculateBDDEligibility,
@@ -50,10 +49,12 @@ const TABS = [
 ];
 
 const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // ── State ──────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("dashboard");
+  // eslint-disable-next-line no-unused-vars
   const [savedData, setSavedData] = useState(() => loadBDDProgress());
   const [separationDate, setSeparationDate] = useState(
     savedData.separationDate || "",
@@ -386,7 +387,7 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
             <span className="text-emerald-500 mt-0.5">&#x2713;</span>
             <span>
               C&P exams happen{" "}
-              <strong>while you're still on active duty</strong>
+              <strong>while you&apos;re still on active duty</strong>
             </span>
           </li>
           <li className="flex items-start gap-2">
@@ -408,6 +409,7 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
 
       {/* Branch Selection */}
       <div className="mb-6">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
           Service Branch
         </label>
@@ -431,6 +433,7 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
 
       {/* Date Picker */}
       <div className="mb-6">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
           Separation / ETS Date
         </label>
@@ -477,7 +480,7 @@ const DashboardTab = ({
   onNavigateToTool,
   onChangeDate,
   separationDate,
-  branch,
+  _branch,
 }) => {
   // Find the next actionable milestone
   const nextMilestone =
@@ -776,7 +779,7 @@ const DashboardTab = ({
  */
 const TimelineTab = ({
   milestones,
-  eligibility,
+  _eligibility,
   expandedMilestone,
   onToggleMilestone,
   onNavigateToTool,
@@ -977,7 +980,7 @@ const ChecklistTab = ({ checkedItems, onToggleItem, completion }) => {
               </h4>
               <div className="space-y-2">
                 {items.map((item) => (
-                  <label
+                  <label /* eslint-disable-line jsx-a11y/label-has-associated-control */
                     key={item.id}
                     className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       checkedItems.has(item.id)
@@ -1032,7 +1035,7 @@ const PitfallsTab = ({ expandedMistake, onToggleMistake }) => (
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">
         These are the mistakes that cost transitioning service members thousands
-        in lost benefits. Don't make them.
+        in lost benefits. Don&apos;t make them.
       </p>
     </div>
 

@@ -13,7 +13,7 @@
  * - AI-powered analysis for action recommendations
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -31,8 +31,6 @@ import {
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
 import {
-  VA_PAY_RATES_HISTORICAL,
-  getHistoricalRate,
   analyzeRetroactivePay,
   checkBilateralFactorCompliance,
   CUE_PATTERNS,
@@ -41,6 +39,7 @@ import {
 const STORAGE_KEY = "vet_rate_retro_pay_history";
 
 const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // Rating history state
@@ -336,7 +335,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
 
           {/* Timeline entries */}
           <div className="space-y-6">
-            {ratingHistory.map((period, index) => (
+            {ratingHistory.map((period, _index) => (
               <div
                 key={period.id}
                 className="relative flex items-start gap-4 pl-16"
@@ -607,7 +606,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               </span>
             </h2>
             <p className="text-yellow-100 mt-1">
-              "You Owe Me Money" - Find Missed Payments
+              &quot;You Owe Me Money&quot; - Find Missed Payments
             </p>
           </div>
         </div>
@@ -688,8 +687,9 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               date
             </p>
             <p className="text-xs text-blue-400 mt-2 italic">
-              Per 38 CFR § 3.400: "Payment shall commence on the first day of
-              the month following the month in which the effective date falls."
+              Per 38 CFR § 3.400: &quot;Payment shall commence on the first day
+              of the month following the month in which the effective date
+              falls.&quot;
             </p>
             <p className="text-xs text-amber-300 mt-2">
               💡 Example: Decision effective Jan 15, 2024 → Payments start Feb
@@ -706,6 +706,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                 Effective Date *
                 <span className="group relative">
@@ -745,6 +746,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
             </div>
 
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Combined Rating *
               </label>

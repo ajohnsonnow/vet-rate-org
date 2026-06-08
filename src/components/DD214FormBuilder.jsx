@@ -9,11 +9,7 @@
 
 import React, { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
-import {
-  saveDD214Data,
-  getServiceHistory,
-  getVeteranProfile,
-} from "../utils/veteranProfile";
+import { getServiceHistory } from "../utils/veteranProfile";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // DD214 Block field definitions with tooltips
@@ -213,6 +209,7 @@ const DD214_FIELDS = {
  * DD214 Form Builder Component
  */
 const DD214FormBuilder = ({ onClose, onSave }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const [formData, setFormData] = useState({});

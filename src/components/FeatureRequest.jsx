@@ -9,13 +9,9 @@
  * Built by a fellow veteran. "Your ideas make us stronger."
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import {
-  getSystemInfo,
-  getAppState,
-  copyToClipboard,
-} from "../utils/bugReportUtils";
+import { getSystemInfo, copyToClipboard } from "../utils/bugReportUtils";
 import {
   saveFeatureRequest,
   generateFeatureId,
@@ -220,6 +216,7 @@ ${t("featureRequest", "thankYouMessage")}
             systemInfo,
           });
 
+          // eslint-disable-next-line no-console
           console.log(`✅ Feature request ${featureId} saved to My Tickets`);
         } catch (storageError) {
           // Fallback to localStorage if IndexedDB fails
@@ -289,6 +286,7 @@ ${t("featureRequest", "thankYouMessage")}
           const result = await response.json();
 
           if (result.success) {
+            // eslint-disable-next-line no-console
             console.log(
               `✅ Feature request ${featureId} sent via FormSubmit AND saved locally`,
             );
@@ -714,6 +712,7 @@ ${t("featureRequest", "thankYouMessage")}
             </h4>
 
             {/* Save to My Tickets */}
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -822,7 +821,8 @@ ${t("featureRequest", "thankYouMessage")}
               {onOpenRoadmap && (
                 <div className="mt-6 pt-4 border-t border-green-200 dark:border-green-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    🗺️ Your idea may appear here! See what's being built & vote:
+                    🗺️ Your idea may appear here! See what&apos;s being built &
+                    vote:
                   </p>
                   <button
                     onClick={() => {

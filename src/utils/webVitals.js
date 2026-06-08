@@ -40,6 +40,7 @@ function emit(name, value, rating) {
         : rating === "needs-improvement"
           ? "color:orange"
           : "color:red";
+    // eslint-disable-next-line no-console
     console.log(`%c[web-vital] ${name} = ${entry.value} (${rating})`, color);
   }
 }

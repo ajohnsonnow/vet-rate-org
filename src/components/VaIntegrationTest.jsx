@@ -12,7 +12,7 @@
  * - Raw JSON toggle for technical review
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
 import {
   getServiceHistory,
@@ -47,11 +47,11 @@ import {
   ExternalLink,
   Info,
   AlertCircle,
-  Briefcase,
   Medal,
 } from "lucide-react";
 
 const VaIntegrationTest = ({ onClose }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // State for sandbox test modal
@@ -104,6 +104,7 @@ const VaIntegrationTest = ({ onClose }) => {
     // Fetch claims
     fetchClaims();
     // Note: Appeals API (fetchAppealableIssues) is Future Scope - not called automatically
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   // Auto-fetch data when authenticated

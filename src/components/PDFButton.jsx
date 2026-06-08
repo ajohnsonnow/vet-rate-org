@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { generatePDF } from "../utils/pdfGenerator";
 import BuyMeCoffee from "./BuyMeCoffee";
 
 function PDFButton({ result, searchTerm }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pdfGenerated, setPdfGenerated] = useState(false);

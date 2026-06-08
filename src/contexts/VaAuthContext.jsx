@@ -5,7 +5,7 @@
  * Handles token storage, user info, and authentication status.
  */
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -65,6 +65,7 @@ export function VaAuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -78,6 +79,7 @@ export function VaAuthProvider({ children }) {
       const { type, data, error: authErr } = event.data || {};
 
       if (type === "VA_AUTH_SUCCESS" && data) {
+        // eslint-disable-next-line no-console
         console.log(
           "[VA Auth] Received success message from popup with token data",
         );
@@ -124,6 +126,7 @@ export function VaAuthProvider({ children }) {
             );
           }
 
+          // eslint-disable-next-line no-console
           console.log("[VA Auth] Authentication state updated from popup");
         }
       } else if (type === "VA_AUTH_ERROR") {
@@ -164,6 +167,7 @@ export function VaAuthProvider({ children }) {
         sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
       }
 
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Authentication successful");
     } catch (err) {
       console.error("[VA Auth] Error storing auth:", err);
@@ -188,6 +192,7 @@ export function VaAuthProvider({ children }) {
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
     sessionStorage.removeItem(STORAGE_KEYS.USER_INFO);
 
+    // eslint-disable-next-line no-console
     console.log("[VA Auth] Authentication cleared");
   }, []);
 

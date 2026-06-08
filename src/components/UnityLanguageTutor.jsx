@@ -19,8 +19,8 @@ const UnityLanguageTutor = ({ isOpen = false, onClose, className = "" }) => {
   const [targetLang, setTargetLang] = useState("es");
   const [phraseCategory, setPhraseCategory] = useState("support");
   const [currentPhrase, setCurrentPhrase] = useState(null);
-  const [isListening, setIsListening] = useState(false);
-  const [userAttempt, setUserAttempt] = useState("");
+  const [_isListening, _setIsListening] = useState(false);
+  const [_userAttempt, setUserAttempt] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [progress, setProgress] = useState({});
 
@@ -447,6 +447,7 @@ const UnityLanguageTutor = ({ isOpen = false, onClose, className = "" }) => {
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Target Language */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="mb-2 block text-xs text-gray-600 dark:text-slate-400">
             Learn This Language
           </label>
@@ -468,6 +469,7 @@ const UnityLanguageTutor = ({ isOpen = false, onClose, className = "" }) => {
 
         {/* Phrase Category */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="mb-2 block text-xs text-gray-600 dark:text-slate-400">
             Phrase Category
           </label>

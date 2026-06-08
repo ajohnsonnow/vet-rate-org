@@ -1,15 +1,10 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 import disabilityData from "../data/disabilityData.json";
-import { getMyRatings, hasMyRatings, addRating } from "../utils/veteranProfile";
+import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
-import {
-  analyzePDF,
-  OCR_STATES,
-  getProgressStyling,
-  formatFileSize,
-} from "../utils/ocr";
+import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -18,6 +13,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * Organized by body system per 38 CFR Part 4, Subpart B - Schedule for Rating Disabilities
  */
 const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown when needed
@@ -201,6 +197,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   };
 
   // Organized by body system per 38 CFR Part 4, Subpart B - Schedule for Rating Disabilities
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const conditionsBySystem = {
     // ═══════════════════════════════════════════════════════════════════
     // MUSCULOSKELETAL SYSTEM (§§ 4.40-4.73)
@@ -1316,6 +1313,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
           {/* Manual Input Method */}
           {inputMethod === "manual" && (
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Enter your service-connected conditions (one per line):
               </label>
@@ -1653,7 +1651,9 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                         d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p>No conditions found matching "{searchFilter}"</p>
+                    <p>
+                      No conditions found matching &quot;{searchFilter}&quot;
+                    </p>
                     <p className="text-sm mt-1">Try a different search term</p>
                   </div>
                 ) : (

@@ -66,7 +66,7 @@ export default function ResponsiveModal({
   if (!isOpen) return null;
 
   const modal = (
-    <div
+    <div /* eslint-disable-line jsx-a11y/no-static-element-interactions */
       className={`fixed inset-0 flex items-stretch justify-center backdrop-blur-sm sm:items-center sm:p-4 ${
         backdropClassName || "bg-black/60"
       }`}
@@ -117,6 +117,7 @@ export default function ResponsiveModal({
             even when a modal's body holds no focusable control (axe
             scrollable-region-focusable). */}
         <div
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
         >

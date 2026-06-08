@@ -12,7 +12,7 @@
 
 // Allowed URL protocols for different contexts
 const SAFE_LINK_PROTOCOLS = ["https:", "http:", "mailto:", "tel:"];
-const SAFE_BLOB_PROTOCOLS = ["blob:"];
+const _SAFE_BLOB_PROTOCOLS = ["blob:"];
 const GOV_DOMAIN_PATTERN = /^https:\/\/[^/]*\.gov(\/|$)/i;
 
 // LLM-output URL allow-list — anything outside this list is stripped before
@@ -121,6 +121,7 @@ export function sanitizeErrorMessage(error, maxLength = 500) {
   // Strip HTML tags to prevent XSS
   message = message.replace(/<[^>]*>/g, "");
   // Strip control characters
+  // eslint-disable-next-line no-control-regex
   message = message.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
   // Limit length
   if (message.length > maxLength) {

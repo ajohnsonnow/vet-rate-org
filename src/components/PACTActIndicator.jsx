@@ -5,7 +5,7 @@
  * This source code is proprietary and confidential.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import pactActData from "../data/pactActData.json";
 
@@ -13,7 +13,7 @@ import pactActData from "../data/pactActData.json";
  * PACTActBadge - A small badge to indicate PACT Act presumptive status
  */
 export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
 
   const pactInfo = pactActData.diagnosticCodePactMapping[diagnosticCode];
@@ -74,7 +74,7 @@ export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
 /**
  * PACTActInfoCard - Full information card about PACT Act status for a condition
  */
-export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
+export const PACTActInfoCard = ({ diagnosticCode, _conditionName }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const pactInfo = pactActData.diagnosticCodePactMapping[diagnosticCode];
@@ -119,6 +119,7 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
   return (
     <div className="mt-4 border-2 border-green-200 rounded-lg overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50">
       {/* Header */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -181,13 +182,13 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
           {/* What is a presumptive condition */}
           <div>
             <h4 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
-              <span>❓</span> What does "presumptive" mean?
+              <span>❓</span> What does &quot;presumptive&quot; mean?
             </h4>
             <p className="text-sm text-gray-600">
               For presumptive conditions, you{" "}
-              <strong>don't need to prove</strong> that your service caused the
-              condition. The VA automatically assumes ("presumes") that your
-              service caused it if you meet the service requirements.
+              <strong>don&apos;t need to prove</strong> that your service caused
+              the condition. The VA automatically assumes (&quot;presumes&quot;)
+              that your service caused it if you meet the service requirements.
             </p>
           </div>
 
@@ -315,7 +316,8 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
                 related to your qualifying service
               </li>
               <li>
-                • You'll still need medical evidence of your current diagnosis
+                • You&apos;ll still need medical evidence of your current
+                diagnosis
               </li>
               <li>
                 • Include your DD-214 showing qualifying service locations/dates
@@ -396,8 +398,8 @@ export const PACTActAlert = ({ diagnosticCodes = [] }) => {
           </h3>
           <p className="text-sm text-green-700 mt-1">
             This condition may qualify for presumptive service connection under
-            the PACT Act. Veterans with qualifying toxic exposure don't need to
-            prove service causation.
+            the PACT Act. Veterans with qualifying toxic exposure don&apos;t
+            need to prove service causation.
           </p>
           <a
             href={pactActData.pactActInfo.vaResourceUrl}

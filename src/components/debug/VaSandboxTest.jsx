@@ -16,21 +16,17 @@
  * - Appeals Status API
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useVaAuth } from "../../auth/useVaAuth";
 import {
   getServiceHistory,
   getClaims,
-  getAppealableIssues,
-  getAppealsStatus,
   getFacilities,
   searchForms,
   getBenefitsReferenceData,
   formatServiceHistory,
   formatClaims,
-  formatAppealableIssues,
-  formatAppealsStatus,
   formatFacilities,
   formatForms,
   formatDisabilities,
@@ -320,7 +316,7 @@ const ApiTestCard = ({
   status,
   loading,
   error,
-  data,
+  _data,
   onTest,
   buttonText = "Test",
   rawData,
@@ -410,6 +406,7 @@ const ApiTestCard = ({
 // ============================================================================
 
 const VaSandboxTest = () => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const {
     isAuthenticated,
@@ -788,8 +785,8 @@ const VaSandboxTest = () => {
               <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
                   <strong>Note:</strong> Each VA API requires separate
-                  registration. If an API shows "skipped", register your API key
-                  at{" "}
+                  registration. If an API shows &quot;skipped&quot;, register
+                  your API key at{" "}
                   <a
                     href="https://developer.va.gov/explore"
                     target="_blank"

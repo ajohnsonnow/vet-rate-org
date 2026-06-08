@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   X,
   ExternalLink,
@@ -7,10 +7,8 @@ import {
   Shield,
   Heart,
   Brain,
-  Home,
   Users,
   Briefcase,
-  Calendar,
   ChevronDown,
   ChevronUp,
   Leaf,

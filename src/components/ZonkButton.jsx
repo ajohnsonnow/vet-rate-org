@@ -63,7 +63,7 @@ const MEMES = [
 ];
 
 const ZonkButton = ({ className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [showZonk, setShowZonk] = useState(false);
   const [zonkData, setZonkData] = useState(null);
   const [clickCount, setClickCount] = useState(0);
@@ -116,7 +116,7 @@ const ZonkButton = ({ className = "" }) => {
       {!showZonk && (
         <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 text-center">
           <p className="text-sm text-gray-600 mb-4">
-            You've been working hard. Need a morale boost?
+            You&apos;ve been working hard. Need a morale boost?
           </p>
           <button
             onClick={handleZonkClick}
@@ -174,7 +174,7 @@ const ZonkButton = ({ className = "" }) => {
         </div>
       )}
 
-      {/* CSS Animation */}
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         @keyframes fadeIn {
           from {

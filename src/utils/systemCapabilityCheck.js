@@ -439,6 +439,7 @@ export function initCapabilityCheck() {
   }
 
   // All checks passed
+  // eslint-disable-next-line no-console
   console.log("✅ Browser compatibility check passed");
   return true;
 }

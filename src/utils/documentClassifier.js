@@ -375,9 +375,13 @@ export const classifyDocument = (text, filename = "") => {
   const filenameHints = filename.toLowerCase();
 
   if (DEBUG_CLASSIFICATION) {
+    // eslint-disable-next-line no-console
     console.log("🔍 [CLASSIFIER DEBUG] Starting document classification");
+    // eslint-disable-next-line no-console
     console.log("🔍 [CLASSIFIER DEBUG] Filename:", filename);
+    // eslint-disable-next-line no-console
     console.log("🔍 [CLASSIFIER DEBUG] Text length:", text.length);
+    // eslint-disable-next-line no-console
     console.log(
       "🔍 [CLASSIFIER DEBUG] First 500 chars:",
       normalizedText.substring(0, 500),
@@ -453,15 +457,19 @@ export const classifyDocument = (text, filename = "") => {
       DEBUG_CLASSIFICATION &&
       (matchedPatterns.length > 0 || matchedNegativePatterns.length > 0)
     ) {
+      // eslint-disable-next-line no-console
       console.log(`🔍 [CLASSIFIER DEBUG] ${docType}:`);
+      // eslint-disable-next-line no-console
       console.log(
         `   ✅ Matched patterns (${matchedPatterns.length}):`,
         matchedPatterns,
       );
+      // eslint-disable-next-line no-console
       console.log(
         `   ❌ Negative patterns (${matchedNegativePatterns.length}):`,
         matchedNegativePatterns,
       );
+      // eslint-disable-next-line no-console
       console.log(`   📊 Final score: ${score}`);
     }
 
@@ -481,6 +489,7 @@ export const classifyDocument = (text, filename = "") => {
   }
 
   if (DEBUG_CLASSIFICATION) {
+    // eslint-disable-next-line no-console
     console.log("🔍 [CLASSIFIER DEBUG] Final scores:", scores);
   }
 
@@ -555,19 +564,26 @@ export const classifyDocument = (text, filename = "") => {
 
   // Final debug output showing the winner
   if (DEBUG_CLASSIFICATION) {
+    // eslint-disable-next-line no-console
     console.log("🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====");
+    // eslint-disable-next-line no-console
     console.log(`🏆 [CLASSIFIER DEBUG] WINNER: ${bestType}`);
+    // eslint-disable-next-line no-console
     console.log(`🏆 [CLASSIFIER DEBUG] Score: ${bestScore}`);
+    // eslint-disable-next-line no-console
     console.log(`🏆 [CLASSIFIER DEBUG] Confidence: ${confidence}%`);
+    // eslint-disable-next-line no-console
     console.log(
       `🏆 [CLASSIFIER DEBUG] Matched patterns:`,
       matches[bestType] || [],
     );
+    // eslint-disable-next-line no-console
     console.log("🏆 [CLASSIFIER DEBUG] ================================");
 
     // Also log if there were close competitors
     const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     if (sortedScores.length > 1) {
+      // eslint-disable-next-line no-console
       console.log(
         "🥈 [CLASSIFIER DEBUG] Runner-up:",
         sortedScores[1]?.[0],

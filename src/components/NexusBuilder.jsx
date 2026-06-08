@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   Document,
@@ -19,7 +19,6 @@ import AIWarningBanner from "./AIWarningBanner";
 import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import CertificationCheckbox from "./CertificationCheckbox";
 import StatementAnalyzer from "./StatementAnalyzer";
-import ClaimProgress from "./ClaimProgress";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   isAIAvailable,
@@ -28,8 +27,7 @@ import {
 } from "../utils/aiStatementHelper";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
-import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
-import AIModelQuickLoad from "./AIModelQuickLoad";
+import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import SmartAILoadButton from "./SmartAILoadButton";
 
 /**
@@ -567,6 +565,7 @@ Sincerely,
                   <SmartAILoadButton
                     toolId="nexus-builder"
                     onLoadComplete={(model) => {
+                      // eslint-disable-next-line no-console
                       console.log(
                         "Smart AI loaded for Nexus Builder:",
                         model?.name,

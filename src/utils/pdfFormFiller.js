@@ -613,6 +613,7 @@ async function fetchPdfForm(formNumber) {
       return await response.arrayBuffer();
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(
       `Could not fetch from VA.gov (${error.message}), trying local fallback...`,
     );
@@ -625,6 +626,7 @@ async function fetchPdfForm(formNumber) {
       return await response.arrayBuffer();
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(`Local fallback also failed: ${error.message}`);
   }
 
@@ -654,6 +656,7 @@ export async function getFormFieldNames(formNumber) {
  * Create a filled PDF with text overlays (for forms without fillable fields)
  * This creates the form content programmatically
  */
+// eslint-disable-next-line no-unused-vars
 async function createFilledPdfFromTemplate(formNumber, data, templateConfig) {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -662,7 +665,7 @@ async function createFilledPdfFromTemplate(formNumber, data, templateConfig) {
   // Use the template config to create pages
   for (const pageConfig of templateConfig.pages) {
     const page = pdfDoc.addPage([612, 792]); // Letter size
-    const { width, height } = page.getSize();
+    const { _width, height } = page.getSize();
 
     // Draw header
     if (pageConfig.header) {
@@ -762,6 +765,7 @@ export async function fillForm21_10210(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found or error: ${fieldName}`);
         }
       };
@@ -772,6 +776,7 @@ export async function fillForm21_10210(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -808,12 +813,12 @@ export async function fillForm21_10210(data) {
         };
       };
       const vetSSN = parseSSN(data.veteranSSN);
-      const witnessSSN = parseSSN(data.witnessSSN);
+      const _witnessSSN = parseSSN(data.witnessSSN);
 
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           // Assume MM/DD/YYYY or YYYY-MM-DD format
           if (parts[0].length === 4) {
@@ -824,7 +829,7 @@ export async function fillForm21_10210(data) {
         return { month: "", day: "", year: "" };
       };
       const vetDOB = parseDOB(data.veteranDOB);
-      const witnessDOB = parseDOB(data.witnessDOB);
+      const _witnessDOB = parseDOB(data.witnessDOB);
 
       // Parse address
       const parseZip = (zip) => {
@@ -988,7 +993,7 @@ async function createBuddyStatementPdf(data) {
   const lineHeight = 14;
 
   const page = pdfDoc.addPage([612, 792]);
-  const { width, height } = page.getSize();
+  const { _width, height } = page.getSize();
   let y = height - 50;
 
   const drawText = (text, options = {}) => {
@@ -1094,7 +1099,7 @@ async function createBuddyStatementPdf(data) {
 
   // Check if we need a second page
   if (y < 200) {
-    const page2 = pdfDoc.addPage([612, 792]);
+    const _page2 = pdfDoc.addPage([612, 792]);
     y = height - 50;
   }
 
@@ -1138,6 +1143,7 @@ export async function fillForm21_4138(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -1170,7 +1176,7 @@ export async function fillForm21_4138(data) {
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 4)
             return { year: parts[0], month: parts[1], day: parts[2] };
@@ -1266,7 +1272,7 @@ async function createPersonalStatementPdf(data) {
   const lineHeight = 14;
 
   let currentPage = pdfDoc.addPage([612, 792]);
-  const { width, height } = currentPage.getSize();
+  const { _width, height } = currentPage.getSize();
   let y = height - 50;
 
   const getPage = () => {
@@ -1383,6 +1389,7 @@ export async function fillForm21_0781(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -1393,6 +1400,7 @@ export async function fillForm21_0781(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -1431,7 +1439,7 @@ export async function fillForm21_0781(data) {
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 4)
             return { year: parts[0], month: parts[1], day: parts[2] };
@@ -1736,6 +1744,7 @@ export async function fillForm21_0966(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -1746,6 +1755,7 @@ export async function fillForm21_0966(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -1778,7 +1788,7 @@ export async function fillForm21_0966(data) {
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 4)
             return { year: parts[0], month: parts[1], day: parts[2] };
@@ -1935,6 +1945,7 @@ export async function fillForm21_4142(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -1956,7 +1967,7 @@ export async function fillForm21_4142(data) {
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 4)
             return { year: parts[0], month: parts[1], day: parts[2] };
@@ -2072,6 +2083,7 @@ export async function fillForm20_10207(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -2082,6 +2094,7 @@ export async function fillForm20_10207(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -2114,7 +2127,7 @@ export async function fillForm20_10207(data) {
       // Parse DOB
       const parseDOB = (dob) => {
         if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-\/]/);
+        const parts = dob.split(/[-/]/);
         if (parts.length === 3) {
           if (parts[0].length === 4)
             return { year: parts[0], month: parts[1], day: parts[2] };
@@ -2293,6 +2306,7 @@ export async function fillForm21_22(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -2302,6 +2316,7 @@ export async function fillForm21_22(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -2322,7 +2337,7 @@ export async function fillForm21_22(data) {
 
       // Parse DOB
       const dobRaw = data.dob || data.veteranDOB || "";
-      const dobParts = dobRaw.split(/[\/\-]/);
+      const dobParts = dobRaw.split(/[/-]/);
       const dob = {
         month: dobParts[0] || "",
         day: dobParts[1] || "",
@@ -2553,6 +2568,7 @@ export async function fillForm21_22a(data) {
           const field = form.getTextField(fieldName);
           if (field) field.setText(String(value));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Field not found: ${fieldName}`);
         }
       };
@@ -2562,6 +2578,7 @@ export async function fillForm21_22a(data) {
           const field = form.getCheckBox(fieldName);
           if (field && checked) field.check();
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log(`Checkbox not found: ${fieldName}`);
         }
       };
@@ -2582,7 +2599,7 @@ export async function fillForm21_22a(data) {
 
       // Parse DOB
       const dobRaw = data.dob || data.veteranDOB || "";
-      const dobParts = dobRaw.split(/[\/\-]/);
+      const dobParts = dobRaw.split(/[/-]/);
       const dob = {
         month: dobParts[0] || "",
         day: dobParts[1] || "",
@@ -2646,7 +2663,7 @@ export async function fillForm21_22a(data) {
           data.claimantRelationship || "",
         );
 
-        const claimantDobParts = (data.claimantDOB || "").split(/[\/\-]/);
+        const claimantDobParts = (data.claimantDOB || "").split(/[/-]/);
         setTextField(fieldMap.claimantDOBMonth, claimantDobParts[0] || "");
         setTextField(fieldMap.claimantDOBDay, claimantDobParts[1] || "");
         setTextField(fieldMap.claimantDOBYear, claimantDobParts[2] || "");

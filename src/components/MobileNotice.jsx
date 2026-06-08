@@ -3,7 +3,7 @@
  * All Rights Reserved. Proprietary and Confidential.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * Detect if device is a tablet

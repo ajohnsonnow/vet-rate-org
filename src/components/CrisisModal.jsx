@@ -8,7 +8,7 @@
  * until veteran connects with crisis support.
  */
 
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { CRISIS_RESOURCES, getCrisisMessage } from "../utils/crisisInterceptor";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -21,7 +21,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * - Direct contact options (call, text, chat)
  * - High contrast, accessible design
  */
-const CrisisModal = ({ severity = "high", source = "application" }) => {
+const CrisisModal = ({ severity = "high", _source = "application" }) => {
   const { t } = useLanguage();
   const containerRef = useRef(null);
 

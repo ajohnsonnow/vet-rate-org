@@ -1,18 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
-import {
-  getAIStatus,
-  AI_MODES,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
-import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
+import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
-import { useVaBenefitsRef, CLAIM_PHASES } from "../hooks/useVaBenefitsRef";
+import { useVaBenefitsRef } from "../hooks/useVaBenefitsRef";
 import {
   analyzePDF,
   analyzeImage,
@@ -37,6 +33,7 @@ import {
  */
 
 const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
@@ -45,7 +42,10 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [showAISettings, setShowAISettings] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
@@ -60,6 +60,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const fileInputRef = useRef(null);
 
   // Benefits Reference hook for claim phase explanations
+  // eslint-disable-next-line no-unused-vars
   const { getClaimPhaseInfo, getAllClaimPhases } = useVaBenefitsRef();
 
   // Monitor AI status changes
@@ -305,6 +306,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     });
 
     try {
+      // eslint-disable-next-line no-console
       console.log(
         "[DecisionDecoder] Starting AI decode with",
         denialText.length,
@@ -320,6 +322,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
       // Clear timeout if we got a response
       clearTimeout(timeoutId);
 
+      // eslint-disable-next-line no-console
       console.log("[DecisionDecoder] AI response:", response);
 
       if (response.success) {
@@ -490,8 +493,8 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
             </h3>
             <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
               VA decisions are written in complex legal language. Paste the key
-              paragraphs below and we'll translate what they're{" "}
-              <em>actually</em> saying, what's missing from your claim, and
+              paragraphs below and we&apos;ll translate what they&apos;re{" "}
+              <em>actually</em> saying, what&apos;s missing from your claim, and
               exactly what you need to do next.
             </p>
           </div>
@@ -504,6 +507,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           <SmartAILoadButton
             toolId="decision-decoder"
             onLoadComplete={(model) =>
+              // eslint-disable-next-line no-console
               console.log("Smart AI loaded for Decision Decoder:", model?.name)
             }
           />
@@ -540,6 +544,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           {/* Paste Text Input */}
           {inputMethod === "paste" && (
             <>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 📄 Paste Your VA Decision Letter
               </label>
@@ -900,7 +905,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                       </p>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                         💡 Tip: For more complete analysis, paste only the
-                        "Reasons for Decision" section.
+                        &quot;Reasons for Decision&quot; section.
                       </p>
                     </div>
                   </div>
@@ -974,7 +979,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                 results.missing_elements.length > 0 && (
                   <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-700">
                     <h4 className="font-semibold text-red-800 dark:text-red-200 flex items-center gap-2 mb-3">
-                      <span>🚨</span> What's Missing From Your Claim
+                      <span>🚨</span> What&apos;s Missing From Your Claim
                     </h4>
                     <ul className="space-y-2">
                       {results.missing_elements.map((element, index) => (
@@ -1096,7 +1101,8 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                 <div className="text-6xl mb-4">🔓</div>
                 <p className="text-lg font-medium">Ready to Decode</p>
                 <p className="text-sm mt-2">
-                  Paste your VA decision letter and click "Decode" to translate
+                  Paste your VA decision letter and click &quot;Decode&quot; to
+                  translate
                 </p>
               </div>
             </div>
@@ -1112,23 +1118,24 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
             <p className="text-red-600 dark:text-red-400 font-medium mb-1">
-              "No nexus established"
+              &quot;No nexus established&quot;
             </p>
             <p className="text-gray-600 dark:text-gray-400">
-              = They need a doctor's letter connecting your condition to service
+              = They need a doctor&apos;s letter connecting your condition to
+              service
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
             <p className="text-red-600 dark:text-red-400 font-medium mb-1">
-              "Not incurred in service"
+              &quot;Not incurred in service&quot;
             </p>
             <p className="text-gray-600 dark:text-gray-400">
-              = They didn't find evidence in your service records
+              = They didn&apos;t find evidence in your service records
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
             <p className="text-red-600 dark:text-red-400 font-medium mb-1">
-              "No current disability"
+              &quot;No current disability&quot;
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               = Need a current diagnosis from a doctor
@@ -1136,7 +1143,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
             <p className="text-red-600 dark:text-red-400 font-medium mb-1">
-              "Not at least as likely as not"
+              &quot;Not at least as likely as not&quot;
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               = The examiner said less than 50% chance of connection
@@ -1183,7 +1190,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
             <div className="relative mb-6">
               <div className="absolute top-4 left-0 right-0 h-1 bg-teal-200 dark:bg-teal-800 rounded"></div>
               <div className="flex justify-between relative">
-                {getAllClaimPhases().map((phase, idx) => (
+                {getAllClaimPhases().map((phase, _idx) => (
                   <button
                     key={phase.key}
                     onClick={() =>

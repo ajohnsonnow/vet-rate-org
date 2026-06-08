@@ -6,7 +6,7 @@
  * Supports both popup and redirect flows.
  */
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useVaAuth } from "./useVaAuth";
 
 const VaAuthCallback = () => {
@@ -23,12 +23,14 @@ const VaAuthCallback = () => {
   useEffect(() => {
     // Prevent double execution from StrictMode
     if (hasProcessed.current) {
+      // eslint-disable-next-line no-console
       console.log("[VA Callback] Already processing, skipping duplicate call");
       return;
     }
     hasProcessed.current = true;
 
     const handleCallback = async () => {
+      // eslint-disable-next-line no-console
       console.log(
         "[VA Callback] Processing OAuth callback...",
         isPopup ? "(popup mode)" : "(redirect mode)",
@@ -80,6 +82,7 @@ const VaAuthCallback = () => {
       try {
         // Exchange code for tokens
         const tokenData = await exchangeCodeForTokens(code, state);
+        // eslint-disable-next-line no-console
         console.log("[VA Callback] Token exchange successful");
 
         // Set flag so MyPacket knows to auto-import records

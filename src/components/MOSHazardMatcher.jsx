@@ -17,17 +17,14 @@
  * - Data from O*NET, DoD COOL, Naval History, DA PAM 611-21
  */
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   MOS_DATABASE,
   searchMOS as searchMOSFromDB,
-  getDatabaseStats,
-  CODE_ALIASES,
 } from "../data/mosDatabase";
-import ReportBugLink from "./ReportBugLink";
 
 /**
  * Legacy MOS Database (for backwards compatibility)
@@ -1185,8 +1182,9 @@ const getPrevalenceColor = (prevalence) => {
 export default function MOSHazardMatcher({
   onClose,
   onAddToPathfinder,
-  onReportBug,
+  _onReportBug,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -1287,8 +1285,8 @@ export default function MOSHazardMatcher({
           <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
             <p className="text-slate-200 text-center">
               <span className="text-2xl mr-2">💡</span>
-              <strong>You aren't weak.</strong> You did a job that breaks
-              bodies. Here's the proof.
+              <strong>You aren&apos;t weak.</strong> You did a job that breaks
+              bodies. Here&apos;s the proof.
             </p>
           </div>
 
@@ -1425,8 +1423,8 @@ export default function MOSHazardMatcher({
                     )}
                     {selectedMOS.matchedAlias && (
                       <p className="text-cyan-300 text-sm mt-2 bg-cyan-900/30 px-2 py-1 rounded inline-block">
-                        ✓ You searched for "{selectedMOS.matchedAlias}" - this
-                        is the current designation
+                        ✓ You searched for &quot;{selectedMOS.matchedAlias}
+                        &quot; - this is the current designation
                       </p>
                     )}
                   </div>

@@ -197,12 +197,14 @@ export async function createPacketFile() {
     const initialData = getEmptyPacket();
     await writeToFileHandle(initialData);
 
+    // eslint-disable-next-line no-console
     console.log("✅ Packet file created successfully");
     notifySaveListeners("file-created", initialData);
 
     return true;
   } catch (error) {
     if (error.name === "AbortError") {
+      // eslint-disable-next-line no-console
       console.log("User cancelled file creation");
       return false;
     }
@@ -252,6 +254,7 @@ async function writeToFileHandle(data) {
     await storage.setItem(CONFIG.LAST_SAVE_KEY, lastSaveTimestamp.toString());
     await storage.setItem(CONFIG.UNSAVED_FLAG_KEY, "false");
 
+    // eslint-disable-next-line no-console
     console.log("💾 Auto-saved to file:", new Date().toLocaleTimeString());
     notifySaveListeners("saved", data);
 
@@ -325,12 +328,14 @@ export async function openExistingPacket() {
     packetData = data;
     await saveToIndexedDB(data);
 
+    // eslint-disable-next-line no-console
     console.log("✅ Packet loaded from file");
     notifySaveListeners("loaded", data);
 
     return data;
   } catch (error) {
     if (error.name === "AbortError") {
+      // eslint-disable-next-line no-console
       console.log("User cancelled file selection");
       return null;
     }
@@ -361,6 +366,7 @@ export async function saveToIndexedDB(data) {
     };
 
     await storage.setItem(PACKET_STORAGE_KEY, JSON.stringify(packetToSave));
+    // eslint-disable-next-line no-console
     console.log("📦 Saved to IndexedDB backup");
     return true;
   } catch (error) {
@@ -427,6 +433,7 @@ export function downloadPacketFile(data, filename = null) {
   lastSaveTimestamp = Date.now();
 
   notifySaveListeners("downloaded", data);
+  // eslint-disable-next-line no-console
   console.log("📥 Packet downloaded:", downloadName);
 }
 
@@ -702,6 +709,7 @@ export async function restorePacketData(packet) {
     await saveToIndexedDB(packet);
 
     notifySaveListeners("restored", packet);
+    // eslint-disable-next-line no-console
     console.log("✅ Packet data restored successfully");
     return true;
   } catch (error) {
@@ -823,6 +831,7 @@ export function startMilestoneSaves() {
 
   milestoneSaveTimer = setInterval(async () => {
     if (hasUnsavedChanges && !saveInProgress) {
+      // eslint-disable-next-line no-console
       console.log("⏰ Milestone save triggered");
       await triggerAutoSave();
     }
@@ -848,17 +857,22 @@ export function stopMilestoneSaves() {
  * Call this on app startup
  */
 export async function initPersistentStorage() {
+  // eslint-disable-next-line no-console
   console.log("🚀 Initializing Persistent Storage System...");
+  // eslint-disable-next-line no-console
   console.log(`   Strategy: ${getStorageStrategy()}`);
+  // eslint-disable-next-line no-console
   console.log(
     `   File System API: ${supportsFileSystemAccess() ? "Supported" : "Not supported"}`,
   );
+  // eslint-disable-next-line no-console
   console.log(`   Device: ${isMobileDevice() ? "Mobile" : "Desktop"}`);
 
   // Load any existing data from IndexedDB
   const existingData = await loadFromIndexedDB();
   if (existingData) {
     packetData = existingData;
+    // eslint-disable-next-line no-console
     console.log("📂 Loaded existing packet from IndexedDB");
   }
 
@@ -866,6 +880,7 @@ export async function initPersistentStorage() {
   const unsavedFlag = await storage.getItem(CONFIG.UNSAVED_FLAG_KEY);
   if (unsavedFlag === "true") {
     hasUnsavedChanges = true;
+    // eslint-disable-next-line no-console
     console.log("⚠️ Found unsaved changes from previous session");
   }
 

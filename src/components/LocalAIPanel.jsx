@@ -66,6 +66,7 @@ const getAdapterInfo = async (adapter) => {
     // Modern WebGPU spec: info property is directly accessible
     if (adapter.info) {
       adapterInfo = adapter.info;
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info:", adapterInfo);
     }
     // Legacy: Try requestAdapterInfo method (older Chrome versions)
@@ -74,6 +75,7 @@ const getAdapterInfo = async (adapter) => {
       typeof adapter.requestAdapterInfo === "function"
     ) {
       adapterInfo = await adapter.requestAdapterInfo();
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info (legacy method):", adapterInfo);
     }
     // Fallback: Basic detection
@@ -83,9 +85,11 @@ const getAdapterInfo = async (adapter) => {
         device: "GPU Detected",
         description: "WebGPU is functional",
       };
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info (basic detection):", adapterInfo);
     }
   } catch (infoErr) {
+    // eslint-disable-next-line no-console
     console.log("Could not get detailed adapter info, but WebGPU is available");
     adapterInfo = {
       vendor: "WebGPU Compatible",
@@ -205,10 +209,14 @@ export const enumerateGPUs = async () => {
       }
     }
 
+    // eslint-disable-next-line no-console
     console.log(`🎮 GPU Enumeration Complete:`);
+    // eslint-disable-next-line no-console
     console.log(`   - Total GPUs found: ${gpus.length}`);
+    // eslint-disable-next-line no-console
     console.log(`   - Has dual GPU: ${gpus.length > 1}`);
     gpus.forEach((gpu, idx) => {
+      // eslint-disable-next-line no-console
       console.log(
         `   - GPU ${idx + 1}: ${gpu.device} (${gpu.vendor}) - ${gpu.type}`,
       );
@@ -231,7 +239,7 @@ let webGPUInitializing = false;
 let webGPUInitPromise = null;
 let webGPULastResult = null; // Cache the result for strict mode re-renders
 
-const checkWebGPUSupport = async (forcePowerPreference = null) => {
+const checkWebGPUSupport = async (_forcePowerPreference = null) => {
   if (!navigator.gpu) {
     return {
       supported: false,
@@ -243,12 +251,14 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
   // If we already have a successful result and device is still valid, return cached result
   // This handles React strict mode re-renders efficiently
   if (webGPULastResult?.supported && gpuManager.getDevice()) {
+    // eslint-disable-next-line no-console
     console.log("🎮 Using cached WebGPU initialization result");
     return webGPULastResult;
   }
 
   // Prevent concurrent initialization attempts (React strict mode double-mounts)
   if (webGPUInitializing && webGPUInitPromise) {
+    // eslint-disable-next-line no-console
     console.log("🎮 WebGPU initialization already in progress, waiting...");
     try {
       return await webGPUInitPromise;
@@ -262,6 +272,7 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
 
   webGPUInitPromise = (async () => {
     try {
+      // eslint-disable-next-line no-console
       console.log("🎮 Initializing WebGPU Manager...");
 
       // Scan for available GPUs using the new manager
@@ -290,9 +301,11 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
         return { supported: false, reason: "Selected GPU not found" };
       }
 
+      // eslint-disable-next-line no-console
       console.log(
         `🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`,
       );
+      // eslint-disable-next-line no-console
       console.log(`🎮 Selected: ${selectedGPU.info.displayName}`);
 
       // Check for required features
@@ -493,10 +506,12 @@ export const LocalAIProvider = ({ children }) => {
     setGpuPreferenceState(newPreference);
 
     // Rescan for GPUs with the new preference
+    // eslint-disable-next-line no-console
     console.log(`🎮 GPU preference updated to: ${newPreference}`);
     const result = await checkWebGPUSupport(newPreference);
     setWebGPUStatus({ checked: true, ...result });
 
+    // eslint-disable-next-line no-console
     console.log(`🎮 Now using: ${result.device} (${result.vendor})`);
 
     return result;
@@ -523,9 +538,11 @@ export const LocalAIProvider = ({ children }) => {
             try {
               const isCached = await hasModelInCache(model.id);
               if (isCached) {
+                // eslint-disable-next-line no-console
                 console.log(`✅ Model ${model.id} is cached`);
                 installed.add(model.id);
               } else {
+                // eslint-disable-next-line no-console
                 console.log(`❌ Model ${model.id} is not cached`);
               }
             } catch (err) {
@@ -548,6 +565,7 @@ export const LocalAIProvider = ({ children }) => {
       if (!webGPUStatus.supported) return;
 
       try {
+        // eslint-disable-next-line no-console
         console.log(
           `🎮 Experimental mode ${experimentalMode ? "ENABLED" : "DISABLED"} - reinitializing WebGPU device...`,
         );
@@ -566,6 +584,7 @@ export const LocalAIProvider = ({ children }) => {
               experimental: experimentalMode,
               forceReinit: true,
             });
+            // eslint-disable-next-line no-console
             console.log(
               `✅ WebGPU device reinitialized with experimental=${experimentalMode}`,
             );
@@ -605,6 +624,7 @@ export const LocalAIProvider = ({ children }) => {
       // 💎 Check if this is a Diamond Swarm agent
       if (modelId.startsWith("diamond-")) {
         const agentId = modelId.replace("diamond-", "");
+        // eslint-disable-next-line no-console
         console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
 
         try {
@@ -649,6 +669,7 @@ export const LocalAIProvider = ({ children }) => {
           });
           localStorage.setItem("vet_rate_local_ai_model", modelId);
 
+          // eslint-disable-next-line no-console
           console.log(
             `🎖️ Warrant Council ${agentId.toUpperCase()} agent initialized successfully`,
           );
@@ -766,6 +787,7 @@ export const LocalAIProvider = ({ children }) => {
           );
 
           navigator.gpu.requestAdapter = async function (options) {
+            // eslint-disable-next-line no-console
             console.log("🔧 Intercepting requestAdapter");
             const adapter = await originalRequestAdapter(options);
             if (!adapter) return adapter;
@@ -775,6 +797,7 @@ export const LocalAIProvider = ({ children }) => {
             const adapterFeatures = adapter.features;
             const originalRequestDevice = adapter.requestDevice.bind(adapter);
 
+            // eslint-disable-next-line no-console
             console.log("🔧 Adapter limits:", {
               maxStorageBufferBindingSize:
                 adapterLimits.maxStorageBufferBindingSize,
@@ -782,9 +805,11 @@ export const LocalAIProvider = ({ children }) => {
               maxComputeInvocationsPerWorkgroup:
                 adapterLimits.maxComputeInvocationsPerWorkgroup,
             });
+            // eslint-disable-next-line no-console
             console.log("🔧 Adapter features:", [...adapterFeatures]);
 
             adapter.requestDevice = async function (descriptor = {}) {
+              // eslint-disable-next-line no-console
               console.log(
                 "🔧 Intercepting requestDevice to inject proper limits",
               );
@@ -828,6 +853,7 @@ export const LocalAIProvider = ({ children }) => {
                 requiredFeatures,
               };
 
+              // eslint-disable-next-line no-console
               console.log("🔧 Requesting device with:", {
                 maxComputeInvocationsPerWorkgroup:
                   enhancedDescriptor.requiredLimits
@@ -844,6 +870,7 @@ export const LocalAIProvider = ({ children }) => {
             return adapter;
           };
           window._mlc_gpu_patched = true;
+          // eslint-disable-next-line no-console
           console.log("🔧 WebGPU patched for MLC-LLM compatibility");
         }
 
@@ -884,6 +911,7 @@ export const LocalAIProvider = ({ children }) => {
 
         // Check if this is a custom model that needs appConfig
         if (selectedModel.isCustomModel && selectedModel.customConfig) {
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 Loading custom model with appConfig:",
             selectedModel.customConfig,
@@ -901,6 +929,7 @@ export const LocalAIProvider = ({ children }) => {
           // If this is a vision model, specify model_type as VLM
           if (selectedModel.hasVision) {
             modelListEntry.model_type = ModelType.VLM;
+            // eslint-disable-next-line no-console
             console.log(
               "🖼️ Custom model marked as VLM (vision-language model)",
             );
@@ -925,6 +954,7 @@ export const LocalAIProvider = ({ children }) => {
           const isNowCached = await hasModelInCache(modelId);
           if (isNowCached) {
             setInstalledModels((prev) => new Set([...prev, modelId]));
+            // eslint-disable-next-line no-console
             console.log(`✅ Model ${modelId} verified as cached`);
           }
         } catch (err) {
@@ -939,6 +969,7 @@ export const LocalAIProvider = ({ children }) => {
         // Determine if this is a vision model
         const isVision =
           isVisionModel || isCustomVisionModel || selectedModel.hasVision;
+        // eslint-disable-next-line no-console
         console.log(
           `🔍 Model type: ${isVision ? "Vision (VLM)" : "Text-only (LLM)"}`,
         );
@@ -1052,6 +1083,7 @@ export const LocalAIProvider = ({ children }) => {
   // Generate completion
   const generate = useCallback(
     async (prompt, options = {}) => {
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Generate: Called with isDiamond =",
         selectedModel?.isDiamond,
@@ -1061,6 +1093,7 @@ export const LocalAIProvider = ({ children }) => {
 
       // 💎 Diamond Swarm models route through diamondSwarm service
       if (selectedModel?.isDiamond || loadedModelId?.startsWith("diamond-")) {
+        // eslint-disable-next-line no-console
         console.log("🔧 Generate: Taking Diamond Swarm path");
         const { generateWithSwarm, getCurrentAgent, hasWebLLMEngine } =
           await import("../utils/diamondSwarm");
@@ -1069,6 +1102,7 @@ export const LocalAIProvider = ({ children }) => {
 
         // Try local server first (llama.cpp with Diamond Swarm GGUF)
         if (isLocalServerAvailable()) {
+          // eslint-disable-next-line no-console
           console.log("💎 Diamond Swarm: Using local llama.cpp server");
           const { generateText } = await import("../utils/unifiedAIService");
           const result = await generateText(prompt, {
@@ -1076,6 +1110,7 @@ export const LocalAIProvider = ({ children }) => {
             taskType: options.task || "general",
             ...options,
           });
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Generate: Local server returned:",
             typeof result,
@@ -1086,14 +1121,17 @@ export const LocalAIProvider = ({ children }) => {
 
         // Use WebLLM engine if loaded (loaded by initializeSwarm)
         if (hasWebLLMEngine()) {
+          // eslint-disable-next-line no-console
           console.log("💎 Diamond Swarm: Using WebLLM engine");
         } else {
+          // eslint-disable-next-line no-console
           console.log(
             "💎 Diamond Swarm: WebLLM still loading, using placeholder",
           );
         }
 
         const agent = getCurrentAgent() || "auditor";
+        // eslint-disable-next-line no-console
         console.log(
           "🔧 Generate: Calling generateWithSwarm with agent:",
           agent,
@@ -1102,6 +1140,7 @@ export const LocalAIProvider = ({ children }) => {
           agentId: agent,
           ...options,
         });
+        // eslint-disable-next-line no-console
         console.log(
           "🔧 Generate: generateWithSwarm returned:",
           typeof result,
@@ -1184,7 +1223,7 @@ export const LocalAIProvider = ({ children }) => {
         // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
         const gibberishPatterns = [
           /(\.{3,}\s*){5,}/, // Multiple ellipsis sequences
-          /(["\"]\s*){5,}/, // Multiple quote sequences
+          /([""]\s*){5,}/, // Multiple quote sequences
           /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
           /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
         ];
@@ -1202,7 +1241,7 @@ export const LocalAIProvider = ({ children }) => {
                 !lower.includes("confuse") &&
                 !lower.includes("unclear") &&
                 line.length > 20 &&
-                !/^[\s\"\'\.\\,\!\?]+$/.test(line)
+                !/^[\s"'.\\,!?]+$/.test(line)
               );
             });
             if (meaningfulLines.length > 0) {
@@ -1299,6 +1338,7 @@ export const LocalAIProvider = ({ children }) => {
     // ONLY interrupt if the unified service says generation is in progress
     // LocalAIPanel's isGenerating state can get stale during React re-renders
     if (!aiStatus.localGenerating) {
+      // eslint-disable-next-line no-console
       console.log(
         "⏭️ interruptGeneration called but no global generation in progress - ignoring",
       );
@@ -1416,7 +1456,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     showExperimentalWarning,
     setShowExperimentalWarning,
     initializeEngine,
-    generate,
+    _generate,
     interruptGeneration,
     switchModel,
   } = useLocalAI();
@@ -1524,6 +1564,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       // If an AI model is loaded, warn user they may need to reload
       if (isReady) {
         // The user will need to reload the model to use the new GPU
+        // eslint-disable-next-line no-console
         console.log(
           "⚠️ GPU changed - model may need to be reloaded to use new GPU",
         );
@@ -1548,6 +1589,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
     // If same adapter, just log and return (no error, no UI change needed)
     if (currentAdapter === targetAdapter.adapter) {
+      // eslint-disable-next-line no-console
       console.log("✅ GPU already selected:", targetAdapter.info.displayName);
       return;
     }
@@ -1573,6 +1615,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log("✅ GPU selection updated:", result.device);
     } catch (err) {
       console.error("❌ Failed to change GPU:", err);
@@ -1833,6 +1876,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                 </div>
 
                 {/* Checkbox */}
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"

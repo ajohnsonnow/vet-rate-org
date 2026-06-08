@@ -15,11 +15,10 @@
  * is the largest expansion of VA healthcare and benefits in 30 years.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
-import { FocusToggle } from "../contexts/FocusModeContext";
 import ReportBugLink from "./ReportBugLink";
 
 /**
@@ -416,6 +415,7 @@ const PACT_ACT_DATA = {
 /**
  * Check if a condition is presumptive for given exposure and location
  */
+// eslint-disable-next-line no-unused-vars
 const checkPresumptiveStatus = (exposureType, location, condition) => {
   const exposure = PACT_ACT_DATA[exposureType];
   if (!exposure) return null;
@@ -436,6 +436,7 @@ const checkPresumptiveStatus = (exposureType, location, condition) => {
 };
 
 export default function PACTActNavigator({ onClose, onReportBug }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // Navigation state
@@ -531,8 +532,8 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
               </strong>{" "}
               is the largest expansion of VA healthcare and benefits in 30
               years. It creates <strong>presumptive service connection</strong>{" "}
-              for many conditions - meaning you don't have to prove your illness
-              is connected to service, the VA presumes it.
+              for many conditions - meaning you don&apos;t have to prove your
+              illness is connected to service, the VA presumes it.
             </p>
           </div>
         </div>
@@ -702,6 +703,7 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
           </h4>
           <div className="flex gap-4">
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                 From
               </label>
@@ -718,6 +720,7 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
               />
             </div>
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                 To
               </label>
@@ -1181,11 +1184,11 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
                       🔥 You just saved $1,500+ on nexus letters
                     </p>
                     <p className="text-blue-300/70 text-sm">
-                      Presumptive conditions don't require expensive medical
-                      nexus letters - the VA MUST grant them if you served in
-                      the right place at the right time. This database took
-                      months to compile from 38 CFR and the PACT Act. Keep it
-                      free.
+                      Presumptive conditions don&apos;t require expensive
+                      medical nexus letters - the VA MUST grant them if you
+                      served in the right place at the right time. This database
+                      took months to compile from 38 CFR and the PACT Act. Keep
+                      it free.
                     </p>
                   </div>
                 </div>

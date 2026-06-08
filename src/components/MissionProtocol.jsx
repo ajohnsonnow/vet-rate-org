@@ -7,12 +7,11 @@
  * Kills skepticism by showing the human behind the tool
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const MissionProtocol = ({ onClose }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // Permanently dark themed (gray-900 + va-gold); override the shell's white
   // panel so the light-mode body doesn't break the dark content.
@@ -88,8 +87,9 @@ const MissionProtocol = ({ onClose }) => {
                   className="text-gray-300 text-sm"
                   style={{ fontFamily: "Courier New, monospace" }}
                 >
-                  This tool is free. No hidden fees. No premium tiers. No "pay
-                  to unlock" features. Everything is available to everyone.
+                  This tool is free. No hidden fees. No premium tiers. No
+                  &quot;pay to unlock&quot; features. Everything is available to
+                  everyone.
                 </p>
               </div>
             </div>
@@ -132,10 +132,10 @@ const MissionProtocol = ({ onClose }) => {
             className="text-gray-300 italic leading-relaxed mb-4"
             style={{ fontFamily: "Georgia, serif" }}
           >
-            "I built this because I watched too many fellow veterans struggle
-            with the same system I navigated. Some gave up. Some paid predatory
-            companies. Some got denied for claims that should have been
-            approved.
+            &quot;I built this because I watched too many fellow veterans
+            struggle with the same system I navigated. Some gave up. Some paid
+            predatory companies. Some got denied for claims that should have
+            been approved.
             <br />
             <br />
             You deserve better tools than a stack of confusing forms and a 1-800
@@ -143,7 +143,7 @@ const MissionProtocol = ({ onClose }) => {
             evidence, and advocate for yourself with confidence.
             <br />
             <br />
-            This is my way of continuing to serve."
+            This is my way of continuing to serve.&quot;
           </p>
         </div>
 

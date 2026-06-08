@@ -12,12 +12,11 @@
  * Appears at the top of the screen, doesn't block work.
  */
 
-import React from "react";
 import { RefreshCw, X } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const UpdateBanner = ({ onApplyUpdate, onDismiss, updateInfo }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   return (
     <div
       className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-slideDown"

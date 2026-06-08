@@ -157,7 +157,7 @@ describe("Accessibility: semantic HTML structures", () => {
 
   it("crisis resources section has no a11y violations", async () => {
     const { container } = render(
-      <aside aria-label="Crisis resources" role="complementary">
+      <aside aria-label="Crisis resources">
         <h2>Need Help Now?</h2>
         <p>If you are in crisis, please reach out immediately.</p>
         <a href="tel:988" aria-label="Call Veterans Crisis Line at 9-8-8">

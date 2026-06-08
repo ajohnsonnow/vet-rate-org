@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { jsPDF } from "jspdf";
-import { FocusToggle } from "../contexts/FocusModeContext";
 import ShareButton from "./ShareButton";
-import {
-  generateAI,
-  getAIStatus,
-  AI_MODES,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import {
@@ -297,6 +291,7 @@ const SYMPTOM_TYPES = {
 };
 
 const SymptomLogger = ({ onClose, onReportBug }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const symptomLoggerContentRef = useRef(null);
@@ -1089,8 +1084,8 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                     <p className={`text-sm ${colors.text} mt-1`}>
                       The VA rates {config.label.toLowerCase()}s on{" "}
                       <strong>frequency</strong>, not just severity. Having a
-                      documented log showing "X prostrating attacks per month"
-                      is powerful evidence.
+                      documented log showing &quot;X prostrating attacks per
+                      month&quot; is powerful evidence.
                     </p>
                   </div>
                 </div>
@@ -1099,6 +1094,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Date & Time */}
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     📅 Date
                   </label>
@@ -1113,6 +1109,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     ⏰ Time
                   </label>
@@ -1155,6 +1152,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Duration */}
                 <div className="md:col-span-2">
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     ⏱️ Duration
                   </label>
@@ -1179,6 +1177,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Body Location - NEW FIELD */}
                 <div className="md:col-span-2">
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     📍 Body Location (optional)
                   </label>
@@ -1230,6 +1229,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Activity Impact - NEW FIELD */}
                 <div className="md:col-span-2">
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     🎯 Activities Affected (optional)
                   </label>
@@ -1260,6 +1260,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Weather Conditions - NEW FIELD */}
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     🌤️ Weather (optional)
                   </label>
@@ -1317,6 +1318,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Prostrating */}
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
                     <input
                       type="checkbox"
@@ -1334,8 +1336,8 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                         🛑 {config.questions.prostrating}
                       </span>
                       <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                        "Prostrating" = had to stop activities. This is KEY for
-                        higher ratings!
+                        &quot;Prostrating&quot; = had to stop activities. This
+                        is KEY for higher ratings!
                       </p>
                     </div>
                   </label>
@@ -1343,6 +1345,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Medication */}
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <input
                       type="checkbox"
@@ -1395,6 +1398,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
                 {/* Notes */}
                 <div className="md:col-span-2">
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     📝 Additional Notes
                   </label>

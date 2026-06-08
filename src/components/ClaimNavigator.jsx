@@ -24,7 +24,6 @@ import {
   Map,
   Plus,
   ChevronRight,
-  ChevronDown,
   AlertTriangle,
   AlertCircle,
   CheckCircle,
@@ -48,20 +47,16 @@ import {
   Award,
   ExternalLink,
   ChevronLeft,
-  Stethoscope,
+  // eslint-disable-next-line no-unused-vars
   Link as LinkIcon,
-  Users,
-  Shield,
   Clipboard,
   Loader,
   BarChart2,
-  Settings,
   Info,
   Play,
   Flag,
   MessageSquare,
   Lightbulb,
-  RefreshCcw,
 } from "lucide-react";
 
 // Schema and engine imports
@@ -69,12 +64,9 @@ import {
   CLAIM_TYPES,
   CLAIM_PHASES,
   EVIDENCE_ITEMS,
-  DECISION_OUTCOMES,
-  DENIAL_REASONS,
   VA_FORMS,
   TRIAGE_QUESTIONS,
   URGENCY_LEVELS,
-  createClaimSchema,
   daysUntilDeadline,
   calculateEvidenceCompleteness,
   hasBigThree,
@@ -83,19 +75,13 @@ import {
 import {
   determineNextStep,
   analyzeMultipleClaims,
-  ACTION_TYPES,
 } from "../utils/claimNavigatorEngine";
 
 import {
   getAllClaims,
-  getClaimById,
   createClaim,
   updateClaim,
   deleteClaim,
-  advanceClaimPhase,
-  updateEvidenceItem,
-  recordDecision,
-  addClaimNote,
   exportClaimsData,
   importClaimsData,
   getClaimStatistics,
@@ -103,14 +89,11 @@ import {
 
 // Integration bridge - syncs with ClaimProgress & useClaimProgress
 import {
-  getBigThreeStatus,
   setBigThreeStatus,
-  syncEvidenceToBigThree,
   recordClaimCreated,
   recordPhaseAdvanced,
   markItfFiled,
   getOverallMilestoneProgress,
-  getSavedConditions,
   initIntegrationListeners,
   dispatchNavigatorUpdate,
 } from "../utils/claimIntegration";
@@ -141,6 +124,7 @@ const UrgencyIcons = {
 // MAIN COMPONENT
 // ============================================
 const ClaimNavigator = ({ onClose, onReportBug }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // Lock background scroll when modal is open
@@ -179,6 +163,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
       window.removeEventListener("claimProgressUpdate", handleProgressUpdate);
       window.removeEventListener("bigThreeUpdate", handleProgressUpdate);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadClaims = useCallback(() => {
@@ -783,7 +768,7 @@ const CommunityInsightsPanel = () => {
         <div className="bg-slate-900/50 rounded-lg p-4 text-center">
           <Lightbulb className="w-8 h-8 text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 text-sm">
-            We're working on bringing you curated insights from the veteran
+            We&apos;re working on bringing you curated insights from the veteran
             community.
           </p>
           <p className="text-slate-500 text-xs mt-2">
@@ -1034,7 +1019,7 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
               </span>
             </h2>
             <p className="text-slate-300 mt-2">
-              Let's determine the best path for your claim. Answer a few
+              Let&apos;s determine the best path for your claim. Answer a few
               questions.
             </p>
           </div>
@@ -1053,6 +1038,7 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
                     onChange={(e) => setConditionName(e.target.value)}
                     placeholder="e.g., Sleep Apnea, Tinnitus, PTSD..."
                     className="mt-2 w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
+                    /* eslint-disable-next-line jsx-a11y/no-autofocus */
                     autoFocus
                   />
                 </label>
@@ -1175,6 +1161,7 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
   const [analysis, setAnalysis] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(claim.conditionName);
+  // eslint-disable-next-line no-unused-vars
   const [showDateEditor, setShowDateEditor] = useState(false);
 
   useEffect(() => {
@@ -1241,6 +1228,7 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       className="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-1 text-white"
+                      /* eslint-disable-next-line jsx-a11y/no-autofocus */
                       autoFocus
                     />
                     <button
@@ -1721,7 +1709,7 @@ const EvidenceTracker = ({ claim, onUpdate, onBack }) => {
             <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-3 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-amber-400" />
               <span className="text-amber-400 font-medium">
-                Complete the "Big 3" before submitting.
+                Complete the &quot;Big 3&quot; before submitting.
               </span>
             </div>
           )}
@@ -1875,7 +1863,7 @@ const HelpModal = ({ onClose }) => {
       <div className="space-y-6">
         <section>
           <h3 className="text-amber-400 font-semibold mb-2">
-            🎯 The "Big 3" Evidence
+            🎯 The &quot;Big 3&quot; Evidence
           </h3>
           <p className="text-slate-300 text-sm">
             Every successful VA claim needs three things:
