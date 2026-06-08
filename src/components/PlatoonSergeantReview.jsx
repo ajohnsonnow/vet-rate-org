@@ -8,7 +8,6 @@
  */
 
 import React from "react";
-import { OCR_STATES } from "../utils/ocr";
 import { formatFileSize } from "../utils/ocr";
 
 /**
@@ -152,16 +151,17 @@ const ExtractionMethodBadge = ({ method }) => {
  * Main Platoon Sergeant Review Component
  */
 export default function PlatoonSergeantReview({
-  document,
+  _document,
   progress,
-  onComplete,
-  onError,
+  _onComplete,
+  _onError,
   onSkip,
 }) {
   const {
     filename,
     fileSize,
     pageCount,
+    // eslint-disable-next-line no-unused-vars
     currentPage,
     method,
     quality,
@@ -187,6 +187,7 @@ export default function PlatoonSergeantReview({
   // Debug: Log what we're receiving
   React.useEffect(() => {
     if (progress) {
+      // eslint-disable-next-line no-console
       console.log("🎖️ PlatoonSergeantReview received progress:", {
         overallProgress,
         progressProp: progress.progress,
@@ -393,9 +394,9 @@ export default function PlatoonSergeantReview({
 
       {/* Military Context Help */}
       <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 italic">
-        💡 The "Platoon Sergeant" thoroughly inspects each document for
-        readability and quality, using advanced OCR for poor-quality scans just
-        like a Platoon Sergeant checks every detail before formation.
+        💡 The &quot;Platoon Sergeant&quot; thoroughly inspects each document
+        for readability and quality, using advanced OCR for poor-quality scans
+        just like a Platoon Sergeant checks every detail before formation.
       </div>
     </div>
   );

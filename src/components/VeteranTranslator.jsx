@@ -295,7 +295,7 @@ const translateText = async (text, fromLang, toLang) => {
   for (const category of Object.values(QUICK_PHRASES)) {
     for (const phrase of category) {
       // Check if input matches any language version of this phrase
-      for (const [lang, phraseText] of Object.entries(phrase.translations)) {
+      for (const [_lang, phraseText] of Object.entries(phrase.translations)) {
         if (phraseText.toLowerCase() === text.toLowerCase()) {
           // Found it! Return the target language version
           const translated =
@@ -325,7 +325,7 @@ const translateText = async (text, fromLang, toLang) => {
 };
 
 const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
-  const { t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
 
   // State
   const [myLanguage, setMyLanguage] = useState(appLanguage || "en");
@@ -466,7 +466,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
   };
 
   // Get branch greeting
-  const getBranchGreeting = (branch, langCode) => {
+  const _getBranchGreeting = (branch, langCode) => {
     const toneData = multilingualTone.branch_greetings?.[branch];
     return toneData?.[langCode] || toneData?.["en"] || `${branch} veteran`;
   };
@@ -551,6 +551,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             {/* My Language */}
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 I speak:
               </label>
@@ -590,6 +591,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
 
             {/* Their Language */}
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 They speak:
               </label>
@@ -615,7 +617,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
             {/* Quick Phrases */}
             <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700">
               <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                {Object.entries(QUICK_PHRASES).map(([category, phrases]) => (
+                {Object.entries(QUICK_PHRASES).map(([category, _phrases]) => (
                   <button
                     key={category}
                     onClick={() => setActiveQuickCategory(category)}
@@ -685,7 +687,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 className="mt-3 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <span>🔊</span>
-                <span>Say It (They'll Hear in {theirLangObj?.name})</span>
+                <span>Say It (They&apos;ll Hear in {theirLangObj?.name})</span>
               </button>
             </div>
           </div>
@@ -799,7 +801,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 className="mt-3 w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <span>🔊</span>
-                <span>Say It (You'll Hear in {myLangObj?.name})</span>
+                <span>Say It (You&apos;ll Hear in {myLangObj?.name})</span>
               </button>
             </div>
           </div>

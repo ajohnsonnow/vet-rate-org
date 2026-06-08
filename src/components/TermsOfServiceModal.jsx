@@ -191,8 +191,9 @@ const TermsOfServiceModal = () => {
           </h3>
           <div className="space-y-2 text-sm leading-relaxed">
             <p>
-              The "Nexus Letter Builder," "Symptom Database," "Secondary
-              Conditions Scout," and all other medical-related features are{" "}
+              The &quot;Nexus Letter Builder,&quot; &quot;Symptom
+              Database,&quot; &quot;Secondary Conditions Scout,&quot; and all
+              other medical-related features are{" "}
               <strong>organizational tools only</strong>-they are
               <span className="font-semibold underline">
                 {" "}
@@ -206,8 +207,8 @@ const TermsOfServiceModal = () => {
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>This tool cannot diagnose medical conditions</li>
               <li>
-                Generated content does not substitute for a licensed physician's
-                evaluation
+                Generated content does not substitute for a licensed
+                physician&apos;s evaluation
               </li>
               <li>
                 Only qualified healthcare professionals can provide medical
@@ -221,7 +222,7 @@ const TermsOfServiceModal = () => {
               <strong>What We Do:</strong> We help you articulate symptoms in
               medically-recognized terminology and identify potential
               connections based on VA medical literature.
-              <strong> What We Don't Do:</strong> Provide medical opinions,
+              <strong> What We Don&apos;t Do:</strong> Provide medical opinions,
               diagnoses, or treatment advice.
             </p>
           </div>
@@ -287,7 +288,7 @@ const TermsOfServiceModal = () => {
             </p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>
-                All data is stored locally in your web browser's{" "}
+                All data is stored locally in your web browser&apos;s{" "}
                 <code className="bg-gray-200 px-1 rounded">localStorage</code>
               </li>
               <li>
@@ -315,8 +316,8 @@ const TermsOfServiceModal = () => {
             </p>
             <p className="mt-3 text-xs text-gray-600">
               <strong>Best Practice:</strong> After each significant work
-              session, use the "Export" feature to save a backup copy to your
-              computer or cloud storage.
+              session, use the &quot;Export&quot; feature to save a backup copy
+              to your computer or cloud storage.
             </p>
           </div>
         </section>
@@ -366,10 +367,10 @@ const TermsOfServiceModal = () => {
           </h3>
           <div className="space-y-2 text-sm leading-relaxed">
             <p>
-              <strong>No Warranty:</strong> This software is provided "AS IS"
-              without warranty of any kind, express or implied, including but
-              not limited to warranties of merchantability, fitness for a
-              particular purpose, or non-infringement.
+              <strong>No Warranty:</strong> This software is provided &quot;AS
+              IS&quot; without warranty of any kind, express or implied,
+              including but not limited to warranties of merchantability,
+              fitness for a particular purpose, or non-infringement.
             </p>
             <p>
               <strong>Limitation of Liability:</strong> In no event shall
@@ -392,7 +393,8 @@ const TermsOfServiceModal = () => {
         {/* Final Statement */}
         <div className="bg-blue-50 border-2 border-blue-600 p-4 rounded-lg">
           <p className="font-semibold text-blue-900 mb-2">
-            By clicking "I Understand & Accept the Risks," you acknowledge that:
+            By clicking &quot;I Understand & Accept the Risks,&quot; you
+            acknowledge that:
           </p>
           <ul className="list-decimal list-inside space-y-1 text-sm ml-2">
             <li>

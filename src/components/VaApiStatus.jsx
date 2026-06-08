@@ -8,10 +8,10 @@
  * issues are on the VA's end, not Vet-Rate.org.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useVaApiStatus, useVaFeatureStatus } from "../hooks/useVaApiStatus";
 import { Tooltip } from "./common/Tooltip";
-import { STATUS_LEVELS, getStatusPageUrl } from "../utils/vaApiStatus";
+import { getStatusPageUrl } from "../utils/vaApiStatus";
 import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl, sanitizeErrorMessage } from "../utils/sanitize";
 
@@ -30,7 +30,7 @@ const sanitizeVaShortlink = (url) =>
  * Only shows when there are actual problems
  */
 export function VaApiStatusBanner({ onDismiss }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { summary, loading, hasIssues } = useVaApiStatus({
     autoFetch: true,
     enablePolling: true,
@@ -145,7 +145,7 @@ export function VaApiStatusBanner({ onDismiss }) {
  * Good for headers, footers, or toolbars
  */
 export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { summary, loading, hasIssues, status } = useVaApiStatus();
   // Call getStatusPageUrl() directly so Snyk can confirm this is a static constant
   const statusPageUrl = getStatusPageUrl();
@@ -215,7 +215,7 @@ export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
  * Use near features that depend on VA APIs
  */
 export function VaFeatureStatusBadge({ feature, showDetails = false }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const {
     status,
     statusInfo,
@@ -316,7 +316,7 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
  * Good for settings pages or dedicated status views
  */
 export function VaApiStatusPanel() {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { status, loading, error, lastUpdated, forceRefresh, hasIssues } =
     useVaApiStatus();
   // Use getStatusPageUrl() directly — static constant, breaks taint chain from hook error state
@@ -522,11 +522,11 @@ export function VaApiStatusPanel() {
                   </p>
                   <p className="text-blue-700 dark:text-blue-300 mt-1">
                     Vet-Rate.org uses official VA APIs for some features. When
-                    the VA's systems are down or under maintenance, those
+                    the VA&apos;s systems are down or under maintenance, those
                     features may not work - but{" "}
-                    <strong>it's not a problem with Vet-Rate.org</strong>. This
-                    status page helps you know when VA APIs are experiencing
-                    issues.
+                    <strong>it&apos;s not a problem with Vet-Rate.org</strong>.
+                    This status page helps you know when VA APIs are
+                    experiencing issues.
                   </p>
                 </div>
               </div>
@@ -547,7 +547,7 @@ export function VaApiStatusPanel() {
  * Helps users understand if it's a VA issue
  */
 export function VaApiErrorMessage({ feature, error, onRetry }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const featureStatus = useVaFeatureStatus(feature);
   const isVaIssue = featureStatus.hasIssues;
 

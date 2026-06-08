@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Shield,
   Lock,
@@ -22,7 +22,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
  * - What skeptics should check
  */
 const SecurityBadge = () => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -59,7 +59,7 @@ const SecurityBadge = () => {
                       Security Proof - Zero BS Transparency
                     </h2>
                     <p className="text-green-100 text-sm">
-                      Don't trust us. Verify us. Here's exactly how.
+                      Don&apos;t trust us. Verify us. Here&apos;s exactly how.
                     </p>
                   </div>
                   <button
@@ -119,8 +119,8 @@ const OverviewTab = () => (
       </h3>
       <p className="text-green-800 dark:text-green-200">
         <strong>Your data NEVER leaves your device.</strong> Everything runs in
-        your browser. We don't have servers to collect your information - by
-        design, not by promise.
+        your browser. We don&apos;t have servers to collect your information -
+        by design, not by promise.
       </p>
     </div>
 
@@ -178,13 +178,13 @@ const OverviewTab = () => (
         Optional AI Feature:
       </h4>
       <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-        When you click "Enhance with AI" (100% optional), only{" "}
+        When you click &quot;Enhance with AI&quot; (100% optional), only{" "}
         <strong>condition names and symptoms</strong> are sent to Google Gemini
         - never your name, SSN, or personal details.
       </p>
       <p className="text-sm text-blue-800 dark:text-blue-200">
         <strong>You control this:</strong> You provide your own API key (free).
-        We don't even have access to it.
+        We don&apos;t even have access to it.
       </p>
     </div>
   </div>
@@ -199,7 +199,7 @@ const ProofTab = () => (
       </h3>
 
       <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4">
-        <div className="mb-2 text-gray-400">// Our entire stack:</div>
+        <div className="mb-2 text-gray-400">{"// Our entire stack:"}</div>
         <div>Frontend: React (Vite) ✅</div>
         <div>
           Backend: <span className="line-through">None</span> ❌
@@ -212,22 +212,22 @@ const ProofTab = () => (
         </div>
         <div>Analytics: GoatCounter (privacy-first) 🔒</div>
         <div className="mt-2 text-gray-400">
-          // Just static files served to your browser
+          {"// Just static files served to your browser"}
         </div>
       </div>
 
       <h4 className="font-bold mt-6 mb-2 dark:text-gray-100">Hosting Model:</h4>
       <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4">
         <p className="text-sm dark:text-yellow-200">
-          <strong>Render.com Static Site:</strong> We use Render's static site
-          hosting, which serves pre-built HTML/CSS/JS files. This is NOT a
-          server that can process or store your data - it's like serving files
-          from a USB drive.
+          <strong>Render.com Static Site:</strong> We use Render&apos;s static
+          site hosting, which serves pre-built HTML/CSS/JS files. This is NOT a
+          server that can process or store your data - it&apos;s like serving
+          files from a USB drive.
         </p>
       </div>
 
       <h4 className="font-bold mt-6 mb-2 dark:text-gray-100">
-        Network Activity You'll See:
+        Network Activity You&apos;ll See:
       </h4>
       <table className="w-full text-sm border-collapse border border-gray-300 dark:border-gray-600 mt-2">
         <thead className="bg-gray-100 dark:bg-gray-700">
@@ -271,7 +271,7 @@ const ProofTab = () => (
               generativelanguage.googleapis.com
             </td>
             <td className="border border-gray-300 dark:border-gray-600 p-2">
-              AI feature (when you click "Enhance")
+              AI feature (when you click &quot;Enhance&quot;)
             </td>
             <td className="border border-gray-300 dark:border-gray-600 p-2 text-yellow-700 dark:text-yellow-400">
               ⚠️ Symptoms only
@@ -326,7 +326,7 @@ const ProofTab = () => (
         <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 italic">
           📱 Fun fact: GoatCounter helped us realize how many veterans use
           mobile devices - sorry for the early UI struggles, small screen folks!
-          We're on it! 🫡
+          We&apos;re on it! 🫡
         </p>
       </div>
 
@@ -341,8 +341,8 @@ const ProofTab = () => (
           <li>Any unknown API</li>
         </ul>
         <p className="mt-2 text-red-800 dark:text-red-300 font-semibold">
-          → Report it immediately via Bug Squasher. That would mean we've been
-          compromised.
+          → Report it immediately via Bug Squasher. That would mean we&apos;ve
+          been compromised.
         </p>
       </div>
     </div>
@@ -354,13 +354,13 @@ const VerifyTab = () => (
   <div className="space-y-6">
     <div className="prose max-w-none dark:prose-invert">
       <h3 className="text-xl font-bold mb-4 dark:text-gray-100">
-        Don't Trust - Verify
+        Don&apos;t Trust - Verify
       </h3>
 
       <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6">
         <p className="font-semibold text-blue-900 dark:text-blue-200">
-          Anyone can claim they're private. Here's how to PROVE we are (or catch
-          us if we're not).
+          Anyone can claim they&apos;re private. Here&apos;s how to PROVE we are
+          (or catch us if we&apos;re not).
         </p>
       </div>
 
@@ -452,7 +452,7 @@ const VerifyTab = () => (
           <li>• POST requests with form data</li>
           <li>• Tracking pixels loading</li>
           <li>• Data sent to third parties</li>
-          <li>• Code doesn't match GitHub repo</li>
+          <li>• Code doesn&apos;t match GitHub repo</li>
         </ul>
       </div>
     </div>
@@ -472,10 +472,11 @@ const FAQTab = () => (
         <div className="space-y-2 text-sm">
           <p>
             <strong>Not here.</strong> That business model requires collecting
-            your data to sell or monetize. We can't sell what we don't have.
+            your data to sell or monetize. We can&apos;t sell what we don&apos;t
+            have.
           </p>
           <p>
-            <strong>Why it's free:</strong>
+            <strong>Why it&apos;s free:</strong>
           </p>
           <ul className="list-disc ml-5 space-y-1">
             <li>Built by a veteran for veterans (me, AJ Johnson)</li>
@@ -485,8 +486,8 @@ const FAQTab = () => (
             <li>Open source - community can verify everything</li>
           </ul>
           <p className="font-semibold mt-2">
-            The "product" is helping veterans get what they deserve without
-            predatory claim sharks taking 20-30% of your backpay.
+            The &quot;product&quot; is helping veterans get what they deserve
+            without predatory claim sharks taking 20-30% of your backpay.
           </p>
         </div>
       }
@@ -497,16 +498,17 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p>
-            <strong>I don't.</strong> This is a passion project, not a business.
+            <strong>I don&apos;t.</strong> This is a passion project, not a
+            business.
           </p>
           <p>
-            There's a donation link for those who want to support
-            hosting/development, but it's 100% optional. No features are
+            There&apos;s a donation link for those who want to support
+            hosting/development, but it&apos;s 100% optional. No features are
             paywalled. No subscriptions. No upsells.
           </p>
           <p className="font-semibold">
-            Veterans shouldn't have to pay to understand their benefits. Full
-            stop.
+            Veterans shouldn&apos;t have to pay to understand their benefits.
+            Full stop.
           </p>
         </div>
       }
@@ -517,19 +519,19 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p>
-            <strong>We don't train any models.</strong> When you use AI
+            <strong>We don&apos;t train any models.</strong> When you use AI
             features:
           </p>
           <ul className="list-disc ml-5 space-y-1">
             <li>You provide your own API key (Google Gemini - free tier)</li>
             <li>Only condition names/symptoms are sent (no PII)</li>
-            <li>Sent directly from YOUR browser to Google's servers</li>
+            <li>Sent directly from YOUR browser to Google&apos;s servers</li>
             <li>We never see the requests or responses</li>
             <li>100% optional - everything works without AI</li>
           </ul>
           <p className="font-semibold mt-2">
-            Google's privacy policy applies to their API, not ours (because we
-            don't have servers).
+            Google&apos;s privacy policy applies to their API, not ours (because
+            we don&apos;t have servers).
           </p>
         </div>
       }
@@ -541,7 +543,7 @@ const FAQTab = () => (
         <div className="space-y-2 text-sm">
           <p>
             <strong>Good catch!</strong> Yes, disability ratings and regulations
-            change. Here's how we handle it:
+            change. Here&apos;s how we handle it:
           </p>
           <ul className="list-disc ml-5 space-y-1">
             <li>
@@ -567,8 +569,8 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p>
-            <strong>GOOD.</strong> You shouldn't blindly trust anyone. That's
-            why:
+            <strong>GOOD.</strong> You shouldn&apos;t blindly trust anyone.
+            That&apos;s why:
           </p>
           <ul className="list-disc ml-5 space-y-1">
             <li>All code is open source on GitHub</li>
@@ -578,8 +580,8 @@ const FAQTab = () => (
             <li>Security researchers can (and should) audit it</li>
           </ul>
           <p className="font-semibold mt-2">
-            Don't trust my words - verify with your own eyes. See the "Verify
-            Yourself" tab above.
+            Don&apos;t trust my words - verify with your own eyes. See the
+            &quot;Verify Yourself&quot; tab above.
           </p>
         </div>
       }
@@ -590,7 +592,7 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p>
-            <strong>Can't breach what doesn't exist.</strong>
+            <strong>Can&apos;t breach what doesn&apos;t exist.</strong>
           </p>
           <p>
             Traditional breaches happen when companies store your data on
@@ -616,7 +618,7 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p>
-            <strong>Don't.</strong> Verify. But here's the difference:
+            <strong>Don&apos;t.</strong> Verify. But here&apos;s the difference:
           </p>
           <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mt-2 text-xs">
             <thead className="bg-gray-100 dark:bg-gray-700">
@@ -691,7 +693,8 @@ const FAQTab = () => (
             </tbody>
           </table>
           <p className="font-semibold mt-2">
-            But don't take this table as truth - verify each claim yourself.
+            But don&apos;t take this table as truth - verify each claim
+            yourself.
           </p>
         </div>
       }

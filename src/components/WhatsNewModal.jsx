@@ -18,7 +18,7 @@
  * 4. Deploy - modal will automatically show for users
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Sparkles,

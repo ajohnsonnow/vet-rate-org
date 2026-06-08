@@ -219,9 +219,13 @@ export function validateConfig() {
   }
 
   // Log the constructed endpoints so developers can verify them
+  // eslint-disable-next-line no-console
   console.log("[VA Auth] Environment:", VA_AUTH_CONFIG.environment);
+  // eslint-disable-next-line no-console
   console.log("[VA Auth] OAuth API Path:", VA_AUTH_CONFIG.oauthApiPath);
+  // eslint-disable-next-line no-console
   console.log("[VA Auth] Authorization URL:", VA_ENDPOINTS.authorization);
+  // eslint-disable-next-line no-console
   console.log("[VA Auth] Redirect URI:", VA_AUTH_CONFIG.redirectUri);
 
   return true;

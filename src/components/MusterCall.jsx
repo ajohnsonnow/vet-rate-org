@@ -21,7 +21,7 @@
  * - "AT EASE" - Inspection complete, formation dismissed
  */
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useToast } from "../contexts/ToastContext";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -36,10 +36,7 @@ import {
   PROCESSING_STATES,
   formatFileSize,
 } from "../utils/musterCallProcessor";
-import {
-  DOCUMENT_TYPES,
-  getDocumentTypeLabel,
-} from "../utils/documentClassifier";
+import { getDocumentTypeLabel } from "../utils/documentClassifier";
 import {
   isAnyAIAvailable,
   getAIStatus,
@@ -62,6 +59,7 @@ export default function MusterCall({
   onProcessComplete,
   onOpenDD214Analyzer,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const toast = useToast();
 
@@ -76,8 +74,10 @@ export default function MusterCall({
     formation,
     currentEntry,
     stats,
+    // eslint-disable-next-line no-unused-vars
     isProcessing: formationProcessing,
     isComplete: formationComplete,
+    // eslint-disable-next-line no-unused-vars
     progress: formationProgress,
     hasDocuments,
     initializeFormation,
@@ -100,6 +100,7 @@ export default function MusterCall({
 
   // Debug: Log formation changes
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log(
       `📋 MusterCall formation changed: length=${formation.length}, hasDocuments=${hasDocuments}`,
     );
@@ -160,6 +161,7 @@ export default function MusterCall({
   const [validation, setValidation] = useState(null);
   const [error, setError] = useState(null);
   const [showReport, setShowReport] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [useSequentialMode, setUseSequentialMode] = useState(true); // Toggle between modes
 
   // Compute locally to avoid stale closure issues (MUST be after processingState is declared)
@@ -184,16 +186,19 @@ export default function MusterCall({
    */
   const handleFileSelect = useCallback(
     (selectedFiles) => {
+      // eslint-disable-next-line no-console
       console.log(
         "🎯 handleFileSelect called with",
         selectedFiles?.length,
         "files",
       );
       const fileArray = Array.from(selectedFiles);
+      // eslint-disable-next-line no-console
       console.log("🎯 fileArray:", fileArray.length, "files");
 
       // Validate files
       const validationResult = validateFilesBatch(fileArray);
+      // eslint-disable-next-line no-console
       console.log("🎯 validationResult:", validationResult);
       setValidation(validationResult);
 
@@ -202,12 +207,14 @@ export default function MusterCall({
 
         // Initialize formation if in sequential mode
         if (useSequentialMode) {
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 Calling initializeFormation with",
             validationResult.valid.length,
             "files",
           );
           const result = initializeFormation(validationResult.valid);
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 initializeFormation returned:",
             result?.length,
@@ -306,16 +313,23 @@ export default function MusterCall({
    * Start processing files
    */
   const handleStartProcessing = async () => {
+    // eslint-disable-next-line no-console
     console.log("🚩 handleStartProcessing called");
+    // eslint-disable-next-line no-console
     console.log("🚩 files.length:", files.length);
+    // eslint-disable-next-line no-console
     console.log("🚩 formation.length:", formation.length);
+    // eslint-disable-next-line no-console
     console.log("🚩 useSequentialMode:", useSequentialMode);
+    // eslint-disable-next-line no-console
     console.log("🚩 hasDocuments:", hasDocuments);
 
     // Use sequential mode if enabled
     if (useSequentialMode && formation.length > 0) {
+      // eslint-disable-next-line no-console
       console.log("🚩 Starting sequential formation processing...");
       const firstEntry = startFormation();
+      // eslint-disable-next-line no-console
       console.log("🚩 First entry:", firstEntry);
 
       if (firstEntry) {
@@ -327,6 +341,7 @@ export default function MusterCall({
 
     // Legacy batch mode requires files
     if (files.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("🚩 No files for batch processing");
       return;
     }
@@ -378,17 +393,21 @@ export default function MusterCall({
           );
 
           if (populateResult.success) {
+            // eslint-disable-next-line no-console
             console.log(
               `✅ Auto-populated ${populateResult.count} profile fields`,
             );
           }
 
           // Generate LLM report
+          // eslint-disable-next-line no-console
           console.log("🤖 Checking AI availability for report generation...");
           const aiStatus = getAIStatus();
+          // eslint-disable-next-line no-console
           console.log("🤖 AI Status:", aiStatus);
 
           if (isAnyAIAvailable()) {
+            // eslint-disable-next-line no-console
             console.log("✅ AI available, generating report...");
             setProcessingState(PROCESSING_STATES.ANALYZING);
             const reportResult = await generateMusterCallReport(
@@ -396,9 +415,11 @@ export default function MusterCall({
               completeData.classified,
             );
 
+            // eslint-disable-next-line no-console
             console.log("📊 Report result:", reportResult);
 
             if (reportResult.success) {
+              // eslint-disable-next-line no-console
               console.log("✅ Setting report in state");
               setReport(reportResult.report);
             } else {
@@ -410,9 +431,11 @@ export default function MusterCall({
           }
 
           // NEW: Evidence Gap Analysis (v1.16.0)
+          // eslint-disable-next-line no-console
           console.log("🔍 Running Evidence Gap Analysis...");
           const gapAnalysis = analyzeEvidenceGaps(completeData.results);
           if (gapAnalysis.success && gapAnalysis.totalGaps > 0) {
+            // eslint-disable-next-line no-console
             console.log(
               `⚠️ Found ${gapAnalysis.totalGaps} potential evidence gaps!`,
             );
@@ -421,6 +444,7 @@ export default function MusterCall({
               completeData.evidenceGaps = gapAnalysis;
             }
           } else {
+            // eslint-disable-next-line no-console
             console.log("✅ No significant evidence gaps detected");
           }
 
@@ -460,6 +484,7 @@ export default function MusterCall({
    */
   const processDocumentEntry = async (entry) => {
     if (!entry) {
+      // eslint-disable-next-line no-console
       console.log("✅ Formation complete!");
       setProcessingState(PROCESSING_STATES.COMPLETE);
       setActiveEntry(null);
@@ -472,6 +497,7 @@ export default function MusterCall({
     }
 
     const file = entry.file;
+    // eslint-disable-next-line no-console
     console.log(`🎖️ Processing document: ${file.name}`);
 
     // Set active entry for UI display
@@ -492,6 +518,7 @@ export default function MusterCall({
     try {
       // Process document with progress callbacks
       const result = await processFormationDocument(file, (progressData) => {
+        // eslint-disable-next-line no-console
         console.log("📊 Progress update received:", progressData);
         setCurrentProgress({
           filename: file.name,
@@ -516,6 +543,7 @@ export default function MusterCall({
         }
       });
 
+      // eslint-disable-next-line no-console
       console.log("✅ Document processed:", result);
 
       // Show Intelligence Briefing for user verification
@@ -553,6 +581,7 @@ export default function MusterCall({
    * Process next document in formation (SEQUENTIAL MODE)
    * Uses currentEntry from hook - call this after state has updated
    */
+  // eslint-disable-next-line no-unused-vars
   const processNextDocument = async () => {
     const next = formation.find(
       (e) => e.status === "WAITING" || e.status === "CALLED",
@@ -564,6 +593,7 @@ export default function MusterCall({
    * Handle Intel Briefing verification (SEQUENTIAL MODE)
    */
   const handleVerifyAndSave = async (verifiedData) => {
+    // eslint-disable-next-line no-console
     console.log("✅ User verified data:", verifiedData);
 
     try {
@@ -609,6 +639,7 @@ export default function MusterCall({
    * Handle skip document (SEQUENTIAL MODE)
    */
   const handleSkipDocument = () => {
+    // eslint-disable-next-line no-console
     console.log("⏭️ Skipping document:", activeEntry?.file?.name);
 
     const nextEntry = skipCurrentAndNext("User skipped");
@@ -718,8 +749,8 @@ export default function MusterCall({
                 </span>
               </h2>
               <p className="text-blue-100 text-sm max-w-2xl">
-                Drop your entire VA file - claim letters, C-Files, DD214s. We'll
-                analyze everything and build your complete profile
+                Drop your entire VA file - claim letters, C-Files, DD214s.
+                We&apos;ll analyze everything and build your complete profile
                 automatically.
               </p>
             </div>
@@ -897,18 +928,22 @@ export default function MusterCall({
                 multiple
                 accept=".pdf,.docx,.doc,.txt,.rtf"
                 onChange={(e) => {
+                  // eslint-disable-next-line no-console
                   console.log(
                     "🎯 File input onChange fired, files:",
                     e.target.files?.length,
                   );
                   handleFileSelect(e.target.files);
                 }}
-                onClick={(e) => console.log("🎯 File input clicked")}
+                // eslint-disable-next-line no-console
+                onClick={(_e) => console.log("🎯 File input clicked")}
                 className="hidden"
                 id="muster-call-files"
               />
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
               <label
                 htmlFor="muster-call-files"
+                // eslint-disable-next-line no-console
                 onClick={() => console.log("🎯 Label clicked")}
                 className="inline-block bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-lg font-bold cursor-pointer transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
               >

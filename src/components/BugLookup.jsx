@@ -115,6 +115,7 @@ export default function BugLookup({ onClose }) {
     };
 
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load reports with current filters

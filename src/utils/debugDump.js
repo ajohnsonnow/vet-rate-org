@@ -128,6 +128,7 @@ export const downloadDebugDump = () => {
     const blob = new Blob([json], { type: "application/json" });
     triggerBlobDownload(blob, String(filename).replace(/[<>"']/g, ""));
 
+    // eslint-disable-next-line no-console
     console.log("✅ Debug dump downloaded:", filename);
     return true;
   } catch (error) {
@@ -187,6 +188,7 @@ export const createDebugDumpHandler = () => {
   return createClickCounter(
     7,
     () => {
+      // eslint-disable-next-line no-console
       console.log(
         "🐛 DEBUG MODE ACTIVATED - Downloading full diagnostic dump...",
       );

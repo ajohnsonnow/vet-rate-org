@@ -4,7 +4,7 @@
  * Displays version with dropdown changelog matching What's New modal
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ChevronDown,
   Sparkles,
@@ -18,7 +18,7 @@ import { generateWhatsNewChangelog } from "../utils/changelogGenerator";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const VersionDropdown = () => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [changelogData, setChangelogData] = useState(null);
   const dropdownRef = useRef(null);
@@ -123,7 +123,7 @@ const VersionDropdown = () => {
         <div className="absolute top-full left-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-y-auto">
           {/* Header */}
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-t-lg sticky top-0">
-            <h3 className="font-bold text-lg">What's New</h3>
+            <h3 className="font-bold text-lg">What&apos;s New</h3>
             <p className="text-emerald-100 text-xs">Version {version}</p>
           </div>
 

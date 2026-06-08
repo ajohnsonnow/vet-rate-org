@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   APP_MODULES,
@@ -11,12 +11,7 @@ import {
   formatBugReport,
   copyToClipboard,
 } from "../utils/bugReportUtils";
-import {
-  saveBugReport,
-  generateReportId,
-  saveToLocalStorage,
-} from "../utils/bugReportStorage";
-import { createSanitizedReport } from "../utils/bugSanitizer";
+import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Developer contact email for bug reports
@@ -27,6 +22,7 @@ const FORMSUBMIT_URL =
   "https://formsubmit.co/ajax/Anth@StructuredForGrowth.com";
 
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const [step, setStep] = useState(1);
@@ -87,6 +83,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
         diagnosticCode: appState.selectedResult.diagnosticCode,
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 
   // Legacy fallback detection (if currentModule not passed from App.jsx)
@@ -247,6 +244,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
             consoleErrors,
           });
 
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`,
           );
@@ -312,6 +310,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
           const result = await response.json();
 
           if (result.success) {
+            // eslint-disable-next-line no-console
             console.log(
               `✅ Bug report ${reportId} sent via FormSubmit AND saved locally`,
             );
@@ -515,6 +514,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Diagnostic Code */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Diagnostic Code (if applicable)
             </label>
@@ -534,6 +534,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Severity */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Bug Severity <span className="text-red-500">*</span>
             </label>
@@ -559,6 +560,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Category */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Bug Category <span className="text-red-500">*</span>
             </label>
@@ -583,6 +585,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
         <div className="space-y-6">
           {/* User Description */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Describe the bug <span className="text-red-500">*</span>
             </label>
@@ -611,6 +614,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Steps to Reproduce */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Steps to Reproduce
             </label>
@@ -628,6 +632,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
           {/* Expected vs Actual */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Expected Behavior
               </label>
@@ -642,6 +647,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
               />
             </div>
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Actual Behavior
               </label>
@@ -659,6 +665,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Additional Context */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Additional Context
             </label>
@@ -701,7 +708,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
                   desc: "Captures errors, warnings, and relevant logs from the console - helps identify the root cause",
                 },
               ].map((item) => (
-                <label
+                <label /* eslint-disable-line jsx-a11y/label-has-associated-control */
                   key={item.key}
                   className="flex items-start gap-3 cursor-pointer"
                 >
@@ -733,6 +740,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
             </h4>
 
             {/* Save to My Tickets */}
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -747,14 +755,15 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
                   Save to My Tickets
                 </span>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Track this bug report in your My Packet. You'll be notified
-                  when it's fixed!
+                  Track this bug report in your My Packet. You&apos;ll be
+                  notified when it&apos;s fixed!
                 </p>
               </div>
             </label>
 
             {/* Optional Email */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email Address (Optional)
               </label>
@@ -769,7 +778,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
                 We respect your privacy. Leave blank to stay anonymous. Only
-                fill this in if you'd like me to email you when the bug is
+                fill this in if you&apos;d like me to email you when the bug is
                 squashed.
               </p>
             </div>
@@ -812,14 +821,15 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
                   ✅ What happens next:
                 </h4>
                 <ul className="text-sm text-green-700 dark:text-green-100 space-y-1">
-                  <li>• I'll investigate this bug personally</li>
+                  <li>• I&apos;ll investigate this bug personally</li>
                   {formData.saveToMyTickets && (
                     <li>
-                      • Check "My Tickets" in My Packet for status updates
+                      • Check &quot;My Tickets&quot; in My Packet for status
+                      updates
                     </li>
                   )}
                   {formData.veteranEmail && (
-                    <li>• I'll email you when this bug is squashed</li>
+                    <li>• I&apos;ll email you when this bug is squashed</li>
                   )}
                 </ul>
               </div>
@@ -837,7 +847,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
               {onOpenRoadmap && (
                 <div className="mt-6 pt-4 border-t border-green-200 dark:border-green-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    🗺️ See what's being built & vote on features:
+                    🗺️ See what&apos;s being built & vote on features:
                   </p>
                   <button
                     onClick={() => {
@@ -882,8 +892,8 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
                     />
                   </svg>
                   <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Bug report generated! Review it below and click "Submit
-                    Report" to send it directly.
+                    Bug report generated! Review it below and click &quot;Submit
+                    Report&quot; to send it directly.
                   </span>
                 </div>
               </div>

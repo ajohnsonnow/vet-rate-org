@@ -13,7 +13,7 @@
  * - Secure sharing with doctors
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
@@ -55,7 +55,7 @@ const CATEGORY_ICONS = {
  * @param {function} props.onClose - Callback when browser is closed
  */
 export default function DbqBrowser({ onClose }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // State
   const [dbqForms, setDbqForms] = useState([]);
@@ -80,11 +80,13 @@ export default function DbqBrowser({ onClose }) {
   // Load DBQ index on mount
   useEffect(() => {
     loadDbqIndex();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Filter forms when search/category changes
   useEffect(() => {
     filterForms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory, dbqForms]);
 
   /**

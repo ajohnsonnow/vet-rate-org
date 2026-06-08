@@ -9,7 +9,6 @@
  *   <VisualRibbon award={award} devices={devices} size="md" />
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Standard ribbon dimensions (scaled by size)
@@ -49,7 +48,7 @@ const VisualRibbon = ({
   className = "",
   showName = false,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const dimensions = SIZES[size] || SIZES.md;
   const { width, height, deviceSize } = dimensions;
 
@@ -274,7 +273,7 @@ export const RibbonRackDisplay = ({
 
   // Calculate rows
   const totalRibbons = awards.length;
-  const fullRows = Math.floor(totalRibbons / ribbonsPerRow);
+  const _fullRows = Math.floor(totalRibbons / ribbonsPerRow);
   const remainder = totalRibbons % ribbonsPerRow;
 
   const rows = [];

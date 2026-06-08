@@ -6,7 +6,7 @@
  * Visual timeline display of events extracted from C-File analysis
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Category colors and icons
@@ -74,7 +74,7 @@ const SIGNIFICANCE_STYLES = {
 };
 
 export default function CFileTimeline({ events = [] }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [filter, setFilter] = useState("all");
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [showHighSignificanceOnly, setShowHighSignificanceOnly] =
@@ -98,6 +98,7 @@ export default function CFileTimeline({ events = [] }) {
       {/* Filter Controls */}
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Filter:
           </label>
@@ -156,6 +157,7 @@ export default function CFileTimeline({ events = [] }) {
                   </div>
 
                   {/* Event card */}
+                  {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                   <div
                     className={`flex-1 ${style.bg} border ${style.border} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${isExpanded ? "shadow-md" : ""}`}
                     onClick={() => setExpandedEvent(isExpanded ? null : idx)}
@@ -203,7 +205,7 @@ export default function CFileTimeline({ events = [] }) {
                           Direct Quote from Record:
                         </p>
                         <blockquote className="text-sm italic text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-black/20 p-3 rounded border-l-4 border-gray-400">
-                          "{event.quote}"
+                          &quot;{event.quote}&quot;
                         </blockquote>
                       </div>
                     )}

@@ -38,6 +38,7 @@ export default function VisionSimulator() {
       <Suspense fallback={null}>
         <VisionSimulatorPanel
           onAnalysisComplete={(result) => {
+            // eslint-disable-next-line no-console
             console.log("Vision analysis complete:", result);
           }}
         />

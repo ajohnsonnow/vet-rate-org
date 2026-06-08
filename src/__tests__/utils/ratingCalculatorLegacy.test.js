@@ -281,7 +281,7 @@ describe("VA Formula Accuracy Proofs", () => {
   });
 
   it("PROOF: Bilateral factor adds exactly 10% per 38 CFR § 4.26", () => {
-    const withoutBilateral = calculateExactCombinedRating([30, 30]);
+    const _withoutBilateral = calculateExactCombinedRating([30, 30]);
     const withBilateral = calculateExactCombinedRating([30, 30]);
     const withBilateralFactor = Math.round((withBilateral * 1.1) / 10) * 10;
 

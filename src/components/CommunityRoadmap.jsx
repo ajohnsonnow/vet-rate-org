@@ -11,7 +11,7 @@
  * Built by a fellow veteran. "Your voice shapes the mission."
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -135,6 +135,7 @@ const generateRoadmapFromChangelog = () => {
     update.changelog.forEach((entry) => {
       items.push({
         id: `changelog-${itemIndex++}`,
+        // eslint-disable-next-line no-misleading-character-class
         title: entry.title.replace(/^[🎖️🌐🖥️⚡🧹💰🔍📝🎯🤝🛡️]+\s*/g, "").trim(),
         description: entry.description,
         category: categoryMap[entry.category] || "Tools",
@@ -245,7 +246,7 @@ const FILTER_TABS = [
 // ROADMAP CARD COMPONENT
 // ============================================
 const RoadmapCard = ({ item, onVote, hasVoted, isSubmitting }) => {
-  const { isDark } = useTheme();
+  const { _isDark } = useTheme();
 
   return (
     <div
@@ -345,7 +346,7 @@ const RoadmapCard = ({ item, onVote, hasVoted, isSubmitting }) => {
 // SUBMIT FEATURE FORM
 // ============================================
 const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -407,6 +408,7 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
         body: JSON.stringify(formPayload),
       });
 
+      // eslint-disable-next-line no-console
       console.log("✅ Roadmap feature request sent to developer");
     } catch (error) {
       // Don't fail the submission if email fails - local save is what matters
@@ -472,6 +474,7 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
       <div className="space-y-4">
         {/* Title */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Feature Title <span className="text-red-500">*</span>
           </label>
@@ -492,6 +495,7 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
 
         {/* Description */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Description <span className="text-red-500">*</span>
           </label>
@@ -512,6 +516,7 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
 
         {/* Category */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category
           </label>
@@ -621,8 +626,8 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
 // MAIN COMPONENT
 // ============================================
 function CommunityRoadmap({ onClose }) {
-  const { t } = useLanguage();
-  const { isDark } = useTheme();
+  const { _t } = useLanguage();
+  const { _isDark } = useTheme();
 
   // State
   const [roadmapItems, setRoadmapItems] = useState(INITIAL_ROADMAP_ITEMS);
@@ -792,7 +797,7 @@ function CommunityRoadmap({ onClose }) {
                   🗺️ Community Roadmap
                 </h2>
                 <p className="text-purple-100 text-sm">
-                  Vote on features • See what's coming • Submit your ideas
+                  Vote on features • See what&apos;s coming • Submit your ideas
                 </p>
               </div>
             </div>

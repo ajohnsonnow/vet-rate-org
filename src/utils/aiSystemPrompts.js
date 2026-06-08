@@ -1127,7 +1127,7 @@ export function detectDecisionText(userInput) {
  * @param {Object} options - Additional options
  * @returns {string} The enhanced prompt with safety context
  */
-export function constructSafePrompt(userQuery, options = {}) {
+export function constructSafePrompt(userQuery, _options = {}) {
   const detection = detectDecisionText(userQuery);
 
   // Inject the status into the prompt context for the AI
@@ -1280,6 +1280,7 @@ async function loadDKB() {
     .then((res) => res.json())
     .then((data) => {
       dkbCache = data;
+      // eslint-disable-next-line no-console
       console.log(
         `[DKB] 💎 Loaded ${data.entries?.length || 0} Diamond Knowledge Base entries for AI context`,
       );

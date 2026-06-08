@@ -131,6 +131,7 @@ export async function advancedPDFAnalysis(
     }
 
     // Insufficient text - use advanced OCR
+    // eslint-disable-next-line no-console
     console.log(
       `📷 Sparse text detected (${avgCharsPerPage.toFixed(0)} chars/page). Activating advanced OCR...`,
     );
@@ -142,6 +143,7 @@ export async function advancedPDFAnalysis(
 
     // Analyze first page to determine optimal strategy
     const strategy = await detectOptimalStrategy(pdf, 1);
+    // eslint-disable-next-line no-console
     console.log(`🎯 Detected quality: ${strategy}`);
 
     // Run advanced multi-pass OCR
@@ -206,6 +208,7 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
 
     canvas.remove();
 
+    // eslint-disable-next-line no-console
     console.log(
       `📊 Image quality metrics: brightness=${metrics.brightness.toFixed(0)}, contrast=${metrics.contrast.toFixed(0)}, noise=${metrics.noise.toFixed(0)}, inverted=${metrics.isInverted}`,
     );
@@ -213,6 +216,7 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
     // Decision tree based on metrics - IMPROVED for aged documents
     // Check for inverted text (white on dark)
     if (metrics.isInverted) {
+      // eslint-disable-next-line no-console
       console.log("🔄 Detected inverted text (white on dark background)");
       return PREPROCESS_STRATEGIES.INVERTED;
     }
@@ -222,6 +226,7 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
       metrics.contrast < 20 ||
       (metrics.brightness > 220 && metrics.contrast < 40)
     ) {
+      // eslint-disable-next-line no-console
       console.log(
         "⚠️ Severely degraded document detected - using maximum enhancement",
       );
@@ -320,6 +325,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     ? config.CANVAS_SCALES_DEGRADED
     : config.CANVAS_SCALES;
 
+  // eslint-disable-next-line no-console
   console.log(
     `🔬 Using ${isDegraded ? "HIGH" : "standard"} resolution scales: [${baseScales.join(", ")}] for strategy: ${strategy}`,
   );
@@ -385,6 +391,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
         textLength < config.MIN_USEFUL_TEXT_LENGTH &&
         config.ENABLE_RETRY_WITH_HIGHER_SCALE
       ) {
+        // eslint-disable-next-line no-console
         console.log(
           `⚠️ Page ${pageNum}: Only ${textLength} chars extracted. Retrying with maximum scale...`,
         );
@@ -405,11 +412,13 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
 
         // Use retry result if it's better
         if (retryResult.data.text.trim().length > textLength) {
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Retry successful: ${retryResult.data.text.trim().length} chars (was ${textLength})`,
           );
           pageText = retryResult.data.text;
         } else {
+          // eslint-disable-next-line no-console
           console.log(`❌ Retry did not improve results`);
         }
       }
@@ -440,6 +449,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       .replace(/---\s*PAGE.*?---\n/g, "")
       .replace(/\s+/g, " ")
       .trim().length;
+    // eslint-disable-next-line no-console
     console.log(
       `📊 OCR Summary: ${totalChars} chars extracted from ${pagesToProcess} pages (avg confidence: ${avgConfidence.toFixed(0)}%)`,
     );
@@ -526,6 +536,7 @@ function applyAdvancedPreprocessing(canvas, strategy) {
 
     case PREPROCESS_STRATEGIES.SEVERELY_AGED:
       // MAXIMUM enhancement for severely degraded/faded documents
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Applying SEVERELY_AGED preprocessing (maximum enhancement)",
       );
@@ -542,6 +553,7 @@ function applyAdvancedPreprocessing(canvas, strategy) {
 
     case PREPROCESS_STRATEGIES.INVERTED:
       // Handle white text on dark background
+      // eslint-disable-next-line no-console
       console.log("🔧 Applying INVERTED preprocessing");
       imageData = grayscale(imageData);
       imageData = invert(imageData); // Flip black/white
@@ -946,6 +958,7 @@ function autoLevels(imageData) {
   const range = max - min;
   const scale = 255 / range;
 
+  // eslint-disable-next-line no-console
   console.log(
     `📊 Auto-levels: min=${min.toFixed(0)}, max=${max.toFixed(0)}, scale=${scale.toFixed(2)}`,
   );

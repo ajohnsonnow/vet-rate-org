@@ -488,9 +488,9 @@ export default function HomeFeatureCards() {
             </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-            <strong>Statement Stress Test.</strong> Find weak language that's{" "}
-            <strong>hurting your claim</strong> before the VA does. "Tough guy"
-            language = denials.
+            <strong>Statement Stress Test.</strong> Find weak language
+            that&apos;s <strong>hurting your claim</strong> before the VA does.
+            &quot;Tough guy&quot; language = denials.
           </p>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("openRedTeam"))}
@@ -517,8 +517,8 @@ export default function HomeFeatureCards() {
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
             <strong>Denial Translator.</strong> Got a confusing VA letter? Paste
-            it in and get <strong>plain English</strong> + what's missing + next
-            steps.
+            it in and get <strong>plain English</strong> + what&apos;s missing +
+            next steps.
           </p>
           <button
             onClick={() =>
@@ -546,8 +546,9 @@ export default function HomeFeatureCards() {
             </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-            <strong>Intent to File Tracker.</strong> Don't lose your effective
-            date! Countdown timer + backpay calculator for your ITF deadline.
+            <strong>Intent to File Tracker.</strong> Don&apos;t lose your
+            effective date! Countdown timer + backpay calculator for your ITF
+            deadline.
           </p>
           <button
             onClick={() =>
@@ -576,7 +577,7 @@ export default function HomeFeatureCards() {
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
             <strong>Before you sign ANYTHING!</strong> Paste contract or email
-            text from "VA consultants" to scan for
+            text from &quot;VA consultants&quot; to scan for
             <strong> illegal fees, predatory practices, and scams</strong> based
             on 38 CFR § 14.636.
           </p>
@@ -615,8 +616,8 @@ export default function HomeFeatureCards() {
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
                 <strong>The Missing Link.</strong> See exactly what evidence
-                you're <strong>missing</strong> for higher ratings. Interactive
-                completeness gauge shows your gaps - fill them{" "}
+                you&apos;re <strong>missing</strong> for higher ratings.
+                Interactive completeness gauge shows your gaps - fill them{" "}
                 <strong>before</strong> submission. Now saves directly to My
                 Packet!
               </p>
@@ -703,9 +704,9 @@ export default function HomeFeatureCards() {
             </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-            <strong>Don't Poke the Bear!</strong> Check 5-Year, 20-Year, and P&T
-            protections <strong>BEFORE</strong> you file. Sharks push frivolous
-            claims that <strong>trigger rating reductions</strong>.
+            <strong>Don&apos;t Poke the Bear!</strong> Check 5-Year, 20-Year,
+            and P&T protections <strong>BEFORE</strong> you file. Sharks push
+            frivolous claims that <strong>trigger rating reductions</strong>.
           </p>
           <button
             onClick={() =>
@@ -869,10 +870,10 @@ export default function HomeFeatureCards() {
             </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-            <strong>Click, Don't Type.</strong> Interactive body map that
+            <strong>Click, Don&apos;t Type.</strong> Interactive body map that
             translates your clicks into{" "}
-            <strong>exact medical terminology</strong>. Turn "My back hurts"
-            into proper diagnosis language.
+            <strong>exact medical terminology</strong>. Turn &quot;My back
+            hurts&quot; into proper diagnosis language.
           </p>
           <button
             onClick={() =>
@@ -932,8 +933,8 @@ export default function HomeFeatureCards() {
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
             <strong>Visualize Your Nexus.</strong> Timeline shows evidence from
             service to now. Automatically flags{" "}
-            <strong>dangerous gaps over 5 years</strong>. Fill them before it's
-            too late.
+            <strong>dangerous gaps over 5 years</strong>. Fill them before
+            it&apos;s too late.
           </p>
           <button
             onClick={() =>
@@ -963,7 +964,7 @@ export default function HomeFeatureCards() {
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
             <strong>Mock BVA Hearing.</strong> Voice-interactive simulator with
             AI judge asking tough questions. Practice before the real Board of
-            Veterans' Appeals.
+            Veterans&apos; Appeals.
           </p>
           <button
             onClick={() =>
@@ -981,7 +982,7 @@ export default function HomeFeatureCards() {
         🤝 Support & Resources
       </h2>
       <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-        Find free representation, track VA rule changes, understand VA's AI
+        Find free representation, track VA rule changes, understand VA&apos;s AI
         systems, and unlock state-specific benefits
       </p>
 
@@ -1006,7 +1007,7 @@ export default function HomeFeatureCards() {
             <strong>The Honest Broker.</strong> Find{" "}
             <strong>FREE, Accredited</strong> representation near you. Connect
             with County VSOs, DAV, VFW, and avoid{" "}
-            <strong>"Claim Sharks"</strong> forever.
+            <strong>&quot;Claim Sharks&quot;</strong> forever.
           </p>
           <button
             onClick={() =>
@@ -1103,8 +1104,8 @@ export default function HomeFeatureCards() {
             </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-            <strong>Know How AI Affects You.</strong> Learn about VA's 227 AI
-            systems: fraud detection, faster claims, health diagnostics, and
+            <strong>Know How AI Affects You.</strong> Learn about VA&apos;s 227
+            AI systems: fraud detection, faster claims, health diagnostics, and
             your privacy protections.
           </p>
           <button
@@ -1125,7 +1126,7 @@ export default function HomeFeatureCards() {
             💎 SHOCK & AWE TOOLS 💎
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Premium visualizations that make you say "Whoa"
+            Premium visualizations that make you say &quot;Whoa&quot;
           </p>
         </div>
 
@@ -1184,7 +1185,8 @@ export default function HomeFeatureCards() {
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
               <strong>Your MOS broke your body.</strong> Enter your job code,
               see <strong>what injuries that job causes</strong>. Hearing loss?
-              Back pain? <strong>It's not just you - it's the job.</strong>
+              Back pain?{" "}
+              <strong>It&apos;s not just you - it&apos;s the job.</strong>
             </p>
             <button
               onClick={() =>

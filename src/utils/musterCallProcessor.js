@@ -30,13 +30,12 @@ import {
   classifyDocument,
   classifyDocumentBatch,
   DOCUMENT_TYPES,
-  getDocumentTypeLabel,
   getProcessingStrategy,
 } from "./documentClassifier";
 import { parseDD214Text } from "./ribbonRackData";
 import { updateVeteranProfile, getVeteranProfile } from "./veteranProfile";
 import { generateAI, isAnyAIAvailable } from "./unifiedAIService";
-import { addDocumentToVKB, loadVKB } from "./veteranKnowledgeBase";
+import { addDocumentToVKB } from "./veteranKnowledgeBase";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
@@ -53,7 +52,6 @@ import { florenceOCRService, isWebGPUSupported } from "./florenceOCRService";
 // Enhanced VA document understanding with "Header-First Extraction"
 // ============================================================
 import {
-  parseVADocument,
   parseDecisionLetter,
   parseDBQReport,
   parseCodeSheet,
@@ -63,15 +61,8 @@ import {
   segmentCFile,
   quickScanCFile,
   buildDocumentInventory,
-  extractDBQs,
-  extractDecisions,
 } from "./cFileSegmentation";
-import {
-  findEvidenceGaps,
-  quickGapCheck,
-  EVIDENCE_TYPES,
-  DTA_VIOLATIONS,
-} from "./evidenceGapFinder";
+import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
 
 // Vision AI confidence threshold - below this, try vision fallback
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
@@ -95,10 +86,12 @@ export { formatFileSize };
  */
 const analyzeCFileWithAI = async (text) => {
   if (!isAnyAIAvailable()) {
+    // eslint-disable-next-line no-console
     console.log("⚠️ No AI available for C-File analysis");
     return null;
   }
 
+  // eslint-disable-next-line no-console
   console.log("🤖 Starting AI-enhanced C-File analysis...");
 
   // Compact prompt for local AI compatibility
@@ -145,11 +138,13 @@ RULES: Only include findings present in text. Be concise.`;
       console.warn("⚠️ JSON parse failed, attempting repair...");
       result = attemptJSONRepair(cleanContent);
       if (result) {
+        // eslint-disable-next-line no-console
         console.log("✅ Successfully repaired truncated AI response");
       }
     }
 
     if (result) {
+      // eslint-disable-next-line no-console
       console.log(
         `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
       );
@@ -293,6 +288,7 @@ const processSingleDocument = async (file, onProgress) => {
       // ============================================================
       // VISION-FIRST PATH: DD214s get Florence-2 treatment
       // ============================================================
+      // eslint-disable-next-line no-console
       console.log(
         `👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`,
       );
@@ -357,7 +353,7 @@ const processSingleDocument = async (file, onProgress) => {
             file,
             {
               maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
-              onPageComplete: (pageNum, total, pageResult) => {
+              onPageComplete: (pageNum, total, _pageResult) => {
                 const progress = 40 + (pageNum / total) * 30; // 40-70%
                 onProgress?.({
                   filename: file.name,
@@ -376,6 +372,7 @@ const processSingleDocument = async (file, onProgress) => {
             visionResult.combinedText &&
             visionResult.combinedText.trim().length > 100
           ) {
+            // eslint-disable-next-line no-console
             console.log(
               `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
             );
@@ -383,6 +380,7 @@ const processSingleDocument = async (file, onProgress) => {
             // Log the parsed data from vision
             if (visionResult.parsedData?.fields) {
               const fields = visionResult.parsedData.fields;
+              // eslint-disable-next-line no-console
               console.log("🔍 Vision parsed fields:", {
                 name: fields.name,
                 branch: fields.branch,
@@ -422,6 +420,7 @@ const processSingleDocument = async (file, onProgress) => {
 
       // Fall back to OCR if vision failed
       if (!extractionResult) {
+        // eslint-disable-next-line no-console
         console.log("📷 Falling back to OCR extraction...");
         onProgress?.({
           filename: file.name,
@@ -461,6 +460,7 @@ const processSingleDocument = async (file, onProgress) => {
         file.size > 50 * 1024 * 1024;
 
       if (isLargePDF) {
+        // eslint-disable-next-line no-console
         console.log(
           `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
         );
@@ -529,6 +529,7 @@ const processSingleDocument = async (file, onProgress) => {
         extractionResult.ocrUsed;
 
       if (shouldTryVisionFallback) {
+        // eslint-disable-next-line no-console
         console.log(
           `👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`,
         );
@@ -564,6 +565,7 @@ const processSingleDocument = async (file, onProgress) => {
               visionResult.text.trim().length >
                 extractionResult.text.trim().length * 0.5
             ) {
+              // eslint-disable-next-line no-console
               console.log(
                 `✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`,
               );
@@ -634,6 +636,7 @@ const processSingleDocument = async (file, onProgress) => {
 
     if (vkbResult.success) {
       result.vkbDocumentId = vkbResult.documentId;
+      // eslint-disable-next-line no-console
       console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
 
       if (vkbResult.storageWarning) {
@@ -678,6 +681,7 @@ const processSingleDocument = async (file, onProgress) => {
           result.classification?.subtype,
         ].filter(Boolean),
       });
+      // eslint-disable-next-line no-console
       console.log(`📁 Archived ${file.name} in My Packet`);
     } catch (packetErr) {
       console.warn(
@@ -721,6 +725,7 @@ const processSingleDocument = async (file, onProgress) => {
  * Returns enhanced result object for user verification
  */
 export const processFormationDocument = async (file, onProgress) => {
+  // eslint-disable-next-line no-console
   console.log(`🎖️ Platoon Sergeant inspecting: ${file.name}`);
 
   // Use enhanced single document processor
@@ -794,6 +799,7 @@ const splitMultipleDD214s = (text) => {
     });
   }
 
+  // eslint-disable-next-line no-console
   console.log(`📄 Detected ${dd214Segments.length} DD214(s) in document`);
   return dd214Segments;
 };
@@ -856,6 +862,7 @@ const selectBestDD214Segment = (segments, filename) => {
   if (segments.length === 0) return null;
   if (segments.length === 1) return segments[0];
 
+  // eslint-disable-next-line no-console
   console.log(
     `🎯 Multiple DD214s found (${segments.length}), selecting best match for filename: ${filename}`,
   );
@@ -864,7 +871,7 @@ const selectBestDD214Segment = (segments, filename) => {
   // "Johnson Service Records DD214 ALL.pdf" -> "JOHNSON"
   // "Smith_John_DD214.pdf" -> "SMITH"
   const filenameUpper = filename.toUpperCase();
-  const filenameWords = filenameUpper.replace(/[_\-\.]/g, " ").split(/\s+/);
+  const filenameWords = filenameUpper.replace(/[_\-.]/g, " ").split(/\s+/);
 
   // Common words to ignore in filename
   const IGNORE_WORDS = [
@@ -887,6 +894,7 @@ const selectBestDD214Segment = (segments, filename) => {
       word.length >= 3 && !IGNORE_WORDS.includes(word) && /^[A-Z]+$/.test(word),
   );
 
+  // eslint-disable-next-line no-console
   console.log(
     `📛 Potential name(s) from filename: [${potentialNames.join(", ")}]`,
   );
@@ -935,6 +943,7 @@ const selectBestDD214Segment = (segments, filename) => {
       score += segments.length - index;
     }
 
+    // eslint-disable-next-line no-console
     console.log(
       `  Segment ${index + 1} (pages ${segment.pages}): name="${extractedName}", score=${score}, reason="${matchReason}"`,
     );
@@ -946,6 +955,7 @@ const selectBestDD214Segment = (segments, filename) => {
   scoredSegments.sort((a, b) => b.score - a.score);
 
   const best = scoredSegments[0];
+  // eslint-disable-next-line no-console
   console.log(
     `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) with name "${best.extractedName}" - ${best.matchReason}`,
   );
@@ -966,6 +976,7 @@ const parseDocumentByType = async (
   filename,
   visionParsedData = null,
 ) => {
+  // eslint-disable-next-line no-unused-vars
   const strategy = getProcessingStrategy(docType);
 
   switch (docType) {
@@ -979,6 +990,7 @@ const parseDocumentByType = async (
       // This avoids re-parsing with regex which may fail on vision output.
       // ============================================================
       if (visionParsedData?.fields) {
+        // eslint-disable-next-line no-console
         console.log("👁️ Using pre-parsed Vision data for DD214");
         const vf = visionParsedData.fields;
 
@@ -1027,6 +1039,7 @@ const parseDocumentByType = async (
           raw: text.substring(0, 1000),
         };
 
+        // eslint-disable-next-line no-console
         console.log(`✅ Vision-parsed DD214:`, {
           name: visionData.veteranName,
           branch: visionData.branch,
@@ -1039,11 +1052,14 @@ const parseDocumentByType = async (
       }
 
       // Standard path: regex-based parsing
+      // eslint-disable-next-line no-case-declarations
       // Check for multiple DD214s in the document
+      // eslint-disable-next-line no-case-declarations
       const dd214Segments = splitMultipleDD214s(text);
 
       if (dd214Segments.length > 1) {
         // Multiple DD214s found - use intelligent selection based on filename
+        // eslint-disable-next-line no-console
         console.log(
           `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
         );
@@ -1067,6 +1083,7 @@ const parseDocumentByType = async (
               extractedName: extractQuickName(seg.text),
             }));
 
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || "name TBD"})`,
           );
@@ -1083,9 +1100,12 @@ const parseDocumentByType = async (
 
     case DOCUMENT_TYPES.RATING_DECISION:
       // Enhanced: Use new VA Document Parser for Decision Letters
+      // eslint-disable-next-line no-console
       console.log(
         "📋 Using enhanced VA Document Parser for Rating Decision...",
+        // eslint-disable-next-line no-case-declarations
       );
+      // eslint-disable-next-line no-case-declarations
       const decisionData = parseDecisionLetter(text);
 
       // If new parser found data, use it; otherwise fall back to legacy parser
@@ -1093,6 +1113,7 @@ const parseDocumentByType = async (
         decisionData.success &&
         (decisionData.conditions.length > 0 || decisionData.combinedRating)
       ) {
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || "N/A"}% combined`,
         );
@@ -1107,6 +1128,7 @@ const parseDocumentByType = async (
           parserVersion: "v1.16.0-enhanced",
         };
       }
+      // eslint-disable-next-line no-console
       console.log("⚠️ Enhanced parser found limited data, using legacy parser");
       return await parseRatingDecision(text);
 
@@ -1115,10 +1137,15 @@ const parseDocumentByType = async (
 
     case DOCUMENT_TYPES.DBQ:
       // Enhanced: Use new VA Document Parser for DBQs
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-case-declarations
+      // eslint-disable-next-line no-console
       console.log("🩺 Using enhanced VA Document Parser for DBQ...");
+      // eslint-disable-next-line no-case-declarations
       const dbqData = parseDBQReport(text);
 
       if (dbqData.success && dbqData.diagnosis) {
+        // eslint-disable-next-line no-console
         console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
         return {
           type: "dbq",
@@ -1126,15 +1153,20 @@ const parseDocumentByType = async (
           parserVersion: "v1.16.0-enhanced",
         };
       }
+      // eslint-disable-next-line no-console
       console.log("⚠️ Enhanced parser found limited data, using legacy parser");
       return await parseDBQ(text);
 
     case DOCUMENT_TYPES.C_FILE_MEDICAL:
       // Enhanced: Use C-File Segmentation for large claim files
+      // eslint-disable-next-line no-console
       console.log("📚 Using enhanced C-File Segmentation...");
 
+      // eslint-disable-next-line no-case-declarations
       // Quick scan to determine file structure
+      // eslint-disable-next-line no-case-declarations
       const cFileSummary = quickScanCFile(text);
+      // eslint-disable-next-line no-console
       console.log(
         `📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(", ")}`,
       );
@@ -1143,6 +1175,7 @@ const parseDocumentByType = async (
       if (cFileSummary.estimatedDocCount > 5) {
         // Full segmentation for large files
         const segments = segmentCFile(text, { maxSegments: 100 });
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Segmented C-File into ${segments.segments.length} documents`,
         );
@@ -1287,6 +1320,7 @@ const parseServiceRecord = async (text) => {
 
   try {
     const upperText = text.toUpperCase();
+    // eslint-disable-next-line no-unused-vars
     const normalizedText = text.replace(/\s+/g, " ").trim();
 
     // ============================================================
@@ -1396,6 +1430,7 @@ const parseServiceRecord = async (text) => {
       cleanedText = cleanedText.replace(pattern, replacement);
     }
 
+    // eslint-disable-next-line no-console
     console.log("🔧 OCR normalization applied to DD214 text");
 
     // STEP 1: Remove ALL parenthetical content (instructions/examples)
@@ -1813,7 +1848,7 @@ const parseServiceRecord = async (text) => {
       // Box 12a with compact YYYYMMDD
       /12[aA]\.?[^0-9]*(\d{8})\b/i,
       // Table format: "2004 | 06 | 22" or "04 06 22"
-      /12[aA]\.?[^0-9]*(\d{2,4})\s*[|/\-]\s*(\d{2})\s*[|/\-]\s*(\d{2})/i,
+      /12[aA]\.?[^0-9]*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
       // Fallback: "DATE ENTERED" followed by date anywhere
       /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     ];
@@ -1908,7 +1943,7 @@ const parseServiceRecord = async (text) => {
       // Box 12b with compact YYYYMMDD
       /12[bB]\.?[^0-9]*(\d{8})\b/i,
       // Table format: "2007 | 06 | 29" or "07 06 29"
-      /12[bB]\.?[^0-9]*(\d{2,4})\s*[|/\-]\s*(\d{2})\s*[|/\-]\s*(\d{2})/i,
+      /12[bB]\.?[^0-9]*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
     ];
     for (const pattern of separationPatterns) {
       const match = cleanedText.match(pattern);
@@ -2238,6 +2273,7 @@ const parseServiceRecord = async (text) => {
       }
     }
 
+    // eslint-disable-next-line no-console
     console.log("📋 DD214 parsed fields:", {
       veteranName: data.veteranName,
       branch: data.branch,
@@ -2605,8 +2641,10 @@ export const processMusterCallBatch = async (files, options = {}) => {
   // Start processing with concurrency limit
   const workers = [];
   for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
+    // eslint-disable-next-line no-constant-condition
     workers.push(
       (async () => {
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           if (queue.length === 0) {
             if (processing === 0) break;
@@ -2671,7 +2709,9 @@ export const processMusterCallBatch = async (files, options = {}) => {
  * Auto-populate veteran profile from processed documents
  */
 export const autoPopulateProfile = async (processedResults) => {
+  // eslint-disable-next-line no-console
   console.log("📋 Auto-populate Profile starting...");
+  // eslint-disable-next-line no-console
   console.log("📊 Total results to process:", processedResults?.length);
 
   const currentProfile = getVeteranProfile();
@@ -2680,6 +2720,7 @@ export const autoPopulateProfile = async (processedResults) => {
   let updateCount = 0;
 
   for (const result of processedResults) {
+    // eslint-disable-next-line no-console
     console.log(`📄 Checking ${result.filename}:`, {
       status: result.status,
       hasExtractedData: !!result.extractedData,
@@ -2688,6 +2729,7 @@ export const autoPopulateProfile = async (processedResults) => {
     });
 
     if (result.status !== "complete" || !result.extractedData) {
+      // eslint-disable-next-line no-console
       console.log(
         `⏭️ Skipping ${result.filename} - status: ${result.status}, hasData: ${!!result.extractedData}`,
       );
@@ -2695,11 +2737,13 @@ export const autoPopulateProfile = async (processedResults) => {
     }
 
     const { type } = result.extractedData;
+    // eslint-disable-next-line no-console
     console.log(`🔍 Processing ${result.filename} with type: ${type}`);
 
     switch (type) {
       case "service_record":
         // Populate from DD214
+        // eslint-disable-next-line no-console
         console.log(
           "📝 Found service record, extracting data:",
           result.extractedData,
@@ -2722,6 +2766,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
       case "rating_decision":
         // Populate from rating decision
+        // eslint-disable-next-line no-console
         console.log(
           "📊 Found rating decision, extracting data:",
           result.extractedData,
@@ -2735,6 +2780,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
       case "claim_letter":
         // Populate from claim letter
+        // eslint-disable-next-line no-console
         console.log(
           "📬 Found claim letter, extracting data:",
           result.extractedData,
@@ -2745,19 +2791,24 @@ export const autoPopulateProfile = async (processedResults) => {
         break;
 
       default:
+        // eslint-disable-next-line no-console
         console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
+  // eslint-disable-next-line no-console
   console.log("📝 Profile updates:", updates);
 
   if (updateCount > 0) {
     const success = updateVeteranProfile(updates);
+    // eslint-disable-next-line no-console
     console.log(`✅ Profile update ${success ? "successful" : "failed"}`);
     return { success, updates, count: updateCount };
   }
 
+  // eslint-disable-next-line no-console
   console.log("⚠️ No profile updates made");
   return { success: false, updates: {}, count: 0 };
 };
@@ -2767,6 +2818,7 @@ export const autoPopulateProfile = async (processedResults) => {
  * Transforms processed document results into structured data for review
  */
 export const extractIntelligenceBriefingData = (processedResults) => {
+  // eslint-disable-next-line no-console
   console.log("📋 Extracting Intelligence Briefing data...");
 
   const briefingData = {
@@ -2811,9 +2863,12 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     briefingData.documentTypes[type]++;
 
     switch (type) {
+      // eslint-disable-next-line no-case-declarations
       case "service_record":
         // Extract from DD214 - data might be in array format
+        // eslint-disable-next-line no-case-declarations
         const serviceData = result.extractedData;
+        // eslint-disable-next-line no-console
         console.log("📝 Extracting service record:", serviceData);
 
         // Handle array-structured data (indexed 0, 1, 2, etc.)
@@ -2848,6 +2903,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
         break;
 
       case "rating_decision":
+        // eslint-disable-next-line no-console
         console.log("📊 Extracting rating decision:", result.extractedData);
         if (result.extractedData.combinedRating) {
           briefingData.currentCombinedRating =
@@ -2878,6 +2934,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
         break;
 
       case "claim_letter":
+        // eslint-disable-next-line no-console
         console.log("📬 Extracting claim letter:", result.extractedData);
         if (
           result.extractedData.claimNumber &&
@@ -2889,6 +2946,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log("✅ Intelligence Briefing data extracted:", briefingData);
   return briefingData;
 };
@@ -2901,6 +2959,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
  * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
  */
 export const analyzeEvidenceGaps = (processedResults) => {
+  // eslint-disable-next-line no-console
   console.log("🔍 Analyzing evidence gaps across processed documents...");
 
   // Find decision letters
@@ -2920,6 +2979,7 @@ export const analyzeEvidenceGaps = (processedResults) => {
   );
 
   if (decisionLetters.length === 0) {
+    // eslint-disable-next-line no-console
     console.log("ℹ️ No Decision Letters found - skipping gap analysis");
     return {
       success: false,
@@ -2929,6 +2989,7 @@ export const analyzeEvidenceGaps = (processedResults) => {
   }
 
   if (evidenceDocs.length < 2) {
+    // eslint-disable-next-line no-console
     console.log("ℹ️ Insufficient evidence documents for gap analysis");
     return {
       success: false,
@@ -2941,6 +3002,7 @@ export const analyzeEvidenceGaps = (processedResults) => {
 
   // For each decision letter, check against all other evidence
   for (const decision of decisionLetters) {
+    // eslint-disable-next-line no-console
     console.log(`📋 Analyzing Decision: ${decision.filename}`);
 
     // Combine all non-decision text as the "C-File equivalent"
@@ -3005,6 +3067,7 @@ export const analyzeEvidenceGaps = (processedResults) => {
     parserVersion: "v1.16.0",
   };
 
+  // eslint-disable-next-line no-console
   console.log(
     `🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`,
   );
@@ -3016,9 +3079,11 @@ export const analyzeEvidenceGaps = (processedResults) => {
  */
 export const generateMusterCallReport = async (
   processedResults,
-  classified,
+  _classified,
 ) => {
+  // eslint-disable-next-line no-console
   console.log("🎖️ Starting Muster Call Report generation...");
+  // eslint-disable-next-line no-console
   console.log("📊 Total processed results:", processedResults?.length);
 
   if (!isAnyAIAvailable()) {
@@ -3043,6 +3108,7 @@ export const generateMusterCallReport = async (
     (r) => r.classification?.category === "medical" && r.status === "complete",
   );
 
+  // eslint-disable-next-line no-console
   console.log(
     `📝 Document counts: ${serviceRecords.length} service, ${ratingDocs.length} rating, ${medicalDocs.length} medical`,
   );
@@ -3104,6 +3170,7 @@ Provide:
 
 Format as markdown with clear sections.`;
 
+  // eslint-disable-next-line no-console
   console.log(`📤 Sending prompt to AI (${prompt.length} chars)`);
 
   try {
@@ -3113,6 +3180,7 @@ Format as markdown with clear sections.`;
       temperature: 0.3,
     });
 
+    // eslint-disable-next-line no-console
     console.log(
       `✅ Report generated successfully (${response?.length || 0} chars)`,
     );

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import {
   AlertCircle,
   TrendingUp,
@@ -33,7 +33,7 @@ const SimulatorFeedback = ({
   onClose,
   onSendToCalculator,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const feedbackContentRef = useRef(null);
 
   if (!result) return null;
@@ -74,7 +74,7 @@ const SimulatorFeedback = ({
     };
 
     // Helper: Add wrapped text with proper line handling
-    const addWrappedText = (
+    const _addWrappedText = (
       text,
       fontSize = 10,
       fontStyle = "normal",
@@ -275,7 +275,7 @@ const SimulatorFeedback = ({
       addSectionHeader("PREPARATION CHECKLIST", [22, 163, 74]);
 
       doc.setTextColor(0, 0, 0);
-      actionItems.forEach((item, idx) => {
+      actionItems.forEach((item, _idx) => {
         checkPageBreak(15);
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
@@ -286,7 +286,7 @@ const SimulatorFeedback = ({
         doc.rect(margin + 2, yPos - 3, 4, 4);
 
         const iLines = doc.splitTextToSize(item, contentWidth - 15);
-        iLines.forEach((line, i) => {
+        iLines.forEach((line, _i) => {
           checkPageBreak(6);
           doc.text(line, margin + 10, yPos);
           yPos += 5;
@@ -484,12 +484,12 @@ const SimulatorFeedback = ({
               </p>
               <p>
                 • The actual rating decision will be made by the VA rater based
-                on the C&P examiner's report and all evidence in your file.
+                on the C&P examiner&apos;s report and all evidence in your file.
               </p>
               <p>
-                • The C&P exam is NOT an adversarial process - the examiner's
-                job is to document your condition accurately, not to deny your
-                claim.
+                • The C&P exam is NOT an adversarial process - the
+                examiner&apos;s job is to document your condition accurately,
+                not to deny your claim.
               </p>
               <p>
                 • <strong>Always tell the truth</strong> during your exam.

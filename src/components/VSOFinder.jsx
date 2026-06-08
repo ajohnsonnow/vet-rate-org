@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
-import { FocusToggle } from "../contexts/FocusModeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { searchVSOs } from "../utils/aiStatementHelper";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";

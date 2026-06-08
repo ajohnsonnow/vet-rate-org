@@ -1,4 +1,3 @@
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -212,13 +211,13 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
                 <p className="text-sm leading-relaxed">
                   <strong>
                     Using Google Gemini API with your own key (BYOK) sends your
-                    data to Google's cloud data centers.
+                    data to Google&apos;s cloud data centers.
                   </strong>{" "}
                   Your text, documents, and prompts are transmitted over the
-                  internet to Google's servers for processing. While this is a
-                  direct connection between you and Google (Vet-Rate.org does
-                  not see your data), your information leaves your device and
-                  enters Google's infrastructure.{" "}
+                  internet to Google&apos;s servers for processing. While this
+                  is a direct connection between you and Google (Vet-Rate.org
+                  does not see your data), your information leaves your device
+                  and enters Google&apos;s infrastructure.{" "}
                   <strong className="underline">
                     For maximum privacy, use Local AI models that run entirely
                     on your device.
@@ -282,7 +281,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline font-medium"
                     >
-                      Google's Gemini API Terms
+                      Google&apos;s Gemini API Terms
                     </a>
                   </li>
                   <li>
@@ -292,7 +291,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline font-medium"
                     >
-                      Google's Privacy Policy
+                      Google&apos;s Privacy Policy
                     </a>
                   </li>
                 </ul>

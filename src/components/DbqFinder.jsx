@@ -14,12 +14,11 @@
  * @see https://developer.va.gov/explore/forms/docs/va_forms
  */
 
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   Search,
-  FileText,
   Download,
   ExternalLink,
   Loader2,
@@ -189,6 +188,7 @@ const DbqFinder = ({ onClose }) => {
         setIsLoading(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [recentSearches],
   );
 

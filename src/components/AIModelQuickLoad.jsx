@@ -9,16 +9,12 @@
  * Usage: <AIModelQuickLoad toolId="nexus-builder" onLoadComplete={() => {...}} />
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getAIStatus,
   isDiamondSwarmReady,
-  isWllamaAvailable,
-  isLocalServerAvailable,
   switchAgent,
-  unloadSwarm,
-  getAgentForTool,
   initializeSwarm,
 } from "../utils/unifiedAIService";
 import { SWARM_AGENTS, TOOL_AGENT_MAP } from "../utils/diamondSwarm";
@@ -38,7 +34,9 @@ export default function AIModelQuickLoad({
   compact = false,
   showFullDropdown = false,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -66,20 +64,24 @@ export default function AIModelQuickLoad({
     try {
       // If Warrant Council is already initialized, just switch agents
       if (isDiamondSwarmReady()) {
+        // eslint-disable-next-line no-console
         console.log("🎖️ Warrant Council already ready, switching agent...");
         await switchAgent(recommendedAgentId);
       } else {
         // Initialize Warrant Council with the recommended agent
+        // eslint-disable-next-line no-console
         console.log(
           `🎖️ Initializing Warrant Council with ${recommendedAgent.name}...`,
         );
         await initializeSwarm(recommendedAgentId, {
           onProgress: (progress) => {
+            // eslint-disable-next-line no-console
             console.log(
               `Loading progress: ${progress.message} (${progress.progress}%)`,
             );
           },
           onComplete: () => {
+            // eslint-disable-next-line no-console
             console.log(`✅ ${recommendedAgent.name} loaded successfully`);
           },
           onError: (err) => {
@@ -245,8 +247,10 @@ export default function AIModelQuickLoad({
                         // Initialize with the selected agent
                         await initializeSwarm(agent.id, {
                           onProgress: (progress) =>
+                            // eslint-disable-next-line no-console
                             console.log(progress.message),
                           onComplete: () =>
+                            // eslint-disable-next-line no-console
                             console.log(`✅ ${agent.name} loaded`),
                           onError: (err) => {
                             throw err;

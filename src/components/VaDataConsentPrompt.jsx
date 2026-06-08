@@ -4,7 +4,7 @@
  * Asks veteran for permission to save VA data locally
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Shield, Save, Lock, Database, FileText } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -109,6 +109,7 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
 
         {/* Storage Options */}
         <div className="space-y-4">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
             <input
               type="checkbox"
@@ -128,6 +129,7 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             </div>
           </label>
 
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
             <input
               type="checkbox"

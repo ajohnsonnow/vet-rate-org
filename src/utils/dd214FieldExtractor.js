@@ -993,7 +993,7 @@ export function mergeAIAndRegexResults(aiResult, regexResult) {
   ];
 
   // Fields where AI is more reliable (requires interpretation)
-  const aiPreferred = [
+  const _aiPreferred = [
     "awards",
     "combatService",
     "specialQualifications",
@@ -1068,7 +1068,7 @@ export function detectDD214Documents(text) {
   const documents = [];
 
   // Split by page markers
-  const pages = text.split(/---\s*PAGE\s+(\d+)\s*(?:\([^)]*\))?\s*---/i);
+  const _pages = text.split(/---\s*PAGE\s+(\d+)\s*(?:\([^)]*\))?\s*---/i);
 
   // Look for form identifiers
   const formPatterns = [

@@ -5,7 +5,7 @@
  * See src/COPYRIGHT.js for full license terms.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   findSecondaryClaims,
   getSecondaryClaimsSummary,
@@ -67,6 +67,7 @@ const SecondaryScout = ({
       setFilteredSuggestions([]);
       setSummary(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userDisabilities]);
 
   useEffect(() => {
@@ -531,9 +532,11 @@ const SecondaryConditionCard = ({
       }`}
     >
       {/* Card Header */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div className="p-6 cursor-pointer" onClick={onToggle}>
         <div className="flex items-start justify-between">
           {/* Selection Checkbox */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             className="mr-4 flex-shrink-0"
             onClick={(e) => {

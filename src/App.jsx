@@ -17,7 +17,7 @@
  * VA disability claims process.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import AppHeader from "./features/header/AppHeader";
 import HomeMain from "./features/home/HomeMain";
 import AppModals from "./features/modals/AppModals";

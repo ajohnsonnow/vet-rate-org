@@ -12,7 +12,7 @@
  * - AI Mode: "Cross-Examination" - Compare evidence vs statements with AI
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import useConsistencyCheck, {
@@ -21,7 +21,7 @@ import useConsistencyCheck, {
 import AIConsistencyAnalyzer from "./AIConsistencyAnalyzer";
 
 export default function ConsistencyEngine({ onClose }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState("rules"); // 'rules' or 'ai'
   const {
@@ -32,7 +32,7 @@ export default function ConsistencyEngine({ onClose }) {
     criticalCount,
     highCount,
     mediumCount,
-    totalCount,
+    _totalCount,
   } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);
 
@@ -95,7 +95,7 @@ export default function ConsistencyEngine({ onClose }) {
     );
   }
 
-  const getSeverityBadge = (severity) => {
+  const _getSeverityBadge = (severity) => {
     const badges = {
       critical: { bg: "bg-red-600", text: "CRITICAL", icon: "🚨" },
       high: { bg: "bg-orange-600", text: "HIGH", icon: "⚠️" },
@@ -311,16 +311,16 @@ export default function ConsistencyEngine({ onClose }) {
         </p>
         <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
           <li>
-            • If you say "constant pain" but your logs show gaps, they'll
-            question your credibility
+            • If you say &quot;constant pain&quot; but your logs show gaps,
+            they&apos;ll question your credibility
           </li>
           <li>
-            • If you say "left knee" in one place and "right knee" in another,
-            they'll deny everything
+            • If you say &quot;left knee&quot; in one place and &quot;right
+            knee&quot; in another, they&apos;ll deny everything
           </li>
           <li>
-            • If you claim you "can't lift 10 lbs" but logged a gym workout,
-            that's evidence against you
+            • If you claim you &quot;can&apos;t lift 10 lbs&quot; but logged a
+            gym workout, that&apos;s evidence against you
           </li>
         </ul>
       </div>

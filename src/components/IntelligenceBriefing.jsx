@@ -37,7 +37,7 @@ export default function IntelligenceBriefing({
   onConfirm,
   onEdit,
 }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [editableData, setEditableData] = useState(extractedData);
   const [discrepancies, setDiscrepancies] = useState([]);
@@ -149,6 +149,7 @@ export default function IntelligenceBriefing({
       let vkb = await loadVKB();
       vkb = mergeMusterCallIntoVKB(vkb, editableData);
       await saveVKB(vkb);
+      // eslint-disable-next-line no-console
       console.log("✅ VKB updated with Muster Call data");
     } catch (err) {
       console.error("Error updating VKB:", err);
@@ -488,8 +489,8 @@ export default function IntelligenceBriefing({
         }
       >
         <p className="text-gray-700 dark:text-slate-300">
-          You haven't committed this data to your packet yet. If you close now,
-          all extracted information will be lost.
+          You haven&apos;t committed this data to your packet yet. If you close
+          now, all extracted information will be lost.
         </p>
       </ResponsiveModal>
     </>

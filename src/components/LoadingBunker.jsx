@@ -9,7 +9,6 @@
  * Shows "Loading Bunker..." with military-themed spinner
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const LoadingBunker = ({

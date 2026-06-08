@@ -10,7 +10,7 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   Camera,

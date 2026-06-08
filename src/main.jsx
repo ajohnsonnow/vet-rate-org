@@ -64,6 +64,7 @@ if (!capabilityResults.passed) {
   renderBrowserWarning(capabilityResults);
 } else {
   // All systems go - render the app
+  // eslint-disable-next-line no-console
   console.log("[Tech Check] ✓ All browser capabilities verified");
 
   // Check if this is an OAuth callback or sandbox test route.
@@ -109,6 +110,7 @@ if (!capabilityResults.passed) {
       navigator.serviceWorker
         .register("/service-worker.js")
         .then((reg) => {
+          // eslint-disable-next-line no-console
           console.log("[SW] registered:", reg.scope);
 
           // Detect new SW installs and surface an "Update available" signal.

@@ -71,6 +71,7 @@ export const autoSummarizeIfLong = async (
       : isTooLong
         ? "Length Check"
         : "Forced";
+    // eslint-disable-next-line no-console
     console.log(`📋 Reddit Summary Triggered: ${reason} (${wordCount} words)`);
 
     const summary = await generateAI(REDDIT_SUMMARY_PROMPT(originalResponse), {

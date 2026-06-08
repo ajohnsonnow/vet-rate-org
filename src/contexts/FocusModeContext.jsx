@@ -9,7 +9,7 @@
  * This context provides a Focus Mode that dims everything except the current input field.
  */
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const FocusModeContext = createContext();
 
@@ -48,6 +48,7 @@ export function FocusModeProvider({ children }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && focusMode) {
+        // eslint-disable-next-line no-console
         console.log("🎯 ESC pressed - exiting focus mode");
         setFocusMode(false);
       }
@@ -58,6 +59,7 @@ export function FocusModeProvider({ children }) {
   }, [focusMode]);
 
   const toggleFocusMode = () => {
+    // eslint-disable-next-line no-console
     console.log(
       "🎯 Toggle clicked, current:",
       focusMode,
@@ -126,6 +128,7 @@ export function FocusToggle({ variant = "dark", className = "" }) {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // eslint-disable-next-line no-console
     console.log("🎯 Focus toggle clicked, current mode:", focusMode);
     toggleFocusMode();
   };
@@ -163,6 +166,7 @@ export function FocusModeToggle() {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // eslint-disable-next-line no-console
     console.log("🎯 Focus toggle button clicked!");
     toggleFocusMode();
   };

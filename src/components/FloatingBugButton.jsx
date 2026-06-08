@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tooltip } from "./common/Tooltip";
 
@@ -7,7 +7,7 @@ import { Tooltip } from "./common/Tooltip";
  * A fixed-position button that's accessible from anywhere in the app
  */
 function FloatingBugButton({ onClick }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Show tooltip on first visit

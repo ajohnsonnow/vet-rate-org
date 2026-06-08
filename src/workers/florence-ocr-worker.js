@@ -381,7 +381,7 @@ function unloadModel() {
   tokenizer = null;
   isLoading = false;
 
-  // Trigger garbage collection hint
+  // eslint-disable-next-line no-undef
   if (typeof gc !== "undefined") gc();
 
   self.postMessage({

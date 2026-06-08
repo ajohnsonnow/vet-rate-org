@@ -30,7 +30,9 @@ const GDRIVE_CONFIG = {
 let accessToken = null;
 let currentUser = null;
 let tokenClient = null;
+// eslint-disable-next-line no-unused-vars
 let gapiInited = false;
+// eslint-disable-next-line no-unused-vars
 let gisInited = false;
 
 /**
@@ -49,6 +51,7 @@ function initializeGapiClient() {
           discoveryDocs: GDRIVE_CONFIG.discoveryDocs,
         });
         gapiInited = true;
+        // eslint-disable-next-line no-console
         console.log("✅ GAPI client initialized");
         resolve(true);
       } catch (error) {
@@ -88,11 +91,13 @@ function initializeGisClient() {
             return;
           }
           accessToken = response.access_token;
+          // eslint-disable-next-line no-console
           console.log("✅ Access token received");
         },
       });
 
       gisInited = true;
+      // eslint-disable-next-line no-console
       console.log("✅ GIS client initialized");
       resolve(true);
     } catch (error) {
@@ -107,6 +112,7 @@ function initializeGisClient() {
  */
 export async function initializeGoogleDrive() {
   try {
+    // eslint-disable-next-line no-console
     console.log("🔄 Initializing Google Drive...");
 
     // Check for required scripts
@@ -136,6 +142,7 @@ export async function initializeGoogleDrive() {
       window.gapi.client.setToken({ access_token: accessToken });
     }
 
+    // eslint-disable-next-line no-console
     console.log("✅ Google Drive API ready");
     return true;
   } catch (error) {
@@ -225,6 +232,7 @@ export async function signOutOfGoogleDrive() {
   if (accessToken) {
     // Revoke token
     window.google.accounts.oauth2.revoke(accessToken, () => {
+      // eslint-disable-next-line no-console
       console.log("✅ Token revoked");
     });
   }
@@ -234,6 +242,7 @@ export async function signOutOfGoogleDrive() {
   sessionStorage.removeItem("gdrive_token");
   window.gapi.client.setToken(null);
 
+  // eslint-disable-next-line no-console
   console.log("✅ Signed out of Google Drive");
 }
 
@@ -278,6 +287,7 @@ async function getOrCreateBackupFolder() {
       fields: "id",
     });
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Created backup folder: ${GDRIVE_CONFIG.folderName}`);
     return folder.result.id;
   } catch (error) {
@@ -463,6 +473,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
 
     const result = await response.json();
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Backup saved to Google Drive: ${fileName}`);
 
     return { fileId: result.id, fileName };
@@ -509,6 +520,7 @@ export async function restoreBackupFromGoogleDrive(fileId, password = null) {
     const jsonData = await decryptData(encryptedData, encryptionKey);
     const data = JSON.parse(jsonData);
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Backup restored from Google Drive`);
 
     return data;
@@ -524,6 +536,7 @@ export async function restoreBackupFromGoogleDrive(fileId, password = null) {
 export async function deleteBackupFromGoogleDrive(fileId) {
   try {
     await window.gapi.client.drive.files.delete({ fileId });
+    // eslint-disable-next-line no-console
     console.log(`✅ Backup deleted from Google Drive`);
   } catch (error) {
     console.error("Error deleting backup:", error);
@@ -541,6 +554,7 @@ export function setupAutoBackup(getDataCallback, intervalMinutes = 30) {
         if (isSignedInToGoogleDrive()) {
           const data = getDataCallback();
           await saveBackupToGoogleDrive(data);
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Auto-backup completed at ${new Date().toLocaleTimeString()}`,
           );

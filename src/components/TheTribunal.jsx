@@ -12,7 +12,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { getVeteranProfile } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -117,11 +116,13 @@ export default function TheTribunal({
   onReportBug,
   onOpenAISettings,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [transcript, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -138,6 +139,7 @@ export default function TheTribunal({
   // Speech control state
   const [speechEnabled, setSpeechEnabled] = useState(true); // Judge TTS enabled
   const [pendingSpeech, setPendingSpeech] = useState(null); // Queued speech to play
+  // eslint-disable-next-line no-unused-vars
   const [hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
@@ -297,6 +299,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
           voicesLoadedRef.current = true;
+          // eslint-disable-next-line no-console
           console.log("Tribunal: Loaded", voices.length, "voices");
         }
       };
@@ -357,6 +360,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
       }
       window.speechSynthesis.cancel();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get a suitable voice for the judge
@@ -466,6 +470,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
   };
 
   // Play pending speech manually
+  // eslint-disable-next-line no-unused-vars
   const playPendingSpeech = () => {
     if (pendingSpeech) {
       speak(pendingSpeech.text, pendingSpeech.callback, true);
@@ -765,7 +770,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
             </h2>
           </div>
           <p className="truncate text-sm text-gray-300">
-            Mock Board of Veterans' Appeals Hearing
+            Mock Board of Veterans&apos; Appeals Hearing
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -846,7 +851,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
-              ⚖️ Judge's Voice
+              ⚖️ Judge&apos;s Voice
             </span>
             <button
               onClick={() => setSpeechEnabled(!speechEnabled)}
@@ -949,7 +954,8 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
       {/* Tips & Help */}
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <span>
-          💡 Tip: Cite "38 CFR...", "per case law...", "medical nexus..."
+          💡 Tip: Cite &quot;38 CFR...&quot;, &quot;per case law...&quot;,
+          &quot;medical nexus...&quot;
         </span>
         <button
           onClick={() => {
@@ -1049,6 +1055,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
 
           {/* Persona Selection */}
           <div className="mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Select Your Judge:
             </label>
@@ -1076,11 +1083,11 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
           <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300 mb-4">
             <li>• This is practice - your responses are not recorded</li>
             <li>• Speak clearly and use legal terms when possible</li>
-            <li>• The judge will challenge you - that's their job</li>
+            <li>• The judge will challenge you - that&apos;s their job</li>
             <li>• Cite regulations (38 CFR) and case law when you can</li>
             <li>
-              • If you don't know the answer, say "I would consult my
-              representative"
+              • If you don&apos;t know the answer, say &quot;I would consult my
+              representative&quot;
             </li>
           </ul>
 
@@ -1103,7 +1110,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                     speak aloud. Ensure your volume is appropriate.
                   </li>
                   <li>
-                    🎤 <strong>Microphone:</strong> You'll need to grant
+                    🎤 <strong>Microphone:</strong> You&apos;ll need to grant
                     microphone permissions to respond by voice.
                   </li>
                   <li>

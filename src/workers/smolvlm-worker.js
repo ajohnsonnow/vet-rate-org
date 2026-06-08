@@ -257,6 +257,7 @@ function unloadModel() {
   processor = null;
   isLoading = false;
 
+  // eslint-disable-next-line no-undef
   if (typeof gc !== "undefined") gc();
 
   self.postMessage({ status: "unloaded", message: "SmolVLM unloaded." });

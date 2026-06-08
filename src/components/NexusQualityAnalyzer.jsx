@@ -7,7 +7,7 @@
  * Data-driven recommendations from 18,609 BVA decisions analysis.
  */
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   NEXUS_QUALITY_OUTCOMES,
   NEXUS_PROVIDER_OUTCOMES,
@@ -62,6 +62,7 @@ const NexusQualityAnalyzer = ({ onClose }) => {
       <div className="space-y-6">
         {/* Provider Type Selection */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Who wrote your nexus opinion?
           </label>
@@ -109,6 +110,7 @@ const NexusQualityAnalyzer = ({ onClose }) => {
 
         {/* Nexus Text Input */}
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Paste your nexus opinion text (we analyze it locally - nothing is
             sent anywhere):

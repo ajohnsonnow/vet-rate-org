@@ -6,7 +6,7 @@
  * Displays potential claims identified from C-File analysis
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Likelihood styles
@@ -39,7 +39,7 @@ const NEXUS_STYLES = {
 };
 
 export default function CFileClaimsCards({ claims = [] }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [filter, setFilter] = useState("all");
   const [expandedClaim, setExpandedClaim] = useState(null);
 
@@ -66,6 +66,7 @@ export default function CFileClaimsCards({ claims = [] }) {
     <div className="p-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "high" ? "ring-2 ring-green-500" : ""} ${LIKELIHOOD_STYLES.high.bg} ${LIKELIHOOD_STYLES.high.border}`}
           onClick={() => setFilter(filter === "high" ? "all" : "high")}
@@ -81,6 +82,7 @@ export default function CFileClaimsCards({ claims = [] }) {
           </div>
         </div>
 
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "medium" ? "ring-2 ring-amber-500" : ""} ${LIKELIHOOD_STYLES.medium.bg} ${LIKELIHOOD_STYLES.medium.border}`}
           onClick={() => setFilter(filter === "medium" ? "all" : "medium")}
@@ -96,6 +98,7 @@ export default function CFileClaimsCards({ claims = [] }) {
           </div>
         </div>
 
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "low" ? "ring-2 ring-red-500" : ""} ${LIKELIHOOD_STYLES.low.bg} ${LIKELIHOOD_STYLES.low.border}`}
           onClick={() => setFilter(filter === "low" ? "all" : "low")}
@@ -137,6 +140,7 @@ export default function CFileClaimsCards({ claims = [] }) {
                 className={`${style.bg} border-2 ${style.border} rounded-xl overflow-hidden transition-all hover:shadow-lg ${isExpanded ? "md:col-span-2" : ""}`}
               >
                 {/* Header */}
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                   className="p-4 cursor-pointer"
                   onClick={() => setExpandedClaim(isExpanded ? null : idx)}
@@ -202,7 +206,7 @@ export default function CFileClaimsCards({ claims = [] }) {
                     {claim.missing_element && (
                       <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                          ⚠️ What's Missing:
+                          ⚠️ What&apos;s Missing:
                         </p>
                         <p className="text-gray-700 dark:text-gray-300">
                           {claim.missing_element}
@@ -244,7 +248,7 @@ export default function CFileClaimsCards({ claims = [] }) {
                     {/* The Big Three Checklist */}
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       <p className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wider">
-                        "The Big Three" Checklist
+                        &quot;The Big Three&quot; Checklist
                       </p>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">

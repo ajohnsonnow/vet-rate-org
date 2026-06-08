@@ -37,6 +37,7 @@ export const useFormationQueue = () => {
     const savedFormation = loadFormationState();
     if (savedFormation && savedFormation.length > 0) {
       setFormation(savedFormation);
+      // eslint-disable-next-line no-console
       console.log(
         `🚩 Formation initialized with ${savedFormation.length} documents`,
       );
@@ -52,6 +53,7 @@ export const useFormationQueue = () => {
       setCurrentEntry(current);
 
       // Debug logging
+      // eslint-disable-next-line no-console
       console.log("📊 Formation stats updated:", {
         total: newStats.total,
         waiting: newStats.waiting,
@@ -72,7 +74,9 @@ export const useFormationQueue = () => {
    * Initialize formation from files
    */
   const initializeFormation = useCallback((files) => {
+    // eslint-disable-next-line no-console
     console.log("🚩 initializeFormation called with:", files?.length, "files");
+    // eslint-disable-next-line no-console
     console.log("🚩 Files are:", files);
 
     if (!files || files.length === 0) {
@@ -81,10 +85,13 @@ export const useFormationQueue = () => {
     }
 
     const newFormation = buildFormation(files);
+    // eslint-disable-next-line no-console
     console.log("🚩 buildFormation returned:", newFormation?.length, "entries");
+    // eslint-disable-next-line no-console
     console.log("🚩 First entry:", newFormation?.[0]);
 
     setFormation(newFormation);
+    // eslint-disable-next-line no-console
     console.log(
       `🚩 Formation state updated with ${newFormation.length} documents`,
     );
@@ -100,6 +107,7 @@ export const useFormationQueue = () => {
       const combined = [...formation, ...newEntries];
       const sorted = sortFormation(combined);
       setFormation(sorted);
+      // eslint-disable-next-line no-console
       console.log(`🚩 Added ${newEntries.length} documents to formation`);
       return sorted;
     },
@@ -151,6 +159,7 @@ export const useFormationQueue = () => {
         updateEntry(next.id, {
           status: FORMATION_STATUS.CALLED,
         });
+        // eslint-disable-next-line no-console
         console.log(`📞 Called to inspection: ${next.filename}`);
       }
 
@@ -179,6 +188,7 @@ export const useFormationQueue = () => {
         updateEntry(next.id, {
           status: FORMATION_STATUS.CALLED,
         });
+        // eslint-disable-next-line no-console
         console.log(`📞 Called to inspection: ${next.filename}`);
       }
 
@@ -207,6 +217,7 @@ export const useFormationQueue = () => {
         updateEntry(next.id, {
           status: FORMATION_STATUS.CALLED,
         });
+        // eslint-disable-next-line no-console
         console.log(`📞 Called to inspection: ${next.filename}`);
       }
 
@@ -224,6 +235,7 @@ export const useFormationQueue = () => {
       updateEntry(first.id, {
         status: FORMATION_STATUS.CALLED,
       });
+      // eslint-disable-next-line no-console
       console.log(`🚩 Formation begun - First call: ${first.filename}`);
       return first;
     }
@@ -237,6 +249,7 @@ export const useFormationQueue = () => {
     (fromIndex, toIndex) => {
       const reordered = reorderFormation(formation, fromIndex, toIndex);
       setFormation(reordered);
+      // eslint-disable-next-line no-console
       console.log(`🔄 Formation reordered: ${fromIndex} → ${toIndex}`);
     },
     [formation],
@@ -249,6 +262,7 @@ export const useFormationQueue = () => {
     (entryId) => {
       const filtered = removeFromFormation(formation, entryId);
       setFormation(filtered);
+      // eslint-disable-next-line no-console
       console.log(`❌ Removed document from formation`);
     },
     [formation],
@@ -262,6 +276,7 @@ export const useFormationQueue = () => {
     setCurrentEntry(null);
     setStats(null);
     clearFormationState();
+    // eslint-disable-next-line no-console
     console.log("🚩 Formation dismissed");
   }, []);
 

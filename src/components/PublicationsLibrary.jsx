@@ -8,7 +8,7 @@
  * "Know your regs, know your rights."
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   BookOpen,
   Download,
@@ -263,7 +263,7 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
  * Main Publications Library Component
  */
 export default function PublicationsLibrary() {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -415,6 +415,7 @@ export default function PublicationsLibrary() {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Branch Filter */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Branch
               </label>
@@ -434,6 +435,7 @@ export default function PublicationsLibrary() {
 
             {/* Category Filter */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
               </label>

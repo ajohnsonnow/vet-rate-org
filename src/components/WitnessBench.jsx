@@ -10,7 +10,7 @@
  * This tool asks the RIGHT questions to get powerful buddy statements.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
@@ -22,7 +22,7 @@ import {
   AlignmentType,
 } from "docx";
 import jsPDF from "jspdf";
-import { saveClaim, generateId } from "../utils/claimsStorage";
+import { saveClaim } from "../utils/claimsStorage";
 import {
   generateAI,
   isAnyAIAvailable,
@@ -468,7 +468,7 @@ export default function WitnessBench({
   const [step, setStep] = useState(1);
   const [relationship, setRelationship] = useState("");
   const [condition, setCondition] = useState("");
-  const [conditionCategory, setConditionCategory] = useState("");
+  const [_conditionCategory, setConditionCategory] = useState("");
   const [witnessName, setWitnessName] = useState("");
 
   // Interview state
@@ -585,6 +585,7 @@ export default function WitnessBench({
       setQuestions(getBaseQuestions(relationship, category));
       setStep(2);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relationship, condition, useAI, aiAvailable, detectConditionCategory]);
 
   /**
@@ -650,6 +651,7 @@ export default function WitnessBench({
     } finally {
       setIsGeneratingStatement(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relationship, condition, answers, useAI]);
 
   /**
@@ -1266,6 +1268,7 @@ export default function WitnessBench({
               <SmartAILoadButton
                 toolId="witness-bench"
                 onLoadComplete={(model) => {
+                  // eslint-disable-next-line no-console
                   console.log(
                     "Smart AI loaded for Witness Bench:",
                     model?.name,

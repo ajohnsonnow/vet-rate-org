@@ -7,13 +7,13 @@
  * Built by a fellow veteran. "Your field manual, always accessible."
  */
 
-import React, { useState, useEffect } from "react";
-import { Download, X, Smartphone, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Download, X, Smartphone } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const PWAInstallButton = ({ className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -46,6 +46,7 @@ const PWAInstallButton = ({ className = "" }) => {
 
     // Listen for successful installation
     const handleAppInstalled = () => {
+      // eslint-disable-next-line no-console
       console.log("PWA was installed");
       setIsInstalled(true);
       setShowPrompt(false);
@@ -77,6 +78,7 @@ const PWAInstallButton = ({ className = "" }) => {
 
     // Wait for the user's response
     const { outcome } = await deferredPrompt.userChoice;
+    // eslint-disable-next-line no-console
     console.log(`User response to install prompt: ${outcome}`);
 
     // Clear the saved prompt
@@ -137,7 +139,8 @@ const PWAInstallButton = ({ className = "" }) => {
                 2.
               </span>
               <span>
-                Scroll down and tap <strong>"Add to Home Screen"</strong>{" "}
+                Scroll down and tap{" "}
+                <strong>&quot;Add to Home Screen&quot;</strong>{" "}
                 <span className="text-xl">➕</span>
               </span>
             </li>
@@ -146,7 +149,7 @@ const PWAInstallButton = ({ className = "" }) => {
                 3.
               </span>
               <span>
-                Tap <strong>"Add"</strong> in the top right corner
+                Tap <strong>&quot;Add&quot;</strong> in the top right corner
               </span>
             </li>
           </ol>

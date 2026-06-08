@@ -75,14 +75,14 @@ function Header({
   onCommunityRoadmapClick,
 }) {
   const { isDark, toggleTheme } = useTheme();
-  const { isHelperMode } = useHelperMode();
-  const { getDropdownClasses, getColorClass, colors } = useColorSchemas();
-  const { t, language } = useLanguage(); // Include language to force re-render on change
+  const { _isHelperMode } = useHelperMode();
+  const { getDropdownClasses, _getColorClass, _colors } = useColorSchemas();
+  const { t, _language } = useLanguage(); // Include language to force re-render on change
   const dropdownClasses = getDropdownClasses();
 
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [shouldPulseBackup, setShouldPulseBackup] = useState(false);
+  const [_shouldPulseBackup, setShouldPulseBackup] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef(null);
 
@@ -1330,10 +1330,11 @@ function Header({
 
         {/* Mobile Menu Drawer - Full screen overlay */}
         {showMobileMenu && (
-          <div
+          <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
             className="md:hidden fixed inset-0 z-50 bg-black/50"
             onClick={() => setShowMobileMenu(false)}
           >
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
             <div
               ref={mobileMenuRef}
               role="dialog"

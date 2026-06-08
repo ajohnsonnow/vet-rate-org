@@ -61,9 +61,11 @@ export default function MusterCallFlow({ onOpenDD214Analyzer }) {
             );
             setShowBriefing(false);
             setBriefingData(null);
+            // eslint-disable-next-line no-console
             console.log("Data committed to My Packet:", confirmedData);
           }}
           onEdit={(section, field, value) => {
+            // eslint-disable-next-line no-console
             console.log(`User edited ${field} in ${section}:`, value);
           }}
         />

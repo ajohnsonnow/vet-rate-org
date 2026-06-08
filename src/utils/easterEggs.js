@@ -42,7 +42,7 @@ export const CHEAT_CODES = {
 export const useIDDQD = () => {
   const [isActive, setIsActive] = useState(false);
   const [activationCount, setActivationCount] = useState(0);
-  const [inputBuffer, setInputBuffer] = useState("");
+  const [_inputBuffer, setInputBuffer] = useState("");
 
   useEffect(() => {
     const handleKeydown = (e) => {
@@ -52,6 +52,7 @@ export const useIDDQD = () => {
           const newBuffer = (prev + e.key.toLowerCase()).slice(-5);
 
           if (newBuffer === CHEAT_CODES.IDDQD) {
+            // eslint-disable-next-line no-console
             console.log("🔫 IDDQD ACTIVATED - Stress Relief Division Online");
             setIsActive(true);
             setActivationCount((c) => c + 1);
@@ -108,7 +109,7 @@ export const useIDDQD = () => {
  */
 export const useKonamiCode = () => {
   const [isTriggered, setIsTriggered] = useState(false);
-  const [sequence, setSequence] = useState([]);
+  const [_sequence, setSequence] = useState([]);
 
   useEffect(() => {
     const handleKeydown = (e) => {
@@ -116,6 +117,7 @@ export const useKonamiCode = () => {
         const newSeq = [...prev, e.key].slice(-10);
 
         if (JSON.stringify(newSeq) === JSON.stringify(CHEAT_CODES.KONAMI)) {
+          // eslint-disable-next-line no-console
           console.log("🎮 KONAMI CODE ACTIVATED");
           setIsTriggered(true);
           return [];
@@ -187,6 +189,7 @@ export const useGamepadBridge = (isActive) => {
         if (!isConnected) {
           setIsConnected(true);
           setControllerName(gp.id);
+          // eslint-disable-next-line no-console
           console.log("🎮 Controller connected:", gp.id);
         }
 

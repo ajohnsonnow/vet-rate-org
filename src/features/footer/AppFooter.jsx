@@ -187,6 +187,7 @@ export default function AppFooter() {
             </button>
           </div>
           <p className="text-center text-gray-400 text-sm">
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <span
               onClick={debugDumpHandler}
               className="cursor-default select-none"

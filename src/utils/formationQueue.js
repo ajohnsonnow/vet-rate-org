@@ -16,7 +16,7 @@
  * 7. Next in Formation - Move to next document
  */
 
-import { DOCUMENT_TYPES, classifyDocument } from "./documentClassifier";
+import { DOCUMENT_TYPES } from "./documentClassifier";
 
 /**
  * Priority levels for document types
@@ -358,6 +358,7 @@ export const loadFormationState = () => {
     const state = JSON.parse(saved);
     if (!state.formation || state.formation.length === 0) return null;
 
+    // eslint-disable-next-line no-console
     console.log(
       `📂 Loading ${state.formation.length} documents from saved formation`,
     );
@@ -377,6 +378,7 @@ export const loadFormationState = () => {
         status === FORMATION_STATUS.VERIFIED
       ) {
         status = FORMATION_STATUS.WAITING;
+        // eslint-disable-next-line no-console
         console.log(
           `   ⏸️ Reset ${entry.filename} from ${entry.status} to WAITING`,
         );

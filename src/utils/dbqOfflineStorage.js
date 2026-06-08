@@ -96,6 +96,7 @@ async function dbGetAll(storeName) {
 }
 
 // Helper to get all keys from a store
+// eslint-disable-next-line no-unused-vars
 async function dbGetAllKeys(storeName) {
   const db = await getDB();
   const tx = db.transaction(storeName, "readonly");

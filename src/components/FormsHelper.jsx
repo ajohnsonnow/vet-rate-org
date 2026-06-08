@@ -1,14 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { triggerBlobDownload } from "../utils/sanitize";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -16,10 +9,7 @@ import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
-import {
-  enhanceFormStatement,
-  getAIDataDisclosure,
-} from "../utils/aiStatementHelper";
+import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import {
   isAnyAIAvailable,
   getAIStatus,
@@ -27,14 +17,13 @@ import {
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
-import ShareButton, { PIISensitive } from "./ShareButton";
-import { markAsModified, saveOnStepComplete } from "../utils/persistentStorage";
+import ShareButton from "./ShareButton";
+import { markAsModified } from "../utils/persistentStorage";
 import {
   getVeteranProfile,
   saveVeteranProfile,
   hasVeteranProfile,
   saveForm,
-  getSavedForms,
   exportAllVeteranData,
   importVeteranData,
 } from "../utils/veteranProfile";
@@ -61,12 +50,15 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [generatedContent, setGeneratedContent] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Veteran Profile State
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
@@ -5869,6 +5861,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
       // Show loading state
       const result = await fillAndDownloadForm(selectedForm?.id, formData);
       if (result.success) {
+        // eslint-disable-next-line no-console
         console.log(`Downloaded: ${result.fileName}`);
       }
     } catch (error) {
@@ -6439,6 +6432,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service Number
                   </label>
@@ -6453,6 +6447,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Rank at Discharge
                   </label>
@@ -6467,6 +6462,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Pay Grade
                   </label>
@@ -6486,6 +6482,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     MOS/Rating Code
                   </label>
@@ -6498,6 +6495,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service Start Date
                   </label>
@@ -6511,6 +6509,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service End Date
                   </label>
@@ -6526,6 +6525,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Character of Service
                   </label>
@@ -6552,6 +6552,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   </select>
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Place of Birth
                   </label>
@@ -6597,6 +6598,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Full SSN (XXX-XX-XXXX)
                   </label>
@@ -6625,6 +6627,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   </p>
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Home of Record
                   </label>

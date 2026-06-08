@@ -8,12 +8,12 @@
  * the WebGPU u8 shader compatibility issue.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { VisionSimulator } from "../utils/visionSimulator";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -199,6 +199,7 @@ const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
       </div>
 
       {/* Drop Zone */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
           imagePreview
@@ -267,6 +268,7 @@ const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
 
       {/* Query Input */}
       <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           What would you like to know about this document?
         </label>

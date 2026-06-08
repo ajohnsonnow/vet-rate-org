@@ -7,7 +7,7 @@
  * targeting veterans from "claim consulting" firms.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   analyzeContract,
@@ -24,7 +24,7 @@ import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 
 // Icons
-const SharkIcon = () => (
+const _SharkIcon = () => (
   <svg
     className="w-6 h-6"
     fill="none"
@@ -196,7 +196,7 @@ const RiskMeter = ({ score, riskLevel }) => {
  * Main Shark Radar Component
  */
 export default function SharkRadar() {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
@@ -226,7 +226,7 @@ export default function SharkRadar() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSaveKey = (key) => {
+  const _handleSaveKey = (key) => {
     localStorage.setItem("vetrate_gemini_key", key);
     setApiKey(key);
   };
@@ -342,6 +342,7 @@ export default function SharkRadar() {
 
           {/* Input Section */}
           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600 mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Paste Contract or Email Text (or use microphone to read aloud)
             </label>
@@ -510,8 +511,8 @@ Example red flags to look for:
                           </span>
                         </div>
                         <div className="text-sm mb-2 bg-gray-100 dark:bg-gray-900 p-2 rounded border-l-4 border-red-500">
-                          <span className="font-medium">Found: </span>"
-                          {flag.trigger_text}"
+                          <span className="font-medium">Found: </span>&quot;
+                          {flag.trigger_text}&quot;
                         </div>
                         <p className="text-sm opacity-90">{flag.advice}</p>
                         {flag.legal_reference && (

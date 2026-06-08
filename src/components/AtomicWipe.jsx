@@ -13,7 +13,7 @@
  * - Privacy-conscious data clearing
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -27,14 +27,17 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
 
     try {
       // 1. Clear all localStorage
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing localStorage...");
       localStorage.clear();
 
       // 2. Clear all sessionStorage
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing sessionStorage...");
       sessionStorage.clear();
 
       // 3. Clear cookies
+      // eslint-disable-next-line no-console
       console.log("Clearing cookies...");
       document.cookie.split(";").forEach((c) => {
         const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
@@ -47,6 +50,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       });
 
       // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing IndexedDB...");
       if (window.indexedDB) {
         try {
@@ -55,12 +59,14 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             const databases = await window.indexedDB.databases();
             const deletePromises = databases.map((db) => {
               if (db.name) {
+                // eslint-disable-next-line no-console
                 console.log(`  Deleting database: ${db.name}`);
                 return new Promise((resolve) => {
                   const req = window.indexedDB.deleteDatabase(db.name);
                   req.onsuccess = () => resolve();
                   req.onerror = () => resolve();
                   req.onblocked = () => {
+                    // eslint-disable-next-line no-console
                     console.log(`  Database ${db.name} blocked, forcing...`);
                     setTimeout(resolve, 100);
                   };
@@ -70,6 +76,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             await Promise.all(deletePromises);
           } else {
             // Fallback: delete known database names
+            // eslint-disable-next-line no-console
             console.log("  Using fallback database deletion...");
             const knownDbs = [
               "vetrate-storage",
@@ -87,6 +94,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
                 try {
                   const req = window.indexedDB.deleteDatabase(dbName);
                   req.onsuccess = () => {
+                    // eslint-disable-next-line no-console
                     console.log(`  Deleted: ${dbName}`);
                     resolve();
                   };
@@ -107,11 +115,13 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       }
 
       // 5. Clear Cache Storage (PWA caches)
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing Cache Storage...");
       if ("caches" in window) {
         try {
           const cacheNames = await caches.keys();
           const deletePromises = cacheNames.map((cacheName) => {
+            // eslint-disable-next-line no-console
             console.log(`  Deleting cache: ${cacheName}`);
             return caches.delete(cacheName);
           });
@@ -122,12 +132,14 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       }
 
       // 6. Unregister Service Workers
+      // eslint-disable-next-line no-console
       console.log("🔥 Unregistering Service Workers...");
       if ("serviceWorker" in navigator) {
         try {
           const registrations =
             await navigator.serviceWorker.getRegistrations();
           const unregisterPromises = registrations.map((registration) => {
+            // eslint-disable-next-line no-console
             console.log("  Unregistering service worker");
             return registration.unregister();
           });
@@ -137,6 +149,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log("✅ Atomic Wipe complete!");
 
       // Notify completion
@@ -323,8 +336,8 @@ function ConfirmModal({ isWiping, onConfirm, onCancel }) {
 
       <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
         <p className="text-xs text-amber-700 dark:text-amber-300">
-          <strong>Note:</strong> If you want to keep your data, use "Export
-          Backup" in The Bunker first.
+          <strong>Note:</strong> If you want to keep your data, use &quot;Export
+          Backup&quot; in The Bunker first.
         </p>
       </div>
     </ResponsiveModal>
@@ -355,7 +368,7 @@ export function BunkerPrivacyNotice() {
           <p
             className={`text-sm ${isDark || isTbiComfort ? "text-gray-400" : "text-slate-600"} mt-1`}
           >
-            Your data is currently stored in your browser's local sandbox.
+            Your data is currently stored in your browser&apos;s local sandbox.
             Exporting a backup creates a private file on your computer.
             Vet-Rate.org never sees, stores, or transmits this data.
           </p>

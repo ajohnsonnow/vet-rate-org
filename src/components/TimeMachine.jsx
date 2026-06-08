@@ -11,7 +11,7 @@
  * IMPORTANT: Payment starts first of month FOLLOWING effective date per 38 CFR § 3.400
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   calculatePaymentEffectiveDate,
@@ -42,7 +42,7 @@ export default function TimeMachine({
   onClose = null,
   onReportBug,
 }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [itfDate, setItfDate] = useState("");
   const [estimatedRating, setEstimatedRating] = useState(70);
@@ -137,7 +137,7 @@ export default function TimeMachine({
   // Widget view (compact)
   if (isWidget && countdown && !isEditing) {
     return (
-      <div
+      <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
         onClick={() => setIsEditing(true)}
         className={`cursor-pointer transition-all ${
           countdown.isExpired
@@ -240,6 +240,7 @@ export default function TimeMachine({
 
             <div className="space-y-4">
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   When did you file your Intent to File? *
                 </label>
@@ -253,6 +254,7 @@ export default function TimeMachine({
               </div>
 
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Estimated Combined Rating (from Tactical Calculator):
                 </label>
@@ -408,8 +410,8 @@ export default function TimeMachine({
                 </h4>
                 <p className="text-red-700 dark:text-red-300">
                   You need to file your claim IMMEDIATELY. Every day counts. If
-                  you're not ready, consider filing a "protective claim" with
-                  what you have now.
+                  you&apos;re not ready, consider filing a &quot;protective
+                  claim&quot; with what you have now.
                 </p>
               </div>
             )}

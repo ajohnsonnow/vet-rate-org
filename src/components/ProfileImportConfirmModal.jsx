@@ -7,7 +7,7 @@
  * Prevents accidental overwriting of existing information
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -21,7 +21,7 @@ const ProfileImportConfirmModal = ({
   onConfirm,
   onCancel,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
@@ -394,7 +394,7 @@ const ProfileImportConfirmModal = ({
               <span className="text-lg">⚠️</span>
               <span>
                 <strong>Important:</strong> Review the extracted information
-                below. Uncheck any fields you don't want to update. Fields
+                below. Uncheck any fields you don&apos;t want to update. Fields
                 already in your profile that differ from the imported data are
                 pre-selected for your review.
               </span>

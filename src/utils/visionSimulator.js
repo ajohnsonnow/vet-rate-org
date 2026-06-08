@@ -81,6 +81,7 @@ async function analyzeImageStructure(imageBlob) {
         const brightness = (r + g + b) / 3;
 
         totalBrightness += brightness;
+        // eslint-disable-next-line no-unused-vars
         if (brightness < 64) darkPixels++;
         if (brightness > 192) lightPixels++;
       }
@@ -229,7 +230,7 @@ function detectDD214Elements(text) {
   }
 
   // Extract service dates
-  const datePattern = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/g;
+  const datePattern = /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g;
   const dates = text.match(datePattern) || [];
   if (dates.length >= 2) {
     elements.serviceInfo.possibleDates = dates.slice(0, 4);

@@ -14,7 +14,7 @@
  * @author Vet-Rate.org Stress Relief Division
  */
 
-import React, {
+import {
   useState,
   useEffect,
   useRef,
@@ -33,8 +33,9 @@ import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 // Lazy load the heavy iframe only when activated
 const DoomFrame = lazy(() =>
   Promise.resolve({
-    default: ({ onClose }) => (
+    default: ({ _onClose }) => (
       <iframe
+        title="DOOM Classic (1993)"
         src="https://archive.org/embed/msdos_DOOM_1993"
         aria-label="DOOM - Stress Relief Division"
         className="w-full h-full border-0"
@@ -133,7 +134,7 @@ const DoomLauncher = ({
               </p>
               <p>
                 Pursuant to the Articles of Incorporation for Vet-Rate.org, this
-                "Stress Reduction Module" is intended for therapeutic
+                &quot;Stress Reduction Module&quot; is intended for therapeutic
                 demon-slaying only. Vet-Rate.org is not liable for any
                 productivity loss, sudden urges to hunt for blue keycards, or
                 delayed VA form submissions.

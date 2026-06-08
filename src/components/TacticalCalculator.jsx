@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
-import ShareButton, { PIISensitive } from "./ShareButton";
+import ShareButton from "./ShareButton";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { FocusToggle } from "../contexts/FocusModeContext";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -12,7 +11,6 @@ import {
   calculateWhatIf,
   calculateNeededRating,
   detectPyramiding,
-  getAmputationMinimumRating,
   BODY_PARTS,
   VA_PAY_RATES_2026,
 } from "../utils/vaCalculator";
@@ -168,6 +166,7 @@ const TacticalCalculator = ({
 
   // Calculate results from My Ratings
   const myRatingsResults = calculateVARating(myRatings);
+  // eslint-disable-next-line no-unused-vars
   const myRatingsCompensation = calculateCompensation(
     myRatingsResults.combinedRating,
     dependents,
@@ -1578,6 +1577,7 @@ const TacticalCalculator = ({
 
                   <div className="space-y-4">
                     {/* Spouse */}
+                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                     <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
                       <input
                         type="checkbox"
@@ -1608,7 +1608,9 @@ const TacticalCalculator = ({
 
                     {/* Spouse A&A */}
                     {dependents.married && (
-                      <label className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
+                      <label
+                        className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750" /* eslint-disable-line jsx-a11y/label-has-associated-control */
+                      >
                         <input
                           type="checkbox"
                           checked={dependents.spouseAidAttendance}
@@ -1938,6 +1940,7 @@ const TacticalCalculator = ({
                       </div>
                     </div>
 
+                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                     <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
                       <input
                         type="checkbox"

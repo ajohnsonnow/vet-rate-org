@@ -94,7 +94,8 @@ function passthrough(level, entry) {
       : level === "warn"
         ? console.warn
         : level === "debug"
-          ? console.debug
+          ? // eslint-disable-next-line no-console
+            console.debug
           : console.info;
   if (entry.fields) fn(`[${level}] ${entry.msg}`, entry.fields);
   else fn(`[${level}] ${entry.msg}`);

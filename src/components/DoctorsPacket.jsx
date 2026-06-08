@@ -188,8 +188,8 @@ export default function DoctorsPacket({
   onClose,
   primaryCondition: initialPrimary = "",
   secondaryCondition: initialSecondary = "",
-  existingMechanism = null,
-  existingCitations = null,
+  _existingMechanism = null,
+  _existingCitations = null,
   onOpenAISettings,
 }) {
   // State
@@ -552,6 +552,7 @@ Vet-Rate.org - Helping Veterans Win Claims`;
 
           {/* Conditions */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Primary Condition (Service-Connected)
             </label>
@@ -572,6 +573,7 @@ Vet-Rate.org - Helping Veterans Win Claims`;
           </div>
 
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Secondary Condition (Claimed)
             </label>

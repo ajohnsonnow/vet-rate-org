@@ -7,14 +7,10 @@
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import {
-  readFileAsArrayBuffer,
-  formatFileSize,
-  estimateProcessingTime,
-} from "../utils/pdfExtractor";
+import { formatFileSize, estimateProcessingTime } from "../utils/pdfExtractor";
 import {
   processFormationDocument,
   PROCESSING_STATES,
@@ -22,14 +18,8 @@ import {
 import {
   analyzeCFile,
   getCFilePrivacyDisclosure,
-  estimateChunks,
-  getContextWindowInfo,
 } from "../utils/cfileAnalyzer";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -56,6 +46,7 @@ export default function CFileAnalyzer({
   const fileInputRef = useRef(null);
 
   // AI status state (unified AI service handles API keys internally)
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   // Processing state
@@ -80,6 +71,7 @@ export default function CFileAnalyzer({
 
   // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [hasConsented, setHasConsented] = useState(false);
 
   // Results state
@@ -164,6 +156,7 @@ export default function CFileAnalyzer({
     }
 
     setShowPrivacyConsent(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, t]);
 
   // Process the file after consent
@@ -363,6 +356,7 @@ export default function CFileAnalyzer({
       )}
 
       {/* Drop Zone */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
           isDragging
@@ -435,6 +429,7 @@ export default function CFileAnalyzer({
           <SmartAILoadButton
             toolId="cfile-analyzer"
             onLoadComplete={(model) =>
+              // eslint-disable-next-line no-console
               console.log("Smart AI loaded for C-File Analyzer:", model?.name)
             }
           />

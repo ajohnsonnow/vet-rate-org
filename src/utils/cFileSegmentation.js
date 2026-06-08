@@ -25,11 +25,7 @@
  * for current ratings. Work backwards from there.
  */
 
-import {
-  parseVADocument,
-  parseCodeSheet,
-  VA_SECTION_HEADERS,
-} from "./vaDocumentParser.js";
+import { parseVADocument, parseCodeSheet } from "./vaDocumentParser.js";
 
 /**
  * Document type signatures for segmentation
@@ -175,6 +171,7 @@ export const DOCUMENT_SIGNATURES = {
 /**
  * Page break patterns commonly found in VA documents
  */
+// eslint-disable-next-line no-unused-vars
 const PAGE_BREAK_PATTERNS = [
   /(?:^|\n)[-=]{20,}(?:\n|$)/,
   /(?:^|\n)PAGE\s*\d+\s*(?:OF\s*\d+)?(?:\n|$)/i,

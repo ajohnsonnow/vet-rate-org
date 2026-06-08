@@ -29,8 +29,8 @@ const loadWllama = async () => {
 };
 
 // Storage keys
-const WLLAMA_CACHE_KEY = "vetrate_wllama_cache";
-const WLLAMA_CONFIG_KEY = "vetrate_wllama_config";
+const _WLLAMA_CACHE_KEY = "vetrate_wllama_cache";
+const _WLLAMA_CONFIG_KEY = "vetrate_wllama_config";
 
 /**
  * Model configurations for Warrant Council agents
@@ -111,11 +111,13 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
   const { onProgress, useCache = true } = options;
 
   if (isInitializing) {
+    // eslint-disable-next-line no-console
     console.log("[Wllama] Already initializing...");
     return false;
   }
 
   if (wllamaInstance && currentModel === modelId) {
+    // eslint-disable-next-line no-console
     console.log("[Wllama] Model already loaded:", modelId);
     return true;
   }
@@ -131,6 +133,7 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
       throw new Error(`Unknown model: ${modelId}`);
     }
 
+    // eslint-disable-next-line no-console
     console.log(`[Wllama] Initializing ${modelConfig.name}...`);
 
     // Create Wllama instance
@@ -149,6 +152,7 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     try {
       const response = await fetch(modelUrl, { method: "HEAD" });
       if (!response.ok) {
+        // eslint-disable-next-line no-console
         console.log("[Wllama] Primary URL not available, using fallback");
         modelUrl = modelConfig.fallbackUrl;
       }
@@ -167,6 +171,7 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     currentModel = modelId;
     isInitializing = false;
 
+    // eslint-disable-next-line no-console
     console.log(`[Wllama] ${modelConfig.name} loaded successfully`);
     return true;
   } catch (error) {
@@ -228,6 +233,7 @@ ${prompt}
     return result.trim();
   } catch (error) {
     if (error.name === "AbortError") {
+      // eslint-disable-next-line no-console
       console.log("[Wllama] Generation aborted");
       return null;
     }
@@ -329,7 +335,7 @@ export const checkWasmSupport = () => {
 /**
  * Estimate model download size
  */
-export const getModelSize = (modelId) => {
+export const getModelSize = (_modelId) => {
   // Q4_K_M 7B models are approximately 4.4GB
   return {
     bytes: 4683073600,

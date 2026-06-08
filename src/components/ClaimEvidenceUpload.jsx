@@ -14,19 +14,16 @@
  * @see https://developer.va.gov/explore/benefits/docs/claims
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   Upload,
-  FileText,
   CheckCircle,
-  XCircle,
   Loader2,
   AlertCircle,
   Info,
   Trash2,
   X,
-  File,
   FileCheck,
   Shield,
   Sparkles,
@@ -80,6 +77,7 @@ const DOCUMENT_TYPES = [
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 // Accepted file types
+// eslint-disable-next-line no-unused-vars
 const ACCEPTED_TYPES = [".pdf", "application/pdf"];
 
 const ClaimEvidenceUpload = ({
@@ -89,6 +87,7 @@ const ClaimEvidenceUpload = ({
   onClose,
   claimDetails = null,
 }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [documentType, setDocumentType] = useState("L049"); // Default to DBQ
@@ -218,6 +217,7 @@ const ClaimEvidenceUpload = ({
   };
 
   // Get selected document type info
+  // eslint-disable-next-line no-unused-vars
   const selectedDocType = DOCUMENT_TYPES.find((d) => d.id === documentType);
 
   const footer = (

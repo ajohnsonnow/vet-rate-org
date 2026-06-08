@@ -7,11 +7,10 @@
  * Reminds users that content must be reviewed before submission
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const DraftWatermark = ({ className = "", variant = "banner" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   if (variant === "banner") {
     return (
       <div

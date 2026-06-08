@@ -56,7 +56,7 @@ export const useRedditClipboard = (resetDuration = 2000) => {
 
         // Pattern D: M21-1 Manual References (e.g., "M21-1 V.ii.3")
         .replace(
-          /\b(M21-1(?:\s+[IVX\.]+\w+)?)/gi,
+          /\b(M21-1(?:\s+[IVX.]+\w+)?)/gi,
           (match) => `[${match}](${KNOWVA_M21})`,
         )
 
@@ -155,7 +155,7 @@ export const useRedditClipboard = (resetDuration = 2000) => {
 
           // Fix paragraphs: Reddit needs 2 newlines for paragraph break
           // This converts single newlines to double (except in code blocks, lists, or tables)
-          .replace(/([^\n])\n([^\n\*#>\|`-])/g, "$1\n\n$2")
+          .replace(/([^\n])\n([^\n*#>|`-])/g, "$1\n\n$2")
 
           // Ensure tables render by forcing newline before table headers
           .replace(/([^\n])\n(\|.*\|)/g, "$1\n\n$2")
@@ -197,6 +197,7 @@ export const useRedditClipboard = (resetDuration = 2000) => {
           setIsCopied(false);
         }, resetDuration);
 
+        // eslint-disable-next-line no-console
         console.log("📋 Copied to clipboard (Reddit formatted)");
         return true;
       } catch (err) {

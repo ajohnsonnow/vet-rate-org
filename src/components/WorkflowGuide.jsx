@@ -7,29 +7,23 @@
  * Maps out step-by-step paths through all available tools
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
   ChevronRight,
   CheckCircle,
-  Circle,
   Play,
   Map,
   FileText,
   TrendingUp,
   GitBranch,
   Scale,
-  Gavel,
-  RefreshCw,
   Stethoscope,
   Shield,
-  Target,
   Award,
   Clock,
   ArrowRight,
-  Bookmark,
-  Star,
   AlertTriangle,
 } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -840,6 +834,7 @@ const saveWorkflowProgress = (progress) => {
 // MAIN COMPONENT
 // ============================================
 export default function WorkflowGuide({ onClose, onToolSelect }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [progress, setProgress] = useState(loadWorkflowProgress);

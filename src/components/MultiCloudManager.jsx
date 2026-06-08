@@ -98,6 +98,7 @@ const MultiCloudManager = ({ onClose }) => {
     if (providerStates[selectedProvider]?.connected) {
       loadBackups();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvider, providerStates]);
 
   // Connect to a provider
@@ -114,7 +115,7 @@ const MultiCloudManager = ({ onClose }) => {
           google_drive: { ...prev.google_drive, connected: true, user },
         }));
       } else {
-        const result = await connectProvider(providerId);
+        const _result = await connectProvider(providerId);
         const state = getProviderState(providerId);
         setProviderStates((prev) => ({
           ...prev,
@@ -989,8 +990,8 @@ const MultiCloudManager = ({ onClose }) => {
                         ✓
                       </span>
                       <span>
-                        <strong>Zero Knowledge</strong> - We can't read your
-                        data even if we wanted to
+                        <strong>Zero Knowledge</strong> - We can&apos;t read
+                        your data even if we wanted to
                       </span>
                     </li>
                   </ul>
@@ -1132,8 +1133,8 @@ const MultiCloudManager = ({ onClose }) => {
                       Vet-Rate.org does NOT store Protected Health Information
                       (PHI).
                     </strong>{" "}
-                    All data remains in your browser's local storage and/or your
-                    personal cloud accounts.
+                    All data remains in your browser&apos;s local storage and/or
+                    your personal cloud accounts.
                   </p>
                   <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-900/50">
                     <p className="mb-2 font-medium text-amber-700 dark:text-amber-300">
@@ -1212,6 +1213,7 @@ const MultiCloudManager = ({ onClose }) => {
           onChange={(e) => setRestorePassphrase(e.target.value)}
           placeholder="Enter backup passphrase"
           className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          /* eslint-disable-next-line jsx-a11y/no-autofocus */
           autoFocus
         />
       </ResponsiveModal>

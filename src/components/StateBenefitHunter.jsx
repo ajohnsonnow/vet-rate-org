@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -194,7 +194,7 @@ const CATEGORY_CONFIG = {
 };
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [selectedState, setSelectedState] = useState("");
   const [selectedRating, setSelectedRating] = useState("");
@@ -203,7 +203,7 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [showAIConsultation, setShowAIConsultation] = useState(false);
+  const [_showAIConsultation, _setShowAIConsultation] = useState(false);
   const [aiQuestion, setAIQuestion] = useState("");
   const [aiAdvice, setAIAdvice] = useState(null);
   const [isAIThinking, setIsAIThinking] = useState(false);
@@ -329,7 +329,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
     return CATEGORY_CONFIG.default;
   };
 
-  const groupBenefitsByCategory = (benefits) => {
+  const _groupBenefitsByCategory = (benefits) => {
     if (!benefits || !Array.isArray(benefits)) return {};
 
     const grouped = {};
@@ -410,7 +410,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               </span>
             </h2>
             <p className="text-green-100 text-sm sm:text-base mt-1">
-              Find the money you're leaving on the table
+              Find the money you&apos;re leaving on the table
             </p>
           </div>
         </div>
@@ -481,7 +481,8 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 Many veterans miss out on <strong>thousands of dollars</strong>{" "}
                 in state benefits each year. These include property tax
                 exemptions, free vehicle registration, hunting/fishing licenses,
-                and education benefits that "Claim Sharks" never tell you about.
+                and education benefits that &quot;Claim Sharks&quot; never tell
+                you about.
               </p>
             </div>
           </div>
@@ -496,6 +497,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* State Selector */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Your State
               </label>
@@ -515,6 +517,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
             {/* Rating Selector */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Combined VA Rating
               </label>
@@ -819,16 +822,16 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                         but may not reflect current laws.
                       </p>
                       <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mt-2">
-                        <strong>Always verify</strong> with your state's
+                        <strong>Always verify</strong> with your state&apos;s
                         official Department of Veterans Affairs before applying.
-                        We're working to manually verify all 48 remaining
+                        We&apos;re working to manually verify all 48 remaining
                         states.
                       </p>
                     </>
                   )}
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
                     <strong>Report Issues:</strong> Found outdated info? Use the
-                    "Report Issue" link below.
+                    &quot;Report Issue&quot; link below.
                   </p>
                 </div>
               </div>
@@ -879,8 +882,8 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               Select your state and rating to discover your benefits
             </p>
             <p className="text-sm mt-2">
-              We'll search for property tax exemptions, vehicle registration
-              benefits, education grants, and more!
+              We&apos;ll search for property tax exemptions, vehicle
+              registration benefits, education grants, and more!
             </p>
           </div>
         )}

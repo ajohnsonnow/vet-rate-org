@@ -1,9 +1,8 @@
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsOfServicePage = ({ onClose }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   return (
     <ResponsiveModal
@@ -200,9 +199,10 @@ const TermsOfServicePage = ({ onClose }) => {
                 Recommendation for Complex Cases:
               </h3>
               <p className="text-gray-800">
-                For complex claims, appeals to the Board of Veterans' Appeals,
-                or cases involving legal nuances, it is strongly recommended to
-                work with an accredited representative. Find one at:{" "}
+                For complex claims, appeals to the Board of Veterans&apos;
+                Appeals, or cases involving legal nuances, it is strongly
+                recommended to work with an accredited representative. Find one
+                at:{" "}
                 <a
                   href="https://www.va.gov/ogc/accreditation.asp"
                   target="_blank"
@@ -378,7 +378,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
                 <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
                   <p className="font-semibold text-gray-900">
-                    "Hallucinations":
+                    &quot;Hallucinations&quot;:
                   </p>
                   <p className="text-sm text-gray-800">
                     AI can generate plausible-sounding but entirely false
@@ -448,7 +448,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </h3>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>
-                  All data is stored in your web browser's{" "}
+                  All data is stored in your web browser&apos;s{" "}
                   <code className="bg-gray-200 px-2 py-1 rounded text-sm">
                     localStorage
                   </code>
@@ -457,7 +457,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <li>No automatic cloud backups are created</li>
                 <li>
                   Data is not transmitted to Vet-Rate.org servers (the webapp
-                  doesn't have data servers)
+                  doesn&apos;t have data servers)
                 </li>
                 <li>
                   Export functionality allows you to save data to your own files
@@ -487,10 +487,11 @@ const TermsOfServicePage = ({ onClose }) => {
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-gray-800 dark:text-gray-200 ml-4">
                     <li>Clear your browser cache or browsing data</li>
-                    <li>Use browser "Clear All History" features</li>
+                    <li>Use browser &quot;Clear All History&quot; features</li>
                     <li>Uninstall or reset your web browser</li>
                     <li>
-                      Use private/incognito browsing mode (data won't persist)
+                      Use private/incognito browsing mode (data won&apos;t
+                      persist)
                     </li>
                     <li>
                       Use browser cleaning tools or privacy extensions that
@@ -579,7 +580,8 @@ const TermsOfServicePage = ({ onClose }) => {
                   Representatives (RVSR)
                 </li>
                 <li>
-                  Successful outcomes at Board of Veterans' Appeals hearings
+                  Successful outcomes at Board of Veterans&apos; Appeals
+                  hearings
                 </li>
                 <li>
                   Total Disability Individual Unemployability (TDIU)
@@ -591,7 +593,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
             <div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Factors Beyond This App's Control:
+                Factors Beyond This App&apos;s Control:
               </h3>
               <p className="mb-2">
                 VA claim outcomes depend on numerous factors including:
@@ -685,12 +687,12 @@ const TermsOfServicePage = ({ onClose }) => {
                 No Warranty
               </h3>
               <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-                THIS SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
-                WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-                LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-                PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. THE WEBAPP DOES
-                NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE,
-                SECURE, OR VIRUS-FREE.
+                THIS SOFTWARE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
+                AVAILABLE&quot; WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+                MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+                NON-INFRINGEMENT. THE WEBAPP DOES NOT WARRANT THAT THE SOFTWARE
+                WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR VIRUS-FREE.
               </p>
             </div>
 
@@ -718,9 +720,9 @@ const TermsOfServicePage = ({ onClose }) => {
               <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                 You agree to indemnify, defend, and hold harmless Vet-Rate.org
                 and its operators from any claims, damages, liabilities, costs,
-                and expenses (including reasonable attorneys' fees) arising from
-                your use of the platform, your violation of these terms, or your
-                violation of any third-party rights.
+                and expenses (including reasonable attorneys&apos; fees) arising
+                from your use of the platform, your violation of these terms, or
+                your violation of any third-party rights.
               </p>
             </div>
 
@@ -757,8 +759,8 @@ const TermsOfServicePage = ({ onClose }) => {
               </h3>
               <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                 The webapp reserves the right to modify these terms at any time.
-                Material changes will be indicated by updating the "Last
-                Updated" date at the top of this document. Continued use of
+                Material changes will be indicated by updating the &quot;Last
+                Updated&quot; date at the top of this document. Continued use of
                 Vet-Rate.org after changes constitutes acceptance of the
                 modified terms.
               </p>
@@ -799,8 +801,8 @@ const TermsOfServicePage = ({ onClose }) => {
           <p className="leading-relaxed mb-3 text-gray-800">
             If you have questions about these Terms of Service, need
             clarification on any provisions, or wish to report issues with the
-            platform, please use the "Contact Us" feature within the application
-            or visit our support resources.
+            platform, please use the &quot;Contact Us&quot; feature within the
+            application or visit our support resources.
           </p>
           <p className="text-sm text-blue-800">
             <strong>Remember:</strong> I cannot provide legal advice about your
@@ -842,7 +844,7 @@ const TermsOfServicePage = ({ onClose }) => {
             Thank you for using Vet-Rate.org
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            I'm honored to serve those who served. Stay safe, document
+            I&apos;m honored to serve those who served. Stay safe, document
             everything, and never give up on your claim.
           </p>
           <p className="text-xs text-gray-500 mt-4">

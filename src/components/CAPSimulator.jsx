@@ -5,7 +5,7 @@
  * See src/COPYRIGHT.js for full license terms.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
@@ -121,21 +121,21 @@ const getTipsForCondition = (conditionType) => {
  * CRITICAL: All criteria based on verbatim 38 CFR Part 4 requirements.
  */
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [mode, setMode] = useState("intro"); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [simulationResult, setSimulationResult] = useState(null);
-  const [savedPacket, setSavedPacket] = useState([]);
+  const [_savedPacket, setSavedPacket] = useState([]);
   const [flashcardTerm, setFlashcardTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Exam Prep mode state
-  const [examPrepCondition, setExamPrepCondition] = useState(null);
+  const [_examPrepCondition, setExamPrepCondition] = useState(null);
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
@@ -220,7 +220,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   // Generate DBQ-based questions specific to the condition and body system
   const generateGenericQuestions = (condition) => {
     const ratings = condition.ratingCriteria?.ratings || {};
-    const ratingKeys = Object.keys(ratings).sort(
+    const _ratingKeys = Object.keys(ratings).sort(
       (a, b) => parseInt(b) - parseInt(a),
     );
     const bodySystem = getBodySystem(condition);
@@ -695,7 +695,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
 
     // === NEUROLOGICAL CONDITIONS ===
     else if (bodySystem === "neurological") {
-      const hasParalysis =
+      const _hasParalysis =
         allCriteriaText.includes("paralysis") ||
         allCriteriaText.includes("incomplete") ||
         allCriteriaText.includes("complete");
@@ -869,7 +869,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
 
     // === CARDIOVASCULAR CONDITIONS ===
     else if (bodySystem === "cardiovascular") {
-      const hasMETs =
+      const _hasMETs =
         allCriteriaText.includes("met") || allCriteriaText.includes("workload");
       const hasEF = allCriteriaText.includes("ejection fraction");
 
@@ -1654,7 +1654,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     );
   });
 
-  const availableConditions = Object.keys(dbqLogicMap);
+  const _availableConditions = Object.keys(dbqLogicMap);
   const currentCondition = selectedConditionKey
     ? dbqLogicMap[selectedConditionKey]
     : null;
@@ -1735,7 +1735,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   };
 
   // Show flashcard for a term
-  const showFlashcard = (term) => {
+  const _showFlashcard = (term) => {
     setFlashcardTerm(term);
   };
 
@@ -1784,7 +1784,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               </h2>
             </div>
             <p className="text-emerald-100 text-sm sm:text-lg pr-8">
-              Turn the "Black Box" of the C&P Exam into an Open-Book Test
+              Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book
+              Test
             </p>
           </div>
         }
@@ -1797,14 +1798,15 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               The Compensation & Pension (C&P) exam can feel like a mystery. You
               walk in not knowing what the doctor will ask, and you walk out not
-              knowing if you said the "right" things.{" "}
+              knowing if you said the &quot;right&quot; things.{" "}
               <strong>This tool removes that mystery.</strong>
             </p>
             <p className="text-gray-700 dark:text-gray-300">
               This simulator uses the{" "}
               <strong>exact rating criteria from 38 CFR Part 4</strong> for your
-              specific condition to present the "tipping point" questions - the
-              questions that determine whether you get 10%, 30%, 50%, or higher.
+              specific condition to present the &quot;tipping point&quot;
+              questions - the questions that determine whether you get 10%, 30%,
+              50%, or higher.
             </p>
           </div>
 
@@ -1874,7 +1876,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                 2. Gap Analysis
               </h4>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                See exactly what rating your answers align with and what's
+                See exactly what rating your answers align with and what&apos;s
                 needed for higher ratings
               </p>
             </div>
@@ -1898,7 +1900,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
               <div>
                 <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
-                  The "Stop When It Hurts" Principle
+                  The &quot;Stop When It Hurts&quot; Principle
                 </h4>
                 <p className="text-amber-800 dark:text-amber-100 text-sm">
                   For conditions like back pain or knee pain, the simulator will
@@ -1908,8 +1910,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                     you
                   </strong>{" "}
                   - not where you can force yourself to go. Many veterans
-                  unknowingly lower their ratings by "pushing through" during
-                  ROM testing.
+                  unknowingly lower their ratings by &quot;pushing through&quot;
+                  during ROM testing.
                 </p>
               </div>
             </div>
@@ -1965,10 +1967,10 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
             <p className="text-xs text-gray-600 dark:text-gray-400 italic">
               <strong>Disclaimer:</strong> This is a training tool, not legal
-              advice. Always tell the truth during your exam. The C&P examiner's
-              job is to document your condition accurately - be honest about
-              your worst days, not just your best days. This tool is based on 38
-              CFR Part 4 as of January 2026.
+              advice. Always tell the truth during your exam. The C&P
+              examiner&apos;s job is to document your condition accurately - be
+              honest about your worst days, not just your best days. This tool
+              is based on 38 CFR Part 4 as of January 2026.
             </p>
           </div>
         </div>
@@ -2053,8 +2055,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                   The Open Book Test
                 </h2>
                 <p className="text-gray-300 text-lg mb-4">
-                  Your C&P examiner isn't improvising - they're checking boxes
-                  on a standardized form called a{" "}
+                  Your C&P examiner isn&apos;t improvising - they&apos;re
+                  checking boxes on a standardized form called a{" "}
                   <span className="font-bold text-white">
                     Disability Benefits Questionnaire (DBQ)
                   </span>
@@ -2065,7 +2067,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                   <span className="font-bold text-cyan-300">
                     exact questions
                   </span>{" "}
-                  they'll ask and{" "}
+                  they&apos;ll ask and{" "}
                   <span className="font-bold text-cyan-300">
                     strategic tips
                   </span>{" "}
@@ -2077,6 +2079,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
 
           {/* Search Bar */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-gray-300 mb-2">
               Search for your condition:
             </label>
@@ -2115,7 +2118,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           {filteredConditions.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <div className="text-4xl mb-4">🔍</div>
-              <p>No conditions found matching "{searchTerm}"</p>
+              <p>No conditions found matching &quot;{searchTerm}&quot;</p>
               <p className="text-sm mt-2">
                 Try a different search term or browse all conditions above.
               </p>
@@ -2252,7 +2255,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                           {/* Intent */}
                           <div>
                             <h4 className="text-sm font-bold text-yellow-300 mb-2">
-                              🎯 What They're Really Looking For:
+                              🎯 What They&apos;re Really Looking For:
                             </h4>
                             <p className="text-gray-300 text-sm leading-relaxed">
                               {q.intent}
@@ -2338,8 +2341,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             </h3>
             <p className="text-gray-300 mb-4">
               Now you know exactly what questions are coming. Walk in prepared,
-              answer honestly, and don't undersell your symptoms. The examiner
-              is checking boxes - make sure they check the right ones.
+              answer honestly, and don&apos;t undersell your symptoms. The
+              examiner is checking boxes - make sure they check the right ones.
             </p>
             <div className="flex flex-wrap gap-3">
               <button
@@ -3260,8 +3263,9 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6 space-y-4">
             {searchTerm && (
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Showing {filteredTermsCount} of {totalTerms} terms matching "
-                {searchTerm}"
+                Showing {filteredTermsCount} of {totalTerms} terms matching
+                &quot;
+                {searchTerm}&quot;
               </div>
             )}
 
@@ -3315,7 +3319,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                               Example:
                             </h4>
                             <p className="text-gray-600 dark:text-gray-400 italic">
-                              "{item.example}"
+                              &quot;{item.example}&quot;
                             </p>
                           </div>
                         </div>
@@ -3330,10 +3334,10 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               <p className="text-blue-900 dark:text-blue-100 text-sm">
                 <strong>💡 Pro Tip:</strong> Using the exact terminology from
                 the CFR during your C&P exam helps ensure the examiner documents
-                your condition correctly. For example, saying "I have
-                prostrating migraines that cause economic inadaptability" is
-                much more precise than "I have really bad headaches that make me
-                miss work."
+                your condition correctly. For example, saying &quot;I have
+                prostrating migraines that cause economic inadaptability&quot;
+                is much more precise than &quot;I have really bad headaches that
+                make me miss work.&quot;
               </p>
             </div>
 

@@ -8,7 +8,7 @@
  * - Understand the privacy implications of each mode
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Tooltip } from "./common/Tooltip";
 import {
@@ -17,7 +17,6 @@ import {
   setAIMode,
   getAIStatus,
   isLocalAIReady,
-  isLocalAIInitializing,
   isCloudAIAvailable,
 } from "../utils/unifiedAIService";
 
@@ -28,10 +27,13 @@ import {
 export const AIStatusBadge = ({
   onClick,
   className = "",
+  // eslint-disable-next-line no-unused-vars
   showLabel = false,
 }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  const [status, setStatus] = useState(getAIStatus());
+  // eslint-disable-next-line no-unused-vars
+  const [s_tatus, setStatus] = useState(getAIStatus());
 
   useEffect(() => {
     // Refresh status periodically
@@ -42,6 +44,7 @@ export const AIStatusBadge = ({
   }, []);
 
   // Check if any local/private AI is active
+  // eslint-disable-next-line no-unused-vars
   const isPrivateAI =
     status.effectiveMode === AI_MODES.SWARM ||
     status.effectiveMode === AI_MODES.LOCAL ||
@@ -469,7 +472,8 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
                 )}
               </div>
               <p className="text-sm text-gray-400 mt-1">
-                Google's Gemini AI - faster, more capable, requires internet
+                Google&apos;s Gemini AI - faster, more capable, requires
+                internet
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">

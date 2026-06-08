@@ -45,7 +45,9 @@ const MILESTONES = [
           if (parsed.filed || parsed.status === "filed" || parsed.date)
             return true;
         }
-      } catch {}
+      } catch {
+        /* ignored */
+      }
       // Check alternate keys
       if (altData?.some((d) => d === "true" || d)) return true;
       return false;
@@ -412,7 +414,7 @@ const getManualProgress = () => {
 /**
  * Set manual progress for a milestone
  */
-const setManualProgress = (milestoneId, completed, notes = "") => {
+const _setManualProgress = (milestoneId, completed, notes = "") => {
   const current = getManualProgress();
   current[milestoneId] = {
     completed,
@@ -488,7 +490,7 @@ const calculateReadyToFile = (completedMilestones) => {
 /**
  * Group milestones by phase
  */
-const getMilestonesByPhase = () => {
+const _getMilestonesByPhase = () => {
   const grouped = {};
   Object.values(PHASES).forEach((phase) => {
     grouped[phase.id] = {

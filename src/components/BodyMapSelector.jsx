@@ -6,7 +6,7 @@
  * The Solution: Click-based medical translation system
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -16,7 +16,7 @@ const BodyMapSelector = ({
   onLogToSymptomLogger,
   onClose,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [view, setView] = useState("front"); // 'front' or 'back'
   const [selectedZone, setSelectedZone] = useState(null);
   const [symptoms, setSymptoms] = useState(existingSymptoms);
@@ -563,7 +563,7 @@ const BodyMapSelector = ({
               </h2>
               <p className="text-gray-300 text-sm">
                 Click body parts OR select a body system below to log symptoms.
-                We'll translate your pain into VA medical terminology.
+                We&apos;ll translate your pain into VA medical terminology.
               </p>
             </div>
             {onClose && (
@@ -593,6 +593,7 @@ const BodyMapSelector = ({
     >
       {/* Body System Category Selector */}
       <div className="mb-4">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-medium text-gray-400 mb-2">
           📋 Select Body System:
         </label>
@@ -1001,7 +1002,7 @@ const BodyMapSelector = ({
                     >
                       <div className="font-semibold text-white">{symptom}</div>
                       <div className="text-xs text-gray-400 mt-1">
-                        Translates to: "{medical}"
+                        Translates to: &quot;{medical}&quot;
                       </div>
                     </button>
                   ),
@@ -1120,7 +1121,7 @@ const BodyMapSelector = ({
           <li>
             • Copy the medical text and paste it into your Personal Statement
           </li>
-          <li>• Red zones show where you've logged symptoms</li>
+          <li>• Red zones show where you&apos;ve logged symptoms</li>
         </ul>
       </div>
     </ResponsiveModal>

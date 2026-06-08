@@ -17,7 +17,6 @@ import {
   Search,
   Lightbulb,
   AlertCircle,
-  Clock,
   CheckCircle,
   X,
   Database,
@@ -27,7 +26,6 @@ import {
   Download,
   Trash2,
   History,
-  Shield,
   Filter,
   Copy,
   Check,
@@ -111,6 +109,7 @@ const STATUS_CONFIG = {
 };
 
 export default function FeatureLookup({ onClose }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // State
@@ -149,6 +148,7 @@ export default function FeatureLookup({ onClose }) {
     };
 
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load requests with current filters

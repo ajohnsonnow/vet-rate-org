@@ -10,31 +10,21 @@
  * - Vision model support (direct image analysis, bypassing OCR)
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
-import {
-  generateAI,
-  generateAIWithImage,
-  getAIStatus,
-  isAnyAIAvailable,
-  isLocalAIReady,
-  isLocalAIVisionModel,
-} from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
 import {
-  analyzeDocument,
   OCR_STATES,
   getProgressStyling,
   formatFileSize,
   isFileSupported,
-  getFileTypeLabel,
   getAcceptString,
-  renderPDFToImages,
 } from "../utils/documentAnalyzer";
 import {
   processFormationDocument,
@@ -48,7 +38,6 @@ import {
   getVeteranProfile,
   updateVeteranProfile,
 } from "../utils/veteranProfile";
-import { parseDD214Text } from "../utils/ribbonRackData";
 import {
   extractDD214Fields,
   mergeAIAndRegexResults,
@@ -441,10 +430,12 @@ const DD214Analyzer = ({
     e.stopPropagation();
     setIsDragging(false);
 
+    // eslint-disable-next-line no-console
     console.log("📁 Files dropped:", e.dataTransfer.files);
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       isFileSupported(f),
     );
+    // eslint-disable-next-line no-console
     console.log(
       "📁 Supported files:",
       files.map((f) => f.name),
@@ -463,6 +454,7 @@ const DD214Analyzer = ({
    * Now automatically starts OCR when files are uploaded
    */
   const processFiles = async (files) => {
+    // eslint-disable-next-line no-console
     console.log(
       "📁 processFiles called with:",
       files.map((f) => f.name),
@@ -474,6 +466,7 @@ const DD214Analyzer = ({
     // Store files in state
     const newDroppedFiles = [...droppedFiles, ...files];
     setDroppedFiles(newDroppedFiles);
+    // eslint-disable-next-line no-console
     console.log(
       "📁 droppedFiles now:",
       newDroppedFiles.map((f) => f.name),
@@ -492,6 +485,7 @@ const DD214Analyzer = ({
 
     // AUTO-RUN OCR immediately after files are added
     // This eliminates the confusing two-step "upload then click Run OCR" process
+    // eslint-disable-next-line no-console
     console.log("🔄 Auto-starting OCR for uploaded files...");
 
     // Small delay to ensure state is updated and UI shows the files
@@ -506,6 +500,7 @@ const DD214Analyzer = ({
    */
   const runOCROnFilesInternal = async (filesToProcess) => {
     if (!filesToProcess || filesToProcess.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("📁 No files to process");
       return;
     }
@@ -516,6 +511,7 @@ const DD214Analyzer = ({
     );
 
     if (unprocessedFiles.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("📁 All files already processed");
       return;
     }
@@ -537,6 +533,7 @@ const DD214Analyzer = ({
         });
 
         try {
+          // eslint-disable-next-line no-console
           console.log(
             `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
           );
@@ -570,6 +567,7 @@ const DD214Analyzer = ({
             ocrUsed: musterResult.ocrUsed ?? true,
             ocrConfidence: musterResult.confidence || 0,
           };
+          // eslint-disable-next-line no-console
           console.log(
             `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
           );
@@ -705,6 +703,7 @@ const DD214Analyzer = ({
   const handleAnalyzeWithAI = async () => {
     // Prevent double-clicks and React StrictMode double-firing
     if (isGenerating) {
+      // eslint-disable-next-line no-console
       console.log("⚠️ Analysis already in progress, ignoring duplicate click");
       return;
     }
@@ -725,9 +724,11 @@ const DD214Analyzer = ({
     const useVisionAnalysis =
       isSmolVLMSupported() && hasPDFFiles && !combinedText;
 
+    // eslint-disable-next-line no-console
     console.log(
       `🔍 Analysis mode: ${useVisionAnalysis ? "VISION (direct image)" : "TEXT (OCR/extraction)"}`,
     );
+    // eslint-disable-next-line no-console
     console.log(
       `   hasVisionModel: ${isSmolVLMSupported()}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`,
     );
@@ -759,6 +760,7 @@ const DD214Analyzer = ({
         // ========== VISION MODEL PATH — SmolVLM (transformers.js v3 + WebGPU) ==========
         // Processes PDF pages as images directly through SmolVLM-256M-Instruct.
         // Replaces the broken MLC WebLLM Phi-3.5-vision path.
+        // eslint-disable-next-line no-console
         console.log("🖼️ Using SmolVLM Vision for direct image analysis");
 
         setOcrProgress({
@@ -814,6 +816,7 @@ const DD214Analyzer = ({
       } else {
         // ========== TEXT MODEL PATH (original) ==========
         // Use OCR/text extraction then send to LLM
+        // eslint-disable-next-line no-console
         console.log("📝 Using Text Model for OCR-based analysis");
 
         // Determine if we're using local or cloud AI
@@ -835,6 +838,7 @@ const DD214Analyzer = ({
         // Models with larger context can handle more output tokens
         const outputBuffer = localContextLimit >= 8192 ? 2048 : 1024;
 
+        // eslint-disable-next-line no-console
         console.log(
           `📊 Token estimates: system=${systemPromptTokens}, doc=${documentTokens}, wrapper=${userPromptWrapper}, output=${outputBuffer}`,
         );
@@ -866,6 +870,7 @@ const DD214Analyzer = ({
           // Ensure minimum reasonable size (at least 500 tokens for useful extraction)
           const maxDocTokens = Math.max(500, availableForDoc);
           documentText = truncateForContext(combinedText, maxDocTokens);
+          // eslint-disable-next-line no-console
           console.log(
             `📄 Truncated to ~${estimateTokens(documentText)} tokens (max allowed: ${maxDocTokens})`,
           );
@@ -873,6 +878,7 @@ const DD214Analyzer = ({
         }
 
         if (preferCloud) {
+          // eslint-disable-next-line no-console
           console.log(
             `📄 Large document (${totalEstimatedTokens} tokens). Using Cloud AI for better results.`,
           );
@@ -902,6 +908,7 @@ const DD214Analyzer = ({
       } else {
         content = "";
       }
+      // eslint-disable-next-line no-console
       console.log("🤖 Raw AI Response:", content || "(empty)");
 
       // Check for empty response - vision models may return empty if image processing failed
@@ -921,6 +928,7 @@ const DD214Analyzer = ({
           typeof content === "string"
             ? content.trim()
             : JSON.stringify(content);
+        // eslint-disable-next-line no-console
         console.log(
           "🧹 Clean content before JSON parse:",
           cleanContent.substring(0, 500),
@@ -948,6 +956,7 @@ const DD214Analyzer = ({
         // Clean up any trailing commas before } or ] (common after comment removal)
         cleanContent = cleanContent.replace(/,(\s*[}\]])/g, "$1");
 
+        // eslint-disable-next-line no-console
         console.log(
           "🧹 After comment removal:",
           cleanContent.substring(0, 500),
@@ -970,6 +979,7 @@ const DD214Analyzer = ({
           data.mosTitle = String(data.mosTitle);
         }
 
+        // eslint-disable-next-line no-console
         console.log("✅ Parsed JSON data:", data);
       } catch (parseError) {
         console.error("JSON parse error:", parseError, "Content:", content);
@@ -988,6 +998,7 @@ const DD214Analyzer = ({
         const regexResult = extractDD214Fields(combinedRaw);
         if (regexResult && Object.keys(regexResult).length > 0) {
           const merged = mergeAIAndRegexResults(data, regexResult);
+          // eslint-disable-next-line no-console
           console.log(
             "🔀 Merged AI + Regex results:",
             Object.keys(merged).length,
@@ -1149,7 +1160,7 @@ const DD214Analyzer = ({
       // Filter out undefined/null values but keep empty strings for user to fill
       // Also keep boolean false values (like reenlisted: false)
       const profileData = Object.fromEntries(
-        Object.entries(rawProfileData).filter(([key, value]) => {
+        Object.entries(rawProfileData).filter(([_key, value]) => {
           // Always exclude undefined/null
           if (value === undefined || value === null) return false;
           // Keep booleans (including false)
@@ -1169,6 +1180,7 @@ const DD214Analyzer = ({
         return;
       }
 
+      // eslint-disable-next-line no-console
       console.log("Opening profile import modal with data:", profileData);
 
       // Show confirmation modal automatically
@@ -1337,6 +1349,7 @@ const DD214Analyzer = ({
 
         mergeDD214IntoVKB(vkb, vkbData, { fileName: sourceFileName });
         await saveVKB(vkb);
+        // eslint-disable-next-line no-console
         console.log("✅ DD214 data merged into VKB");
 
         // Also register the document in VKB documentation
@@ -1383,6 +1396,7 @@ const DD214Analyzer = ({
         });
 
         if (packetResult.success) {
+          // eslint-disable-next-line no-console
           console.log("📁 DD214 saved to My Packet:", packetResult.documentId);
         }
       } catch (packetErr) {
@@ -1567,8 +1581,8 @@ const DD214Analyzer = ({
                   )}
                   {!onOpenMusterCall && (
                     <p className="text-xs italic">
-                      Look for "Muster Call" in the Missions menu for batch
-                      document processing
+                      Look for &quot;Muster Call&quot; in the Missions menu for
+                      batch document processing
                     </p>
                   )}
                 </div>
@@ -1599,6 +1613,7 @@ const DD214Analyzer = ({
               <SmartAILoadButton
                 toolId="dd214-analyzer"
                 onLoadComplete={(model) => {
+                  // eslint-disable-next-line no-console
                   console.log(
                     "Smart AI loaded for DD214 Analyzer:",
                     model?.name,
@@ -1714,6 +1729,7 @@ const DD214Analyzer = ({
           {inputMethod === "upload" && (
             <div className="space-y-4">
               {/* Drop Zone */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
@@ -2365,6 +2381,7 @@ const DD214Analyzer = ({
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
           onSave={(dd214) => {
+            // eslint-disable-next-line no-console
             console.log("DD214 saved:", dd214);
             // Optionally refresh the list or show success message
           }}

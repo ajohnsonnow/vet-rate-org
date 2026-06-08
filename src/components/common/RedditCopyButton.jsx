@@ -11,7 +11,7 @@
  * @version 1.0.0
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useRedditClipboard } from "../../hooks/useRedditClipboard";
 
@@ -36,7 +36,7 @@ const RedditCopyButton = ({
   variant = "default",
   glow = false,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { isCopied, copyToClipboard } = useRedditClipboard();
   const [localSanitize, setLocalSanitize] = useState(sanitize);
   const [localLinkCitations, setLocalLinkCitations] = useState(linkCitations);
