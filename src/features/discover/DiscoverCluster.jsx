@@ -46,7 +46,25 @@ export default function DiscoverCluster({ userConditions, setUserConditions }) {
   useEffect(() => {
     const openLauncher = () => setShowSecondaryScoutLauncher(true);
     const openNexus = (e) => {
-      if (e?.detail) setNexusBuilderData(e.detail);
+      if (e?.detail) {
+        setNexusBuilderData(e.detail);
+      } else {
+        const saved = getSavedClaims();
+        const first = saved[0];
+        setNexusBuilderData(
+          first
+            ? {
+                condition: first.conditionName,
+                primaryCondition: first.parentCondition ?? null,
+                existingStatement: getStatement(first.id),
+              }
+            : {
+                condition: "",
+                primaryCondition: null,
+                existingStatement: null,
+              },
+        );
+      }
       setShowNexusBuilder(true);
     };
     const resumeFromPacket = (e) => {

@@ -179,18 +179,10 @@ test.describe("Discover cluster — with 9-condition packet", () => {
       .isVisible({ timeout: 8000 })
       .catch(() => false);
 
-    // This is a regression canary: if NexusBuilder still shows nothing with
-    // conditions loaded, that is a data-binding bug to fix.
-    if (!appeared) {
-      console.warn(
-        "[tool-with-packet] NexusBuilder did not render even with 9 conditions pre-loaded. " +
-          "Possible: conditions not hydrated from localStorage into React state before tool mount.",
-      );
-    }
-
-    // We record the result but do not hard-fail on CI until the root cause is fixed.
-    // Change to expect(appeared).toBe(true) once confirmed fixed.
-    await page.locator("body").isVisible(); // sanity: app not crashed
+    expect(
+      appeared,
+      "NexusBuilder should render when conditions are pre-loaded in localStorage",
+    ).toBe(true);
     await closeTool(page);
   });
 
