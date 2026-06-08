@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from "react";
+import { saveClaim } from "../../utils/claimsStorage";
 
 const PACTActNavigator = lazy(
   () => import("../../components/PACTActNavigator"),
@@ -78,9 +79,10 @@ export default function ClaimPrepCluster({ onToolSelect }) {
         <MOSHazardMatcher
           onClose={() => setShowMOS(false)}
           onAddToPathfinder={(conditions) => {
-            // eslint-disable-next-line no-console
-            console.log("Add to pathfinder:", conditions);
             setShowMOS(false);
+            window.dispatchEvent(
+              new CustomEvent("openPathfinder", { detail: { conditions } }),
+            );
           }}
           onReportBug={reportBug(setShowMOS)}
         />
@@ -89,8 +91,7 @@ export default function ClaimPrepCluster({ onToolSelect }) {
         <WebOfConditions
           onClose={() => setShowWeb(false)}
           onSelectCondition={(condition) => {
-            // eslint-disable-next-line no-console
-            console.log("Selected condition:", condition);
+            saveClaim({ conditionName: condition });
           }}
           onReportBug={reportBug(setShowWeb)}
         />

@@ -25,8 +25,10 @@ export default function VKBTimelineModal() {
     <Suspense fallback={null}>
       <VKBTimeline
         onDocumentClick={(doc) => {
-          // eslint-disable-next-line no-console
-          console.log("Document clicked:", doc);
+          setOpen(false);
+          window.dispatchEvent(
+            new CustomEvent("openVKBViewer", { detail: { docId: doc.id } }),
+          );
         }}
         onClose={() => setOpen(false)}
       />
