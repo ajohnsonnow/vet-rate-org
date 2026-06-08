@@ -339,13 +339,22 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col"
+      role="dialog"
+      aria-labelledby="claim-navigator-title"
+    >
       {/* Header */}
       <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <Map className="w-6 h-6 text-amber-500" />
           <div>
-            <h1 className="text-lg font-bold text-white">Claim Navigator</h1>
+            <h1
+              id="claim-navigator-title"
+              className="text-lg font-bold text-white"
+            >
+              Claim Navigator
+            </h1>
             <p className="text-xs text-slate-400">
               Mission Control for Your VA Claims
             </p>

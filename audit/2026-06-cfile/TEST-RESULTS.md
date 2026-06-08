@@ -447,4 +447,36 @@ Eval: `scripts/legal-ingestion/eval/run-eval.mjs`, n=25, k=5
 
 ## Sprint 6 — Accessibility pass
 
-> To be populated after Sprint 6 execution.
+### Gate results
+
+| Test suite | Result | Coverage |
+|---|---|---|
+| `test:e2e:axe` (WCAG 2.2 AA, serious/critical) | PASS — 21/21 | 20 modals + 1 splash |
+| `test:e2e:mobile` | PASS — 177/177 | 360px/414px/768px viewports |
+
+Both suites re-run after ARIA fixes below — still green.
+
+### ARIA gap fixes
+
+**F6-1 — ClaimNavigator missing `role="dialog"` (FIXED)**
+
+`ClaimNavigator.jsx` renders a full-screen `fixed inset-0` overlay with no ARIA dialog semantics. Screen readers had no way to announce the tool as a dialog or find its label.
+
+Fix: added `role="dialog"` + `aria-labelledby="claim-navigator-title"` to the outer div; added `id="claim-navigator-title"` to the `<h1>`. Note: `aria-modal` deliberately omitted — ClaimNavigator has no focus trap; adding `aria-modal` without a trap misleads AT into hiding background content while focus can still escape.
+
+**F6-2 — DenialDecoder missing `role="dialog"` (FIXED)**
+
+`DenialDecoder.jsx` renders as `<div className="denial-decoder ...">` with no dialog role. Rendered by `DecisionToolsCluster` without a `ResponsiveModal` wrapper.
+
+Fix: added `role="dialog"` + `aria-labelledby="denial-decoder-title"` to the outer div; added `id="denial-decoder-title"` to the `<h2>`. Same `aria-modal` omission rationale as ClaimNavigator.
+
+### Remaining open items (for IMPROVEMENT-PLAN)
+
+- ClaimNavigator + DenialDecoder: add `useFocusTrap` and then promote to `aria-modal="true"` (feature work — both are complex full-screen tools)
+- Axe spec currently covers 20/48 tool surfaces; expand surface coverage in a future sprint
+- AI explainability: Risk Assessment, Remand Risk Checker, Appeals Lane Advisor, Nexus Quality Analyzer score justifications not surfaced in UI (document as feature work)
+
+### Fixes committed
+
+- `src/components/ClaimNavigator.jsx` — `role="dialog"` + `aria-labelledby`
+- `src/components/DenialDecoder.jsx` — `role="dialog"` + `aria-labelledby`
