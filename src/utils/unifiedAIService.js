@@ -1794,22 +1794,16 @@ const generateAIInternal = async (prompt, options = {}) => {
     let usedMode;
     let agentUsed = null;
 
-    // Determine which AI to use - Warrant Council is primary, then Wllama, then Local Server
-    const useSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
-    const useWllama =
-      effectiveMode === AI_MODES.WLLAMA || (!useSwarm && isWllamaAvailable());
-    const useLocalServer =
-      effectiveMode === AI_MODES.LOCAL_SERVER ||
-      (!useSwarm && !useWllama && isLocalServerAvailable());
+    // Dispatch follows getEffectiveAIMode() — never implicitly upgrade to a
+    // backend the user didn't choose. getEffectiveAIMode() already handles the
+    // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
+    const useSwarm = effectiveMode === AI_MODES.SWARM;
+    const useWllama = effectiveMode === AI_MODES.WLLAMA;
+    const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
     const useCloud =
-      (options.preferCloud && isCloudAIAvailable()) ||
-      effectiveMode === AI_MODES.CLOUD;
-    const useLocal =
-      !useSwarm &&
-      !useWllama &&
-      !useLocalServer &&
-      !useCloud &&
-      effectiveMode === AI_MODES.LOCAL;
+      effectiveMode === AI_MODES.CLOUD ||
+      (options.preferCloud === true && isCloudAIAvailable());
+    const useLocal = effectiveMode === AI_MODES.LOCAL;
 
     if (useSwarm && isDiamondSwarmReady()) {
       // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
