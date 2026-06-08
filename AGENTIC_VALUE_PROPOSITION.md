@@ -26,8 +26,8 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| **Lines of Code** | 247,305 | Production React/JavaScript |
-| **Total Files** | 2,289 | Organized codebase |
+| **Lines of Code** | 247,309 | Production React/JavaScript |
+| **Total Files** | 2,144 | Organized codebase |
 | **React Components** | 167 | 42 major tools + 125 supporting |
 | **Utility Modules** | 107 | Reusable helper functions |
 | **Disabilities Database** | 748 | Validated against 38 CFR |
@@ -117,7 +117,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | **Billable Hours** | 150 hours |
 | **Hourly Rate** | $420/hr |
 | **Total Cost** | $63,000 |
-| **Lines of Code** | 247,305 |
+| **Lines of Code** | 247,309 |
 | **Effective LOC/Hour** | 1,292 |
 | **Commits** | 241 |
 | **Commits per Day** | 11 average |
@@ -323,6 +323,6 @@ find src -name '*.js' -o -name '*.jsx' | xargs wc -l
 
 ---
 
-*Document generated: June 7, 2026*
-*Version: 1.23.0*
+*Document generated: June 8, 2026*
+*Version: 1.23.1*
 *Project: VetRate.org*
