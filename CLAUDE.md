@@ -110,17 +110,19 @@ If you cannot test a change, say so. If you're guessing, say "I'm guessing." Nev
 
 | Use case | Model | ID |
 |---|---|---|
-| Complex engineering, architecture, long agentic runs | **Opus 4.7** | `claude-opus-4-7` |
+| Complex engineering, architecture, long agentic runs | **Opus 4.8** | `claude-opus-4-8` |
 | Daily coding, code review, most agent work | **Sonnet 4.6** | `claude-sonnet-4-6` |
 | Classification, extraction, high-volume routing | **Haiku 4.5** | `claude-haiku-4-5-20251001` |
 
-**Sunsets:** Haiku 3 retires 2026-04-19; Sonnet 4 / Opus 4 retire 2026-06-15.
+**Opus 4.8** (`claude-opus-4-8`, released 2026-05-28) is the current flagship — $5/$25 per MTok, 1M context, adaptive thinking. **Opus 4.7 (`claude-opus-4-7`) is now legacy** — still available, not retired; default new work to 4.8.
 
-**Opus 4.7 tokenizer** can consume up to ~35% more tokens for identical text vs 4.6 — re-test cost projections on migration.
+**Sunsets:** Haiku 3 retired 2026-04-19; Sonnet 4 / Opus 4 retire 2026-06-15.
+
+**Tokenizer:** the ~35% token premium was a one-time change at the 4.6 → 4.7 boundary; **Opus 4.7 and 4.8 tokenize identically**, so 4.7 → 4.8 adds no further premium. Budget the ceiling once when leaving a pre-4.7 model.
 
 **Prompt caching** (1-hour TTL) cuts Claude API spend ~90% for repeated context. Always cache stable system prompts and large reference docs. See [claude-code-best-practices.md §5](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md).
 
-**Effort levels (Claude Code `/effort`):** `low` for trivial edits, `medium` default, `high` for architecture/security/multi-step refactors.
+**Effort levels (Claude Code `/effort`):** `low` for trivial edits, `medium` default, `high` for architecture/security/multi-step refactors, `xhigh` for the hardest coding/agentic runs.
 
 ---
 

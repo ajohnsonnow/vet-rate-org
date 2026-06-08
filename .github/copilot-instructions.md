@@ -54,11 +54,11 @@ Can't test → say so. Guessing → say "I'm guessing." Never fabricate file pat
 
 | Use case | Model ID |
 |---|---|
-| Complex engineering, architecture | `claude-opus-4-7` |
+| Complex engineering, architecture | `claude-opus-4-8` |
 | Daily coding, code review | `claude-sonnet-4-6` |
 | Classification, extraction, routing | `claude-haiku-4-5-20251001` |
 
-Sunsets: Haiku 3 → 2026-04-19; Sonnet 4 / Opus 4 → 2026-06-15.
+Opus 4.8 (`claude-opus-4-8`, 2026-05-28) is the current flagship; `claude-opus-4-7` is now legacy. Sunsets: Haiku 3 → 2026-04-19; Sonnet 4 / Opus 4 → 2026-06-15.
 
 ## Output style
 

@@ -28,7 +28,7 @@
 
 ## Claude models (if applicable)
 
-- Complex engineering: `claude-opus-4-7`
+- Complex engineering: `claude-opus-4-8` (current flagship; `claude-opus-4-7` is now legacy)
 - Daily coding: `claude-sonnet-4-6`
 - Classification: `claude-haiku-4-5-20251001`
 
