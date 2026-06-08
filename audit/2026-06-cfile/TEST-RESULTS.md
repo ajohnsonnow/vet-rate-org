@@ -395,7 +395,53 @@ Fix: `scrubPII()` from `piiScrubber.js` applied to all five free-text fields and
 
 ## Sprint 5 — Domain accuracy spot-check
 
-> To be populated after Sprint 5 execution.
+### eCFR spot-check — Johnson's 7 diagnostic codes
+
+`lastVerifiedDate` in `disabilityData.json`: **2026-01-18** (5 months ago at session date 2026-06-08).
+
+| DC | Condition | App rating percentages | eCFR status | Finding |
+|---|---|---|---|---|
+| 9411 | PTSD | 0/10/30/50/70/100% | ✓ Confirmed (§ 4.130) | MATCH |
+| 5242 | Degenerative arthritis/disc (spine) | 10/20/30/40/50/100% | ✓ Confirmed (§ 4.71a) | MATCH |
+| 8520 | Sciatic nerve paralysis/radiculopathy | 10/20/40/60/80% | ✓ Confirmed (§ 4.124a) | MATCH |
+| 8620 | Sciatic nerve neuritis | (empty — no % criteria) | ⚠ Partial | Gap — `ratingCriteria` has no ratings; DC rated under § 4.124a same as 8520 |
+| 5276 | Flatfoot, acquired | 0/10/20/30/50% | ⚠ Fetch failed (§ 4.71a) | Reasonable based on known schedule; unverified this session |
+| 6260 | Tinnitus | 10% only | ✓ Confirmed (§ 4.87) | MATCH |
+| 5252 | Thigh, limitation of flexion | 10/20/30/40% | ⚠ Fetch failed (§ 4.71a) | Reasonable; unverified this session |
+
+**Gap F5-1 (LOW):** DC 8620 (`ratingCriteria.ratings` is empty object). Veteran using app tools for neuritis, sciatic nerve will see no percentage breakdown. DC 8620 is rated under the same § 4.124a framework as 8520 (incomplete paralysis scale: 10/20/40/60%). Documented for IMPROVEMENT-PLAN.
+
+### Secondary conditions citation spot-check
+
+Static `secondary_conditions_db.json` contains no named citations — all nexus_theory entries reference 38 CFR § 3.310 and general pathophysiological mechanisms. No specific author/journal citations to verify. No fabricated DOIs found in static data.
+
+Named citations (e.g., "Sharafkhaneh et al., Chest 2005") appear only in live AI output (Gemini). Prompt rule in `nexusLogicGenerator.js:38` already guards: "Do not fabricate specific URLs or DOIs." UI disclaimer strengthened to cover citation verification.
+
+### Nexus disclaimer fix
+
+`NexusDisclaimerFooter.jsx` — added explicit citation-verification warning: "AI-generated literature references and study types are research starting points only. They have not been independently verified and **must not be cited to the VA as established medical fact** without physician confirmation."
+
+### eval:rag results
+
+Eval: `scripts/legal-ingestion/eval/run-eval.mjs`, n=25, k=5
+
+| Metric | Score |
+|---|---|
+| recall@5 | 0.880 (22/25) |
+| MRR | 0.776 |
+| NDCG@5 | 0.637 |
+
+3 misses:
+
+- q02: "How does VA combine multiple disability ratings?" — expected § 4.25 (combined ratings table), retrieved § 4.16/4.29/4.26
+- q06: "Can VA rate the same disability twice under different codes?" — expected § 4.14 (pyramiding), retrieved § 4.27/4.114
+- q22: "Are dental and oral conditions service-connectable?" — expected § 4.150/§ 4.149, retrieved unrelated entries
+
+**Coverage note:** RAG index covers 38 CFR Part 4 only. Parts 3, 19, 20, M21-1 adjudication manual, and CAVC/Federal Circuit case law not ingested. This is the primary legal-coverage gap for future work.
+
+### Fixes committed
+
+- `src/components/NexusDisclaimerFooter.jsx` — citation verification warning
 
 ---
 
