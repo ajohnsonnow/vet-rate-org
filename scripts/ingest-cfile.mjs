@@ -22,7 +22,8 @@ const workerPath = resolve('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'
 GlobalWorkerOptions.workerSrc = new URL(`file:///${workerPath.replace(/\\/g, '/')}`).href;
 
 const CFILE_DIR = 'E:\\Johnson_C-FIle';
-const OUTPUT_PATH = 'E:\\Johnson_C-FIle\\vet-rate-packet-johnson-anthony-2026-03-21.json';
+const runDate = new Date().toISOString().slice(0, 10);
+const OUTPUT_PATH = `${CFILE_DIR}\\vet-rate-packet-${runDate}.json`;
 
 // ============================================================================
 // DOCUMENT CLASSIFICATION (mirrors src/utils/documentClassifier.js)

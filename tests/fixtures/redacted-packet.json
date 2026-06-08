@@ -1,0 +1,177 @@
+{
+  "version": "2.0",
+  "exportDate": "2026-01-15T00:00:00.000Z",
+  "source": "Vet-Rate.org",
+  "disclaimer": "SYNTHETIC TEST FIXTURE — No real veteran data. PII replaced with placeholder values. Condition names and ratings reflect a real combined-80% rating scenario for automated test coverage only.",
+  "ingestionInfo": {
+    "ingestedAt": "2026-01-15T00:00:00.000Z",
+    "ingestedBy": "ingest-cfile.mjs (synthetic fixture)",
+    "sourceDirectory": "REDACTED",
+    "totalFilesProcessed": 1,
+    "totalFilesWithText": 1,
+    "totalFilesSkipped": 0,
+    "processingNotes": ["Synthetic fixture — all PII (name/SSN/file#/DOB) replaced with placeholder values"]
+  },
+  "importedFiles": [
+    {
+      "filename": "rating-decision-redacted.pdf",
+      "originalPath": "REDACTED",
+      "fileSizeBytes": 0,
+      "fileSizeMB": 0,
+      "ext": "pdf",
+      "documentType": "RATING_DECISION",
+      "pageCount": 0,
+      "hasText": true,
+      "totalCharacters": 0,
+      "extractionMethod": "synthetic",
+      "extractError": null,
+      "needsBrowserOCR": false,
+      "browserOCRNote": null,
+      "structuredDataExtracted": true,
+      "importedAt": "2026-01-15T00:00:00.000Z"
+    }
+  ],
+  "rawDocumentText": {
+    "rating-decision-redacted.pdf": "[REDACTED — synthetic test fixture; no real veteran text]"
+  },
+  "data": {
+    "claims": [
+      {
+        "id": "claim-fixture-001",
+        "conditionName": "Post-Traumatic Stress Disorder (PTSD)",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 9411,
+        "selectedRating": 50,
+        "claimType": "Primary",
+        "notes": "Service-connected PTSD"
+      },
+      {
+        "id": "claim-fixture-002",
+        "conditionName": "Lumbosacral Strain",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 5237,
+        "selectedRating": 20,
+        "claimType": "Primary",
+        "notes": "Lower back strain"
+      },
+      {
+        "id": "claim-fixture-003",
+        "conditionName": "Radiculopathy, Lower Extremity, Left",
+        "parentCondition": "Lumbosacral Strain",
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 8520,
+        "selectedRating": 20,
+        "claimType": "Secondary",
+        "notes": "Secondary to lumbosacral strain"
+      },
+      {
+        "id": "claim-fixture-004",
+        "conditionName": "Radiculopathy, Lower Extremity, Right",
+        "parentCondition": "Lumbosacral Strain",
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 8521,
+        "selectedRating": 10,
+        "claimType": "Secondary",
+        "notes": "Secondary to lumbosacral strain"
+      },
+      {
+        "id": "claim-fixture-005",
+        "conditionName": "Hip, Limitation of Motion, Left",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 5252,
+        "selectedRating": 10,
+        "claimType": "Primary",
+        "notes": "Left hip limitation of flexion"
+      },
+      {
+        "id": "claim-fixture-006",
+        "conditionName": "Hip, Limitation of Motion, Right",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 5252,
+        "selectedRating": 10,
+        "claimType": "Primary",
+        "notes": "Right hip limitation of flexion"
+      },
+      {
+        "id": "claim-fixture-007",
+        "conditionName": "Knee, Limitation of Flexion, Left",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 5260,
+        "selectedRating": 10,
+        "claimType": "Primary",
+        "notes": "Left knee limitation of flexion"
+      },
+      {
+        "id": "claim-fixture-008",
+        "conditionName": "Pes Planus, Bilateral",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 5276,
+        "selectedRating": 10,
+        "claimType": "Primary",
+        "notes": "Bilateral flat feet"
+      },
+      {
+        "id": "claim-fixture-009",
+        "conditionName": "Tinnitus",
+        "parentCondition": null,
+        "dateSaved": "2026-01-15T00:00:00.000Z",
+        "dateUpdated": "2026-01-15T00:00:00.000Z",
+        "status": "Drafting",
+        "diagnosticCode": 6260,
+        "selectedRating": 10,
+        "claimType": "Primary",
+        "notes": "Ringing in ears"
+      }
+    ],
+    "statements": {},
+    "veteranProfile": {
+      "name": "JOHN Q. VETERAN",
+      "ssn": "000-00-0000",
+      "vaFileNumber": "C-000-0000",
+      "dob": "1970-01-01",
+      "branch": "Army",
+      "mos": "11B"
+    },
+    "serviceHistory": {
+      "deployments": [],
+      "awards": [],
+      "dd214Data": {
+        "branch": "Army",
+        "component": "Active Duty",
+        "rankAtDischarge": "E-5",
+        "mos": "11B",
+        "characterOfService": "Honorable",
+        "totalServiceYears": 6,
+        "separationDate": "2010-01-01T00:00:00.000Z",
+        "narrative": ""
+      }
+    },
+    "myRatings": [],
+    "ratingHistory": [],
+    "timelineEvents": [],
+    "painMaps": [],
+    "savedForms": []
+  }
+}
