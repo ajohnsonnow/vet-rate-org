@@ -27,7 +27,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | Category | Count | Description |
 |----------|-------|-------------|
 | **Lines of Code** | 247,305 | Production React/JavaScript |
-| **Total Files** | 2,227 | Organized codebase |
+| **Total Files** | 2,289 | Organized codebase |
 | **React Components** | 167 | 42 major tools + 125 supporting |
 | **Utility Modules** | 107 | Reusable helper functions |
 | **Disabilities Database** | 748 | Validated against 38 CFR |

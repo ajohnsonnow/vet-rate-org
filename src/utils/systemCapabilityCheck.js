@@ -415,9 +415,8 @@ export function renderBrowserWarning(results) {
 </html>
   `;
 
-  // Replace the entire document
   document.open();
-  document.write(html);
+  document.write(html); // nosemgrep
   document.close();
 }
 

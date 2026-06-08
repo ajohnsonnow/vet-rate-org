@@ -2375,6 +2375,19 @@ body {
   }
 }
 
+/* Hide floating shell buttons from the a11y tree when an aria-modal dialog is
+   open on mobile. aria-modal dialogs expect background content to be inert;
+   visibility:hidden achieves that without JS and prevents axe target-size
+   violations caused by the AI Navigator / Quick Exit buttons overlapping
+   dialog footer Close targets at the same viewport-bottom coordinates. */
+@media (max-width: 767px) {
+  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav,
+  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav-stacked {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
 /* Print Styles */
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT OPTIMIZATION - "The Paper General"

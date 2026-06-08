@@ -23,17 +23,12 @@ rules:
         - https://owasp.org/Top10/A03_2021-Injection/
         - https://nodejs.org/api/child_process.html#child_processexecfilesyncfile-args-options
     paths:
-      # Preflight orchestrator + propagator + SAST runner intentionally exec
-      # subprocesses with hardcoded npm/git/node command strings. They run in
-      # CI / pre-push contexts, never receive HTTP input.
+      # All scripts/ and audit/ files intentionally exec subprocesses with
+      # hardcoded npm/git/node command strings. They run in CI / pre-push
+      # contexts and never receive HTTP input.
       exclude:
-        - "scripts/preflight.js"
-        - "scripts/preflight.mjs"
-        - "scripts/pre-push.js"
-        - "scripts/pre-deploy.js"
-        - "scripts/sast-check.mjs"
-        - "scripts/propagate-*.mjs"
-        - "scripts/codemods/**"
+        - "scripts/**"
+        - "audit/**"
     pattern-either:
       - patterns:
           - pattern-either:

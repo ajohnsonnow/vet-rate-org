@@ -48,11 +48,13 @@ jobs:
       - name: Run ingestion pipeline
         id: ingest
         continue-on-error: true
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           set +e
           VERSION_ARG=""
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION_ARG="--version ${{ inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION_ARG="--version $INPUT_VERSION"
           fi
           node scripts/legal-ingestion/run-all.mjs $VERSION_ARG > diff.md 2> ingest.log
           CODE=$?
