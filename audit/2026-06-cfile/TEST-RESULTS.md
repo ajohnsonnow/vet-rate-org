@@ -355,6 +355,10 @@ Full suite total (all specs, all projects): **731/737** pass (prior 730/736 + 1 
 | Atomic Wipe coverage | PASS | Clears localStorage, sessionStorage, cookies, all IndexedDB (modern API + named-DB fallback), Cache Storage, Service Workers |
 | BugSquasher endpoint | FIXED | Was hardcoded `formsubmit.co/Anth@StructuredForGrowth.com`; now reads `VITE_BUG_REPORT_ENDPOINT` (empty = send disabled) |
 | BugSquasher PII guard | FIXED | `scrubPII()` applied to all free-text fields + `full_report` before remote send |
+| semgrep `.semgrep.yml` | PASS | 0 findings (semgrep 1.162.0) |
+| gitleaks | PASS | 0 leaks found (scanned 12 MB) |
+| dompurify-noop review | PASS | No src file imports DOMPurify; jspdf never calls `.fromHTML()`; noop is safe |
+| Network PII egress (local-AI) | MANUAL | Requires DevTools + real packet loaded interactively — operator must verify |
 
 ### Findings
 
@@ -374,10 +378,18 @@ Fix: `scrubPII()` from `piiScrubber.js` applied to all five free-text fields and
 
 `bugReportUtils.js:311` serializes `savedClaimConditions: claimsData.map(c => ({ condition: c.conditionName, ... }))`. Condition names are not PII under this project's definition. Accepted — no change needed.
 
+**F4-4 — dompurify-noop pass-through (LOW / accepted)**
+
+`packages/dompurify-noop/index.js` exports a pass-through `sanitize = (dirty) => dirty`. This is intentional — jspdf lists DOMPurify as an optional dep but never calls it in the PDF-generation paths used by this app (programmatic `doc.text()` / `doc.addImage()`, no `fromHTML`). No src file imports DOMPurify. The noop prevents the XSS advisories present in all dompurify 3.x releases from entering the dep tree. Accepted — no change needed; guarded by `packages/dompurify-noop` existing as the override target.
+
 ### Fixes committed
 
 - `src/components/BugSquasher.jsx` — env-configurable endpoint + PII scrub
 - `.env.example` — `VITE_BUG_REPORT_ENDPOINT` documented
+
+### Manual verification required
+
+- **Network PII egress (local-AI + Gemini paths)**: Load real packet in browser → open DevTools Network tab → trigger an AI prompt containing file number → confirm no PII leaves in request bodies. Gemini path: confirm `generativelanguage.googleapis.com` payload contains only `[REDACTED]` tokens from `piiScrubber.js`.
 
 ---
 
