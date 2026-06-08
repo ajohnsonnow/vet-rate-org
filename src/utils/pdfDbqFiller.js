@@ -10,7 +10,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb, degrees } from "pdf-lib";
-import { getCachedDbq, getDbqWithFallback } from "./dbqOfflineStorage";
+import { getCachedDbq } from "./dbqOfflineStorage";
 import { triggerBlobDownload } from "./sanitize";
 
 // ============================================================================
@@ -200,6 +200,7 @@ export async function fillFormFields(pdfDoc, formData) {
     }
   } catch (error) {
     // PDF may not have form fields - that's okay
+    // eslint-disable-next-line no-console
     console.log(
       "PDF does not have fillable form fields or error occurred:",
       error.message,
@@ -217,7 +218,7 @@ export async function fillFormFields(pdfDoc, formData) {
  * Known DBQ form field locations for text overlay
  * These are approximate positions for common DBQ sections
  */
-const DBQ_FIELD_POSITIONS = {
+const _DBQ_FIELD_POSITIONS = {
   // Subjective sections that veterans can fill out
   subjectiveHistory: {
     page: 1,
@@ -303,7 +304,7 @@ export function downloadPdfBlob(blob, filename) {
  * @param {string} password - The password to use
  * @returns {Promise<Blob|null>}
  */
-export async function createEncryptedZip(pdfBlob, filename, password) {
+export async function createEncryptedZip(pdfBlob, filename, _password) {
   try {
     // Dynamically import JSZip
     const JSZip = (await import("jszip")).default;

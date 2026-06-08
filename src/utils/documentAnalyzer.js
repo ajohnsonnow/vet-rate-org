@@ -455,6 +455,7 @@ export async function renderPDFToImages(
       totalPages: pagesToRender,
     });
 
+    // eslint-disable-next-line no-console
     console.log(
       `📷 Rendered ${images.length} PDF pages as images for vision model`,
     );

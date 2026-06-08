@@ -8,9 +8,10 @@
  * issues are on the VA's end, not Vet-Rate.org.
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useVaApiStatus, useVaFeatureStatus } from "../hooks/useVaApiStatus";
-import { STATUS_LEVELS, getStatusPageUrl } from "../utils/vaApiStatus";
+import { Tooltip } from "./common/Tooltip";
+import { getStatusPageUrl } from "../utils/vaApiStatus";
 import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl, sanitizeErrorMessage } from "../utils/sanitize";
 
@@ -29,7 +30,7 @@ const sanitizeVaShortlink = (url) =>
  * Only shows when there are actual problems
  */
 export function VaApiStatusBanner({ onDismiss }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { summary, loading, hasIssues } = useVaApiStatus({
     autoFetch: true,
     enablePolling: true,
@@ -107,25 +108,27 @@ export function VaApiStatusBanner({ onDismiss }) {
           </a>
 
           {summary?.severity !== "major_outage" && (
-            <button
-              onClick={handleDismiss}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
-              aria-label="Dismiss notification"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <Tooltip content="Dismiss notification" placement="bottom">
+              <button
+                onClick={handleDismiss}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                aria-label="Dismiss notification"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -142,7 +145,7 @@ export function VaApiStatusBanner({ onDismiss }) {
  * Good for headers, footers, or toolbars
  */
 export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { summary, loading, hasIssues, status } = useVaApiStatus();
   // Call getStatusPageUrl() directly so Snyk can confirm this is a static constant
   const statusPageUrl = getStatusPageUrl();
@@ -212,7 +215,7 @@ export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
  * Use near features that depend on VA APIs
  */
 export function VaFeatureStatusBadge({ feature, showDetails = false }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const {
     status,
     statusInfo,
@@ -313,7 +316,7 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
  * Good for settings pages or dedicated status views
  */
 export function VaApiStatusPanel() {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const { status, loading, error, lastUpdated, forceRefresh, hasIssues } =
     useVaApiStatus();
   // Use getStatusPageUrl() directly — static constant, breaks taint chain from hook error state
@@ -345,26 +348,28 @@ export function VaApiStatusPanel() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || loading}
-              className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-              title="Refresh status"
-            >
-              <svg
-                className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <Tooltip content="Refresh status" placement="bottom">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                aria-label="Refresh status"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
+                <svg
+                  className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+            </Tooltip>
 
             <a
               href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol
@@ -517,11 +522,11 @@ export function VaApiStatusPanel() {
                   </p>
                   <p className="text-blue-700 dark:text-blue-300 mt-1">
                     Vet-Rate.org uses official VA APIs for some features. When
-                    the VA's systems are down or under maintenance, those
+                    the VA&apos;s systems are down or under maintenance, those
                     features may not work - but{" "}
-                    <strong>it's not a problem with Vet-Rate.org</strong>. This
-                    status page helps you know when VA APIs are experiencing
-                    issues.
+                    <strong>it&apos;s not a problem with Vet-Rate.org</strong>.
+                    This status page helps you know when VA APIs are
+                    experiencing issues.
                   </p>
                 </div>
               </div>
@@ -542,7 +547,7 @@ export function VaApiStatusPanel() {
  * Helps users understand if it's a VA issue
  */
 export function VaApiErrorMessage({ feature, error, onRetry }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const featureStatus = useVaFeatureStatus(feature);
   const isVaIssue = featureStatus.hasIssues;
 

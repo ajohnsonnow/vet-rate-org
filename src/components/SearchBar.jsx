@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getSearchSuggestions } from "../utils/searchUtils";
 import disabilityData from "../data/disabilityData.json";
 import { useLanguage } from "../contexts/LanguageContext";

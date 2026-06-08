@@ -10,7 +10,7 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   Camera,
@@ -145,7 +145,7 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
       setError(
         "No AI available. Please configure an API key or enable Local AI in settings.",
       );
-      setShowAISettings(true);
+      onOpenAISettings?.();
       setStep("upload");
       return;
     }
@@ -275,7 +275,7 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
                 <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
                   {t("denialDecoder.ai")}
                 </span>
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                   BETA
                 </span>
               </h2>
@@ -351,7 +351,11 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
               </div>
             )}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div
+                className="bg-red-50 border border-red-200 rounded-lg p-4"
+                role="alert"
+                aria-live="polite"
+              >
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-900">{error}</p>

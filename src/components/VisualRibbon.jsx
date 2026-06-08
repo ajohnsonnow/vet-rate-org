@@ -9,7 +9,6 @@
  *   <VisualRibbon award={award} devices={devices} size="md" />
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Standard ribbon dimensions (scaled by size)
@@ -49,7 +48,7 @@ const VisualRibbon = ({
   className = "",
   showName = false,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const dimensions = SIZES[size] || SIZES.md;
   const { width, height, deviceSize } = dimensions;
 
@@ -89,7 +88,7 @@ const VisualRibbon = ({
               width: deviceSize,
               height: deviceSize,
             }}
-            title={device.type.replace(/_/g, " ")}
+            aria-label={device.type.replace(/_/g, " ")}
           >
             <span
               style={{
@@ -115,7 +114,7 @@ const VisualRibbon = ({
               width: deviceSize,
               height: deviceSize,
             }}
-            title={
+            aria-label={
               device.type === "bronze_olc"
                 ? "Bronze Oak Leaf Cluster"
                 : "Silver Oak Leaf Cluster"
@@ -151,7 +150,7 @@ const VisualRibbon = ({
               fontSize: deviceSize * 0.8,
               textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
-            title="V Device (Valor)"
+            aria-label="V Device (Valor)"
           >
             V
           </div>
@@ -171,7 +170,7 @@ const VisualRibbon = ({
               fontSize: deviceSize * 0.8,
               textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
-            title="C Device (Combat)"
+            aria-label="C Device (Combat)"
           >
             C
           </div>
@@ -191,7 +190,7 @@ const VisualRibbon = ({
               fontSize: deviceSize * 0.8,
               textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
-            title="R Device (Remote)"
+            aria-label="R Device (Remote)"
           >
             R
           </div>
@@ -211,7 +210,7 @@ const VisualRibbon = ({
               fontSize: deviceSize * 0.9,
               textShadow: "0 1px 2px rgba(0,0,0,0.5)",
             }}
-            title="Arrowhead Device"
+            aria-label="Arrowhead Device"
           >
             ▲
           </div>
@@ -250,7 +249,7 @@ const VisualRibbon = ({
         <div
           className="text-center text-xs mt-1 text-gray-700 dark:text-gray-300 truncate"
           style={{ maxWidth: width + 20 }}
-          title={award.name}
+          aria-label={award.name}
         >
           {award.name}
         </div>
@@ -274,7 +273,7 @@ export const RibbonRackDisplay = ({
 
   // Calculate rows
   const totalRibbons = awards.length;
-  const fullRows = Math.floor(totalRibbons / ribbonsPerRow);
+  const _fullRows = Math.floor(totalRibbons / ribbonsPerRow);
   const remainder = totalRibbons % ribbonsPerRow;
 
   const rows = [];

@@ -13,9 +13,9 @@
  * - Creates downloadable request ready for QuickSubmit
  */
 
-import React, { useState, useRef } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   Document,
@@ -24,11 +24,6 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  BorderStyle,
 } from "docx";
 import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
@@ -271,9 +266,8 @@ const generateRequestText = (formData, selectedRecords) => {
 };
 
 export default function FOIAGenerator({ onClose, onReportBug }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -464,11 +458,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               First Name *
             </label>
             <input
               type="text"
+              aria-label="First Name"
               value={formData.firstName}
               onChange={(e) => updateField("firstName", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -476,11 +472,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             />
           </div>
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Last Name *
             </label>
             <input
               type="text"
+              aria-label="Last Name"
               value={formData.lastName}
               onChange={(e) => updateField("lastName", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -491,11 +489,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
 
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Last 4 of SSN *
             </label>
             <input
               type="text"
+              aria-label="Last 4 of SSN"
               value={formData.ssn}
               onChange={(e) =>
                 updateField(
@@ -510,11 +510,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             />
           </div>
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Date of Birth *
             </label>
             <input
               type="date"
+              aria-label="Date of Birth"
               value={formData.dob}
               onChange={(e) => updateField("dob", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -524,11 +526,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
         </div>
 
         <div className="mt-4">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             VA File Number (if different from SSN)
           </label>
           <input
             type="text"
+            aria-label="VA File Number"
             value={formData.vaFileNumber}
             onChange={(e) => updateField("vaFileNumber", e.target.value)}
             placeholder="Leave blank if same as SSN"
@@ -543,11 +547,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
         </h3>
 
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Street Address *
           </label>
           <input
             type="text"
+            aria-label="Street Address"
             value={formData.address}
             onChange={(e) => updateField("address", e.target.value)}
             className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -555,13 +561,15 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           />
         </div>
 
-        <div className="grid grid-cols-6 gap-4 mt-4">
-          <div className="col-span-3">
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4">
+          <div className="col-span-2 sm:col-span-3">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               City *
             </label>
             <input
               type="text"
+              aria-label="City"
               value={formData.city}
               onChange={(e) => updateField("city", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -569,11 +577,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             />
           </div>
           <div className="col-span-1">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               State *
             </label>
             <input
               type="text"
+              aria-label="State"
               value={formData.state}
               onChange={(e) =>
                 updateField("state", e.target.value.toUpperCase().slice(0, 2))
@@ -584,12 +594,14 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
               required
             />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-1 sm:col-span-2">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ZIP Code *
             </label>
             <input
               type="text"
+              aria-label="ZIP Code"
               value={formData.zip}
               onChange={(e) =>
                 updateField(
@@ -606,11 +618,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
 
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Phone Number *
             </label>
             <input
               type="tel"
+              aria-label="Phone Number"
               value={formData.phone}
               onChange={(e) => updateField("phone", e.target.value)}
               placeholder="(XXX) XXX-XXXX"
@@ -619,11 +633,13 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             />
           </div>
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email Address *
             </label>
             <input
               type="email"
+              aria-label="Email Address"
               value={formData.email}
               onChange={(e) => updateField("email", e.target.value)}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -663,8 +679,8 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
               Request your <strong>complete C-File</strong> - it contains
               everything and reveals what VA actually considered when making
-              their decisions. You're entitled to <strong>one free copy</strong>{" "}
-              under 38 CFR § 1.555.
+              their decisions. You&apos;re entitled to{" "}
+              <strong>one free copy</strong> under 38 CFR § 1.555.
             </p>
           </div>
         </div>
@@ -706,7 +722,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {RECORD_TYPES.filter((r) => r.category === category).map(
               (record) => (
-                <div
+                <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
                   key={record.id}
                   className={`p-4 transition-colors cursor-pointer ${
                     selectedRecords.includes(record.id)
@@ -794,22 +810,26 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           {formData.dateRange === "custom" && (
             <div className="ml-8 flex gap-4">
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                   From
                 </label>
                 <input
                   type="month"
+                  aria-label="Date range start (month and year)"
                   value={formData.startDate}
                   onChange={(e) => updateField("startDate", e.target.value)}
                   className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
                 />
               </div>
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                   To
                 </label>
                 <input
                   type="month"
+                  aria-label="Date range end (month and year)"
                   value={formData.endDate}
                   onChange={(e) => updateField("endDate", e.target.value)}
                   className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
@@ -827,6 +847,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
         </h3>
 
         <div className="space-y-3">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="radio"
@@ -846,6 +867,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             </div>
           </label>
 
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="radio"
@@ -1151,64 +1173,65 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden relative modal-content flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header - Fixed at top */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🔑</span>
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  The Keysmith{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-amber-100">
-                  FOIA / C-File Request Generator
-                </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="foia-generator-title"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🔑</span>
+                <div>
+                  <h2
+                    id="foia-generator-title"
+                    className="text-xl font-bold text-white"
+                  >
+                    The Keysmith{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-amber-100">
+                    FOIA / C-File Request Generator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="FOIA Keysmith"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="FOIA Keysmith"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
-        </div>
-
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto">
+        }
+      >
+        <div>
           {/* Progress Steps */}
           <div className="px-6 pt-6">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -1261,28 +1284,29 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                   />
                   <div className="flex-1">
                     <p className="text-amber-200 font-semibold mb-1">
-                      🔐 Knowledge is power - now you're unlocking yours
+                      🔐 Knowledge is power - now you&apos;re unlocking yours
                     </p>
                     <p className="text-amber-300/70 text-sm">
                       Your C-File contains everything VA used to decide your
-                      claim - and everything they may have "overlooked." This
-                      tool helps every veteran see their own file. Transparency
-                      tools like this take time to build. Help keep them free.
+                      claim - and everything they may have
+                      &quot;overlooked.&quot; This tool helps every veteran see
+                      their own file. Transparency tools like this take time to
+                      build. Help keep them free.
                     </p>
                   </div>
                 </div>
               </div>
             )}
           </div>
-
-          {/* BuyMeCoffee - shows on download page */}
-          {step === 3 && (
-            <div className="p-6 pt-0">
-              <BuyMeCoffee show={true} trigger="foia" />
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+      </ResponsiveModal>
+
+      {/* BuyMeCoffee - shows on download page */}
+      {step === 3 && (
+        <div className="relative z-[70]">
+          <BuyMeCoffee show={true} trigger="foia" />
+        </div>
+      )}
+    </>
   );
 }

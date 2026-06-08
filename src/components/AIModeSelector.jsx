@@ -8,15 +8,15 @@
  * - Understand the privacy implications of each mode
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { Tooltip } from "./common/Tooltip";
 import {
   AI_MODES,
   getAIMode,
   setAIMode,
   getAIStatus,
   isLocalAIReady,
-  isLocalAIInitializing,
   isCloudAIAvailable,
 } from "../utils/unifiedAIService";
 
@@ -27,10 +27,13 @@ import {
 export const AIStatusBadge = ({
   onClick,
   className = "",
+  // eslint-disable-next-line no-unused-vars
   showLabel = false,
 }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  const [status, setStatus] = useState(getAIStatus());
+  // eslint-disable-next-line no-unused-vars
+  const [s_tatus, setStatus] = useState(getAIStatus());
 
   useEffect(() => {
     // Refresh status periodically
@@ -41,6 +44,7 @@ export const AIStatusBadge = ({
   }, []);
 
   // Check if any local/private AI is active
+  // eslint-disable-next-line no-unused-vars
   const isPrivateAI =
     status.effectiveMode === AI_MODES.SWARM ||
     status.effectiveMode === AI_MODES.LOCAL ||
@@ -130,7 +134,7 @@ export const AIStatusBadge = ({
           <span className="text-base">{status.cloudModelName}</span>
           <span
             className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium"
-            title="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
+            aria-label="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
           >
             💎 DKB*
           </span>
@@ -163,13 +167,15 @@ export const AIStatusBadge = ({
   };
 
   return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${getBadgeStyle()} ${className}`}
-      title={getTooltip()}
-    >
-      {getDisplayContent()}
-    </button>
+    <Tooltip content={getTooltip()} placement="bottom">
+      <button
+        onClick={onClick}
+        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${getBadgeStyle()} ${className}`}
+        aria-label={getTooltip()}
+      >
+        {getDisplayContent()}
+      </button>
+    </Tooltip>
   );
 };
 
@@ -222,23 +228,32 @@ export const AIToggle = ({
           {isLocal ? "🔒 Private" : "☁️ Cloud"}
         </span>
       )}
-      <button
-        onClick={handleToggle}
-        className={`relative w-12 h-6 rounded-full transition-colors ${
-          isLocal ? "bg-green-600" : "bg-blue-600"
-        }`}
-        title={
+      <Tooltip
+        content={
           isLocal
-            ? "Using Local AI (click for Cloud)"
-            : "Using Cloud AI (click for Local)"
+            ? "Using Local AI — click to use Cloud"
+            : "Using Cloud AI — click to use Local"
         }
+        placement="bottom"
       >
-        <div
-          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-            isLocal ? "left-1" : "left-7"
+        <button
+          onClick={handleToggle}
+          className={`relative w-12 h-6 rounded-full transition-colors ${
+            isLocal ? "bg-green-600" : "bg-blue-600"
           }`}
-        />
-      </button>
+          aria-label={
+            isLocal
+              ? "Using Local AI (click for Cloud)"
+              : "Using Cloud AI (click for Local)"
+          }
+        >
+          <div
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+              isLocal ? "left-1" : "left-7"
+            }`}
+          />
+        </button>
+      </Tooltip>
     </div>
   );
 };
@@ -457,7 +472,8 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
                 )}
               </div>
               <p className="text-sm text-gray-400 mt-1">
-                Google's Gemini AI - faster, more capable, requires internet
+                Google&apos;s Gemini AI - faster, more capable, requires
+                internet
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">

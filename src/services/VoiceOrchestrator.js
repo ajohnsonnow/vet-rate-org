@@ -17,8 +17,6 @@ import {
   speak,
   stopSpeaking,
   speakCrisisMessage,
-  getVoiceSettings,
-  setVoice,
   isSpeaking,
 } from "../utils/voiceEngine";
 import {
@@ -112,6 +110,7 @@ class VoiceOrchestrator {
    */
   enable() {
     this.isEnabled = true;
+    // eslint-disable-next-line no-console
     console.log("🎙️ Voice Orchestrator enabled");
   }
 
@@ -122,6 +121,7 @@ class VoiceOrchestrator {
     this.isEnabled = false;
     stopSpeaking();
     this.voiceQueue = [];
+    // eslint-disable-next-line no-console
     console.log("🎙️ Voice Orchestrator disabled");
   }
 

@@ -8,7 +8,7 @@
  * "Know your regs, know your rights."
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   BookOpen,
   Download,
@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 // Branch colors
 const BRANCH_COLORS = {
@@ -162,12 +163,14 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
   if (!publication) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div
-          className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]} rounded-t-xl`}
-        >
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="lg"
+      zIndex={70}
+      labelledBy="publication-details-title"
+      header={
+        <div className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]}`}>
           <div className="flex items-center justify-between">
             <div>
               <span className="text-lg">
@@ -178,80 +181,81 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
             <button
               onClick={onClose}
               className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
+      }
+    >
+      <h2
+        id="publication-details-title"
+        className="text-xl font-bold text-gray-900 dark:text-white mb-2"
+      >
+        {publication.title}
+      </h2>
 
-        {/* Content */}
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            {publication.title}
-          </h2>
+      <p className="text-gray-600 dark:text-gray-300 mb-4">
+        {publication.description}
+      </p>
 
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            {publication.description}
+      <div className="space-y-4">
+        {/* Category */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+            Category
+          </h4>
+          <p className="text-gray-900 dark:text-white">
+            {CATEGORY_ICONS[publication.category]}{" "}
+            {CATEGORY_NAMES[publication.category]}
           </p>
+        </div>
 
-          <div className="space-y-4">
-            {/* Category */}
-            <div>
-              <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
-                Category
-              </h4>
-              <p className="text-gray-900 dark:text-white">
-                {CATEGORY_ICONS[publication.category]}{" "}
-                {CATEGORY_NAMES[publication.category]}
-              </p>
-            </div>
+        {/* Use For */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
+            Useful For
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {publication.useFor?.map((use, idx) => (
+              <span
+                key={idx}
+                className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm"
+              >
+                {use}
+              </span>
+            ))}
+          </div>
+        </div>
 
-            {/* Use For */}
-            <div>
-              <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
-                Useful For
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {publication.useFor?.map((use, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm"
-                  >
-                    {use}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Links */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex gap-3">
-                {publication.filename && (
-                  <a
-                    href={`/pubs/${publication.filename}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    <Download className="w-5 h-5" />
-                    Download PDF
-                  </a>
-                )}
-                <a
-                  href={publication.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  Official Source
-                </a>
-              </div>
-            </div>
+        {/* Links */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex gap-3">
+            {publication.filename && (
+              <a
+                href={`/pubs/${publication.filename}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                Download PDF
+              </a>
+            )}
+            <a
+              href={publication.externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <ExternalLink className="w-5 h-5" />
+              Official Source
+            </a>
           </div>
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 
@@ -259,7 +263,7 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
  * Main Publications Library Component
  */
 export default function PublicationsLibrary() {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -367,7 +371,7 @@ export default function PublicationsLibrary() {
           <BookOpen className="w-8 h-8" />
           <h1 className="text-2xl font-bold">
             Publications Library{" "}
-            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
               BETA
             </span>
           </h1>
@@ -411,6 +415,7 @@ export default function PublicationsLibrary() {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Branch Filter */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Branch
               </label>
@@ -430,6 +435,7 @@ export default function PublicationsLibrary() {
 
             {/* Category Filter */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
               </label>

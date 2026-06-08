@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import { useState, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import { resetTourState, triggerTourRestart } from "./BootCampTour";
-import { getTotalToolCount } from "../data/toolkitData";
+import { useFocusTrap } from "../hooks/useFocusTrap";
+import { triggerTourRestart } from "./BootCampTour";
 import { PROJECT_STATS } from "../data/projectStats";
-import { getDisabilityCount } from "../utils/disabilityCount";
+import { sanitizeUrl } from "../utils/sanitize";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -3844,12 +3844,19 @@ const renderContent = (content, onClose) => {
       /`(.+?)`/g,
       '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
     );
-    // Handle links
-    text = text.replace(
-      /\[(.+?)\]\((.+?)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">$1</a>',
-    );
+    // Handle links — sanitize the href so a future contributor cannot land a
+    // javascript: URL in the static manual content. sanitizeUrl returns '#'
+    // for any non-http(s)/mailto/tel protocol.
+    text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+    });
 
+    // Safe-by-construction: `text` is developer-controlled manual content
+    // (static strings in this file). Bold / code / link replacements only
+    // emit a fixed allow-list of tags. Link hrefs are sanitizeUrl()-wrapped
+    // above. CSP in index.html blocks unknown script/connect origins.
+    // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
   };
 
@@ -3899,6 +3906,7 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("> ")) {
       flushList();
       flushTable();
+      // eslint-disable-next-line no-unused-vars
       inBlockquote = true;
       blockquoteContent.push(line.slice(2));
       continue;
@@ -3908,6 +3916,7 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("|")) {
       flushList();
       flushBlockquote();
+      // eslint-disable-next-line no-unused-vars
       inTable = true;
       const cells = line.split("|").filter((cell) => cell.trim() !== "");
       tableRows.push(cells);
@@ -3983,6 +3992,7 @@ const renderContent = (content, onClose) => {
 
 const UserManual = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
+  const panelRef = useRef(null);
 
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
@@ -4141,26 +4151,27 @@ const UserManual = ({ onClose, onReportBug }) => {
   const searchResults = searchQuery.trim()
     ? Object.entries(documentationContent)
         .filter(
-          ([id, content]) =>
+          ([_id, content]) =>
             content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             content.content.toLowerCase().includes(searchQuery.toLowerCase()),
         )
         .slice(0, 10)
     : [];
 
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [onClose]);
+  // Two-pane layout keeps independent sidebar/content scroll, so it stays a
+  // hand-built dialog rather than the single-scroll-body ResponsiveModal.
+  useFocusTrap(panelRef, { active: true, onEscape: onClose });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
       {/* Main container */}
-      <div className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("userManual", "title")}
+        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden"
+      >
         {/* Mobile header */}
         <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
           <button

@@ -72,13 +72,14 @@ export const initializeCompassionateVoice = () => {
   initializeVoiceEngine();
   initializePanicKey();
 
+  // eslint-disable-next-line no-console
   console.log("💎 Compassionate Voice System initialized");
 };
 
 /**
  * Configuration for voice features
  */
-const VOICE_CONFIG = {
+const _VOICE_CONFIG = {
   // Default voice settings (TBI-friendly)
   defaultSettings: {
     pitch: 0.95,

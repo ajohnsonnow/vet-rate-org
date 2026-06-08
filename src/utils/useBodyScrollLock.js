@@ -8,6 +8,14 @@
 
 import { useEffect } from "react";
 
+// Module-level lock state so nested modals (a ResponsiveModal opened from
+// inside another) share one lock: the body unlocks only when the last one
+// closes, and the scroll position captured at the first lock is restored.
+let lockCount = 0;
+let savedScrollX = 0;
+let savedScrollY = 0;
+let savedPaddingRight = "";
+
 /**
  * useBodyScrollLock - Locks body scroll when a modal is open
  *
@@ -23,32 +31,32 @@ export const useBodyScrollLock = (isLocked) => {
   useEffect(() => {
     if (!isLocked) return;
 
-    // Store current scroll position
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
+    if (lockCount === 0) {
+      savedScrollX = window.scrollX;
+      savedScrollY = window.scrollY;
+      savedPaddingRight = document.body.style.paddingRight;
 
-    // Get current body padding (to prevent layout shift from scrollbar removal)
-    const originalPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
+      // Compensate for scrollbar width to prevent layout shift
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
 
-    // Apply scroll lock
-    document.body.classList.add("modal-open");
-    document.body.style.top = `-${scrollY}px`;
-
-    // Compensate for scrollbar width to prevent layout shift
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.classList.add("modal-open");
+      document.body.style.top = `-${savedScrollY}px`;
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
     }
+    lockCount += 1;
 
-    // Cleanup function - restore scroll when modal closes
+    // Cleanup - restore scroll only when the last open modal closes
     return () => {
+      lockCount -= 1;
+      if (lockCount > 0) return;
+
       document.body.classList.remove("modal-open");
       document.body.style.top = "";
-      document.body.style.paddingRight = originalPaddingRight;
-
-      // Restore scroll position
-      window.scrollTo(scrollX, scrollY);
+      document.body.style.paddingRight = savedPaddingRight;
+      window.scrollTo(savedScrollX, savedScrollY);
     };
   }, [isLocked]);
 };

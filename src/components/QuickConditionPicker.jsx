@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import disabilityData from "../data/disabilityData.json";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -10,7 +10,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState("");
   const [expandedSystems, setExpandedSystems] = useState(new Set());
@@ -72,6 +72,7 @@ const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
     });
 
     return systemMap;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sort system names in a logical order

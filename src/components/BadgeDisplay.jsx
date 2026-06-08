@@ -14,10 +14,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {
-  ALL_BADGES,
   BADGE_GROUPS,
   BADGE_PLACEMENT,
-  parseDD214Badges,
   calculateOverseasBars,
   calculateServiceStripes,
 } from "../data/badgeData";
@@ -140,10 +138,17 @@ const Badge = ({ badge, size = "md", showTooltip = true }) => {
       );
     }
 
-    // Second try: use embedded SVG if provided
+    // Second try: use embedded SVG if provided.
+    //
+    // Safe-by-construction: `badge.svg` is sourced exclusively from
+    // src/data/badgeData.js — a developer-curated static file of military
+    // badge/tab/insignia template literals (no user input flows here). CSP
+    // in index.html restricts the page's script/connect origins so even a
+    // contributor-injected <script> in an SVG would fail to call out.
     if (badge.svg) {
       return (
         <div
+          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
           dangerouslySetInnerHTML={{ __html: badge.svg }}
           style={{ width: dimensions.width, height: dimensions.height }}
         />
@@ -302,6 +307,7 @@ const OverseasBars = ({ count, type = "wartime", size = "md" }) => {
 
   const barHeight = size === "sm" ? 4 : size === "md" ? 6 : 8;
   const barWidth = size === "sm" ? 30 : size === "md" ? 40 : 50;
+  // eslint-disable-next-line no-unused-vars
   const gap = 3;
 
   return (

@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { checkWebGPUSupport } from "./unifiedAIService";
+import { MOBILE_MAX } from "./breakpoints";
 
 /**
  * Device capability tiers
@@ -53,7 +54,7 @@ const checkIsMobile = () => {
   const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
   // Check screen size
-  const isSmallScreen = window.innerWidth < 768;
+  const isSmallScreen = window.innerWidth < MOBILE_MAX;
 
   // Check User Agent for mobile keywords
   const ua = navigator.userAgent.toLowerCase();

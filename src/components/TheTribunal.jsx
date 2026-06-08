@@ -9,10 +9,9 @@
  * Prepares veterans for Higher Level Reviews and Board Appeals
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import { getVeteranProfile } from "../utils/veteranProfile";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -117,14 +116,13 @@ export default function TheTribunal({
   onReportBug,
   onOpenAISettings,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [transcript, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -141,6 +139,7 @@ export default function TheTribunal({
   // Speech control state
   const [speechEnabled, setSpeechEnabled] = useState(true); // Judge TTS enabled
   const [pendingSpeech, setPendingSpeech] = useState(null); // Queued speech to play
+  // eslint-disable-next-line no-unused-vars
   const [hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
@@ -300,6 +299,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
           voicesLoadedRef.current = true;
+          // eslint-disable-next-line no-console
           console.log("Tribunal: Loaded", voices.length, "voices");
         }
       };
@@ -360,6 +360,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
       }
       window.speechSynthesis.cancel();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get a suitable voice for the judge
@@ -469,6 +470,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
   };
 
   // Play pending speech manually
+  // eslint-disable-next-line no-unused-vars
   const playPendingSpeech = () => {
     if (pendingSpeech) {
       speak(pendingSpeech.text, pendingSpeech.callback, true);
@@ -741,292 +743,422 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
 
   if (!isInitialized) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md text-center">
-          <p className="text-gray-800 dark:text-white">
-            Initializing speech recognition...
-          </p>
-        </div>
-      </div>
+      <ResponsiveModal isOpen onClose={onClose} title="The Tribunal" size="sm">
+        <p className="py-8 text-center text-gray-800 dark:text-white">
+          Initializing speech recognition...
+        </p>
+      </ResponsiveModal>
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop overscroll-contain">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-3xl font-bold flex items-center gap-2">
-                  ⚖️ The Tribunal
-                  <span className="px-1.5 py-0.5 bg-gray-500 text-white text-[10px] font-bold rounded">
-                    AI
-                  </span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-              </div>
-              <p className="text-gray-300">
-                Mock Board of Veterans' Appeals Hearing
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="The Tribunal"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="text-white hover:text-gray-200 text-2xl font-bold"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
+  const header = (
+    <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="mb-1 flex items-center gap-2 sm:mb-2">
+            <h2
+              id="the-tribunal-title"
+              className="flex items-center gap-2 text-xl font-bold sm:text-3xl"
+            >
+              ⚖️ The Tribunal
+              <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                AI
+              </span>
+              <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                BETA
+              </span>
+            </h2>
           </div>
+          <p className="truncate text-sm text-gray-300">
+            Mock Board of Veterans&apos; Appeals Hearing
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="The Tribunal"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      </div>
 
-          {/* Score Display */}
-          {sessionScore.total > 0 && (
-            <div className="mt-4 bg-white/10 rounded-lg p-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Performance:</span>
-                <span className="font-bold">
-                  {sessionScore.correct} / {sessionScore.total} correct (
-                  {Math.round(
-                    (sessionScore.correct / sessionScore.total) * 100,
-                  )}
-                  %)
-                </span>
+      {/* Score Display */}
+      {sessionScore.total > 0 && (
+        <div className="mt-4 rounded-lg bg-white/10 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Performance:</span>
+            <span className="font-bold">
+              {sessionScore.correct} / {sessionScore.total} correct (
+              {Math.round((sessionScore.correct / sessionScore.total) * 100)}%)
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const instructionsFooter = (
+    <button
+      onClick={startHearing}
+      disabled={!acknowledgedWarning}
+      className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+    >
+      {acknowledgedWarning
+        ? "Enter the Courtroom →"
+        : "Please acknowledge the notice above"}
+    </button>
+  );
+
+  const hearingFooter = (
+    <div>
+      {/* Voice Status Indicators */}
+      <div className="mb-3 hidden items-center justify-center gap-6 sm:flex">
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isListening ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
+        >
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${isListening ? "bg-red-500 animate-pulse" : "bg-gray-400"}`}
+          />
+          <span className="text-sm font-medium">
+            🎤 {isListening ? "Recording" : "Mic Off"}
+          </span>
+        </div>
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isSpeaking ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
+        >
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${isSpeaking ? "bg-blue-500 animate-pulse" : "bg-gray-400"}`}
+          />
+          <span className="text-sm font-medium">
+            🔊 {isSpeaking ? "Judge Speaking" : "Silent"}
+          </span>
+        </div>
+      </div>
+
+      {/* Two-Column Control Panel */}
+      <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+        {/* Judge Speaker Controls */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
+              ⚖️ Judge&apos;s Voice
+            </span>
+            <button
+              onClick={() => setSpeechEnabled(!speechEnabled)}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                speechEnabled ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+              }`}
+              aria-label={
+                speechEnabled ? "Disable judge audio" : "Enable judge audio"
+              }
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  speechEnabled ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={speakLastJudgeMessage}
+              disabled={
+                isSpeaking ||
+                conversation.filter((m) => m.speaker === "judge").length === 0
+              }
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {pendingSpeech ? "Play Opening" : "Replay"}
+            </button>
+            <button
+              onClick={stopSpeaking}
+              disabled={!isSpeaking}
+              className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" />
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
+
+        {/* Veteran Microphone Controls */}
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-red-900 dark:text-red-200 flex items-center gap-2">
+              🎤 Your Microphone
+            </span>
+            {isListening && (
+              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse">
+                ● LIVE
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={startListening}
+              disabled={isListening || isSpeaking || isAIProcessing}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93V7h2v1c0 2.76 2.24 5 5 5s5-2.24 5-5V7h2v1c0 4.08-3.06 7.44-7 7.93V18h4v2H8v-2h4v-2.07z" />
+              </svg>
+              {isListening ? "Recording..." : "Start Recording"}
+            </button>
+            <button
+              onClick={stopListening}
+              disabled={!isListening}
+              className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" />
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Manual Text Input Fallback */}
+      <form onSubmit={handleManualInput} className="mb-3 flex gap-2">
+        <input
+          type="text"
+          name="manualText"
+          placeholder="Or type your response here..."
+          disabled={isAIProcessing || isSpeaking}
+          className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={isAIProcessing || isSpeaking}
+          className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+        >
+          Send
+        </button>
+      </form>
+
+      {/* Tips & Help */}
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span>
+          💡 Tip: Cite &quot;38 CFR...&quot;, &quot;per case law...&quot;,
+          &quot;medical nexus...&quot;
+        </span>
+        <button
+          onClick={() => {
+            stopSpeaking();
+            stopListening();
+            setShowInstructions(true);
+            setHearingStarted(false);
+            setConversation([]);
+            setSessionScore({ correct: 0, total: 0 });
+            setCurrentQuestion(null);
+            setPendingSpeech(null);
+          }}
+          className="text-red-500 hover:text-red-600 font-medium"
+        >
+          ← Exit Courtroom
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      footer={showInstructions ? instructionsFooter : hearingFooter}
+      labelledBy="the-tribunal-title"
+      size="2xl"
+    >
+      {/* Instructions */}
+      {showInstructions && (
+        <div className="-m-4 bg-blue-50 p-4 dark:bg-blue-900/20 sm:p-6">
+          <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
+            📋 Before You Begin:
+          </h3>
+
+          {/* AI Required Warning */}
+          {!aiAvailable && (
+            <div className="mb-4 p-4 bg-amber-900/30 rounded-lg border border-amber-600/50">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💡</span>
+                <div>
+                  <h3 className="font-bold text-amber-300">
+                    AI Required for Analysis
+                  </h3>
+                  <p className="text-amber-200 text-sm mt-1">
+                    Click the <strong>AI Status button</strong> in the header
+                    above to load your secure Local AI (100% private) or enter
+                    your Gemini API key.
+                  </p>
+                </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Instructions */}
-        {showInstructions && (
-          <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-            <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
-              📋 Before You Begin:
-            </h3>
-
-            {/* AI Required Warning */}
-            {!aiAvailable && (
-              <div className="mb-4 p-4 bg-amber-900/30 rounded-lg border border-amber-600/50">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h3 className="font-bold text-amber-300">
-                      AI Required for Analysis
-                    </h3>
-                    <p className="text-amber-200 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header
-                      above to load your secure Local AI (100% private) or enter
-                      your Gemini API key.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* AI Mode Toggle */}
-            <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🤖</span>
-                  <div>
-                    <div className="font-semibold text-purple-900 dark:text-purple-200">
-                      AI-Powered Judge
-                    </div>
-                    <p className="text-xs text-purple-700 dark:text-purple-300">
-                      {aiAvailable
-                        ? "Intelligent responses based on VA law and your claims"
-                        : "AI unavailable - using preset questions"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setUseAI(!useAI)}
-                  disabled={!aiAvailable}
-                  aria-label={useAI ? "Disable AI judges" : "Enable AI judges"}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    useAI && aiAvailable
-                      ? "bg-purple-600"
-                      : "bg-gray-300 dark:bg-gray-600"
-                  } ${!aiAvailable ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      useAI && aiAvailable ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-              {useAI && aiAvailable && (
-                <p className="mt-2 text-xs text-purple-700 dark:text-purple-300 bg-purple-200/50 dark:bg-purple-900/50 rounded p-2">
-                  ✨ AI judges will evaluate your arguments using real veterans
-                  law principles, cite relevant case law, and provide
-                  personalized coaching.
-                </p>
-              )}
-            </div>
-
-            {/* Persona Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Select Your Judge:
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedPersona(key)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      selectedPersona === key
-                        ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
-                        : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
-                    }`}
-                  >
-                    <div className="text-3xl mb-1">{persona.avatar}</div>
-                    <div className="font-semibold text-sm">{persona.name}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                      {persona.style}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300 mb-4">
-              <li>• This is practice - your responses are not recorded</li>
-              <li>• Speak clearly and use legal terms when possible</li>
-              <li>• The judge will challenge you - that's their job</li>
-              <li>• Cite regulations (38 CFR) and case law when you can</li>
-              <li>
-                • If you don't know the answer, say "I would consult my
-                representative"
-              </li>
-            </ul>
-
-            {/* Speech/Hearing Technology Warning */}
-            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">⚠️</span>
+          {/* AI Mode Toggle */}
+          <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🤖</span>
                 <div>
-                  <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
-                    Audio Technology Notice
-                  </h4>
-                  <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
-                    This feature uses <strong>speech synthesis</strong>{" "}
-                    (text-to-speech) and <strong>speech recognition</strong>{" "}
-                    (microphone input) for an interactive hearing simulation.
+                  <div className="font-semibold text-purple-900 dark:text-purple-200">
+                    AI-Powered Judge
+                  </div>
+                  <p className="text-xs text-purple-700 dark:text-purple-300">
+                    {aiAvailable
+                      ? "Intelligent responses based on VA law and your claims"
+                      : "AI unavailable - using preset questions"}
                   </p>
-                  <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
-                    <li>
-                      🔊 <strong>Speakers/Headphones:</strong> The AI judge will
-                      speak aloud. Ensure your volume is appropriate.
-                    </li>
-                    <li>
-                      🎤 <strong>Microphone:</strong> You'll need to grant
-                      microphone permissions to respond by voice.
-                    </li>
-                    <li>
-                      ⌨️ <strong>Alternative:</strong> You can also type
-                      responses if you prefer not to use voice.
-                    </li>
-                    <li>
-                      🔒 <strong>Privacy:</strong> Voice data is processed
-                      locally by your browser and is NOT recorded or stored.
-                    </li>
-                  </ul>
-                  <label className="flex items-center gap-2 mt-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={acknowledgedWarning}
-                      onChange={(e) => setAcknowledgedWarning(e.target.checked)}
-                      className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
-                    />
-                    <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
-                      I understand this uses speech technology
-                    </span>
-                  </label>
                 </div>
               </div>
-            </div>
-
-            <button
-              onClick={startHearing}
-              disabled={!acknowledgedWarning}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              {acknowledgedWarning
-                ? "Enter the Courtroom →"
-                : "Please acknowledge the notice above"}
-            </button>
-          </div>
-        )}
-
-        {/* Conversation Area */}
-        {!showInstructions && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
-            {conversation.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
+              <button
+                onClick={() => setUseAI(!useAI)}
+                disabled={!aiAvailable}
+                aria-label={useAI ? "Disable AI judges" : "Enable AI judges"}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  useAI && aiAvailable
+                    ? "bg-purple-600"
+                    : "bg-gray-300 dark:bg-gray-600"
+                } ${!aiAvailable ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.speaker === "judge"
-                      ? message.isCorrect === true
-                        ? "bg-green-100 dark:bg-green-900/30 border-l-4 border-green-600"
-                        : message.isCorrect === false
-                          ? "bg-red-100 dark:bg-red-900/30 border-l-4 border-red-600"
-                          : "bg-white dark:bg-gray-800 shadow-md"
-                      : "bg-blue-600 text-white shadow-md"
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useAI && aiAvailable ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            {useAI && aiAvailable && (
+              <p className="mt-2 text-xs text-purple-700 dark:text-purple-300 bg-purple-200/50 dark:bg-purple-900/50 rounded p-2">
+                ✨ AI judges will evaluate your arguments using real veterans
+                law principles, cite relevant case law, and provide personalized
+                coaching.
+              </p>
+            )}
+          </div>
+
+          {/* Persona Selection */}
+          <div className="mb-4">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Select Your Judge:
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedPersona(key)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    selectedPersona === key
+                      ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
+                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
                   }`}
                 >
-                  {message.speaker === "judge" && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">
-                        {JUDGE_PERSONAS[selectedPersona].avatar}
-                      </span>
-                      <span className="font-bold text-sm">
-                        {JUDGE_PERSONAS[selectedPersona].name}
-                      </span>
-                      {message.category && (
-                        <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
-                          {message.category}
-                        </span>
-                      )}
-                      {message.isAI && (
-                        <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
-                          🤖 AI
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <p
-                    className={`${message.speaker === "user" ? "text-white" : "text-gray-800 dark:text-gray-200"}`}
-                  >
-                    {message.text}
-                  </p>
-                  <p className="text-xs opacity-75 mt-2">
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
+                  <div className="text-3xl mb-1">{persona.avatar}</div>
+                  <div className="font-semibold text-sm">{persona.name}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {persona.style}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
 
-            {/* AI Processing Indicator */}
-            {isAIProcessing && (
-              <div className="flex justify-start">
-                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 max-w-[80%]">
+          <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300 mb-4">
+            <li>• This is practice - your responses are not recorded</li>
+            <li>• Speak clearly and use legal terms when possible</li>
+            <li>• The judge will challenge you - that&apos;s their job</li>
+            <li>• Cite regulations (38 CFR) and case law when you can</li>
+            <li>
+              • If you don&apos;t know the answer, say &quot;I would consult my
+              representative&quot;
+            </li>
+          </ul>
+
+          {/* Speech/Hearing Technology Warning */}
+          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
+                  Audio Technology Notice
+                </h4>
+                <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
+                  This feature uses <strong>speech synthesis</strong>{" "}
+                  (text-to-speech) and <strong>speech recognition</strong>{" "}
+                  (microphone input) for an interactive hearing simulation.
+                </p>
+                <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                  <li>
+                    🔊 <strong>Speakers/Headphones:</strong> The AI judge will
+                    speak aloud. Ensure your volume is appropriate.
+                  </li>
+                  <li>
+                    🎤 <strong>Microphone:</strong> You&apos;ll need to grant
+                    microphone permissions to respond by voice.
+                  </li>
+                  <li>
+                    ⌨️ <strong>Alternative:</strong> You can also type responses
+                    if you prefer not to use voice.
+                  </li>
+                  <li>
+                    🔒 <strong>Privacy:</strong> Voice data is processed locally
+                    by your browser and is NOT recorded or stored.
+                  </li>
+                </ul>
+                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgedWarning}
+                    onChange={(e) => setAcknowledgedWarning(e.target.checked)}
+                    className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                  />
+                  <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                    I understand this uses speech technology
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conversation Area */}
+      {!showInstructions && (
+        <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
+          {conversation.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-4 ${
+                  message.speaker === "judge"
+                    ? message.isCorrect === true
+                      ? "bg-green-100 dark:bg-green-900/30 border-l-4 border-green-600"
+                      : message.isCorrect === false
+                        ? "bg-red-100 dark:bg-red-900/30 border-l-4 border-red-600"
+                        : "bg-white dark:bg-gray-800 shadow-md"
+                    : "bg-blue-600 text-white shadow-md"
+                }`}
+              >
+                {message.speaker === "judge" && (
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">
                       {JUDGE_PERSONAS[selectedPersona].avatar}
@@ -1034,213 +1166,69 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                     <span className="font-bold text-sm">
                       {JUDGE_PERSONAS[selectedPersona].name}
                     </span>
-                    <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
-                      🤖 AI
-                    </span>
+                    {message.category && (
+                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                        {message.category}
+                      </span>
+                    )}
+                    {message.isAI && (
+                      <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
+                        🤖 AI
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <div className="flex space-x-1">
-                      <div
-                        className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      ></div>
-                    </div>
-                    <span className="text-sm">
-                      Judge is considering your response...
-                    </span>
+                )}
+                <p
+                  className={`${message.speaker === "user" ? "text-white" : "text-gray-800 dark:text-gray-200"}`}
+                >
+                  {message.text}
+                </p>
+                <p className="text-xs opacity-75 mt-2">
+                  {message.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {/* AI Processing Indicator */}
+          {isAIProcessing && (
+            <div className="flex justify-start">
+              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 max-w-[85%] sm:max-w-[80%]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">
+                    {JUDGE_PERSONAS[selectedPersona].avatar}
+                  </span>
+                  <span className="font-bold text-sm">
+                    {JUDGE_PERSONAS[selectedPersona].name}
+                  </span>
+                  <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
+                    🤖 AI
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <div className="flex space-x-1">
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Control Panel */}
-        {!showInstructions && (
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
-            {/* Voice Status Indicators */}
-            <div className="flex items-center justify-center gap-6 mb-4">
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isListening ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
-              >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${isListening ? "bg-red-500 animate-pulse" : "bg-gray-400"}`}
-                />
-                <span className="text-sm font-medium">
-                  🎤 {isListening ? "Recording" : "Mic Off"}
-                </span>
-              </div>
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isSpeaking ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
-              >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${isSpeaking ? "bg-blue-500 animate-pulse" : "bg-gray-400"}`}
-                />
-                <span className="text-sm font-medium">
-                  🔊 {isSpeaking ? "Judge Speaking" : "Silent"}
-                </span>
-              </div>
-            </div>
-
-            {/* Two-Column Control Panel */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {/* Judge Speaker Controls */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
-                    ⚖️ Judge's Voice
+                  <span className="text-sm">
+                    Judge is considering your response...
                   </span>
-                  <button
-                    onClick={() => setSpeechEnabled(!speechEnabled)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                      speechEnabled
-                        ? "bg-blue-600"
-                        : "bg-gray-300 dark:bg-gray-600"
-                    }`}
-                    title={
-                      speechEnabled
-                        ? "Disable judge audio"
-                        : "Enable judge audio"
-                    }
-                  >
-                    <span
-                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                        speechEnabled ? "translate-x-5" : "translate-x-0.5"
-                      }`}
-                    />
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={speakLastJudgeMessage}
-                    disabled={
-                      isSpeaking ||
-                      conversation.filter((m) => m.speaker === "judge")
-                        .length === 0
-                    }
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                    {pendingSpeech ? "Play Opening" : "Replay"}
-                  </button>
-                  <button
-                    onClick={stopSpeaking}
-                    disabled={!isSpeaking}
-                    className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <rect x="6" y="6" width="12" height="12" />
-                    </svg>
-                    Stop
-                  </button>
-                </div>
-              </div>
-
-              {/* Veteran Microphone Controls */}
-              <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-red-900 dark:text-red-200 flex items-center gap-2">
-                    🎤 Your Microphone
-                  </span>
-                  {isListening && (
-                    <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse">
-                      ● LIVE
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={startListening}
-                    disabled={isListening || isSpeaking || isAIProcessing}
-                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93V7h2v1c0 2.76 2.24 5 5 5s5-2.24 5-5V7h2v1c0 4.08-3.06 7.44-7 7.93V18h4v2H8v-2h4v-2.07z" />
-                    </svg>
-                    {isListening ? "Recording..." : "Start Recording"}
-                  </button>
-                  <button
-                    onClick={stopListening}
-                    disabled={!isListening}
-                    className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <rect x="6" y="6" width="12" height="12" />
-                    </svg>
-                    Stop
-                  </button>
                 </div>
               </div>
             </div>
-
-            {/* Manual Text Input Fallback */}
-            <form onSubmit={handleManualInput} className="flex gap-2 mb-3">
-              <input
-                type="text"
-                name="manualText"
-                placeholder="Or type your response here..."
-                disabled={isAIProcessing || isSpeaking}
-                className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={isAIProcessing || isSpeaking}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
-              >
-                Send
-              </button>
-            </form>
-
-            {/* Tips & Help */}
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-              <span>
-                💡 Tip: Cite "38 CFR...", "per case law...", "medical nexus..."
-              </span>
-              <button
-                onClick={() => {
-                  stopSpeaking();
-                  stopListening();
-                  setShowInstructions(true);
-                  setHearingStarted(false);
-                  setConversation([]);
-                  setSessionScore({ correct: 0, total: 0 });
-                  setCurrentQuestion(null);
-                  setPendingSpeech(null);
-                }}
-                className="text-red-500 hover:text-red-600 font-medium"
-              >
-                ← Exit Courtroom
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+          )}
+        </div>
+      )}
+    </ResponsiveModal>
   );
 }

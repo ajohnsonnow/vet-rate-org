@@ -6,20 +6,19 @@
  * The Solution: AI-powered adversarial review that finds weaknesses before the VA does
  */
 
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useState, useEffect } from "react";
 import {
   getSavedClaims,
   getStatement,
   getAllStatements,
 } from "../utils/claimsStorage";
 import { getVeteranProfile, getSavedForms } from "../utils/veteranProfile";
-import { isAnyAIAvailable, generateAI } from "../utils/unifiedAIService";
+import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import ReportBugLink from "./ReportBugLink";
 import VoiceInputButton from "./VoiceInput";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
-  const { t } = useLanguage();
   const [testResults, setTestResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [practiceAnswers, setPracticeAnswers] = useState({});
@@ -29,7 +28,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
   const [savedClaims, setSavedClaims] = useState([]);
   const [savedStatements, setSavedStatements] = useState([]);
   const [savedForms, setSavedForms] = useState([]);
-  const [veteranProfile, setVeteranProfile] = useState({});
+  const [_veteranProfile, setVeteranProfile] = useState({});
   const [showPacketSelector, setShowPacketSelector] = useState(false);
   const [selectedPacketItem, setSelectedPacketItem] = useState(null);
 
@@ -339,11 +338,11 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
   const getSeverityColor = (severity) => {
     switch (severity) {
       case "HIGH":
-        return "text-red-500 border-red-500";
+        return "text-red-600 dark:text-red-500 border-red-500";
       case "MEDIUM":
-        return "text-yellow-500 border-yellow-500";
+        return "text-yellow-600 dark:text-yellow-500 border-yellow-500";
       case "LOW":
-        return "text-green-500 border-green-500";
+        return "text-green-600 dark:text-green-500 border-green-500";
       default:
         return "text-gray-500 border-gray-500";
     }
@@ -362,10 +361,27 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
     }
   };
 
-  return (
-    <div className="bg-gray-900 border border-red-500/30 rounded-lg p-6 relative">
-      {/* Close Button and Bug Report */}
-      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+  const header = (
+    <div className="flex items-start justify-between gap-3 border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <div>
+        <h2
+          id="claim-stress-title"
+          className="mb-2 flex items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
+        >
+          ⚔️ The War Game - Red Team Simulator
+          <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            AI
+          </span>
+          <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            BETA
+          </span>
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          Stress-test your claim. See the tough questions{" "}
+          <span className="font-bold">before</span> the C&P examiner asks them.
+        </p>
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-2">
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -373,56 +389,52 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
             moduleName="The War Game"
           />
         )}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
-            aria-label="Close"
+        <button
+          onClick={onClose}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          aria-label="Close dialog"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
       </div>
+    </div>
+  );
 
-      {/* Header */}
-      <div className="mb-6 pr-12">
-        <h2 className="text-2xl font-bold text-red-400 mb-2 flex items-center gap-2">
-          ⚔️ The War Game - Red Team Simulator
-          <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
-            AI
-          </span>
-          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-            BETA
-          </span>
-        </h2>
-        <p className="text-gray-300 text-sm">
-          Stress-test your claim. See the tough questions{" "}
-          <span className="font-bold">before</span> the C&P examiner asks them.
-        </p>
-      </div>
-
+  return (
+    <ResponsiveModal
+      isOpen={true}
+      onClose={onClose}
+      header={header}
+      labelledBy="claim-stress-title"
+      size="xl"
+      className="border border-red-300 dark:border-red-500/30"
+    >
       {/* Mission Brief */}
-      <div className="bg-red-900/20 border border-red-500/30 rounded p-4 mb-6">
-        <h3 className="text-red-400 font-bold mb-2">🎯 MISSION BRIEF</h3>
-        <p className="text-gray-300 text-sm mb-3">
+      <div className="mb-6 rounded border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-900/20">
+        <h3 className="mb-2 font-bold text-red-600 dark:text-red-400">
+          🎯 MISSION BRIEF
+        </h3>
+        <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
           This tool adopts the persona of a{" "}
-          <span className="font-bold text-red-400">Skeptical VA Rater</span>. It
-          will identify logical gaps, timeline issues, and missing evidence in
-          your claim.
+          <span className="font-bold text-red-600 dark:text-red-400">
+            Skeptical VA Rater
+          </span>
+          . It will identify logical gaps, timeline issues, and missing evidence
+          in your claim.
         </p>
-        <p className="text-yellow-400 text-xs font-semibold">
+        <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
           Better to panic now in the safety of this app than freeze up in the
           exam room.
         </p>
@@ -430,14 +442,14 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
 
       {/* AI Required Warning */}
       {!isAnyAIAvailable() && (
-        <div className="bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+        <div className="mb-6 rounded-r-lg border-l-4 border-amber-500 bg-amber-50 p-4 dark:bg-amber-900/30">
           <div className="flex items-start gap-3">
             <span className="text-2xl">💡</span>
             <div>
-              <h3 className="font-bold text-amber-300">
+              <h3 className="font-bold text-amber-700 dark:text-amber-300">
                 AI Required for Analysis
               </h3>
-              <p className="text-amber-200 text-sm mt-1">
+              <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
                 Click the <strong>AI Status button</strong> in the header above
                 to load your secure Local AI (100% private) or enter your Gemini
                 API key.
@@ -465,15 +477,15 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
 
               {/* Packet Selector Dropdown */}
               {showPacketSelector && (
-                <div className="mt-3 bg-gray-800 border border-blue-500/50 rounded-lg p-4 max-h-64 overflow-y-auto">
-                  <p className="text-gray-400 text-sm mb-3">
+                <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-blue-200 bg-gray-100 p-4 dark:border-blue-500/50 dark:bg-gray-800">
+                  <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
                     Select an item from your packet to analyze:
                   </p>
 
                   {/* Saved Claims */}
                   {savedClaims.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-blue-400 font-semibold text-sm mb-2">
+                      <h4 className="mb-2 text-sm font-semibold text-blue-600 dark:text-blue-400">
                         📋 Saved Claims
                       </h4>
                       <div className="space-y-2">
@@ -481,16 +493,16 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                           <button
                             key={claim.id}
                             onClick={() => loadFromPacket(claim, "claim")}
-                            className="w-full text-left p-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition"
+                            className="w-full rounded bg-gray-200 p-2 text-left text-sm transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                           >
-                            <span className="text-white font-medium">
+                            <span className="font-medium text-gray-900 dark:text-white">
                               {claim.condition}
                             </span>
-                            <span className="text-gray-400 ml-2">
+                            <span className="ml-2 text-gray-600 dark:text-gray-400">
                               ({claim.code})
                             </span>
                             {claim.rating && (
-                              <span className="text-green-400 ml-2">
+                              <span className="ml-2 text-green-700 dark:text-green-400">
                                 {claim.rating}%
                               </span>
                             )}
@@ -503,7 +515,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                   {/* Saved Forms (Personal Statements, Buddy Statements, etc.) */}
                   {savedForms.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-yellow-400 font-semibold text-sm mb-2">
+                      <h4 className="mb-2 text-sm font-semibold text-yellow-700 dark:text-yellow-400">
                         📝 Saved Forms & Statements
                       </h4>
                       <div className="space-y-2">
@@ -511,17 +523,17 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                           <button
                             key={form.id}
                             onClick={() => loadFromPacket(form, "form")}
-                            className="w-full text-left p-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition"
+                            className="w-full rounded bg-gray-200 p-2 text-left text-sm transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                           >
-                            <span className="text-white font-medium">
+                            <span className="font-medium text-gray-900 dark:text-white">
                               {form.title || form.formName}
                             </span>
-                            <span className="text-gray-400 ml-2 text-xs">
+                            <span className="ml-2 text-xs text-gray-600 dark:text-gray-400">
                               {form.formType
                                 ?.replace("-", " ")
                                 .replace(/\b\w/g, (l) => l.toUpperCase())}
                             </span>
-                            <span className="text-gray-500 ml-2 text-xs">
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-500">
                               {new Date(form.dateSaved).toLocaleDateString()}
                             </span>
                           </button>
@@ -533,7 +545,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                   {/* Close Selector */}
                   <button
                     onClick={() => setShowPacketSelector(false)}
-                    className="w-full py-2 bg-gray-600 hover:bg-gray-500 text-gray-300 text-sm rounded mt-2"
+                    className="mt-2 w-full rounded bg-gray-300 py-2 text-sm text-gray-700 hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
                   >
                     Cancel
                   </button>
@@ -544,8 +556,8 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
 
           {/* Selected Item Indicator */}
           {selectedPacketItem && (
-            <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/30 rounded flex items-center justify-between">
-              <span className="text-blue-300 text-sm">
+            <div className="mb-3 flex items-center justify-between rounded border border-blue-200 bg-blue-50 p-2 dark:border-blue-500/30 dark:bg-blue-900/30">
+              <span className="text-sm text-blue-700 dark:text-blue-300">
                 📁 Loaded:{" "}
                 <strong>
                   {selectedPacketItem.condition ||
@@ -558,14 +570,14 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                   setSelectedPacketItem(null);
                   setSelectedClaim("");
                 }}
-                className="text-blue-400 hover:text-blue-300 text-sm"
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
               >
                 ✕ Clear
               </button>
             </div>
           )}
 
-          <label className="block text-gray-300 font-semibold mb-2">
+          <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
             {hasPacketData
               ? "Or paste your text manually:"
               : "Paste Your Personal Statement or Nexus Letter:"}
@@ -575,7 +587,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
               value={selectedClaim}
               onChange={(e) => setSelectedClaim(e.target.value)}
               placeholder="Paste your claim text here, or use the microphone to speak. Include dates, medical terms, and service connection details..."
-              className="w-full h-48 bg-gray-800 border border-gray-700 rounded p-3 pr-14 text-white resize-none focus:border-red-500 focus:outline-none"
+              className="h-48 w-full resize-none rounded border border-gray-300 bg-white p-3 pr-14 text-gray-900 focus:border-red-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             />
             <div className="absolute right-3 top-3">
               <VoiceInputButton
@@ -595,7 +607,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
             }
             className={`mt-4 w-full py-3 font-bold rounded transition ${
               isAnalyzing
-                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
                 : "bg-red-500 hover:bg-red-600 text-white"
             }`}
           >
@@ -611,14 +623,14 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
         <div className="space-y-6">
           {/* Weaknesses Detected */}
           <div>
-            <h3 className="text-xl font-bold text-red-400 mb-3">
+            <h3 className="mb-3 text-xl font-bold text-red-600 dark:text-red-400">
               🚨 Weaknesses Detected: {testResults.weaknesses.length}
             </h3>
             <div className="space-y-3">
               {testResults.weaknesses.map((weakness, idx) => (
                 <div
                   key={idx}
-                  className={`border-l-4 ${getSeverityColor(weakness.severity)} bg-gray-800 p-4 rounded`}
+                  className={`border-l-4 ${getSeverityColor(weakness.severity)} rounded bg-gray-100 p-4 dark:bg-gray-800`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h4
@@ -632,10 +644,10 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                       {weakness.severity}
                     </span>
                   </div>
-                  <p className="text-white text-sm mb-2">
+                  <p className="mb-2 text-sm text-gray-900 dark:text-white">
                     {weakness.description}
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     <span className="font-semibold">Impact:</span>{" "}
                     {weakness.impact}
                   </p>
@@ -646,10 +658,10 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
 
           {/* Hard Questions (Mock Exam) */}
           <div>
-            <h3 className="text-xl font-bold text-yellow-400 mb-3">
+            <h3 className="mb-3 text-xl font-bold text-yellow-700 dark:text-yellow-400">
               💬 Mock C&P Examiner Questions:
             </h3>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               These are the tough questions you might face. Practice your
               answers below:
             </p>
@@ -657,12 +669,12 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
               {testResults.questions.map((q, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-800 border border-gray-700 rounded p-4"
+                  className="rounded border border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
                 >
                   {/* Question */}
                   <div className="mb-3">
                     <div className="flex items-start justify-between mb-2">
-                      <span className="text-gray-500 font-bold text-sm">
+                      <span className="text-sm font-bold text-gray-600 dark:text-gray-500">
                         Question {idx + 1}
                       </span>
                       <span
@@ -671,17 +683,18 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                         {q.threat_level}
                       </span>
                     </div>
-                    <p className="text-white font-semibold mb-1">
+                    <p className="mb-1 font-semibold text-gray-900 dark:text-white">
                       {q.question}
                     </p>
-                    <p className="text-gray-500 text-xs">
+                    <p className="text-xs text-gray-600 dark:text-gray-500">
                       Category: {q.category}
                     </p>
                   </div>
 
                   {/* Practice Answer */}
                   <div>
-                    <label className="block text-gray-400 text-sm mb-1">
+                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+                    <label className="mb-1 block text-sm text-gray-600 dark:text-gray-400">
                       Your Practice Answer (use microphone to speak):
                     </label>
                     <div className="relative">
@@ -691,7 +704,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                           handleAnswerChange(idx, e.target.value)
                         }
                         placeholder="Type or speak your response. Be specific, provide dates, and reference evidence..."
-                        className="w-full h-24 bg-gray-700 border border-gray-600 rounded p-2 pr-12 text-white text-sm resize-none focus:border-yellow-500 focus:outline-none"
+                        className="h-24 w-full resize-none rounded border border-gray-300 bg-white p-2 pr-12 text-sm text-gray-900 focus:border-yellow-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       />
                       <div className="absolute right-2 top-2">
                         <VoiceInputButton
@@ -714,15 +727,15 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
           </div>
 
           {/* Recommendations */}
-          <div className="bg-blue-900/30 border border-blue-500/30 rounded p-4">
-            <h4 className="text-blue-400 font-bold mb-2">
+          <div className="rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-blue-900/30">
+            <h4 className="mb-2 font-bold text-blue-600 dark:text-blue-400">
               📋 Recommended Actions:
             </h4>
-            <ul className="text-gray-300 text-sm space-y-2">
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
               {testResults.weaknesses.some((w) => w.severity === "HIGH") && (
                 <li>
                   •{" "}
-                  <span className="text-red-400 font-semibold">
+                  <span className="font-semibold text-red-600 dark:text-red-400">
                     Critical Issues Found:
                   </span>{" "}
                   Address high-severity weaknesses before submitting
@@ -737,8 +750,8 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                 Somatic Target tool)
               </li>
               <li>
-                • Ensure your nexus letter includes "at least as likely as not"
-                language
+                • Ensure your nexus letter includes &quot;at least as likely as
+                not&quot; language
               </li>
               <li>• Have a VSO or attorney review your final packet</li>
               <li>
@@ -754,7 +767,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
               setTestResults(null);
               setPracticeAnswers({});
             }}
-            className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition"
+            className="w-full rounded bg-gray-200 py-2 font-semibold text-gray-800 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
           >
             ↺ Run Another Analysis
           </button>
@@ -762,14 +775,14 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
       )}
 
       {/* Footer Warning */}
-      <div className="mt-6 bg-yellow-900/20 border border-yellow-500/30 rounded p-3">
-        <p className="text-yellow-400 text-xs font-semibold">
+      <div className="mt-6 rounded border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-500/30 dark:bg-yellow-900/20">
+        <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
           ⚠️ This is a simulation. Real C&P examiners may ask different
           questions. Always consult with a VSO or attorney before submitting
           your claim.
         </p>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

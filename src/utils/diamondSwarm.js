@@ -11,9 +11,15 @@
  * 100% local inference via GGUF format - no data leaves the device.
  */
 
+import {
+  TOOL_REQUIRED_CAPABILITY,
+  enforceAgentBoundary,
+  resolveAgentForTool,
+} from "./agentBoundaries";
+
 // Storage keys
 const SWARM_CONFIG_KEY = "vetrate_diamond_swarm_config";
-const SWARM_STATUS_KEY = "vetrate_diamond_swarm_status";
+const _SWARM_STATUS_KEY = "vetrate_diamond_swarm_status";
 
 /**
  * Warrant Council Agent Types
@@ -255,6 +261,7 @@ export const registerSwarmEngine = (
     loadedAgents.add(agentId);
     currentAgent = agentId;
   }
+  // eslint-disable-next-line no-console
   console.log(
     `🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`,
   );
@@ -279,6 +286,7 @@ const clearCorruptedCache = async () => {
       const cacheNames = await caches.keys();
       for (const name of cacheNames) {
         if (name.includes("webllm") || name.includes("mlc")) {
+          // eslint-disable-next-line no-console
           console.log(`💎 Clearing potentially corrupted cache: ${name}`);
           await caches.delete(name);
         }
@@ -358,6 +366,7 @@ export const initializeSwarm = async (
       progress: 0,
     });
 
+    // eslint-disable-next-line no-console
     console.log(`🎖️ Initializing Warrant Council agent: ${agentId}`);
 
     // Load real WebLLM model for inference - try multiple models
@@ -387,6 +396,7 @@ export const initializeSwarm = async (
 
         loadedModel = modelId;
         loadedModelId = modelId; // Store globally for status reporting
+        // eslint-disable-next-line no-console
         console.log(`🎖️ WebLLM engine loaded for Warrant Council: ${modelId}`);
         break; // Success!
       } catch (modelError) {
@@ -397,6 +407,7 @@ export const initializeSwarm = async (
           modelError.message?.includes("Cache") &&
           modelId === DIAMOND_MODELS[0]
         ) {
+          // eslint-disable-next-line no-console
           console.log("💎 Attempting to clear corrupted cache...");
           await clearCorruptedCache();
           // Continue to next model
@@ -439,6 +450,7 @@ export const switchAgent = async (agentId, callbacks = {}) => {
   }
 
   if (currentAgent === agentId) {
+    // eslint-disable-next-line no-console
     console.log(`💎 Already using ${agentId} agent`);
     return true;
   }
@@ -447,6 +459,7 @@ export const switchAgent = async (agentId, callbacks = {}) => {
   currentAgent = agentId;
   loadedAgents.add(agentId);
 
+  // eslint-disable-next-line no-console
   console.log(`💎 Switched to ${SWARM_AGENTS[agentId.toUpperCase()].name}`);
   callbacks.onComplete?.({ agent: agentId });
 
@@ -467,12 +480,26 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     onStream = null,
   } = options;
 
-  // Get the appropriate agent
-  const effectiveAgent = toolId ? TOOL_AGENT_MAP[toolId] || agentId : agentId;
+  // Resolve effective agent. When a toolId is supplied, derive the agent
+  // from the capability allowlist in agentBoundaries.js (not from the
+  // legacy TOOL_AGENT_MAP table) so the boundary check below has the
+  // matching contract to assert against.
+  const effectiveAgent = toolId
+    ? resolveAgentForTool(toolId, { strict: false })
+    : agentId;
   const agent = SWARM_AGENTS[effectiveAgent.toUpperCase()];
 
   if (!agent) {
     throw new Error(`Unknown agent: ${effectiveAgent}`);
+  }
+
+  // Property assertion: the agent must declare the capability the tool
+  // requires. Throws AgentBoundaryViolation otherwise — surfacing
+  // misrouting instead of silently letting the wrong agent answer.
+  // Bare swarm calls (no toolId) skip this check, since the caller is
+  // selecting the agent explicitly.
+  if (toolId && TOOL_REQUIRED_CAPABILITY[toolId]) {
+    enforceAgentBoundary(effectiveAgent, TOOL_REQUIRED_CAPABILITY[toolId]);
   }
 
   // Use custom system prompt or agent's default
@@ -498,6 +525,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
       (availableForInput - estimatedSystemTokens) * 4,
     );
     if (prompt.length > maxPromptChars) {
+      // eslint-disable-next-line no-console
       console.log(
         `💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`,
       );
@@ -511,6 +539,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log(`💎 Generating with ${agent.name} (${agent.icon})`);
 
   // If WebLLM engine is loaded, use it for real inference
@@ -696,6 +725,7 @@ export const unloadSwarm = async () => {
     loadedAgents.clear();
     currentAgent = null;
 
+    // eslint-disable-next-line no-console
     console.log("🎖️ Warrant Council unloaded");
     return true;
   } catch (error) {

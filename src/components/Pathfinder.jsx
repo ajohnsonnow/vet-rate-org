@@ -7,9 +7,9 @@
  * and suggests high-probability secondary claims.
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   analyzeStrategy,
   getProbabilityColors,
@@ -17,25 +17,21 @@ import {
   getPathfinderPrivacyDisclosure,
 } from "../utils/pathfinderEngine";
 import { getSavedClaims } from "../utils/claimsStorage";
-import { getMyRatings, hasMyRatings, addRating } from "../utils/veteranProfile";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import {
   analyzeDocument,
-  OCR_STATES,
   isFileSupported,
   getFileTypeLabel,
   getAcceptString,
 } from "../utils/documentAnalyzer";
 
 // Icons
+// eslint-disable-next-line no-unused-vars
 const CompassIcon = () => (
   <svg
     className="w-6 h-6"
@@ -408,9 +404,6 @@ export default function Pathfinder({
 }) {
   const { t } = useLanguage();
 
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
-
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 
   const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
@@ -422,6 +415,7 @@ export default function Pathfinder({
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
@@ -458,6 +452,7 @@ export default function Pathfinder({
       Array.isArray(initialConditions) &&
       initialConditions.length > 0
     ) {
+      // eslint-disable-next-line no-console
       console.log(
         "Pathfinder: Loading",
         initialConditions.length,
@@ -472,6 +467,7 @@ export default function Pathfinder({
     }
   }, [initialConditions]);
 
+  // eslint-disable-next-line no-unused-vars
   const handleSaveKey = (key) => {
     localStorage.setItem("vetrate_gemini_key", key);
     setApiKey(key);
@@ -637,7 +633,7 @@ export default function Pathfinder({
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
       setError(t("pathfinder", "errorNoAI"));
-      setShowAISettings(true);
+      onOpenAISettings?.();
       return;
     }
 
@@ -702,7 +698,7 @@ export default function Pathfinder({
         </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {t("pathfinder", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
             BETA
           </span>
         </h1>
@@ -745,6 +741,7 @@ export default function Pathfinder({
               <SmartAILoadButton
                 toolId="pathfinder"
                 onLoadComplete={(model) =>
+                  // eslint-disable-next-line no-console
                   console.log("Smart AI loaded for Pathfinder:", model?.name)
                 }
               />
@@ -888,12 +885,17 @@ export default function Pathfinder({
 
           {/* Error Display */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <div
+              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3"
+              role="alert"
+              aria-live="polite"
+            >
               <svg
                 className="w-5 h-5 text-red-500 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -1107,12 +1109,23 @@ export default function Pathfinder({
 
       {/* File Drop In Modal */}
       {showDropInModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
-            {/* Header */}
+        <ResponsiveModal
+          isOpen
+          onClose={() => {
+            setShowDropInModal(false);
+            setUploadedFile(null);
+            setFileProgress(null);
+          }}
+          size="md"
+          zIndex={70}
+          labelledBy="pathfinder-dropin-title"
+          header={
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3
+                  id="pathfinder-dropin-title"
+                  className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+                >
                   📄 {t("pathfinder", "dropInFile") || "Drop In Document"}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -1125,6 +1138,7 @@ export default function Pathfinder({
                   setUploadedFile(null);
                   setFileProgress(null);
                 }}
+                aria-label="Close"
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <svg
@@ -1142,116 +1156,114 @@ export default function Pathfinder({
                 </svg>
               </button>
             </div>
-
-            {/* Content */}
-            <div className="p-6">
-              {!uploadedFile ? (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-violet-400 dark:hover:border-violet-500 transition-colors cursor-pointer"
-                >
-                  <div className="text-6xl mb-4">📄</div>
-                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    {t("pathfinder", "dropFileHere")}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t("pathfinder", "supportsFormats")}
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    {t("pathfinder", "maxFileSize")}
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={getAcceptString()}
-                    onChange={(e) => handleFileSelect(e.target.files)}
-                    className="hidden"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Selected File Info */}
-                  <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-3xl">📄</div>
-                        <div>
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {uploadedFile.name}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {getFileTypeLabel(uploadedFile)} •{" "}
-                            {(uploadedFile.size / 1024).toFixed(0)} KB
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setUploadedFile(null);
-                          setFileProgress(null);
-                        }}
-                        className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors"
-                      >
-                        <svg
-                          className="w-5 h-5 text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Processing Progress */}
-                  {fileProgress && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
-                        {fileProgress.message}
+          }
+        >
+          {/* Content */}
+          {!uploadedFile ? (
+            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-violet-400 dark:hover:border-violet-500 transition-colors cursor-pointer"
+            >
+              <div className="text-6xl mb-4">📄</div>
+              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {t("pathfinder", "dropFileHere")}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t("pathfinder", "supportsFormats")}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                {t("pathfinder", "maxFileSize")}
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={getAcceptString()}
+                onChange={(e) => handleFileSelect(e.target.files)}
+                className="hidden"
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Selected File Info */}
+              <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">📄</div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {uploadedFile.name}
                       </p>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${fileProgress.progress}%` }}
-                        />
-                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {getFileTypeLabel(uploadedFile)} •{" "}
+                        {(uploadedFile.size / 1024).toFixed(0)} KB
+                      </p>
                     </div>
-                  )}
-
-                  {/* Info */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      💡 <strong>{t("pathfinder", "whatHappensNext")}</strong>{" "}
-                      {t("pathfinder", "whatHappensNextDesc")}
-                    </p>
                   </div>
-
-                  {/* Process Button */}
                   <button
-                    onClick={handleProcessFile}
-                    disabled={isProcessingFile}
-                    className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    onClick={() => {
+                      setUploadedFile(null);
+                      setFileProgress(null);
+                    }}
+                    className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors"
                   >
-                    {isProcessingFile ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        {t("pathfinder", "processing")}
-                      </>
-                    ) : (
-                      <>✨ {t("pathfinder", "extractAndLoad")}</>
-                    )}
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
                   </button>
                 </div>
+              </div>
+
+              {/* Processing Progress */}
+              {fileProgress && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    {fileProgress.message}
+                  </p>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${fileProgress.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
+
+              {/* Info */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  💡 <strong>{t("pathfinder", "whatHappensNext")}</strong>{" "}
+                  {t("pathfinder", "whatHappensNextDesc")}
+                </p>
+              </div>
+
+              {/* Process Button */}
+              <button
+                onClick={handleProcessFile}
+                disabled={isProcessingFile}
+                className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                {isProcessingFile ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t("pathfinder", "processing")}
+                  </>
+                ) : (
+                  <>✨ {t("pathfinder", "extractAndLoad")}</>
+                )}
+              </button>
             </div>
-          </div>
-        </div>
+          )}
+        </ResponsiveModal>
       )}
     </div>
   );

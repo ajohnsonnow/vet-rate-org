@@ -35,7 +35,7 @@ export function isPDFFile(filename) {
   return /\.pdf$/i.test(filename);
 }
 
-export async function analyzeImage(file, onProgress = () => {}) {
+export async function analyzeImage(file, _onProgress = () => {}) {
   // For image files, wrap them in a single-page PDF-like result
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -72,6 +72,7 @@ export async function analyzeImage(file, onProgress = () => {}) {
  * Main PDF Analysis Function
  */
 export async function analyzePDF(file, onProgress = () => {}) {
+  // eslint-disable-next-line no-console
   console.log("🔬 Starting PDF analysis with advanced OCR system...");
 
   try {
@@ -86,6 +87,7 @@ export async function analyzePDF(file, onProgress = () => {}) {
       });
     });
 
+    // eslint-disable-next-line no-console
     console.log(
       `✅ OCR complete: ${result.method}, ${result.confidence.toFixed(0)}% confidence, ${result.processingTime}ms`,
     );

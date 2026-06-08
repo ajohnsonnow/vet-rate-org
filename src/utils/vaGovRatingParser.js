@@ -119,8 +119,11 @@ export function parseVAGovRatings(text) {
     });
   }
 
+  // eslint-disable-next-line no-console
   console.log("Parser: Combined rating:", combinedRating);
+  // eslint-disable-next-line no-console
   console.log("Parser: Service-connected found:", serviceConnected.length);
+  // eslint-disable-next-line no-console
   console.log(
     "Parser: Not service-connected found:",
     notServiceConnected.length,

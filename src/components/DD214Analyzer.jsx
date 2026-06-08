@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vet-Rate.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
@@ -10,31 +10,21 @@
  * - Vision model support (direct image analysis, bypassing OCR)
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import {
-  generateAI,
-  generateAIWithImage,
-  getAIStatus,
-  isAnyAIAvailable,
-  isLocalAIReady,
-  isLocalAIVisionModel,
-} from "../utils/unifiedAIService";
+import ResponsiveModal from "./common/ResponsiveModal";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
 import {
-  analyzeDocument,
   OCR_STATES,
   getProgressStyling,
   formatFileSize,
   isFileSupported,
-  getFileTypeLabel,
   getAcceptString,
-  renderPDFToImages,
 } from "../utils/documentAnalyzer";
 import {
   processFormationDocument,
@@ -48,7 +38,6 @@ import {
   getVeteranProfile,
   updateVeteranProfile,
 } from "../utils/veteranProfile";
-import { parseDD214Text } from "../utils/ribbonRackData";
 import {
   extractDD214Fields,
   mergeAIAndRegexResults,
@@ -388,7 +377,6 @@ const DD214Analyzer = ({
   onOpenMusterCall,
 }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // State
   const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
@@ -442,10 +430,12 @@ const DD214Analyzer = ({
     e.stopPropagation();
     setIsDragging(false);
 
+    // eslint-disable-next-line no-console
     console.log("📁 Files dropped:", e.dataTransfer.files);
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       isFileSupported(f),
     );
+    // eslint-disable-next-line no-console
     console.log(
       "📁 Supported files:",
       files.map((f) => f.name),
@@ -464,6 +454,7 @@ const DD214Analyzer = ({
    * Now automatically starts OCR when files are uploaded
    */
   const processFiles = async (files) => {
+    // eslint-disable-next-line no-console
     console.log(
       "📁 processFiles called with:",
       files.map((f) => f.name),
@@ -475,6 +466,7 @@ const DD214Analyzer = ({
     // Store files in state
     const newDroppedFiles = [...droppedFiles, ...files];
     setDroppedFiles(newDroppedFiles);
+    // eslint-disable-next-line no-console
     console.log(
       "📁 droppedFiles now:",
       newDroppedFiles.map((f) => f.name),
@@ -493,6 +485,7 @@ const DD214Analyzer = ({
 
     // AUTO-RUN OCR immediately after files are added
     // This eliminates the confusing two-step "upload then click Run OCR" process
+    // eslint-disable-next-line no-console
     console.log("🔄 Auto-starting OCR for uploaded files...");
 
     // Small delay to ensure state is updated and UI shows the files
@@ -507,6 +500,7 @@ const DD214Analyzer = ({
    */
   const runOCROnFilesInternal = async (filesToProcess) => {
     if (!filesToProcess || filesToProcess.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("📁 No files to process");
       return;
     }
@@ -517,6 +511,7 @@ const DD214Analyzer = ({
     );
 
     if (unprocessedFiles.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("📁 All files already processed");
       return;
     }
@@ -538,6 +533,7 @@ const DD214Analyzer = ({
         });
 
         try {
+          // eslint-disable-next-line no-console
           console.log(
             `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
           );
@@ -571,6 +567,7 @@ const DD214Analyzer = ({
             ocrUsed: musterResult.ocrUsed ?? true,
             ocrConfidence: musterResult.confidence || 0,
           };
+          // eslint-disable-next-line no-console
           console.log(
             `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
           );
@@ -706,6 +703,7 @@ const DD214Analyzer = ({
   const handleAnalyzeWithAI = async () => {
     // Prevent double-clicks and React StrictMode double-firing
     if (isGenerating) {
+      // eslint-disable-next-line no-console
       console.log("⚠️ Analysis already in progress, ignoring duplicate click");
       return;
     }
@@ -726,11 +724,13 @@ const DD214Analyzer = ({
     const useVisionAnalysis =
       isSmolVLMSupported() && hasPDFFiles && !combinedText;
 
+    // eslint-disable-next-line no-console
     console.log(
       `🔍 Analysis mode: ${useVisionAnalysis ? "VISION (direct image)" : "TEXT (OCR/extraction)"}`,
     );
+    // eslint-disable-next-line no-console
     console.log(
-      `   hasVisionModel: ${hasVisionModel}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`,
+      `   hasVisionModel: ${isSmolVLMSupported()}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`,
     );
 
     // If no text has been extracted, prompt user to run OCR
@@ -760,6 +760,7 @@ const DD214Analyzer = ({
         // ========== VISION MODEL PATH — SmolVLM (transformers.js v3 + WebGPU) ==========
         // Processes PDF pages as images directly through SmolVLM-256M-Instruct.
         // Replaces the broken MLC WebLLM Phi-3.5-vision path.
+        // eslint-disable-next-line no-console
         console.log("🖼️ Using SmolVLM Vision for direct image analysis");
 
         setOcrProgress({
@@ -815,6 +816,7 @@ const DD214Analyzer = ({
       } else {
         // ========== TEXT MODEL PATH (original) ==========
         // Use OCR/text extraction then send to LLM
+        // eslint-disable-next-line no-console
         console.log("📝 Using Text Model for OCR-based analysis");
 
         // Determine if we're using local or cloud AI
@@ -836,6 +838,7 @@ const DD214Analyzer = ({
         // Models with larger context can handle more output tokens
         const outputBuffer = localContextLimit >= 8192 ? 2048 : 1024;
 
+        // eslint-disable-next-line no-console
         console.log(
           `📊 Token estimates: system=${systemPromptTokens}, doc=${documentTokens}, wrapper=${userPromptWrapper}, output=${outputBuffer}`,
         );
@@ -867,6 +870,7 @@ const DD214Analyzer = ({
           // Ensure minimum reasonable size (at least 500 tokens for useful extraction)
           const maxDocTokens = Math.max(500, availableForDoc);
           documentText = truncateForContext(combinedText, maxDocTokens);
+          // eslint-disable-next-line no-console
           console.log(
             `📄 Truncated to ~${estimateTokens(documentText)} tokens (max allowed: ${maxDocTokens})`,
           );
@@ -874,6 +878,7 @@ const DD214Analyzer = ({
         }
 
         if (preferCloud) {
+          // eslint-disable-next-line no-console
           console.log(
             `📄 Large document (${totalEstimatedTokens} tokens). Using Cloud AI for better results.`,
           );
@@ -903,6 +908,7 @@ const DD214Analyzer = ({
       } else {
         content = "";
       }
+      // eslint-disable-next-line no-console
       console.log("🤖 Raw AI Response:", content || "(empty)");
 
       // Check for empty response - vision models may return empty if image processing failed
@@ -922,6 +928,7 @@ const DD214Analyzer = ({
           typeof content === "string"
             ? content.trim()
             : JSON.stringify(content);
+        // eslint-disable-next-line no-console
         console.log(
           "🧹 Clean content before JSON parse:",
           cleanContent.substring(0, 500),
@@ -949,6 +956,7 @@ const DD214Analyzer = ({
         // Clean up any trailing commas before } or ] (common after comment removal)
         cleanContent = cleanContent.replace(/,(\s*[}\]])/g, "$1");
 
+        // eslint-disable-next-line no-console
         console.log(
           "🧹 After comment removal:",
           cleanContent.substring(0, 500),
@@ -971,6 +979,7 @@ const DD214Analyzer = ({
           data.mosTitle = String(data.mosTitle);
         }
 
+        // eslint-disable-next-line no-console
         console.log("✅ Parsed JSON data:", data);
       } catch (parseError) {
         console.error("JSON parse error:", parseError, "Content:", content);
@@ -989,6 +998,7 @@ const DD214Analyzer = ({
         const regexResult = extractDD214Fields(combinedRaw);
         if (regexResult && Object.keys(regexResult).length > 0) {
           const merged = mergeAIAndRegexResults(data, regexResult);
+          // eslint-disable-next-line no-console
           console.log(
             "🔀 Merged AI + Regex results:",
             Object.keys(merged).length,
@@ -1150,7 +1160,7 @@ const DD214Analyzer = ({
       // Filter out undefined/null values but keep empty strings for user to fill
       // Also keep boolean false values (like reenlisted: false)
       const profileData = Object.fromEntries(
-        Object.entries(rawProfileData).filter(([key, value]) => {
+        Object.entries(rawProfileData).filter(([_key, value]) => {
           // Always exclude undefined/null
           if (value === undefined || value === null) return false;
           // Keep booleans (including false)
@@ -1170,6 +1180,7 @@ const DD214Analyzer = ({
         return;
       }
 
+      // eslint-disable-next-line no-console
       console.log("Opening profile import modal with data:", profileData);
 
       // Show confirmation modal automatically
@@ -1338,6 +1349,7 @@ const DD214Analyzer = ({
 
         mergeDD214IntoVKB(vkb, vkbData, { fileName: sourceFileName });
         await saveVKB(vkb);
+        // eslint-disable-next-line no-console
         console.log("✅ DD214 data merged into VKB");
 
         // Also register the document in VKB documentation
@@ -1384,6 +1396,7 @@ const DD214Analyzer = ({
         });
 
         if (packetResult.success) {
+          // eslint-disable-next-line no-console
           console.log("📁 DD214 saved to My Packet:", packetResult.documentId);
         }
       } catch (packetErr) {
@@ -1439,58 +1452,109 @@ const DD214Analyzer = ({
     originalPDFFiles.length > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">📜</span>
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                {t("dd214Analyzer", "title")}{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                  {t("dd214Analyzer", "beta")}
-                </span>
-              </h2>
-              <p className="text-sm text-blue-200">
-                {t("dd214Analyzer", "subtitle")}
-              </p>
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="dd214-analyzer-title"
+        footer={
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              {hasInput && (
+                <button
+                  onClick={handleClearAll}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
+                >
+                  {t("dd214Analyzer", "clearAll")}
+                </button>
+              )}
+
+              {analysisResult && (
+                <button
+                  onClick={handleSaveResults}
+                  className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  💾 {t("dd214Analyzer", "saveToProfile")}
+                </button>
+              )}
+
+              <button
+                onClick={handleAnalyzeWithAI}
+                disabled={
+                  !hasInput ||
+                  !aiStatus.anyAvailable ||
+                  isGenerating ||
+                  isProcessing
+                }
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {t("dd214Analyzer", "analyzing")}
+                  </>
+                ) : (
+                  <>🤖 {t("dd214Analyzer", "analyzeWithAi")}</>
+                )}
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <LLMRecommendationBadge toolId="dd214-analyzer" />
-            <AIStatusBadge onClick={onOpenAISettings} />
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="DD214 Analyzer"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label={t("dd214Analyzer", "close")}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+        }
+        header={
+          <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">📜</span>
+              <div>
+                <h2
+                  id="dd214-analyzer-title"
+                  className="text-xl font-bold text-white"
+                >
+                  {t("dd214Analyzer", "title")}{" "}
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                    {t("dd214Analyzer", "beta")}
+                  </span>
+                </h2>
+                <p className="text-sm text-blue-200">
+                  {t("dd214Analyzer", "subtitle")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <LLMRecommendationBadge toolId="dd214-analyzer" />
+              <AIStatusBadge onClick={onOpenAISettings} />
+              {onReportBug && (
+                <ReportBugLink
+                  onClick={onReportBug}
+                  variant="light"
+                  moduleName="DD214 Analyzer"
                 />
-              </svg>
-            </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label={t("dd214Analyzer", "close")}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        }
+      >
+        <div className="space-y-6">
           {/* Workflow Guidance Banner */}
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -1517,8 +1581,8 @@ const DD214Analyzer = ({
                   )}
                   {!onOpenMusterCall && (
                     <p className="text-xs italic">
-                      Look for "Muster Call" in the Missions menu for batch
-                      document processing
+                      Look for &quot;Muster Call&quot; in the Missions menu for
+                      batch document processing
                     </p>
                   )}
                 </div>
@@ -1549,6 +1613,7 @@ const DD214Analyzer = ({
               <SmartAILoadButton
                 toolId="dd214-analyzer"
                 onLoadComplete={(model) => {
+                  // eslint-disable-next-line no-console
                   console.log(
                     "Smart AI loaded for DD214 Analyzer:",
                     model?.name,
@@ -1577,7 +1642,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Copy text from a digital DD214 and paste it here"
+                aria-label="Copy text from a digital DD214 and paste it here"
               >
                 📋 {t("dd214Analyzer", "pasteText")}
               </button>
@@ -1588,7 +1653,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Upload PDF or image files - we'll extract the text for you"
+                aria-label="Upload PDF or image files - we'll extract the text for you"
               >
                 📄 {t("dd214Analyzer", "dropInPdf")}{" "}
                 {extractedTexts.length > 0 && `(${extractedTexts.length})`}
@@ -1600,7 +1665,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Fill out a guided form if you don't have a digital copy"
+                aria-label="Fill out a guided form if you don't have a digital copy"
               >
                 ✏️ {t("dd214Analyzer", "manualEntry")}
               </button>
@@ -1664,6 +1729,7 @@ const DD214Analyzer = ({
           {inputMethod === "upload" && (
             <div className="space-y-4">
               {/* Drop Zone */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
@@ -2295,53 +2361,9 @@ const DD214Analyzer = ({
             </div>
           )}
         </div>
+      </ResponsiveModal>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col sm:flex-row items-center justify-end gap-4 rounded-b-2xl bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            {hasInput && (
-              <button
-                onClick={handleClearAll}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
-              >
-                {t("dd214Analyzer", "clearAll")}
-              </button>
-            )}
-
-            {analysisResult && (
-              <button
-                onClick={handleSaveResults}
-                className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                💾 {t("dd214Analyzer", "saveToProfile")}
-              </button>
-            )}
-
-            <button
-              onClick={handleAnalyzeWithAI}
-              disabled={
-                !hasInput ||
-                !aiStatus.anyAvailable ||
-                isGenerating ||
-                isProcessing
-              }
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {t("dd214Analyzer", "analyzing")}
-                </>
-              ) : (
-                <>🤖 {t("dd214Analyzer", "analyzeWithAi")}</>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Import Confirmation Modal - Rendered via portal to escape z-index stacking context */}
+      {/* Profile import confirmation — already portaled to document.body */}
       {showProfileImportModal &&
         extractedProfileData &&
         createPortal(
@@ -2354,17 +2376,18 @@ const DD214Analyzer = ({
           document.body,
         )}
 
-      {/* DD214 Form Builder Modal */}
+      {/* DD214 Form Builder — fixed z-[9999] portal, renders above the shell */}
       {showFormBuilder && (
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
           onSave={(dd214) => {
+            // eslint-disable-next-line no-console
             console.log("DD214 saved:", dd214);
             // Optionally refresh the list or show success message
           }}
         />
       )}
-    </div>
+    </>
   );
 };
 

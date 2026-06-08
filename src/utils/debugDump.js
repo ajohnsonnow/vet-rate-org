@@ -16,6 +16,21 @@
 import { APP_VERSION, SCHEMA_VERSION } from "./version";
 import { triggerBlobDownload } from "./sanitize";
 
+// Keys whose VALUE must never leave the device in a debug dump: backup DEKs
+// (plaintext + wrapped), the KEK descriptor/verifier/rotation marker, in-flight
+// rotation slots, and the third-party Gemini API key. The dump still lists the
+// key NAME and accounts its real size — only the secret value is redacted.
+const SENSITIVE_KEY_PREFIXES = [
+  "vet_rate_backup_key_",
+  "vet_rate_wrapped_key_",
+  "vet_rate_kek_",
+  "vet_rate_rotating_key_",
+];
+const SENSITIVE_KEYS = new Set(["vetrate_gemini_key"]);
+const isSensitiveKey = (key) =>
+  SENSITIVE_KEYS.has(key) ||
+  SENSITIVE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
+
 /**
  * Export complete localStorage state for debugging
  * @returns {Object} Complete debug data
@@ -61,9 +76,9 @@ export const createDebugDump = () => {
       const key = localStorage.key(i);
       const value = localStorage.getItem(key);
 
-      debugData.localStorage[key] = value;
+      debugData.localStorage[key] = isSensitiveKey(key) ? "[REDACTED]" : value;
 
-      // Calculate size (rough estimate)
+      // Calculate size (rough estimate) — on the real value, not the redaction
       const size = (key.length + value.length) * 2; // 2 bytes per char
       totalSize += size;
 
@@ -113,6 +128,7 @@ export const downloadDebugDump = () => {
     const blob = new Blob([json], { type: "application/json" });
     triggerBlobDownload(blob, String(filename).replace(/[<>"']/g, ""));
 
+    // eslint-disable-next-line no-console
     console.log("✅ Debug dump downloaded:", filename);
     return true;
   } catch (error) {
@@ -172,6 +188,7 @@ export const createDebugDumpHandler = () => {
   return createClickCounter(
     7,
     () => {
+      // eslint-disable-next-line no-console
       console.log(
         "🐛 DEBUG MODE ACTIVATED - Downloading full diagnostic dump...",
       );

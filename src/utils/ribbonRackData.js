@@ -1004,7 +1004,7 @@ export function calculateRackLayout(sortedAwards, ribbonsPerRow = 3) {
   const totalRibbons = sortedAwards.length;
 
   // Calculate how many full rows and remainder
-  const fullRows = Math.floor(totalRibbons / ribbonsPerRow);
+  const _fullRows = Math.floor(totalRibbons / ribbonsPerRow);
   const remainder = totalRibbons % ribbonsPerRow;
 
   let index = 0;

@@ -201,7 +201,7 @@ export function findSecondaryClaims(userDisabilities) {
   });
 
   // Step 5: Cluster Logic - Mental Health & Tinnitus Combinations
-  const hasPTSD = normalizedDisabilities.some((d) => d.slug === "ptsd");
+  const _hasPTSD = normalizedDisabilities.some((d) => d.slug === "ptsd");
   const hasTinnitus = normalizedDisabilities.some((d) => d.slug === "tinnitus");
   const hasMigraines = userDisabilities.some(
     (d) =>

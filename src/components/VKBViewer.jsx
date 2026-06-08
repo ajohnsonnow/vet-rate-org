@@ -7,9 +7,8 @@
  * knowledge in an organized, editable format.
  */
 
-import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useState, useEffect } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   loadVKB,
@@ -20,8 +19,7 @@ import {
 } from "../utils/veteranKnowledgeBase";
 
 const VKBViewer = ({ isOpen, onClose }) => {
-  const { t } = useLanguage();
-  useBodyScrollLock(isOpen);
+  const { _t } = useLanguage();
 
   const [vkb, setVkb] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
@@ -81,6 +79,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Full Name
           </label>
@@ -98,6 +97,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Date of Birth
           </label>
@@ -115,6 +115,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email
           </label>
@@ -132,6 +133,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Phone
           </label>
@@ -156,6 +158,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Branch
           </label>
@@ -183,6 +186,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           </select>
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Character of Service
           </label>
@@ -209,6 +213,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           </select>
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Entry Date
           </label>
@@ -229,6 +234,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
           />
         </div>
         <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Separation Date
           </label>
@@ -561,25 +567,21 @@ const VKBViewer = ({ isOpen, onClose }) => {
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
-        {loading || !vkb ? (
-          // Loading state
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Loading your Knowledge Base...
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Header */}
+  return (
+    <>
+      <ResponsiveModal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="2xl"
+        labelledBy="vkb-viewer-title"
+        header={
+          loading || !vkb ? undefined : (
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <h2
+                  id="vkb-viewer-title"
+                  className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+                >
                   📚 Veteran Knowledge Base
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -620,6 +622,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
                 <button
                   onClick={onClose}
                   className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  aria-label="Close"
                 >
                   <svg
                     className="w-6 h-6"
@@ -637,35 +640,11 @@ const VKBViewer = ({ isOpen, onClose }) => {
                 </button>
               </div>
             </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-hidden flex">
-              {/* Sidebar Navigation */}
-              <div className="w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id)}
-                    className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                      activeSection === section.id
-                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-r-2 border-blue-600"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <span className="text-xl">{section.icon}</span>
-                    <span className="font-medium">{section.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Main Content Area */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {renderSection()}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          )
+        }
+        footer={
+          loading || !vkb ? undefined : (
+            <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 Last updated:{" "}
                 {vkb.metadata.lastUpdated
@@ -687,31 +666,62 @@ const VKBViewer = ({ isOpen, onClose }) => {
                 </button>
               </div>
             </div>
+          )
+        }
+      >
+        {loading || !vkb ? (
+          // Loading state
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">
+                Loading your Knowledge Base...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="-mx-4 -my-4 flex h-full flex-col sm:flex-row">
+            {/* Sidebar Navigation — vertical on desktop, horizontal scroller on mobile */}
+            <div className="flex shrink-0 overflow-x-auto border-b border-gray-200 dark:border-gray-700 sm:w-64 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:border-b-0 sm:border-r">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex shrink-0 items-center gap-3 whitespace-nowrap px-4 py-3 text-left transition-colors sm:w-full ${
+                    activeSection === section.id
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 sm:border-r-2 sm:border-blue-600"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <span className="text-xl">{section.icon}</span>
+                  <span className="font-medium">{section.label}</span>
+                </button>
+              ))}
+            </div>
 
-            {/* LLM Context Preview Modal */}
-            {showLLMContext && (
-              <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold">LLM Context String</h3>
-                    <button
-                      onClick={() => setShowLLMContext(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-xs overflow-x-auto">
-                    {generateLLMContext(vkb)}
-                  </pre>
-                </div>
-              </div>
-            )}
-          </>
+            {/* Main Content Area */}
+            <div className="min-w-0 flex-1 overflow-y-auto p-6">
+              {renderSection()}
+            </div>
+          </div>
         )}
-      </div>
-    </div>,
-    document.body,
+      </ResponsiveModal>
+
+      {/* LLM Context Preview Modal — lifted above the viewer shell */}
+      {showLLMContext && vkb && (
+        <ResponsiveModal
+          isOpen
+          onClose={() => setShowLLMContext(false)}
+          size="xl"
+          zIndex={70}
+          title="LLM Context String"
+        >
+          <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-xs overflow-x-auto">
+            {generateLLMContext(vkb)}
+          </pre>
+        </ResponsiveModal>
+      )}
+    </>
   );
 };
 

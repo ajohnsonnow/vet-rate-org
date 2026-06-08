@@ -17,9 +17,9 @@
  * 2. VOICE SYNTHESIS - Speaking the translated text in the target language's voice
  */
 
-import React, { useState, useRef, useEffect } from "react";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 import VoiceInputButton from "./VoiceInput";
 import multilingualTone from "../config/multilingualTone.json";
 import ReportBugLink from "./ReportBugLink";
@@ -295,7 +295,7 @@ const translateText = async (text, fromLang, toLang) => {
   for (const category of Object.values(QUICK_PHRASES)) {
     for (const phrase of category) {
       // Check if input matches any language version of this phrase
-      for (const [lang, phraseText] of Object.entries(phrase.translations)) {
+      for (const [_lang, phraseText] of Object.entries(phrase.translations)) {
         if (phraseText.toLowerCase() === text.toLowerCase()) {
           // Found it! Return the target language version
           const translated =
@@ -325,9 +325,7 @@ const translateText = async (text, fromLang, toLang) => {
 };
 
 const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
-  useBodyScrollLock(isOpen);
-
-  const { t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
 
   // State
   const [myLanguage, setMyLanguage] = useState(appLanguage || "en");
@@ -447,8 +445,8 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     speak(result.translated, myLanguage);
   };
 
-  // Use quick phrase - get the translated version and speak it
-  const useQuickPhrase = (phrase) => {
+  // Apply quick phrase - get the translated version and speak it
+  const applyQuickPhrase = (phrase) => {
     // Get the phrase in my language (what I'm saying)
     const myPhrase = phrase.translations[myLanguage] || phrase.translations.en;
     // Get the phrase translated to their language
@@ -468,71 +466,99 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
   };
 
   // Get branch greeting
-  const getBranchGreeting = (branch, langCode) => {
+  const _getBranchGreeting = (branch, langCode) => {
     const toneData = multilingualTone.branch_greetings?.[branch];
     return toneData?.[langCode] || toneData?.["en"] || `${branch} veteran`;
   };
 
-  if (!isOpen) return null;
-
   const myLangObj = SUPPORTED_LANGUAGES[myLanguage];
   const theirLangObj = SUPPORTED_LANGUAGES[theirLanguage];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🤝</span>
-            <div>
-              <h2 className="text-xl font-bold">Veteran Translator</h2>
-              <p className="text-sm text-amber-100">
-                Connect across language barriers
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="Veteran Translator"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+  const header = (
+    <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-4 text-white sm:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="hidden text-3xl sm:inline">🤝</span>
+        <div className="min-w-0">
+          <h2
+            id="veteran-translator-title"
+            className="truncate text-lg font-bold sm:text-xl"
+          >
+            Veteran Translator
+          </h2>
+          <p className="truncate text-xs text-amber-100 sm:text-sm">
+            Connect across language barriers
+          </p>
         </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Veteran Translator"
+          />
+        )}
+        <button
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="grid h-11 w-11 place-items-center rounded-lg transition-colors hover:bg-white/20"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 
+  const footer = (
+    <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+      <p>🎖️ Building veteran camaraderie across 40+ languages</p>
+      <div className="flex items-center gap-2">
+        {isSpeaking && (
+          <span className="flex items-center gap-1 text-amber-500">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
+            Speaking...
+          </span>
+        )}
+        <span>🔒 100% on-device • No data sent</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      header={header}
+      footer={footer}
+      labelledBy="veteran-translator-title"
+      size="xl"
+    >
+      <div className="-m-4 flex flex-col">
         {/* Language Selectors */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-4">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-900/50 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             {/* My Language */}
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 I speak:
               </label>
               <select
                 value={myLanguage}
                 onChange={(e) => setMyLanguage(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 {availableLanguages.map((lang) => (
                   <option key={lang.code} value={lang.code}>
@@ -545,11 +571,11 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
             {/* Swap Button */}
             <button
               onClick={swapLanguages}
-              className="mt-5 p-2 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-800/30 rounded-full transition-colors"
-              title="Swap languages"
+              className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-full bg-amber-100 transition-colors hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-800/30 sm:mt-5 sm:self-auto"
+              aria-label="Swap languages"
             >
               <svg
-                className="w-6 h-6 text-amber-600 dark:text-amber-400"
+                className="h-6 w-6 rotate-90 text-amber-600 dark:text-amber-400 sm:rotate-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -565,13 +591,14 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
 
             {/* Their Language */}
             <div className="flex-1">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 They speak:
               </label>
               <select
                 value={theirLanguage}
                 onChange={(e) => setTheirLanguage(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 {availableLanguages.map((lang) => (
                   <option key={lang.code} value={lang.code}>
@@ -584,13 +611,13 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
         </div>
 
         {/* Main Content - Split View */}
-        <div className="flex-1 overflow-hidden flex">
+        <div className="flex flex-col md:flex-row">
           {/* Left Panel - Quick Phrases & My Input */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 md:h-[60vh] md:w-1/2 md:border-b-0 md:border-r">
             {/* Quick Phrases */}
             <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700">
               <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                {Object.entries(QUICK_PHRASES).map(([category, phrases]) => (
+                {Object.entries(QUICK_PHRASES).map(([category, _phrases]) => (
                   <button
                     key={category}
                     onClick={() => setActiveQuickCategory(category)}
@@ -610,7 +637,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 {QUICK_PHRASES[activeQuickCategory].map((phrase) => (
                   <button
                     key={phrase.key}
-                    onClick={() => useQuickPhrase(phrase)}
+                    onClick={() => applyQuickPhrase(phrase)}
                     className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
                   >
                     <span className="mr-2">{phrase.emoji}</span>
@@ -632,7 +659,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                   You ({myLangObj?.nativeName})
                 </span>
               </div>
-              <div className="flex-1 relative">
+              <div className="relative h-32 md:h-auto md:flex-1">
                 <textarea
                   value={myText}
                   onChange={(e) => setMyText(e.target.value)}
@@ -660,15 +687,15 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 className="mt-3 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <span>🔊</span>
-                <span>Say It (They'll Hear in {theirLangObj?.name})</span>
+                <span>Say It (They&apos;ll Hear in {theirLangObj?.name})</span>
               </button>
             </div>
           </div>
 
           {/* Right Panel - Conversation & Their Input */}
-          <div className="w-1/2 flex flex-col">
+          <div className="flex flex-col md:h-[60vh] md:w-1/2">
             {/* Conversation History */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900/30">
+            <div className="min-h-[12rem] flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-900/30">
               {conversation.length === 0 ? (
                 <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                   <span className="text-4xl block mb-2">💬</span>
@@ -725,7 +752,7 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                             speak(msg.translatedText, msg.toLangCode)
                           }
                           className="p-1 hover:bg-white/50 rounded transition-colors"
-                          title="Play translated text"
+                          aria-label="Play translated text"
                         >
                           🔊
                         </button>
@@ -774,29 +801,13 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                 className="mt-3 w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <span>🔊</span>
-                <span>Say It (You'll Hear in {myLangObj?.name})</span>
+                <span>Say It (You&apos;ll Hear in {myLangObj?.name})</span>
               </button>
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <p>🎖️ Building veteran camaraderie across 40+ languages</p>
-            <div className="flex items-center gap-2">
-              {isSpeaking && (
-                <span className="flex items-center gap-1 text-amber-500">
-                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                  Speaking...
-                </span>
-              )}
-              <span>🔒 100% on-device • No data sent</span>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

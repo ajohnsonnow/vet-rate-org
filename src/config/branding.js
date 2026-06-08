@@ -153,6 +153,7 @@ export const getBrandCSSVars = () => ({
 
 // Log active brand on load (dev only)
 if (import.meta.env.DEV) {
+  // eslint-disable-next-line no-console
   console.log(`🏷️ Running as: ${BRAND.appName} (${BRAND_MODE} mode)`);
 }
 

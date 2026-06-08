@@ -1,154 +1,179 @@
 /**
- * Vet-Rate.org - Service Worker
- * Enables offline functionality and fast loading
- * 
- * This service worker caches the core application shell so veterans
- * can access their reference materials even without internet.
+ * Service Worker — Vet-Rate.org offline shell.
+ *
+ * Strategy:
+ *   - **Navigation requests** (HTML): network-first → cache fallback → /offline.html.
+ *     Keeps users on a fresh build when the network is up; falls back gracefully when not.
+ *   - **Hashed static assets** (/assets/, /images/, /favicon.*): cache-first.
+ *     Vite emits content-hashed filenames so cache entries are effectively immutable.
+ *   - **Cross-origin requests**: pass through untouched. Critical for the
+ *     zero-knowledge stance — AI API calls (Anthropic, Gemini, Google), VA
+ *     endpoints, HuggingFace model downloads, and analytics are NEVER cached
+ *     here. The browser's HTTP cache and the app's own IndexedDB/localStorage
+ *     layers handle their own persistence.
+ *   - **Same-origin POST/PUT/DELETE**: pass through (never cache mutations).
+ *
+ * Versioning:
+ *   - CACHE_VERSION bumps invalidate the previous cache on activate.
+ *   - Bump when you change app-shell URLs or cache-shape. Hashed assets do
+ *     NOT need a bump — their filenames change automatically.
+ *
+ * Update flow:
+ *   - On install, precache the app shell + offline page.
+ *   - On activate, delete any cache whose name does not match CACHE_VERSION.
+ *   - The page can postMessage({type:"SKIP_WAITING"}) to activate immediately
+ *     after a user opts into "Refresh to update" — without that, the new SW
+ *     waits until all tabs close, which is the safer default.
+ *
+ * Closes finding #27 in docs/AUDIT_FINDINGS.md.
  */
 
-const CACHE_NAME = 'vetrate-v1.0.0';
-const OFFLINE_URL = '/index.html';
+const CACHE_VERSION = "vetrate-v2";
+const OFFLINE_URL = "/offline.html";
 
-// Core files to cache for offline use
-const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/src/main.jsx',
-  '/src/App.jsx',
-  '/src/index.css',
-  '/manifest.json'
+// App shell — the minimum needed to render the offline page and the SPA root.
+// Hashed JS/CSS bundles are NOT listed here; they're cached lazily on first
+// fetch because their names are build-output dependent.
+const PRECACHE_URLS = [
+  "/",
+  "/index.html",
+  OFFLINE_URL,
+  "/manifest.json",
+  "/favicon.ico",
 ];
 
-// Install event - cache core assets
-self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching core assets');
-      return cache.addAll(CORE_ASSETS).catch((error) => {
-        console.error('[Service Worker] Failed to cache:', error);
-        // Don't fail the installation if some assets fail to cache
-        return Promise.resolve();
-      });
-    })
+    caches.open(CACHE_VERSION).then((cache) =>
+      // Use { cache: "reload" } to bypass the browser HTTP cache during
+      // precache — guarantees we get the latest build, not a stale 304.
+      cache.addAll(
+        PRECACHE_URLS.map((url) => new Request(url, { cache: "reload" })),
+      ),
+    ),
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  // Don't auto-skipWaiting — let the page opt in via postMessage so an
+  // in-flight session isn't yanked out from under the user.
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(
+        names.filter((n) => n !== CACHE_VERSION).map((n) => caches.delete(n)),
       );
-    })
+      await self.clients.claim();
+    })(),
   );
-  // Take control of all pages immediately
-  return self.clients.claim();
 });
 
-// Fetch event - serve from cache when offline, network when online
-self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+self.addEventListener("message", (event) => {
+  // Validate origin — only accept messages from same origin. In service
+  // workers, event.origin may be empty string for same-origin messages.
+  const eventOrigin = event.origin || "";
+  const selfOrigin = self.location.origin || "";
+  if (eventOrigin !== "" && eventOrigin !== selfOrigin) {
     return;
   }
-
-  // Skip chrome-extension and other non-http requests
-  if (!event.request.url.startsWith('http')) {
+  // Source must be a controlled client (WindowClient).
+  if (!event.source || !("id" in event.source)) {
     return;
   }
-
-  // Skip API calls to AI services (they need internet anyway)
+  // Page-driven update activation — pages send this after the user accepts
+  // an "Update available" prompt.
   if (
-    event.request.url.includes('generativelanguage.googleapis.com') ||
-    event.request.url.includes('api.anthropic.com') ||
-    event.request.url.includes('goatcounter.com')
+    event.data &&
+    typeof event.data === "object" &&
+    event.data.type === "SKIP_WAITING"
   ) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Return cached version if available
-      if (cachedResponse) {
-        // Still fetch from network in background to update cache
-        fetch(event.request)
-          .then((response) => {
-            if (response && response.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, response.clone());
-              });
-            }
-          })
-          .catch(() => {
-            // Ignore network errors in background fetch
-          });
-        
-        return cachedResponse;
-      }
-
-      // Not in cache, fetch from network
-      return fetch(event.request)
-        .then((response) => {
-          // Don't cache if not a valid response
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Cache the fetched resource
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return response;
-        })
-        .catch(() => {
-          // If both cache and network fail, return offline page for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL);
-          }
-          
-          // For other requests, just fail gracefully
-          return new Response('Offline', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
-          });
-        });
-    })
-  );
-});
-
-// Handle messages from the client
-self.addEventListener('message', (event) => {
-  // Validate origin - only accept messages from same origin
-  // In service workers, event.origin may be empty string for same-origin messages
-  const eventOrigin = event.origin || '';
-  const selfOrigin = self.location.origin || '';
-  if (eventOrigin !== '' && eventOrigin !== selfOrigin) {
-    console.warn('[SW] Rejected message from foreign origin:', eventOrigin);
-    return;
-  }
-  // Verify source is a controlled client (WindowClient)
-  if (!event.source || !('id' in event.source)) {
-    return;
-  }
-  // Only accept known message types with strict shape validation
-  if (event.data && typeof event.data === 'object' && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+
+  // 1. Only handle GET. Mutations always go straight to the network.
+  if (request.method !== "GET") return;
+
+  // 2. Only handle http(s). Skip chrome-extension://, file://, etc.
+  if (!request.url.startsWith("http")) return;
+
+  const url = new URL(request.url);
+
+  // 3. Skip cross-origin entirely. AI/VA/analytics/CDN traffic is opaque
+  //    to us and the page handles its own retry/error logic.
+  if (url.origin !== self.location.origin) return;
+
+  // 4. Skip range requests (video/audio streaming). The browser handles them.
+  if (request.headers.has("range")) return;
+
+  // 5. Navigation requests → network-first with offline fallback.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(request);
+          // Cache the latest index.html so a future offline navigation
+          // gets the real shell, not just the static fallback.
+          const cache = await caches.open(CACHE_VERSION);
+          cache.put("/index.html", fresh.clone()).catch(() => {});
+          return fresh;
+        } catch {
+          const cache = await caches.open(CACHE_VERSION);
+          return (
+            (await cache.match(request)) ||
+            (await cache.match("/index.html")) ||
+            (await cache.match(OFFLINE_URL)) ||
+            new Response("Offline", { status: 503, statusText: "Offline" })
+          );
+        }
+      })(),
+    );
+    return;
+  }
+
+  // 6. Static asset → cache-first, falling back to network and populating cache.
+  //    Hashed Vite output under /assets/ is the common case.
+  const isStaticAsset =
+    url.pathname.startsWith("/assets/") ||
+    url.pathname.startsWith("/images/") ||
+    url.pathname.startsWith("/icons/") ||
+    /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|webp|gif|ico)$/i.test(
+      url.pathname,
+    );
+
+  if (isStaticAsset) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_VERSION);
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        try {
+          const fresh = await fetch(request);
+          // Only cache successful basic responses. 4xx/5xx/redirects/opaque
+          // pass through without polluting the cache.
+          if (fresh && fresh.ok && fresh.type === "basic") {
+            cache.put(request, fresh.clone()).catch(() => {});
+          }
+          return fresh;
+        } catch {
+          return (
+            cached ||
+            new Response("Offline asset unavailable", {
+              status: 503,
+              statusText: "Offline",
+            })
+          );
+        }
+      })(),
+    );
+    return;
+  }
+
+  // 7. Everything else (same-origin JSON/API endpoints, dev endpoints):
+  //    pass through to the network. Don't cache JSON responses by default
+  //    — they may contain user data and we have no way of knowing without
+  //    inspecting payloads, which we deliberately don't do.
 });

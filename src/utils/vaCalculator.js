@@ -661,7 +661,7 @@ export const detectPyramiding = (conditions) => {
  * @param {string} bodyPart - Which extremity
  * @returns {Object} - Minimum rating and special rules
  */
-export const getAmputationMinimumRating = (amputationLevel, bodyPart) => {
+export const getAmputationMinimumRating = (amputationLevel, _bodyPart) => {
   const amputationRules = {
     // Upper extremity amputations (DC 5120-5127)
     "above-elbow": { minimum: 70, dc: "5124", note: "Amputation above elbow" },

@@ -12,7 +12,6 @@ import { APP_VERSION } from "./version";
 import {
   getSquashedBugsForChangelog,
   getSquashedBugCount,
-  getRecentSquashedBugs,
 } from "../data/squashedBugs";
 import { PROJECT_STATS, getTotalToolCount } from "../data/projectStats";
 

@@ -20,10 +20,12 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { VaAuthProvider } from "./contexts/VaAuthContext";
 import VaAuthCallback from "./auth/VaAuthCallback";
 import VaSandboxTest from "./components/debug/VaSandboxTest";
+import { isVaApiEnabled } from "./config/vaAuth";
 import {
   checkSystemCapabilities,
   renderBrowserWarning,
 } from "./utils/systemCapabilityCheck";
+import { initWebVitals } from "./utils/webVitals";
 import "./index.css";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -62,17 +64,26 @@ if (!capabilityResults.passed) {
   renderBrowserWarning(capabilityResults);
 } else {
   // All systems go - render the app
+  // eslint-disable-next-line no-console
   console.log("[Tech Check] ✓ All browser capabilities verified");
 
-  // Check if this is an OAuth callback or sandbox test route
+  // Check if this is an OAuth callback or sandbox test route.
+  // When the VA API surface is disabled, those routes redirect to "/" so the
+  // user never lands on a broken VA component.
   const pathname = window.location.pathname;
   const isOAuthCallback = pathname === "/callback";
   const isSandboxTest = pathname === "/sandbox-test";
 
+  if (!isVaApiEnabled() && (isOAuthCallback || isSandboxTest)) {
+    window.history.replaceState(null, "", "/");
+  }
+
   // Helper to render the appropriate component based on route
   const renderRoute = () => {
-    if (isOAuthCallback) return <VaAuthCallback />;
-    if (isSandboxTest) return <VaSandboxTest />;
+    if (isVaApiEnabled()) {
+      if (isOAuthCallback) return <VaAuthCallback />;
+      if (isSandboxTest) return <VaSandboxTest />;
+    }
     return <App />;
   };
 
@@ -83,4 +94,61 @@ if (!capabilityResults.passed) {
       </ThemeProvider>
     </React.StrictMode>,
   );
+
+  initWebVitals();
+
+  // Register the service worker for offline shell (Sprint 5 / pwa-privacy).
+  // Production-only — dev mode bypasses the SW so HMR works correctly. The
+  // SW lives at public/service-worker.js and caches /index.html + core
+  // assets so the veteran can reach their saved data on a flaky network.
+  if (
+    import.meta.env.PROD &&
+    typeof navigator !== "undefined" &&
+    "serviceWorker" in navigator
+  ) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/service-worker.js")
+        .then((reg) => {
+          // eslint-disable-next-line no-console
+          console.log("[SW] registered:", reg.scope);
+
+          // Detect new SW installs and surface an "Update available" signal.
+          // The SW intentionally does NOT auto-skipWaiting, so the page must
+          // accept the update by posting { type: "SKIP_WAITING" }. We dispatch
+          // a CustomEvent any component (e.g. a toast) can subscribe to.
+          reg.addEventListener("updatefound", () => {
+            const installing = reg.installing;
+            if (!installing) return;
+            installing.addEventListener("statechange", () => {
+              if (
+                installing.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                window.dispatchEvent(
+                  new CustomEvent("sw-update-available", {
+                    detail: {
+                      accept: () =>
+                        installing.postMessage({ type: "SKIP_WAITING" }),
+                    },
+                  }),
+                );
+              }
+            });
+          });
+        })
+        .catch((err) => {
+          console.warn("[SW] registration failed:", err.message);
+        });
+
+      // After the SW activates a new version, reload once so the new bundle
+      // is the one running. Guarded so it only fires after a real change.
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      });
+    });
+  }
 }

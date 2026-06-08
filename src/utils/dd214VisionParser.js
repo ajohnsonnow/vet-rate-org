@@ -42,7 +42,9 @@ export function parseDD214Text(rawText) {
   const text = normalizeOcrText(rawText);
 
   // Debug: Log first 1000 chars of normalized text
+  // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser] Input text length:", rawText.length);
+  // eslint-disable-next-line no-console
   console.log(
     "🔍 [DD214Parser] Normalized text (first 1000 chars):",
     text.substring(0, 1000),
@@ -208,6 +210,7 @@ function normalizeOcrText(text) {
  */
 function extractName(text) {
   // Debug: log what we're searching
+  // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser:Name] Searching for name patterns...");
 
   // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
@@ -220,7 +223,7 @@ function extractName(text) {
     // Name followed by SSN or digits
     /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*\d|\s*ssn|\s*social)/i,
     // Florence-2 may output: "JOHNSON JOHN WILLIAM" or "LAST: JOHNSON FIRST: JOHN"
-    /last\s*name?\s*[:\-]?\s*([A-Z][A-Za-z\-']+)\s+first\s*name?\s*[:\-]?\s*([A-Za-z\-']+)/i,
+    /last\s*name?\s*[:-]?\s*([A-Z][A-Za-z\-']+)\s+first\s*name?\s*[:-]?\s*([A-Za-z\-']+)/i,
     // Just look for LASTNAME, FIRSTNAME pattern anywhere
     /\b([A-Z][A-Z]+),\s*([A-Z][A-Za-z]+)(?:\s+([A-Z][A-Za-z]*))?(?=\s|$|\d|,)/,
     // Veterans name format - flexible
@@ -231,6 +234,7 @@ function extractName(text) {
     const pattern = patterns[i];
     const match = text.match(pattern);
     if (match) {
+      // eslint-disable-next-line no-console
       console.log(
         `🔍 [DD214Parser:Name] Pattern ${i} matched:`,
         match[0].substring(0, 100),
@@ -248,6 +252,7 @@ function extractName(text) {
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser:Name] No patterns matched");
   return {
     value: null,
@@ -368,6 +373,7 @@ function extractBranch(text) {
       ) {
         component = "National Guard";
       }
+      // eslint-disable-next-line no-console
       console.log(
         `🔍 [DD214Parser:Branch] Found via alias "${alias}":`,
         value.name,
@@ -394,6 +400,7 @@ function extractBranch(text) {
         component = "National Guard";
       }
 
+      // eslint-disable-next-line no-console
       console.log(`🔍 [DD214Parser:Branch] Found:`, value.name);
       return {
         value: value.name,
@@ -403,6 +410,7 @@ function extractBranch(text) {
     }
   }
 
+  // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser:Branch] No branch found");
   return { value: null, component: null, confidence: 0 };
 }

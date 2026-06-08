@@ -15,8 +15,8 @@ import React, {
   useContext,
   createContext,
 } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { registerLocalAIEngine } from "../utils/unifiedAIService";
+import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
 import ReportBugLink from "./ReportBugLink";
 import GPUSelector from "./GPUSelector";
@@ -66,6 +66,7 @@ const getAdapterInfo = async (adapter) => {
     // Modern WebGPU spec: info property is directly accessible
     if (adapter.info) {
       adapterInfo = adapter.info;
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info:", adapterInfo);
     }
     // Legacy: Try requestAdapterInfo method (older Chrome versions)
@@ -74,6 +75,7 @@ const getAdapterInfo = async (adapter) => {
       typeof adapter.requestAdapterInfo === "function"
     ) {
       adapterInfo = await adapter.requestAdapterInfo();
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info (legacy method):", adapterInfo);
     }
     // Fallback: Basic detection
@@ -83,9 +85,11 @@ const getAdapterInfo = async (adapter) => {
         device: "GPU Detected",
         description: "WebGPU is functional",
       };
+      // eslint-disable-next-line no-console
       console.log("🎮 GPU Adapter Info (basic detection):", adapterInfo);
     }
   } catch (infoErr) {
+    // eslint-disable-next-line no-console
     console.log("Could not get detailed adapter info, but WebGPU is available");
     adapterInfo = {
       vendor: "WebGPU Compatible",
@@ -205,10 +209,14 @@ export const enumerateGPUs = async () => {
       }
     }
 
+    // eslint-disable-next-line no-console
     console.log(`🎮 GPU Enumeration Complete:`);
+    // eslint-disable-next-line no-console
     console.log(`   - Total GPUs found: ${gpus.length}`);
+    // eslint-disable-next-line no-console
     console.log(`   - Has dual GPU: ${gpus.length > 1}`);
     gpus.forEach((gpu, idx) => {
+      // eslint-disable-next-line no-console
       console.log(
         `   - GPU ${idx + 1}: ${gpu.device} (${gpu.vendor}) - ${gpu.type}`,
       );
@@ -231,7 +239,7 @@ let webGPUInitializing = false;
 let webGPUInitPromise = null;
 let webGPULastResult = null; // Cache the result for strict mode re-renders
 
-const checkWebGPUSupport = async (forcePowerPreference = null) => {
+const checkWebGPUSupport = async (_forcePowerPreference = null) => {
   if (!navigator.gpu) {
     return {
       supported: false,
@@ -243,12 +251,14 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
   // If we already have a successful result and device is still valid, return cached result
   // This handles React strict mode re-renders efficiently
   if (webGPULastResult?.supported && gpuManager.getDevice()) {
+    // eslint-disable-next-line no-console
     console.log("🎮 Using cached WebGPU initialization result");
     return webGPULastResult;
   }
 
   // Prevent concurrent initialization attempts (React strict mode double-mounts)
   if (webGPUInitializing && webGPUInitPromise) {
+    // eslint-disable-next-line no-console
     console.log("🎮 WebGPU initialization already in progress, waiting...");
     try {
       return await webGPUInitPromise;
@@ -262,6 +272,7 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
 
   webGPUInitPromise = (async () => {
     try {
+      // eslint-disable-next-line no-console
       console.log("🎮 Initializing WebGPU Manager...");
 
       // Scan for available GPUs using the new manager
@@ -290,9 +301,11 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
         return { supported: false, reason: "Selected GPU not found" };
       }
 
+      // eslint-disable-next-line no-console
       console.log(
         `🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`,
       );
+      // eslint-disable-next-line no-console
       console.log(`🎮 Selected: ${selectedGPU.info.displayName}`);
 
       // Check for required features
@@ -493,10 +506,12 @@ export const LocalAIProvider = ({ children }) => {
     setGpuPreferenceState(newPreference);
 
     // Rescan for GPUs with the new preference
+    // eslint-disable-next-line no-console
     console.log(`🎮 GPU preference updated to: ${newPreference}`);
     const result = await checkWebGPUSupport(newPreference);
     setWebGPUStatus({ checked: true, ...result });
 
+    // eslint-disable-next-line no-console
     console.log(`🎮 Now using: ${result.device} (${result.vendor})`);
 
     return result;
@@ -523,9 +538,11 @@ export const LocalAIProvider = ({ children }) => {
             try {
               const isCached = await hasModelInCache(model.id);
               if (isCached) {
+                // eslint-disable-next-line no-console
                 console.log(`✅ Model ${model.id} is cached`);
                 installed.add(model.id);
               } else {
+                // eslint-disable-next-line no-console
                 console.log(`❌ Model ${model.id} is not cached`);
               }
             } catch (err) {
@@ -548,6 +565,7 @@ export const LocalAIProvider = ({ children }) => {
       if (!webGPUStatus.supported) return;
 
       try {
+        // eslint-disable-next-line no-console
         console.log(
           `🎮 Experimental mode ${experimentalMode ? "ENABLED" : "DISABLED"} - reinitializing WebGPU device...`,
         );
@@ -566,6 +584,7 @@ export const LocalAIProvider = ({ children }) => {
               experimental: experimentalMode,
               forceReinit: true,
             });
+            // eslint-disable-next-line no-console
             console.log(
               `✅ WebGPU device reinitialized with experimental=${experimentalMode}`,
             );
@@ -605,6 +624,7 @@ export const LocalAIProvider = ({ children }) => {
       // 💎 Check if this is a Diamond Swarm agent
       if (modelId.startsWith("diamond-")) {
         const agentId = modelId.replace("diamond-", "");
+        // eslint-disable-next-line no-console
         console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
 
         try {
@@ -649,6 +669,7 @@ export const LocalAIProvider = ({ children }) => {
           });
           localStorage.setItem("vet_rate_local_ai_model", modelId);
 
+          // eslint-disable-next-line no-console
           console.log(
             `🎖️ Warrant Council ${agentId.toUpperCase()} agent initialized successfully`,
           );
@@ -766,6 +787,7 @@ export const LocalAIProvider = ({ children }) => {
           );
 
           navigator.gpu.requestAdapter = async function (options) {
+            // eslint-disable-next-line no-console
             console.log("🔧 Intercepting requestAdapter");
             const adapter = await originalRequestAdapter(options);
             if (!adapter) return adapter;
@@ -775,6 +797,7 @@ export const LocalAIProvider = ({ children }) => {
             const adapterFeatures = adapter.features;
             const originalRequestDevice = adapter.requestDevice.bind(adapter);
 
+            // eslint-disable-next-line no-console
             console.log("🔧 Adapter limits:", {
               maxStorageBufferBindingSize:
                 adapterLimits.maxStorageBufferBindingSize,
@@ -782,9 +805,11 @@ export const LocalAIProvider = ({ children }) => {
               maxComputeInvocationsPerWorkgroup:
                 adapterLimits.maxComputeInvocationsPerWorkgroup,
             });
+            // eslint-disable-next-line no-console
             console.log("🔧 Adapter features:", [...adapterFeatures]);
 
             adapter.requestDevice = async function (descriptor = {}) {
+              // eslint-disable-next-line no-console
               console.log(
                 "🔧 Intercepting requestDevice to inject proper limits",
               );
@@ -828,6 +853,7 @@ export const LocalAIProvider = ({ children }) => {
                 requiredFeatures,
               };
 
+              // eslint-disable-next-line no-console
               console.log("🔧 Requesting device with:", {
                 maxComputeInvocationsPerWorkgroup:
                   enhancedDescriptor.requiredLimits
@@ -844,6 +870,7 @@ export const LocalAIProvider = ({ children }) => {
             return adapter;
           };
           window._mlc_gpu_patched = true;
+          // eslint-disable-next-line no-console
           console.log("🔧 WebGPU patched for MLC-LLM compatibility");
         }
 
@@ -884,6 +911,7 @@ export const LocalAIProvider = ({ children }) => {
 
         // Check if this is a custom model that needs appConfig
         if (selectedModel.isCustomModel && selectedModel.customConfig) {
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 Loading custom model with appConfig:",
             selectedModel.customConfig,
@@ -901,6 +929,7 @@ export const LocalAIProvider = ({ children }) => {
           // If this is a vision model, specify model_type as VLM
           if (selectedModel.hasVision) {
             modelListEntry.model_type = ModelType.VLM;
+            // eslint-disable-next-line no-console
             console.log(
               "🖼️ Custom model marked as VLM (vision-language model)",
             );
@@ -925,6 +954,7 @@ export const LocalAIProvider = ({ children }) => {
           const isNowCached = await hasModelInCache(modelId);
           if (isNowCached) {
             setInstalledModels((prev) => new Set([...prev, modelId]));
+            // eslint-disable-next-line no-console
             console.log(`✅ Model ${modelId} verified as cached`);
           }
         } catch (err) {
@@ -939,6 +969,7 @@ export const LocalAIProvider = ({ children }) => {
         // Determine if this is a vision model
         const isVision =
           isVisionModel || isCustomVisionModel || selectedModel.hasVision;
+        // eslint-disable-next-line no-console
         console.log(
           `🔍 Model type: ${isVision ? "Vision (VLM)" : "Text-only (LLM)"}`,
         );
@@ -1052,6 +1083,7 @@ export const LocalAIProvider = ({ children }) => {
   // Generate completion
   const generate = useCallback(
     async (prompt, options = {}) => {
+      // eslint-disable-next-line no-console
       console.log(
         "🔧 Generate: Called with isDiamond =",
         selectedModel?.isDiamond,
@@ -1061,6 +1093,7 @@ export const LocalAIProvider = ({ children }) => {
 
       // 💎 Diamond Swarm models route through diamondSwarm service
       if (selectedModel?.isDiamond || loadedModelId?.startsWith("diamond-")) {
+        // eslint-disable-next-line no-console
         console.log("🔧 Generate: Taking Diamond Swarm path");
         const { generateWithSwarm, getCurrentAgent, hasWebLLMEngine } =
           await import("../utils/diamondSwarm");
@@ -1069,6 +1102,7 @@ export const LocalAIProvider = ({ children }) => {
 
         // Try local server first (llama.cpp with Diamond Swarm GGUF)
         if (isLocalServerAvailable()) {
+          // eslint-disable-next-line no-console
           console.log("💎 Diamond Swarm: Using local llama.cpp server");
           const { generateText } = await import("../utils/unifiedAIService");
           const result = await generateText(prompt, {
@@ -1076,6 +1110,7 @@ export const LocalAIProvider = ({ children }) => {
             taskType: options.task || "general",
             ...options,
           });
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Generate: Local server returned:",
             typeof result,
@@ -1086,14 +1121,17 @@ export const LocalAIProvider = ({ children }) => {
 
         // Use WebLLM engine if loaded (loaded by initializeSwarm)
         if (hasWebLLMEngine()) {
+          // eslint-disable-next-line no-console
           console.log("💎 Diamond Swarm: Using WebLLM engine");
         } else {
+          // eslint-disable-next-line no-console
           console.log(
             "💎 Diamond Swarm: WebLLM still loading, using placeholder",
           );
         }
 
         const agent = getCurrentAgent() || "auditor";
+        // eslint-disable-next-line no-console
         console.log(
           "🔧 Generate: Calling generateWithSwarm with agent:",
           agent,
@@ -1102,6 +1140,7 @@ export const LocalAIProvider = ({ children }) => {
           agentId: agent,
           ...options,
         });
+        // eslint-disable-next-line no-console
         console.log(
           "🔧 Generate: generateWithSwarm returned:",
           typeof result,
@@ -1184,7 +1223,7 @@ export const LocalAIProvider = ({ children }) => {
         // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
         const gibberishPatterns = [
           /(\.{3,}\s*){5,}/, // Multiple ellipsis sequences
-          /(["\"]\s*){5,}/, // Multiple quote sequences
+          /([""]\s*){5,}/, // Multiple quote sequences
           /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
           /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
         ];
@@ -1202,7 +1241,7 @@ export const LocalAIProvider = ({ children }) => {
                 !lower.includes("confuse") &&
                 !lower.includes("unclear") &&
                 line.length > 20 &&
-                !/^[\s\"\'\.\\,\!\?]+$/.test(line)
+                !/^[\s"'.\\,!?]+$/.test(line)
               );
             });
             if (meaningfulLines.length > 0) {
@@ -1299,6 +1338,7 @@ export const LocalAIProvider = ({ children }) => {
     // ONLY interrupt if the unified service says generation is in progress
     // LocalAIPanel's isGenerating state can get stale during React re-renders
     if (!aiStatus.localGenerating) {
+      // eslint-disable-next-line no-console
       console.log(
         "⏭️ interruptGeneration called but no global generation in progress - ignoring",
       );
@@ -1353,10 +1393,12 @@ export const LocalAIProvider = ({ children }) => {
   const value = {
     // Status
     webGPUStatus,
+    setWebGPUStatus,
     isLoading,
     loadProgress,
     isReady,
     error,
+    setError,
     isGenerating,
 
     // Model
@@ -1393,13 +1435,14 @@ export const LocalAIProvider = ({ children }) => {
  * UI for managing and using local AI
  */
 const LocalAIPanel = ({ onClose, onReportBug }) => {
-  const { t } = useLanguage();
   const {
     webGPUStatus,
+    setWebGPUStatus,
     isLoading,
     loadProgress,
     isReady,
     error,
+    setError,
     isGenerating,
     selectedModel,
     setSelectedModel,
@@ -1413,7 +1456,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     showExperimentalWarning,
     setShowExperimentalWarning,
     initializeEngine,
-    generate,
+    _generate,
     interruptGeneration,
     switchModel,
   } = useLocalAI();
@@ -1521,6 +1564,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       // If an AI model is loaded, warn user they may need to reload
       if (isReady) {
         // The user will need to reload the model to use the new GPU
+        // eslint-disable-next-line no-console
         console.log(
           "⚠️ GPU changed - model may need to be reloaded to use new GPU",
         );
@@ -1545,6 +1589,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
     // If same adapter, just log and return (no error, no UI change needed)
     if (currentAdapter === targetAdapter.adapter) {
+      // eslint-disable-next-line no-console
       console.log("✅ GPU already selected:", targetAdapter.info.displayName);
       return;
     }
@@ -1565,15 +1610,12 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
         );
 
         if (shouldReload) {
-          // Unload current model first
-          await handleUnload();
-          // Small delay to ensure cleanup
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          // Load model with new GPU
-          await handleLoadModel(selectedModel.id);
+          // switchModel unloads the current engine, then loads the new one
+          await switchModel(selectedModel.id);
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log("✅ GPU selection updated:", result.device);
     } catch (err) {
       console.error("❌ Failed to change GPU:", err);
@@ -1671,1032 +1713,872 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-gray-700">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden flex-shrink-0">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
+  const header = (
+    <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 px-6 py-6 text-white">
+      <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
+      <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white/5" />
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <span className="text-4xl">🛡️</span>
-              </div>
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold">
-                  Faraday Cage Protocol{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-cyan-200 mt-1">
-                  100% Local AI • Zero Data Leaves Your Device
-                </p>
-                <div className="mt-2">
-                  <span
-                    className="px-2 py-0.5 bg-blue-500/90 text-white text-xs font-semibold rounded-full"
-                    title="VA employees use VA GPT, a secure AI tool"
-                  >
-                    ℹ️ VA Staff Use VA GPT (100K+ Users)
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="VA AI Transparency Hub"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+            <span className="text-4xl">🛡️</span>
+          </div>
+          <div>
+            <h2
+              id="local-ai-panel-title"
+              className="text-2xl font-bold sm:text-3xl"
+            >
+              Faraday Cage Protocol{" "}
+              <span className="rounded bg-amber-500 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+                BETA
+              </span>
+            </h2>
+            <p className="mt-1 text-cyan-200">
+              100% Local AI • Zero Data Leaves Your Device
+            </p>
+            <div className="mt-2">
+              <span
+                className="rounded-full bg-blue-500/90 px-2 py-0.5 text-xs font-semibold text-white"
+                aria-label="VA employees use VA GPT, a secure AI tool"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                ℹ️ VA Staff Use VA GPT (100K+ Users)
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="VA AI Transparency Hub"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+            aria-label="Close dialog"
+          >
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const footer = (
+    <div className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+      <span>🔒</span>
+      <span>Military-grade privacy: Your data never leaves your device</span>
+    </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      labelledBy="local-ai-panel-title"
+      size="lg"
+      footer={footer}
+      className="border border-gray-200 dark:border-gray-700"
+    >
+      <div className="space-y-6">
+        {/* Experimental Mode Warning */}
+        <ExperimentalModeWarning experimentalMode={experimentalMode} />
+
+        {/* WebGPU Status */}
+        <div
+          className={`rounded-xl border-2 p-4 ${
+            webGPUStatus.supported
+              ? "border-green-300 bg-green-50 dark:border-green-500/50 dark:bg-green-900/30"
+              : "border-red-300 bg-red-50 dark:border-red-500/50 dark:bg-red-900/30"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">
+              {webGPUStatus.supported ? "✅" : "❌"}
+            </span>
+            <div className="flex-1">
+              <h3
+                className={`font-bold ${
+                  webGPUStatus.supported
+                    ? "text-green-700 dark:text-green-400"
+                    : "text-red-700 dark:text-red-400"
+                }`}
+              >
+                {webGPUStatus.supported
+                  ? "WebGPU Available"
+                  : "WebGPU Not Available"}
+              </h3>
+              {webGPUStatus.supported ? (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  🎮 Using: {webGPUStatus.device} ({webGPUStatus.vendor})
+                </p>
+              ) : (
+                <p className="text-sm text-red-600 dark:text-red-400/80">
+                  {webGPUStatus.reason ||
+                    "Your browser or device does not support WebGPU"}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {/* Experimental Mode Warning */}
-          <ExperimentalModeWarning experimentalMode={experimentalMode} />
-
-          {/* WebGPU Status */}
-          <div
-            className={`p-4 rounded-xl border-2 ${
-              webGPUStatus.supported
-                ? "bg-green-900/30 border-green-500/50"
-                : "bg-red-900/30 border-red-500/50"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">
-                {webGPUStatus.supported ? "✅" : "❌"}
+        {/* GPU Selector Component - Show when WebGPU is supported */}
+        {webGPUStatus.supported && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🎮</span>
+              <h3 className="font-bold text-cyan-700 dark:text-cyan-300">
+                GPU Selection
+              </h3>
+              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs text-cyan-700 dark:bg-cyan-500/30 dark:text-cyan-200">
+                {webGPUStatus.availableGPUs?.length || 1} GPU
+                {(webGPUStatus.availableGPUs?.length || 1) > 1 ? "s" : ""}{" "}
+                Available
               </span>
-              <div className="flex-1">
-                <h3
-                  className={`font-bold ${
-                    webGPUStatus.supported ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {webGPUStatus.supported
-                    ? "WebGPU Available"
-                    : "WebGPU Not Available"}
-                </h3>
-                {webGPUStatus.supported ? (
-                  <p className="text-gray-400 text-sm">
-                    🎮 Using: {webGPUStatus.device} ({webGPUStatus.vendor})
+            </div>
+            <GPUSelector onGPUSelected={handleGPUSelected} autoSelect={false} />
+          </div>
+        )}
+
+        {/* Experimental WebGPU Features Toggle - HIDDEN (feature disabled) */}
+        {/* Vision models and experimental features disabled - standard WebGPU works great for all text models */}
+        {false && webGPUStatus.supported && (
+          <div className="p-4 rounded-xl border-2 bg-amber-900/20 border-amber-500/50">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 className="font-bold text-amber-400 flex items-center gap-2">
+                    Experimental WebGPU Mode
+                    <span className="text-xs px-2 py-0.5 bg-amber-500/30 text-amber-200 rounded-full">
+                      Advanced
+                    </span>
+                  </h3>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Enable experimental shader features for newer AI models (may
+                    be unstable)
                   </p>
-                ) : (
-                  <p className="text-red-400/80 text-sm">
-                    {webGPUStatus.reason ||
-                      "Your browser or device does not support WebGPU"}
-                  </p>
+                </div>
+
+                {/* Checkbox */}
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={experimentalMode}
+                    onChange={(e) => {
+                      if (e.target.checked && !showExperimentalWarning) {
+                        setShowExperimentalWarning(true);
+                      } else if (!e.target.checked) {
+                        setExperimentalMode(false);
+                        localStorage.setItem(
+                          "vet_rate_experimental_webgpu",
+                          "false",
+                        );
+                      }
+                    }}
+                    className="mt-1 w-5 h-5 rounded border-2 border-amber-500 bg-gray-800 text-amber-500 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  />
+                  <div className="flex-1">
+                    <span className="text-white font-medium group-hover:text-amber-400 transition-colors">
+                      I understand the risks and want to enable experimental
+                      features
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This attempts to use experimental WebGPU APIs that may not
+                      be available in your browser
+                    </p>
+                  </div>
+                </label>
+
+                {/* Warning Panel - Shows when trying to enable */}
+                {showExperimentalWarning && (
+                  <div className="bg-red-900/30 border-2 border-red-500/50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-xl">🚨</span>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-red-400 text-sm">
+                          IMPORTANT WARNINGS
+                        </h4>
+                        <ul className="text-xs text-gray-300 mt-2 space-y-1 list-disc list-inside">
+                          <li>
+                            This enables{" "}
+                            <strong>experimental browser features</strong> not
+                            yet standardized
+                          </li>
+                          <li>
+                            May cause{" "}
+                            <strong>
+                              browser crashes, GPU errors, or system instability
+                            </strong>
+                          </li>
+                          <li>
+                            Requires launching Chrome with special flags (see
+                            instructions below)
+                          </li>
+                          <li>
+                            <strong>Not recommended for production use</strong>{" "}
+                            - for testing only
+                          </li>
+                          <li>
+                            Your browser may not support these features even
+                            with flags enabled
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="bg-gray-900/50 rounded p-3 space-y-2">
+                      <p className="text-xs font-bold text-amber-400">
+                        📋 How to Enable (Windows):
+                      </p>
+                      <div className="bg-gray-950 rounded p-2">
+                        <code className="text-xs text-green-400 break-all">
+                          chrome.exe --enable-dawn-features=allow_unsafe_apis
+                        </code>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        1. Close ALL Chrome windows
+                        <br />
+                        2. Open Command Prompt or PowerShell
+                        <br />
+                        3. Run the command above (adjust path to Chrome if
+                        needed)
+                        <br />
+                        4. Check if experimental features are detected below
+                      </p>
+                    </div>
+
+                    {/* Feature Detection Status */}
+                    <div className="bg-gray-900/50 rounded p-3">
+                      <p className="text-xs font-bold text-cyan-400 mb-2">
+                        🔍 Detected Features:
+                      </p>
+                      <div className="space-y-1 text-xs">
+                        {webGPUStatus.availableFeatures?.length > 0 ? (
+                          <>
+                            {webGPUStatus.availableFeatures.map((feature) => (
+                              <div
+                                key={feature}
+                                className="flex items-center gap-2"
+                              >
+                                <span className="text-green-400">✓</span>
+                                <code className="text-gray-300">{feature}</code>
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <p className="text-gray-500">
+                            No experimental features detected
+                          </p>
+                        )}
+                        {webGPUStatus.missingFeatures?.length > 0 && (
+                          <>
+                            <p className="text-xs text-red-400 mt-2 font-semibold">
+                              Missing Features:
+                            </p>
+                            {webGPUStatus.missingFeatures.map((feature) => (
+                              <div
+                                key={feature}
+                                className="flex items-center gap-2"
+                              >
+                                <span className="text-red-400">✗</span>
+                                <code className="text-gray-400">{feature}</code>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setExperimentalMode(true);
+                          localStorage.setItem(
+                            "vet_rate_experimental_webgpu",
+                            "true",
+                          );
+                          setShowExperimentalWarning(false);
+                        }}
+                        className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium text-sm transition-colors"
+                      >
+                        I Accept the Risks - Enable Now
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowExperimentalWarning(false);
+                        }}
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Status when enabled */}
+                {experimentalMode && !showExperimentalWarning && (
+                  <div className="bg-amber-900/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">⚡</span>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-amber-400">
+                          Experimental Mode Active
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          The AI will attempt to use experimental WebGPU
+                          features if available. If you encounter errors,
+                          disable this option.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           </div>
+        )}
 
-          {/* GPU Selector Component - Show when WebGPU is supported */}
-          {webGPUStatus.supported && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🎮</span>
-                <h3 className="font-bold text-cyan-300">GPU Selection</h3>
-                <span className="text-xs px-2 py-0.5 bg-cyan-500/30 text-cyan-200 rounded-full">
-                  {webGPUStatus.availableGPUs?.length || 1} GPU
-                  {(webGPUStatus.availableGPUs?.length || 1) > 1
-                    ? "s"
-                    : ""}{" "}
-                  Available
-                </span>
-              </div>
-              <GPUSelector
-                onGPUSelected={handleGPUSelected}
-                autoSelect={false}
-              />
+        {/* GPU Selection - Only show if dual GPU detected */}
+        {webGPUStatus.supported && webGPUStatus.hasDualGPU && (
+          <div className="rounded-xl border-2 border-purple-300 bg-purple-50 p-4 dark:border-purple-500/50 dark:bg-purple-900/20">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-xl">🎮</span>
+              <h3 className="font-bold text-purple-700 dark:text-purple-300">
+                Advanced GPU Selection
+              </h3>
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-500/30 dark:text-purple-200">
+                {webGPUStatus.availableGPUs?.length || 2} GPUs Detected
+              </span>
+              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs text-cyan-700 dark:bg-cyan-500/30 dark:text-cyan-200">
+                🤓 Nerd Mode
+              </span>
             </div>
-          )}
-
-          {/* Experimental WebGPU Features Toggle - HIDDEN (feature disabled) */}
-          {/* Vision models and experimental features disabled - standard WebGPU works great for all text models */}
-          {false && webGPUStatus.supported && (
-            <div className="p-4 rounded-xl border-2 bg-amber-900/20 border-amber-500/50">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">⚠️</span>
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <h3 className="font-bold text-amber-400 flex items-center gap-2">
-                      Experimental WebGPU Mode
-                      <span className="text-xs px-2 py-0.5 bg-amber-500/30 text-amber-200 rounded-full">
-                        Advanced
-                      </span>
-                    </h3>
-                    <p className="text-gray-400 text-sm mt-1">
-                      Enable experimental shader features for newer AI models
-                      (may be unstable)
+            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              Multiple GPUs detected on your system. Select which GPU to use for
+              AI processing:
+            </p>
+            <div className="grid gap-3">
+              {/* Auto Option */}
+              <button
+                onClick={() => handleGPUChange(GPU_PREFERENCES.AUTO)}
+                disabled={isChangingGPU || isLoading}
+                className={`rounded-lg border-2 p-4 text-left transition-all ${
+                  gpuPreference === GPU_PREFERENCES.AUTO
+                    ? "border-purple-500 bg-purple-100 shadow-lg shadow-purple-500/20 dark:bg-purple-900/40"
+                    : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
+                } ${isChangingGPU || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🤖</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-gray-900 dark:text-white">
+                        Auto (Recommended)
+                      </p>
+                      {gpuPreference === GPU_PREFERENCES.AUTO && (
+                        <span className="rounded-full bg-purple-500 px-2 py-0.5 text-xs font-bold text-white">
+                          ACTIVE
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      Let the browser choose based on power state and workload
                     </p>
                   </div>
+                </div>
+              </button>
 
-                  {/* Checkbox */}
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={experimentalMode}
-                      onChange={(e) => {
-                        if (e.target.checked && !showExperimentalWarning) {
-                          setShowExperimentalWarning(true);
-                        } else if (!e.target.checked) {
-                          setExperimentalMode(false);
-                          localStorage.setItem(
-                            "vet_rate_experimental_webgpu",
-                            "false",
-                          );
-                        }
-                      }}
-                      className="mt-1 w-5 h-5 rounded border-2 border-amber-500 bg-gray-800 text-amber-500 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-                    />
-                    <div className="flex-1">
-                      <span className="text-white font-medium group-hover:text-amber-400 transition-colors">
-                        I understand the risks and want to enable experimental
-                        features
+              {/* Available GPUs with Detailed Specs */}
+              {webGPUStatus.availableGPUs?.map((gpu) => (
+                <button
+                  key={gpu.type}
+                  onClick={() => handleGPUChange(gpu.type)}
+                  disabled={isChangingGPU || isLoading}
+                  className={`rounded-lg border-2 p-4 text-left transition-all ${
+                    gpuPreference === gpu.type
+                      ? "border-purple-500 bg-purple-100 shadow-lg shadow-purple-500/20 dark:bg-purple-900/40"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
+                  } ${isChangingGPU || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <div className="space-y-2">
+                    {/* GPU Header */}
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">
+                        {gpu.type === "high-performance" ? "🚀" : "🔋"}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        This attempts to use experimental WebGPU APIs that may
-                        not be available in your browser
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Warning Panel - Shows when trying to enable */}
-                  {showExperimentalWarning && (
-                    <div className="bg-red-900/30 border-2 border-red-500/50 rounded-lg p-4 space-y-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-xl">🚨</span>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-red-400 text-sm">
-                            IMPORTANT WARNINGS
-                          </h4>
-                          <ul className="text-xs text-gray-300 mt-2 space-y-1 list-disc list-inside">
-                            <li>
-                              This enables{" "}
-                              <strong>experimental browser features</strong> not
-                              yet standardized
-                            </li>
-                            <li>
-                              May cause{" "}
-                              <strong>
-                                browser crashes, GPU errors, or system
-                                instability
-                              </strong>
-                            </li>
-                            <li>
-                              Requires launching Chrome with special flags (see
-                              instructions below)
-                            </li>
-                            <li>
-                              <strong>
-                                Not recommended for production use
-                              </strong>{" "}
-                              - for testing only
-                            </li>
-                            <li>
-                              Your browser may not support these features even
-                              with flags enabled
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Instructions */}
-                      <div className="bg-gray-900/50 rounded p-3 space-y-2">
-                        <p className="text-xs font-bold text-amber-400">
-                          📋 How to Enable (Windows):
-                        </p>
-                        <div className="bg-gray-950 rounded p-2">
-                          <code className="text-xs text-green-400 break-all">
-                            chrome.exe --enable-dawn-features=allow_unsafe_apis
-                          </code>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                          1. Close ALL Chrome windows
-                          <br />
-                          2. Open Command Prompt or PowerShell
-                          <br />
-                          3. Run the command above (adjust path to Chrome if
-                          needed)
-                          <br />
-                          4. Check if experimental features are detected below
-                        </p>
-                      </div>
-
-                      {/* Feature Detection Status */}
-                      <div className="bg-gray-900/50 rounded p-3">
-                        <p className="text-xs font-bold text-cyan-400 mb-2">
-                          🔍 Detected Features:
-                        </p>
-                        <div className="space-y-1 text-xs">
-                          {webGPUStatus.availableFeatures?.length > 0 ? (
-                            <>
-                              {webGPUStatus.availableFeatures.map((feature) => (
-                                <div
-                                  key={feature}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span className="text-green-400">✓</span>
-                                  <code className="text-gray-300">
-                                    {feature}
-                                  </code>
-                                </div>
-                              ))}
-                            </>
-                          ) : (
-                            <p className="text-gray-500">
-                              No experimental features detected
-                            </p>
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-bold text-gray-900 dark:text-white">
+                            {gpu.label}
+                          </p>
+                          {gpuPreference === gpu.type && (
+                            <span className="rounded-full bg-purple-500 px-2 py-0.5 text-xs font-bold text-white">
+                              ACTIVE
+                            </span>
                           )}
-                          {webGPUStatus.missingFeatures?.length > 0 && (
-                            <>
-                              <p className="text-xs text-red-400 mt-2 font-semibold">
-                                Missing Features:
-                              </p>
-                              {webGPUStatus.missingFeatures.map((feature) => (
-                                <div
-                                  key={feature}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span className="text-red-400">✗</span>
-                                  <code className="text-gray-400">
-                                    {feature}
-                                  </code>
-                                </div>
-                              ))}
-                            </>
+                          {gpu.type === "high-performance" && (
+                            <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-500/30 dark:text-cyan-200">
+                              Recommended for AI
+                            </span>
                           )}
                         </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setExperimentalMode(true);
-                            localStorage.setItem(
-                              "vet_rate_experimental_webgpu",
-                              "true",
-                            );
-                            setShowExperimentalWarning(false);
-                          }}
-                          className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium text-sm transition-colors"
-                        >
-                          I Accept the Risks - Enable Now
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowExperimentalWarning(false);
-                          }}
-                          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
-                        >
-                          Cancel
-                        </button>
+                        <p className="mt-1 font-mono text-sm text-cyan-700 dark:text-cyan-300">
+                          {gpu.device}
+                        </p>
+                        <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {gpu.description}
+                        </p>
                       </div>
                     </div>
-                  )}
 
-                  {/* Status when enabled */}
-                  {experimentalMode && !showExperimentalWarning && (
-                    <div className="bg-amber-900/30 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">⚡</span>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold text-amber-400">
-                            Experimental Mode Active
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            The AI will attempt to use experimental WebGPU
-                            features if available. If you encounter errors,
-                            disable this option.
-                          </p>
-                        </div>
+                    {/* GPU Specs */}
+                    <div className="grid grid-cols-2 gap-2 pl-11">
+                      <div className="rounded bg-gray-100 p-2 dark:bg-gray-900/50">
+                        <p className="text-xs text-gray-600 dark:text-gray-500">
+                          Vendor
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {gpu.vendor}
+                        </p>
+                      </div>
+                      <div className="rounded bg-gray-100 p-2 dark:bg-gray-900/50">
+                        <p className="text-xs text-gray-600 dark:text-gray-500">
+                          Est. VRAM
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {gpu.vram || "Unknown"}
+                        </p>
+                      </div>
+                      <div className="rounded bg-gray-100 p-2 dark:bg-gray-900/50">
+                        <p className="text-xs text-gray-600 dark:text-gray-500">
+                          Architecture
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {gpu.architecture || "Unknown"}
+                        </p>
+                      </div>
+                      <div className="rounded bg-gray-100 p-2 dark:bg-gray-900/50">
+                        <p className="text-xs text-gray-600 dark:text-gray-500">
+                          Max Texture
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {gpu.limits?.maxTextureSize || "N/A"}
+                        </p>
                       </div>
                     </div>
-                  )}
+
+                    {/* WebGPU Features Count */}
+                    {gpu.features && gpu.features.length > 0 && (
+                      <div className="pl-11">
+                        <p className="text-xs text-gray-600 dark:text-gray-500">
+                          WebGPU Features:{" "}
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">
+                            {gpu.features.length} supported
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Detailed Info for Nerds */}
+            {webGPUStatus.availableGPUs &&
+              webGPUStatus.availableGPUs.length > 0 && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer select-none text-xs text-gray-600 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400">
+                    🤓 Show Technical Details
+                  </summary>
+                  <div className="mt-2 space-y-2 font-mono text-xs">
+                    {webGPUStatus.availableGPUs.map((gpu, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded border border-gray-200 bg-gray-100 p-2 dark:border-gray-800 dark:bg-gray-900/50"
+                      >
+                        <p className="mb-1 font-bold text-purple-600 dark:text-purple-400">
+                          {gpu.device}
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Max Buffer: {gpu.limits?.maxBufferSize}
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Max Workgroup Size:{" "}
+                          {gpu.limits?.maxComputeWorkgroupSizeX}
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Max Workgroups:{" "}
+                          {gpu.limits?.maxComputeWorkgroupsPerDimension}
+                        </p>
+                        {gpu.features && gpu.features.length > 0 && (
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-gray-600 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400">
+                              Features ({gpu.features.length})
+                            </summary>
+                            <div className="mt-1 pl-2 text-gray-600 dark:text-gray-500">
+                              {gpu.features.slice(0, 10).map((feat, i) => (
+                                <div key={i}>• {feat}</div>
+                              ))}
+                              {gpu.features.length > 10 && (
+                                <div>
+                                  • ... and {gpu.features.length - 10} more
+                                </div>
+                              )}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+            {isChangingGPU && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-purple-600 dark:text-purple-300">
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Switching GPU...
+              </div>
+            )}
+
+            {isReady && gpuPreference !== webGPUStatus.currentPreference && (
+              <div className="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 p-2 dark:border-yellow-500/50 dark:bg-yellow-900/30">
+                <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                  ⚠️ GPU preference changed. Unload and reload the AI model to
+                  use the new GPU.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {webGPUStatus.supported && (
+          <>
+            {/* Helpful Info Box */}
+            <div className="rounded-xl border border-blue-300 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-blue-900/20">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💡</span>
+                <div className="flex-1">
+                  <h4 className="mb-2 font-bold text-blue-700 dark:text-blue-300">
+                    Choosing Your AI Model
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <p>
+                      <strong>For most veterans:</strong> The recommended model
+                      works great for typical tasks.
+                    </p>
+                    <p>
+                      <strong>Large medical records:</strong> Don&apos;t worry!
+                      All models can handle large Blue Button files. The system
+                      automatically breaks them into smaller sections if needed.
+                    </p>
+                    <p>
+                      <strong>Need faster results?</strong> Try a smaller model.{" "}
+                      <strong>Need better quality?</strong> Try a larger one.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* GPU Selection - Only show if dual GPU detected */}
-          {webGPUStatus.supported && webGPUStatus.hasDualGPU && (
-            <div className="p-4 rounded-xl border-2 bg-purple-900/20 border-purple-500/50">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xl">🎮</span>
-                <h3 className="font-bold text-purple-300">
-                  Advanced GPU Selection
-                </h3>
-                <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-200 rounded-full">
-                  {webGPUStatus.availableGPUs?.length || 2} GPUs Detected
-                </span>
-                <span className="text-xs px-2 py-0.5 bg-cyan-500/30 text-cyan-200 rounded-full">
-                  🤓 Nerd Mode
-                </span>
-              </div>
-              <p className="text-gray-400 text-sm mb-3">
-                Multiple GPUs detected on your system. Select which GPU to use
-                for AI processing:
-              </p>
+            {/* Model Selection */}
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span>🧠</span> Select Neural Engine
+              </h3>
               <div className="grid gap-3">
-                {/* Auto Option */}
-                <button
-                  onClick={() => handleGPUChange(GPU_PREFERENCES.AUTO)}
-                  disabled={isChangingGPU || isLoading}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    gpuPreference === GPU_PREFERENCES.AUTO
-                      ? "bg-purple-900/40 border-purple-500 shadow-lg shadow-purple-500/20"
-                      : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
-                  } ${isChangingGPU || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🤖</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-white">
-                          Auto (Recommended)
-                        </p>
-                        {gpuPreference === GPU_PREFERENCES.AUTO && (
-                          <span className="px-2 py-0.5 bg-purple-500 text-white text-xs font-bold rounded-full">
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Let the browser choose based on power state and workload
-                      </p>
-                    </div>
-                  </div>
-                </button>
+                {availableModels.map((model) => {
+                  const isInstalled = installedModels.has(model.id);
+                  const isCurrentlyLoaded = loadedModelId === model.id;
+                  const isDisabled = model.disabled || isLoading;
 
-                {/* Available GPUs with Detailed Specs */}
-                {webGPUStatus.availableGPUs?.map((gpu, idx) => (
-                  <button
-                    key={gpu.type}
-                    onClick={() => handleGPUChange(gpu.type)}
-                    disabled={isChangingGPU || isLoading}
-                    className={`p-4 rounded-lg border-2 text-left transition-all ${
-                      gpuPreference === gpu.type
-                        ? "bg-purple-900/40 border-purple-500 shadow-lg shadow-purple-500/20"
-                        : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
-                    } ${isChangingGPU || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <div className="space-y-2">
-                      {/* GPU Header */}
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">
-                          {gpu.type === "high-performance" ? "🚀" : "🔋"}
-                        </span>
+                  return (
+                    <button
+                      key={model.id}
+                      onClick={() => !model.disabled && setSelectedModel(model)}
+                      disabled={isDisabled}
+                      className={`rounded-xl border-2 p-4 text-left transition-all ${
+                        model.disabled
+                          ? "cursor-not-allowed border-gray-200 bg-gray-100 opacity-60 dark:border-gray-800 dark:bg-gray-900/30"
+                          : selectedModel.id === model.id
+                            ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
+                            : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
+                      } ${isLoading && !model.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold text-white">{gpu.label}</p>
-                            {gpuPreference === gpu.type && (
-                              <span className="px-2 py-0.5 bg-purple-500 text-white text-xs font-bold rounded-full">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`font-bold ${model.disabled ? "text-gray-500 line-through" : "text-gray-900 dark:text-white"}`}
+                            >
+                              {model.name}
+                            </span>
+                            {model.disabled && (
+                              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700 dark:bg-red-500/30 dark:text-red-300">
+                                DISABLED
+                              </span>
+                            )}
+                            {model.bestFor && !model.disabled && (
+                              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs text-violet-700 dark:bg-violet-500/30 dark:text-violet-300">
+                                {model.bestFor}
+                              </span>
+                            )}
+                            {model.recommended && !model.disabled && (
+                              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs text-cyan-700 dark:bg-cyan-500/30 dark:text-cyan-300">
+                                RECOMMENDED
+                              </span>
+                            )}
+                            {isInstalled && !model.disabled && (
+                              <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-500/30 dark:text-green-300">
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                INSTALLED
+                              </span>
+                            )}
+                            {isCurrentlyLoaded && !model.disabled && (
+                              <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-500/30 dark:text-blue-300">
+                                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
                                 ACTIVE
                               </span>
                             )}
-                            {gpu.type === "high-performance" && (
-                              <span className="px-2 py-0.5 bg-cyan-500/30 text-cyan-200 text-xs font-semibold rounded-full">
-                                Recommended for AI
-                              </span>
-                            )}
                           </div>
-                          <p className="text-sm text-cyan-300 font-mono mt-1">
-                            {gpu.device}
+                          <p
+                            className={`text-sm mt-1 ${model.disabled ? "text-gray-500 dark:text-gray-600" : "text-gray-600 dark:text-gray-400"}`}
+                          >
+                            {model.description}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {gpu.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* GPU Specs */}
-                      <div className="grid grid-cols-2 gap-2 pl-11">
-                        <div className="bg-gray-900/50 p-2 rounded">
-                          <p className="text-xs text-gray-500">Vendor</p>
-                          <p className="text-sm text-white font-semibold">
-                            {gpu.vendor}
-                          </p>
-                        </div>
-                        <div className="bg-gray-900/50 p-2 rounded">
-                          <p className="text-xs text-gray-500">Est. VRAM</p>
-                          <p className="text-sm text-white font-semibold">
-                            {gpu.vram || "Unknown"}
-                          </p>
-                        </div>
-                        <div className="bg-gray-900/50 p-2 rounded">
-                          <p className="text-xs text-gray-500">Architecture</p>
-                          <p className="text-sm text-white font-semibold">
-                            {gpu.architecture || "Unknown"}
-                          </p>
-                        </div>
-                        <div className="bg-gray-900/50 p-2 rounded">
-                          <p className="text-xs text-gray-500">Max Texture</p>
-                          <p className="text-sm text-white font-semibold">
-                            {gpu.limits?.maxTextureSize || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* WebGPU Features Count */}
-                      {gpu.features && gpu.features.length > 0 && (
-                        <div className="pl-11">
-                          <p className="text-xs text-gray-500">
-                            WebGPU Features:{" "}
-                            <span className="text-purple-400 font-semibold">
-                              {gpu.features.length} supported
-                            </span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Detailed Info for Nerds */}
-              {webGPUStatus.availableGPUs &&
-                webGPUStatus.availableGPUs.length > 0 && (
-                  <details className="mt-3">
-                    <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-400 select-none">
-                      🤓 Show Technical Details
-                    </summary>
-                    <div className="mt-2 space-y-2 text-xs font-mono">
-                      {webGPUStatus.availableGPUs.map((gpu, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-gray-900/50 p-2 rounded border border-gray-800"
-                        >
-                          <p className="text-purple-400 font-bold mb-1">
-                            {gpu.device}
-                          </p>
-                          <p className="text-gray-400">
-                            Max Buffer: {gpu.limits?.maxBufferSize}
-                          </p>
-                          <p className="text-gray-400">
-                            Max Workgroup Size:{" "}
-                            {gpu.limits?.maxComputeWorkgroupSizeX}
-                          </p>
-                          <p className="text-gray-400">
-                            Max Workgroups:{" "}
-                            {gpu.limits?.maxComputeWorkgroupsPerDimension}
-                          </p>
-                          {gpu.features && gpu.features.length > 0 && (
-                            <details className="mt-1">
-                              <summary className="cursor-pointer text-gray-500 hover:text-gray-400">
-                                Features ({gpu.features.length})
-                              </summary>
-                              <div className="mt-1 pl-2 text-gray-500">
-                                {gpu.features.slice(0, 10).map((feat, i) => (
-                                  <div key={i}>• {feat}</div>
-                                ))}
-                                {gpu.features.length > 10 && (
-                                  <div>
-                                    • ... and {gpu.features.length - 10} more
-                                  </div>
-                                )}
-                              </div>
-                            </details>
+                          {model.contextInfo && (
+                            <p
+                              className={`text-xs mt-1 italic ${model.disabled ? "font-medium text-orange-600 dark:text-orange-400/80" : "text-cyan-700 dark:text-cyan-400/80"}`}
+                            >
+                              💡 {model.contextInfo}
+                            </p>
                           )}
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-              {isChangingGPU && (
-                <div className="mt-3 flex items-center gap-2 text-purple-300 text-sm">
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Switching GPU...
-                </div>
-              )}
-
-              {isReady && gpuPreference !== webGPUStatus.currentPreference && (
-                <div className="mt-3 p-2 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
-                  <p className="text-yellow-300 text-xs">
-                    ⚠️ GPU preference changed. Unload and reload the AI model to
-                    use the new GPU.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {webGPUStatus.supported && (
-            <>
-              {/* Helpful Info Box */}
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-blue-300 mb-2">
-                      Choosing Your AI Model
-                    </h4>
-                    <div className="text-gray-300 text-sm space-y-2">
-                      <p>
-                        <strong>For most veterans:</strong> The recommended
-                        model works great for typical tasks.
-                      </p>
-                      <p>
-                        <strong>Large medical records:</strong> Don't worry! All
-                        models can handle large Blue Button files. The system
-                        automatically breaks them into smaller sections if
-                        needed.
-                      </p>
-                      <p>
-                        <strong>Need faster results?</strong> Try a smaller
-                        model. <strong>Need better quality?</strong> Try a
-                        larger one.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Model Selection */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span>🧠</span> Select Neural Engine
-                </h3>
-                <div className="grid gap-3">
-                  {availableModels.map((model) => {
-                    const isInstalled = installedModels.has(model.id);
-                    const isCurrentlyLoaded = loadedModelId === model.id;
-                    const isDisabled = model.disabled || isLoading;
-
-                    return (
-                      <button
-                        key={model.id}
-                        onClick={() =>
-                          !model.disabled && setSelectedModel(model)
-                        }
-                        disabled={isDisabled}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          model.disabled
-                            ? "bg-gray-900/30 border-gray-800 opacity-60 cursor-not-allowed"
-                            : selectedModel.id === model.id
-                              ? "bg-cyan-900/30 border-cyan-500"
-                              : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
-                        } ${isLoading && !model.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={`font-bold ${model.disabled ? "text-gray-500 line-through" : "text-white"}`}
-                              >
-                                {model.name}
-                              </span>
-                              {model.disabled && (
-                                <span className="text-xs px-2 py-0.5 bg-red-500/30 text-red-300 rounded-full">
-                                  DISABLED
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-500">
+                            Size: {model.size} • VRAM: {model.vramRequired}
+                          </p>
+                          {/* Base Model Transparency - show veterans what powers their AI */}
+                          {model.baseModel && !model.disabled && (
+                            <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700/50">
+                              <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400/80">
+                                <span>🔬</span>
+                                <span className="font-medium">Based on:</span>
+                                <span className="text-amber-700 dark:text-amber-300">
+                                  {model.baseModel}
                                 </span>
+                              </p>
+                              {model.baseModelInfo && (
+                                <p className="ml-4 mt-0.5 text-xs text-gray-600 dark:text-gray-500">
+                                  {model.baseModelInfo}
+                                </p>
                               )}
-                              {model.bestFor && !model.disabled && (
-                                <span className="text-xs px-2 py-0.5 bg-violet-500/30 text-violet-300 rounded-full">
-                                  {model.bestFor}
-                                </span>
-                              )}
-                              {model.recommended && !model.disabled && (
-                                <span className="text-xs px-2 py-0.5 bg-cyan-500/30 text-cyan-300 rounded-full">
-                                  RECOMMENDED
-                                </span>
-                              )}
-                              {isInstalled && !model.disabled && (
-                                <span className="text-xs px-2 py-0.5 bg-green-500/30 text-green-300 rounded-full flex items-center gap-1">
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={3}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                  INSTALLED
-                                </span>
-                              )}
-                              {isCurrentlyLoaded && !model.disabled && (
-                                <span className="text-xs px-2 py-0.5 bg-blue-500/30 text-blue-300 rounded-full flex items-center gap-1">
-                                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-                                  ACTIVE
-                                </span>
+                              {model.trainingFocus && (
+                                <p className="ml-4 mt-0.5 text-xs text-emerald-600 dark:text-emerald-400/70">
+                                  🎯 Specialized for: {model.trainingFocus}
+                                </p>
                               )}
                             </div>
-                            <p
-                              className={`text-sm mt-1 ${model.disabled ? "text-gray-600" : "text-gray-400"}`}
-                            >
-                              {model.description}
-                            </p>
-                            {model.contextInfo && (
-                              <p
-                                className={`text-xs mt-1 italic ${model.disabled ? "text-orange-400/80 font-medium" : "text-cyan-400/80"}`}
-                              >
-                                💡 {model.contextInfo}
-                              </p>
-                            )}
-                            <p className="text-gray-500 text-xs mt-1">
-                              Size: {model.size} • VRAM: {model.vramRequired}
-                            </p>
-                            {/* Base Model Transparency - show veterans what powers their AI */}
-                            {model.baseModel && !model.disabled && (
-                              <div className="mt-2 pt-2 border-t border-gray-700/50">
-                                <p className="text-xs text-amber-400/80 flex items-center gap-1">
-                                  <span>🔬</span>
-                                  <span className="font-medium">Based on:</span>
-                                  <span className="text-amber-300">
-                                    {model.baseModel}
-                                  </span>
-                                </p>
-                                {model.baseModelInfo && (
-                                  <p className="text-xs text-gray-500 mt-0.5 ml-4">
-                                    {model.baseModelInfo}
-                                  </p>
-                                )}
-                                {model.trainingFocus && (
-                                  <p className="text-xs text-emerald-400/70 mt-0.5 ml-4">
-                                    🎯 Specialized for: {model.trainingFocus}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
-                              model.disabled
-                                ? "border-gray-700 bg-gray-800"
-                                : selectedModel.id === model.id
-                                  ? "border-cyan-500 bg-cyan-500"
-                                  : "border-gray-600"
-                            }`}
-                          >
-                            {selectedModel.id === model.id && (
-                              <svg
-                                className="w-4 h-4 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Initialize/Switch Button */}
-              {!isReady ? (
-                <ToolCardButton
-                  className="w-full"
-                  type="button"
-                  onClick={() => initializeEngine()}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>{" "}
-                      {loadProgress.text}
-                    </>
-                  ) : installedModels.has(selectedModel.id) ? (
-                    <>⚡ Load {selectedModel.name}</>
-                  ) : (
-                    <>📥 Download & Load {selectedModel.name}</>
-                  )}
-                </ToolCardButton>
-              ) : loadedModelId !== selectedModel.id ? (
-                <ToolCardButton
-                  className="w-full"
-                  type="button"
-                  onClick={() => switchModel(selectedModel.id)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>{" "}
-                      {loadProgress.text}
-                    </>
-                  ) : installedModels.has(selectedModel.id) ? (
-                    <>🔄 Switch to {selectedModel.name}</>
-                  ) : (
-                    <>📥 Download & Switch to {selectedModel.name}</>
-                  )}
-                </ToolCardButton>
-              ) : null}
-
-              {/* Loading Progress */}
-              {isLoading && (
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
-                      style={{ width: `${loadProgress.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-gray-400 text-sm text-center">
-                    {loadProgress.text} ({loadProgress.progress}%)
-                  </p>
-                </div>
-              )}
-
-              {/* Ready State */}
-              {isReady && (
-                <div className="bg-green-900/30 border-2 border-green-500 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-3xl animate-pulse">🟢</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-green-400">
-                        Neural Engine Active
-                      </h3>
-                      <p className="text-green-300/80 text-sm">
-                        All AI processing happens locally. You can disconnect
-                        from the internet now.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* AI Knowledge Test */}
-                  <div className="mb-4 p-4 bg-cyan-900/20 border border-cyan-700/50 rounded-lg">
-                    <div className="flex items-start gap-3 mb-3">
-                      <span className="text-2xl">🧪</span>
-                      <div>
-                        <h4 className="font-bold text-cyan-300 text-sm">
-                          AI Knowledge Test
-                        </h4>
-                        <p className="text-cyan-400/80 text-xs mt-1">
-                          Test if the AI knows about Vet-Rate.org's tools and 38
-                          CFR regulations
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setTestPrompt(
-                          "What do you know about eCFR and Vet-Rate.org functions? Please list the tools available and explain key VA disability regulations.",
-                        )
-                      }
-                      className="w-full py-2 px-4 bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-300 text-sm font-medium rounded-lg transition-colors"
-                    >
-                      Run Knowledge Test ⚡
-                    </button>
-                  </div>
-
-                  {/* Luna's Test Message - Shows contextual message for loaded AI */}
-                  {lunaTestMessage && !lunaDisabled && (
-                    <div className="mb-4 p-4 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30 border border-purple-500/40 rounded-lg animate-luna-bounce-in">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl flex-shrink-0">😸</span>
-                        <div className="flex-1">
-                          <p className="text-purple-200 text-sm italic">
-                            {lunaTestMessage}
-                          </p>
-                          <p className="text-purple-400/60 text-xs mt-2">
-                            - Luna, Chief Treat Officer 🐾
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              if (lunaTimerRef.current)
-                                clearTimeout(lunaTimerRef.current);
-                              setLunaTestMessage(null);
-                            }}
-                            className="text-purple-400/60 hover:text-purple-300 transition-colors"
-                            aria-label="Dismiss Luna's message"
-                            title="Close"
-                          >
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
+                            model.disabled
+                              ? "border-gray-300 bg-gray-200 dark:border-gray-700 dark:bg-gray-800"
+                              : selectedModel.id === model.id
+                                ? "border-cyan-500 bg-cyan-500"
+                                : "border-gray-400 dark:border-gray-600"
+                          }`}
+                        >
+                          {selectedModel.id === model.id && (
                             <svg
-                              className="w-4 h-4"
+                              className="w-4 h-4 text-white"
                               fill="none"
-                              viewBox="0 0 24 24"
                               stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
                               />
                             </svg>
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (lunaTimerRef.current)
-                                clearTimeout(lunaTimerRef.current);
-                              localStorage.setItem(
-                                "luna_messages_disabled",
-                                "true",
-                              );
-                              setLunaDisabled(true);
-                              setLunaTestMessage(null);
-                            }}
-                            className="text-purple-400/60 hover:text-purple-300 transition-colors text-xs px-2 py-1 rounded border border-purple-500/30 hover:border-purple-400/50"
-                            aria-label="Don't show Luna messages again"
-                            title="Don't show again"
-                          >
-                            🚫
-                          </button>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                  {/* Test Input */}
-                  <div className="space-y-3">
-                    <textarea
-                      value={testPrompt}
-                      onChange={(e) => setTestPrompt(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          if (testPrompt.trim() && !isGenerating) {
-                            handleTestGenerate();
-                          }
-                        }
-                      }}
-                      placeholder="Test the local AI... e.g., 'What evidence do I need for a PTSD claim?' (Press Enter to generate, Shift+Enter for new line)"
-                      className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white placeholder:text-gray-500 resize-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-                      rows={3}
-                    />
-                    <div className="flex gap-2">
-                      {!isTestGenerating && !isGenerating ? (
-                        <button
-                          onClick={handleTestGenerate}
-                          disabled={!testPrompt.trim()}
-                          className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                          <span>⚡</span>
-                          Generate (100% Local)
-                        </button>
-                      ) : (
-                        <button
-                          onClick={
-                            isTestGenerating
-                              ? handleStopTest
-                              : interruptGeneration
-                          }
-                          className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <rect
-                              x="6"
-                              y="6"
-                              width="12"
-                              height="12"
-                              strokeWidth="2"
-                            />
-                          </svg>
-                          Stop
-                        </button>
-                      )}
-                    </div>
-                    {(isTestGenerating || isGenerating) && (
-                      <div className="flex items-center justify-center gap-2 text-sm text-cyan-400">
-                        <svg
-                          className="w-4 h-4 animate-spin"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        <span>Generating response...</span>
-                      </div>
-                    )}
-                  </div>
+            {/* Initialize/Switch Button */}
+            {!isReady ? (
+              <ToolCardButton
+                className="w-full"
+                type="button"
+                onClick={() => initializeEngine()}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>{" "}
+                    {loadProgress.text}
+                  </>
+                ) : installedModels.has(selectedModel.id) ? (
+                  <>⚡ Load {selectedModel.name}</>
+                ) : (
+                  <>📥 Download & Load {selectedModel.name}</>
+                )}
+              </ToolCardButton>
+            ) : loadedModelId !== selectedModel.id ? (
+              <ToolCardButton
+                className="w-full"
+                type="button"
+                onClick={() => switchModel(selectedModel.id)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>{" "}
+                    {loadProgress.text}
+                  </>
+                ) : installedModels.has(selectedModel.id) ? (
+                  <>🔄 Switch to {selectedModel.name}</>
+                ) : (
+                  <>📥 Download & Switch to {selectedModel.name}</>
+                )}
+              </ToolCardButton>
+            ) : null}
 
-                  {/* Response - Always show when generating or has content */}
-                  {(isTestGenerating || streamedResponse || testResponse) && (
-                    <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
-                      <p className="text-sm text-gray-400 mb-2">
-                        {isTestGenerating && !streamedResponse && !testResponse
-                          ? "⏳ Processing..."
-                          : "Response:"}
-                      </p>
-                      <p className="text-white whitespace-pre-wrap">
-                        {streamedResponse ||
-                          testResponse ||
-                          (isTestGenerating
-                            ? "Waiting for AI response..."
-                            : "")}
-                      </p>
-                    </div>
-                  )}
+            {/* Loading Progress */}
+            {isLoading && (
+              <div className="space-y-2">
+                <div className="h-4 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
+                    style={{ width: `${loadProgress.progress}%` }}
+                  />
                 </div>
-              )}
+                <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                  {loadProgress.text} ({loadProgress.progress}%)
+                </p>
+              </div>
+            )}
 
-              {/* Error State */}
-              {error && (
-                <div className="bg-red-900/30 border-2 border-red-500 rounded-xl p-4">
-                  <p className="text-red-400 whitespace-pre-wrap">
-                    <strong>Error:</strong> {error}
-                  </p>
+            {/* Ready State */}
+            {isReady && (
+              <div className="rounded-xl border-2 border-green-500 bg-green-50 p-6 dark:bg-green-900/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-3xl animate-pulse">🟢</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-green-700 dark:text-green-400">
+                      Neural Engine Active
+                    </h3>
+                    <p className="text-sm text-green-700 dark:text-green-300/80">
+                      All AI processing happens locally. You can disconnect from
+                      the internet now.
+                    </p>
+                  </div>
+                </div>
 
-                  {/* Vision model alternative - show Vision Simulator option */}
-                  {selectedModel?.disabledReason === "beta-experimental" &&
-                    selectedModel?.hasVision && (
-                      <div className="mt-4 pt-4 border-t border-red-500/30">
-                        <p className="text-green-400 font-semibold mb-2">
-                          🎉 Good News: We Have a Working Alternative!
+                {/* AI Knowledge Test */}
+                <div className="mb-4 rounded-lg border border-cyan-300 bg-cyan-50 p-4 dark:border-cyan-700/50 dark:bg-cyan-900/20">
+                  <div className="flex items-start gap-3 mb-3">
+                    <span className="text-2xl">🧪</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-cyan-700 dark:text-cyan-300">
+                        AI Knowledge Test
+                      </h4>
+                      <p className="mt-1 text-xs text-cyan-700 dark:text-cyan-400/80">
+                        Test if the AI knows about Vet-Rate.org&apos;s tools and
+                        38 CFR regulations
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setTestPrompt(
+                        "What do you know about eCFR and Vet-Rate.org functions? Please list the tools available and explain key VA disability regulations.",
+                      )
+                    }
+                    className="w-full rounded-lg border border-cyan-300 bg-cyan-100 px-4 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-200 dark:border-cyan-500/50 dark:bg-cyan-600/30 dark:text-cyan-300 dark:hover:bg-cyan-600/50"
+                  >
+                    Run Knowledge Test ⚡
+                  </button>
+                </div>
+
+                {/* Luna's Test Message - Shows contextual message for loaded AI */}
+                {lunaTestMessage && !lunaDisabled && (
+                  <div className="animate-luna-bounce-in mb-4 rounded-lg border border-purple-300 bg-purple-50 p-4 dark:border-purple-500/40 dark:bg-gradient-to-r dark:from-purple-900/30 dark:via-pink-900/20 dark:to-purple-900/30">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl flex-shrink-0">😸</span>
+                      <div className="flex-1">
+                        <p className="text-sm italic text-purple-800 dark:text-purple-200">
+                          {lunaTestMessage}
                         </p>
-                        <p className="text-gray-300 text-sm mb-3">
-                          Use our <strong>Vision Simulator</strong> - it
-                          combines OCR (text extraction) with AI analysis to
-                          give you ~80% of vision model functionality for
-                          documents like DD214s, medical records, and VA forms.
+                        <p className="mt-2 text-xs text-purple-600 dark:text-purple-400/60">
+                          - Luna, Chief Treat Officer 🐾
                         </p>
-                        <p className="text-gray-400 text-xs mb-3">
-                          ✅ Works in ALL browsers | ✅ No special flags needed
-                          | ✅ 100% private
-                        </p>
+                      </div>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
-                            // Store that user wants vision simulator
-                            localStorage.setItem(
-                              "vet_rate_show_vision_simulator",
-                              "true",
-                            );
-                            // Dispatch event for Navigator/AIAssistant to pick up
-                            window.dispatchEvent(
-                              new CustomEvent("openVisionSimulator"),
-                            );
-                            setError(null);
+                            if (lunaTimerRef.current)
+                              clearTimeout(lunaTimerRef.current);
+                            setLunaTestMessage(null);
                           }}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                          className="text-purple-600 transition-colors hover:text-purple-700 dark:text-purple-400/60 dark:hover:text-purple-300"
+                          aria-label="Dismiss Luna's message"
                         >
                           <svg
-                            className="w-5 h-5"
+                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2705,54 +2587,215 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              d="M6 18L18 6M6 6l12 12"
                             />
                           </svg>
-                          Open Vision Simulator
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (lunaTimerRef.current)
+                              clearTimeout(lunaTimerRef.current);
+                            localStorage.setItem(
+                              "luna_messages_disabled",
+                              "true",
+                            );
+                            setLunaDisabled(true);
+                            setLunaTestMessage(null);
+                          }}
+                          className="rounded border border-purple-300 px-2 py-1 text-xs text-purple-600 transition-colors hover:border-purple-400 hover:text-purple-700 dark:border-purple-500/30 dark:text-purple-400/60 dark:hover:border-purple-400/50 dark:hover:text-purple-300"
+                          aria-label="Don't show Luna messages again"
+                        >
+                          🚫
                         </button>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Test Input */}
+                <div className="space-y-3">
+                  <textarea
+                    value={testPrompt}
+                    onChange={(e) => setTestPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (testPrompt.trim() && !isGenerating) {
+                          handleTestGenerate();
+                        }
+                      }
+                    }}
+                    placeholder="Test the local AI... e.g., 'What evidence do I need for a PTSD claim?' (Press Enter to generate, Shift+Enter for new line)"
+                    className="w-full resize-none rounded-lg border-2 border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    {!isTestGenerating && !isGenerating ? (
+                      <button
+                        onClick={handleTestGenerate}
+                        disabled={!testPrompt.trim()}
+                        className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        <span>⚡</span>
+                        Generate (100% Local)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={
+                          isTestGenerating
+                            ? handleStopTest
+                            : interruptGeneration
+                        }
+                        className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <rect
+                            x="6"
+                            y="6"
+                            width="12"
+                            height="12"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                        Stop
+                      </button>
                     )}
+                  </div>
+                  {(isTestGenerating || isGenerating) && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-cyan-600 dark:text-cyan-400">
+                      <svg
+                        className="w-4 h-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      <span>Generating response...</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </>
-          )}
 
-          {/* Fallback for no WebGPU */}
-          {!webGPUStatus.supported && webGPUStatus.checked && (
-            <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-xl p-6">
-              <h3 className="font-bold text-yellow-400 mb-2">
-                Use Cloud AI Instead
-              </h3>
-              <p className="text-gray-300 text-sm mb-4">
-                Your device doesn't support local AI, but you can still use the
-                cloud-based AI features by adding your own Gemini API key in
-                Settings.
-              </p>
-              <p className="text-gray-500 text-xs">
-                💡 Tip: Try using Chrome/Edge on a device with a dedicated GPU
-                for local AI support.
-              </p>
-            </div>
-          )}
-        </div>
+                {/* Response - Always show when generating or has content */}
+                {(isTestGenerating || streamedResponse || testResponse) && (
+                  <div className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50">
+                    <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                      {isTestGenerating && !streamedResponse && !testResponse
+                        ? "⏳ Processing..."
+                        : "Response:"}
+                    </p>
+                    <p className="whitespace-pre-wrap text-gray-900 dark:text-white">
+                      {streamedResponse ||
+                        testResponse ||
+                        (isTestGenerating ? "Waiting for AI response..." : "")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700 flex-shrink-0">
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <span>🔒</span>
-            <span>
-              Military-grade privacy: Your data never leaves your device
-            </span>
+            {/* Error State */}
+            {error && (
+              <div className="rounded-xl border-2 border-red-500 bg-red-50 p-4 dark:bg-red-900/30">
+                <p className="whitespace-pre-wrap text-red-700 dark:text-red-400">
+                  <strong>Error:</strong> {error}
+                </p>
+
+                {/* Vision model alternative - show Vision Simulator option */}
+                {selectedModel?.disabledReason === "beta-experimental" &&
+                  selectedModel?.hasVision && (
+                    <div className="mt-4 border-t border-red-300 pt-4 dark:border-red-500/30">
+                      <p className="mb-2 font-semibold text-green-700 dark:text-green-400">
+                        🎉 Good News: We Have a Working Alternative!
+                      </p>
+                      <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                        Use our <strong>Vision Simulator</strong> - it combines
+                        OCR (text extraction) with AI analysis to give you ~80%
+                        of vision model functionality for documents like DD214s,
+                        medical records, and VA forms.
+                      </p>
+                      <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
+                        ✅ Works in ALL browsers | ✅ No special flags needed |
+                        ✅ 100% private
+                      </p>
+                      <button
+                        onClick={() => {
+                          // Store that user wants vision simulator
+                          localStorage.setItem(
+                            "vet_rate_show_vision_simulator",
+                            "true",
+                          );
+                          // Dispatch event for Navigator/AIAssistant to pick up
+                          window.dispatchEvent(
+                            new CustomEvent("openVisionSimulator"),
+                          );
+                          setError(null);
+                        }}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        Open Vision Simulator
+                      </button>
+                    </div>
+                  )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Fallback for no WebGPU */}
+        {!webGPUStatus.supported && webGPUStatus.checked && (
+          <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 p-6 dark:border-yellow-500/50 dark:bg-yellow-900/30">
+            <h3 className="mb-2 font-bold text-yellow-700 dark:text-yellow-400">
+              Use Cloud AI Instead
+            </h3>
+            <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">
+              Your device doesn&apos;t support local AI, but you can still use
+              the cloud-based AI features by adding your own Gemini API key in
+              Settings.
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-500">
+              💡 Tip: Try using Chrome/Edge on a device with a dedicated GPU for
+              local AI support.
+            </p>
           </div>
-        </div>
+        )}
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

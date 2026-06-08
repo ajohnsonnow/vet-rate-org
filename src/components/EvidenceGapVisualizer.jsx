@@ -6,13 +6,12 @@
  * The difference between "data display" and "active coaching."
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   EVIDENCE_REQUIREMENTS,
   getAvailableConditions,
-  getRequirements,
   analyzeEvidenceGaps,
 } from "../data/evidenceRequirements";
 import { saveClaim } from "../utils/claimsStorage";
@@ -24,8 +23,8 @@ const EvidenceGapVisualizer = ({
   initialRating = null,
   onReportBug,
 }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // State
   const [selectedCondition, setSelectedCondition] = useState(
@@ -233,12 +232,12 @@ const EvidenceGapVisualizer = ({
 
     return (
       <div className="space-y-3">
-        {analysis.analysis.map((item, index) => {
+        {analysis.analysis.map((item, _index) => {
           const isFound = item.status === "found";
           const isCritical = item.isCritical;
 
           return (
-            <div
+            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
               key={item.id}
               className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer ${
                 isFound
@@ -348,7 +347,7 @@ const EvidenceGapVisualizer = ({
         </div>
 
         <div className="space-y-3">
-          {analysis.criticalGaps.map((gap, index) => (
+          {analysis.criticalGaps.map((gap, _index) => (
             <div
               key={gap.id}
               className="flex items-start gap-3 p-3 bg-red-950/50 rounded-lg"
@@ -480,15 +479,14 @@ const EvidenceGapVisualizer = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="evidence-gap-title"
-    >
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-700">
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      labelledBy="evidence-gap-title"
+      className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"
+      header={
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white px-6 py-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
 
@@ -503,12 +501,12 @@ const EvidenceGapVisualizer = ({
                   className="text-2xl sm:text-3xl font-bold"
                 >
                   Evidence Gap Visualizer{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     BETA
                   </span>
                 </h2>
                 <p className="text-purple-200 mt-1">
-                  "The Missing Link" • See exactly what you need
+                  &quot;The Missing Link&quot; • See exactly what you need
                 </p>
               </div>
             </div>
@@ -542,12 +540,15 @@ const EvidenceGapVisualizer = ({
             </div>
           </div>
         </div>
-
-        {/* Content - Scrollable */}
-        <div className="overflow-y-auto flex-1 p-6">
+      }
+    >
+      <div className="-mx-4 -my-4">
+        {/* Content */}
+        <div className="p-6">
           {/* Condition & Rating Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Select Condition
               </label>
@@ -566,6 +567,7 @@ const EvidenceGapVisualizer = ({
             </div>
 
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Target Rating
               </label>
@@ -711,15 +713,15 @@ const EvidenceGapVisualizer = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
+        {/* Disclaimer */}
+        <div className="px-6 py-4 bg-gray-800/50 border-t border-gray-700">
           <p className="text-xs text-gray-500 text-center">
             💡 This analysis is based on 38 CFR requirements. Always consult
             with a VSO or attorney for specific claim advice.
           </p>
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Document,
   Packer,
@@ -15,8 +15,7 @@ import {
   AlignmentType,
 } from "docx";
 import jsPDF from "jspdf";
-import { FocusToggle } from "../contexts/FocusModeContext";
-import ShareButton, { PIISensitive } from "./ShareButton";
+import ShareButton from "./ShareButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -31,8 +30,6 @@ import {
   importStatements,
 } from "../utils/claimsStorage";
 import {
-  exportPacketData,
-  importPacketData,
   downloadPacketBackup,
   exportCompletePacket,
   importCompletePacket,
@@ -54,21 +51,18 @@ import {
   saveDD214Data,
   clearDD214Data,
   getTimelineEvents,
-  saveTimelineEvents,
   clearTimelineEvents,
   getPainMaps,
   deletePainMap,
-  clearPainMaps,
 } from "../utils/veteranProfile";
 import {
   loadVARecords,
   clearVARecords,
   saveVADataWithConsent,
 } from "../utils/vaDataPersistence";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { triggerBlobDownload } from "../utils/sanitize";
 import { useVaAuth } from "../hooks/useVaAuth";
-import { isVaIntegrationConfigured } from "../config/vaAuth";
 import {
   getServiceHistory as fetchVAServiceHistory,
   getClaims as fetchVAClaims,
@@ -85,15 +79,9 @@ import DraftWatermark from "./DraftWatermark";
 import CertificationCheckbox from "./CertificationCheckbox";
 import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import ClaimProgress from "./ClaimProgress";
-import {
-  generateAI,
-  getAIStatus,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
-import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import VADataCenter from "./VADataCenter";
-import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
 const MyPacket = ({
   onResume,
@@ -120,6 +108,7 @@ const MyPacket = ({
   const [backupCreated, setBackupCreated] = useState(false);
   const [isCertified, setIsCertified] = useState(false); // Certification for downloads
   const [showBackupGuide, setShowBackupGuide] = useState(false); // Ground Guide - first-time backup guidance
+  // eslint-disable-next-line no-unused-vars
   const [hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
@@ -181,11 +170,15 @@ const MyPacket = ({
   // VA Authentication & Import state
   const {
     isAuthenticated: isVaAuthenticated,
+    // eslint-disable-next-line no-unused-vars
     isLoading: vaAuthLoading,
+    // eslint-disable-next-line no-unused-vars
     userInfo: vaUserInfo,
+    // eslint-disable-next-line no-unused-vars
     login: vaLogin,
     logout: vaLogout,
     accessToken: vaAccessToken,
+    // eslint-disable-next-line no-unused-vars
     error: vaAuthError,
   } = useVaAuth();
   const [vaImportStatus, setVaImportStatus] = useState({
@@ -194,10 +187,9 @@ const MyPacket = ({
     message: "",
     counts: {},
   });
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [showVaImportConsent, setShowVaImportConsent] = useState(false);
-
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
 
   useEffect(() => {
     loadClaims();
@@ -221,6 +213,7 @@ const MyPacket = ({
       !vaImportStatus.loading
     ) {
       sessionStorage.removeItem("va_auth_just_connected");
+      // eslint-disable-next-line no-console
       console.log(
         "[MyPacket] Auto-importing VA records after fresh auth connection",
       );
@@ -230,6 +223,7 @@ const MyPacket = ({
       }, 500);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVaAuthenticated, vaAccessToken]);
 
   const loadVeteranProfile = () => {
@@ -335,6 +329,7 @@ const MyPacket = ({
     setVaRecords(records);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleClearVARecords = () => {
     if (
       window.confirm("Clear all imported VA records? This cannot be undone.")
@@ -438,6 +433,7 @@ const MyPacket = ({
     }));
 
     const consent = { saveToPacket: true, saveToVKB: true };
+    // eslint-disable-next-line no-unused-vars
     const saveResult = await saveVADataWithConsent(fetchedData, consent);
 
     // Reload the VA records display
@@ -483,6 +479,7 @@ const MyPacket = ({
   };
 
   // Handle VA Disconnect - clears session but keeps imported data
+  // eslint-disable-next-line no-unused-vars
   const handleVaDisconnect = () => {
     vaLogout();
     setVaImportStatus({
@@ -1187,19 +1184,14 @@ Return ONLY the JSON object, no explanation.`,
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="my-packet-title"
-    >
-      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
-        <div
-          ref={packetContentRef}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col modal-content"
-        >
-          {/* Header - Sticky */}
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="my-packet-title"
+        header={
+          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h2
@@ -1207,7 +1199,7 @@ Return ONLY the JSON object, no explanation.`,
                   className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
                 >
                   📁 {t("myPacketSection.title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                     BETA
                   </span>
                 </h2>
@@ -1250,7 +1242,9 @@ Return ONLY the JSON object, no explanation.`,
               </div>
             </div>
           </div>
-
+        }
+      >
+        <div ref={packetContentRef}>
           {/* Statistics Dashboard */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
             <div className="text-center">
@@ -1626,7 +1620,7 @@ Return ONLY the JSON object, no explanation.`,
             </nav>
           </div>
 
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-6">
             {/* MY RATINGS TAB */}
             {activeTab === "ratings" && (
               <>
@@ -2537,7 +2531,7 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          title="DD214 Analyzer - Coming Soon"
+                          aria-label="DD214 Analyzer - Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
@@ -2549,6 +2543,7 @@ Return ONLY the JSON object, no explanation.`,
                   {!serviceHistory.dd214Data && !showDD214Processor && (
                     <div className="space-y-4">
                       {/* Drag & Drop Zone */}
+                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                       <div
                         onClick={() => dd214FileInputRef.current?.click()}
                         onDragOver={handleDD214DragOver}
@@ -2643,14 +2638,14 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          title="DD214 Analyzer - Coming Soon"
+                          aria-label="DD214 Analyzer - Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
                         <button
                           onClick={onOpenAISettings}
                           className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                          title="Open Faraday Cage - AI Settings"
+                          aria-label="Open Faraday Cage - AI Settings"
                         >
                           ⚙️ {t("myPacketSection.aiSettings")}
                         </button>
@@ -2755,7 +2750,7 @@ Return ONLY the JSON object, no explanation.`,
                         <button
                           disabled
                           className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                          title="Coming Soon"
+                          aria-label="Coming Soon"
                         >
                           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
                         </button>
@@ -2819,7 +2814,7 @@ Return ONLY the JSON object, no explanation.`,
                               OIR - Operation Inherent Resolve
                             </option>
                             <option value="OFS">
-                              OFS - Operation Freedom's Sentinel
+                              OFS - Operation Freedom&apos;s Sentinel
                             </option>
                             <option value="Gulf War">Gulf War</option>
                             <option value="Vietnam">Vietnam</option>
@@ -3159,7 +3154,7 @@ Return ONLY the JSON object, no explanation.`,
                           <button
                             onClick={() => handleRemoveAward(award.id)}
                             className="text-red-400 hover:text-red-600 text-sm"
-                            title={`Remove ${award.name}`}
+                            aria-label={`Remove ${award.name}`}
                           >
                             ×
                           </button>
@@ -3333,7 +3328,7 @@ Return ONLY the JSON object, no explanation.`,
                                       )
                                     }
                                     disabled={!isCertified}
-                                    title={
+                                    aria-label={
                                       !isCertified
                                         ? t(
                                             "myPacketSection.certifyBeforeDownload",
@@ -3533,7 +3528,7 @@ Return ONLY the JSON object, no explanation.`,
                       <div className="space-y-4">
                         {timelineEvents
                           .sort((a, b) => new Date(b.date) - new Date(a.date))
-                          .map((event, index) => (
+                          .map((event, _index) => (
                             <div
                               key={event.id}
                               className="relative flex items-start gap-4 pl-10"
@@ -3614,7 +3609,7 @@ Return ONLY the JSON object, no explanation.`,
                                       );
                                     }}
                                     className="text-red-400 hover:text-red-600 transition-colors p-1"
-                                    title="Remove event"
+                                    aria-label="Remove event"
                                   >
                                     <svg
                                       className="w-4 h-4"
@@ -3723,7 +3718,7 @@ Return ONLY the JSON object, no explanation.`,
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {painMaps.map((map) => (
-                        <div
+                        <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
                           key={map.id}
                           className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group"
                           onClick={() => setViewingPainMap(map)}
@@ -3813,24 +3808,173 @@ Return ONLY the JSON object, no explanation.`,
 
             {/* Pain Map Detail Modal */}
             {viewingPainMap && (
-              <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
-                <div className="min-h-screen px-4 py-8">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold">
-                          {viewingPainMap.name ||
-                            t("myPacketSection.painMapDetails")}
-                        </h3>
-                        <p className="text-red-100 text-sm">
-                          {t("myPacketSection.saved")}:{" "}
-                          {new Date(
-                            viewingPainMap.savedAt || viewingPainMap.createdAt,
-                          ).toLocaleString()}
+              <ResponsiveModal
+                isOpen
+                onClose={() => setViewingPainMap(null)}
+                size="xl"
+                zIndex={70}
+                labelledBy="painmap-detail-title"
+                header={
+                  <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 flex items-center justify-between">
+                    <div>
+                      <h3
+                        id="painmap-detail-title"
+                        className="text-xl font-bold"
+                      >
+                        {viewingPainMap.name ||
+                          t("myPacketSection.painMapDetails")}
+                      </h3>
+                      <p className="text-red-100 text-sm">
+                        {t("myPacketSection.saved")}:{" "}
+                        {new Date(
+                          viewingPainMap.savedAt || viewingPainMap.createdAt,
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setViewingPainMap(null)}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                }
+              >
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Pain Map Image */}
+                  <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 flex items-center justify-center">
+                    {viewingPainMap.thumbnail ? (
+                      <img
+                        src={viewingPainMap.thumbnail}
+                        alt="Pain Map"
+                        className="max-w-full max-h-[400px] object-contain"
+                      />
+                    ) : (
+                      <div className="text-center py-12">
+                        <span className="text-6xl">🎨</span>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
+                          {t("myPacketSection.noPreviewAvailable")}
                         </p>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Pain Points List */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                      {t("myPacketSection.painPoints")} (
+                      {viewingPainMap.painPoints?.length || 0})
+                    </h4>
+                    {viewingPainMap.painPoints &&
+                    viewingPainMap.painPoints.length > 0 ? (
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {viewingPainMap.painPoints.map((point, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`w-3 h-3 rounded-full ${
+                                  point.severity === "severe"
+                                    ? "bg-red-500"
+                                    : point.severity === "moderate"
+                                      ? "bg-orange-500"
+                                      : "bg-yellow-500"
+                                }`}
+                              ></span>
+                              <span className="font-medium text-gray-900 dark:text-gray-100">
+                                {point.region || point.bodyPart}
+                              </span>
+                            </div>
+                            {point.type && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {t("myPacketSection.type")}: {point.type}
+                              </p>
+                            )}
+                            {point.notes && (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">
+                                &quot;{point.notes}&quot;
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400">
+                        {t("myPacketSection.noPainPointsRecorded")}
+                      </p>
+                    )}
+
+                    {/* Generated Nexus Language */}
+                    {viewingPainMap.nexusLanguage && (
+                      <div className="mt-4">
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                          {t("myPacketSection.nexusLanguage")}
+                        </h4>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                          <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
+                            {viewingPainMap.nexusLanguage}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      handleDeletePainMap(viewingPainMap.id);
+                      setViewingPainMap(null);
+                    }}
+                    className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                  >
+                    {t("myPacketSection.deleteMap")}
+                  </button>
+                  <button
+                    onClick={() => setViewingPainMap(null)}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    {t("myPacketSection.close")}
+                  </button>
+                </div>
+              </ResponsiveModal>
+            )}
+
+            {/* Form Viewer Modal */}
+            {viewingForm && (
+              <ResponsiveModal
+                isOpen
+                onClose={() => setViewingForm(null)}
+                size="xl"
+                zIndex={70}
+                labelledBy="form-viewer-title"
+                header={
+                  <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
+                    <div>
+                      <h3 id="form-viewer-title" className="text-xl font-bold">
+                        {viewingForm.title || viewingForm.formName}
+                      </h3>
+                      <p className="text-blue-100 text-sm">
+                        {viewingForm.formNumber}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setViewingPainMap(null)}
+                        onClick={() => setViewingForm(null)}
                         className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                       >
                         <svg
@@ -3848,373 +3992,230 @@ Return ONLY the JSON object, no explanation.`,
                         </svg>
                       </button>
                     </div>
-
-                    <div className="p-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        {/* Pain Map Image */}
-                        <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 flex items-center justify-center">
-                          {viewingPainMap.thumbnail ? (
-                            <img
-                              src={viewingPainMap.thumbnail}
-                              alt="Pain Map"
-                              className="max-w-full max-h-[400px] object-contain"
-                            />
-                          ) : (
-                            <div className="text-center py-12">
-                              <span className="text-6xl">🎨</span>
-                              <p className="text-gray-500 dark:text-gray-400 mt-2">
-                                {t("myPacketSection.noPreviewAvailable")}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Pain Points List */}
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                            {t("myPacketSection.painPoints")} (
-                            {viewingPainMap.painPoints?.length || 0})
-                          </h4>
-                          {viewingPainMap.painPoints &&
-                          viewingPainMap.painPoints.length > 0 ? (
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                              {viewingPainMap.painPoints.map((point, idx) => (
-                                <div
-                                  key={idx}
-                                  className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className={`w-3 h-3 rounded-full ${
-                                        point.severity === "severe"
-                                          ? "bg-red-500"
-                                          : point.severity === "moderate"
-                                            ? "bg-orange-500"
-                                            : "bg-yellow-500"
-                                      }`}
-                                    ></span>
-                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                      {point.region || point.bodyPart}
-                                    </span>
-                                  </div>
-                                  {point.type && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                      {t("myPacketSection.type")}: {point.type}
-                                    </p>
-                                  )}
-                                  {point.notes && (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">
-                                      "{point.notes}"
-                                    </p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 dark:text-gray-400">
-                              {t("myPacketSection.noPainPointsRecorded")}
-                            </p>
-                          )}
-
-                          {/* Generated Nexus Language */}
-                          {viewingPainMap.nexusLanguage && (
-                            <div className="mt-4">
-                              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                {t("myPacketSection.nexusLanguage")}
-                              </h4>
-                              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                                <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
-                                  {viewingPainMap.nexusLanguage}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-3 mt-6">
-                        <button
-                          onClick={() => {
-                            handleDeletePainMap(viewingPainMap.id);
-                            setViewingPainMap(null);
-                          }}
-                          className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                        >
-                          {t("myPacketSection.deleteMap")}
-                        </button>
-                        <button
-                          onClick={() => setViewingPainMap(null)}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {t("myPacketSection.close")}
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Form Viewer Modal */}
-            {viewingForm && (
-              <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
-                <div className="min-h-screen px-4 py-8">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold">
-                          {viewingForm.title || viewingForm.formName}
-                        </h3>
-                        <p className="text-blue-100 text-sm">
-                          {viewingForm.formNumber}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setViewingForm(null)}
-                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                        >
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      {viewingForm.generatedContent && (
-                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-auto">
-                          <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
-                            {viewingForm.generatedContent}
-                          </pre>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end gap-3 mt-4">
-                        <button
-                          onClick={() => {
-                            const blob = new Blob(
-                              [viewingForm.generatedContent],
-                              { type: "text/plain" },
-                            );
-                            const url = URL.createObjectURL(blob);
-                            if (!url.startsWith("blob:")) return; // Validate blob URL
-                            // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = `${viewingForm.formNumber || "form"}-${viewingForm.title || "draft"}.txt`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                          }}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-                        >
-                          {t("myPacketSection.downloadTxt")}
-                        </button>
-                        <button
-                          onClick={() => setViewingForm(null)}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {t("myPacketSection.close")}
-                        </button>
-                      </div>
-                    </div>
+                }
+              >
+                {viewingForm.generatedContent && (
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-auto">
+                    <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
+                      {viewingForm.generatedContent}
+                    </pre>
                   </div>
+                )}
+
+                <div className="flex justify-end gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      const blob = new Blob([viewingForm.generatedContent], {
+                        type: "text/plain",
+                      });
+                      const url = URL.createObjectURL(blob);
+                      if (!url.startsWith("blob:")) return; // Validate blob URL
+                      // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${viewingForm.formNumber || "form"}-${viewingForm.title || "draft"}.txt`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  >
+                    {t("myPacketSection.downloadTxt")}
+                  </button>
+                  <button
+                    onClick={() => setViewingForm(null)}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    {t("myPacketSection.close")}
+                  </button>
                 </div>
-              </div>
+              </ResponsiveModal>
             )}
           </div>
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* Statement Viewer Modal */}
       {viewingStatement && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-              <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-                <h3 className="text-xl font-bold">
-                  {t("myPacketSection.generatedStatement")}
-                </h3>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleEditStatement}
-                    className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
+        <ResponsiveModal
+          isOpen
+          onClose={() => {
+            setViewingStatement(null);
+            setViewingClaimId(null);
+          }}
+          size="xl"
+          zIndex={70}
+          labelledBy="statement-viewer-title"
+          header={
+            <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 flex items-center justify-between">
+              <h3 id="statement-viewer-title" className="text-xl font-bold">
+                {t("myPacketSection.generatedStatement")}
+              </h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleEditStatement}
+                  className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
+                >
+                  {t("myPacketSection.editStatement")}
+                </button>
+                <button
+                  onClick={() => {
+                    setViewingStatement(null);
+                    setViewingClaimId(null);
+                  }}
+                  className="text-white hover:text-gray-200"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {t("myPacketSection.editStatement")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewingStatement(null);
-                      setViewingClaimId(null);
-                    }}
-                    className="text-white hover:text-gray-200"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Draft Watermark */}
-                <DraftWatermark variant="banner" />
-
-                <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                    {t("myPacketSection.statementInSupport")}
-                  </h4>
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-                    {viewingStatement.statement}
-                  </pre>
-                </div>
-
-                <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                    {t("myPacketSection.doctorsCheatSheet")}
-                  </h4>
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-                    {viewingStatement.doctorNote}
-                  </pre>
-
-                  {/* Medical Disclaimer Footer */}
-                  <NexusDisclaimerFooter className="mt-4" />
-                </div>
-
-                {/* Certification Checkbox before download */}
-                <div className="border-t pt-4">
-                  <CertificationCheckbox
-                    checked={isCertified}
-                    onChange={setIsCertified}
-                  />
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
+          }
+        >
+          <div className="space-y-6">
+            {/* Draft Watermark */}
+            <DraftWatermark variant="banner" />
+
+            <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {t("myPacketSection.statementInSupport")}
+              </h4>
+              <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
+                {viewingStatement.statement}
+              </pre>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {t("myPacketSection.doctorsCheatSheet")}
+              </h4>
+              <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
+                {viewingStatement.doctorNote}
+              </pre>
+
+              {/* Medical Disclaimer Footer */}
+              <NexusDisclaimerFooter className="mt-4" />
+            </div>
+
+            {/* Certification Checkbox before download */}
+            <div className="border-t pt-4">
+              <CertificationCheckbox
+                checked={isCertified}
+                onChange={setIsCertified}
+              />
+            </div>
           </div>
-        </div>
+        </ResponsiveModal>
       )}
 
       {/* Import Confirmation Modal */}
       {showImportConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8 flex items-center justify-center">
-            <div
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="import-confirm-title"
-            >
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-lg">
-                <h3 id="import-confirm-title" className="text-xl font-bold">
-                  📥 {t("myPacketSection.confirmImport")}
-                </h3>
-              </div>
-
-              <div className="p-6">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    {t("myPacketSection.backupDetails")}:
-                  </p>
-                  <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
-                    <li>
-                      • <strong>{showImportConfirm.meta.claimCount}</strong>{" "}
-                      {t("myPacketSection.claimsFound")}
-                    </li>
-                    <li>
-                      • <strong>{showImportConfirm.meta.statementCount}</strong>{" "}
-                      {t("myPacketSection.statementsFound")}
-                    </li>
-                    {showImportConfirm.meta.exportDate && (
-                      <li>
-                        • {t("myPacketSection.backupDate")}:{" "}
-                        {new Date(
-                          showImportConfirm.meta.exportDate,
-                        ).toLocaleDateString()}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {t("myPacketSection.importQuestion")}
-                </p>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={() => handleConfirmImport("replace")}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    {t("myPacketSection.replaceAllFreshStart")}
-                  </button>
-                  <button
-                    onClick={() => handleConfirmImport("merge")}
-                    className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    {t("myPacketSection.mergeAddNewOnly")}
-                  </button>
-                  <button
-                    onClick={() => setShowImportConfirm(null)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    {t("myPacketSection.cancel")}
-                  </button>
-                </div>
-
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                  ⚠️ {t("myPacketSection.replaceAllWarning")}
-                </p>
-              </div>
+        <ResponsiveModal
+          isOpen
+          onClose={() => setShowImportConfirm(null)}
+          size="sm"
+          zIndex={70}
+          labelledBy="import-confirm-title"
+          header={
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+              <h3 id="import-confirm-title" className="text-xl font-bold">
+                📥 {t("myPacketSection.confirmImport")}
+              </h3>
             </div>
+          }
+        >
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {t("myPacketSection.backupDetails")}:
+            </p>
+            <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
+              <li>
+                • <strong>{showImportConfirm.meta.claimCount}</strong>{" "}
+                {t("myPacketSection.claimsFound")}
+              </li>
+              <li>
+                • <strong>{showImportConfirm.meta.statementCount}</strong>{" "}
+                {t("myPacketSection.statementsFound")}
+              </li>
+              {showImportConfirm.meta.exportDate && (
+                <li>
+                  • {t("myPacketSection.backupDate")}:{" "}
+                  {new Date(
+                    showImportConfirm.meta.exportDate,
+                  ).toLocaleDateString()}
+                </li>
+              )}
+            </ul>
           </div>
-        </div>
+
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            {t("myPacketSection.importQuestion")}
+          </p>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => handleConfirmImport("replace")}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              {t("myPacketSection.replaceAllFreshStart")}
+            </button>
+            <button
+              onClick={() => handleConfirmImport("merge")}
+              className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {t("myPacketSection.mergeAddNewOnly")}
+            </button>
+            <button
+              onClick={() => setShowImportConfirm(null)}
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              {t("myPacketSection.cancel")}
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+            ⚠️ {t("myPacketSection.replaceAllWarning")}
+          </p>
+        </ResponsiveModal>
       )}
 
       {/* Buy Me a Coffee - shows when packet has claims */}
@@ -4239,7 +4240,7 @@ Return ONLY the JSON object, no explanation.`,
           onClose={() => setShowVAGovPaster(false)}
         />
       )}
-    </div>
+    </>
   );
 };
 

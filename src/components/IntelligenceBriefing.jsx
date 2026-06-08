@@ -11,10 +11,9 @@
  * Military Term: "Intelligence Briefing" - Pre-mission review of all intel
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   loadVKB,
   saveVKB,
@@ -38,8 +37,7 @@ export default function IntelligenceBriefing({
   onConfirm,
   onEdit,
 }) {
-  const { t } = useLanguage();
-  useBodyScrollLock(isOpen);
+  const { _t } = useLanguage();
 
   const [editableData, setEditableData] = useState(extractedData);
   const [discrepancies, setDiscrepancies] = useState([]);
@@ -151,6 +149,7 @@ export default function IntelligenceBriefing({
       let vkb = await loadVKB();
       vkb = mergeMusterCallIntoVKB(vkb, editableData);
       await saveVKB(vkb);
+      // eslint-disable-next-line no-console
       console.log("✅ VKB updated with Muster Call data");
     } catch (err) {
       console.error("Error updating VKB:", err);
@@ -175,58 +174,104 @@ export default function IntelligenceBriefing({
 
   if (!isOpen) return null;
 
-  const modal = (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden border-2 border-amber-500/30">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <span className="text-4xl">📋</span>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                Intelligence Briefing
-                <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded uppercase">
-                  CLASSIFIED
-                </span>
-              </h2>
-              <p className="text-amber-100 text-sm">
-                Review all extracted data before committing to your packet
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowDiscardWarning(true)}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+  const header = (
+    <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+        <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur sm:flex">
+          <span className="text-4xl">📋</span>
         </div>
+        <div className="min-w-0">
+          <h2
+            id="intel-briefing-title"
+            className="flex items-center gap-2 text-lg font-bold text-white sm:text-2xl"
+          >
+            Intelligence Briefing
+            <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-bold uppercase text-white">
+              CLASSIFIED
+            </span>
+          </h2>
+          <p className="text-xs text-amber-100 sm:text-sm">
+            Review all extracted data before committing to your packet
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={() => setShowDiscardWarning(true)}
+        className="shrink-0 rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+        aria-label="Close dialog"
+      >
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  );
 
+  const footer = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">📊</span>
+        <div>
+          <p className="text-sm font-bold text-gray-900 dark:text-white">
+            {Object.keys(editableData).length} Fields Extracted
+          </p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            {discrepancies.length > 0
+              ? `${discrepancies.length} discrepancies remaining`
+              : "All clear - ready to commit"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowDiscardWarning(true)}
+          className="rounded-xl bg-gray-200 px-6 py-3 font-bold text-gray-800 transition-all hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleConfirm}
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-3 font-bold text-white shadow-lg transition-all hover:from-green-500 hover:to-emerald-500 hover:shadow-xl"
+        >
+          <span>✅</span>
+          <span>Commit to My Packet</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={() => setShowDiscardWarning(true)}
+        header={header}
+        footer={footer}
+        labelledBy="intel-briefing-title"
+        size="2xl"
+        className="border-2 border-amber-200 dark:border-amber-500/30"
+      >
         {/* Discrepancies Warning */}
         {discrepancies.length > 0 && (
-          <div className="bg-red-900/30 border-b-2 border-red-500 px-6 py-3">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-500 dark:bg-red-900/30">
             <div className="flex items-center gap-3">
-              <span className="text-3xl animate-pulse">⚠️</span>
+              <span className="animate-pulse text-3xl">⚠️</span>
               <div>
-                <p className="font-bold text-red-200">
+                <p className="font-bold text-red-700 dark:text-red-200">
                   {discrepancies.length} Discrepancy(ies) Detected
                 </p>
-                <p className="text-sm text-red-300">
+                <p className="text-sm text-red-600 dark:text-red-300">
                   Multiple values found for some fields. Review and select the
                   correct one.
                 </p>
@@ -235,53 +280,53 @@ export default function IntelligenceBriefing({
           </div>
         )}
 
-        <div className="flex h-[calc(90vh-180px)]">
+        <div className="flex flex-col gap-4 md:flex-row">
           {/* Sidebar Navigation */}
-          <div className="w-64 bg-slate-800/50 border-r border-slate-700 p-4 overflow-y-auto">
-            <p className="text-xs text-slate-400 uppercase font-bold mb-3">
+          <nav className="flex gap-2 overflow-x-auto md:max-h-[55vh] md:w-56 md:shrink-0 md:flex-col md:overflow-x-visible md:overflow-y-auto md:border-r md:border-gray-200 md:pr-3 dark:md:border-slate-700">
+            <p className="hidden text-xs font-bold uppercase text-gray-500 dark:text-slate-400 md:mb-1 md:block">
               Briefing Sections
             </p>
             {sections.map((section) => (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-all flex items-center gap-3 ${
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 transition-all md:mb-1 md:w-full md:gap-3 ${
                   activeSection === section.id
-                    ? "bg-amber-500 text-white font-bold"
-                    : "text-slate-300 hover:bg-slate-700/50"
+                    ? "bg-amber-500 font-bold text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
                 }`}
               >
                 <span className="text-xl">{section.icon}</span>
                 <span className="text-sm">{section.label}</span>
               </button>
             ))}
-          </div>
+          </nav>
 
           {/* Main Content Area */}
-          <div className="flex-1 p-6 overflow-y-auto bg-slate-900/30">
+          <div className="min-w-0 flex-1 md:max-h-[55vh] md:overflow-y-auto">
             {/* Discrepancies Section */}
             {discrepancies.length > 0 && (
-              <div className="mb-6 p-4 bg-red-900/20 border-2 border-red-500/50 rounded-xl">
-                <h3 className="text-lg font-bold text-red-200 mb-3">
+              <div className="mb-6 rounded-xl border-2 border-red-200 bg-red-50 p-4 dark:border-red-500/50 dark:bg-red-900/20">
+                <h3 className="mb-3 text-lg font-bold text-red-700 dark:text-red-200">
                   🚨 Resolve Discrepancies First
                 </h3>
                 {discrepancies.map((disc, idx) => (
                   <div
                     key={idx}
-                    className="mb-4 p-3 bg-slate-800/50 rounded-lg"
+                    className="mb-4 rounded-lg bg-gray-100 p-3 dark:bg-slate-800/50"
                   >
-                    <p className="text-sm font-bold text-white mb-2">
+                    <p className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
                       {disc.message}
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {disc.values.map((value, vIdx) => (
                         <button
                           key={vIdx}
                           onClick={() => resolveDiscrepancy(disc, value)}
-                          className="p-3 bg-slate-700 hover:bg-amber-500 text-white rounded-lg text-left transition-all"
+                          className="rounded-lg bg-gray-200 p-3 text-left text-gray-900 transition-all hover:bg-amber-500 hover:text-white dark:bg-slate-700 dark:text-white"
                         >
                           <p className="font-mono text-sm">{value}</p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                             Click to select
                           </p>
                         </button>
@@ -295,7 +340,7 @@ export default function IntelligenceBriefing({
             {/* Dynamic content based on active section */}
             {activeSection === "personal" && (
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
                   👤 Personal Information
                 </h3>
                 <div className="space-y-4">
@@ -333,7 +378,7 @@ export default function IntelligenceBriefing({
 
             {activeSection === "service" && (
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
                   🎖️ Service History
                 </h3>
                 <div className="space-y-4">
@@ -373,7 +418,7 @@ export default function IntelligenceBriefing({
 
             {activeSection === "conditions" && (
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
                   🏥 Service-Connected Conditions
                 </h3>
                 {editableData.conditions &&
@@ -382,23 +427,23 @@ export default function IntelligenceBriefing({
                     {editableData.conditions.map((condition, idx) => (
                       <div
                         key={idx}
-                        className="p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                        className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
                       >
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="mb-2 flex items-start justify-between">
                           <div>
-                            <p className="font-bold text-white">
+                            <p className="font-bold text-gray-900 dark:text-white">
                               {condition.name}
                             </p>
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-gray-500 dark:text-slate-400">
                               {condition.diagnosticCode || "No code"}
                             </p>
                           </div>
-                          <span className="px-3 py-1 bg-blue-500 text-white font-bold rounded-full">
+                          <span className="rounded-full bg-blue-500 px-3 py-1 font-bold text-white">
                             {condition.rating}%
                           </span>
                         </div>
                         {condition.effectiveDate && (
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">
                             Effective: {condition.effectiveDate}
                           </p>
                         )}
@@ -406,7 +451,7 @@ export default function IntelligenceBriefing({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-slate-400 italic">
+                  <p className="italic text-gray-500 dark:text-slate-400">
                     No conditions extracted from documents
                   </p>
                 )}
@@ -416,90 +461,62 @@ export default function IntelligenceBriefing({
             {/* Add more sections as needed */}
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="bg-slate-800/50 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📊</span>
-            <div>
-              <p className="text-sm font-bold text-white">
-                {Object.keys(editableData).length} Fields Extracted
-              </p>
-              <p className="text-xs text-slate-400">
-                {discrepancies.length > 0
-                  ? `${discrepancies.length} discrepancies remaining`
-                  : "All clear - ready to commit"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowDiscardWarning(true)}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
-            >
-              <span>✅</span>
-              <span>Commit to My Packet</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      </ResponsiveModal>
 
       {/* Discard Warning Modal */}
-      {showDiscardWarning && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-slate-800 rounded-xl p-6 max-w-md border-2 border-red-500">
-            <h3 className="text-xl font-bold text-white mb-3">
-              ⚠️ Discard Changes?
-            </h3>
-            <p className="text-slate-300 mb-4">
-              You haven't committed this data to your packet yet. If you close
-              now, all extracted information will be lost.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDiscardWarning(false)}
-                className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-              >
-                Keep Editing
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors"
-              >
-                Discard & Close
-              </button>
-            </div>
+      <ResponsiveModal
+        isOpen={showDiscardWarning}
+        onClose={() => setShowDiscardWarning(false)}
+        title="⚠️ Discard Changes?"
+        size="sm"
+        zIndex={70}
+        className="border-2 border-red-300 dark:border-red-500"
+        footer={
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowDiscardWarning(false)}
+              className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-800 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+            >
+              Keep Editing
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-bold text-white transition-colors hover:bg-red-500"
+            >
+              Discard & Close
+            </button>
           </div>
-        </div>
-      )}
-    </div>
+        }
+      >
+        <p className="text-gray-700 dark:text-slate-300">
+          You haven&apos;t committed this data to your packet yet. If you close
+          now, all extracted information will be lost.
+        </p>
+      </ResponsiveModal>
+    </>
   );
-
-  return createPortal(modal, document.body);
 }
 
 /**
  * Reusable field component
  */
 function Field({ label, value, onChange, type = "text", maxLength }) {
+  const inputId = useId();
   return (
     <div>
-      <label className="block text-sm font-bold text-slate-300 mb-2">
+      <label
+        htmlFor={inputId}
+        className="mb-2 block text-sm font-bold text-gray-700 dark:text-slate-300"
+      >
         {label}
       </label>
       <input
+        id={inputId}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={maxLength}
-        className="w-full px-4 py-2 bg-slate-800 text-white border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
       />
     </div>
   );

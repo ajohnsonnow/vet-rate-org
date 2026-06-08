@@ -21,11 +21,10 @@
  * - "AT EASE" - Inspection complete, formation dismissed
  */
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useToast } from "../contexts/ToastContext";
-import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   processMusterCallBatch,
   processFormationDocument,
@@ -37,10 +36,7 @@ import {
   PROCESSING_STATES,
   formatFileSize,
 } from "../utils/musterCallProcessor";
-import {
-  DOCUMENT_TYPES,
-  getDocumentTypeLabel,
-} from "../utils/documentClassifier";
+import { getDocumentTypeLabel } from "../utils/documentClassifier";
 import {
   isAnyAIAvailable,
   getAIStatus,
@@ -63,9 +59,9 @@ export default function MusterCall({
   onProcessComplete,
   onOpenDD214Analyzer,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const toast = useToast();
-  useBodyScrollLock(isOpen);
 
   // AI state - NO auto-init, user must manually load
   const [aiReady, setAiReady] = useState(false);
@@ -78,8 +74,10 @@ export default function MusterCall({
     formation,
     currentEntry,
     stats,
+    // eslint-disable-next-line no-unused-vars
     isProcessing: formationProcessing,
     isComplete: formationComplete,
+    // eslint-disable-next-line no-unused-vars
     progress: formationProgress,
     hasDocuments,
     initializeFormation,
@@ -102,6 +100,7 @@ export default function MusterCall({
 
   // Debug: Log formation changes
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log(
       `📋 MusterCall formation changed: length=${formation.length}, hasDocuments=${hasDocuments}`,
     );
@@ -162,6 +161,7 @@ export default function MusterCall({
   const [validation, setValidation] = useState(null);
   const [error, setError] = useState(null);
   const [showReport, setShowReport] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [useSequentialMode, setUseSequentialMode] = useState(true); // Toggle between modes
 
   // Compute locally to avoid stale closure issues (MUST be after processingState is declared)
@@ -186,16 +186,19 @@ export default function MusterCall({
    */
   const handleFileSelect = useCallback(
     (selectedFiles) => {
+      // eslint-disable-next-line no-console
       console.log(
         "🎯 handleFileSelect called with",
         selectedFiles?.length,
         "files",
       );
       const fileArray = Array.from(selectedFiles);
+      // eslint-disable-next-line no-console
       console.log("🎯 fileArray:", fileArray.length, "files");
 
       // Validate files
       const validationResult = validateFilesBatch(fileArray);
+      // eslint-disable-next-line no-console
       console.log("🎯 validationResult:", validationResult);
       setValidation(validationResult);
 
@@ -204,12 +207,14 @@ export default function MusterCall({
 
         // Initialize formation if in sequential mode
         if (useSequentialMode) {
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 Calling initializeFormation with",
             validationResult.valid.length,
             "files",
           );
           const result = initializeFormation(validationResult.valid);
+          // eslint-disable-next-line no-console
           console.log(
             "🎯 initializeFormation returned:",
             result?.length,
@@ -308,16 +313,23 @@ export default function MusterCall({
    * Start processing files
    */
   const handleStartProcessing = async () => {
+    // eslint-disable-next-line no-console
     console.log("🚩 handleStartProcessing called");
+    // eslint-disable-next-line no-console
     console.log("🚩 files.length:", files.length);
+    // eslint-disable-next-line no-console
     console.log("🚩 formation.length:", formation.length);
+    // eslint-disable-next-line no-console
     console.log("🚩 useSequentialMode:", useSequentialMode);
+    // eslint-disable-next-line no-console
     console.log("🚩 hasDocuments:", hasDocuments);
 
     // Use sequential mode if enabled
     if (useSequentialMode && formation.length > 0) {
+      // eslint-disable-next-line no-console
       console.log("🚩 Starting sequential formation processing...");
       const firstEntry = startFormation();
+      // eslint-disable-next-line no-console
       console.log("🚩 First entry:", firstEntry);
 
       if (firstEntry) {
@@ -329,6 +341,7 @@ export default function MusterCall({
 
     // Legacy batch mode requires files
     if (files.length === 0) {
+      // eslint-disable-next-line no-console
       console.log("🚩 No files for batch processing");
       return;
     }
@@ -380,17 +393,21 @@ export default function MusterCall({
           );
 
           if (populateResult.success) {
+            // eslint-disable-next-line no-console
             console.log(
               `✅ Auto-populated ${populateResult.count} profile fields`,
             );
           }
 
           // Generate LLM report
+          // eslint-disable-next-line no-console
           console.log("🤖 Checking AI availability for report generation...");
           const aiStatus = getAIStatus();
+          // eslint-disable-next-line no-console
           console.log("🤖 AI Status:", aiStatus);
 
           if (isAnyAIAvailable()) {
+            // eslint-disable-next-line no-console
             console.log("✅ AI available, generating report...");
             setProcessingState(PROCESSING_STATES.ANALYZING);
             const reportResult = await generateMusterCallReport(
@@ -398,9 +415,11 @@ export default function MusterCall({
               completeData.classified,
             );
 
+            // eslint-disable-next-line no-console
             console.log("📊 Report result:", reportResult);
 
             if (reportResult.success) {
+              // eslint-disable-next-line no-console
               console.log("✅ Setting report in state");
               setReport(reportResult.report);
             } else {
@@ -412,9 +431,11 @@ export default function MusterCall({
           }
 
           // NEW: Evidence Gap Analysis (v1.16.0)
+          // eslint-disable-next-line no-console
           console.log("🔍 Running Evidence Gap Analysis...");
           const gapAnalysis = analyzeEvidenceGaps(completeData.results);
           if (gapAnalysis.success && gapAnalysis.totalGaps > 0) {
+            // eslint-disable-next-line no-console
             console.log(
               `⚠️ Found ${gapAnalysis.totalGaps} potential evidence gaps!`,
             );
@@ -423,6 +444,7 @@ export default function MusterCall({
               completeData.evidenceGaps = gapAnalysis;
             }
           } else {
+            // eslint-disable-next-line no-console
             console.log("✅ No significant evidence gaps detected");
           }
 
@@ -462,6 +484,7 @@ export default function MusterCall({
    */
   const processDocumentEntry = async (entry) => {
     if (!entry) {
+      // eslint-disable-next-line no-console
       console.log("✅ Formation complete!");
       setProcessingState(PROCESSING_STATES.COMPLETE);
       setActiveEntry(null);
@@ -474,6 +497,7 @@ export default function MusterCall({
     }
 
     const file = entry.file;
+    // eslint-disable-next-line no-console
     console.log(`🎖️ Processing document: ${file.name}`);
 
     // Set active entry for UI display
@@ -494,6 +518,7 @@ export default function MusterCall({
     try {
       // Process document with progress callbacks
       const result = await processFormationDocument(file, (progressData) => {
+        // eslint-disable-next-line no-console
         console.log("📊 Progress update received:", progressData);
         setCurrentProgress({
           filename: file.name,
@@ -518,6 +543,7 @@ export default function MusterCall({
         }
       });
 
+      // eslint-disable-next-line no-console
       console.log("✅ Document processed:", result);
 
       // Show Intelligence Briefing for user verification
@@ -555,6 +581,7 @@ export default function MusterCall({
    * Process next document in formation (SEQUENTIAL MODE)
    * Uses currentEntry from hook - call this after state has updated
    */
+  // eslint-disable-next-line no-unused-vars
   const processNextDocument = async () => {
     const next = formation.find(
       (e) => e.status === "WAITING" || e.status === "CALLED",
@@ -566,6 +593,7 @@ export default function MusterCall({
    * Handle Intel Briefing verification (SEQUENTIAL MODE)
    */
   const handleVerifyAndSave = async (verifiedData) => {
+    // eslint-disable-next-line no-console
     console.log("✅ User verified data:", verifiedData);
 
     try {
@@ -611,6 +639,7 @@ export default function MusterCall({
    * Handle skip document (SEQUENTIAL MODE)
    */
   const handleSkipDocument = () => {
+    // eslint-disable-next-line no-console
     console.log("⏭️ Skipping document:", activeEntry?.file?.name);
 
     const nextEntry = skipCurrentAndNext("User skipped");
@@ -653,25 +682,75 @@ export default function MusterCall({
     }
   };
 
-  if (!isOpen) return null;
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      labelledBy="muster-call-title"
+      dismissable={!processing}
+      footer={
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {processingState === PROCESSING_STATES.IDLE &&
+              files.length > 0 &&
+              !useSequentialMode && (
+                <button
+                  onClick={handleStartProcessing}
+                  disabled={
+                    !aiReady ||
+                    aiInitializing ||
+                    !validation ||
+                    validation.valid.length === 0
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🎖️ Open Ranks, MARCH!
+                </button>
+              )}
+            {(processingState === PROCESSING_STATES.COMPLETE ||
+              formationComplete) && (
+              <button
+                onClick={handleReset}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              >
+                🎖️ Fall In - New Formation
+              </button>
+            )}
+          </div>
 
-  return createPortal(
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {useSequentialMode ? (
+              <span className="flex items-center gap-2">
+                <span className="text-green-600 dark:text-green-400">●</span>
+                Formation Mode (Sequential)
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <span className="text-blue-600 dark:text-blue-400">●</span>
+                Batch Mode
+              </span>
+            )}
+          </div>
+        </div>
+      }
+      header={
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
+              <h2
+                id="muster-call-title"
+                className="text-3xl font-bold mb-2 flex items-center gap-3"
+              >
                 <span className="text-4xl">📋</span>
                 Muster Call{" "}
-                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                   BETA
                 </span>
               </h2>
               <p className="text-blue-100 text-sm max-w-2xl">
-                Drop your entire VA file - claim letters, C-Files, DD214s. We'll
-                analyze everything and build your complete profile
+                Drop your entire VA file - claim letters, C-Files, DD214s.
+                We&apos;ll analyze everything and build your complete profile
                 automatically.
               </p>
             </div>
@@ -700,594 +779,534 @@ export default function MusterCall({
             </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* AI Initialization Banner */}
-          {aiInitializing && (
-            <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border-l-4 border-purple-500">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    {/* Spinning circular progress indicator */}
-                    <div className="w-12 h-12 rounded-full border-4 border-purple-200 dark:border-purple-800 border-t-purple-600 dark:border-t-purple-400 animate-spin"></div>
-                    {/* CWO icon in center */}
-                    <div className="absolute inset-0 flex items-center justify-center text-xl">
-                      🎖️
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                      Initializing Warrant Council AI...
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {initMessage || "Preparing AI agent for analysis"}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 italic">
-                      🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical
-                      experts trained to analyze your claim, write statements,
-                      and calculate ratings
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {initProgress}%
-                  </div>
+      }
+    >
+      {/* AI Initialization Banner */}
+      {aiInitializing && (
+        <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border-l-4 border-purple-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                {/* Spinning circular progress indicator */}
+                <div className="w-12 h-12 rounded-full border-4 border-purple-200 dark:border-purple-800 border-t-purple-600 dark:border-t-purple-400 animate-spin"></div>
+                {/* CWO icon in center */}
+                <div className="absolute inset-0 flex items-center justify-center text-xl">
+                  🎖️
                 </div>
               </div>
-              <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden relative">
-                <div
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
-                  style={{ width: `${initProgress}%` }}
-                />
-                {/* Guidon flag marching across */}
-                <div
-                  className="absolute -top-6 transform -translate-x-1/2 transition-all duration-500 text-2xl"
-                  style={{ left: `${initProgress}%` }}
-                  title="Warrant Council loading progress"
-                >
-                  🚩
-                </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Initializing Warrant Council AI...
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {initMessage || "Preparing AI agent for analysis"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 italic">
+                  🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical experts
+                  trained to analyze your claim, write statements, and calculate
+                  ratings
+                </p>
               </div>
             </div>
-          )}
+            <div className="text-right">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {initProgress}%
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden relative">
+            <div
+              className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
+              style={{ width: `${initProgress}%` }}
+            />
+            {/* Guidon flag marching across */}
+            <div
+              className="absolute -top-6 transform -translate-x-1/2 transition-all duration-500 text-2xl"
+              style={{ left: `${initProgress}%` }}
+              aria-label="Warrant Council loading progress"
+            >
+              🚩
+            </div>
+          </div>
+        </div>
+      )}
 
-          {aiReady && !aiInitializing && (
-            <div className="mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500">
-              <div className="flex items-center">
-                <span className="text-2xl mr-3">✅</span>
-                <div>
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    CW5 Auditor ready - Your claim accuracy Chief Warrant
-                    Officer is standing by
+      {aiReady && !aiInitializing && (
+        <div className="mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500">
+          <div className="flex items-center">
+            <span className="text-2xl mr-3">✅</span>
+            <div>
+              <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                CW5 Auditor ready - Your claim accuracy Chief Warrant Officer is
+                standing by
+              </span>
+              <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                Intelligence Briefing will be generated automatically after
+                document processing
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Load AI Button - Show when AI not loaded and not initializing */}
+      {!aiReady && !aiInitializing && (
+        <div className="mb-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border-l-4 border-purple-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="text-2xl mr-3">🎖️</span>
+              <div>
+                <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                  Warrant Council AI Required
+                </span>
+                <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                  Load AI to enable intelligent document analysis and processing
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLoadAI}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              🎖️ Load AI
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Processing Time Warning */}
+      <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border-l-4 border-yellow-500">
+        <div className="flex items-start">
+          <span className="text-xl mr-3 mt-0.5">⏱️</span>
+          <div>
+            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+              Processing Time Notice
+            </span>
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+              Large files (like 320MB+ C-files) and poor-quality scanned images
+              may take several minutes to process. Please be patient while we
+              extract and analyze your documents with maximum accuracy.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* DROP ZONE - Military-style document staging area */}
+      {processingState === PROCESSING_STATES.IDLE &&
+        !(useSequentialMode && hasDocuments) && (
+          <>
+            <div
+              ref={dropZoneRef}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className="relative border-4 border-dashed border-amber-500 dark:border-amber-400 rounded-xl p-8 text-center transition-all duration-300 hover:border-amber-400 hover:bg-amber-50/30 dark:hover:bg-amber-900/20 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-inner"
+            >
+              {/* Corner markers - military targeting style */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-l-4 border-t-4 border-amber-500 dark:border-amber-400"></div>
+              <div className="absolute top-2 right-2 w-6 h-6 border-r-4 border-t-4 border-amber-500 dark:border-amber-400"></div>
+              <div className="absolute bottom-2 left-2 w-6 h-6 border-l-4 border-b-4 border-amber-500 dark:border-amber-400"></div>
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-amber-500 dark:border-amber-400"></div>
+
+              {/* DROP ZONE Header */}
+              <div className="mb-4">
+                <div className="inline-block bg-amber-500 dark:bg-amber-600 text-black dark:text-white px-6 py-2 rounded font-bold text-lg tracking-widest shadow-md">
+                  ⬇️ DROP ZONE ⬇️
+                </div>
+              </div>
+
+              <div className="text-5xl mb-3 animate-bounce">📦</div>
+              <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                Deploy Your Documents Here
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+                DD214s • C-Files • Decision Letters • Medical Records
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.docx,.doc,.txt,.rtf"
+                onChange={(e) => {
+                  // eslint-disable-next-line no-console
+                  console.log(
+                    "🎯 File input onChange fired, files:",
+                    e.target.files?.length,
+                  );
+                  handleFileSelect(e.target.files);
+                }}
+                // eslint-disable-next-line no-console
+                onClick={(_e) => console.log("🎯 File input clicked")}
+                className="hidden"
+                id="muster-call-files"
+              />
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
+              <label
+                htmlFor="muster-call-files"
+                // eslint-disable-next-line no-console
+                onClick={() => console.log("🎯 Label clicked")}
+                className="inline-block bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-lg font-bold cursor-pointer transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                🎯 Select Files
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 font-mono">
+                SUPPORTED: PDF • DOCX • TXT | MAX: 500MB
+              </p>
+
+              {/* Document type badges */}
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
+                  C-Files (320MB+)
+                </span>
+                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                  Decision Letters
+                </span>
+                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                  DD214s
+                </span>
+                <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">
+                  Medical Records
+                </span>
+              </div>
+
+              {/* Privacy assurance - 100% client-side */}
+              <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="font-semibold text-sm">
+                    100% ON YOUR DEVICE
                   </span>
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    Intelligence Briefing will be generated automatically after
-                    document processing
-                  </p>
                 </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+                  Your documents are <strong>never uploaded</strong> anywhere.
+                  All processing happens right here in your browser. Your
+                  records stay on YOUR device - we never see them.
+                </p>
               </div>
             </div>
-          )}
 
-          {/* Load AI Button - Show when AI not loaded and not initializing */}
-          {!aiReady && !aiInitializing && (
-            <div className="mb-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border-l-4 border-purple-500">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">🎖️</span>
-                  <div>
-                    <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                      Warrant Council AI Required
-                    </span>
-                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
-                      Load AI to enable intelligent document analysis and
-                      processing
+            {/* File List */}
+            {files.length > 0 && !useSequentialMode && (
+              <div className="mt-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Selected Files ({files.length})
+                  </h3>
+                  <button
+                    onClick={handleReset}
+                    className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                {/* Validation Messages */}
+                {validation && (
+                  <>
+                    {validation.warnings.length > 0 && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div className="flex">
+                          <div className="text-xl mr-3">⚠️</div>
+                          <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                            <p className="font-semibold mb-2">Warnings:</p>
+                            {validation.warnings.map((warning, idx) => (
+                              <p key={idx}>• {warning.message}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {validation.invalid.length > 0 && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 mb-4">
+                        <div className="flex">
+                          <div className="text-xl mr-3">❌</div>
+                          <div className="text-sm text-red-800 dark:text-red-200">
+                            <p className="font-semibold mb-2">Invalid Files:</p>
+                            {validation.invalid.map((invalid, idx) => (
+                              <p key={idx}>
+                                • {invalid.file.name}: {invalid.reason}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* File List */}
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="text-2xl">📄</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total Size */}
+                {validation && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total: {formatFileSize(validation.totalSize)} •{" "}
+                      {validation.valid.length} valid files
                     </p>
                   </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+      {/* Formation Lineup (SEQUENTIAL MODE) - Use locally computed shouldShowFormation */}
+      {shouldShowFormation && (
+        <div className="mt-6">
+          <FormationLineup
+            formation={formation}
+            onReorder={reorderDocuments}
+            onRemove={removeDocument}
+            onStartFormation={handleStartProcessing}
+            onClearFormation={clearFormation}
+            aiReady={aiReady}
+            aiInitializing={aiInitializing}
+          />
+        </div>
+      )}
+
+      {/* Platoon Sergeant Review (SEQUENTIAL MODE - Active Processing) */}
+      {showProcessingView && (
+        <div className="space-y-4">
+          {/* Show compact formation status */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                📋 Processing {stats?.completed || 0} of {formation.length}{" "}
+                documents
+              </span>
+              <span className="text-xs text-blue-600 dark:text-blue-400">
+                {stats?.waiting || 0} waiting • {stats?.skipped || 0} skipped •{" "}
+                {stats?.errors || 0} errors
+              </span>
+            </div>
+          </div>
+
+          <PlatoonSergeantReview
+            document={activeEntry.file}
+            progress={currentProgress}
+            onComplete={() => {}}
+            onError={(error) => errorCurrentAndNext(error)}
+            onSkip={handleSkipDocument}
+          />
+        </div>
+      )}
+
+      {/* Intelligence Briefing Modal (SEQUENTIAL MODE - User Verification) */}
+      {showIntelBriefing && extractionResult && activeEntry && (
+        <DocumentIntelligenceBriefing
+          document={activeEntry.file}
+          extractionResult={extractionResult}
+          conflicts={[]} // TODO: Implement conflict detection
+          onVerify={handleVerifyAndSave}
+          onSkip={handleSkipDocument}
+          onClose={() => setShowIntelBriefing(false)}
+          onOpenDD214Analyzer={onOpenDD214Analyzer}
+        />
+      )}
+
+      {/* Processing View */}
+      {processing && processingState !== PROCESSING_STATES.IDLE && (
+        <div className="space-y-6">
+          {/* Overall Progress */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {getStateLabel(processingState)}
+              </h3>
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {progress.completed} / {progress.total} files
                 </div>
                 <button
-                  onClick={handleLoadAI}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  onClick={handleStopProcessing}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                  aria-label="Stop processing"
                 >
-                  🎖️ Load AI
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="6" y="6" width="12" height="12" strokeWidth="2" />
+                  </svg>
+                  Stop
                 </button>
               </div>
             </div>
-          )}
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-blue-600 h-full transition-all duration-300 rounded-full"
+                style={{
+                  width: `${(progress.completed / progress.total) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
 
-          {/* Processing Time Warning */}
-          <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border-l-4 border-yellow-500">
-            <div className="flex items-start">
-              <span className="text-xl mr-3 mt-0.5">⏱️</span>
+          {/* Individual File Progress */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              File Progress:
+            </h4>
+            {Object.entries(fileProgress).map(([filename, fileData]) => (
+              <div
+                key={filename}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
+                    {filename}
+                  </p>
+                  <span className="text-xs text-gray-500 ml-2">
+                    {fileData.progress?.toFixed(0) || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 rounded-full ${
+                      fileData.error ? "bg-red-500" : "bg-green-500"
+                    }`}
+                    style={{ width: `${fileData.progress || 0}%` }}
+                  />
+                </div>
+                {fileData.error && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    {fileData.error}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Processing Animation */}
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+          </div>
+        </div>
+      )}
+
+      {/* Results View */}
+      {processingState === PROCESSING_STATES.COMPLETE && results && (
+        <div className="space-y-6">
+          {/* Success Banner */}
+          <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-6 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">✅</span>
               <div>
-                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Processing Time Notice
-                </span>
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  Large files (like 320MB+ C-files) and poor-quality scanned
-                  images may take several minutes to process. Please be patient
-                  while we extract and analyze your documents with maximum
-                  accuracy.
+                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
+                  Muster Call Complete!
+                </h3>
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  Processed {results.summary.successful} files in{" "}
+                  {(results.summary.processingTime / 1000).toFixed(1)}s
                 </p>
               </div>
             </div>
           </div>
 
-          {/* DROP ZONE - Military-style document staging area */}
-          {processingState === PROCESSING_STATES.IDLE &&
-            !(useSequentialMode && hasDocuments) && (
-              <>
-                <div
-                  ref={dropZoneRef}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className="relative border-4 border-dashed border-amber-500 dark:border-amber-400 rounded-xl p-8 text-center transition-all duration-300 hover:border-amber-400 hover:bg-amber-50/30 dark:hover:bg-amber-900/20 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-inner"
-                >
-                  {/* Corner markers - military targeting style */}
-                  <div className="absolute top-2 left-2 w-6 h-6 border-l-4 border-t-4 border-amber-500 dark:border-amber-400"></div>
-                  <div className="absolute top-2 right-2 w-6 h-6 border-r-4 border-t-4 border-amber-500 dark:border-amber-400"></div>
-                  <div className="absolute bottom-2 left-2 w-6 h-6 border-l-4 border-b-4 border-amber-500 dark:border-amber-400"></div>
-                  <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-amber-500 dark:border-amber-400"></div>
-
-                  {/* DROP ZONE Header */}
-                  <div className="mb-4">
-                    <div className="inline-block bg-amber-500 dark:bg-amber-600 text-black dark:text-white px-6 py-2 rounded font-bold text-lg tracking-widest shadow-md">
-                      ⬇️ DROP ZONE ⬇️
-                    </div>
-                  </div>
-
-                  <div className="text-5xl mb-3 animate-bounce">📦</div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
-                    Deploy Your Documents Here
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-                    DD214s • C-Files • Decision Letters • Medical Records
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf,.docx,.doc,.txt,.rtf"
-                    onChange={(e) => {
-                      console.log(
-                        "🎯 File input onChange fired, files:",
-                        e.target.files?.length,
-                      );
-                      handleFileSelect(e.target.files);
-                    }}
-                    onClick={(e) => console.log("🎯 File input clicked")}
-                    className="hidden"
-                    id="muster-call-files"
-                  />
-                  <label
-                    htmlFor="muster-call-files"
-                    onClick={() => console.log("🎯 Label clicked")}
-                    className="inline-block bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-lg font-bold cursor-pointer transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+          {/* Document Breakdown */}
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Discovered Documents
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(results.classified.grouped).map(
+                ([type, docs]) => (
+                  <div
+                    key={type}
+                    className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500"
                   >
-                    🎯 Select Files
-                  </label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 font-mono">
-                    SUPPORTED: PDF • DOCX • TXT | MAX: 500MB
-                  </p>
-
-                  {/* Document type badges */}
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
-                      C-Files (320MB+)
-                    </span>
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">
-                      Decision Letters
-                    </span>
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
-                      DD214s
-                    </span>
-                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">
-                      Medical Records
-                    </span>
-                  </div>
-
-                  {/* Privacy assurance - 100% client-side */}
-                  <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="font-semibold text-sm">
-                        100% ON YOUR DEVICE
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
-                      Your documents are <strong>never uploaded</strong>{" "}
-                      anywhere. All processing happens right here in your
-                      browser. Your records stay on YOUR device - we never see
-                      them.
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      {getDocumentTypeLabel(type)}
+                    </h4>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {docs.length}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {docs.length === 1 ? "document" : "documents"}
                     </p>
                   </div>
-                </div>
-
-                {/* File List */}
-                {files.length > 0 && !useSequentialMode && (
-                  <div className="mt-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Selected Files ({files.length})
-                      </h3>
-                      <button
-                        onClick={handleReset}
-                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                      >
-                        Clear All
-                      </button>
-                    </div>
-
-                    {/* Validation Messages */}
-                    {validation && (
-                      <>
-                        {validation.warnings.length > 0 && (
-                          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 mb-4">
-                            <div className="flex">
-                              <div className="text-xl mr-3">⚠️</div>
-                              <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                                <p className="font-semibold mb-2">Warnings:</p>
-                                {validation.warnings.map((warning, idx) => (
-                                  <p key={idx}>• {warning.message}</p>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {validation.invalid.length > 0 && (
-                          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 mb-4">
-                            <div className="flex">
-                              <div className="text-xl mr-3">❌</div>
-                              <div className="text-sm text-red-800 dark:text-red-200">
-                                <p className="font-semibold mb-2">
-                                  Invalid Files:
-                                </p>
-                                {validation.invalid.map((invalid, idx) => (
-                                  <p key={idx}>
-                                    • {invalid.file.name}: {invalid.reason}
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {/* File List */}
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg"
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <span className="text-2xl">📄</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {formatFileSize(file.size)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Total Size */}
-                    {validation && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Total: {formatFileSize(validation.totalSize)} •{" "}
-                          {validation.valid.length} valid files
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-          {/* Formation Lineup (SEQUENTIAL MODE) - Use locally computed shouldShowFormation */}
-          {shouldShowFormation && (
-            <div className="mt-6">
-              <FormationLineup
-                formation={formation}
-                onReorder={reorderDocuments}
-                onRemove={removeDocument}
-                onStartFormation={handleStartProcessing}
-                onClearFormation={clearFormation}
-                aiReady={aiReady}
-                aiInitializing={aiInitializing}
-              />
-            </div>
-          )}
-
-          {/* Platoon Sergeant Review (SEQUENTIAL MODE - Active Processing) */}
-          {showProcessingView && (
-            <div className="space-y-4">
-              {/* Show compact formation status */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    📋 Processing {stats?.completed || 0} of {formation.length}{" "}
-                    documents
-                  </span>
-                  <span className="text-xs text-blue-600 dark:text-blue-400">
-                    {stats?.waiting || 0} waiting • {stats?.skipped || 0}{" "}
-                    skipped • {stats?.errors || 0} errors
-                  </span>
-                </div>
-              </div>
-
-              <PlatoonSergeantReview
-                document={activeEntry.file}
-                progress={currentProgress}
-                onComplete={() => {}}
-                onError={(error) => errorCurrentAndNext(error)}
-                onSkip={handleSkipDocument}
-              />
-            </div>
-          )}
-
-          {/* Intelligence Briefing Modal (SEQUENTIAL MODE - User Verification) */}
-          {showIntelBriefing && extractionResult && activeEntry && (
-            <DocumentIntelligenceBriefing
-              document={activeEntry.file}
-              extractionResult={extractionResult}
-              conflicts={[]} // TODO: Implement conflict detection
-              onVerify={handleVerifyAndSave}
-              onSkip={handleSkipDocument}
-              onClose={() => setShowIntelBriefing(false)}
-              onOpenDD214Analyzer={onOpenDD214Analyzer}
-            />
-          )}
-
-          {/* Processing View */}
-          {processing && processingState !== PROCESSING_STATES.IDLE && (
-            <div className="space-y-6">
-              {/* Overall Progress */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {getStateLabel(processingState)}
-                  </h3>
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {progress.completed} / {progress.total} files
-                    </div>
-                    <button
-                      onClick={handleStopProcessing}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                      title="Stop processing"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <rect
-                          x="6"
-                          y="6"
-                          width="12"
-                          height="12"
-                          strokeWidth="2"
-                        />
-                      </svg>
-                      Stop
-                    </button>
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-full transition-all duration-300 rounded-full"
-                    style={{
-                      width: `${(progress.completed / progress.total) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Individual File Progress */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  File Progress:
-                </h4>
-                {Object.entries(fileProgress).map(([filename, fileData]) => (
-                  <div
-                    key={filename}
-                    className="bg-white dark:bg-gray-800 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
-                        {filename}
-                      </p>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {fileData.progress?.toFixed(0) || 0}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 rounded-full ${
-                          fileData.error ? "bg-red-500" : "bg-green-500"
-                        }`}
-                        style={{ width: `${fileData.progress || 0}%` }}
-                      />
-                    </div>
-                    {fileData.error && (
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                        {fileData.error}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Processing Animation */}
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-              </div>
-            </div>
-          )}
-
-          {/* Results View */}
-          {processingState === PROCESSING_STATES.COMPLETE && results && (
-            <div className="space-y-6">
-              {/* Success Banner */}
-              <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-6 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">✅</span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
-                      Muster Call Complete!
-                    </h3>
-                    <p className="text-sm text-green-800 dark:text-green-200">
-                      Processed {results.summary.successful} files in{" "}
-                      {(results.summary.processingTime / 1000).toFixed(1)}s
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Document Breakdown */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Discovered Documents
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(results.classified.grouped).map(
-                    ([type, docs]) => (
-                      <div
-                        key={type}
-                        className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500"
-                      >
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                          {getDocumentTypeLabel(type)}
-                        </h4>
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          {docs.length}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {docs.length === 1 ? "document" : "documents"}
-                        </p>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* LLM Report */}
-              {report && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <span className="text-2xl">🤖</span>
-                      AI Analysis & Recommendations
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ReportBugLink context="muster-call-report" />
-                      <button
-                        onClick={() => setShowReport(!showReport)}
-                        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
-                      >
-                        {showReport ? "Hide" : "Show"} Report
-                      </button>
-                    </div>
-                  </div>
-                  {showReport && (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown>{report}</ReactMarkdown>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Error View */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-6 rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">❌</span>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
-                    Processing Error
-                  </h3>
-                  <p className="text-sm text-red-800 dark:text-red-200">
-                    {error}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {processingState === PROCESSING_STATES.IDLE &&
-                files.length > 0 &&
-                !useSequentialMode && (
-                  <button
-                    onClick={handleStartProcessing}
-                    disabled={
-                      !aiReady ||
-                      aiInitializing ||
-                      !validation ||
-                      validation.valid.length === 0
-                    }
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    🎖️ Open Ranks, MARCH!
-                  </button>
-                )}
-              {(processingState === PROCESSING_STATES.COMPLETE ||
-                formationComplete) && (
-                <button
-                  onClick={handleReset}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-                >
-                  🎖️ Fall In - New Formation
-                </button>
-              )}
-            </div>
-
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {useSequentialMode ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-green-600 dark:text-green-400">●</span>
-                  Formation Mode (Sequential)
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <span className="text-blue-600 dark:text-blue-400">●</span>
-                  Batch Mode
-                </span>
+                ),
               )}
             </div>
           </div>
+
+          {/* LLM Report */}
+          {report && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span className="text-2xl">🤖</span>
+                  AI Analysis & Recommendations
+                </h3>
+                <div className="flex items-center gap-3">
+                  <ReportBugLink context="muster-call-report" />
+                  <button
+                    onClick={() => setShowReport(!showReport)}
+                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  >
+                    {showReport ? "Hide" : "Show"} Report
+                  </button>
+                </div>
+              </div>
+              {showReport && (
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown>{report}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      </div>
-    </div>,
-    document.body,
+      )}
+
+      {/* Error View */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-6 rounded-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">❌</span>
+            <div>
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
+                Processing Error
+              </h3>
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </ResponsiveModal>
   );
 }
 

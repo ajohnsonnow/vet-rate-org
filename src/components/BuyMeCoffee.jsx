@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -38,7 +38,7 @@ const POSITION_ZONES = [
 const CAT_EMOJIS = ["😺", "😸", "🐱", "😻", "😽", "🐾", "✨"];
 
 function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [sessionDismissCount, setSessionDismissCount] = useState(0);
@@ -54,6 +54,7 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
         ],
       extraEmoji: CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)],
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [trigger],
   ); // Re-randomize when trigger changes
 
@@ -341,7 +342,7 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
 
         {/* Encouraging footer with sparkles */}
         <p className="text-xs text-purple-500 dark:text-purple-400 text-center mt-4 italic">
-          ✨ Luna's here whenever you need a moment of calm ✨ 🐱💜
+          ✨ Luna&apos;s here whenever you need a moment of calm ✨ 🐱💜
         </p>
       </div>
     </div>

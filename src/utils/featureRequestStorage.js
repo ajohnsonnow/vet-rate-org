@@ -146,6 +146,7 @@ export const saveFeatureRequest = async (requestData) => {
           accessor: "user",
         });
 
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Feature request ${request.request_id} saved successfully`,
         );
@@ -419,12 +420,14 @@ export const getFeatureStatistics = async () => {
 
   allRequests.forEach((request) => {
     // Count by status
-    if (stats.byStatus.hasOwnProperty(request.status)) {
+    if (Object.prototype.hasOwnProperty.call(stats.byStatus, request.status)) {
       stats.byStatus[request.status]++;
     }
 
     // Count by priority
-    if (stats.byPriority.hasOwnProperty(request.priority)) {
+    if (
+      Object.prototype.hasOwnProperty.call(stats.byPriority, request.priority)
+    ) {
       stats.byPriority[request.priority]++;
     }
 
@@ -512,6 +515,7 @@ export const saveFeatureToLocalStorage = (requestData) => {
       created_at: requestData.created_at || new Date().toISOString(),
     });
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(existing));
+    // eslint-disable-next-line no-console
     console.log("Feature request saved to localStorage fallback");
   } catch (error) {
     console.error("Failed to save to localStorage:", error);

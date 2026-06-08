@@ -465,6 +465,7 @@ const deepMerge = (target, source) => {
  */
 const migrateClaims = (data) => {
   // Add migration logic as schema evolves
+  // eslint-disable-next-line no-console
   console.log(
     "Migrating claims from version",
     data.version,

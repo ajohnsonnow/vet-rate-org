@@ -15,7 +15,7 @@
  * @see https://developer.va.gov/explore/benefits/docs/benefits_reference_data
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { VA_BENEFITS_REF_API_KEY } from "../config/vaAuth";
 import { startApiLog, API_CATEGORIES } from "../utils/vaSyncLogger";
 

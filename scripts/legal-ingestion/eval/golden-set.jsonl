@@ -1,0 +1,25 @@
+{"id": "q01", "query": "What rules apply when a veteran has a tinnitus claim?", "expected_citations": ["38 CFR § 4.87", "38 CFR § 4.87a"], "notes": "Tinnitus is rated under DC 6260 in § 4.87 (ear diseases)."}
+{"id": "q02", "query": "How does VA combine multiple disability ratings?", "expected_citations": ["38 CFR § 4.25"], "notes": "Combined ratings table — § 4.25."}
+{"id": "q03", "query": "What is the bilateral factor for paired extremities?", "expected_citations": ["38 CFR § 4.26"], "notes": "10% additional combined for bilateral arm/leg."}
+{"id": "q04", "query": "When is a veteran entitled to individual unemployability?", "expected_citations": ["38 CFR § 4.16"], "notes": "TDIU criteria."}
+{"id": "q05", "query": "How is reasonable doubt resolved in favor of the claimant?", "expected_citations": ["38 CFR § 4.3"], "notes": "Benefit-of-the-doubt rule."}
+{"id": "q06", "query": "Can VA rate the same disability twice under different diagnostic codes?", "expected_citations": ["38 CFR § 4.14"], "notes": "Pyramiding — avoidance of evaluation of same disability."}
+{"id": "q07", "query": "How are painful joints with functional loss evaluated?", "expected_citations": ["38 CFR § 4.40", "38 CFR § 4.45", "38 CFR § 4.59"], "notes": "Functional loss, joints, painful motion."}
+{"id": "q08", "query": "What is the temporary 100% rating after surgery requiring convalescence?", "expected_citations": ["38 CFR § 4.30"], "notes": "Para 30 convalescent rating."}
+{"id": "q09", "query": "When does a veteran get a temporary total rating due to hospitalization?", "expected_citations": ["38 CFR § 4.29"], "notes": "Hospital 21+ days = temp 100%."}
+{"id": "q10", "query": "How is hearing loss measured for VA disability?", "expected_citations": ["38 CFR § 4.85", "38 CFR § 4.86"], "notes": "Tables VI/VII and exceptional patterns."}
+{"id": "q11", "query": "What general formula applies to mental disorder ratings?", "expected_citations": ["38 CFR § 4.130"], "notes": "General rating formula for mental disorders."}
+{"id": "q12", "query": "How is PTSD specifically evaluated under the rating schedule?", "expected_citations": ["38 CFR § 4.125", "38 CFR § 4.129", "38 CFR § 4.130"], "notes": "Mental disorder definitions, trauma-related rule, general formula."}
+{"id": "q13", "query": "How are scars and skin conditions rated?", "expected_citations": ["38 CFR § 4.118"], "notes": "Skin schedule of ratings."}
+{"id": "q14", "query": "What rating schedule covers respiratory and lung conditions?", "expected_citations": ["38 CFR § 4.97", "38 CFR § 4.96"], "notes": "Respiratory diseases."}
+{"id": "q15", "query": "Which section covers heart and cardiovascular disabilities?", "expected_citations": ["38 CFR § 4.104"], "notes": "Cardiovascular schedule."}
+{"id": "q16", "query": "How does VA evaluate digestive system conditions and IBS?", "expected_citations": ["38 CFR § 4.114", "38 CFR § 4.113"], "notes": "Digestive ratings schedule."}
+{"id": "q17", "query": "Where are genitourinary diseases rated?", "expected_citations": ["38 CFR § 4.115", "38 CFR § 4.115a", "38 CFR § 4.115b"], "notes": "Genitourinary schedule and dysfunction criteria."}
+{"id": "q18", "query": "What schedule covers neurological conditions and migraines?", "expected_citations": ["38 CFR § 4.124a", "38 CFR § 4.124"], "notes": "Neurological schedule."}
+{"id": "q19", "query": "How are musculoskeletal disabilities of the spine and joints rated?", "expected_citations": ["38 CFR § 4.71a", "38 CFR § 4.71"], "notes": "Musculoskeletal schedule of ratings."}
+{"id": "q20", "query": "How are muscle group injuries classified by severity?", "expected_citations": ["38 CFR § 4.56", "38 CFR § 4.55"], "notes": "Muscle injury principles and combinations."}
+{"id": "q21", "query": "What rule applies when two evaluations could apply?", "expected_citations": ["38 CFR § 4.7"], "notes": "Higher of two evaluations rule."}
+{"id": "q22", "query": "Are dental and oral conditions service-connectable for compensation?", "expected_citations": ["38 CFR § 4.150", "38 CFR § 4.149"], "notes": "Dental schedule."}
+{"id": "q23", "query": "How does VA rate diabetes and endocrine conditions?", "expected_citations": ["38 CFR § 4.119", "38 CFR § 4.120"], "notes": "Endocrine schedule."}
+{"id": "q24", "query": "What are the rules for prestabilization ratings shortly after discharge?", "expected_citations": ["38 CFR § 4.28"], "notes": "Prestabilization rating from discharge."}
+{"id": "q25", "query": "When VA assigns a zero percent rating, what does it mean?", "expected_citations": ["38 CFR § 4.31"], "notes": "0% (noncompensable) rating rule."}

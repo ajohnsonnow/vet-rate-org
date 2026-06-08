@@ -12,7 +12,7 @@ export const normalizeSearchTerm = (term) => {
   return term
     .toLowerCase()
     .trim()
-    .replace(/[\-\/,().]/g, " ") // Replace punctuation with spaces
+    .replace(/[-/,().]/g, " ") // Replace punctuation with spaces
     .replace(/\s+/g, " ") // Normalize multiple spaces to single
     .trim(); // Remove leading/trailing spaces
 };
@@ -257,5 +257,5 @@ export const validateSearchTerm = (term) => {
 
   // Allow alphanumeric, spaces, hyphens, slashes, parentheses, periods, commas, ampersands, and apostrophes
   // This supports all legitimate medical terminology including anatomical terms
-  return /^[a-zA-Z0-9\s\-\/().,&']*$/.test(term);
+  return /^[a-zA-Z0-9\s\-/().,&']*$/.test(term);
 };

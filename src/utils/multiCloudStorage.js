@@ -271,7 +271,7 @@ export const saveToDropbox = async (data, filename, passphrase = null) => {
 
   // Store key locally if no passphrase
   if (keyExport) {
-    storeLocalKey(`dropbox_${filename}`, keyExport);
+    await storeLocalKey(`dropbox_${filename}`, keyExport);
   }
 
   // Upload to Dropbox
@@ -374,7 +374,7 @@ export const restoreFromDropbox = async (filePath, passphraseOrKey = null) => {
     const filename = filePath.split("/").pop();
 
     if (!key) {
-      key = getLocalKey(`dropbox_${filename}`);
+      key = await getLocalKey(`dropbox_${filename}`);
     }
 
     if (!key) {
@@ -543,7 +543,7 @@ export const saveToOneDrive = async (data, filename, passphrase = null) => {
   );
 
   if (keyExport) {
-    storeLocalKey(`onedrive_${filename}`, keyExport);
+    await storeLocalKey(`onedrive_${filename}`, keyExport);
   }
 
   // Create folder if needed and upload
@@ -634,7 +634,7 @@ export const restoreFromOneDrive = async (fileId, passphraseOrKey = null) => {
       const backups = await listOneDriveBackups();
       const backup = backups.find((b) => b.id === fileId);
       if (backup) {
-        key = getLocalKey(`onedrive_${backup.name}`);
+        key = await getLocalKey(`onedrive_${backup.name}`);
       }
     }
 

@@ -7,8 +7,9 @@
  * User verifies extracted data before saving to VKB
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { formatFileSize } from "../utils/ocr";
 import { detectConflicts } from "../utils/conflictDetector";
 import {
@@ -82,7 +83,7 @@ const VerifiableField = ({
           {tooltip && (
             <span
               className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
-              title={tooltip}
+              aria-label={tooltip}
             >
               💡
             </span>
@@ -96,6 +97,7 @@ const VerifiableField = ({
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              /* eslint-disable-next-line jsx-a11y/no-autofocus */
               autoFocus
             />
             <div className="flex gap-2">
@@ -133,7 +135,7 @@ const VerifiableField = ({
                     ? "text-white bg-red-600 hover:bg-red-700 px-2 py-0.5 rounded"
                     : "text-red-600 hover:text-red-700 dark:text-red-400"
                 }`}
-                title={
+                aria-label={
                   showDeleteConfirm
                     ? "Click again to confirm delete"
                     : "Delete this field (OCR error?)"
@@ -603,7 +605,7 @@ const AddMissingFieldPanel = ({
                       >
                         <label
                           className="w-1/3 text-xs font-medium text-gray-600 dark:text-gray-400 truncate"
-                          title={field.label}
+                          aria-label={field.label}
                         >
                           {field.label}
                         </label>
@@ -623,7 +625,7 @@ const AddMissingFieldPanel = ({
                           onClick={() => handleAddField(field.key)}
                           disabled={!fieldValues[field.key]?.trim()}
                           className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded text-sm"
-                          title="Add this field"
+                          aria-label="Add this field"
                         >
                           ✓
                         </button>
@@ -644,7 +646,7 @@ const AddMissingFieldPanel = ({
  * Main Document Intelligence Briefing Modal
  */
 export default function DocumentIntelligenceBriefing({
-  document,
+  _document,
   extractionResult,
   conflicts: providedConflicts = [],
   onVerify,
@@ -684,9 +686,12 @@ export default function DocumentIntelligenceBriefing({
 
   // Debug logging to trace data flow
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log("🛡️ SigInt Briefing received extractedData:", extractedData);
+    // eslint-disable-next-line no-console
     console.log("🛡️ SigInt Briefing classification:", classification);
     if (isMultiDocument) {
+      // eslint-disable-next-line no-console
       console.log(`🛡️ Multiple documents detected: ${totalDocuments} DD214(s)`);
     }
   }, [extractedData, classification, isMultiDocument, totalDocuments]);
@@ -695,6 +700,7 @@ export default function DocumentIntelligenceBriefing({
   useEffect(() => {
     const loadConflicts = async () => {
       if (currentData && classification?.type) {
+        // eslint-disable-next-line no-console
         console.log(
           "🛡️ Processing document",
           isMultiDocument ? `${currentDocIndex + 1}/${totalDocuments}` : "1/1",
@@ -739,11 +745,13 @@ export default function DocumentIntelligenceBriefing({
           }
         }
 
+        // eslint-disable-next-line no-console
         console.log("🛡️ Filtered fields:", Object.keys(filtered));
         setFilteredData(filtered);
 
         // Group by category
         const grouped = groupFieldsByCategory(filtered, classification.type);
+        // eslint-disable-next-line no-console
         console.log("🛡️ Grouped fields:", grouped);
         setGroupedFields(grouped);
       }
@@ -770,6 +778,7 @@ export default function DocumentIntelligenceBriefing({
 
   // Delete a field that was incorrectly extracted by OCR
   const handleFieldDelete = (field) => {
+    // eslint-disable-next-line no-console
     console.log(`🗑️ Deleting incorrectly extracted field: ${field}`);
     // Remove from filteredData (what's displayed)
     setFilteredData((prev) => {
@@ -798,6 +807,7 @@ export default function DocumentIntelligenceBriefing({
 
   // Delete a single item from an array field (e.g., one award from awards list)
   const handleArrayItemDelete = (field, indexToDelete) => {
+    // eslint-disable-next-line no-console
     console.log(`🗑️ Deleting item ${indexToDelete} from array field: ${field}`);
 
     setFilteredData((prev) => {
@@ -893,537 +903,533 @@ export default function DocumentIntelligenceBriefing({
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-xl z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">🛡️</span>
-              <div>
-                <h2 className="text-2xl font-bold">
-                  SigInt Intelligence Briefing{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-indigo-100">
-                  Verify extracted information before saving
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-indigo-200 text-2xl"
+  const header = (
+    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white sm:p-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl sm:text-4xl">🛡️</span>
+          <div className="min-w-0">
+            <h2
+              id="doc-intel-briefing-title"
+              className="text-lg font-bold sm:text-2xl"
             >
-              ×
-            </button>
-          </div>
-
-          {/* Multiple Document Navigator */}
-          {isMultiDocument && (
-            <div className="mt-4 flex items-center justify-between bg-white/10 rounded-lg p-3">
-              <button
-                onClick={goToPrevDocument}
-                disabled={currentDocIndex === 0}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
-              >
-                ← Previous
-              </button>
-              <div className="text-center">
-                <span className="text-lg font-bold">
-                  DD214 #{currentDocIndex + 1}
-                </span>
-                <span className="text-sm opacity-80"> of {totalDocuments}</span>
-                {currentData?.sourcePages && (
-                  <span className="text-xs block opacity-60">
-                    Pages {currentData.sourcePages}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={goToNextDocument}
-                disabled={currentDocIndex === totalDocuments - 1}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
-              >
-                Next →
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Document Info */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-              📄 {filename}{" "}
-              {isMultiDocument && (
-                <span className="text-blue-600 dark:text-blue-400">
-                  (DD214 #{currentDocIndex + 1})
-                </span>
-              )}
-            </h3>
-            <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <span>💾 {formatFileSize(size)}</span>
-              <span>
-                📑 {pageCount} page{pageCount !== 1 ? "s" : ""}
+              SigInt Intelligence Briefing{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
               </span>
-              {/* Show extraction method with Vision AI indicator */}
+            </h2>
+            <p className="text-xs text-indigo-100 sm:text-sm">
+              Verify extracted information before saving
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white transition-colors hover:bg-white/20"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Multiple Document Navigator */}
+      {isMultiDocument && (
+        <div className="mt-4 flex items-center justify-between gap-2 bg-white/10 rounded-lg p-3">
+          <button
+            onClick={goToPrevDocument}
+            disabled={currentDocIndex === 0}
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
+          >
+            ← Previous
+          </button>
+          <div className="text-center">
+            <span className="text-lg font-bold">
+              DD214 #{currentDocIndex + 1}
+            </span>
+            <span className="text-sm opacity-80"> of {totalDocuments}</span>
+            {currentData?.sourcePages && (
+              <span className="text-xs block opacity-60">
+                Pages {currentData.sourcePages}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={goToNextDocument}
+            disabled={currentDocIndex === totalDocuments - 1}
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const footer = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <button
+        onClick={onSkip}
+        className="w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors sm:w-auto"
+      >
+        ⏭️ Skip This Document
+      </button>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+        <button
+          onClick={onClose}
+          className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold transition-colors sm:w-auto"
+        >
+          ← Back to Formation
+        </button>
+
+        <button
+          onClick={handleVerifyAndSave}
+          disabled={!allFieldsVerified && Object.keys(filteredData).length > 0}
+          className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 sm:w-auto ${
+            allFieldsVerified || Object.keys(filteredData).length === 0
+              ? "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          ✅ Verify & Save
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      footer={footer}
+      labelledBy="doc-intel-briefing-title"
+      size="xl"
+    >
+      {/* Document Info */}
+      <div className="border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+            📄 {filename}{" "}
+            {isMultiDocument && (
+              <span className="text-blue-600 dark:text-blue-400">
+                (DD214 #{currentDocIndex + 1})
+              </span>
+            )}
+          </h3>
+          <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+            <span>💾 {formatFileSize(size)}</span>
+            <span>
+              📑 {pageCount} page{pageCount !== 1 ? "s" : ""}
+            </span>
+            {/* Show extraction method with Vision AI indicator */}
+            <span
+              className={
+                visionUsed
+                  ? "text-purple-600 dark:text-purple-400 font-medium"
+                  : ""
+              }
+            >
+              {visionUsed
+                ? "👁️ Vision AI (Florence-2)"
+                : method === "ocr"
+                  ? "🔍 OCR Extracted"
+                  : method === "advanced_ocr"
+                    ? "🔍 Advanced OCR"
+                    : method === "vision_florence"
+                      ? "👁️ Vision AI"
+                      : "📖 Native Text"}
+            </span>
+            {/* Show confidence if available */}
+            {confidence && (
               <span
-                className={
-                  visionUsed
-                    ? "text-purple-600 dark:text-purple-400 font-medium"
-                    : ""
-                }
+                className={`${
+                  confidence >= 80
+                    ? "text-green-600 dark:text-green-400"
+                    : confidence >= 60
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : "text-red-600 dark:text-red-400"
+                }`}
               >
-                {visionUsed
-                  ? "👁️ Vision AI (Florence-2)"
-                  : method === "ocr"
-                    ? "🔍 OCR Extracted"
-                    : method === "advanced_ocr"
-                      ? "🔍 Advanced OCR"
-                      : method === "vision_florence"
-                        ? "👁️ Vision AI"
-                        : "📖 Native Text"}
+                {confidence}% confidence
               </span>
-              {/* Show confidence if available */}
-              {confidence && (
-                <span
-                  className={`${
-                    confidence >= 80
-                      ? "text-green-600 dark:text-green-400"
-                      : confidence >= 60
-                        ? "text-yellow-600 dark:text-yellow-400"
-                        : "text-red-600 dark:text-red-400"
-                  }`}
-                >
-                  {confidence}% confidence
-                </span>
-              )}
-              {currentData?.sourcePages && (
-                <span>📋 Source: Pages {currentData.sourcePages}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Classification */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
-                  Classification:
-                </span>
-                <span
-                  className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                    classification?.confidence >= 80
-                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                  }`}
-                >
-                  {getDocumentTypeLabel(classification?.type)} -{" "}
-                  {classification?.confidence}% confidence
-                </span>
-              </div>
-
-              {/* Open in DD214 Analyzer button for service records */}
-              {["dd214", "dd215", "ngb22", "dd256", "dd257"].includes(
-                classification?.type?.toLowerCase(),
-              ) &&
-                onOpenDD214Analyzer && (
-                  <button
-                    onClick={onOpenDD214Analyzer}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
-                    title="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
-                  >
-                    🔍 Analyze with AI
-                  </button>
-                )}
-            </div>
+            )}
+            {currentData?.sourcePages && (
+              <span>📋 Source: Pages {currentData.sourcePages}</span>
+            )}
           </div>
         </div>
 
-        {/* Conflicts */}
-        {conflicts.length > 0 && (
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-300 mb-3">
-              ⚠️ {conflicts.length} Conflict{conflicts.length !== 1 ? "s" : ""}{" "}
-              Detected
-            </h3>
-            <div className="space-y-3">
-              {conflicts.map((conflict, index) => (
-                <ConflictWarning
-                  key={index}
-                  conflict={conflict}
-                  onResolve={handleConflictResolve}
-                />
-              ))}
+        {/* Classification */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-700 dark:text-gray-300">
+                Classification:
+              </span>
+              <span
+                className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                  classification?.confidence >= 80
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                }`}
+              >
+                {getDocumentTypeLabel(classification?.type)} -{" "}
+                {classification?.confidence}% confidence
+              </span>
             </div>
+
+            {/* Open in DD214 Analyzer button for service records */}
+            {["dd214", "dd215", "ngb22", "dd256", "dd257"].includes(
+              classification?.type?.toLowerCase(),
+            ) &&
+              onOpenDD214Analyzer && (
+                <button
+                  onClick={onOpenDD214Analyzer}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
+                  aria-label="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
+                >
+                  🔍 Analyze with AI
+                </button>
+              )}
+          </div>
+        </div>
+      </div>
+
+      {/* Conflicts */}
+      {conflicts.length > 0 && (
+        <div className="border-b border-gray-200 py-6 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-300 mb-3">
+            ⚠️ {conflicts.length} Conflict{conflicts.length !== 1 ? "s" : ""}{" "}
+            Detected
+          </h3>
+          <div className="space-y-3">
+            {conflicts.map((conflict, index) => (
+              <ConflictWarning
+                key={index}
+                conflict={conflict}
+                onResolve={handleConflictResolve}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Extracted Information */}
+      <div className="py-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          Extracted Information (Verify before saving):
+        </h3>
+
+        {/* Show apologetic message when OCR fails */}
+        {(!filteredData || Object.keys(filteredData).length === 0) && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-6 text-center mb-6">
+            {/* Apologetic Header */}
+            <div className="text-4xl mb-3">😔</div>
+            <h4 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-3">
+              We&apos;re Sorry - We Couldn&apos;t Read This DD214
+            </h4>
+
+            {/* Empathetic Explanation */}
+            <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2 mb-4 max-w-lg mx-auto">
+              <p>
+                Many older DD214s (especially those from the typewriter era or
+                documents that have been copied multiple times) are simply too
+                faded or degraded for our OCR technology to read reliably.
+              </p>
+              <p className="font-medium">
+                This is <strong>not your fault</strong> - it&apos;s a limitation
+                of working with aged documents.
+              </p>
+            </div>
+
+            {/* What to Do Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
+              <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
+                <span>📝</span> What You Can Do
+              </h5>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-2 max-w-md mx-auto">
+                <li className="flex gap-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>
+                    <strong>Manual Entry:</strong> Use the &quot;Enter DD214
+                    Fields Manually&quot; panel below to enter your information
+                    by hand.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>
+                    <strong>Request Replacement:</strong> Contact the{" "}
+                    <a
+                      href="https://www.archives.gov/veterans/military-service-records"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      National Archives
+                    </a>{" "}
+                    for a certified copy of your DD214.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>
+                    <strong>Better Scan:</strong> If possible, try scanning your
+                    original at 300+ DPI in grayscale.
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Raw Text Note */}
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 italic">
+              💾 The raw text (whatever we could capture) has been saved to your
+              Veteran Knowledge Base for reference.
+            </p>
           </div>
         )}
 
-        {/* Extracted Information */}
-        <div className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Extracted Information (Verify before saving):
-          </h3>
+        {/* Show extracted fields when OCR succeeded */}
+        {filteredData && Object.keys(filteredData).length > 0 && (
+          <div className="space-y-6 mb-6">
+            {/* Group fields by category */}
+            {Object.entries(groupedFields).map(([category, fields]) => (
+              <div key={category}>
+                <h4 className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
+                  {category} Information
+                </h4>
+                <div className="space-y-3">
+                  {Object.entries(fields).map(([key, value]) => {
+                    if (!value || (Array.isArray(value) && value.length === 0))
+                      return null;
 
-          {/* Show apologetic message when OCR fails */}
-          {(!filteredData || Object.keys(filteredData).length === 0) && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-6 text-center mb-6">
-              {/* Apologetic Header */}
-              <div className="text-4xl mb-3">😔</div>
-              <h4 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-3">
-                We're Sorry - We Couldn't Read This DD214
-              </h4>
-
-              {/* Empathetic Explanation */}
-              <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2 mb-4 max-w-lg mx-auto">
-                <p>
-                  Many older DD214s (especially those from the typewriter era or
-                  documents that have been copied multiple times) are simply too
-                  faded or degraded for our OCR technology to read reliably.
-                </p>
-                <p className="font-medium">
-                  This is <strong>not your fault</strong> - it's a limitation of
-                  working with aged documents.
-                </p>
-              </div>
-
-              {/* What to Do Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
-                <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
-                  <span>📝</span> What You Can Do
-                </h5>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-2 max-w-md mx-auto">
-                  <li className="flex gap-2">
-                    <span className="text-green-600 dark:text-green-400">
-                      ✓
-                    </span>
-                    <span>
-                      <strong>Manual Entry:</strong> Use the "Enter DD214 Fields
-                      Manually" panel below to enter your information by hand.
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-600 dark:text-green-400">
-                      ✓
-                    </span>
-                    <span>
-                      <strong>Request Replacement:</strong> Contact the{" "}
-                      <a
-                        href="https://www.archives.gov/veterans/military-service-records"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        National Archives
-                      </a>{" "}
-                      for a certified copy of your DD214.
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-600 dark:text-green-400">
-                      ✓
-                    </span>
-                    <span>
-                      <strong>Better Scan:</strong> If possible, try scanning
-                      your original at 300+ DPI in grayscale.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Raw Text Note */}
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 italic">
-                💾 The raw text (whatever we could capture) has been saved to
-                your Veteran Knowledge Base for reference.
-              </p>
-            </div>
-          )}
-
-          {/* Show extracted fields when OCR succeeded */}
-          {filteredData && Object.keys(filteredData).length > 0 && (
-            <div className="space-y-6 mb-6">
-              {/* Group fields by category */}
-              {Object.entries(groupedFields).map(([category, fields]) => (
-                <div key={category}>
-                  <h4 className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
-                    {category} Information
-                  </h4>
-                  <div className="space-y-3">
-                    {Object.entries(fields).map(([key, value]) => {
-                      if (
-                        !value ||
-                        (Array.isArray(value) && value.length === 0)
-                      )
-                        return null;
-
-                      // Handle arrays (like awards, deployments)
-                      if (Array.isArray(value)) {
-                        // Format array items for display
-                        const formatItem = (item) => {
-                          if (typeof item === "string") return item;
-                          // Handle award objects from parseDD214Text
-                          if (item?.award?.name) {
-                            const name = item.award.name;
-                            const qty =
-                              item.quantity > 1
-                                ? ` (${item.quantity}${item.quantity > 1 ? "x" : ""})`
-                                : "";
-                            const devices =
-                              item.devices?.length > 0
-                                ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
-                                : "";
-                            return `${name}${qty}${devices}`;
-                          }
-                          // Handle other objects
-                          if (typeof item === "object") {
-                            return (
-                              item.name ||
-                              item.title ||
-                              item.value ||
-                              JSON.stringify(item)
-                            );
-                          }
-                          return String(item);
-                        };
-
-                        // Check if this is an awards array with award objects
-                        const isAwardsArray =
-                          key.toLowerCase() === "awards" &&
-                          value.some(
-                            (item) => item?.award?.name || item?.awardId,
+                    // Handle arrays (like awards, deployments)
+                    if (Array.isArray(value)) {
+                      // Format array items for display
+                      const formatItem = (item) => {
+                        if (typeof item === "string") return item;
+                        // Handle award objects from parseDD214Text
+                        if (item?.award?.name) {
+                          const name = item.award.name;
+                          const qty =
+                            item.quantity > 1
+                              ? ` (${item.quantity}${item.quantity > 1 ? "x" : ""})`
+                              : "";
+                          const devices =
+                            item.devices?.length > 0
+                              ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
+                              : "";
+                          return `${name}${qty}${devices}`;
+                        }
+                        // Handle other objects
+                        if (typeof item === "object") {
+                          return (
+                            item.name ||
+                            item.title ||
+                            item.value ||
+                            JSON.stringify(item)
                           );
+                        }
+                        return String(item);
+                      };
 
-                        // Prepare visual awards for RibbonRackDisplay
-                        const visualAwards = isAwardsArray
-                          ? value
-                              .filter((item) => item?.award || item?.awardId)
-                              .map((item) => ({
-                                awardId: item.awardId || item.award?.id,
-                                award: item.award || {
-                                  id: item.awardId,
-                                  name: item.matchedText,
-                                },
-                                devices: item.devices || [],
-                              }))
+                      // Check if this is an awards array with award objects
+                      const isAwardsArray =
+                        key.toLowerCase() === "awards" &&
+                        value.some(
+                          (item) => item?.award?.name || item?.awardId,
+                        );
+
+                      // Prepare visual awards for RibbonRackDisplay
+                      const visualAwards = isAwardsArray
+                        ? value
+                            .filter((item) => item?.award || item?.awardId)
+                            .map((item) => ({
+                              awardId: item.awardId || item.award?.id,
+                              award: item.award || {
+                                id: item.awardId,
+                                name: item.matchedText,
+                              },
+                              devices: item.devices || [],
+                            }))
+                        : [];
+
+                      // Sort by precedence for proper military display
+                      const sortedVisualAwards =
+                        visualAwards.length > 0
+                          ? sortRibbonsByPrecedence(
+                              visualAwards,
+                              filteredData?.branch || "Army",
+                            )
                           : [];
 
-                        // Sort by precedence for proper military display
-                        const sortedVisualAwards =
-                          visualAwards.length > 0
-                            ? sortRibbonsByPrecedence(
-                                visualAwards,
-                                filteredData?.branch || "Army",
-                              )
-                            : [];
-
-                        // Parse badges from awards text
-                        const awardsText = value
-                          .map(
-                            (item) =>
-                              item?.matchedText ||
-                              item?.award?.name ||
-                              String(item),
-                          )
-                          .join("\n");
-                        const { badges, tabs, combatIndicators } =
-                          parseDD214Badges(
-                            awardsText,
-                            filteredData?.branch?.replace(/\/.*$/, "") ||
-                              "Army",
-                          );
-
-                        return (
-                          <div
-                            key={key}
-                            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                          >
-                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                              {key.charAt(0).toUpperCase() +
-                                key.slice(1).replace(/([A-Z])/g, " $1")}
-                              {getTooltip(key) && (
-                                <span
-                                  className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
-                                  title={getTooltip(key)}
-                                >
-                                  💡
-                                </span>
-                              )}
-                            </label>
-
-                            {/* Combat Indicator Alert */}
-                            {combatIndicators.length > 0 && (
-                              <CombatIndicatorSummary
-                                badges={badges.filter((b) => b.combatIndicator)}
-                                ribbonAwards={value}
-                              />
-                            )}
-
-                            {/* Badges Display (above ribbons) */}
-                            {badges.length > 0 && (
-                              <div className="mb-4">
-                                <BadgeDisplay
-                                  badges={badges}
-                                  tabs={tabs}
-                                  branch={
-                                    filteredData?.branch?.replace(
-                                      /\/.*$/,
-                                      "",
-                                    ) || "Army"
-                                  }
-                                  size="sm"
-                                  showLabels={true}
-                                />
-                              </div>
-                            )}
-
-                            {/* Visual Ribbon Rack for awards */}
-                            {sortedVisualAwards.length > 0 && (
-                              <div className="mb-4 flex justify-center">
-                                <RibbonRackDisplay
-                                  awards={sortedVisualAwards}
-                                  ribbonsPerRow={3}
-                                  size="md"
-                                  showNames={false}
-                                />
-                              </div>
-                            )}
-
-                            {/* Text list of awards with delete buttons */}
-                            <ul className="space-y-1 text-sm">
-                              {value.map((item, idx) => (
-                                <li
-                                  key={idx}
-                                  className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
-                                >
-                                  <span>• {formatItem(item)}</span>
-                                  <button
-                                    onClick={() =>
-                                      handleArrayItemDelete(key, idx)
-                                    }
-                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
-                                    title="Remove this item (OCR error?)"
-                                  >
-                                    🗑️
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                      // Parse badges from awards text
+                      const awardsText = value
+                        .map(
+                          (item) =>
+                            item?.matchedText ||
+                            item?.award?.name ||
+                            String(item),
+                        )
+                        .join("\n");
+                      const { badges, tabs, combatIndicators } =
+                        parseDD214Badges(
+                          awardsText,
+                          filteredData?.branch?.replace(/\/.*$/, "") || "Army",
                         );
-                      }
 
                       return (
-                        <VerifiableField
+                        <div
                           key={key}
-                          label={
-                            key.charAt(0).toUpperCase() +
-                            key.slice(1).replace(/([A-Z])/g, " $1")
-                          }
-                          value={String(value)}
-                          tooltip={getTooltip(key)}
-                          checked={verifiedFields[key] || false}
-                          onCheckChange={(checked) =>
-                            handleFieldCheck(key, checked)
-                          }
-                          onChange={(newValue) =>
-                            handleFieldEdit(key, newValue)
-                          }
-                          hasConflict={hasConflict(key)}
-                          onDelete={() => handleFieldDelete(key)}
-                        />
+                          className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        >
+                          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            {key.charAt(0).toUpperCase() +
+                              key.slice(1).replace(/([A-Z])/g, " $1")}
+                            {getTooltip(key) && (
+                              <span
+                                className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
+                                aria-label={getTooltip(key)}
+                              >
+                                💡
+                              </span>
+                            )}
+                          </label>
+
+                          {/* Combat Indicator Alert */}
+                          {combatIndicators.length > 0 && (
+                            <CombatIndicatorSummary
+                              badges={badges.filter((b) => b.combatIndicator)}
+                              ribbonAwards={value}
+                            />
+                          )}
+
+                          {/* Badges Display (above ribbons) */}
+                          {badges.length > 0 && (
+                            <div className="mb-4">
+                              <BadgeDisplay
+                                badges={badges}
+                                tabs={tabs}
+                                branch={
+                                  filteredData?.branch?.replace(/\/.*$/, "") ||
+                                  "Army"
+                                }
+                                size="sm"
+                                showLabels={true}
+                              />
+                            </div>
+                          )}
+
+                          {/* Visual Ribbon Rack for awards */}
+                          {sortedVisualAwards.length > 0 && (
+                            <div className="mb-4 flex justify-center">
+                              <RibbonRackDisplay
+                                awards={sortedVisualAwards}
+                                ribbonsPerRow={3}
+                                size="md"
+                                showNames={false}
+                              />
+                            </div>
+                          )}
+
+                          {/* Text list of awards with delete buttons */}
+                          <ul className="space-y-1 text-sm">
+                            {value.map((item, idx) => (
+                              <li
+                                key={idx}
+                                className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
+                              >
+                                <span>• {formatItem(item)}</span>
+                                <button
+                                  onClick={() =>
+                                    handleArrayItemDelete(key, idx)
+                                  }
+                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
+                                  aria-label="Remove this item (OCR error?)"
+                                >
+                                  🗑️
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       );
-                    })}
-                  </div>
+                    }
+
+                    return (
+                      <VerifiableField
+                        key={key}
+                        label={
+                          key.charAt(0).toUpperCase() +
+                          key.slice(1).replace(/([A-Z])/g, " $1")
+                        }
+                        value={String(value)}
+                        tooltip={getTooltip(key)}
+                        checked={verifiedFields[key] || false}
+                        onCheckChange={(checked) =>
+                          handleFieldCheck(key, checked)
+                        }
+                        onChange={(newValue) => handleFieldEdit(key, newValue)}
+                        hasConflict={hasConflict(key)}
+                        onDelete={() => handleFieldDelete(key)}
+                      />
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* ALWAYS show Add Missing Field panel - auto-expand when OCR failed */}
-          <AddMissingFieldPanel
-            classification={classification?.type}
-            onAddField={(field, value) => {
-              setFilteredData((prev) => ({ ...prev, [field]: value }));
-              setEditedData((prev) => ({ ...prev, [field]: value }));
-              setVerifiedFields((prev) => ({ ...prev, [field]: true }));
-            }}
-            existingFields={Object.keys(filteredData)}
-            autoExpand={!filteredData || Object.keys(filteredData).length === 0}
-          />
-        </div>
-
-        {/* Options */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={saveToVKB}
-                onChange={(e) => setSaveToVKB(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                💾 Save this document to Veteran Knowledge Base
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={updateProfile}
-                onChange={(e) => setUpdateProfile(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                👤 Update profile with verified information
-              </span>
-            </label>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Actions */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-b-xl flex items-center justify-between">
-          <button
-            onClick={onSkip}
-            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
-          >
-            ⏭️ Skip This Document
-          </button>
+        {/* ALWAYS show Add Missing Field panel - auto-expand when OCR failed */}
+        <AddMissingFieldPanel
+          classification={classification?.type}
+          onAddField={(field, value) => {
+            setFilteredData((prev) => ({ ...prev, [field]: value }));
+            setEditedData((prev) => ({ ...prev, [field]: value }));
+            setVerifiedFields((prev) => ({ ...prev, [field]: true }));
+          }}
+          existingFields={Object.keys(filteredData)}
+          autoExpand={!filteredData || Object.keys(filteredData).length === 0}
+        />
+      </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold transition-colors"
-            >
-              ← Back to Formation
-            </button>
+      {/* Options */}
+      <div className="border-t border-gray-200 py-6 dark:border-gray-700">
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={saveToVKB}
+              onChange={(e) => setSaveToVKB(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              💾 Save this document to Veteran Knowledge Base
+            </span>
+          </label>
 
-            <button
-              onClick={handleVerifyAndSave}
-              disabled={
-                !allFieldsVerified && Object.keys(filteredData).length > 0
-              }
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2 ${
-                allFieldsVerified || Object.keys(filteredData).length === 0
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              ✅ Verify & Save
-            </button>
-          </div>
-        </div>
-
-        {/* Help Text */}
-        <div className="px-6 pb-6 text-xs text-gray-500 dark:text-gray-400 italic">
-          💡 Review each field carefully. Check the boxes to verify accuracy,
-          click [Edit] to correct mistakes, or click 🗑️ to delete incorrect OCR
-          extractions. Only verified fields will be saved to your profile.
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={updateProfile}
+              onChange={(e) => setUpdateProfile(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              👤 Update profile with verified information
+            </span>
+          </label>
         </div>
       </div>
-    </div>
+
+      {/* Help Text */}
+      <p className="pt-6 text-xs text-gray-500 dark:text-gray-400 italic">
+        💡 Review each field carefully. Check the boxes to verify accuracy,
+        click [Edit] to correct mistakes, or click 🗑️ to delete incorrect OCR
+        extractions. Only verified fields will be saved to your profile.
+      </p>
+    </ResponsiveModal>
   );
 }

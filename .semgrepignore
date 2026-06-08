@@ -1,0 +1,16 @@
+# Semgrep ignore — applies to ALL semgrep configs for this project.
+# Mirrors .eslintignore: directories that are not production source.
+
+# LLM training / research directory (Python scrapers, scraped HTML, models)
+llm-compiler/
+
+# Audit tooling and one-off analysis scripts
+audit/
+
+# Archived dev artifacts
+archive/
+
+# Build artifacts
+dist/
+dist-supplylocker/
+node_modules/

@@ -11,10 +11,7 @@
  * Reference: 38 CFR § 4.26 - Bilateral factor
  */
 
-import {
-  VA_PAY_RATES_HISTORICAL,
-  getCurrentYearRates,
-} from "../data/vaPayRatesHistorical";
+import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 
 /**
  * Calculate combined VA disability rating using official VA formula

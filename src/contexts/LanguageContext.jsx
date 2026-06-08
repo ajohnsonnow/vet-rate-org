@@ -8,7 +8,7 @@
  * are still generated and submitted in English (VA requirement).
  */
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -16639,6 +16639,7 @@ export const LanguageProvider = ({ children }) => {
       // Update document lang attribute for accessibility
       document.documentElement.lang = newLang;
       document.documentElement.dir = SUPPORTED_LANGUAGES[newLang].direction;
+      // eslint-disable-next-line no-console
       console.log(
         `🌐 Language changed to: ${SUPPORTED_LANGUAGES[newLang].nativeName}`,
       );

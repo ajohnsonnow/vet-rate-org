@@ -1,0 +1,11 @@
+{
+  "version": "v0.1.0",
+  "fetched_at": "2026-05-15T07:17:18.982Z",
+  "embedding_model": "Xenova/bge-small-en-v1.5",
+  "embedding_dim": 384,
+  "quantization": "int8",
+  "total_chunks": 226,
+  "sources": {
+    "ecfr": 226
+  }
+}

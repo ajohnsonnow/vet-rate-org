@@ -1,25 +1,15 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { triggerBlobDownload } from "../utils/sanitize";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
-import {
-  enhanceFormStatement,
-  getAIDataDisclosure,
-} from "../utils/aiStatementHelper";
+import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import {
   isAnyAIAvailable,
   getAIStatus,
@@ -27,14 +17,13 @@ import {
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
-import ShareButton, { PIISensitive } from "./ShareButton";
-import { markAsModified, saveOnStepComplete } from "../utils/persistentStorage";
+import ShareButton from "./ShareButton";
+import { markAsModified } from "../utils/persistentStorage";
 import {
   getVeteranProfile,
   saveVeteranProfile,
   hasVeteranProfile,
   saveForm,
-  getSavedForms,
   exportAllVeteranData,
   importVeteranData,
 } from "../utils/veteranProfile";
@@ -46,7 +35,6 @@ import {
  */
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   // AI Status monitoring
   const [aiStatus, setAIStatus] = useState(getAIStatus());
@@ -62,12 +50,15 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [generatedContent, setGeneratedContent] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Veteran Profile State
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
@@ -5870,6 +5861,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
       // Show loading state
       const result = await fillAndDownloadForm(selectedForm?.id, formData);
       if (result.success) {
+        // eslint-disable-next-line no-console
         console.log(`Downloaded: ${result.fileName}`);
       }
     } catch (error) {
@@ -5994,7 +5986,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             {isSpeechRecognitionSupported() && (
               <div
                 className="absolute right-2 top-2"
-                title="Click to dictate using voice"
+                aria-label="Click to dictate using voice"
               >
                 <VoiceInputButton
                   onTranscript={(text) => {
@@ -6036,7 +6028,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           📋 {t("formsHelper", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
             {t("formsHelper", "beta")}
           </span>
         </h2>
@@ -6440,6 +6432,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service Number
                   </label>
@@ -6454,6 +6447,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Rank at Discharge
                   </label>
@@ -6468,6 +6462,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Pay Grade
                   </label>
@@ -6487,6 +6482,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     MOS/Rating Code
                   </label>
@@ -6499,6 +6495,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service Start Date
                   </label>
@@ -6512,6 +6509,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   />
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Service End Date
                   </label>
@@ -6527,6 +6525,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Character of Service
                   </label>
@@ -6553,6 +6552,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   </select>
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Place of Birth
                   </label>
@@ -6598,6 +6598,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Full SSN (XXX-XX-XXXX)
                   </label>
@@ -6626,6 +6627,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                   </p>
                 </div>
                 <div>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Home of Record
                   </label>
@@ -7435,19 +7437,19 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4">
-      <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
-        <div
-          ref={formsContentRef}
-          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden flex flex-col max-h-[90vh]"
-        >
-          {/* Header */}
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="xl"
+        labelledBy="forms-helper-title"
+        header={
           <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📋</span>
                 <div>
-                  <h2 className="text-xl font-bold">
+                  <h2 id="forms-helper-title" className="text-xl font-bold">
                     {t("formsHelper", "title")}
                   </h2>
                   <p className="text-violet-100 text-sm">
@@ -7490,28 +7492,31 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               </div>
             </div>
           </div>
-
-          {/* Content - Scrollable */}
-          <div className="overflow-y-auto flex-1 p-6">{renderContent()}</div>
-
-          {/* Footer */}
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
-            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
-              <p>📌 {t("formsHelper", "footerPrivacy")}</p>
-              <BuyMeCoffee show={true} trigger="forms-helper" />
-            </div>
+        }
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <p>📌 {t("formsHelper", "footerPrivacy")}</p>
           </div>
-        </div>
+        }
+      >
+        <div ref={formsContentRef}>{renderContent()}</div>
+      </ResponsiveModal>
+
+      {/* Luna encouragement — lifted above the z-60 shell */}
+      <div className="relative z-[70]">
+        <BuyMeCoffee show={true} trigger="forms-helper" />
       </div>
 
-      {/* AI Consent Modal */}
-      <AIConsentModal
-        isOpen={showAIConsent}
-        onConsent={handleAIConsent}
-        onCancel={handleAICancel}
-        statementType={getAIStatementType()}
-      />
-    </div>
+      {/* AI consent gate — lifted above the z-60 shell */}
+      <div className="relative z-[70]">
+        <AIConsentModal
+          isOpen={showAIConsent}
+          onConsent={handleAIConsent}
+          onCancel={handleAICancel}
+          statementType={getAIStatementType()}
+        />
+      </div>
+    </>
   );
 };
 

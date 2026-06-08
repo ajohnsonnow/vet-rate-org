@@ -12,7 +12,7 @@
  * - Professional presentation mode
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useVaAuth } from "../hooks/useVaAuth";
 import {
   getServiceHistory,
@@ -32,20 +32,18 @@ import {
   VA_BENEFITS_REF_API_KEY,
   VA_AUTH_CONFIG,
 } from "../config/vaAuth";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Icons
 import {
   Shield,
   FileText,
-  RefreshCw,
   LogIn,
   LogOut,
   User,
   ChevronDown,
   ChevronUp,
-  Code,
   CheckCircle,
   Clock,
   XCircle,
@@ -53,8 +51,6 @@ import {
   AlertCircle,
   MapPin,
   Database,
-  Building2,
-  FileType,
   Briefcase,
   Medal,
   Lock,
@@ -74,8 +70,8 @@ import {
 // =============================================================================
 
 const DemoDashboard = ({ onClose }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   const {
     isAuthenticated,
@@ -120,6 +116,8 @@ const DemoDashboard = ({ onClose }) => {
 
   // UI States
   const [showRawJson, setShowRawJson] = useState({});
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const [activeTab, setActiveTab] = useState("status"); // 'status', 'oauth', 'opendata'
   const [isRunningTests, setIsRunningTests] = useState(false);
 
@@ -586,374 +584,362 @@ const DemoDashboard = ({ onClose }) => {
   // RENDER
   // =========================================================================
 
-  return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="demo-dashboard-title"
-    >
-      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-5xl w-full animate-modalEnter">
-          {/* ============================================================= */}
-          {/* HEADER */}
-          {/* ============================================================= */}
-          <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                  <Activity className="w-8 h-8" />
-                </div>
-                <div>
-                  <h2
-                    id="demo-dashboard-title"
-                    className="text-2xl font-bold tracking-tight"
-                  >
-                    VA.gov API System Status{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-blue-200 text-sm mt-1 flex items-center gap-2">
-                    <Terminal className="w-4 h-4" />
-                    Production Access Demo •{" "}
-                    {VA_AUTH_CONFIG.environment === "sandbox"
-                      ? "Sandbox"
-                      : "Production"}{" "}
-                    Environment
-                  </p>
-                </div>
-                {/* VA Sandbox Verification Button */}
-                <button
-                  onClick={isAuthenticated ? handleLogout : handleLogin}
-                  disabled={authLoading}
-                  className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                    isAuthenticated
-                      ? "bg-green-500/20 border border-green-400/50 text-green-200 hover:bg-green-500/30"
-                      : "bg-white/10 border border-white/30 text-white hover:bg-white/20"
-                  } ${authLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  {authLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isAuthenticated ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <Shield className="w-4 h-4" />
-                  )}
-                  {authLoading
-                    ? "Connecting..."
-                    : isAuthenticated
-                      ? "VA Connected"
-                      : "Connect VA Sandbox"}
-                </button>
-              </div>
-              <button
-                onClick={onClose}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Status Summary Bar */}
-            <div className="mt-6 grid grid-cols-5 gap-3">
-              <div className="bg-green-500/20 border border-green-400/30 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-green-300">
-                  {counts.success}
-                </p>
-                <p className="text-xs text-green-200 mt-1">Active</p>
-              </div>
-              <div className="bg-orange-500/20 border border-orange-400/30 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-orange-300">
-                  {counts.sandbox_limit}
-                </p>
-                <p className="text-xs text-orange-200 mt-1">Sandbox</p>
-              </div>
-              <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-yellow-300">
-                  {counts.pending}
-                </p>
-                <p className="text-xs text-yellow-200 mt-1">Pending</p>
-              </div>
-              <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-red-300">
-                  {counts.error}
-                </p>
-                <p className="text-xs text-red-200 mt-1">Errors</p>
-              </div>
-              <div className="bg-gray-500/20 border border-gray-400/30 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-gray-300">
-                  {counts.skipped}
-                </p>
-                <p className="text-xs text-gray-200 mt-1">Future</p>
-              </div>
-            </div>
+  const header = (
+    <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
+            <Activity className="w-8 h-8" />
           </div>
+          <div>
+            <h2
+              id="demo-dashboard-title"
+              className="text-2xl font-bold tracking-tight"
+            >
+              VA.gov API System Status{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-blue-200 text-sm mt-1 flex items-center gap-2">
+              <Terminal className="w-4 h-4" />
+              Production Access Demo •{" "}
+              {VA_AUTH_CONFIG.environment === "sandbox"
+                ? "Sandbox"
+                : "Production"}{" "}
+              Environment
+            </p>
+          </div>
+          {/* VA Sandbox Verification Button */}
+          <button
+            onClick={isAuthenticated ? handleLogout : handleLogin}
+            disabled={authLoading}
+            className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              isAuthenticated
+                ? "bg-green-500/20 border border-green-400/50 text-green-200 hover:bg-green-500/30"
+                : "bg-white/10 border border-white/30 text-white hover:bg-white/20"
+            } ${authLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {authLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isAuthenticated ? (
+              <CheckCircle className="w-4 h-4" />
+            ) : (
+              <Shield className="w-4 h-4" />
+            )}
+            {authLoading
+              ? "Connecting..."
+              : isAuthenticated
+                ? "VA Connected"
+                : "Connect VA Sandbox"}
+          </button>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
 
-          {/* ============================================================= */}
-          {/* AUTH STATUS BAR */}
-          {/* ============================================================= */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-4 h-4 rounded-full ${isAuthenticated ? "bg-green-500" : "bg-gray-400"} animate-pulse`}
-                />
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    {isAuthenticated ? (
-                      <>
-                        <Wifi className="w-4 h-4 text-green-500" />
-                        VA.gov OAuth Connected
-                      </>
-                    ) : (
-                      <>
-                        <WifiOff className="w-4 h-4 text-gray-400" />
-                        OAuth Not Connected
-                      </>
-                    )}
-                  </p>
-                  {isAuthenticated && userInfo && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
-                      <User className="w-3.5 h-3.5" />
-                      {userInfo.given_name || userInfo.name || "Veteran"} •
-                      Sandbox Test User
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={runAllTests}
-                  disabled={isRunningTests}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                >
-                  {isRunningTests ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+      {/* Status Summary Bar */}
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="bg-green-500/20 border border-green-400/30 rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-green-300">{counts.success}</p>
+          <p className="text-xs text-green-200 mt-1">Active</p>
+        </div>
+        <div className="bg-orange-500/20 border border-orange-400/30 rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-orange-300">
+            {counts.sandbox_limit}
+          </p>
+          <p className="text-xs text-orange-200 mt-1">Sandbox</p>
+        </div>
+        <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-yellow-300">{counts.pending}</p>
+          <p className="text-xs text-yellow-200 mt-1">Pending</p>
+        </div>
+        <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-red-300">{counts.error}</p>
+          <p className="text-xs text-red-200 mt-1">Errors</p>
+        </div>
+        <div className="bg-gray-500/20 border border-gray-400/30 rounded-xl p-3 text-center">
+          <p className="text-2xl font-bold text-gray-300">{counts.skipped}</p>
+          <p className="text-xs text-gray-200 mt-1">Future</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const footer = (
+    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+      <p>Vet-Rate.org • VA.gov API Integration v1.0</p>
+      <p className="flex items-center gap-2">
+        <Zap className="w-4 h-4 text-green-500" />
+        {counts.success} of {Object.keys(apiStatus).length - counts.skipped}{" "}
+        APIs Active
+      </p>
+    </div>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="demo-dashboard-title"
+      header={header}
+      footer={footer}
+    >
+      <div className="-mx-4">
+        {/* ============================================================= */}
+        {/* AUTH STATUS BAR */}
+        {/* ============================================================= */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div
+                className={`w-4 h-4 rounded-full ${isAuthenticated ? "bg-green-500" : "bg-gray-400"} animate-pulse`}
+              />
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  {isAuthenticated ? (
+                    <>
+                      <Wifi className="w-4 h-4 text-green-500" />
+                      VA.gov OAuth Connected
+                    </>
                   ) : (
-                    <Play className="w-4 h-4" />
+                    <>
+                      <WifiOff className="w-4 h-4 text-gray-400" />
+                      OAuth Not Connected
+                    </>
                   )}
-                  {isRunningTests ? "Testing..." : "Run All Tests"}
-                </button>
-                {isAuthenticated ? (
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleLogin}
-                    disabled={authLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Connect VA Account
-                  </button>
+                </p>
+                {isAuthenticated && userInfo && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                    <User className="w-3.5 h-3.5" />
+                    {userInfo.given_name || userInfo.name || "Veteran"} •
+                    Sandbox Test User
+                  </p>
                 )}
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={runAllTests}
+                disabled={isRunningTests}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {isRunningTests ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                {isRunningTests ? "Testing..." : "Run All Tests"}
+              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  disabled={authLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Connect VA Account
+                </button>
+              )}
+            </div>
+          </div>
 
-            {authError && (
-              <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+          {authError && (
+            <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {authError}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ============================================================= */}
+        {/* MAIN CONTENT */}
+        {/* ============================================================= */}
+        <div className="p-6">
+          {/* Section: Open Data APIs (API Key) */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
+                <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">
+                  Open Data APIs
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  API Key Authentication • No Login Required
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <ApiCard
+                name="VA Facilities"
+                apiKey="facilities"
+                icon={MapPin}
+                status={apiStatus.facilities}
+                data={apiStatus.facilities.data}
+                rawData={apiStatus.facilities.rawData}
+                error={apiStatus.facilities.error}
+              />
+              <ApiCard
+                name="VA Forms"
+                apiKey="forms"
+                icon={FileText}
+                status={apiStatus.forms}
+                data={apiStatus.forms.data}
+                rawData={apiStatus.forms.rawData}
+                error={apiStatus.forms.error}
+              />
+              <ApiCard
+                name="Benefits Reference"
+                apiKey="benefitsRef"
+                icon={Database}
+                status={apiStatus.benefitsRef}
+                data={apiStatus.benefitsRef.data}
+                rawData={apiStatus.benefitsRef.rawData}
+                error={apiStatus.benefitsRef.error}
+              />
+            </div>
+          </div>
+
+          {/* Section: OAuth Protected APIs */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
+                <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">
+                  OAuth Protected APIs
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Requires VA.gov Login • User-Specific Data
+                </p>
+              </div>
+            </div>
+
+            {!isAuthenticated && (
+              <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  {authError}
+                  Connect your VA.gov account to test Service History and Claims
+                  APIs
                 </p>
               </div>
             )}
-          </div>
 
-          {/* ============================================================= */}
-          {/* MAIN CONTENT */}
-          {/* ============================================================= */}
-          <div className="p-6">
-            {/* Section: Open Data APIs (API Key) */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
-                  <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">
-                    Open Data APIs
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    API Key Authentication • No Login Required
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                <ApiCard
-                  name="VA Facilities"
-                  apiKey="facilities"
-                  icon={MapPin}
-                  status={apiStatus.facilities}
-                  data={apiStatus.facilities.data}
-                  rawData={apiStatus.facilities.rawData}
-                  error={apiStatus.facilities.error}
-                />
-                <ApiCard
-                  name="VA Forms"
-                  apiKey="forms"
-                  icon={FileText}
-                  status={apiStatus.forms}
-                  data={apiStatus.forms.data}
-                  rawData={apiStatus.forms.rawData}
-                  error={apiStatus.forms.error}
-                />
-                <ApiCard
-                  name="Benefits Reference"
-                  apiKey="benefitsRef"
-                  icon={Database}
-                  status={apiStatus.benefitsRef}
-                  data={apiStatus.benefitsRef.data}
-                  rawData={apiStatus.benefitsRef.rawData}
-                  error={apiStatus.benefitsRef.error}
-                />
-              </div>
-            </div>
-
-            {/* Section: OAuth Protected APIs */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">
-                    OAuth Protected APIs
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Requires VA.gov Login • User-Specific Data
-                  </p>
-                </div>
-              </div>
-
-              {!isAuthenticated && (
-                <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Connect your VA.gov account to test Service History and
-                    Claims APIs
-                  </p>
-                </div>
-              )}
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <ApiCard
-                  name="Service History"
-                  apiKey="serviceHistory"
-                  icon={Medal}
-                  status={apiStatus.serviceHistory}
-                  data={apiStatus.serviceHistory.data}
-                  rawData={apiStatus.serviceHistory.rawData}
-                  error={apiStatus.serviceHistory.error}
-                  isOAuth={true}
-                />
-                <ApiCard
-                  name="VA Claims"
-                  apiKey="claims"
-                  icon={Briefcase}
-                  status={apiStatus.claims}
-                  data={apiStatus.claims.data}
-                  rawData={apiStatus.claims.rawData}
-                  error={apiStatus.claims.error}
-                  isOAuth={true}
-                />
-              </div>
-            </div>
-
-            {/* Section: Future Scope (Skipped APIs) */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-500 dark:text-gray-400">
-                    Future Scope
-                  </h3>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                    Planned for Phase 2 Implementation
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <ApiCard
-                  name="Appeals Status"
-                  apiKey="appealsStatus"
-                  icon={FileText}
-                  status={apiStatus.appealsStatus}
-                  data={null}
-                  rawData={null}
-                  error={null}
-                  isOAuth={true}
-                />
-                <ApiCard
-                  name="Appealable Issues"
-                  apiKey="appealableIssues"
-                  icon={FileText}
-                  status={apiStatus.appealableIssues}
-                  data={null}
-                  rawData={null}
-                  error={null}
-                  isOAuth={true}
-                />
-              </div>
-            </div>
-
-            {/* Privacy Notice */}
-            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-              <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                    Privacy & Security
-                  </h4>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    All data is processed client-side only. No veteran data is
-                    stored on our servers or in any database. OAuth tokens are
-                    stored in browser session storage and cleared on logout.
-                  </p>
-                </div>
-              </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <ApiCard
+                name="Service History"
+                apiKey="serviceHistory"
+                icon={Medal}
+                status={apiStatus.serviceHistory}
+                data={apiStatus.serviceHistory.data}
+                rawData={apiStatus.serviceHistory.rawData}
+                error={apiStatus.serviceHistory.error}
+                isOAuth={true}
+              />
+              <ApiCard
+                name="VA Claims"
+                apiKey="claims"
+                icon={Briefcase}
+                status={apiStatus.claims}
+                data={apiStatus.claims.data}
+                rawData={apiStatus.claims.rawData}
+                error={apiStatus.claims.error}
+                isOAuth={true}
+              />
             </div>
           </div>
 
-          {/* ============================================================= */}
-          {/* FOOTER */}
-          {/* ============================================================= */}
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
-            <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-              <p>Vet-Rate.org • VA.gov API Integration v1.0</p>
-              <p className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-green-500" />
-                {counts.success} of{" "}
-                {Object.keys(apiStatus).length - counts.skipped} APIs Active
-              </p>
+          {/* Section: Future Scope (Skipped APIs) */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                <Clock className="w-4 h-4 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-500 dark:text-gray-400">
+                  Future Scope
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Planned for Phase 2 Implementation
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <ApiCard
+                name="Appeals Status"
+                apiKey="appealsStatus"
+                icon={FileText}
+                status={apiStatus.appealsStatus}
+                data={null}
+                rawData={null}
+                error={null}
+                isOAuth={true}
+              />
+              <ApiCard
+                name="Appealable Issues"
+                apiKey="appealableIssues"
+                icon={FileText}
+                status={apiStatus.appealableIssues}
+                data={null}
+                rawData={null}
+                error={null}
+                isOAuth={true}
+              />
+            </div>
+          </div>
+
+          {/* Privacy Notice */}
+          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                  Privacy & Security
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  All data is processed client-side only. No veteran data is
+                  stored on our servers or in any database. OAuth tokens are
+                  stored in browser session storage and cleared on logout.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

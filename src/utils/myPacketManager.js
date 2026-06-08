@@ -245,6 +245,7 @@ export const saveDocumentToPacket = async (doc) => {
     await updatePacketMetadata();
     markAsModified();
 
+    // eslint-disable-next-line no-console
     console.log(`📁 Saved to My Packet: ${document.fileName} (${id})`);
     return { success: true, documentId: id };
   } catch (error) {
@@ -907,6 +908,7 @@ function sanitize(str, maxLength = 500) {
   s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
   s = s.replace(/on\w+\s*=/gi, "");
   s = s.replace(/javascript:/gi, "");
+  // eslint-disable-next-line no-control-regex
   s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
   return s.trim();
 }

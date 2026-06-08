@@ -6,12 +6,10 @@
  * Everything AI-related in one mission briefing.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useState, useEffect } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   getAIStatus,
-  isLocalAIReady,
   unloadLocalAI,
   registerLocalAIEngine,
 } from "../utils/unifiedAIService";
@@ -19,16 +17,10 @@ import {
   useDeviceCapability,
   DEVICE_TIERS,
 } from "../utils/useDeviceCapability";
-import {
-  getGPUPreference,
-  GPU_PREFERENCES,
-  setGPUPreference,
-} from "./LocalAIPanel";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
 import ReportBugLink from "./ReportBugLink";
 import GPUSelector from "./GPUSelector";
-import { gpuManager } from "../utils/WebGPUManager";
 
 const GEMINI_KEY_STORAGE = "vetrate_gemini_key";
 
@@ -130,16 +122,12 @@ const MODELS = [
 ];
 
 const AICommandCenter = ({ onClose, onReportBug }) => {
-  const { t } = useLanguage();
-  useBodyScrollLock(true);
-
   // Tab state
   const [activeTab, setActiveTab] = useState("setup"); // 'setup' | 'advanced'
 
   // AI Status
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [isUnloading, setIsUnloading] = useState(false);
-  const localAIReady = isLocalAIReady();
 
   // API Key
   const [apiKey, setApiKey] = useState("");
@@ -158,8 +146,8 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
     text: "Ready",
   });
   const [isReady, setIsReady] = useState(false);
-  const [loadedModelId, setLoadedModelId] = useState(null);
-  const [installedModels, setInstalledModels] = useState(new Set());
+  const [, setLoadedModelId] = useState(null);
+  const [, setInstalledModels] = useState(new Set());
 
   // Test box state
   const [testPrompt, setTestPrompt] = useState("");
@@ -203,6 +191,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             adapterInfo = await adapter.requestAdapterInfo();
           }
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.log("Could not get adapter info");
         }
 
@@ -373,608 +362,628 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-gray-700">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 text-white px-6 py-5 rounded-t-2xl relative overflow-hidden flex-shrink-0">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+  const header = (
+    <>
+      {/* Gradient brand header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
+        <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🛡️</span>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">AI Command Center</h2>
-                <p className="text-cyan-200 text-sm mt-1">
-                  Faraday Cage Protocol • All AI Settings in One Place
-                </p>
-              </div>
+        <div className="relative flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+              <span className="text-3xl">🛡️</span>
             </div>
-            <div className="flex items-center gap-2">
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="AI Command Center"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
+            <div>
+              <h2 id="ai-command-center-title" className="text-2xl font-bold">
+                AI Command Center
+              </h2>
+              <p className="mt-1 text-sm text-cyan-200">
+                Faraday Cage Protocol • All AI Settings in One Place
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {onReportBug && (
+              <ReportBugLink
+                onClick={onReportBug}
+                variant="light"
+                moduleName="AI Command Center"
+              />
+            )}
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+              aria-label="Close dialog"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Status Indicator */}
-          <div
-            className={`mt-4 px-4 py-2 rounded-lg inline-flex items-center gap-2 ${
-              aiStatus.isPrivate
-                ? "bg-green-500/30 text-green-200"
-                : aiStatus.effectiveMode
-                  ? "bg-blue-500/30 text-blue-200"
-                  : "bg-yellow-500/30 text-yellow-200"
-            }`}
-          >
-            <span className="text-lg">
-              {aiStatus.effectiveMode === "local"
-                ? "🔒"
-                : aiStatus.effectiveMode === "cloud"
-                  ? "☁️"
-                  : "⚠️"}
-            </span>
-            <span className="font-semibold">{aiStatus.statusText}</span>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-700 bg-gray-800/50 flex-shrink-0">
-          <button
-            onClick={() => setActiveTab("setup")}
-            className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-              activeTab === "setup"
-                ? "text-cyan-400 border-b-2 border-cyan-400 bg-gray-900/50"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            ⚡ Quick Setup
-          </button>
-          <button
-            onClick={() => setActiveTab("advanced")}
-            className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-              activeTab === "advanced"
-                ? "text-purple-400 border-b-2 border-purple-400 bg-gray-900/50"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            🔧 Advanced
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {activeTab === "setup" && (
-            <>
-              {/* STEP 1: Choose Your AI Mode */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span className="w-8 h-8 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center text-sm font-bold">
-                    1
-                  </span>
-                  Choose Your AI
-                </h3>
-
-                {/* Option A: Local AI (Privacy First) */}
-                <div
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    aiStatus.effectiveMode === "local"
-                      ? "bg-green-900/30 border-green-500"
-                      : webGPUStatus.supported
-                        ? "bg-gray-800/50 border-gray-700 hover:border-cyan-500/50"
-                        : "bg-gray-800/30 border-gray-700 opacity-60"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">🔒</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-white">
-                          Local AI - 100% Private
-                        </h4>
-                        {deviceCapability.tier !== DEVICE_TIERS.UNSUPPORTED && (
-                          <span className="px-2 py-0.5 bg-green-500/30 text-green-300 text-xs font-bold rounded-full">
-                            RECOMMENDED
-                          </span>
-                        )}
-                        {aiStatus.effectiveMode === "local" && (
-                          <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full animate-pulse">
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Runs entirely on your device. Zero data transmitted.
-                        Works offline.
-                      </p>
-
-                      {webGPUStatus.supported && webGPUStatus.device && (
-                        <p className="text-cyan-400 text-xs mt-2">
-                          🎮 GPU Ready: {webGPUStatus.device}
-                        </p>
-                      )}
-
-                      {!webGPUStatus.supported && webGPUStatus.checked && (
-                        <p className="text-red-400 text-xs mt-2">
-                          ❌ WebGPU not available on this device
-                        </p>
-                      )}
-
-                      {/* Model Selection - Simple */}
-                      {webGPUStatus.supported && !isReady && (
-                        <div className="mt-4 space-y-3">
-                          <p className="text-gray-300 text-sm font-medium">
-                            Select AI Model:
-                          </p>
-                          <div className="grid gap-2">
-                            {MODELS.map((model) => (
-                              <button
-                                key={model.id}
-                                onClick={() => setSelectedModel(model)}
-                                className={`p-3 rounded-lg border-2 text-left transition-all ${
-                                  selectedModel.id === model.id
-                                    ? "bg-cyan-900/30 border-cyan-500"
-                                    : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="font-semibold text-white text-sm">
-                                      {model.name}
-                                    </p>
-                                    <p className="text-gray-400 text-xs">
-                                      {model.description}
-                                    </p>
-                                    <p className="text-gray-500 text-xs mt-1">
-                                      {model.size} download •{" "}
-                                      {model.vramRequired} VRAM
-                                    </p>
-                                  </div>
-                                  {selectedModel.id === model.id && (
-                                    <span className="text-cyan-400">✓</span>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-
-                          <button
-                            onClick={initializeEngine}
-                            disabled={isLoading}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all disabled:opacity-50"
-                          >
-                            {isLoading ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="animate-spin">⏳</span>{" "}
-                                {loadProgress.text} ({loadProgress.progress}%)
-                              </span>
-                            ) : (
-                              <span>🚀 Download & Activate Local AI</span>
-                            )}
-                          </button>
-
-                          {isLoading && (
-                            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
-                                style={{ width: `${loadProgress.progress}%` }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Active State */}
-                      {isReady && (
-                        <>
-                          <div className="mt-4 flex gap-2">
-                            <span className="flex-1 py-2 px-4 bg-green-500/20 text-green-300 font-medium rounded-lg text-center text-sm">
-                              ✅ AI Active & Private
-                            </span>
-                            <button
-                              onClick={handleUnloadLocalAI}
-                              disabled={isUnloading}
-                              className="py-2 px-4 bg-red-500/20 text-red-400 font-medium rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
-                            >
-                              {isUnloading ? "⏳" : "⏹️ Unload"}
-                            </button>
-                          </div>
-
-                          {/* Test Box */}
-                          <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-                            <div className="flex items-center gap-2 mb-3">
-                              <span className="text-cyan-400">🧪</span>
-                              <h4 className="text-white font-semibold text-sm">
-                                Test Your AI
-                              </h4>
-                            </div>
-
-                            <div className="space-y-3">
-                              {/* Quick Test Examples */}
-                              <div className="space-y-2">
-                                <p className="text-xs text-gray-400 font-medium">
-                                  Quick Test Questions:
-                                </p>
-                                <div className="grid gap-2">
-                                  <button
-                                    onClick={() =>
-                                      setTestPrompt(
-                                        "What is the VA disability rating for tinnitus?",
-                                      )
-                                    }
-                                    className="text-left px-3 py-2 bg-cyan-900/30 hover:bg-cyan-900/50 border border-cyan-700/50 hover:border-cyan-600 text-cyan-100 rounded-lg transition-all text-sm group"
-                                  >
-                                    <span className="font-medium">
-                                      💰 Rating Question:
-                                    </span>
-                                    <span className="block text-xs text-cyan-300 mt-0.5 group-hover:text-cyan-200">
-                                      What is the VA disability rating for
-                                      tinnitus?
-                                    </span>
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setTestPrompt(
-                                        "Explain PTSD secondary conditions",
-                                      )
-                                    }
-                                    className="text-left px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 hover:border-purple-600 text-purple-100 rounded-lg transition-all text-sm group"
-                                  >
-                                    <span className="font-medium">
-                                      🔗 Secondary Conditions:
-                                    </span>
-                                    <span className="block text-xs text-purple-300 mt-0.5 group-hover:text-purple-200">
-                                      Explain PTSD secondary conditions
-                                    </span>
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setTestPrompt(
-                                        "How does bilateral factor work?",
-                                      )
-                                    }
-                                    className="text-left px-3 py-2 bg-blue-900/30 hover:bg-blue-900/50 border border-blue-700/50 hover:border-blue-600 text-blue-100 rounded-lg transition-all text-sm group"
-                                  >
-                                    <span className="font-medium">
-                                      🧮 Math Calculation:
-                                    </span>
-                                    <span className="block text-xs text-blue-300 mt-0.5 group-hover:text-blue-200">
-                                      How does bilateral factor work?
-                                    </span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <hr className="flex-1 border-gray-600" />
-                                <span className="text-xs text-gray-500">
-                                  or ask your own
-                                </span>
-                                <hr className="flex-1 border-gray-600" />
-                              </div>
-
-                              <textarea
-                                value={testPrompt}
-                                onChange={(e) => setTestPrompt(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    if (testPrompt.trim() && !isTesting) {
-                                      handleTestAI();
-                                    }
-                                  }
-                                }}
-                                placeholder="Type your question here... (Press Enter to send, Shift+Enter for new line)"
-                                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
-                                rows={2}
-                                disabled={isTesting}
-                              />
-
-                              <button
-                                onClick={handleTestAI}
-                                disabled={isTesting || !testPrompt.trim()}
-                                className="w-full py-2 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                              >
-                                {isTesting ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⏳</span>{" "}
-                                    Testing...
-                                  </span>
-                                ) : (
-                                  "🚀 Send Test Prompt"
-                                )}
-                              </button>
-
-                              {(testResponse || isTesting) && (
-                                <div className="p-3 bg-gray-900/70 border border-gray-600 rounded-lg">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <p className="text-xs text-gray-400 font-medium">
-                                      Response:
-                                    </p>
-                                    {isTesting &&
-                                      testResponse &&
-                                      testResponse !== "⏳ Generating..." && (
-                                        <span className="text-xs text-cyan-400 animate-pulse">
-                                          ● Generating...
-                                        </span>
-                                      )}
-                                  </div>
-                                  <p className="text-white text-sm whitespace-pre-wrap">
-                                    {testResponse || "⏳ Generating..."}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-4">
-                  <hr className="flex-1 border-gray-700" />
-                  <span className="text-gray-500 text-sm">OR</span>
-                  <hr className="flex-1 border-gray-700" />
-                </div>
-
-                {/* Option B: Cloud AI (Gemini) */}
-                <div
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    aiStatus.effectiveMode === "cloud"
-                      ? "bg-blue-900/30 border-blue-500"
-                      : "bg-gray-800/50 border-gray-700 hover:border-blue-500/50"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">☁️</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-white">
-                          Cloud AI - Gemini (Free)
-                        </h4>
-                        {aiStatus.effectiveMode === "cloud" && (
-                          <span className="px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full animate-pulse">
-                            ACTIVE
-                          </span>
-                        )}
-                        {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED ||
-                          deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
-                          <span className="px-2 py-0.5 bg-blue-500/30 text-blue-300 text-xs font-bold rounded-full">
-                            BEST FOR YOUR DEVICE
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Fast responses via Google Gemini. Requires internet
-                        connection.
-                      </p>
-
-                      {/* Warning */}
-                      <div className="mt-3 p-2 bg-amber-900/20 border border-amber-500/30 rounded-lg">
-                        <p className="text-amber-300 text-xs">
-                          ⚠️ Your queries are sent to Google's servers. API key
-                          stays in YOUR browser only.
-                        </p>
-                      </div>
-
-                      {/* API Key Input */}
-                      <div className="mt-3 space-y-2">
-                        <div className="relative">
-                          <input
-                            type={showApiKey ? "text" : "password"}
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Enter Gemini API key..."
-                            className="w-full px-4 py-2 pr-10 text-sm border-2 border-gray-600 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1"
-                          >
-                            {showApiKey ? "👁️" : "👁️‍🗨️"}
-                          </button>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSaveApiKey}
-                            disabled={!apiKey.trim()}
-                            className="flex-1 py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
-                          >
-                            {apiKeySaved ? "✓ Saved!" : "💾 Save Key"}
-                          </button>
-                          {apiKey && (
-                            <button
-                              onClick={handleClearApiKey}
-                              className="py-2 px-4 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
-                            >
-                              Clear
-                            </button>
-                          )}
-                        </div>
-
-                        <a
-                          href="https://aistudio.google.com/app/apikey"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline"
-                        >
-                          🔗 Get free API key from Google AI Studio →
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Tips */}
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                  <span>💡</span> Quick Tips
-                </h4>
-                <ul className="text-sm text-gray-400 space-y-1">
-                  <li>
-                    • <strong className="text-green-400">Local AI</strong> =
-                    100% private, works offline
-                  </li>
-                  <li>
-                    • <strong className="text-blue-400">Cloud AI</strong> =
-                    faster but sends data to Google
-                  </li>
-                  <li>
-                    • Both use the same Diamond Knowledge Base (130K+ VA
-                    entries)
-                  </li>
-                </ul>
-              </div>
-            </>
-          )}
-
-          {activeTab === "advanced" && (
-            <>
-              {/* Token Limit */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span>📊</span> Response Length
-                </h3>
-                <TokenLimitConfig />
-              </div>
-
-              <hr className="border-gray-700" />
-
-              {/* AI Preset */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span>🎯</span> AI Personality
-                </h3>
-                <PresetSelector
-                  value={selectedPreset}
-                  onChange={(name) => handlePresetChange(name)}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
                 />
-              </div>
-
-              <hr className="border-gray-700" />
-
-              {/* GPU Selection (if WebGPU available) */}
-              {webGPUStatus.supported && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span>🎮</span> GPU Settings
-                  </h3>
-                  <GPUSelector onGPUSelected={() => {}} autoSelect={false} />
-                </div>
-              )}
-
-              {/* DKB Info */}
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💎</span>
-                  <div>
-                    <h4 className="font-bold text-purple-300">
-                      Diamond Knowledge Base
-                    </h4>
-                    <p className="text-gray-400 text-sm mt-1">
-                      Both Local and Cloud AI use our 130,000+ entry database of
-                      VA regulations, 38 CFR, BVA decisions, and CAVC rulings.
-                    </p>
-                    <p className="text-purple-400/80 text-xs mt-2">
-                      Local AI: 6-8 entries per query (optimized for GPU memory)
-                      <br />
-                      Cloud AI: 8-10 entries per query (full context)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Device Info */}
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                <h4 className="font-bold text-white mb-3 flex items-center gap-2">
-                  <span>📱</span> Device Capability
-                </h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gray-900/50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs">Device Tier</p>
-                    <p className="text-white font-semibold">
-                      {deviceCapability.tier === DEVICE_TIERS.HIGH_END
-                        ? "🚀 High-End"
-                        : deviceCapability.tier === DEVICE_TIERS.MID_RANGE
-                          ? "⚡ Mid-Range"
-                          : deviceCapability.tier === DEVICE_TIERS.LEGACY
-                            ? "📱 Legacy"
-                            : "❓ Unknown"}
-                    </p>
-                  </div>
-                  <div className="bg-gray-900/50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs">WebGPU</p>
-                    <p
-                      className={`font-semibold ${webGPUStatus.supported ? "text-green-400" : "text-red-400"}`}
-                    >
-                      {webGPUStatus.supported
-                        ? "✅ Supported"
-                        : "❌ Not Available"}
-                    </p>
-                  </div>
-                  {webGPUStatus.supported && webGPUStatus.device && (
-                    <div className="bg-gray-900/50 p-3 rounded-lg col-span-2">
-                      <p className="text-gray-500 text-xs">Active GPU</p>
-                      <p className="text-cyan-400 font-semibold">
-                        {webGPUStatus.device}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700 flex-shrink-0">
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
-          >
-            Done
-          </button>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-3">
-            <span>🔒</span>
-            <span>Your data, your device, your control</span>
-          </div>
+        {/* Status Indicator */}
+        <div
+          className={`mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 ${
+            aiStatus.isPrivate
+              ? "bg-green-500/30 text-green-200"
+              : aiStatus.effectiveMode
+                ? "bg-blue-500/30 text-blue-200"
+                : "bg-yellow-500/30 text-yellow-200"
+          }`}
+        >
+          <span className="text-lg">
+            {aiStatus.effectiveMode === "local"
+              ? "🔒"
+              : aiStatus.effectiveMode === "cloud"
+                ? "☁️"
+                : "⚠️"}
+          </span>
+          <span className="font-semibold">{aiStatus.statusText}</span>
         </div>
       </div>
-    </div>
+
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+        <button
+          onClick={() => setActiveTab("setup")}
+          className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+            activeTab === "setup"
+              ? "border-b-2 border-cyan-500 bg-white text-cyan-600 dark:border-cyan-400 dark:bg-gray-900/50 dark:text-cyan-400"
+              : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          }`}
+        >
+          ⚡ Quick Setup
+        </button>
+        <button
+          onClick={() => setActiveTab("advanced")}
+          className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+            activeTab === "advanced"
+              ? "border-b-2 border-purple-500 bg-white text-purple-600 dark:border-purple-400 dark:bg-gray-900/50 dark:text-purple-400"
+              : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          }`}
+        >
+          🔧 Advanced
+        </button>
+      </div>
+    </>
+  );
+
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className="w-full rounded-xl bg-gray-200 py-3 font-semibold text-gray-900 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+      >
+        Done
+      </button>
+      <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500">
+        <span>🔒</span>
+        <span>Your data, your device, your control</span>
+      </div>
+    </>
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      labelledBy="ai-command-center-title"
+      size="lg"
+      footer={footer}
+    >
+      <div className="space-y-6">
+        {activeTab === "setup" && (
+          <>
+            {/* STEP 1: Choose Your AI Mode */}
+            <div className="space-y-4">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                  1
+                </span>
+                Choose Your AI
+              </h3>
+
+              {/* Option A: Local AI (Privacy First) */}
+              <div
+                className={`rounded-xl border-2 p-4 transition-all ${
+                  aiStatus.effectiveMode === "local"
+                    ? "border-green-500 bg-green-50 dark:bg-green-900/30"
+                    : webGPUStatus.supported
+                      ? "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50"
+                      : "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30"
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-green-500/20">
+                    <span className="text-2xl">🔒</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-bold text-gray-900 dark:text-white">
+                        Local AI - 100% Private
+                      </h4>
+                      {deviceCapability.tier !== DEVICE_TIERS.UNSUPPORTED && (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700 dark:bg-green-500/30 dark:text-green-300">
+                          RECOMMENDED
+                        </span>
+                      )}
+                      {aiStatus.effectiveMode === "local" && (
+                        <span className="animate-pulse rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white">
+                          ACTIVE
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      Runs entirely on your device. Zero data transmitted. Works
+                      offline.
+                    </p>
+
+                    {webGPUStatus.supported && webGPUStatus.device && (
+                      <p className="mt-2 text-xs text-cyan-600 dark:text-cyan-400">
+                        🎮 GPU Ready: {webGPUStatus.device}
+                      </p>
+                    )}
+
+                    {!webGPUStatus.supported && webGPUStatus.checked && (
+                      <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                        ❌ WebGPU not available on this device
+                      </p>
+                    )}
+
+                    {/* Model Selection - Simple */}
+                    {webGPUStatus.supported && !isReady && (
+                      <div className="mt-4 space-y-3">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Select AI Model:
+                        </p>
+                        <div className="grid gap-2">
+                          {MODELS.map((model) => (
+                            <button
+                              key={model.id}
+                              onClick={() => setSelectedModel(model)}
+                              className={`rounded-lg border-2 p-3 text-left transition-all ${
+                                selectedModel.id === model.id
+                                  ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
+                                  : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {model.name}
+                                  </p>
+                                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    {model.description}
+                                  </p>
+                                  <p className="mt-1 text-xs text-gray-500">
+                                    {model.size} download • {model.vramRequired}{" "}
+                                    VRAM
+                                  </p>
+                                </div>
+                                {selectedModel.id === model.id && (
+                                  <span className="text-cyan-600 dark:text-cyan-400">
+                                    ✓
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={initializeEngine}
+                          disabled={isLoading}
+                          className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 font-bold text-white transition-all hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
+                        >
+                          {isLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="animate-spin">⏳</span>{" "}
+                              {loadProgress.text} ({loadProgress.progress}%)
+                            </span>
+                          ) : (
+                            <span>🚀 Download & Activate Local AI</span>
+                          )}
+                        </button>
+
+                        {isLoading && (
+                          <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
+                              style={{ width: `${loadProgress.progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Active State */}
+                    {isReady && (
+                      <>
+                        <div className="mt-4 flex gap-2">
+                          <span className="flex-1 rounded-lg bg-green-100 px-4 py-2 text-center text-sm font-medium text-green-700 dark:bg-green-500/20 dark:text-green-300">
+                            ✅ AI Active & Private
+                          </span>
+                          <button
+                            onClick={handleUnloadLocalAI}
+                            disabled={isUnloading}
+                            className="rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-200 disabled:opacity-50 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30"
+                          >
+                            {isUnloading ? "⏳" : "⏹️ Unload"}
+                          </button>
+                        </div>
+
+                        {/* Test Box */}
+                        <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                          <div className="mb-3 flex items-center gap-2">
+                            <span className="text-cyan-600 dark:text-cyan-400">
+                              🧪
+                            </span>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                              Test Your AI
+                            </h4>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Quick Test Examples */}
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Quick Test Questions:
+                              </p>
+                              <div className="grid gap-2">
+                                <button
+                                  onClick={() =>
+                                    setTestPrompt(
+                                      "What is the VA disability rating for tinnitus?",
+                                    )
+                                  }
+                                  className="group rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-left text-sm text-cyan-800 transition-all hover:border-cyan-300 hover:bg-cyan-100 dark:border-cyan-700/50 dark:bg-cyan-900/30 dark:text-cyan-100 dark:hover:border-cyan-600 dark:hover:bg-cyan-900/50"
+                                >
+                                  <span className="font-medium">
+                                    💰 Rating Question:
+                                  </span>
+                                  <span className="mt-0.5 block text-xs text-cyan-600 group-hover:text-cyan-700 dark:text-cyan-300 dark:group-hover:text-cyan-200">
+                                    What is the VA disability rating for
+                                    tinnitus?
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setTestPrompt(
+                                      "Explain PTSD secondary conditions",
+                                    )
+                                  }
+                                  className="group rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-left text-sm text-purple-800 transition-all hover:border-purple-300 hover:bg-purple-100 dark:border-purple-700/50 dark:bg-purple-900/30 dark:text-purple-100 dark:hover:border-purple-600 dark:hover:bg-purple-900/50"
+                                >
+                                  <span className="font-medium">
+                                    🔗 Secondary Conditions:
+                                  </span>
+                                  <span className="mt-0.5 block text-xs text-purple-600 group-hover:text-purple-700 dark:text-purple-300 dark:group-hover:text-purple-200">
+                                    Explain PTSD secondary conditions
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setTestPrompt(
+                                      "How does bilateral factor work?",
+                                    )
+                                  }
+                                  className="group rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-left text-sm text-blue-800 transition-all hover:border-blue-300 hover:bg-blue-100 dark:border-blue-700/50 dark:bg-blue-900/30 dark:text-blue-100 dark:hover:border-blue-600 dark:hover:bg-blue-900/50"
+                                >
+                                  <span className="font-medium">
+                                    🧮 Math Calculation:
+                                  </span>
+                                  <span className="mt-0.5 block text-xs text-blue-600 group-hover:text-blue-700 dark:text-blue-300 dark:group-hover:text-blue-200">
+                                    How does bilateral factor work?
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+                              <span className="text-xs text-gray-500">
+                                or ask your own
+                              </span>
+                              <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+                            </div>
+
+                            <textarea
+                              value={testPrompt}
+                              onChange={(e) => setTestPrompt(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  if (testPrompt.trim() && !isTesting) {
+                                    handleTestAI();
+                                  }
+                                }
+                              }}
+                              placeholder="Type your question here... (Press Enter to send, Shift+Enter for new line)"
+                              className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-gray-600 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500"
+                              rows={2}
+                              disabled={isTesting}
+                            />
+
+                            <button
+                              onClick={handleTestAI}
+                              disabled={isTesting || !testPrompt.trim()}
+                              className="w-full rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:from-cyan-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isTesting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <span className="animate-spin">⏳</span>{" "}
+                                  Testing...
+                                </span>
+                              ) : (
+                                "🚀 Send Test Prompt"
+                              )}
+                            </button>
+
+                            {(testResponse || isTesting) && (
+                              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-900/70">
+                                <div className="mb-1 flex items-center justify-between">
+                                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    Response:
+                                  </p>
+                                  {isTesting &&
+                                    testResponse &&
+                                    testResponse !== "⏳ Generating..." && (
+                                      <span className="animate-pulse text-xs text-cyan-600 dark:text-cyan-400">
+                                        ● Generating...
+                                      </span>
+                                    )}
+                                </div>
+                                <p className="whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
+                                  {testResponse || "⏳ Generating..."}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4">
+                <hr className="flex-1 border-gray-200 dark:border-gray-700" />
+                <span className="text-sm text-gray-500">OR</span>
+                <hr className="flex-1 border-gray-200 dark:border-gray-700" />
+              </div>
+
+              {/* Option B: Cloud AI (Gemini) */}
+              <div
+                className={`rounded-xl border-2 p-4 transition-all ${
+                  aiStatus.effectiveMode === "cloud"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                    : "border-gray-200 bg-gray-50 hover:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800/50"
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/20">
+                    <span className="text-2xl">☁️</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-bold text-gray-900 dark:text-white">
+                        Cloud AI - Gemini (Free)
+                      </h4>
+                      {aiStatus.effectiveMode === "cloud" && (
+                        <span className="animate-pulse rounded-full bg-blue-500 px-2 py-0.5 text-xs font-bold text-white">
+                          ACTIVE
+                        </span>
+                      )}
+                      {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED ||
+                        deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-500/30 dark:text-blue-300">
+                          BEST FOR YOUR DEVICE
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      Fast responses via Google Gemini. Requires internet
+                      connection.
+                    </p>
+
+                    {/* Warning */}
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/30 dark:bg-amber-900/20">
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                        ⚠️ Your queries are sent to Google&apos;s servers. API
+                        key stays in YOUR browser only.
+                      </p>
+                    </div>
+
+                    {/* API Key Input */}
+                    <div className="mt-3 space-y-2">
+                      <div className="relative">
+                        <input
+                          type={showApiKey ? "text" : "password"}
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder="Enter Gemini API key..."
+                          className="w-full rounded-lg border-2 border-gray-300 bg-white px-4 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                        >
+                          {showApiKey ? "👁️" : "👁️‍🗨️"}
+                        </button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveApiKey}
+                          disabled={!apiKey.trim()}
+                          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {apiKeySaved ? "✓ Saved!" : "💾 Save Key"}
+                        </button>
+                        {apiKey && (
+                          <button
+                            onClick={handleClearApiKey}
+                            className="rounded-lg bg-red-100 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      <a
+                        href="https://aistudio.google.com/app/apikey"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        🔗 Get free API key from Google AI Studio →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Tips */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+              <h4 className="mb-2 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
+                <span>💡</span> Quick Tips
+              </h4>
+              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <li>
+                  •{" "}
+                  <strong className="text-green-600 dark:text-green-400">
+                    Local AI
+                  </strong>{" "}
+                  = 100% private, works offline
+                </li>
+                <li>
+                  •{" "}
+                  <strong className="text-blue-600 dark:text-blue-400">
+                    Cloud AI
+                  </strong>{" "}
+                  = faster but sends data to Google
+                </li>
+                <li>
+                  • Both use the same Diamond Knowledge Base (130K+ VA entries)
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
+
+        {activeTab === "advanced" && (
+          <>
+            {/* Token Limit */}
+            <div className="space-y-4">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span>📊</span> Response Length
+              </h3>
+              <TokenLimitConfig />
+            </div>
+
+            <hr className="border-gray-200 dark:border-gray-700" />
+
+            {/* AI Preset */}
+            <div className="space-y-4">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span>🎯</span> AI Personality
+              </h3>
+              <PresetSelector
+                value={selectedPreset}
+                onChange={(name) => handlePresetChange(name)}
+              />
+            </div>
+
+            <hr className="border-gray-200 dark:border-gray-700" />
+
+            {/* GPU Selection (if WebGPU available) */}
+            {webGPUStatus.supported && (
+              <div className="space-y-4">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                  <span>🎮</span> GPU Settings
+                </h3>
+                <GPUSelector onGPUSelected={() => {}} autoSelect={false} />
+              </div>
+            )}
+
+            {/* DKB Info */}
+            <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-500/30 dark:bg-purple-900/20">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💎</span>
+                <div>
+                  <h4 className="font-bold text-purple-700 dark:text-purple-300">
+                    Diamond Knowledge Base
+                  </h4>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Both Local and Cloud AI use our 130,000+ entry database of
+                    VA regulations, 38 CFR, BVA decisions, and CAVC rulings.
+                  </p>
+                  <p className="mt-2 text-xs text-purple-600 dark:text-purple-400/80">
+                    Local AI: 6-8 entries per query (optimized for GPU memory)
+                    <br />
+                    Cloud AI: 8-10 entries per query (full context)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Device Info */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+              <h4 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
+                <span>📱</span> Device Capability
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
+                  <p className="text-xs text-gray-500">Device Tier</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {deviceCapability.tier === DEVICE_TIERS.HIGH_END
+                      ? "🚀 High-End"
+                      : deviceCapability.tier === DEVICE_TIERS.MID_RANGE
+                        ? "⚡ Mid-Range"
+                        : deviceCapability.tier === DEVICE_TIERS.LEGACY
+                          ? "📱 Legacy"
+                          : "❓ Unknown"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
+                  <p className="text-xs text-gray-500">WebGPU</p>
+                  <p
+                    className={`font-semibold ${webGPUStatus.supported ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                  >
+                    {webGPUStatus.supported
+                      ? "✅ Supported"
+                      : "❌ Not Available"}
+                  </p>
+                </div>
+                {webGPUStatus.supported && webGPUStatus.device && (
+                  <div className="col-span-2 rounded-lg bg-white p-3 dark:bg-gray-900/50">
+                    <p className="text-xs text-gray-500">Active GPU</p>
+                    <p className="font-semibold text-cyan-600 dark:text-cyan-400">
+                      {webGPUStatus.device}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </ResponsiveModal>
   );
 };
 

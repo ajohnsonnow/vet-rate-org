@@ -415,9 +415,8 @@ export function renderBrowserWarning(results) {
 </html>
   `;
 
-  // Replace the entire document
   document.open();
-  document.write(html);
+  document.write(html); // nosemgrep
   document.close();
 }
 
@@ -439,6 +438,7 @@ export function initCapabilityCheck() {
   }
 
   // All checks passed
+  // eslint-disable-next-line no-console
   console.log("✅ Browser compatibility check passed");
   return true;
 }

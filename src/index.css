@@ -3,6 +3,24 @@
 @tailwind utilities;
 
 /* ============================================
+   ACCESSIBILITY — prefers-reduced-motion (Sprint 5 / WCAG 2.3.3)
+   Honor the OS-level "Reduce motion" preference. Set every animation /
+   transition to near-zero so vestibular-sensitive users (TBI, migraine,
+   PTSD-related visual hypersensitivity) aren't subjected to motion they
+   didn't ask for. Targets veterans specifically — TBI is high prevalence.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
    MOBILE OPTIMIZATION
    iOS auto-zoom prevention, touch targets, safe areas
    ============================================ */
@@ -759,7 +777,9 @@ html.font-xlarge {
 }
 
 /* ============================================
-   REDUCED MOTION
+   REDUCED MOTION — in-app override
+   System-preference variant lives at the top of this file (Sprint 5 / WCAG 2.3.3);
+   this class is applied by ThemeContext when the user toggles the in-app setting.
    ============================================ */
 
 html.reduce-motion *,
@@ -769,18 +789,6 @@ html.reduce-motion *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
-}
-
-/* Respect system preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }
 
 /* ============================================
@@ -841,7 +849,7 @@ html.dark .bg-gray-100 {
   background-color: #1a3d2e !important; /* forest green-800 */
 }
 
-html.dark .text-gray-900:not(.dark\:text-gray-900) {
+html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -1321,7 +1329,7 @@ html.dark .hover\:border-indigo-300:hover {
 }
 
 /* Gray text in dark mode */
-html.dark .text-gray-900:not(.dark\:text-gray-900) {
+html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -1345,14 +1353,14 @@ html.dark .text-gray-500 {
 html.dark
   a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
     .bg-green-600
-  ):not(.bg-sky-600) {
+  ):not(.bg-sky-600):not(.bg-amber-700) {
   color: #93c5fd;
 }
 
 html.dark
   a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
     .bg-green-600
-  ):not(.bg-sky-600):hover {
+  ):not(.bg-sky-600):not(.bg-amber-700):hover {
   color: #bfdbfe;
 }
 
@@ -1977,6 +1985,7 @@ a {
   /* Optimize modal sizes for mobile */
   .modal-content {
     max-height: 90vh;
+    max-height: 90dvh; /* dynamic viewport — keeps footer above the URL bar */
     border-radius: 16px 16px 0 0;
   }
 
@@ -2122,6 +2131,7 @@ body {
   .modal-content {
     width: 100%;
     max-height: 92vh;
+    max-height: 92dvh; /* dynamic viewport — keeps footer above the URL bar */
     border-radius: 20px 20px 0 0;
     margin: 0;
   }
@@ -2319,6 +2329,62 @@ body {
   nav button [class*="icon"] {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   S9 MOBILE SAFETY-NET — audit cycle S9–S17 (2026-05-31)
+   Cross-cutting mobile fixes that belong to no single component. See
+   docs/SPRINT_PLAN_S9-S17.md. Fuller de-dup of the legacy mobile blob above
+   is deferred to S10's per-cluster refactor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Dynamic viewport height for the ~90 legacy `max-h-[Nvh]` modal panels that
+   set the cap via a Tailwind utility (not the `.modal-content` class). Mobile
+   browsers shrink the visual viewport when the URL bar shows, so a `90vh`
+   panel can push its action bar below the toolbar; `dvh` tracks the *visible*
+   height. Declared after the Tailwind utilities so it wins on a specificity
+   tie; browsers without `dvh` silently keep the original `vh`. `dvh === vh` on
+   desktop, so this is safe at every width. */
+.max-h-\[60vh\] {
+  max-height: 60dvh;
+}
+.max-h-\[70vh\] {
+  max-height: 70dvh;
+}
+.max-h-\[80vh\] {
+  max-height: 80dvh;
+}
+.max-h-\[90vh\] {
+  max-height: 90dvh;
+}
+.max-h-\[95vh\] {
+  max-height: 95dvh;
+}
+
+/* Lift the bottom-left floating buttons clear of the 70px MobileBottomNav
+   (`md:hidden`, so phones only) plus the iOS home-indicator safe area. Two
+   tiers keep the AI bubble (lower) and the bug button (upper) from stacking on
+   top of each other. */
+@media (max-width: 767px) {
+  .above-mobile-nav {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 1rem) !important;
+  }
+  .above-mobile-nav-stacked {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 5.5rem) !important;
+  }
+}
+
+/* Hide floating shell buttons from the a11y tree when an aria-modal dialog is
+   open on mobile. aria-modal dialogs expect background content to be inert;
+   visibility:hidden achieves that without JS and prevents axe target-size
+   violations caused by the AI Navigator / Quick Exit buttons overlapping
+   dialog footer Close targets at the same viewport-bottom coordinates. */
+@media (max-width: 767px) {
+  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav,
+  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav-stacked {
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 

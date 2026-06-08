@@ -8,6 +8,8 @@
  * @file dkbIndexedDB.js
  */
 
+import { MOBILE_MAX } from "./breakpoints";
+
 const DB_NAME = "VetRate_DKB";
 const DB_VERSION = 1;
 const STORE_NAME = "knowledge_base";
@@ -25,7 +27,7 @@ export const WEB_DATABASE_COUNT = 7988;
 export const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
   const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  const isSmallScreen = window.innerWidth < 768;
+  const isSmallScreen = window.innerWidth < MOBILE_MAX;
   const ua = navigator.userAgent.toLowerCase();
   const mobileKeywords = ["mobile", "android", "iphone", "ipad", "ipod"];
   const isMobileUA = mobileKeywords.some((keyword) => ua.includes(keyword));
@@ -115,6 +117,7 @@ export const getCachedEntryCount = async () => {
 export const downloadFullDKB = async (onProgress = () => {}) => {
   try {
     onProgress(5);
+    // eslint-disable-next-line no-console
     console.log("[DKB] Starting full database download...");
 
     // First try to fetch the full database
@@ -151,6 +154,7 @@ export const downloadFullDKB = async (onProgress = () => {}) => {
     const chunks = [];
     let receivedLength = 0;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -178,6 +182,7 @@ export const downloadFullDKB = async (onProgress = () => {}) => {
     const data = JSON.parse(jsonString);
 
     const entries = data.entries || data || [];
+    // eslint-disable-next-line no-console
     console.log(
       `[DKB] Parsed ${entries.length} entries (${isFullDB ? "FULL" : "web-optimized"})`,
     );
@@ -231,6 +236,7 @@ export const downloadFullDKB = async (onProgress = () => {}) => {
     });
 
     onProgress(100);
+    // eslint-disable-next-line no-console
     console.log(`[DKB] ✅ Cached ${entries.length} entries in IndexedDB`);
 
     // Dispatch event for UI updates
@@ -325,6 +331,7 @@ export const getCachedSourceCounts = async () => {
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
     });
 
+    // eslint-disable-next-line no-console
     console.log("[DKB] Calculated source counts from cache:", sourceCounts);
     return sourceCounts;
   } catch (err) {
@@ -343,6 +350,7 @@ export const smartLoadDKB = async (onProgress = () => {}) => {
   const isMobile = isMobileDevice();
   const isCached = await isFullDKBCached();
 
+  // eslint-disable-next-line no-console
   console.log(`[DKB] Smart load: mobile=${isMobile}, cached=${isCached}`);
 
   // If already cached, load from cache
@@ -353,6 +361,7 @@ export const smartLoadDKB = async (onProgress = () => {}) => {
 
   // Desktop: Auto-download full database
   if (!isMobile) {
+    // eslint-disable-next-line no-console
     console.log("[DKB] Desktop detected - downloading full database...");
     const result = await downloadFullDKB(onProgress);
     if (result.success) {
@@ -362,6 +371,7 @@ export const smartLoadDKB = async (onProgress = () => {}) => {
   }
 
   // Mobile (not cached): Load web-optimized version
+  // eslint-disable-next-line no-console
   console.log("[DKB] Loading web-optimized database...");
   try {
     const response = await fetch(WEB_DKB_URL);

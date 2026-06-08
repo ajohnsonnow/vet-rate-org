@@ -1,8 +1,716 @@
 {
-  "version": "1.20.0",
-  "lastUpdated": "2026-03-21",
+  "version": "1.23.1",
+  "lastUpdated": "2026-06-08",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.23.1",
+      "date": "2026-06-08",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.0",
+      "changelog": [
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "resolve 7 Snyk/cSpell problems tab findings",
+          "description": "resolve 7 Snyk/cSpell problems tab findings"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "audit(s9): mobile a11y safety net, semgrep tuning, CI injection hardening",
+          "description": "audit(s9): mobile a11y safety net, semgrep tuning, CI injection hardening"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.0",
+          "description": "release v1.23.0"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "sync build artifacts after commit G (stats, version date, legal HTML)",
+          "description": "sync build artifacts after commit G (stats, version date, legal HTML)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "unlock/deauth UI + cloudSync default-key retirement (commit G)",
+          "description": "unlock/deauth UI + cloudSync default-key retirement (commit G)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "drain ESLint warning backlog (unused vars, dead imports, entities, no-console)",
+          "description": "drain ESLint warning backlog (unused vars, dead imports, entities, no-console)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "close keystore adversarial findings (verify-before-commit, KEYSTORE_LOCKED, corruption/crash detection, Web Locks)",
+          "description": "close keystore adversarial findings (verify-before-commit, KEYSTORE_LOCKED, corruption/crash detection, Web Locks)"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "sync AI-rules mirrors to Opus 4.8 model guidance",
+          "description": "sync AI-rules mirrors to Opus 4.8 model guidance"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "at-rest device-passphrase keystore (KEK-wraps-DEK) (commit F)",
+          "description": "at-rest device-passphrase keystore (KEK-wraps-DEK) (commit F)"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "pin cloudSync V1 decrypt + reopen at-rest key-custody scope (commit E)",
+          "description": "pin cloudSync V1 decrypt + reopen at-rest key-custody scope (commit E)"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record piiScrubber + lhci closure; pause rotation/deauth at owner gate",
+          "description": "record piiScrubber + lhci closure; pause rotation/deauth at owner gate"
+        },
+        {
+          "type": "ci",
+          "category": "Other",
+          "title": "promote lhci SEO category warn->error; keep perf budgets informational",
+          "description": "promote lhci SEO category warn->error; keep perf budgets informational"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "harden red-team PII traps (zero-width-in-number, full-width)",
+          "description": "harden red-team PII traps (zero-width-in-number, full-width)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "NFKC-normalize before PII scan; fix leaky legalAnswerer scrub",
+          "description": "NFKC-normalize before PII scan; fix leaky legalAnswerer scrub"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record PWA/offline + SEO worklist (manifest, meta, robots/sitemap)",
+          "description": "record PWA/offline + SEO worklist (manifest, meta, robots/sitemap)"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "add PWA + SEO Playwright gate, lhci SEO assertion, CI pwa job",
+          "description": "add PWA + SEO Playwright gate, lhci SEO assertion, CI pwa job"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "emit brand-aware robots.txt + sitemap.xml at build",
+          "description": "emit brand-aware robots.txt + sitemap.xml at build"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "add Open Graph / Twitter / canonical + iOS PWA meta",
+          "description": "add Open Graph / Twitter / canonical + iOS PWA meta"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "repair PWA manifest icons (generate 192/512 + maskable)",
+          "description": "repair PWA manifest icons (generate 192/512 + maskable)"
+        },
+        {
+          "type": "ci",
+          "category": "Other",
+          "title": "add Lighthouse + Core Web Vitals mobile gates",
+          "description": "add Lighthouse + Core Web Vitals mobile gates"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "reserve image dimensions + prioritize the LCP hero on mobile",
+          "description": "reserve image dimensions + prioritize the LCP hero on mobile"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "close no-undef + no-dupe-keys correctness backlog",
+          "description": "close no-undef + no-dupe-keys correctness backlog"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "no-AI path opens AI settings instead of crashing (3 tools)",
+          "description": "no-AI path opens AI settings instead of crashing (3 tools)"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "mark S13 worklist complete (type-check job committed)",
+          "description": "mark S13 worklist complete (type-check job committed)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "add jsx-a11y + react-hooks lint plugins + type-check CI gate",
+          "description": "add jsx-a11y + react-hooks lint plugins + type-check CI gate"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate CFileAnalyzer privacy-consent gate to ResponsiveModal",
+          "description": "migrate CFileAnalyzer privacy-consent gate to ResponsiveModal"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "add Playwright dialog-contract + skip-link e2e gate",
+          "description": "add Playwright dialog-contract + skip-link e2e gate"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "add blocking axe-core accessibility gate + CI job",
+          "description": "add blocking axe-core accessibility gate + CI job"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "a11y(s12): remediate WCAG serious/critical surfaced by the axe gate",
+          "description": "a11y(s12): remediate WCAG serious/critical surfaced by the axe gate"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record hard-redesign chunk (AIAssistant, DocIntel, VeteranTranslator, TheTribunal)",
+          "description": "record hard-redesign chunk (AIAssistant, DocIntel, VeteranTranslator, TheTribunal)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "redesign TheTribunal for mobile + migrate to ResponsiveModal",
+          "description": "redesign TheTribunal for mobile + migrate to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "redesign VeteranTranslator two-pane for mobile + migrate to ResponsiveModal",
+          "description": "redesign VeteranTranslator two-pane for mobile + migrate to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate DocumentIntelligenceBriefing to ResponsiveModal",
+          "description": "migrate DocumentIntelligenceBriefing to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate AIAssistant Expanded view to ResponsiveModal",
+          "description": "migrate AIAssistant Expanded view to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "redesign IntelligenceBriefing for mobile + migrate to ResponsiveModal",
+          "description": "redesign IntelligenceBriefing for mobile + migrate to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "redesign WhatIfSandbox for mobile + migrate to ResponsiveModal",
+          "description": "redesign WhatIfSandbox for mobile + migrate to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate FeatureLookup admin panel to ResponsiveModal",
+          "description": "migrate FeatureLookup admin panel to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ClaimStressTest war-game to ResponsiveModal",
+          "description": "migrate ClaimStressTest war-game to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "a11y for UserManual (hand-applied) + VaSandboxTest → ResponsiveModal",
+          "description": "a11y for UserManual (hand-applied) + VaSandboxTest → ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate QuickExitButton + UnityLanguageTutor to ResponsiveModal",
+          "description": "migrate QuickExitButton + UnityLanguageTutor to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ShareButton + DemoDataLoader to ResponsiveModal",
+          "description": "migrate ShareButton + DemoDataLoader to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate MultiCloudManager to ResponsiveModal + theme-normalize",
+          "description": "migrate MultiCloudManager to ResponsiveModal + theme-normalize"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate LocalAIPanel to ResponsiveModal + theme-normalize",
+          "description": "migrate LocalAIPanel to ResponsiveModal + theme-normalize"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate DoctorsPacket to ResponsiveModal + theme-aware",
+          "description": "migrate DoctorsPacket to ResponsiveModal + theme-aware"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate BugLookup (main + Resolve) to ResponsiveModal + theme-normalize",
+          "description": "migrate BugLookup (main + Resolve) to ResponsiveModal + theme-normalize"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate AICommandCenter to ResponsiveModal + theme-normalize",
+          "description": "migrate AICommandCenter to ResponsiveModal + theme-normalize"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "a11y(s12): migrate AdminLogin to ResponsiveModal + normalize theming",
+          "description": "a11y(s12): migrate AdminLogin to ResponsiveModal + normalize theming"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "author NVDA/VoiceOver/TalkBack SR manual checklist",
+          "description": "author NVDA/VoiceOver/TalkBack SR manual checklist"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record Bucket E verification — passive surfaces compliant, no code change",
+          "description": "record Bucket E verification — passive surfaces compliant, no code change"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "a11y(s12): theme + dialog-contract the light-only / dynamic-color overlays",
+          "description": "a11y(s12): theme + dialog-contract the light-only / dynamic-color overlays"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "a11y(s12): live-region + label hygiene on passive surfaces",
+          "description": "a11y(s12): live-region + label hygiene on passive surfaces"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "a11y(s12): complete dialog contract for Bucket A overlays",
+          "description": "a11y(s12): complete dialog contract for Bucket A overlays"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate SharkRadar modal wrapper to ResponsiveModal",
+          "description": "migrate SharkRadar modal wrapper to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate CommandersChecklist modal to ResponsiveModal",
+          "description": "migrate CommandersChecklist modal to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate VoiceInput safety prompt + SecurityBadge to ResponsiveModal",
+          "description": "migrate VoiceInput safety prompt + SecurityBadge to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ClaimEvidenceUpload + DbqFinder to ResponsiveModal",
+          "description": "migrate ClaimEvidenceUpload + DbqFinder to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ProfileImportConfirmModal + LanguageSuggestionModal to ResponsiveModal",
+          "description": "migrate ProfileImportConfirmModal + LanguageSuggestionModal to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate VAGovRatingPaster + Helper ExplainerModal to ResponsiveModal",
+          "description": "migrate VAGovRatingPaster + Helper ExplainerModal to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate BugSquasher + FeatureRequest wizards to ResponsiveModal",
+          "description": "migrate BugSquasher + FeatureRequest wizards to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate BVA-data tool modals to ResponsiveModal (Chunk 4)",
+          "description": "migrate BVA-data tool modals to ResponsiveModal (Chunk 4)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate non-dismissible gates to ResponsiveModal (Chunk 3)",
+          "description": "migrate non-dismissible gates to ResponsiveModal (Chunk 3)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate WhatsNewModal to ResponsiveModal (Chunk 2)",
+          "description": "migrate WhatsNewModal to ResponsiveModal (Chunk 2)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "hand-apply focus-trap + dialog a11y to bespoke overlays (Chunk 1)",
+          "description": "hand-apply focus-trap + dialog a11y to bespoke overlays (Chunk 1)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "add error boundaries — app-level + per-cluster, one-tap crash report",
+          "description": "add error boundaries — app-level + per-cluster, one-tap crash report"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "restore corrupted glyphs (U+FFFD) in legal + reference text",
+          "description": "restore corrupted glyphs (U+FFFD) in legal + reference text"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record S10 verification gate green + closeout",
+          "description": "record S10 verification gate green + closeout"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "remove SmallScreenWarning (gated deletion satisfied)",
+          "description": "remove SmallScreenWarning (gated deletion satisfied)"
+        },
+        {
+          "type": "ci",
+          "category": "Other",
+          "title": "add blocking mobile layout gate + test:e2e:mobile script",
+          "description": "add blocking mobile layout gate + test:e2e:mobile script"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "centralize viewport px thresholds in one source",
+          "description": "centralize viewport px thresholds in one source"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record grid mobile workstream — detector, apply, deferrals",
+          "description": "record grid mobile workstream — detector, apply, deferrals"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "responsive address row in FOIAGenerator (ambiguous hand-fix)",
+          "description": "responsive address row in FOIAGenerator (ambiguous hand-fix)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "responsive grids for medium-severity mobile crowding",
+          "description": "responsive grids for medium-severity mobile crowding"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "responsive grids for 3 high-severity mobile overflows",
+          "description": "responsive grids for 3 high-severity mobile overflows"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "detect child col-span fixed layouts in grid audit",
+          "description": "detect child col-span fixed layouts in grid audit"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "add reporting-only grid-mobile audit detector + worklist",
+          "description": "add reporting-only grid-mobile audit detector + worklist"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record Cluster H migration + critic-surface deferrals",
+          "description": "record Cluster H migration + critic-surface deferrals"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate RegulationsReference to ResponsiveModal (Cluster H3)",
+          "description": "migrate RegulationsReference to ResponsiveModal (Cluster H3)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate VisionSimulator to ResponsiveModal (Cluster H2)",
+          "description": "migrate VisionSimulator to ResponsiveModal (Cluster H2)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate TermsOfServicePage to ResponsiveModal (Cluster H1)",
+          "description": "migrate TermsOfServicePage to ResponsiveModal (Cluster H1)"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "mark Cluster G complete (G1+G2) with honest UserManual deferral note",
+          "description": "mark Cluster G complete (G1+G2) with honest UserManual deferral note"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster G2 embedded full-page components to ResponsiveModal",
+          "description": "migrate Cluster G2 embedded full-page components to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster G1 standalone visualizers to ResponsiveModal",
+          "description": "migrate Cluster G1 standalone visualizers to ResponsiveModal"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "mark Cluster F complete + record F1-F9 migration",
+          "description": "mark Cluster F complete + record F1-F9 migration"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate DbqBrowser cluster to ResponsiveModal",
+          "description": "migrate DbqBrowser cluster to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate CloudSyncManager to ResponsiveModal (Cluster F8)",
+          "description": "migrate CloudSyncManager to ResponsiveModal (Cluster F8)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate TacticalCalculator modals to ResponsiveModal (Cluster F7)",
+          "description": "migrate TacticalCalculator modals to ResponsiveModal (Cluster F7)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate CAPSimulator modals to ResponsiveModal (Cluster F6)",
+          "description": "migrate CAPSimulator modals to ResponsiveModal (Cluster F6)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate MyPacket modals to ResponsiveModal (Cluster F5)",
+          "description": "migrate MyPacket modals to ResponsiveModal (Cluster F5)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ClaimNavigator help + Pathfinder pair to ResponsiveModal (Cluster F4)",
+          "description": "migrate ClaimNavigator help + Pathfinder pair to ResponsiveModal (Cluster F4)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate BackupManager + PainPainter to ResponsiveModal (Cluster F3)",
+          "description": "migrate BackupManager + PainPainter to ResponsiveModal (Cluster F3)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate VKB pair to ResponsiveModal (Cluster F2)",
+          "description": "migrate VKB pair to ResponsiveModal (Cluster F2)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster F1 leaf/nested modals + ref-count scroll lock",
+          "description": "migrate Cluster F1 leaf/nested modals + ref-count scroll lock"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record Cluster E migration in worklist",
+          "description": "record Cluster E migration in worklist"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster E wide/page-scroll modals to ResponsiveModal",
+          "description": "migrate Cluster E wide/page-scroll modals to ResponsiveModal"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record Cluster C + D migration in progress log",
+          "description": "record Cluster C + D migration in progress log"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster D2 wizard modals to ResponsiveModal",
+          "description": "migrate Cluster D2 wizard modals to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster D1 wizard modals to ResponsiveModal",
+          "description": "migrate Cluster D1 wizard modals to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster C2 dark/nested modals to ResponsiveModal",
+          "description": "migrate Cluster C2 dark/nested modals to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster C1 standard modals to ResponsiveModal",
+          "description": "migrate Cluster C1 standard modals to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate Cluster B modals to ResponsiveModal",
+          "description": "migrate Cluster B modals to ResponsiveModal"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate TimeMachine full-modal to ResponsiveModal",
+          "description": "migrate TimeMachine full-modal to ResponsiveModal"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "record consent-gate migration + honest overflow metric in worklist",
+          "description": "record consent-gate migration + honest overflow metric in worklist"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate consent gates to ResponsiveModal + honest mobile overflow metric",
+          "description": "migrate consent gates to ResponsiveModal + honest mobile overflow metric"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "add header slot + gate props to ResponsiveModal (additive)",
+          "description": "add header slot + gate props to ResponsiveModal (additive)"
+        },
+        {
+          "type": "refactor",
+          "category": "Other",
+          "title": "migrate ContactUs + PrivacyPolicy to ResponsiveModal; harden mobile gate",
+          "description": "migrate ContactUs + PrivacyPolicy to ResponsiveModal; harden mobile gate"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "discovery worklist + verified inventory (audit S9-S17)",
+          "description": "discovery worklist + verified inventory (audit S9-S17)"
+        }
+      ]
+    },
+    {
+      "version": "1.23.0",
+      "date": "2026-05-18",
+      "isFirstRelease": false,
+      "releaseTitle": "Audit Closeout — Lazy Chunks + Signed Releases + Local-First Logging",
+      "changelog": [
+        {
+          "type": "perf",
+          "category": "Frontend",
+          "title": "67 modal-shaped feature surfaces moved behind React.lazy()",
+          "description": "App.jsx no longer eager-imports the entire tool catalog. Each feature surface (PrivacyPolicy, MyPacket, CAPSimulator, NexusBuilder, AICommandCenter, PACTActNavigator, …) is its own vite chunk fetched on first open. Main entry: 196 KB gz. Modal cluster wrapped in a single <Suspense fallback={<LoadingBunker />}> boundary. Closes audit rows #23 + #28."
+        },
+        {
+          "type": "feat",
+          "category": "Supply chain",
+          "title": "Sigstore keyless cosign + SLSA-3 provenance on every release",
+          "description": ".github/workflows/release.yml now signs SBOMs + dist.tar.gz with cosign (GitHub OIDC, no key storage) and emits a SLSA Level 3 provenance attestation via the pinned slsa-github-generator@v2.0.0 reusable workflow. Verification recipes in docs/SUPPLY_CHAIN.md. Closes audit rows #20 + #21."
+        },
+        {
+          "type": "feat",
+          "category": "Observability",
+          "title": "Local-first structured logger (zero-knowledge friendly)",
+          "description": "src/utils/logger.js: debug/info/warn/error levels, 500-entry FIFO ring buffer, dev console passthrough, opt-in IndexedDB persistence (vet_rate_log_persist localStorage flag), single exportLogs() egress. No OTel/Sentry/Datadog — those rejections are explained in docs/OBSERVABILITY.md. Closes audit row #38."
+        },
+        {
+          "type": "docs",
+          "category": "DX",
+          "title": "Diátaxis categorical doc index",
+          "description": "docs/DOCS_INDEX.md places every engineering doc in one of four quadrants (Tutorials, How-to, Reference, Explanation) with a one-line hook. Veteran-facing manual at docs/index.md stays separate. Closes audit row #37."
+        }
+      ]
+    },
+    {
+      "version": "1.21.0",
+      "date": "2026-05-15",
+      "isFirstRelease": false,
+      "releaseTitle": "Best-Practices Audit Complete — Legal-RAG + Supply-Chain Hardening",
+      "changelog": [
+        {
+          "type": "feat",
+          "category": "AI / Legal-RAG",
+          "title": "Legal-RAG runtime over 38 CFR Part 4",
+          "description": "New legalRag.js + legalAnswerer.js services with dual-LLM split (extractor → JSON facts → synthesizer) and LegalCitation badges that link to canonical .gov sources with fetched_at currency dates."
+        },
+        {
+          "type": "feat",
+          "category": "Knowledge / Ops",
+          "title": "Weekly legal-index ingestion cron",
+          "description": "GitHub Action refreshes the legal-index every Monday, opens a PR on content diff, and files a stale-source issue on fetcher failure. External-truth registry at knowledge-sources.yaml."
+        },
+        {
+          "type": "chore",
+          "category": "Supply chain",
+          "title": "Zero npm audit vulnerabilities + SBOM on release",
+          "description": "protobufjs and @xmldom/xmldom advisories resolved via npm overrides. Release tag now generates CycloneDX + SPDX SBOMs and attaches them to the GitHub Release."
+        },
+        {
+          "type": "chore",
+          "category": "DevSecOps",
+          "title": "CI security gates flipped to blocking",
+          "description": "npm audit (prod, ≥high) and semgrep SAST (--strict) now block CI. Preflight contract enforcement defaults to STRICT_AUDIT=true."
+        }
+      ]
+    },
     {
       "version": "1.20.0",
       "date": "2026-03-20",
@@ -197,378 +905,6 @@
           "category": "Local AI",
           "title": "Cleaner Settings Interface",
           "description": "Simplified WebGPU configuration - removed experimental toggles for a more intuitive setup experience"
-        }
-      ]
-    },
-    {
-      "version": "1.4.2.4",
-      "date": "2026-01-21",
-      "isFirstRelease": false,
-      "releaseTitle": "Local AI Critical Hotfixes - v1.4.2.4",
-      "changelog": [
-        {
-          "type": "fix",
-          "category": "Local AI",
-          "title": "DD214 Analyzer UX Fix",
-          "description": "Analysis now automatically shows confirmation popup with extracted data - no more confusion about where data went"
-        },
-        {
-          "type": "fix",
-          "category": "Local AI",
-          "title": "AI Badge Model Name",
-          "description": "Fixed race condition causing wrong model name in status badge - now updates immediately when model loads"
-        },
-        {
-          "type": "fix",
-          "category": "Local AI",
-          "title": "WebGPU Adapter Reinit",
-          "description": "Fixed 'adapter consumed' error - experimental mode toggle now works without browser reload"
-        },
-        {
-          "type": "fix",
-          "category": "Local AI",
-          "title": "Experimental Mode Crash",
-          "description": "Fixed ReferenceError crash when accessing experimental mode settings"
-        },
-        {
-          "type": "fix",
-          "category": "Local AI",
-          "title": "WGSL Shader Support",
-          "description": "Added chromium_experimental_subgroup_matrix extension for u8 type support in WebLLM models"
-        },
-        {
-          "type": "documentation",
-          "category": "Support",
-          "title": "Local AI Setup Guide",
-          "description": "Added comprehensive FAQ with Chrome flags instructions for Windows/Mac/Linux and troubleshooting steps"
-        }
-      ]
-    },
-    {
-      "version": "1.4.2",
-      "date": "2026-01-21",
-      "isFirstRelease": false,
-      "releaseTitle": "Faraday Cage Protocol - Local AI Arrives - v1.4.2",
-      "changelog": [
-        {
-          "type": "feature",
-          "category": "AI & Privacy",
-          "title": "WebGPU Local AI (Faraday Cage)",
-          "description": "Run AI models 100% locally in browser - zero data ever leaves your device. Supports Llama, Phi, Qwen, DeepSeek models with GPU acceleration",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "AI Configuration",
-          "title": "AI Settings Modal",
-          "description": "Global AI configuration interface - switch between Cloud AI (Gemini) and Local AI, select models, manage WebGPU adapters",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "DD214 Analyzer Enhancements",
-          "description": "AI-powered extraction with automatic profile import confirmation - selective field import with side-by-side comparison",
-          "isNew": true
-        },
-        {
-          "type": "improvement",
-          "category": "Infrastructure",
-          "title": "Dynamic Stats System",
-          "description": "All feature counts update from single source of truth - eliminates hardcoded numbers across entire codebase"
-        }
-      ]
-    },
-    {
-      "version": "1.2.0",
-      "date": "2026-01-19",
-      "isFirstRelease": true,
-      "releaseTitle": "The Complete VA Claims Arsenal - v1.2.0",
-      "changelog": [
-        {
-          "type": "feature",
-          "category": "Calculate Your Rating",
-          "title": "Tactical Calculator",
-          "description": "Advanced combined rating calculator with VA math, bilateral factors, dependents, and 2026 pay rates"
-        },
-        {
-          "type": "feature",
-          "category": "Calculate Your Rating",
-          "title": "Million Dollar Dashboard",
-          "description": "Calculate your lifetime benefit value ($1-2.5M+) including VA pay, property tax savings, education benefits, and healthcare"
-        },
-        {
-          "type": "feature",
-          "category": "Calculate Your Rating",
-          "title": "What-If Sandbox",
-          "description": "Drag-and-drop rating scenario planner with real VA math - see how adding conditions affects your combined rating"
-        },
-        {
-          "type": "feature",
-          "category": "Calculate Your Rating",
-          "title": "Retro Pay Hunter",
-          "description": "Find missed backpay from rating history errors and CUE claims using historical VA pay rates 2020-2026",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Calculate Your Rating",
-          "title": "Time Machine",
-          "description": "Intent to File countdown with backpay tracking - never miss your effective date deadline",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "Secondary Scout",
-          "description": "Discover 500+ medically-recognized secondary conditions with probability ratings and nexus evidence"
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "C&P Exam Simulator",
-          "description": "Practice DBQ-aligned questions, view actual exam questions BEFORE your C&P, and get percentage predictions"
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "Pathfinder",
-          "description": "AI-powered strategic roadmap from initial claim through appeals - personalized claim strategy"
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "MOS Hazard Matcher",
-          "description": "Link military occupational specialties to exposures and conditions - prove your job caused your injuries"
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "PACT Act Navigator",
-          "description": "Identify toxic exposure presumptive conditions - Agent Orange, burn pits, Gulf War, radiation. Skip the nexus letter!"
-        },
-        {
-          "type": "feature",
-          "category": "Discover Your Claims",
-          "title": "Web of Conditions",
-          "description": "Interactive force-directed graph visualization showing how disabilities connect to each other"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "C-File AI Analyzer",
-          "description": "Drop in your Claims File PDF - AI finds evidence in thousands of pages. What others charge $500+ for!"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Blue Button X-Ray",
-          "description": "Parse VA health records for claim-relevant diagnoses - extract evidence from your medical records"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "PDF Evidence Finder (The Needle)",
-          "description": "Search 2,000+ page STRs for keywords - find the needle in the haystack",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Witness Bench",
-          "description": "AI-assisted buddy statement generator with smart interview questions for powerful lay evidence"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Nexus Builder",
-          "description": "Generate medical nexus statements with optional AI enhancement - the missing link for service connection"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Forms Helper with Auto-Scribe",
-          "description": "Guided assistance for 16+ VA forms with AI-powered PDF auto-fill - never fill a form wrong again"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Symptom Logger",
-          "description": "Track daily symptoms with body map selector for evidence documentation - build your symptom diary"
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Pain Painter",
-          "description": "Interactive body map with glow effects - paint your symptoms and get diagnostic code suggestions",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "Evidence Timeline",
-          "description": "Visual continuity tracker with automatic gap detection - show continuous symptoms since service",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Build Your Evidence",
-          "title": "FOIA Keysmith",
-          "description": "Generate FOIA requests for military and VA records - unlock your C-File"
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Red Team",
-          "description": "AI devil's advocate - finds weak language before the VA does. Strengthen your statements!"
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Claim Stress Test (The War Game)",
-          "description": "Adversarial review - AI Skeptical Examiner stress-tests your claim before submission",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Decision Decoder",
-          "description": "AI translation of VA decision letters to plain English - understand what VA actually said"
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Denials Decoder",
-          "description": "OCR scan denial letters + AI analysis - drop in a photo or PDF of your denial letter",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Shark Radar",
-          "description": "Identify predatory claim services and avoid scams - protect yourself from claim sharks"
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Consistency Engine",
-          "description": "Auto-detect contradictions in your statements - fix inconsistencies before VA finds them",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Evidence Gap Visualizer",
-          "description": "See exactly what evidence is missing for your target rating - completeness gauge shows gaps",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Quality Control",
-          "title": "Risk Assessment (Poke the Bear)",
-          "description": "Check protections before filing - identify what could go wrong with your claim"
-        },
-        {
-          "type": "feature",
-          "category": "Maximize Your Rating",
-          "title": "TDIU Builder",
-          "description": "Total Disability Individual Unemployability - get 100% pay even at lower combined ratings"
-        },
-        {
-          "type": "feature",
-          "category": "Maximize Your Rating",
-          "title": "State Benefit Hunter",
-          "description": "Discover state-level veteran benefits by location - all 50 states + DC covered"
-        },
-        {
-          "type": "feature",
-          "category": "Maximize Your Rating",
-          "title": "The Tribunal",
-          "description": "Voice-interactive mock BVA hearing simulator - practice before your real hearing",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Maximize Your Rating",
-          "title": "Legislative Watchdog",
-          "description": "Track VA rule changes in the Federal Register - never miss a new presumptive condition"
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "VSO Finder",
-          "description": "Locate free, accredited Veterans Service Officers near you - get free professional help"
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "The Bunker (Backup Manager)",
-          "description": "Export/import all your data - never lose your work, even if you clear your browser",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "Cloud Sync",
-          "description": "Back up to YOUR Google Drive (encrypted) - access your data from any device",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "My Packet",
-          "description": "Save and manage all your claims evidence in one place - your personal claims folder"
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "VA Resources Hub",
-          "description": "Direct links to official VA programs, crisis support, and benefits - curated resource library"
-        },
-        {
-          "type": "feature",
-          "category": "Support & Resources",
-          "title": "Field Manual",
-          "description": "Comprehensive guide to using every feature - your complete reference"
-        },
-        {
-          "type": "feature",
-          "category": "AI & Privacy",
-          "title": "WebGPU Local AI",
-          "description": "Run AI analysis 100% locally using WebGPU - Faraday Cage Protocol ensures data never leaves your device",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "AI & Privacy",
-          "title": "Sanitize & Share",
-          "description": "Screenshot your results with automatic PII redaction - safe to share on Reddit/Facebook",
-          "isNew": true
-        },
-        {
-          "type": "security",
-          "category": "Privacy",
-          "title": "100% Client-Side Processing",
-          "description": "All processing happens in YOUR browser. No accounts, no tracking, no PII storage. Your data stays yours."
-        },
-        {
-          "type": "improvement",
-          "category": "Accessibility",
-          "title": "WCAG 2.1 AA Compliance",
-          "description": "Full keyboard navigation, screen reader support, color blindness modes, and adjustable font sizes"
-        },
-        {
-          "type": "improvement",
-          "category": "Data",
-          "title": "751 VA Disabilities Validated",
-          "description": "Complete coverage of all body systems from 38 CFR Part 4, verified against eCFR January 2026"
-        },
-        {
-          "type": "improvement",
-          "category": "Platform",
-          "title": "Dynamic Stats & Updates",
-          "description": "All statistics dynamically update from single source of truth - always accurate numbers",
-          "isNew": true
         }
       ]
     }

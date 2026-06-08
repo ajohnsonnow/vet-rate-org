@@ -154,7 +154,7 @@ CRITICAL RULES:
 8. MENTAL HEALTH SENSITIVITY: Pay special attention to mental health indicators, even subtle ones.`;
 
 // Chunk-specific prompt (tells AI this is a partial file)
-const CHUNK_PROMPT_PREFIX = `IMPORTANT: This is CHUNK {chunkNum} of {totalChunks} from a large C-File.
+const _CHUNK_PROMPT_PREFIX = `IMPORTANT: This is CHUNK {chunkNum} of {totalChunks} from a large C-File.
 Pages in this chunk: {startPage} to {endPage}.
 Focus on extracting findings from THIS chunk only. Findings will be merged with other chunks.
 
@@ -268,6 +268,7 @@ function attemptJSONRepair(jsonStr) {
 
       // If we got at least a summary, return partial result
       if (result.summary) {
+        // eslint-disable-next-line no-console
         console.log("📝 Extracted partial data from truncated response");
         return result;
       }
@@ -319,6 +320,7 @@ function splitIntoChunks(fullText, aiMode) {
       startIndex: match.index,
       endIndex: fullText.length, // Will be updated on next iteration
     });
+    // eslint-disable-next-line no-unused-vars
     lastIndex = match.index;
   }
 
@@ -335,10 +337,12 @@ function splitIntoChunks(fullText, aiMode) {
     ];
   }
 
+  // eslint-disable-next-line no-console
   console.log(`📄 Found ${pages.length} pages in document`);
 
   // If total text fits in one chunk, return as-is
   if (fullText.length <= maxCharsPerChunk) {
+    // eslint-disable-next-line no-console
     console.log(
       `✅ Document fits in single chunk (${fullText.length} chars <= ${maxCharsPerChunk} max)`,
     );
@@ -353,6 +357,7 @@ function splitIntoChunks(fullText, aiMode) {
   }
 
   // Need to split into multiple chunks
+  // eslint-disable-next-line no-console
   console.log(
     `📦 Document too large (${fullText.length} chars > ${maxCharsPerChunk} max), splitting into chunks...`,
   );
@@ -410,8 +415,10 @@ function splitIntoChunks(fullText, aiMode) {
     });
   }
 
+  // eslint-disable-next-line no-console
   console.log(`📦 Split into ${chunks.length} chunks`);
   chunks.forEach((chunk, i) => {
+    // eslint-disable-next-line no-console
     console.log(
       `  Chunk ${i + 1}: Pages ${chunk.startPage}-${chunk.endPage}, ${chunk.text.length} chars`,
     );
@@ -460,6 +467,7 @@ function mergeChunkResults(chunkResults) {
     return chunkResults[0];
   }
 
+  // eslint-disable-next-line no-console
   console.log(`🔀 Merging ${chunkResults.length} chunk results...`);
 
   // Initialize merged result with first chunk's service period (usually most reliable)
@@ -583,6 +591,7 @@ function mergeChunkResults(chunkResults) {
   }
   merged.actionItems = deduplicateActionItems(allActions);
 
+  // eslint-disable-next-line no-console
   console.log(
     `✅ Merged results: ${merged.timeline.length} timeline events, ${merged.potential_claims.length} claims, ${merged.exposures.length} exposures`,
   );
@@ -859,6 +868,7 @@ export async function analyzeCFile(
   const chunks = splitIntoChunks(fullText, aiMode);
   const totalChunks = chunks.length;
 
+  // eslint-disable-next-line no-console
   console.log(`📊 Analysis plan: ${totalChunks} chunk(s), AI mode: ${aiMode}`);
 
   if (totalChunks === 1) {
@@ -1007,7 +1017,7 @@ RULES: Only include findings present in text. Track "--- PAGE X ---" markers for
 /**
  * Analyze a single chunk of text
  */
-async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
+async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
   // Detect if we're using local AI (smaller context)
   const status = getAIStatus();
   const isLocalAI =
@@ -1081,6 +1091,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     // Attempt to repair truncated JSON
     const repaired = attemptJSONRepair(cleanContent);
     if (repaired) {
+      // eslint-disable-next-line no-console
       console.log("✅ Successfully repaired truncated JSON response");
       analysisResult = repaired;
     } else {

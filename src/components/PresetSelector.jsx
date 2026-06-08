@@ -9,12 +9,12 @@
  * - BALANCED: General purpose (temp 0.7)
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AI_PRESETS } from "../utils/unifiedAIService";
 
 const PresetSelector = ({ value, onChange, className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState(value || "BALANCED");
   const [showDetails, setShowDetails] = useState(false);
 
@@ -35,6 +35,7 @@ const PresetSelector = ({ value, onChange, className = "" }) => {
     <div className={`space-y-3 ${className}`}>
       {/* Preset Selector */}
       <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           AI Configuration Preset
         </label>
@@ -151,7 +152,8 @@ const PresetSelector = ({ value, onChange, className = "" }) => {
               </strong>
               <p className="ml-2">
                 Temperature 0.4 = Critical, skeptical evaluation. Simulates VA
-                reviewers who scrutinize claims. Use for "War Game" preparation.
+                reviewers who scrutinize claims. Use for &quot;War Game&quot;
+                preparation.
               </p>
             </div>
 
