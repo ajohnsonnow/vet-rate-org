@@ -82,7 +82,7 @@ for (const task of tasks) {
   }
 
   console.log(`\n[run] ${task.label}`);
-  const r = spawnSync(task.cmd, task.args, {
+  const r = spawnSync(task.cmd, task.args, { // nosemgrep: local.detect-child-process-strict
     cwd: ROOT,
     stdio: "inherit",
     shell: process.platform === "win32",

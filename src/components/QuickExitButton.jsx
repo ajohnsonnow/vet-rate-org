@@ -23,7 +23,7 @@ const QuickExitButton = ({
     "top-left": "fixed top-3 left-3",
     "bottom-right": "fixed bottom-3 right-3",
     "bottom-left": "fixed bottom-3 left-3",
-    floating: "fixed bottom-20 right-4",
+    floating: "fixed bottom-28 right-4",
   };
 
   // Handle click - show confirm for subtle variant, immediate for others

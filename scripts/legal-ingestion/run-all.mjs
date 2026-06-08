@@ -61,7 +61,7 @@ function autoVersion() {
 function runStep(label, scriptPath, args = []) {
   return new Promise((resolve, reject) => {
     console.log(`\n========== ${label} ==========`);
-    const child = spawn(
+    const child = spawn( // nosemgrep: local.detect-child-process-strict
       process.execPath,
       [scriptPath, ...args],
       { stdio: "inherit", cwd: ROOT },

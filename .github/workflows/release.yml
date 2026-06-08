@@ -117,10 +117,12 @@ jobs:
       - name: Create GitHub Release with signed artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+          INPUT_REF: ${{ inputs.ref }}
         run: |
           set -euo pipefail
-          TAG="${{ github.ref_name }}"
-          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then TAG="${{ inputs.ref }}"; fi
+          TAG="$GIT_REF_NAME"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then TAG="$INPUT_REF"; fi
           # Create if missing; uploading to an existing release is idempotent via --clobber.
           gh release view "$TAG" >/dev/null 2>&1 || \
             gh release create "$TAG" --title "$TAG" --generate-notes

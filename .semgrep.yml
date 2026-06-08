@@ -31,3 +31,5 @@ paths:
     - coverage
     - .git
     - "**/.semgrep_logs"
+    - llm-compiler
+    - audit

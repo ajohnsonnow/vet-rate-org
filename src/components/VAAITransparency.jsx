@@ -873,13 +873,17 @@ const VAAITransparency = ({ onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  aria-label={tab.label}
                   className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-colors whitespace-nowrap flex-1 justify-center ${
                     activeTab === tab.id
                       ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <tab.icon
+                    className="h-3 w-3 sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                  />
                   <span className="hidden xs:inline">{tab.label}</span>
                 </button>
               ))}
