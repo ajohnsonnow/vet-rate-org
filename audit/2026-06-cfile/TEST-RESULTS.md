@@ -105,7 +105,71 @@ Replaced the generic `expect.poll(.found)` + `inspectResponsiveModal` assertions
 
 ## Sprint 1 — Real-data ingestion round-trip
 
-> To be populated after Sprint 1 execution.
+### Changes
+
+**`scripts/ingest-cfile.mjs` — OUTPUT_PATH date-stamp fix**
+
+Before:
+
+```js
+const OUTPUT_PATH = 'E:\\Williams_C-FIle\\vet-rate-packet-johnson-anthony-2026-03-21.json';
+```
+
+After:
+
+```js
+const runDate = new Date().toISOString().slice(0, 10);
+const OUTPUT_PATH = `${CFILE_DIR}\\vet-rate-packet-${runDate}.json`;
+```
+
+Each invocation now writes to `vet-rate-packet-YYYY-MM-DD.json`. Multiple runs on the same calendar day still overwrite; runs on different days create separate files.
+
+**`tests/fixtures/redacted-packet.json`** — new synthetic v2.0 packet fixture
+
+| Field | Value |
+|---|---|
+| version | `2.0` |
+| source | `Vet-Rate.org` |
+| PII | All replaced — name `JOHN Q. VETERAN`, SSN `000-00-0000`, file# `C-000-0000`, DOB `1970-01-01` |
+| Claims | 9 conditions (see table below) |
+
+| # | conditionName | DC | selectedRating | claimType |
+|---|---|---|---|---|
+| 1 | Post-Traumatic Stress Disorder (PTSD) | 9411 | 50% | Primary |
+| 2 | Lumbosacral Strain | 5237 | 20% | Primary |
+| 3 | Radiculopathy, Lower Extremity, Left | 8520 | 20% | Secondary |
+| 4 | Radiculopathy, Lower Extremity, Right | 8521 | 10% | Secondary |
+| 5 | Hip, Limitation of Motion, Left | 5252 | 10% | Primary |
+| 6 | Hip, Limitation of Motion, Right | 5252 | 10% | Primary |
+| 7 | Knee, Limitation of Flexion, Left | 5260 | 10% | Primary |
+| 8 | Pes Planus, Bilateral | 5276 | 10% | Primary |
+| 9 | Tinnitus | 6260 | 10% | Primary |
+
+Combined rating implied: ~80% (matches Johnson ground truth; Sprint 2 verifies the calculator).
+
+**`tests/e2e/cfile-packet.spec.ts`** — new e2e spec (4 tests × 3 browsers)
+
+| Test | What it asserts |
+|---|---|
+| fixture is a valid v2.0 packet with 9 conditions | Schema shape, PTSD DC 9411 @ 50%, 2 Secondary claims — pure JS (no browser) |
+| claims are present in localStorage after app boot | `vet_rate_saved_claims` survives app initialization; PTSD entry findable |
+| claims persist across page reload | `vet_rate_saved_claims` intact after `page.reload()`; head + tail IDs present |
+| app boots without crashing with 9 pre-loaded claims | No `pageerror` events (ResizeObserver noise excluded); `body` visible |
+
+### Incidental finding (Sprint 2 scope)
+
+`scripts/ingest-cfile.mjs` emits `ratingPercent` on each claim object; `packetBackup.js` `VALID_CLAIM_FIELDS` uses `selectedRating`. The two field names differ — packets produced by the ingest script cannot be round-tripped through `importCompletePacket` without losing the rating value. Tracked for Sprint 2 dual-calc reconciliation.
+
+### Sprint 1 gate results
+
+| Gate | Status | Count | Notes |
+|---|---|---|---|
+| cfile-packet.spec.ts — chromium | **PASS** | 4/4 | 14.2 s |
+| cfile-packet.spec.ts — firefox | **PASS** | 4/4 | — |
+| cfile-packet.spec.ts — mobile-chrome | **PASS** | 4/4 | — |
+| **Total new tests** | — | **12/12** | — |
+
+Full suite total (all specs, all projects): **711/717** pass (prior 699/705 + 12 new, same 3 pre-existing firefox/mobile-chrome fails, same 3 skips).
 
 ---
 
