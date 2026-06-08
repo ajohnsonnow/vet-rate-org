@@ -441,6 +441,14 @@ export const isDevicePassphraseEnabled = () =>
 export const isKeystoreUnlocked = () => sessionKEK !== null;
 
 /**
+ * Whether the keystore exists but is locked this session — the state the restore
+ * UI branches on to prompt for the device passphrase. Distinct from "no
+ * passphrase set": a disabled keystore is not "locked", it is simply absent.
+ */
+export const isDeviceKeystoreLocked = () =>
+  isDevicePassphraseEnabled() && !isKeystoreUnlocked();
+
+/**
  * Every backup id that has a stored key (plaintext or wrapped).
  */
 export const listBackupKeyIds = () => {
@@ -878,6 +886,90 @@ export const wipeLocalKeystore = () => {
   return toRemove.length;
 };
 
+const RECOVERY_BUNDLE_FORMAT = "vetrate.keystore-recovery";
+
+/**
+ * Export the at-rest keystore — KEK descriptor + verifier + every wrapped DEK —
+ * as a portable bundle the USER downloads and keeps (Q-RECOVERY). Every byte is
+ * already wrapped under the passphrase-anchored KEK, so the bundle is useless
+ * without the device passphrase; this is NOT escrow and we never hold a copy.
+ * Un-migrated plaintext DEKs are deliberately excluded so a bundle can never
+ * carry an unwrapped key. Runs under the keystore lock for a snapshot that is
+ * never captured mid-rotation.
+ */
+const _exportRecoveryBundle = async () => {
+  if (!isDevicePassphraseEnabled()) {
+    throw new Error("Device passphrase is not enabled; nothing to export.");
+  }
+  let meta;
+  try {
+    meta = JSON.parse(localStorage.getItem(KEK_META_KEY));
+  } catch {
+    meta = null;
+  }
+  if (!meta || typeof meta.salt !== "string") {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  const wrappedKeys = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(WRAPPED_KEY_PREFIX)) {
+      wrappedKeys[k.slice(WRAPPED_KEY_PREFIX.length)] = localStorage.getItem(k);
+    }
+  }
+  return {
+    format: RECOVERY_BUNDLE_FORMAT,
+    v: 1,
+    exportedAt: new Date().toISOString(),
+    meta,
+    verifier: localStorage.getItem(KEK_VERIFIER_KEY),
+    verifierTag: localStorage.getItem(KEK_VERIFIER_TAG_KEY),
+    wrappedKeys,
+  };
+};
+
+/**
+ * Restore a recovery bundle onto a device that has NO keystore (fresh or freshly
+ * deauthorized). Refuses to overwrite a live keystore — an import would clobber
+ * its KEK descriptor and orphan every DEK wrapped under it. After import the
+ * keystore is present but LOCKED; the user unlocks with the same passphrase the
+ * bundle was made under (a wrong passphrase or a tampered bundle simply fails
+ * that unlock — there is no pre-existing material to brick). Returns the count
+ * of wrapped keys written.
+ */
+const _importRecoveryBundle = async (bundle) => {
+  if (isDevicePassphraseEnabled()) {
+    throw new Error(
+      "This device already has a passphrase keystore. Deauthorize it before importing a recovery bundle.",
+    );
+  }
+  if (
+    !bundle ||
+    bundle.format !== RECOVERY_BUNDLE_FORMAT ||
+    !bundle.meta ||
+    typeof bundle.meta.salt !== "string" ||
+    typeof bundle.verifier !== "string" ||
+    !bundle.wrappedKeys ||
+    typeof bundle.wrappedKeys !== "object"
+  ) {
+    throw new Error("Not a valid Vet-Rate keystore recovery bundle.");
+  }
+  localStorage.setItem(KEK_META_KEY, JSON.stringify(bundle.meta));
+  localStorage.setItem(KEK_VERIFIER_KEY, bundle.verifier);
+  if (typeof bundle.verifierTag === "string") {
+    localStorage.setItem(KEK_VERIFIER_TAG_KEY, bundle.verifierTag);
+  }
+  let count = 0;
+  for (const [id, wrapped] of Object.entries(bundle.wrappedKeys)) {
+    if (typeof wrapped === "string") {
+      localStorage.setItem(WRAPPED_KEY_PREFIX + id, wrapped);
+      count += 1;
+    }
+  }
+  sessionKEK = null; // imported locked — the user unlocks with the passphrase
+  return count;
+};
+
 /**
  * Store encryption key locally (indexed by backup filename). When a device
  * passphrase is enabled the key is wrapped under the session KEK; refusing to
@@ -936,3 +1028,7 @@ export const getLocalKey = (backupId) =>
   withKeystoreLock(() => _getLocalKey(backupId));
 export const rotateDevicePassphrase = (newPassphrase) =>
   withKeystoreLock(() => _rotateDevicePassphrase(newPassphrase));
+export const exportRecoveryBundle = () =>
+  withKeystoreLock(() => _exportRecoveryBundle());
+export const importRecoveryBundle = (bundle) =>
+  withKeystoreLock(() => _importRecoveryBundle(bundle));
