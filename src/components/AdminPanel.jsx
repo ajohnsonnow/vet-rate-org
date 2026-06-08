@@ -13,7 +13,7 @@
  * Built by a fellow veteran. "Command and control for the mission."
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAdminAuth, getAuthAuditLog } from "../contexts/AdminAuthContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
@@ -27,13 +27,8 @@ import {
   History,
   X,
   ChevronRight,
-  Database,
-  Download,
-  AlertTriangle,
   Settings,
   RefreshCw,
-  Search,
-  Filter,
 } from "lucide-react";
 
 // Import lookup components
@@ -45,6 +40,7 @@ import { getBugStatistics } from "../utils/bugReportStorage";
 import { getFeatureStatistics } from "../utils/featureRequestStorage";
 
 export default function AdminPanel() {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const {
     showAdminPanel,
@@ -172,7 +168,7 @@ export default function AdminPanel() {
             <button
               onClick={closeAdminPanel}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Close Panel (Esc)"
+              aria-label="Close Panel (Esc)"
             >
               <X className="w-5 h-5" />
             </button>

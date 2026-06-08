@@ -7,14 +7,10 @@
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import {
-  readFileAsArrayBuffer,
-  formatFileSize,
-  estimateProcessingTime,
-} from "../utils/pdfExtractor";
+import ResponsiveModal from "./common/ResponsiveModal";
+import { formatFileSize, estimateProcessingTime } from "../utils/pdfExtractor";
 import {
   processFormationDocument,
   PROCESSING_STATES,
@@ -22,14 +18,8 @@ import {
 import {
   analyzeCFile,
   getCFilePrivacyDisclosure,
-  estimateChunks,
-  getContextWindowInfo,
 } from "../utils/cfileAnalyzer";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -50,15 +40,13 @@ export default function CFileAnalyzer({
 }) {
   const { t } = useLanguage();
 
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
-
   // File drop state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   // AI status state (unified AI service handles API keys internally)
+  // eslint-disable-next-line no-unused-vars
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   // Processing state
@@ -83,6 +71,7 @@ export default function CFileAnalyzer({
 
   // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [hasConsented, setHasConsented] = useState(false);
 
   // Results state
@@ -162,11 +151,12 @@ export default function CFileAnalyzer({
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
       setError(t("cfileAnalyzer", "noAiAvailable"));
-      setShowAISettings(true);
+      onOpenAISettings?.();
       return;
     }
 
     setShowPrivacyConsent(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, t]);
 
   // Process the file after consent
@@ -366,6 +356,7 @@ export default function CFileAnalyzer({
       )}
 
       {/* Drop Zone */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
           isDragging
@@ -438,6 +429,7 @@ export default function CFileAnalyzer({
           <SmartAILoadButton
             toolId="cfile-analyzer"
             onLoadComplete={(model) =>
+              // eslint-disable-next-line no-console
               console.log("Smart AI loaded for C-File Analyzer:", model?.name)
             }
           />
@@ -468,38 +460,45 @@ export default function CFileAnalyzer({
     </div>
   );
 
-  // Render privacy consent modal
+  // Privacy consent gate — nested over the main analyzer shell (zIndex 70 > the
+  // shell's 60). Dismissable: Cancel / ESC / backdrop all decline.
   const renderPrivacyConsent = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-            🔒 {t("cfileAnalyzer", "privacyDataHandling")}
-          </h2>
-
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-              {getCFilePrivacyDisclosure()}
-            </pre>
-          </div>
-
-          <div className="mt-6 flex gap-4">
-            <button
-              onClick={() => setShowPrivacyConsent(false)}
-              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              {t("cfileAnalyzer", "cancel")}
-            </button>
-            <button
-              onClick={handleConsentAndProcess}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              {t("cfileAnalyzer", "iUnderstandStart")}
-            </button>
-          </div>
+    <ResponsiveModal
+      isOpen={showPrivacyConsent}
+      onClose={() => setShowPrivacyConsent(false)}
+      size="lg"
+      zIndex={70}
+      labelledBy="cfile-privacy-title"
+      footer={
+        <div className="flex gap-4">
+          <button
+            onClick={() => setShowPrivacyConsent(false)}
+            className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t("cfileAnalyzer", "cancel")}
+          </button>
+          <button
+            onClick={handleConsentAndProcess}
+            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            {t("cfileAnalyzer", "iUnderstandStart")}
+          </button>
         </div>
+      }
+    >
+      <h2
+        id="cfile-privacy-title"
+        className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2"
+      >
+        🔒 {t("cfileAnalyzer", "privacyDataHandling")}
+      </h2>
+
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          {getCFilePrivacyDisclosure()}
+        </pre>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 
   // Render processing state
@@ -1011,92 +1010,88 @@ export default function CFileAnalyzer({
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🔬</span>
-              <div>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  {t("cfileAnalyzer", "title")}
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                    {t("cfileAnalyzer", "ai")}
-                  </span>
-                </h1>
-                <p className="text-sm text-violet-100">
-                  {t("cfileAnalyzer", "subtitle")}
-                </p>
-              </div>
-              <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
-                {t("cfileAnalyzer", "beta")}
-              </span>
-              <span
-                className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
-                title="VA also uses AI for document classification in claims processing"
-              >
-                🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {/* AI Status & LLM Recommendation Badges */}
-              <LLMRecommendationBadge toolId="cfile-analyzer" />
-              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="C-File Analyzer"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-                aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content - Scrollable */}
-        <div className="overflow-y-auto flex-1 p-4">
-          {showPrivacyConsent && renderPrivacyConsent()}
-
-          {isProcessing
-            ? renderProcessing()
-            : analysisResult
-              ? renderDashboard()
-              : renderUploadForm()}
-        </div>
-
-        {/* Footer Disclaimer */}
-        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="full"
+        labelledBy="cfile-analyzer-title"
+        footer={
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
             ⚠️ {t("cfileAnalyzer", "footerDisclaimer")}
           </p>
-        </div>
-      </div>
-    </div>
+        }
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
+            <div className="px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🔬</span>
+                <div>
+                  <h1
+                    id="cfile-analyzer-title"
+                    className="text-2xl font-bold text-white flex items-center gap-2"
+                  >
+                    {t("cfileAnalyzer", "title")}
+                    <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                      {t("cfileAnalyzer", "ai")}
+                    </span>
+                  </h1>
+                  <p className="text-sm text-violet-100">
+                    {t("cfileAnalyzer", "subtitle")}
+                  </p>
+                </div>
+                <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
+                  {t("cfileAnalyzer", "beta")}
+                </span>
+                <span
+                  className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
+                  aria-label="VA also uses AI for document classification in claims processing"
+                >
+                  🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* AI Status & LLM Recommendation Badges */}
+                <LLMRecommendationBadge toolId="cfile-analyzer" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="C-File Analyzer"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                  aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        {isProcessing
+          ? renderProcessing()
+          : analysisResult
+            ? renderDashboard()
+            : renderUploadForm()}
+      </ResponsiveModal>
+      {renderPrivacyConsent()}
+    </>
   );
 }

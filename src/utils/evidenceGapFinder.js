@@ -181,7 +181,7 @@ export function findEvidenceGaps(decisionLetterText, cFileText) {
         const previewLower = segment.preview.toLowerCase();
 
         // Check for matching keywords
-        for (const [typeName, typeInfo] of Object.entries(EVIDENCE_TYPES)) {
+        for (const [_typeName, typeInfo] of Object.entries(EVIDENCE_TYPES)) {
           for (const pattern of typeInfo.patterns) {
             if (mentionedLower.match(pattern) && previewLower.match(pattern)) {
               evidenceItem.mentioned = true;

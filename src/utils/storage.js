@@ -172,6 +172,7 @@ export async function migrateFromLocalStorage() {
   };
 
   try {
+    // eslint-disable-next-line no-console
     console.log("🔄 Starting migration from localStorage to IndexedDB...");
 
     // Get all localStorage keys
@@ -181,6 +182,7 @@ export async function migrateFromLocalStorage() {
       if (key) allKeys.push(key);
     }
 
+    // eslint-disable-next-line no-console
     console.log(`📦 Found ${allKeys.length} keys in localStorage`);
 
     // Migrate each key
@@ -191,6 +193,7 @@ export async function migrateFromLocalStorage() {
           await storage.setItem(key, value);
           migrationResults.migratedKeys.push(key);
           migrationResults.totalSize += value.length;
+          // eslint-disable-next-line no-console
           console.log(`✅ Migrated: ${key} (${value.length} bytes)`);
         }
       } catch (error) {
@@ -205,12 +208,14 @@ export async function migrateFromLocalStorage() {
 
     migrationResults.success = migrationResults.failedKeys.length === 0;
 
+    // eslint-disable-next-line no-console
     console.log(
       `✨ Migration complete! Migrated ${migrationResults.migratedKeys.length} keys (${(migrationResults.totalSize / 1024).toFixed(2)} KB)`,
     );
 
     // DO NOT clear localStorage - app still reads from it
     // Data is now in both places (IndexedDB for backup, localStorage for live access)
+    // eslint-disable-next-line no-console
     console.log(
       "✅ Data successfully backed up to IndexedDB (localStorage preserved)",
     );
@@ -320,6 +325,7 @@ export async function importAllData(exportedData) {
       throw new Error("Invalid export data format");
     }
 
+    // eslint-disable-next-line no-console
     console.log("📥 Importing data into IndexedDB...");
 
     const entries = Object.entries(exportedData.data);
@@ -327,6 +333,7 @@ export async function importAllData(exportedData) {
       await storage.setItem(key, value);
     }
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Imported ${entries.length} keys`);
     return true;
   } catch (error) {

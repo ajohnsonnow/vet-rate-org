@@ -572,7 +572,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
   );
 
   const periods = [];
-  let totalPotentialUnderpayment = 0;
+  let _totalPotentialUnderpayment = 0;
 
   sorted.forEach((period, index) => {
     const startDate = new Date(period.effectiveDate);

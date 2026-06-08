@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import {
   getModalClasses,
   getSectionClasses,
@@ -108,6 +108,21 @@ export function ThemeProvider({ children }) {
     const handleChange = (e) => {
       if (!localStorage.getItem("vet-rate-theme")) {
         setTheme(e.matches ? THEME_MODES.DARK : THEME_MODES.LIGHT);
+      }
+    };
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  // Listen for system reduced-motion changes (parallels color-scheme above).
+  // If the user hasn't set an in-app override, mirror their OS preference
+  // live — so toggling "Reduce motion" in System Settings updates the app
+  // without a reload. Vestibular accessibility matters more than persistence.
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = (e) => {
+      if (!localStorage.getItem("vet-rate-reduced-motion")) {
+        setReducedMotion(e.matches);
       }
     };
     mediaQuery.addEventListener("change", handleChange);

@@ -4,7 +4,7 @@
  * Military-themed messaging for veteran users
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   AlertCircle,
@@ -39,8 +39,15 @@ const Toast = ({
   onClose,
   onAction,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [isExiting, setIsExiting] = useState(false);
+
+  // Errors, warnings, and network drops interrupt (assertive); success/info
+  // wait their turn (polite) so a screen reader isn't yanked off-task.
+  const isUrgent =
+    type === ToastType.ERROR ||
+    type === ToastType.WARNING ||
+    type === ToastType.NETWORK;
 
   useEffect(() => {
     if (duration && duration > 0) {
@@ -50,6 +57,7 @@ const Toast = ({
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   const handleClose = () => {
@@ -108,8 +116,8 @@ const Toast = ({
         ${isExiting ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"}
         min-w-[320px] max-w-[480px]
       `}
-      role="alert"
-      aria-live="assertive"
+      role={isUrgent ? "alert" : "status"}
+      aria-live={isUrgent ? "assertive" : "polite"}
     >
       <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
 
@@ -153,7 +161,6 @@ export const ToastContainer = ({ toasts, onClose, onAction }) => {
     <div
       className="fixed top-4 right-4 z-[9999] pointer-events-none"
       aria-live="polite"
-      aria-atomic="true"
     >
       <div className="flex flex-col pointer-events-auto">
         {toasts.map((toast) => (

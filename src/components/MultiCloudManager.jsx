@@ -7,13 +7,9 @@
  * Secure backup to multiple cloud providers with AES-256 encryption
  */
 
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useState, useEffect } from "react";
 import {
-  getProviders,
   getProvider,
-  isProviderConnected,
   getProviderState,
   connectProvider,
   disconnectProvider,
@@ -40,15 +36,15 @@ import {
   storeLocalKey,
   getLocalKey,
   isCryptoAvailable,
+  unlockDeviceKeystore,
 } from "../utils/cloudEncryption";
 import { exportAllData, importAllData } from "../utils/storage";
 
+import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
+import DeviceKeystorePanel from "./DeviceKeystorePanel";
 
 const MultiCloudManager = ({ onClose }) => {
-  const { t } = useLanguage();
-  useBodyScrollLock(true);
-
   // UI State
   const [selectedProvider, setSelectedProvider] = useState("google_drive");
   const [activeTab, setActiveTab] = useState("providers"); // 'providers', 'backups', 'settings'
@@ -77,6 +73,12 @@ const MultiCloudManager = ({ onClose }) => {
   const [pendingRestore, setPendingRestore] = useState(null);
   const [restorePassphrase, setRestorePassphrase] = useState("");
 
+  // Device-keystore unlock modal (a wrapped backup key needs the device
+  // passphrase before a locked restore can proceed).
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [pendingUnlock, setPendingUnlock] = useState(null);
+  const [unlockPassphrase, setUnlockPassphrase] = useState("");
+
   // Initialize Google Drive on mount
   useEffect(() => {
     const initGDrive = async () => {
@@ -104,6 +106,7 @@ const MultiCloudManager = ({ onClose }) => {
     if (providerStates[selectedProvider]?.connected) {
       loadBackups();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvider, providerStates]);
 
   // Connect to a provider
@@ -120,7 +123,7 @@ const MultiCloudManager = ({ onClose }) => {
           google_drive: { ...prev.google_drive, connected: true, user },
         }));
       } else {
-        const result = await connectProvider(providerId);
+        const _result = await connectProvider(providerId);
         const state = getProviderState(providerId);
         setProviderStates((prev) => ({
           ...prev,
@@ -213,7 +216,7 @@ const MultiCloudManager = ({ onClose }) => {
 
         // Store key locally if no passphrase
         if (keyExport) {
-          storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
+          await storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
         }
 
         setStatus("Uploading encrypted backup...");
@@ -276,7 +279,9 @@ const MultiCloudManager = ({ onClose }) => {
       // Check if it's encrypted
       if (isEncryptedBackup(data)) {
         // Try local key first
-        const localKey = getLocalKey(`${selectedProvider}_${backup.name}`);
+        const localKey = await getLocalKey(
+          `${selectedProvider}_${backup.name}`,
+        );
 
         if (localKey) {
           setStatus("Decrypting backup...");
@@ -298,7 +303,39 @@ const MultiCloudManager = ({ onClose }) => {
       await importAllData(data);
       setStatus("✅ Backup restored successfully! Refresh to see changes.");
     } catch (err) {
+      // A wrapped backup key whose device keystore is locked: prompt for the
+      // device passphrase, then retry this same restore. Mirrors the
+      // PASSPHRASE_REQUIRED branch above. getLocalKey throws this bare sentinel.
+      if (err.message === "KEYSTORE_LOCKED") {
+        setPendingUnlock(backup);
+        setShowUnlockModal(true);
+        return; // finally still clears the loading flag
+      }
       setError(`Restore failed: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Unlock the device keystore, then retry the restore that hit KEYSTORE_LOCKED.
+  const handleUnlockAndRestore = async () => {
+    if (!unlockPassphrase) {
+      setError("Please enter your device passphrase");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await unlockDeviceKeystore(unlockPassphrase);
+      const backup = pendingUnlock;
+      setShowUnlockModal(false);
+      setUnlockPassphrase("");
+      setPendingUnlock(null);
+      if (backup) await handleRestore(backup);
+    } catch (err) {
+      setError(`Unlock failed: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -397,70 +434,81 @@ const MultiCloudManager = ({ onClose }) => {
 
   const provider = getProvider(selectedProvider) || PROVIDERS.GOOGLE_DRIVE;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden border border-cyan-500/30">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl">🏰</div>
-            <div>
-              <h1 className="text-xl font-bold text-white">
-                The Redundant Bunker Network
-              </h1>
-              <p className="text-cyan-100 text-sm">
-                Multi-cloud backup with military-grade encryption
-              </p>
-            </div>
+  const header = (
+    <div>
+      <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="text-3xl">🏰</div>
+          <div>
+            <h1 id="multicloud-title" className="text-xl font-bold text-white">
+              The Redundant Bunker Network
+            </h1>
+            <p className="text-sm text-cyan-100">
+              Multi-cloud backup with military-grade encryption
+            </p>
           </div>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="text-2xl font-bold text-white transition-colors hover:text-cyan-200"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
+        {[
+          {
+            id: "providers",
+            label: "☁️ Cloud Providers",
+            desc: "Connect accounts",
+          },
+          { id: "backups", label: "💾 Backups", desc: "Manage backups" },
+          {
+            id: "settings",
+            label: "🔒 Security",
+            desc: "Encryption settings",
+          },
+        ].map((tab) => (
           <button
-            onClick={onClose}
-            className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold"
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? "border-b-2 border-cyan-500 bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white"
+            }`}
           >
-            ×
+            <div>{tab.label}</div>
+            <div className="text-xs opacity-60">{tab.desc}</div>
           </button>
-        </div>
+        ))}
+      </div>
+    </div>
+  );
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          {[
-            {
-              id: "providers",
-              label: "☁️ Cloud Providers",
-              desc: "Connect accounts",
-            },
-            { id: "backups", label: "💾 Backups", desc: "Manage backups" },
-            {
-              id: "settings",
-              label: "🔒 Security",
-              desc: "Encryption settings",
-            },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-gray-800 text-white border-b-2 border-cyan-500"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800/50"
-              }`}
-            >
-              <div>{tab.label}</div>
-              <div className="text-xs opacity-60">{tab.desc}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        header={header}
+        labelledBy="multicloud-title"
+        size="2xl"
+        className="border border-cyan-200 dark:border-cyan-500/30"
+      >
+        <div>
           {/* Status Messages */}
           {(status || error) && (
             <div
-              className={`mb-4 p-3 rounded-lg ${error ? "bg-red-500/10 border border-red-400/30" : "bg-blue-500/10 border border-blue-400/30"}`}
+              className={`mb-4 p-3 rounded-lg ${error ? "border border-red-300 bg-red-50 dark:border-red-400/30 dark:bg-red-500/10" : "border border-blue-300 bg-blue-50 dark:border-blue-400/30 dark:bg-blue-500/10"}`}
             >
               <p
                 className={
-                  error ? "text-red-300 text-sm" : "text-blue-300 text-sm"
+                  error
+                    ? "text-sm text-red-700 dark:text-red-300"
+                    : "text-sm text-blue-700 dark:text-blue-300"
                 }
               >
                 {error ? `⚠️ ${error}` : status}
@@ -471,11 +519,11 @@ const MultiCloudManager = ({ onClose }) => {
           {/* Providers Tab */}
           {activeTab === "providers" && (
             <div className="space-y-4">
-              <div className="bg-gradient-to-r from-green-500/10 to-cyan-500/10 border border-green-400/30 rounded-lg p-4 mb-4">
-                <h3 className="text-green-300 font-bold mb-2">
+              <div className="mb-4 rounded-lg border border-green-300 bg-green-50 p-4 dark:border-green-400/30 dark:bg-gradient-to-r dark:from-green-500/10 dark:to-cyan-500/10">
+                <h3 className="mb-2 font-bold text-green-700 dark:text-green-300">
                   🛡️ Your Data, Your Cloud
                 </h3>
-                <p className="text-gray-300 text-sm">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   Connect your personal cloud storage. Your data is encrypted{" "}
                   <strong>before</strong> it leaves your browser and stored in{" "}
                   <strong>your own</strong> cloud account. We never have access
@@ -484,11 +532,11 @@ const MultiCloudManager = ({ onClose }) => {
               </div>
 
               {/* HIPAA & Privacy Warning */}
-              <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-400/30 rounded-lg p-4 mb-6">
-                <h3 className="text-amber-300 font-bold mb-2 flex items-center gap-2">
+              <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-400/30 dark:bg-gradient-to-r dark:from-amber-500/10 dark:to-orange-500/10">
+                <h3 className="mb-2 flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300">
                   ⚠️ Important Privacy & HIPAA Notice
                 </h3>
-                <div className="text-gray-300 text-sm space-y-2">
+                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                   <p>
                     <strong>This is NOT a HIPAA-covered service.</strong>{" "}
                     Vet-Rate.org is a free educational tool that runs entirely
@@ -500,9 +548,9 @@ const MultiCloudManager = ({ onClose }) => {
                     to cloud providers, YOUR data goes to YOUR personal account.
                     The security of that data depends on:
                   </p>
-                  <ul className="list-disc list-inside text-gray-400 text-xs space-y-1 ml-2">
+                  <ul className="ml-2 list-inside list-disc space-y-1 text-xs text-gray-600 dark:text-gray-400">
                     <li>
-                      Your cloud account's security settings (enable 2FA!)
+                      Your cloud account&apos;s security settings (enable 2FA!)
                     </li>
                     <li>
                       Whether you enable encryption (strongly recommended)
@@ -510,9 +558,9 @@ const MultiCloudManager = ({ onClose }) => {
                     <li>
                       Whether you use a passphrase (for cross-device access)
                     </li>
-                    <li>Your cloud provider's own security practices</li>
+                    <li>Your cloud provider&apos;s own security practices</li>
                   </ul>
-                  <p className="text-amber-300 text-xs mt-2">
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
                     💡 <strong>Recommendation:</strong> Always enable encryption
                     with a passphrase for sensitive medical data. Consider using
                     Dropbox Business or OneDrive for Business if you need
@@ -525,10 +573,10 @@ const MultiCloudManager = ({ onClose }) => {
               <div className="grid gap-4">
                 {/* Google Drive */}
                 <div
-                  className={`border rounded-lg p-4 transition-all ${
+                  className={`rounded-lg border p-4 transition-all ${
                     selectedProvider === "google_drive"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -542,10 +590,10 @@ const MultiCloudManager = ({ onClose }) => {
                       />
                       <div className="text-2xl">📁</div>
                       <div>
-                        <h4 className="text-white font-semibold">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
                           Google Drive
                         </h4>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           Most veterans have Gmail - easiest option
                         </p>
                       </div>
@@ -553,12 +601,12 @@ const MultiCloudManager = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                       {providerStates.google_drive.connected ? (
                         <>
-                          <span className="text-green-400 text-sm">
+                          <span className="text-sm text-green-600 dark:text-green-400">
                             ✓ Connected
                           </span>
                           <button
                             onClick={() => handleDisconnect("google_drive")}
-                            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
+                            className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                           >
                             Disconnect
                           </button>
@@ -567,7 +615,7 @@ const MultiCloudManager = ({ onClose }) => {
                         <button
                           onClick={() => handleConnect("google_drive")}
                           disabled={isLoading}
-                          className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 text-sm font-medium rounded flex items-center gap-2"
+                          className="flex items-center gap-2 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100"
                         >
                           <svg className="w-4 h-4" viewBox="0 0 24 24">
                             <path
@@ -593,16 +641,16 @@ const MultiCloudManager = ({ onClose }) => {
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🔐 TLS Encryption
                     </span>
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🗄️ At-Rest Encryption
                     </span>
-                    <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">
+                    <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
                       SOC 2
                     </span>
-                    <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">
+                    <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
                       ISO 27001
                     </span>
                   </div>
@@ -610,10 +658,10 @@ const MultiCloudManager = ({ onClose }) => {
 
                 {/* Dropbox */}
                 <div
-                  className={`border rounded-lg p-4 transition-all ${
+                  className={`rounded-lg border p-4 transition-all ${
                     selectedProvider === "dropbox"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -627,8 +675,10 @@ const MultiCloudManager = ({ onClose }) => {
                       />
                       <div className="text-2xl">📦</div>
                       <div>
-                        <h4 className="text-white font-semibold">Dropbox</h4>
-                        <p className="text-gray-400 text-xs">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          Dropbox
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           Strong security, great mobile apps
                         </p>
                       </div>
@@ -636,12 +686,12 @@ const MultiCloudManager = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                       {providerStates.dropbox.connected ? (
                         <>
-                          <span className="text-green-400 text-sm">
+                          <span className="text-sm text-green-600 dark:text-green-400">
                             ✓ Connected
                           </span>
                           <button
                             onClick={() => handleDisconnect("dropbox")}
-                            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
+                            className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                           >
                             Disconnect
                           </button>
@@ -652,7 +702,7 @@ const MultiCloudManager = ({ onClose }) => {
                           disabled={
                             isLoading || !import.meta.env.VITE_DROPBOX_APP_KEY
                           }
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded flex items-center gap-2"
+                          className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
                         >
                           {!import.meta.env.VITE_DROPBOX_APP_KEY
                             ? "🔧 Not Configured"
@@ -662,16 +712,16 @@ const MultiCloudManager = ({ onClose }) => {
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🔐 TLS Encryption
                     </span>
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🗄️ AES-256 At-Rest
                     </span>
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded">
+                    <span className="rounded bg-purple-100 px-2 py-1 text-xs text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
                       HIPAA Eligible
                     </span>
-                    <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">
+                    <span className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
                       SOC 2/3
                     </span>
                   </div>
@@ -679,10 +729,10 @@ const MultiCloudManager = ({ onClose }) => {
 
                 {/* OneDrive */}
                 <div
-                  className={`border rounded-lg p-4 transition-all ${
+                  className={`rounded-lg border p-4 transition-all ${
                     selectedProvider === "onedrive"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -696,10 +746,10 @@ const MultiCloudManager = ({ onClose }) => {
                       />
                       <div className="text-2xl">☁️</div>
                       <div>
-                        <h4 className="text-white font-semibold">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
                           Microsoft OneDrive
                         </h4>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           Great for Microsoft/VA computer users
                         </p>
                       </div>
@@ -707,12 +757,12 @@ const MultiCloudManager = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                       {providerStates.onedrive.connected ? (
                         <>
-                          <span className="text-green-400 text-sm">
+                          <span className="text-sm text-green-600 dark:text-green-400">
                             ✓ Connected
                           </span>
                           <button
                             onClick={() => handleDisconnect("onedrive")}
-                            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
+                            className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                           >
                             Disconnect
                           </button>
@@ -724,7 +774,7 @@ const MultiCloudManager = ({ onClose }) => {
                             isLoading ||
                             !import.meta.env.VITE_ONEDRIVE_CLIENT_ID
                           }
-                          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded flex items-center gap-2"
+                          className="flex items-center gap-2 rounded bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
                         >
                           {!import.meta.env.VITE_ONEDRIVE_CLIENT_ID
                             ? "🔧 Not Configured"
@@ -734,16 +784,16 @@ const MultiCloudManager = ({ onClose }) => {
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🔐 TLS Encryption
                     </span>
-                    <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 dark:bg-green-500/20 dark:text-green-300">
                       🗄️ BitLocker At-Rest
                     </span>
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded">
+                    <span className="rounded bg-purple-100 px-2 py-1 text-xs text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
                       HIPAA Eligible
                     </span>
-                    <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded">
+                    <span className="rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300">
                       FedRAMP
                     </span>
                   </div>
@@ -756,22 +806,24 @@ const MultiCloudManager = ({ onClose }) => {
           {activeTab === "backups" && (
             <div className="space-y-4">
               {/* Selected Provider */}
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{provider.icon}</span>
                   <div>
-                    <span className="text-white font-medium">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {provider.name}
                     </span>
                     {providerStates[selectedProvider]?.user && (
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {providerStates[selectedProvider].user.email}
                       </p>
                     )}
                   </div>
                 </div>
                 {providerStates[selectedProvider]?.connected ? (
-                  <span className="text-green-400">✓ Connected</span>
+                  <span className="text-green-600 dark:text-green-400">
+                    ✓ Connected
+                  </span>
                 ) : (
                   <button
                     onClick={() => handleConnect(selectedProvider)}
@@ -785,8 +837,8 @@ const MultiCloudManager = ({ onClose }) => {
               {providerStates[selectedProvider]?.connected && (
                 <>
                   {/* Create Backup */}
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                    <h3 className="text-white font-semibold mb-3">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                    <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">
                       Create New Backup
                     </h3>
 
@@ -801,10 +853,10 @@ const MultiCloudManager = ({ onClose }) => {
                           }
                           className="rounded text-cyan-500"
                         />
-                        <span className="text-gray-300">
+                        <span className="text-gray-700 dark:text-gray-300">
                           🔐 Encrypt backup (AES-256-GCM)
                         </span>
-                        <span className="text-green-400 text-xs">
+                        <span className="text-xs text-green-600 dark:text-green-400">
                           Recommended
                         </span>
                       </label>
@@ -817,10 +869,10 @@ const MultiCloudManager = ({ onClose }) => {
                             onChange={(e) => setUsePassphrase(e.target.checked)}
                             className="rounded text-cyan-500"
                           />
-                          <span className="text-gray-300">
+                          <span className="text-gray-700 dark:text-gray-300">
                             🔑 Use passphrase protection
                           </span>
-                          <span className="text-yellow-400 text-xs">
+                          <span className="text-xs text-yellow-700 dark:text-yellow-400">
                             Extra security
                           </span>
                         </label>
@@ -833,7 +885,7 @@ const MultiCloudManager = ({ onClose }) => {
                             value={passphrase}
                             onChange={(e) => setPassphrase(e.target.value)}
                             placeholder="Enter passphrase (min 8 characters)"
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded text-white text-sm"
+                            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
                           />
                           <input
                             type="password"
@@ -842,9 +894,9 @@ const MultiCloudManager = ({ onClose }) => {
                               setConfirmPassphrase(e.target.value)
                             }
                             placeholder="Confirm passphrase"
-                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded text-white text-sm"
+                            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
                           />
-                          <p className="text-yellow-300 text-xs">
+                          <p className="text-xs text-yellow-700 dark:text-yellow-300">
                             ⚠️ If you forget this passphrase, your backup CANNOT
                             be recovered!
                           </p>
@@ -852,7 +904,7 @@ const MultiCloudManager = ({ onClose }) => {
                       )}
 
                       {encryptionEnabled && !usePassphrase && (
-                        <p className="text-gray-400 text-xs ml-6">
+                        <p className="ml-6 text-xs text-gray-600 dark:text-gray-400">
                           ℹ️ Encryption key stored locally. Backup can only be
                           restored on this device.
                         </p>
@@ -873,22 +925,22 @@ const MultiCloudManager = ({ onClose }) => {
                   </div>
 
                   {/* Backup List */}
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-white font-semibold">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         Your Backups ({backups.length})
                       </h3>
                       <button
                         onClick={loadBackups}
                         disabled={isLoading}
-                        className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded"
+                        className="rounded bg-gray-200 px-3 py-1 text-sm text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                       >
                         🔄 Refresh
                       </button>
                     </div>
 
                     {backups.length === 0 ? (
-                      <p className="text-gray-400 text-center py-6">
+                      <p className="py-6 text-center text-gray-600 dark:text-gray-400">
                         No backups found. Create your first backup above.
                       </p>
                     ) : (
@@ -896,13 +948,13 @@ const MultiCloudManager = ({ onClose }) => {
                         {backups.map((backup) => (
                           <div
                             key={backup.id}
-                            className="bg-gray-900 border border-gray-700 rounded p-3 flex items-center justify-between"
+                            className="flex items-center justify-between rounded border border-gray-200 bg-gray-100 p-3 dark:border-gray-700 dark:bg-gray-900"
                           >
                             <div>
-                              <p className="text-white text-sm font-medium">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
                                 {backup.name}
                               </p>
-                              <p className="text-gray-400 text-xs">
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
                                 {formatDate(
                                   backup.createdTime || backup.modified,
                                 )}{" "}
@@ -939,68 +991,101 @@ const MultiCloudManager = ({ onClose }) => {
           {activeTab === "settings" && (
             <div className="space-y-6">
               {/* Encryption Info */}
-              <div className="bg-gradient-to-r from-green-500/10 to-cyan-500/10 border border-green-400/30 rounded-lg p-6">
-                <h3 className="text-green-300 font-bold text-lg mb-3">
+              <div className="rounded-lg border border-green-300 bg-green-50 p-6 dark:border-green-400/30 dark:bg-gradient-to-r dark:from-green-500/10 dark:to-cyan-500/10">
+                <h3 className="mb-3 text-lg font-bold text-green-700 dark:text-green-300">
                   🔐 Military-Grade Encryption
                 </h3>
-                <div className="space-y-3 text-gray-300">
+                <div className="space-y-3 text-gray-700 dark:text-gray-300">
                   <p>Your backups are protected with:</p>
                   <ul className="space-y-2 ml-4">
                     <li className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-600 dark:text-green-400">
+                        ✓
+                      </span>
                       <span>
                         <strong>AES-256-GCM</strong> - Same encryption used by
                         the US military for classified data
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-600 dark:text-green-400">
+                        ✓
+                      </span>
                       <span>
-                        <strong>PBKDF2</strong> - 100,000 iterations for
+                        <strong>PBKDF2</strong> - 600,000 iterations for
                         passphrase-based keys (OWASP recommended)
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-600 dark:text-green-400">
+                        ✓
+                      </span>
                       <span>
                         <strong>Client-Side Only</strong> - Encryption happens
                         in YOUR browser, never on a server
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-600 dark:text-green-400">
+                        ✓
+                      </span>
                       <span>
-                        <strong>Zero Knowledge</strong> - We can't read your
-                        data even if we wanted to
+                        <strong>Zero Knowledge</strong> - We can&apos;t read
+                        your data even if we wanted to
                       </span>
                     </li>
                   </ul>
                 </div>
               </div>
 
+              {/* Device Keystore Management */}
+              <DeviceKeystorePanel
+                onDeauthorize={async () => {
+                  await signOutOfGoogleDrive();
+                  disconnectProvider("dropbox");
+                  disconnectProvider("onedrive");
+                  setProviderStates({
+                    google_drive: {
+                      connected: false,
+                      user: null,
+                      initialized: false,
+                    },
+                    dropbox: { connected: false, user: null },
+                    onedrive: { connected: false, user: null },
+                  });
+                  setBackups([]);
+                }}
+              />
+
               {/* Crypto API Status */}
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <h4 className="text-white font-semibold mb-3">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">
                   Security Status
                 </h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Web Crypto API</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Web Crypto API
+                    </span>
                     <span
                       className={
-                        isCryptoAvailable() ? "text-green-400" : "text-red-400"
+                        isCryptoAvailable()
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
                       }
                     >
                       {isCryptoAvailable() ? "✓ Available" : "✗ Not Available"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">HTTPS Connection</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      HTTPS Connection
+                    </span>
                     <span
                       className={
                         location.protocol === "https:"
-                          ? "text-green-400"
-                          : "text-yellow-400"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-yellow-700 dark:text-yellow-400"
                       }
                     >
                       {location.protocol === "https:"
@@ -1012,14 +1097,14 @@ const MultiCloudManager = ({ onClose }) => {
               </div>
 
               {/* Provider Security Comparison */}
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <h4 className="text-white font-semibold mb-3">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">
                   Cloud Provider Security
                 </h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-gray-400 border-b border-gray-700">
+                      <tr className="border-b border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-400">
                         <th className="text-left py-2">Provider</th>
                         <th className="text-center py-2">In Transit</th>
                         <th className="text-center py-2">At Rest</th>
@@ -1029,58 +1114,92 @@ const MultiCloudManager = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-gray-700/50">
-                        <td className="py-2 text-white">Google Drive</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-yellow-400">~</td>
-                        <td className="text-center text-green-400">✓</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-700/50">
+                        <td className="py-2 text-gray-900 dark:text-white">
+                          Google Drive
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-yellow-700 dark:text-yellow-400">
+                          ~
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
                       </tr>
-                      <tr className="border-b border-gray-700/50">
-                        <td className="py-2 text-white">Dropbox</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-700/50">
+                        <td className="py-2 text-gray-900 dark:text-white">
+                          Dropbox
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
                         <td className="text-center text-gray-500">-</td>
                       </tr>
                       <tr>
-                        <td className="py-2 text-white">OneDrive</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
-                        <td className="text-center text-green-400">✓</td>
+                        <td className="py-2 text-gray-900 dark:text-white">
+                          OneDrive
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
+                        <td className="text-center text-green-600 dark:text-green-400">
+                          ✓
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <p className="text-gray-400 text-xs mt-3">
+                <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
                   ~ Google Drive can be HIPAA compliant with Workspace + BAA.
                   Personal accounts are not.
                 </p>
               </div>
 
               {/* HIPAA Compliance Notice */}
-              <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/30 rounded-lg p-4">
-                <h4 className="text-red-300 font-semibold mb-3 flex items-center gap-2">
+              <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-400/30 dark:bg-gradient-to-r dark:from-red-500/10 dark:to-orange-500/10">
+                <h4 className="mb-3 flex items-center gap-2 font-semibold text-red-700 dark:text-red-300">
                   ⚕️ HIPAA Compliance Information
                 </h4>
-                <div className="text-gray-300 text-sm space-y-3">
+                <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                   <p>
                     <strong>
                       Vet-Rate.org does NOT store Protected Health Information
                       (PHI).
                     </strong>{" "}
-                    All data remains in your browser's local storage and/or your
-                    personal cloud accounts.
+                    All data remains in your browser&apos;s local storage and/or
+                    your personal cloud accounts.
                   </p>
-                  <div className="bg-gray-900/50 p-3 rounded-lg">
-                    <p className="text-amber-300 font-medium mb-2">
+                  <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-900/50">
+                    <p className="mb-2 font-medium text-amber-700 dark:text-amber-300">
                       For HIPAA-eligible cloud storage:
                     </p>
-                    <ul className="list-disc list-inside text-gray-400 text-xs space-y-1">
+                    <ul className="list-inside list-disc space-y-1 text-xs text-gray-600 dark:text-gray-400">
                       <li>
                         <strong>Google:</strong> Requires Google Workspace +
                         Business Associate Agreement (BAA)
@@ -1094,12 +1213,12 @@ const MultiCloudManager = ({ onClose }) => {
                         Business/Enterprise with BAA
                       </li>
                     </ul>
-                    <p className="text-gray-500 text-xs mt-2">
+                    <p className="mt-2 text-xs text-gray-600 dark:text-gray-500">
                       Personal/free accounts are NOT HIPAA compliant regardless
                       of provider.
                     </p>
                   </div>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     <strong>Your responsibility:</strong> If you are a
                     healthcare provider or VSO handling veteran PHI, ensure you
                     use appropriate enterprise accounts with signed BAAs.
@@ -1109,49 +1228,104 @@ const MultiCloudManager = ({ onClose }) => {
             </div>
           )}
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* Passphrase Modal */}
-      {showPassphraseModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90">
-          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-cyan-500/30">
-            <h3 className="text-xl font-bold text-white mb-4">
-              🔑 Enter Passphrase
-            </h3>
-            <p className="text-gray-300 text-sm mb-4">
-              This backup is protected with a passphrase. Enter it to restore.
-            </p>
-            <input
-              type="password"
-              value={restorePassphrase}
-              onChange={(e) => setRestorePassphrase(e.target.value)}
-              placeholder="Enter backup passphrase"
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white mb-4"
-              autoFocus
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowPassphraseModal(false);
-                  setPendingRestore(null);
-                  setRestorePassphrase("");
-                }}
-                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePassphraseRestore}
-                disabled={!restorePassphrase}
-                className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-600 text-white rounded-lg font-medium"
-              >
-                Decrypt & Restore
-              </button>
-            </div>
+      <ResponsiveModal
+        isOpen={showPassphraseModal}
+        onClose={() => {
+          setShowPassphraseModal(false);
+          setPendingRestore(null);
+          setRestorePassphrase("");
+        }}
+        title="🔑 Enter Passphrase"
+        size="sm"
+        zIndex={70}
+        footer={
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowPassphraseModal(false);
+                setPendingRestore(null);
+                setRestorePassphrase("");
+              }}
+              className="flex-1 rounded-lg bg-gray-200 py-2 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePassphraseRestore}
+              disabled={!restorePassphrase}
+              className="flex-1 rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+            >
+              Decrypt & Restore
+            </button>
           </div>
-        </div>
-      )}
-    </div>
+        }
+      >
+        <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">
+          This backup is protected with a passphrase. Enter it to restore.
+        </p>
+        <input
+          type="password"
+          value={restorePassphrase}
+          onChange={(e) => setRestorePassphrase(e.target.value)}
+          placeholder="Enter backup passphrase"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          /* eslint-disable-next-line jsx-a11y/no-autofocus */
+          autoFocus
+        />
+      </ResponsiveModal>
+
+      {/* Device-keystore unlock modal — shown when a restore hits KEYSTORE_LOCKED */}
+      <ResponsiveModal
+        isOpen={showUnlockModal}
+        onClose={() => {
+          setShowUnlockModal(false);
+          setPendingUnlock(null);
+          setUnlockPassphrase("");
+        }}
+        title="🔒 Unlock Device Keystore"
+        size="sm"
+        zIndex={70}
+        footer={
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowUnlockModal(false);
+                setPendingUnlock(null);
+                setUnlockPassphrase("");
+              }}
+              className="flex-1 rounded-lg bg-gray-200 py-2 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUnlockAndRestore}
+              disabled={!unlockPassphrase || isLoading}
+              className="flex-1 rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+            >
+              Unlock & Restore
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">
+          This backup was encrypted with a device-bound key. Enter your device
+          passphrase to unlock the keystore and continue restoring.
+        </p>
+        <input
+          type="password"
+          value={unlockPassphrase}
+          onChange={(e) => setUnlockPassphrase(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleUnlockAndRestore()}
+          placeholder="Enter device passphrase"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          /* eslint-disable-next-line jsx-a11y/no-autofocus */
+          autoFocus
+        />
+      </ResponsiveModal>
+    </>
   );
 };
 

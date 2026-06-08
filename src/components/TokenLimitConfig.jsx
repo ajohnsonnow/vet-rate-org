@@ -4,7 +4,7 @@
  * with presets and warnings about capabilities and VRAM requirements
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getAIStatus } from "../utils/unifiedAIService";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -171,7 +171,7 @@ export const saveTokenLimit = (value) => {
  * TokenLimitConfig Component
  */
 const TokenLimitConfig = () => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [tokenLimit, setTokenLimit] = useState(getTokenLimit());
   const [customValue, setCustomValue] = useState("");
   const [isCustom, setIsCustom] = useState(false);
@@ -313,7 +313,7 @@ const TokenLimitConfig = () => {
       </div>
 
       {/* Preset Buttons */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {Object.entries(TOKEN_PRESETS).map(([key, preset]) => {
           const isSelected = !isCustom && tokenLimit === preset.value;
           return (
@@ -424,7 +424,7 @@ const TokenLimitConfig = () => {
                   </p>
                   <p className="text-xs text-gray-700 dark:text-gray-300">
                     This is additional VRAM needed <strong>on top of</strong>{" "}
-                    the model's base requirements.
+                    the model&apos;s base requirements.
                   </p>
                 </div>
               )}
@@ -459,7 +459,7 @@ const TokenLimitConfig = () => {
 
             <p>
               <strong>Why does it matter?</strong> The token limit determines
-              how long the AI's response can be:
+              how long the AI&apos;s response can be:
             </p>
 
             <ul className="list-disc ml-5 space-y-1">
@@ -512,8 +512,8 @@ const TokenLimitConfig = () => {
               {aiStatus.effectiveMode === "cloud" && (
                 <li>
                   <strong>API Cost:</strong> Higher limits consume more API
-                  quota. Google's free tier is generous, but larger responses
-                  use more quota.
+                  quota. Google&apos;s free tier is generous, but larger
+                  responses use more quota.
                 </li>
               )}
             </ul>

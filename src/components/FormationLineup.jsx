@@ -109,7 +109,7 @@ const FormationEntry = ({
         <button
           onClick={() => onRemove(entry.id)}
           className="absolute -right-2 -top-2 w-6 h-6 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
-          title="Remove from formation"
+          aria-label="Remove from formation"
         >
           ×
         </button>
@@ -281,7 +281,7 @@ export default function FormationLineup({
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e, index) => {
+  const handleDragOver = (e, _index) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
@@ -307,6 +307,7 @@ export default function FormationLineup({
   const hasRestoredDocs = formation.some((e) => e.isRestored);
 
   // Debug log to verify component renders
+  // eslint-disable-next-line no-console
   console.log("📋 FormationLineup rendering:", {
     documentCount: formation.length,
     hasRestoredDocs,
@@ -333,8 +334,8 @@ export default function FormationLineup({
               <p className="text-xs text-yellow-700 dark:text-yellow-300">
                 These documents are from your previous session. They were saved
                 but the actual files are no longer in memory. You can view the
-                lineup and clear it, but you'll need to re-upload the files to
-                process them again.
+                lineup and clear it, but you&apos;ll need to re-upload the files
+                to process them again.
               </p>
             </div>
           </div>
@@ -363,7 +364,7 @@ export default function FormationLineup({
                   ? "bg-gray-400 cursor-not-allowed text-white"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
-              title={
+              aria-label={
                 hasRestoredDocs
                   ? "Cannot process restored documents - please re-upload files"
                   : !aiReady && aiInitializing
@@ -419,7 +420,7 @@ export default function FormationLineup({
             process first
           </li>
           <li>• Each document gets inspected individually for accuracy</li>
-          <li>• You'll verify extracted data before it's saved</li>
+          <li>• You&apos;ll verify extracted data before it&apos;s saved</li>
           <li>• Drag documents to change processing order</li>
           <li>• You can pause and resume anytime</li>
         </ul>

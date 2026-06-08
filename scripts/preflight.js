@@ -440,13 +440,108 @@ async function phaseValidate() {
     return { note: `0 critical, ${warnings.length} warning(s)` };
   });
 
-  // 6. Contract enforcement
-  await check("Contract enforcement", () => {
-    // npm audit
-    const audit = tryRun("npm audit --audit-level=critical");
-    if (!audit.ok && audit.out.includes("critical"))
-      throw new Error("npm audit: critical vulnerabilities found");
-    return { note: "0 violations" };
+  // 5a. Secret scan (gitleaks). Catches committed API keys, tokens, private
+  // keys, etc. across the whole git history. Config: .gitleaks.toml.
+  // Gracefully skips when gitleaks isn't installed locally.
+  await check("Secret scan (gitleaks)", () => {
+    const probe = tryRun("gitleaks version");
+    if (!probe.ok) {
+      return {
+        note: "gitleaks not installed — `go install github.com/gitleaks/gitleaks/v8@latest` or download from github.com/gitleaks/gitleaks",
+      };
+    }
+    const reportPath = path.join(ROOT, ".gitleaks-preflight-report.json");
+    const r = tryRun(
+      `gitleaks detect --no-banner --redact --config .gitleaks.toml --report-format json --report-path "${reportPath}"`,
+    );
+    let findings = 0;
+    if (fs.existsSync(reportPath)) {
+      try {
+        findings = JSON.parse(fs.readFileSync(reportPath, "utf8")).length;
+      } catch {}
+      fs.unlinkSync(reportPath);
+    }
+    if (findings > 0) {
+      throw new Error(`${findings} secret(s) detected — see gitleaks output`);
+    }
+    if (!r.ok && !/no leaks found/i.test(r.out)) {
+      // gitleaks exits 1 on findings, 0 otherwise. A non-zero exit with no
+      // parsed findings means a scan-level failure (e.g., corrupt repo state).
+      throw new Error("gitleaks scan failed — see verbose output");
+    }
+    return { note: "0 secrets" };
+  });
+
+  // 5b. SAST (semgrep). Pulls 5 registry rule packs + project-local custom
+  // rules. Skips when semgrep isn't installed. Driver: scripts/sast-check.mjs.
+  //
+  // Findings are informational during Sprint 1–2: ~44 pre-existing baseline
+  // hits are tracked in docs/AUDIT_FINDINGS.md and closed in Sprint 3. After
+  // S3 lands, flip STRICT_SAST=true in CI to make this block again.
+  await check("SAST (semgrep)", () => {
+    const STRICT_SAST = process.env.STRICT_SAST === "true";
+    const r = tryRun("node scripts/sast-check.mjs");
+    if (/not installed/i.test(r.out)) {
+      return {
+        note: "semgrep not installed — `pip install semgrep`",
+      };
+    }
+    const blockerMatch = /FAILED \((\d+) blocking finding/.exec(r.out);
+    const findingMatch = /(\d+) finding/.exec(r.out);
+    if (!r.ok && STRICT_SAST) {
+      throw new Error(
+        blockerMatch
+          ? `${blockerMatch[1]} blocking SAST finding(s) — see audit output`
+          : "semgrep scan failed",
+      );
+    }
+    if (blockerMatch) {
+      return {
+        note: `${blockerMatch[1]} pre-existing finding(s) — tracked in AUDIT_FINDINGS.md, fix in S3`,
+      };
+    }
+    return {
+      note: findingMatch ? `${findingMatch[1]} info finding(s)` : "0 findings",
+    };
+  });
+
+  // 5c. Bundle budget (Sprint 5). Non-blocking until App.jsx feature-region
+  // split (S4.5) brings the initial chunk under 300 KB gz. Flip
+  // STRICT_BUNDLE=true in CI after that lands.
+  await check("Bundle budget", () => {
+    const distExists = fs.existsSync(path.join(ROOT, "dist"));
+    if (!distExists) {
+      return { note: "dist/ missing — skipped (run after build)" };
+    }
+    const r = tryRun("node scripts/check-bundle-budget.mjs");
+    const breachMatch = /(\d+) budget breach/.exec(r.out);
+    if (breachMatch && breachMatch[1] !== "0") {
+      return {
+        note: `${breachMatch[1]} pre-existing breach(es) — tracked, fix in S4.5/S5`,
+      };
+    }
+    return { note: "all budgets met" };
+  });
+
+  // 6. Contract enforcement (blocking as of S8)
+  //
+  // S8 closed the protobufjs/xmldom advisories via npm `overrides`. This step
+  // is now blocking on high+ production advisories. Opt-out via
+  // STRICT_AUDIT=false only when diagnosing a newly-published CVE that the
+  // dependency tree hasn't caught up to yet.
+  await check("Contract enforcement (prod audit)", () => {
+    const STRICT_AUDIT = process.env.STRICT_AUDIT !== "false";
+    const audit = tryRun("npm audit --omit=dev --audit-level=high");
+    if (!audit.ok) {
+      const critMatch = /(\d+) critical/.exec(audit.out);
+      const highMatch = /(\d+) high/.exec(audit.out);
+      const summary = `${critMatch?.[1] ?? "0"} critical, ${highMatch?.[1] ?? "0"} high`;
+      if (STRICT_AUDIT) {
+        throw new Error(`npm audit (prod): ${summary}`);
+      }
+      return { note: `non-strict mode: ${summary}` };
+    }
+    return { note: "0 high+ in production deps" };
   });
 
   // 7. Accessibility audit

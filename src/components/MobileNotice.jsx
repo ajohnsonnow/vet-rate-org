@@ -3,8 +3,7 @@
  * All Rights Reserved. Proprietary and Confidential.
  */
 
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useState, useEffect } from "react";
 
 /**
  * Detect if device is a tablet
@@ -43,9 +42,8 @@ const isTablet = () => {
  * Remembers dismissal for the session.
  */
 const MobileNotice = () => {
-  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
-  const [deviceType, setDeviceType] = useState(null); // 'phone', 'tablet', or null
+  const [deviceType, setDeviceType] = useState(null); // 'tablet' or null
 
   useEffect(() => {
     // Check if already dismissed this session
@@ -56,17 +54,14 @@ const MobileNotice = () => {
       return;
     }
 
-    // Check screen size and device type
+    // Tablet-only notice. The phone branch was removed in S10 — its
+    // "optimized for mobile" copy contradicted the old SmallScreenWarning,
+    // which has since been removed too (S10 gated deletion, once the mobile
+    // suite went green across the top-20 surfaces; docs/SPRINT_PLAN_S9-S17.md,
+    // S10). Phones now get no interstitial — the responsive layouts are the
+    // support.
     const checkDevice = () => {
-      const width = window.innerWidth;
-
-      if (isTablet()) {
-        setDeviceType("tablet");
-      } else if (width < 768) {
-        setDeviceType("phone");
-      } else {
-        setDeviceType(null); // Desktop
-      }
+      setDeviceType(isTablet() ? "tablet" : null);
     };
 
     checkDevice();
@@ -81,44 +76,24 @@ const MobileNotice = () => {
 
   if (dismissed || !deviceType) return null;
 
-  // Different messages for phone vs tablet
-  const isPhone = deviceType === "phone";
-
   return (
     <div
-      className={`text-white px-4 py-3 text-center relative shadow-lg ${
-        isPhone
-          ? "bg-gradient-to-r from-emerald-600 to-teal-600"
-          : "bg-gradient-to-r from-blue-600 to-indigo-600"
-      }`}
+      className="text-white px-4 py-3 text-center relative shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600"
+      role="status"
+      aria-live="polite"
     >
       <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 pr-10">
-        <span
-          className="text-2xl"
-          role="img"
-          aria-label={isPhone ? "Mobile optimized" : "Tablet optimized"}
-        >
-          {isPhone ? "📱" : "📱💻"}
+        <span className="text-2xl" role="img" aria-label="Tablet optimized">
+          📱💻
         </span>
         <div className="text-left flex-1">
-          {isPhone ? (
-            <>
-              <p className="text-sm font-bold">Mobile-Optimized Experience!</p>
-              <p className="text-xs opacity-90 mt-0.5">
-                90% of veterans use mobile - this app is built for you ✨
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-bold">
-                Tablet Mode - Perfect for Detailed Work!
-              </p>
-              <p className="text-xs opacity-90 mt-0.5">
-                Great choice! Tablet screens are ideal for reviewing claims &
-                building your packet 📋
-              </p>
-            </>
-          )}
+          <p className="text-sm font-bold">
+            Tablet Mode - Perfect for Detailed Work!
+          </p>
+          <p className="text-xs opacity-90 mt-0.5">
+            Great choice! Tablet screens are ideal for reviewing claims &
+            building your packet 📋
+          </p>
         </div>
       </div>
       <button

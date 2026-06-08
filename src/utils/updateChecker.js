@@ -21,6 +21,7 @@
 import { APP_VERSION, UPDATE_CHECK_INTERVAL } from "./version";
 
 let checkInterval = null;
+// eslint-disable-next-line no-unused-vars
 let lastCheckTime = null;
 
 /**
@@ -62,6 +63,7 @@ export const checkForUpdates = async () => {
     if (!response.ok) {
       // If version.json doesn't exist yet (first deployment), silently ignore
       if (response.status === 404) {
+        // eslint-disable-next-line no-console
         console.log("ℹ️ version.json not found (first deployment?)");
         return { updateAvailable: false, reason: "version_file_not_found" };
       }
@@ -72,6 +74,7 @@ export const checkForUpdates = async () => {
     const serverVersion = data.version;
     const currentVersion = APP_VERSION;
 
+    // eslint-disable-next-line no-console
     console.log(
       `🔍 Update check: Server=${serverVersion}, Local=${currentVersion}`,
     );
@@ -80,6 +83,7 @@ export const checkForUpdates = async () => {
 
     if (comparison > 0) {
       // Server version is newer
+      // eslint-disable-next-line no-console
       console.log("🆕 Update available!");
       return {
         updateAvailable: true,
@@ -90,6 +94,7 @@ export const checkForUpdates = async () => {
       };
     } else {
       // Already on latest version
+      // eslint-disable-next-line no-console
       console.log("✅ App is up to date");
       return {
         updateAvailable: false,
@@ -111,6 +116,7 @@ export const checkForUpdates = async () => {
  * Clears cache and reloads from server
  */
 export const applyUpdate = () => {
+  // eslint-disable-next-line no-console
   console.log("🔄 Applying update - hard reload...");
 
   // Force hard reload (bypasses cache)
@@ -126,6 +132,7 @@ export const startUpdateChecker = (onUpdateAvailable) => {
   // Stop any existing checker
   stopUpdateChecker();
 
+  // eslint-disable-next-line no-console
   console.log(
     `🛡️ Update checker started (checking every ${UPDATE_CHECK_INTERVAL / 60000} minutes)`,
   );
@@ -153,6 +160,7 @@ export const stopUpdateChecker = () => {
   if (checkInterval) {
     clearInterval(checkInterval);
     checkInterval = null;
+    // eslint-disable-next-line no-console
     console.log("🛡️ Update checker stopped");
   }
 };

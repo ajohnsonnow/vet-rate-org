@@ -9,6 +9,8 @@
  * to prevent code injection and ensure data integrity.
  */
 
+import { triggerBlobDownload } from "./sanitize.js";
+
 // Valid field names that can exist in a claim object
 const VALID_CLAIM_FIELDS = [
   "id",
@@ -62,6 +64,7 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
   sanitized = sanitized.replace(/data:/gi, "data-blocked:");
 
   // Remove null bytes and control characters (except newlines and tabs)
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 
   return sanitized;
@@ -86,7 +89,7 @@ const validateClaim = (claim) => {
 
   // Only copy valid fields
   for (const field of VALID_CLAIM_FIELDS) {
-    if (claim.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(claim, field)) {
       const value = claim[field];
 
       if (field === "id") {
@@ -150,7 +153,7 @@ const validateStatement = (statement) => {
   const sanitizedStatement = {};
 
   for (const field of VALID_STATEMENT_FIELDS) {
-    if (statement.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(statement, field)) {
       const value = statement[field];
 
       if (field === "savedDate") {
@@ -315,18 +318,10 @@ export const importPacketData = (jsonString) => {
 export const downloadPacketBackup = (exportData, filename = null) => {
   const date = new Date().toISOString().split("T")[0];
   const defaultFilename = `vet-rate-packet-backup-${date}.json`;
-
-  const jsonString = JSON.stringify(exportData, null, 2);
-  const blob = new Blob([jsonString], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename || defaultFilename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: "application/json",
+  });
+  triggerBlobDownload(blob, filename || defaultFilename);
 };
 
 /**

@@ -125,7 +125,7 @@ function HeaderWithSecurity({ securityContext }) {
               className="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 
                        rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 
                        transition-colors text-sm font-medium"
-              title="Security & Privacy Settings"
+              aria-label="Security & Privacy Settings"
             >
               <svg
                 className="w-5 h-5"

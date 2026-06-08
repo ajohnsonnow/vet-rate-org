@@ -8,13 +8,8 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import {
-  saveDD214Data,
-  getServiceHistory,
-  getVeteranProfile,
-} from "../utils/veteranProfile";
+import ResponsiveModal from "./common/ResponsiveModal";
+import { getServiceHistory } from "../utils/veteranProfile";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // DD214 Block field definitions with tooltips
@@ -214,8 +209,8 @@ const DD214_FIELDS = {
  * DD214 Form Builder Component
  */
 const DD214FormBuilder = ({ onClose, onSave }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
-  useBodyScrollLock(true);
 
   const [formData, setFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -391,84 +386,36 @@ const DD214FormBuilder = ({ onClose, onSave }) => {
   const sections = Object.keys(DD214_FIELDS);
   const currentSectionIndex = sections.indexOf(currentSection);
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              📋 Build My DD214
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Manually enter your DD214 information • {savedDD214s.length} DD214
-              {savedDD214s.length !== 1 ? "s" : ""} saved
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      zIndex={9999}
+      labelledBy="dd214-form-builder-title"
+      header={
+        <>
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div>
+              <h2
+                id="dd214-form-builder-title"
+                className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+              >
+                📋 Build My DD214
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Manually enter your DD214 information • {savedDD214s.length}{" "}
+                DD214
+                {savedDD214s.length !== 1 ? "s" : ""} saved
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Close"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            {sections.map((section, index) => (
-              <React.Fragment key={section}>
-                <button
-                  onClick={() => setCurrentSection(section)}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
-                    currentSection === section
-                      ? "bg-blue-600 text-white"
-                      : index < currentSectionIndex
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {DD214_FIELDS[section].title.split(" ")[0]}
-                </button>
-                {index < sections.length - 1 && (
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* Success Message */}
-        {saveSuccess && (
-          <div className="mx-6 mt-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-            <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
               <svg
-                className="w-5 h-5"
+                className="w-6 h-6 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -477,48 +424,52 @@ const DD214FormBuilder = ({ onClose, onSave }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 13l4 4L19 7"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <span className="font-semibold">DD214 saved to My Packet!</span>
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2">
+              {sections.map((section, index) => (
+                <React.Fragment key={section}>
+                  <button
+                    onClick={() => setCurrentSection(section)}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                      currentSection === section
+                        ? "bg-blue-600 text-white"
+                        : index < currentSectionIndex
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {DD214_FIELDS[section].title.split(" ")[0]}
+                  </button>
+                  {index < sections.length - 1 && (
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  )}
+                </React.Fragment>
+              ))}
             </div>
           </div>
-        )}
-
-        {/* Form Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-              {DD214_FIELDS[currentSection].title}
-            </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Enter information as it appears on your DD214.{" "}
-              <span className="text-red-500">*</span> = Required field
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {DD214_FIELDS[currentSection].fields.map((field) => (
-              <div key={field.id}>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  {field.label}
-                  {field.required && (
-                    <span className="text-red-500 ml-1">*</span>
-                  )}
-                  {field.block && (
-                    <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                      (Block {field.block})
-                    </span>
-                  )}
-                </label>
-                {renderField(field)}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        </>
+      }
+      footer={
+        <div className="flex items-center justify-between">
           <div className="flex gap-2">
             {currentSectionIndex > 0 && (
               <button
@@ -553,9 +504,58 @@ const DD214FormBuilder = ({ onClose, onSave }) => {
             )}
           </div>
         </div>
+      }
+    >
+      {/* Success Message */}
+      {saveSuccess && (
+        <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+          <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="font-semibold">DD214 saved to My Packet!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Form Content */}
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+          {DD214_FIELDS[currentSection].title}
+        </h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          Enter information as it appears on your DD214.{" "}
+          <span className="text-red-500">*</span> = Required field
+        </p>
       </div>
-    </div>,
-    document.body,
+
+      <div className="space-y-4">
+        {DD214_FIELDS[currentSection].fields.map((field) => (
+          <div key={field.id}>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+              {field.block && (
+                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                  (Block {field.block})
+                </span>
+              )}
+            </label>
+            {renderField(field)}
+          </div>
+        ))}
+      </div>
+    </ResponsiveModal>
   );
 };
 

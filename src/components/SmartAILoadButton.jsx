@@ -4,14 +4,12 @@
  * Automatically detects device, recommends best model, handles switching
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  getRecommendedModelForDevice,
   checkModelMatch,
   smartLoadAI,
   getDeviceType,
 } from "../utils/smartAILoader";
-import { getAIStatus } from "../utils/unifiedAIService";
 
 const SmartAILoadButton = ({
   toolId,
@@ -69,7 +67,7 @@ const SmartAILoadButton = ({
               Configuration Error
             </h4>
             <p className="text-red-400 text-xs mt-1">
-              Tool ID "{toolId}" not configured. Using default AI.
+              Tool ID &quot;{toolId}&quot; not configured. Using default AI.
             </p>
           </div>
         </div>

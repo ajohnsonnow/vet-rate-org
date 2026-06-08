@@ -15,7 +15,7 @@
  * - More: Mission Roadmap and full tool access
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
 const NAV_ITEMS = [

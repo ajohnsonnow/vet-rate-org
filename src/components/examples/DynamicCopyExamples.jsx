@@ -8,7 +8,7 @@ import { useAboutUsContent, useDynamicCopy } from "../hooks/useDynamicCopy";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 export const AboutUsExample = () => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const aboutUs = useAboutUsContent();
   const { stats } = useDynamicCopy();
 
@@ -74,7 +74,7 @@ const StatCard = ({ label, value }) => (
  */
 
 export const BuyMeACoffeeExample = () => {
-  const { copy, stats } = useDynamicCopy();
+  const { copy, _stats } = useDynamicCopy();
   const coffee = copy.buyMeACoffee;
 
   // Randomly select a caption (or rotate through them)

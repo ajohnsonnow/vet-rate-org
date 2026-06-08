@@ -17,7 +17,7 @@
  * @see https://developer.va.gov/explore
  */
 
-import { VA_AUTH_CONFIG } from "../config/vaAuth";
+import { assertVaApiEnabled } from "../config/vaAuth";
 
 // Base URLs - use proxy in development to bypass CORS
 const isDev = import.meta.env.DEV;
@@ -36,8 +36,10 @@ const FORMS_API_KEY = import.meta.env.VITE_VA_FORMS_API_KEY;
  * Make an authenticated request (OAuth Bearer token)
  */
 async function authenticatedFetch(endpoint, accessToken, options = {}) {
+  assertVaApiEnabled();
   const url = `${SANDBOX_BASE}${endpoint}`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Fetching: ${url}`);
 
   const response = await fetch(url, {
@@ -87,6 +89,7 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
  * @param {string} customApiKey - Optional specific API key (defaults to VITE_VA_API_KEY)
  */
 async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
+  assertVaApiEnabled();
   const apiKey = customApiKey || API_KEY;
 
   if (!apiKey) {
@@ -95,7 +98,9 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
 
   const url = `${SANDBOX_BASE}${endpoint}`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Fetching (API Key): ${url}`);
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Using API Key: ${apiKey.substring(0, 8)}...`);
 
   const response = await fetch(url, {
@@ -107,6 +112,7 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
     },
   });
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Response status: ${response.status}`);
 
   if (response.status === 401 || response.status === 403) {
@@ -202,6 +208,7 @@ export async function uploadClaimDocument(
   file,
   documentType = "L049",
 ) {
+  assertVaApiEnabled();
   if (!accessToken) {
     throw new Error("No access token provided");
   }
@@ -214,6 +221,7 @@ export async function uploadClaimDocument(
 
   const url = `${SANDBOX_BASE}/services/claims/v2/veterans/me/claims/${claimId}/documents`;
 
+  // eslint-disable-next-line no-console
   console.log(`[VA API] Uploading document to claim ${claimId}`);
 
   const formData = new FormData();

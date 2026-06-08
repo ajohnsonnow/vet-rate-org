@@ -15,7 +15,7 @@
  * Built by a fellow veteran. "Security is mission-critical."
  */
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -247,6 +247,7 @@ export function AdminAuthProvider({ children }) {
       SECURITY_CONFIG.SESSION_CHECK_INTERVAL,
     );
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, sessionExpiry]);
 
   // Extend session on activity

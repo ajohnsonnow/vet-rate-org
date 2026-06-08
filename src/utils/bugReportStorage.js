@@ -13,7 +13,7 @@
  * Built by a fellow veteran. "No bug report left behind."
  */
 
-import { sanitizeErrorPayload, createSanitizedReport } from "./bugSanitizer";
+import { createSanitizedReport } from "./bugSanitizer";
 
 // ============================================
 // DATABASE CONFIGURATION
@@ -616,6 +616,7 @@ export const clearAllBugReports = async () => {
       const clearRequest = store.clear();
 
       clearRequest.onsuccess = () => {
+        // eslint-disable-next-line no-console
         console.log("✅ All bug reports cleared");
         resolve(true);
       };

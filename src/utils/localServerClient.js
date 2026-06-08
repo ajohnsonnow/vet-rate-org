@@ -129,6 +129,7 @@ export const generateCompletion = async (prompt, options = {}) => {
       const decoder = new TextDecoder();
       let result = "";
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -144,7 +145,9 @@ export const generateCompletion = async (prompt, options = {}) => {
                 result += data.content;
                 onToken(data.content);
               }
-            } catch {}
+            } catch {
+              /* ignored */
+            }
           }
         }
       }
@@ -157,6 +160,7 @@ export const generateCompletion = async (prompt, options = {}) => {
     return data.content;
   } catch (error) {
     if (error.name === "AbortError") {
+      // eslint-disable-next-line no-console
       console.log("[LocalServer] Request aborted");
       return null;
     }

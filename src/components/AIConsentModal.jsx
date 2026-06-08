@@ -5,10 +5,11 @@
  * sending any data to the AI service (Google Gemini).
  */
 
-import React from "react";
+import { useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getAIDataDisclosure } from "../utils/aiStatementHelper";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 
 const AIConsentModal = ({
   isOpen,
@@ -16,8 +17,13 @@ const AIConsentModal = ({
   onCancel,
   statementType = "personal", // 'personal', 'buddy', or 'ptsd'
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
+  const containerRef = useRef(null);
   useBodyScrollLock(isOpen);
+
+  // Trap keyboard focus inside the consent dialog; ESC declines (uses the
+  // standard local template) and restores focus to the opener on close.
+  useFocusTrap(containerRef, { active: isOpen, onEscape: onCancel });
 
   if (!isOpen) return null;
 
@@ -31,6 +37,7 @@ const AIConsentModal = ({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
@@ -74,8 +81,9 @@ const AIConsentModal = ({
               <span className="text-green-500">✓</span> What This Does
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              The AI assistant uses the <strong>"Three Pillars"</strong>{" "}
-              approach to generate a professionally-written
+              The AI assistant uses the{" "}
+              <strong>&quot;Three Pillars&quot;</strong> approach to generate a
+              professionally-written
               <strong> {statementTypeLabels[statementType]}</strong> that
               follows VA formatting guidelines. You can edit the result before
               downloading.
@@ -201,13 +209,13 @@ const AIConsentModal = ({
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-0.5">•</span>
-                Provider: <strong>{disclosure.provider}</strong> (Google's AI
-                service)
+                Provider: <strong>{disclosure.provider}</strong> (Google&apos;s
+                AI service)
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-0.5">•</span>
-                Google's free API tier does not use your prompts to train their
-                models
+                Google&apos;s free API tier does not use your prompts to train
+                their models
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-0.5">•</span>
@@ -230,8 +238,9 @@ const AIConsentModal = ({
 
           {/* Alternative option */}
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Don't want to use AI? No problem! Click "No Thanks" to use the
-            standard template that processes everything locally on your device.
+            Don&apos;t want to use AI? No problem! Click &quot;No Thanks&quot;
+            to use the standard template that processes everything locally on
+            your device.
           </p>
         </div>
 

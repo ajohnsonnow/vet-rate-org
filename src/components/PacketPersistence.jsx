@@ -13,24 +13,21 @@
  * - Mobile download prompt
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   initPersistentStorage,
-  createPacketFile,
   openExistingPacket,
   manualSave,
   downloadPacketFile,
   loadFromUploadedFile,
   gatherPacketData,
   restorePacketData,
-  getSaveStatus,
   addSaveListener,
   supportsFileSystemAccess,
   isMobileDevice,
   isTabletDevice,
   isMobilePhone,
-  getStorageStrategy,
   checkHasUnsavedChanges,
   getOrientationInfo,
 } from "../utils/persistentStorage";
@@ -106,14 +103,17 @@ function getTimeAgo(timestamp) {
 export default function PacketPersistence({
   onPacketLoaded,
   onSaveComplete,
+  // eslint-disable-next-line no-unused-vars
   showFloatingIndicator = true,
   compact = false,
 }) {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   const [initialized, setInitialized] = useState(false);
   const [saveStatus, setSaveStatus] = useState("ready");
   const [lastSaved, setLastSaved] = useState(null);
   const [storageInfo, setStorageInfo] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [showMobilePrompt, setShowMobilePrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -325,7 +325,7 @@ export default function PacketPersistence({
           onClick={handleSavePacket}
           disabled={isLoading}
           className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-          title="Save packet to your device"
+          aria-label="Save packet to your device"
         >
           <svg
             className="w-4 h-4"
@@ -560,8 +560,8 @@ export default function PacketPersistence({
               💻 On Computer
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Click "Save Packet" once, then we auto-save to your file as you
-              type
+              Click &quot;Save Packet&quot; once, then we auto-save to your file
+              as you type
             </p>
           </div>
           <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -578,7 +578,8 @@ export default function PacketPersistence({
               🔄 Coming Back?
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Click "Resume Packet" to pick up exactly where you left off
+              Click &quot;Resume Packet&quot; to pick up exactly where you left
+              off
             </p>
           </div>
         </div>
@@ -684,6 +685,7 @@ export function FloatingSaveButton({ onSave }) {
 
 export function MobileSaveReminder({ onDismiss }) {
   const [visible, setVisible] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [hasUnsaved, setHasUnsaved] = useState(false);
 
   useEffect(() => {

@@ -31,6 +31,30 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    # Blocking gate as of S13 (docs/SPRINT_PLAN_S9-S17.md, row S13;
+    # docs/audit/S13_WORKLIST.md). Runs `tsc --noEmit` over the typed surface
+    # (tsconfig.json: allowJs + checkJs:false, so .ts/.tsx + config are checked,
+    # JS/JSX bodies are not). Green at adoption. Kept as its own job — like the
+    # Lint job — so a type regression is visible at a glance and bisectable from
+    # CI output. Owner-authorized CI scope (the S13 selection).
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run type-check
+
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
@@ -99,9 +123,17 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  security:
-    name: Security Audit
+  mobile:
+    name: Mobile Layout Gate (Playwright)
     runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/mobile.spec.ts on the three
+    # owner-specified baselines (360 / 390 / 768px) under the Pixel 5
+    # mobile-chrome project (touch + mobile UA). Promoted from smoke-only
+    # per the S9–S17 plan (docs/SPRINT_PLAN_S9-S17.md, S10). Kept separate
+    # from the full e2e job — which runs every spec across every project —
+    # so a mobile-layout regression (overflow, off-screen CTA, sub-44px
+    # tap target) is visible at a glance and bisectable from CI output.
     steps:
       - uses: actions/checkout@v4
 
@@ -114,5 +146,251 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: npm audit
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run mobile layout gate (blocking)
+        run: npm run test:e2e:mobile
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mobile
+          path: playwright-report/
+          retention-days: 14
+
+  axe:
+    name: Accessibility Gate (axe-core)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/axe.spec.ts: axe-core run against
+    # the top-20 user-facing surfaces (home + 19 event-mountable modals) plus
+    # the first-visit DisclaimerSplash, failing on any serious/critical WCAG
+    # 2.0/2.1/2.2 A+AA violation — the S12 Definition of Done
+    # (docs/SPRINT_PLAN_S9-S17.md). Kept separate from the full e2e job so an
+    # a11y regression is visible at a glance and bisectable from CI output.
+    # GitHub Actions sets CI=true, so playwright.config runs serial with 2
+    # retries (workers:1) — the config that makes this gate deterministic.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run accessibility gate (blocking)
+        run: npm run test:e2e:axe
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-axe
+          path: playwright-report/
+          retention-days: 14
+
+  cwv:
+    name: Core Web Vitals Gate (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/cwv.spec.ts under the Pixel 5
+    # mobile-chrome project: reads the app's native window.__VITALS__ buffer
+    # (src/utils/webVitals.js) and asserts CLS <= 0.1 on the home surface plus
+    # the AboutUs gallery's aspect-ratio reservation — the S14 Definition of
+    # Done (docs/SPRINT_PLAN_S9-S17.md; docs/audit/S14_WORKLIST.md). CLS is
+    # layout-driven and deterministic, so it hard-gates here; the throttled
+    # LCP/INP/TBT budgets live in the lighthouse job below. Kept separate from
+    # the full e2e job so a vitals regression is visible at a glance.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Core Web Vitals gate (blocking)
+        run: npm run test:e2e:cwv
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-cwv
+          path: playwright-report/
+          retention-days: 14
+
+  pwa:
+    name: PWA + SEO Gate (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Dedicated blocking gate for tests/e2e/pwa.spec.ts under the chromium
+    # project: asserts the web app manifest is linked, parses, and every icon
+    # it declares loads as a real PNG (guards the S15 broken-icon fix); the
+    # SEO / Open Graph / Twitter meta are present, brand-correct and PII-free;
+    # and the hand-rolled service worker serves the app shell offline — the S15
+    # Definition of Done (docs/SPRINT_PLAN_S9-S17.md; docs/audit/S15_WORKLIST.md).
+    # The SW is registered manually in-test because the app only registers it in
+    # PROD (src/main.jsx), so it never auto-registers on the dev server. Kept
+    # separate from the full e2e job so a PWA/SEO regression is visible at a
+    # glance and bisectable from CI output.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run PWA + SEO gate (blocking)
+        run: npm run test:e2e:pwa
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pwa
+          path: playwright-report/
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse Mobile Gate (Core Web Vitals)
+    runs-on: ubuntu-latest
+    needs: [build]
+    # Lighthouse-CI on the built SPA, served via `vite preview`, under
+    # Lighthouse's default mobile form factor with simulated throttling — the
+    # explicitly-deferred piece of AUDIT_FINDINGS #33 (docs/SPRINT_PLAN_S9-S17.md,
+    # S14). lighthouserc.json hard-asserts CLS <= 0.1 and the SEO category
+    # (>= 0.9, promoted S16 — measured 1.00 over 3 runs in S15, and SEO audits are
+    # deterministic from the built HTML, so the baseline is stable regardless of
+    # throttling). LCP / TBT / perf-score remain warn: the same informational->
+    # strict ratchet the bundle-budget gate (scripts/check-bundle-budget.mjs)
+    # uses — those budgets ratchet to error once CI establishes a stable
+    # throttled-mobile baseline (this branch is local-only, so the CI Lighthouse
+    # job has not yet produced one; tracked in docs/audit/S14_WORKLIST.md). @lhci/cli
+    # is installed globally (the standard lhci CI pattern) rather than as a
+    # devDependency. Chrome ships on the ubuntu-latest runner, which lhci's
+    # chrome-launcher discovers automatically.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.15.1
+
+      - name: Run Lighthouse CI (mobile, blocking on CLS + SEO)
+        run: lhci autorun
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report/
+          retention-days: 14
+
+  red-team:
+    name: Red-Team Suite (LLM defenses)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    # Dedicated blocking gate for the prompt-injection / exfiltration /
+    # PII-trap / URL-bait payloads under src/__tests__/red-team/. Kept
+    # separate from the main test job so a regression here is visible
+    # at a glance and bisectable from CI output. Promptfoo / PyRIT were
+    # considered and rejected: those tools want a live LLM endpoint to
+    # call, which this local-first app does not have in CI (we ship the
+    # dual-LLM split, PII scrubber, spotlight wrap, and URL allowlist —
+    # all of which are deterministic and testable against vitest mocks).
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run red-team suite (blocking)
+        run: npm run test:red-team
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs full history to scan past commits
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (production deps, blocking on high+)
+        # Blocking gate as of S8 close — pre-existing protobufjs/xmldom advisories
+        # resolved via npm `overrides` in package.json (protobufjs ^7.5.6,
+        # @xmldom/xmldom ^0.8.13). If this fails, audit the new advisory and
+        # add a targeted override or upgrade the parent dep.
         run: npm audit --omit=dev --audit-level=high
+
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+      - name: Setup Python (for semgrep)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install semgrep
+        run: pip install semgrep
+
+      - name: SAST (semgrep, blocking)
+        # Blocking as of S8 close — S3 closed the original 44-finding backlog;
+        # sast-check.mjs exits 1 on ERROR/WARNING findings. If a new blocker
+        # lands, fix it or add a justified suppression in .semgrep.yml.
+        run: node scripts/sast-check.mjs --strict

@@ -1,5 +1,4 @@
-import React from "react";
-import { Info, Shield, BookOpen, Lock } from "lucide-react";
+import { Shield, BookOpen, Lock } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import BRAND from "../config/branding";
 

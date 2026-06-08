@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AccessibilityMenu from "./AccessibilityMenu";
 import LanguageSelector from "./LanguageSelector";
 import HelperModeToggle from "./HelperModeToggle";
@@ -10,6 +10,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useHelperMode } from "../contexts/HelperModeContext";
 import { hasUnsavedChanges } from "../utils/dataPersistence";
 import { useColorSchemas } from "../hooks/useColorSchemas";
+import useFocusTrap from "../hooks/useFocusTrap";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { useLanguage } from "../contexts/LanguageContext";
 
 function Header({
@@ -73,15 +75,25 @@ function Header({
   onCommunityRoadmapClick,
 }) {
   const { isDark, toggleTheme } = useTheme();
-  const { isHelperMode } = useHelperMode();
-  const { getDropdownClasses, getColorClass, colors } = useColorSchemas();
-  const { t, language } = useLanguage(); // Include language to force re-render on change
+  const { _isHelperMode } = useHelperMode();
+  const { getDropdownClasses, _getColorClass, _colors } = useColorSchemas();
+  const { t, _language } = useLanguage(); // Include language to force re-render on change
   const dropdownClasses = getDropdownClasses();
 
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [shouldPulseBackup, setShouldPulseBackup] = useState(false);
+  const [_shouldPulseBackup, setShouldPulseBackup] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  // The mobile drawer is a modal overlay, so lock background scroll and trap
+  // focus while it is open (ESC closes it). The desktop Tools/Resources menus
+  // are disclosure dropdowns (aria-expanded + click-away), not trapped.
+  useBodyScrollLock(showMobileMenu);
+  useFocusTrap(mobileMenuRef, {
+    active: showMobileMenu,
+    onEscape: () => setShowMobileMenu(false),
+  });
 
   // Check for unsaved changes periodically
   useEffect(() => {
@@ -210,6 +222,10 @@ function Header({
                 src="/images/Vet-Rate-org-logo-official.png"
                 alt="Vet-Rate.org Logo"
                 className="h-full w-full object-cover"
+                width={80}
+                height={80}
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
             <div className="flex-shrink-0">
@@ -239,11 +255,6 @@ function Header({
                     ? t("header", "switchToLight")
                     : t("header", "switchToDark")
                 }
-                title={
-                  isDark
-                    ? t("header", "switchToLight")
-                    : t("header", "switchToDark")
-                }
               >
                 {isDark ? (
                   <>
@@ -263,7 +274,6 @@ function Header({
                 onClick={onLegislativeWatchdogClick}
                 className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium relative"
                 aria-label={t("tools", "legislativeWatchdog")}
-                title={t("header", "legislativeWatchdogTooltip")}
               >
                 <span>📡</span>
                 <span>Watch</span>
@@ -275,7 +285,6 @@ function Header({
                 id="tour-help-btn"
                 onClick={onUserManualClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm whitespace-nowrap"
-                title={t("common", "help")}
                 aria-label={t("common", "help")}
               >
                 ❓{" "}
@@ -287,7 +296,6 @@ function Header({
                 id="tour-workflow-guide-btn"
                 onClick={onWorkflowGuideClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm flex items-center gap-1 whitespace-nowrap"
-                title={t("tools", "missions")}
                 aria-label={t("tools", "missions")}
               >
                 🗺️{" "}
@@ -307,7 +315,6 @@ function Header({
                 id="tour-my-packet-btn"
                 onClick={onMyPacketClick}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
-                title={t("tools", "myPacket")}
                 aria-label={t("tools", "myPacket")}
               >
                 📁{" "}
@@ -322,7 +329,7 @@ function Header({
                   onClick={() => setShowToolsMenu(!showToolsMenu)}
                   onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-                  title={t("common", "tools")}
+                  aria-label={t("common", "tools")}
                   aria-expanded={showToolsMenu}
                   aria-haspopup="true"
                 >
@@ -509,7 +516,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             🗺️ {t("tools", "claimNavigator")}
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded animate-pulse">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded animate-pulse">
                               {t("common", "new").toUpperCase()}
                             </span>
                           </span>
@@ -574,7 +581,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             🎖️ BDD Builder
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                               NEW
                             </span>
                           </span>
@@ -912,7 +919,7 @@ function Header({
                         >
                           <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             💼 {t("tools", "tdiuBuilder")}
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                               100%
                             </span>
                           </span>
@@ -1084,7 +1091,7 @@ function Header({
                     setTimeout(() => setShowResourcesMenu(false), 200)
                   }
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-                  title={t("header", "veteranResources")}
+                  aria-label={t("header", "veteranResources")}
                   aria-expanded={showResourcesMenu}
                   aria-haspopup="true"
                 >
@@ -1277,8 +1284,7 @@ function Header({
           {/* Community Roadmap Button */}
           <button
             onClick={onCommunityRoadmapClick}
-            className="inline-flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
-            title="View community roadmap and vote on features"
+            className="inline-flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
             aria-label="Community Roadmap"
           >
             <svg
@@ -1301,8 +1307,7 @@ function Header({
           {/* Feature Request Button */}
           <button
             onClick={onFeatureRequestClick}
-            className="inline-flex items-center justify-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
-            title={t("header", "featureRequestTooltip")}
+            className="inline-flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
             aria-label={t("buttons", "featureRequest")}
           >
             <svg
@@ -1325,18 +1330,25 @@ function Header({
 
         {/* Mobile Menu Drawer - Full screen overlay */}
         {showMobileMenu && (
-          <div
+          <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
             className="md:hidden fixed inset-0 z-50 bg-black/50"
             onClick={() => setShowMobileMenu(false)}
           >
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
             <div
+              ref={mobileMenuRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mobile-menu-title"
               className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Mobile Menu Header */}
               <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10">
                 <div>
-                  <h2 className="text-lg font-bold">Menu</h2>
+                  <h2 id="mobile-menu-title" className="text-lg font-bold">
+                    Menu
+                  </h2>
                   <p className="text-xs text-white/80">39 Pro Tools</p>
                 </div>
                 <button

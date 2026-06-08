@@ -8,9 +8,11 @@
  * Built by a fellow veteran. Hooah.
  */
 
-import React, { useState } from "react";
+import { useState, useRef } from "react";
 import { Smile, PartyPopper, Coffee } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import useFocusTrap from "../hooks/useFocusTrap";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 
 const ZONK_MESSAGES = [
   {
@@ -61,10 +63,17 @@ const MEMES = [
 ];
 
 const ZonkButton = ({ className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [showZonk, setShowZonk] = useState(false);
   const [zonkData, setZonkData] = useState(null);
   const [clickCount, setClickCount] = useState(0);
+  const zonkRef = useRef(null);
+
+  useBodyScrollLock(showZonk);
+  useFocusTrap(zonkRef, {
+    active: showZonk,
+    onEscape: () => setShowZonk(false),
+  });
 
   const handleZonkClick = () => {
     // Pick a random zonk message
@@ -107,7 +116,7 @@ const ZonkButton = ({ className = "" }) => {
       {!showZonk && (
         <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 text-center">
           <p className="text-sm text-gray-600 mb-4">
-            You've been working hard. Need a morale boost?
+            You&apos;ve been working hard. Need a morale boost?
           </p>
           <button
             onClick={handleZonkClick}
@@ -125,6 +134,10 @@ const ZonkButton = ({ className = "" }) => {
       {showZonk && zonkData && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div
+            ref={zonkRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="zonk-title"
             className={`max-w-md w-full border-4 rounded-2xl p-8 shadow-2xl transform animate-bounce ${getColorClasses(zonkData.color)}`}
           >
             <div className="text-center">
@@ -132,7 +145,9 @@ const ZonkButton = ({ className = "" }) => {
               <zonkData.icon className="w-24 h-24 mx-auto mb-4" />
 
               {/* Title */}
-              <h2 className="text-4xl font-black mb-4">{zonkData.title}</h2>
+              <h2 id="zonk-title" className="text-4xl font-black mb-4">
+                {zonkData.title}
+              </h2>
 
               {/* Message */}
               <p className="text-xl font-semibold mb-6 leading-relaxed">
@@ -159,7 +174,7 @@ const ZonkButton = ({ className = "" }) => {
         </div>
       )}
 
-      {/* CSS Animation */}
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         @keyframes fadeIn {
           from {

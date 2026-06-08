@@ -5,7 +5,7 @@
  * Integrates with WebGPUManager for multi-GPU discovery
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { gpuManager } from "../utils/WebGPUManager";
 import {
   AlertTriangle,
@@ -17,7 +17,7 @@ import {
 import { useLanguage } from "../contexts/LanguageContext";
 
 const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [adapters, setAdapters] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
 
   useEffect(() => {
     scanSystem();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scanSystem = async () => {
@@ -72,7 +73,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
 
     try {
       // Wait for the manager to return the device
-      const device = await gpuManager.selectAdapter(id);
+      const _device = await gpuManager.selectAdapter(id);
 
       // Update UI state
       setSelectedId(id);
@@ -110,7 +111,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
         <button
           onClick={scanSystem}
           className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-          title="Rescan for GPUs"
+          aria-label="Rescan for GPUs"
         >
           <RefreshCw className="w-4 h-4" />
           Rescan
@@ -239,8 +240,8 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
             </div>
           </div>
           <p className="mt-3 text-xs text-gray-500 italic">
-            This is an OS-level limitation - there's no code workaround. The
-            browser only exposes what Windows allows.
+            This is an OS-level limitation - there&apos;s no code workaround.
+            The browser only exposes what Windows allows.
           </p>
         </div>
       )}
@@ -248,9 +249,9 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
       {adapters.length > 1 && (
         <div className="mt-4 text-xs text-gray-500 bg-slate-900/50 dark:bg-slate-800/50 p-3 rounded">
           <p>
-            💡 <strong>Tip:</strong> Multiple GPUs detected! Select "High
-            Performance" for faster AI inference, or "Integrated" to save
-            battery on laptops.
+            💡 <strong>Tip:</strong> Multiple GPUs detected! Select &quot;High
+            Performance&quot; for faster AI inference, or &quot;Integrated&quot;
+            to save battery on laptops.
           </p>
         </div>
       )}

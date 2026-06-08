@@ -13,8 +13,9 @@
  * - Provides step-by-step guidance for claims process
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { generateAI } from "../utils/unifiedAIService";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useHelperMode } from "../contexts/HelperModeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getTotalToolCount } from "../data/toolkitData";
@@ -23,8 +24,6 @@ import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";
 import { autoSummarizeIfLong } from "../utils/redditSummarizer";
-import { loadVKB, generateLLMContext } from "../utils/veteranKnowledgeBase";
-import { generatePacketContext } from "../utils/myPacketManager";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
 const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
@@ -157,6 +156,7 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
         window.removeEventListener("mouseup", handleMouseUp);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, dragOffset, position]);
 
   // Listen for tour start event to close Navigator (prevents blocking tour elements)
@@ -193,6 +193,7 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
       ]);
       localStorage.setItem("vet_rate_ai_assistant_welcomed", "true");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Build context-aware system prompt
@@ -410,7 +411,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
     } else {
       // When expanding, reposition so the Navigator appears above the button
       // Navigator height is 600px, so position it anchored at the bottom
-      setPosition((prev) => ({
+      setPosition((_prev) => ({
         x: 16, // Keep at left edge
         y: Math.max(16, window.innerHeight - 600 - 16), // Anchor at bottom with 16px margin, but not above viewport
       }));
@@ -420,7 +421,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   if (isMinimized) {
     return (
       <button
-        onClick={(e) => {
+        onClick={(_e) => {
           // Only restore if not dragging
           if (!isDragging) {
             setIsMinimized(false);
@@ -429,7 +430,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         onMouseDown={handleMouseDown}
         style={{ left: `${position.x}px`, top: `${position.y}px` }}
         className="fixed z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group cursor-move"
-        title={t("aiAssistant", "minimizedTooltip")}
+        aria-label={t("aiAssistant", "minimizedTooltip")}
       >
         <div className="relative pointer-events-none">
           <span className="text-2xl">🧭</span>
@@ -444,157 +445,302 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
 
   // Expanded full-screen modal view
   if (isExpanded) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🧭</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-xl">
-                  {t("aiAssistant", "title")}
-                </h3>
-                <p className="text-sm text-blue-100">
-                  {t("aiAssistant", "subtitleExpanded")}
-                </p>
-              </div>
-            </div>
+    const header = (
+      <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="hidden h-12 w-12 items-center justify-center rounded-xl bg-white/20 sm:flex">
+            <span className="text-3xl">🧭</span>
+          </div>
+          <div className="min-w-0">
+            <h3
+              id="ai-assistant-expanded-title"
+              className="truncate text-lg font-bold sm:text-xl"
+            >
+              {t("aiAssistant", "title")}
+            </h3>
+            <p className="truncate text-xs text-blue-100 sm:text-sm">
+              {t("aiAssistant", "subtitleExpanded")}
+            </p>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2">
-              {/* AI Status Button */}
-              {onOpenAISettings && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <AIStatusBadge
-                    onClick={onOpenAISettings}
-                    className="text-sm"
-                    showLabel={true}
-                  />
-                </div>
-              )}
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                title={t("aiAssistant", "shrinkTooltip")}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* AI Status Button */}
+          {onOpenAISettings && (
+            <div
+              onClick={(e) =>
+                e.stopPropagation()
+              } /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+            >
+              <AIStatusBadge
+                onClick={onOpenAISettings}
+                className="text-sm"
+                showLabel={true}
+              />
+            </div>
+          )}
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="hidden rounded-lg p-2 transition-colors hover:bg-white/20 sm:block"
+            aria-label={t("aiAssistant", "shrinkTooltip")}
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+              />
+            </svg>
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 transition-colors hover:bg-white/20"
+              aria-label={t("common", "close")}
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
-                  />
-                </svg>
-              </button>
-              {onClose && (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+
+    const footer = (
+      <div className="space-y-3">
+        {/* Quick Questions - Horizontal */}
+        {messages.length <= 1 && !isLoading && (
+          <div>
+            <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+              {t("aiAssistant", "quickQuestions")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {getQuickQuestions().map((q, idx) => (
                 <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  title={t("common", "close")}
+                  key={idx}
+                  onClick={() => setInput(q)}
+                  className="text-xs px-3 py-2 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full border border-gray-200 dark:border-gray-700 transition-colors"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  {q}
                 </button>
-              )}
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Messages - Larger area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900/30">
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+        {/* Input - Larger in expanded mode */}
+        <div>
+          <div className="flex gap-2 sm:gap-3">
+            <div className="flex-1 relative">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  isHelperMode
+                    ? t("aiAssistant", "placeholderHelper")
+                    : t("aiAssistant", "placeholder")
+                }
+                className="w-full px-4 py-3 pr-14 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base"
+                rows={3}
+                disabled={isLoading}
+              />
+              <div className="absolute right-3 top-3">
+                <VoiceInputButton
+                  onTranscript={(text) =>
+                    setInput((prev) => (prev ? `${prev} ${text}` : text))
+                  }
+                  size="md"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors self-end flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div
-                  className={`max-w-[70%] rounded-xl p-4 ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : msg.isError
-                        ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-100"
-                        : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                  }`}
-                >
-                  {/* Markdown-style formatting */}
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {msg.content.split("\n").map((line, i) => {
-                      // Bold
-                      if (line.startsWith("**") && line.endsWith("**")) {
-                        return (
-                          <p key={i} className="font-bold mb-2">
-                            {line.slice(2, -2)}
-                          </p>
-                        );
-                      }
-                      // Bullet point
-                      if (line.startsWith("• ") || line.startsWith("- ")) {
-                        return (
-                          <li key={i} className="ml-4">
-                            {line.slice(2)}
-                          </li>
-                        );
-                      }
-                      // Regular text
-                      if (line.trim()) {
-                        return (
-                          <p key={i} className="mb-2">
-                            {line}
-                          </p>
-                        );
-                      }
-                      return <br key={i} />;
-                    })}
-                  </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+              <span className="font-medium">{t("aiAssistant", "send")}</span>
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {t("aiAssistant", "keyboardHints")}{" "}
+            {isHelperMode && t("aiAssistant", "helperModeActive")}
+          </p>
+        </div>
+      </div>
+    );
 
-                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20 dark:border-gray-600">
-                    <span className="text-xs opacity-70">
-                      {msg.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {/* Reddit Copy Button - Only for assistant messages */}
-                      {msg.role === "assistant" && !msg.isError && (
+    return (
+      <ResponsiveModal
+        isOpen
+        onClose={onClose || (() => setIsExpanded(false))}
+        header={header}
+        footer={footer}
+        labelledBy="ai-assistant-expanded-title"
+        size="xl"
+      >
+        <div className="space-y-4">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[85%] sm:max-w-[70%] rounded-xl p-4 ${
+                  msg.role === "user"
+                    ? "bg-blue-600 text-white"
+                    : msg.isError
+                      ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-100"
+                      : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                }`}
+              >
+                {/* Markdown-style formatting */}
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  {msg.content.split("\n").map((line, i) => {
+                    // Bold
+                    if (line.startsWith("**") && line.endsWith("**")) {
+                      return (
+                        <p key={i} className="font-bold mb-2">
+                          {line.slice(2, -2)}
+                        </p>
+                      );
+                    }
+                    // Bullet point
+                    if (line.startsWith("• ") || line.startsWith("- ")) {
+                      return (
+                        <li key={i} className="ml-4">
+                          {line.slice(2)}
+                        </li>
+                      );
+                    }
+                    // Regular text
+                    if (line.trim()) {
+                      return (
+                        <p key={i} className="mb-2">
+                          {line}
+                        </p>
+                      );
+                    }
+                    return <br key={i} />;
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20 dark:border-gray-600">
+                  <span className="text-xs opacity-70">
+                    {msg.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {/* Reddit Copy Button - Only for assistant messages */}
+                    {msg.role === "assistant" && !msg.isError && (
+                      <button
+                        onClick={() => handleCopyMessage(msg.content, idx)}
+                        className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
+                        aria-label="Copy for Reddit (with eCFR links & privacy redaction)"
+                      >
+                        {copiedMessageIdx === idx ? (
+                          <>
+                            <svg
+                              className="w-3 h-3 text-green-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span className="text-green-500">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              />
+                            </svg>
+                            <span>Reddit</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* Summarize Button - Only for long assistant messages without existing summary */}
+                    {msg.role === "assistant" &&
+                      !msg.isError &&
+                      isLongMessage(msg.content) &&
+                      !summaryStates[idx]?.hasSummary && (
                         <button
-                          onClick={() => handleCopyMessage(msg.content, idx)}
-                          className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
-                          title="Copy for Reddit (with eCFR links & privacy redaction)"
+                          onClick={() => handleSummarize(msg.content, idx)}
+                          disabled={summaryStates[idx]?.isSummarizing}
+                          className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
+                          aria-label="Generate BLUF summary for Reddit"
                         >
-                          {copiedMessageIdx === idx ? (
+                          {summaryStates[idx]?.isSummarizing ? (
                             <>
                               <svg
-                                className="w-3 h-3 text-green-500"
+                                className="w-3 h-3 animate-spin"
                                 fill="none"
                                 viewBox="0 0 24 24"
-                                stroke="currentColor"
                               >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
                                 <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
                               </svg>
-                              <span className="text-green-500">Copied!</span>
+                              <span>Summarizing...</span>
                             </>
                           ) : (
                             <>
@@ -608,227 +754,98 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                  d="M4 6h16M4 12h8m-8 6h16"
                                 />
                               </svg>
-                              <span>Reddit</span>
+                              <span>BLUF</span>
                             </>
                           )}
                         </button>
                       )}
-                      {/* Summarize Button - Only for long assistant messages without existing summary */}
-                      {msg.role === "assistant" &&
-                        !msg.isError &&
-                        isLongMessage(msg.content) &&
-                        !summaryStates[idx]?.hasSummary && (
-                          <button
-                            onClick={() => handleSummarize(msg.content, idx)}
-                            disabled={summaryStates[idx]?.isSummarizing}
-                            className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
-                            title="Generate BLUF summary for Reddit"
-                          >
-                            {summaryStates[idx]?.isSummarizing ? (
-                              <>
-                                <svg
-                                  className="w-3 h-3 animate-spin"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
-                                </svg>
-                                <span>Summarizing...</span>
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 6h16M4 12h8m-8 6h16"
-                                  />
-                                </svg>
-                                <span>BLUF</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      {msg.mode && (
-                        <span className="text-xs opacity-70">
-                          {msg.mode === "local"
-                            ? t("aiAssistant", "modeLocal")
-                            : t("aiAssistant", "modeCloud")}
-                        </span>
-                      )}
+                    {msg.mode && (
+                      <span className="text-xs opacity-70">
+                        {msg.mode === "local"
+                          ? t("aiAssistant", "modeLocal")
+                          : t("aiAssistant", "modeCloud")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Summary Section - Shows when BLUF has been generated */}
+                {summaryStates[idx]?.hasSummary && (
+                  <div className="mt-2 pt-2 border-t border-purple-300 dark:border-purple-700">
+                    <div className="flex items-center gap-1 mb-1">
+                      <svg
+                        className="w-3 h-3 text-purple-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 6h16M4 12h8m-8 6h16"
+                        />
+                      </svg>
+                      <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        BLUF Summary
+                      </span>
+                      <button
+                        onClick={() =>
+                          handleCopyMessage(
+                            summaryStates[idx].summary,
+                            `summary-${idx}`,
+                          )
+                        }
+                        className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
+                        aria-label="Copy summary for Reddit"
+                      >
+                        {copiedMessageIdx === `summary-${idx}` ? "✓" : "📋"}
+                      </button>
+                    </div>
+                    <div className="text-xs text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/30 rounded p-2">
+                      {summaryStates[idx].summary}
                     </div>
                   </div>
-
-                  {/* Summary Section - Shows when BLUF has been generated */}
-                  {summaryStates[idx]?.hasSummary && (
-                    <div className="mt-2 pt-2 border-t border-purple-300 dark:border-purple-700">
-                      <div className="flex items-center gap-1 mb-1">
-                        <svg
-                          className="w-3 h-3 text-purple-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 6h16M4 12h8m-8 6h16"
-                          />
-                        </svg>
-                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-                          BLUF Summary
-                        </span>
-                        <button
-                          onClick={() =>
-                            handleCopyMessage(
-                              summaryStates[idx].summary,
-                              `summary-${idx}`,
-                            )
-                          }
-                          className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
-                          title="Copy summary for Reddit"
-                        >
-                          {copiedMessageIdx === `summary-${idx}` ? "✓" : "📋"}
-                        </button>
-                      </div>
-                      <div className="text-xs text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/30 rounded p-2">
-                        {summaryStates[idx].summary}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            ))}
+            </div>
+          ))}
 
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 flex items-center gap-3 shadow-sm">
-                  <div className="flex space-x-1">
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t("aiAssistant", "analyzing")}
-                  </span>
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                <div className="flex space-x-1">
+                  <div
+                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  ></div>
                 </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Questions - Horizontal */}
-          {messages.length <= 1 && !isLoading && (
-            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                {t("aiAssistant", "quickQuestions")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {getQuickQuestions().map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setInput(q)}
-                    className="text-xs px-3 py-2 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full border border-gray-200 dark:border-gray-700 transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("aiAssistant", "analyzing")}
+                </span>
               </div>
             </div>
           )}
 
-          {/* Input - Larger in expanded mode */}
-          <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={
-                    isHelperMode
-                      ? t("aiAssistant", "placeholderHelper")
-                      : t("aiAssistant", "placeholder")
-                  }
-                  className="w-full px-4 py-3 pr-14 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base"
-                  rows={3}
-                  disabled={isLoading}
-                />
-                <div className="absolute right-3 top-3">
-                  <VoiceInputButton
-                    onTranscript={(text) =>
-                      setInput((prev) => (prev ? `${prev} ${text}` : text))
-                    }
-                    size="md"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors self-end flex items-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-                <span className="font-medium">{t("aiAssistant", "send")}</span>
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              {t("aiAssistant", "keyboardHints")}{" "}
-              {isHelperMode && t("aiAssistant", "helperModeActive")}
-            </p>
-          </div>
+          <div ref={messagesEndRef} />
         </div>
-      </div>
+      </ResponsiveModal>
     );
   }
 
   return (
-    <div
+    <div /* eslint-disable-line jsx-a11y/no-static-element-interactions */
       id="tour-ai-navigator-expanded"
       ref={containerRef}
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
@@ -855,7 +872,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* AI Status Button */}
           {onOpenAISettings && (
-            <div
+            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
               className="pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -869,7 +886,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsExpanded(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title={t("aiAssistant", "expandTooltip")}
+            aria-label={t("aiAssistant", "expandTooltip")}
           >
             <svg
               className="w-5 h-5"
@@ -888,7 +905,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title={t("aiAssistant", "minimizeTooltip")}
+            aria-label={t("aiAssistant", "minimizeTooltip")}
           >
             <svg
               className="w-5 h-5"
@@ -908,7 +925,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-white/20 rounded transition-colors"
-              title={t("common", "close")}
+              aria-label={t("common", "close")}
             >
               <svg
                 className="w-5 h-5"
@@ -988,7 +1005,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                     <button
                       onClick={() => handleCopyMessage(msg.content, idx)}
                       className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
-                      title="Copy for Reddit (with eCFR links & privacy redaction)"
+                      aria-label="Copy for Reddit (with eCFR links & privacy redaction)"
                     >
                       {copiedMessageIdx === idx ? (
                         <>
@@ -1036,7 +1053,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                         onClick={() => handleSummarize(msg.content, idx)}
                         disabled={summaryStates[idx]?.isSummarizing}
                         className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
-                        title="Generate BLUF summary for Reddit"
+                        aria-label="Generate BLUF summary for Reddit"
                       >
                         {summaryStates[idx]?.isSummarizing ? (
                           <>
@@ -1119,7 +1136,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
                         )
                       }
                       className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
-                      title="Copy summary for Reddit"
+                      aria-label="Copy summary for Reddit"
                     >
                       {copiedMessageIdx === `summary-${idx}` ? "✓" : "📋"}
                     </button>

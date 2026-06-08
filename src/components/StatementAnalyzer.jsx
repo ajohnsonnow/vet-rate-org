@@ -8,7 +8,7 @@
  * Built by a fellow veteran. "Clinical facts, not rage."
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Check, Lightbulb, Brain } from "lucide-react";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -70,7 +70,7 @@ Severity: "low"
 Now analyze this statement:`;
 
 const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
@@ -100,6 +100,7 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
         clearTimeout(debounceTimer.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
 
   const analyzeStatement = async () => {
@@ -245,7 +246,11 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+        <div
+          className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
+          role="alert"
+          aria-live="polite"
+        >
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -337,7 +342,7 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
             <p className="text-sm text-blue-800">
               <strong>The Diplomat</strong> helps you write clinical,
               professional statements that resonate with VA raters. Start typing
-              your statement, and I'll analyze the tone automatically.
+              your statement, and I&apos;ll analyze the tone automatically.
             </p>
             <p className="text-xs text-blue-700 mt-2">
               💡 Tip: Avoid emotional language. Focus on facts, measurements,

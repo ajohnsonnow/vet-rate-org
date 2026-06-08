@@ -91,7 +91,7 @@ const CONDITION_PATTERNS = {
 
   // Effective date pattern
   EFFECTIVE_DATE:
-    /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi,
+    /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
 
   // Diagnostic code pattern
   DIAGNOSTIC_CODE: /(?:diagnostic\s*code|DC)[:\s#]*(\d{4})/gi,
@@ -154,7 +154,7 @@ export function parseDecisionLetter(text) {
     if (nameMatch) result.veteranName = nameMatch[1].trim();
 
     const claimMatch = text.match(
-      /(?:claim|file)\s*(?:number|#)[:\s]*([A-Z0-9\-]+)/i,
+      /(?:claim|file)\s*(?:number|#)[:\s]*([A-Z0-9-]+)/i,
     );
     if (claimMatch) result.claimNumber = claimMatch[1];
 
@@ -381,13 +381,13 @@ export function parseDBQReport(text) {
   try {
     // === EXTRACT EXAM DATE ===
     const dateMatch = text.match(
-      /(?:exam(?:ination)?\s*date|date\s*of\s*exam)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /(?:exam(?:ination)?\s*date|date\s*of\s*exam)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     );
     if (dateMatch) result.examDate = dateMatch[1];
 
     // === EXTRACT EXAMINER ===
     const examinerMatch = text.match(
-      /(?:examiner|physician|doctor)[:\s]*([A-Z][A-Za-z\s,\.]+(?:MD|DO|PA|NP)?)/i,
+      /(?:examiner|physician|doctor)[:\s]*([A-Z][A-Za-z\s,.]+(?:MD|DO|PA|NP)?)/i,
     );
     if (examinerMatch) result.examinerName = examinerMatch[1].trim();
 
@@ -397,7 +397,7 @@ export function parseDBQReport(text) {
       const diagSection = text.substring(diagnosisStart, diagnosisStart + 1000);
       // Look for ICD codes or diagnosis statements
       const diagMatches = diagSection.matchAll(
-        /(?:\d+\.|•|-)?\s*([A-Za-z\s\-]+)(?:\s*\(?\s*(?:ICD[:\s]*)?([A-Z]\d{2}(?:\.\d+)?)\)?)?/gi,
+        /(?:\d+\.|•|-)?\s*([A-Za-z\s-]+)(?:\s*\(?\s*(?:ICD[:\s]*)?([A-Z]\d{2}(?:\.\d+)?)\)?)?/gi,
       );
       for (const match of diagMatches) {
         if (
@@ -571,7 +571,7 @@ export function parseCodeSheet(text) {
   try {
     // Code sheets have a very specific format with DC codes
     const dcPattern =
-      /(\d{4})\s*[:\-]?\s*([A-Za-z\s\-,()]+?)\s*[:\-]?\s*(\d{1,3})%/g;
+      /(\d{4})\s*[:-]?\s*([A-Za-z\s\-,()]+?)\s*[:-]?\s*(\d{1,3})%/g;
     const matches = text.matchAll(dcPattern);
 
     for (const match of matches) {
@@ -750,7 +750,7 @@ export function parseHLR(text) {
 
       // Try to extract conference date
       const confDateMatch = text.match(
-        /(?:conference|meeting)\s*(?:held\s*)?(?:on\s*)?(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+        /(?:conference|meeting)\s*(?:held\s*)?(?:on\s*)?(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
       );
       if (confDateMatch) {
         result.informalConference.date = confDateMatch[1];
@@ -800,7 +800,7 @@ export function parseHLR(text) {
 
     // Extract effective date
     const effectiveDateMatch = text.match(
-      /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     );
     if (effectiveDateMatch) {
       result.effectiveDate = effectiveDateMatch[1];
@@ -847,7 +847,7 @@ export function extractBigThree(text) {
 
   // Pattern: Condition ... XX% ... effective DATE
   const bigThreePattern =
-    /([A-Za-z\s\-,()]{5,50}?)(?:\s*(?:\.{2,}|–|-|:)\s*)(\d{1,3})\s*(?:percent|%)[^]*?effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi;
+    /([A-Za-z\s\-,()]{5,50}?)(?:\s*(?:\.{2,}|–|-|:)\s*)(\d{1,3})\s*(?:percent|%)[^]*?effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi;
 
   const matches = text.matchAll(bigThreePattern);
   for (const match of matches) {

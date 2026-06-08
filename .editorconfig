@@ -1,0 +1,97 @@
+# .editorconfig
+# Normalize editor settings across all editors and IDEs.
+# Supported by VS Code, IntelliJ, Vim, Emacs, Sublime, and more.
+# See: https://editorconfig.org
+#
+# Copy this to your project root.
+
+root = true
+
+# ============================================================
+# ALL FILES
+# ============================================================
+[*]
+charset = utf-8
+end_of_line = lf              # LF prevents Windows CRLF issues in git diffs
+insert_final_newline = true   # Files end with newline (POSIX standard)
+trim_trailing_whitespace = true
+
+# ============================================================
+# WEB & CONFIG FILES (2-space indent)
+# ============================================================
+[*.{js,mjs,cjs,jsx,ts,tsx,css,scss,sass,less,html,json,jsonc,yaml,yml,toml,graphql,gql}]
+indent_style = space
+indent_size = 2
+
+# ============================================================
+# PYTHON (4-space indent per PEP 8)
+# ============================================================
+[*.py]
+indent_style = space
+indent_size = 4
+
+# ============================================================
+# RUBY (2-space per community standard)
+# ============================================================
+[*.rb]
+indent_style = space
+indent_size = 2
+
+# ============================================================
+# GO (tabs per gofmt)
+# ============================================================
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# ============================================================
+# RUST (4-space per rustfmt)
+# ============================================================
+[*.rs]
+indent_style = space
+indent_size = 4
+
+# ============================================================
+# MAKEFILES (TABS REQUIRED — Makefiles will break with spaces)
+# ============================================================
+[Makefile]
+indent_style = tab
+
+[*.mk]
+indent_style = tab
+
+# ============================================================
+# MARKDOWN (special rules)
+# ============================================================
+[*.md]
+trim_trailing_whitespace = false  # Markdown uses trailing spaces for <br>
+max_line_length = off             # Allow long lines in docs
+
+# ============================================================
+# SHELL SCRIPTS (2-space)
+# ============================================================
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+
+# ============================================================
+# BATCH/POWERSHELL (4-space)
+# ============================================================
+[*.{bat,cmd,ps1}]
+indent_style = space
+indent_size = 4
+end_of_line = crlf    # Windows batch files need CRLF
+
+# ============================================================
+# JAVA / KOTLIN / SWIFT (4-space)
+# ============================================================
+[*.{java,kt,kts,swift}]
+indent_style = space
+indent_size = 4
+
+# ============================================================
+# C / C++ / C# (4-space)
+# ============================================================
+[*.{c,cpp,h,hpp,cs}]
+indent_style = space
+indent_size = 4

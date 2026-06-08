@@ -8,7 +8,6 @@
  * Falls back to language code badges for regions without flags (like Hmong, Hawaiian)
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Map language/region codes to their flag-icons country codes
@@ -96,7 +95,7 @@ const FlagIcon = ({
   rounded = true,
   fallbackEmoji,
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const countryCode = FLAG_CODE_MAP[langCode];
   const fallback = fallbackEmoji || FALLBACK_ICONS[langCode];
 

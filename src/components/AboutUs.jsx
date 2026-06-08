@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReportBugLink from "./ReportBugLink";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import {
   PROJECT_STATS,
   FORMATTED_STATS,
@@ -25,6 +26,7 @@ const VersionDropUp = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [changelogData, setChangelogData] = useState(null);
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     const data = generateWhatsNewChangelog();
@@ -32,18 +34,27 @@ const VersionDropUp = () => {
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
+    // ESC closes the disclosure and returns focus to its trigger (APG
+    // disclosure pattern — informational popup, not a menu/dialog, so no trap).
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -100,7 +111,7 @@ const VersionDropUp = () => {
     return (
       <button
         className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors"
-        title="Loading version information..."
+        aria-label="Loading version information..."
       >
         v1.0.0
       </button>
@@ -112,9 +123,11 @@ const VersionDropUp = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors flex items-center gap-1"
-        title="View version changelog"
+        aria-label="View version changelog"
+        aria-expanded={isOpen}
       >
         v{version}
         <ChevronUp
@@ -167,7 +180,7 @@ const VersionDropUp = () => {
 
           {/* Header - at bottom since it's flipped */}
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-b-lg sticky bottom-0">
-            <h3 className="font-bold text-lg">What's New</h3>
+            <h3 className="font-bold text-lg">What&apos;s New</h3>
             <p className="text-emerald-100 text-xs">Version {version}</p>
           </div>
         </div>
@@ -179,6 +192,10 @@ const VersionDropUp = () => {
 const AboutUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+
+  // Trap focus inside the dialog, close on ESC, restore focus on teardown.
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, { active: true, onEscape: onClose });
 
   // Get color schemas
   const { getModalClasses, getColorClass, colors } = useColorSchemas();
@@ -199,6 +216,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
 
   return (
     <div
+      ref={dialogRef}
       className={modalClasses.backdrop}
       role="dialog"
       aria-modal="true"
@@ -247,7 +265,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
 
             <div className="font-mono text-gray-300 space-y-4 text-sm leading-relaxed">
               <p className="text-center text-lg text-white font-semibold">
-                "{t("about", "builtByVeteranForVeterans")}"
+                &quot;{t("about", "builtByVeteranForVeterans")}&quot;
               </p>
 
               <p>{t("about", "promiseIntro")}</p>
@@ -413,6 +431,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   src="/images/Anth.jpg"
                   alt="Veteran in military uniform"
                   className="w-48 h-auto rounded-lg shadow-lg border-2 border-gray-300 dark:border-gray-600"
+                  width={435}
+                  height={604}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2 italic">
                   SGT Johnson, 92Y20
@@ -466,6 +488,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/ReadyForHerCloseup.jpg"
                           alt="Luna the calico cat - portrait"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={1750}
+                          height={2048}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Ready for her closeup 📷
@@ -476,6 +502,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/Kitty_Coder.jpg"
                           alt="Luna supervising coding at the workstation"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={2048}
+                          height={1536}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Supervising the code 💻
@@ -486,6 +516,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           src="/images/NaptimeLuna.jpg"
                           alt="Luna taking a well-deserved nap"
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                          width={2048}
+                          height={1536}
+                          loading="lazy"
+                          decoding="async"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">
                           Quality assurance testing 😴
@@ -549,8 +583,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
                         80+ Titanium
                       </p>
                       <p>
-                        <strong>Displays:</strong> Asus ProArt PA329CV 32" 4K +
-                        PA279CRV 27" 4K + Caperave CU17 17.3" 4K
+                        <strong>Displays:</strong> Asus ProArt PA329CV 32&quot;
+                        4K + PA279CRV 27&quot; 4K + Caperave CU17 17.3&quot; 4K
                       </p>
                       <p className="pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
                         <strong>eGPU:</strong> Asus Dual GeForce RTX 5060 Ti OC
@@ -1062,7 +1096,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <button
                 onClick={handleZonk}
                 className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-sm"
-                title="Zonk! (Click me)"
+                aria-label="Zonk! (Click me)"
               >
                 {t("about", "dismissed")}
               </button>

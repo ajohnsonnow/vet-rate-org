@@ -152,13 +152,13 @@ export const getAppState = (appState = {}) => {
     searchTerm = "",
     results = [],
     selectedResult = null,
-    hasSearched = false,
-    showSecondaryScout = false,
-    showSecondaryScoutLauncher = false,
+    _hasSearched = false,
+    _showSecondaryScout = false,
+    _showSecondaryScoutLauncher = false,
     showNexusBuilder = false,
-    showMyPacket = false,
-    showCAPSimulator = false,
-    showVAResources = false,
+    _showMyPacket = false,
+    _showCAPSimulator = false,
+    _showVAResources = false,
     userConditions = [],
     nexusBuilderData = null,
     error = null,
@@ -648,6 +648,7 @@ export const initializeErrorCapture = () => {
   const originalConsole = {
     error: console.error,
     warn: console.warn,
+    // eslint-disable-next-line no-console
     log: console.log,
     info: console.info,
   };
@@ -680,6 +681,7 @@ export const initializeErrorCapture = () => {
   };
 
   // Intercept console.log (capture only important logs to avoid spam)
+  // eslint-disable-next-line no-console
   console.log = function (...args) {
     // Only capture logs that might be relevant to bugs
     const message = args

@@ -6,7 +6,7 @@
 
 import { getToolRecommendation } from "./llmRecommendations";
 import { isMobilePhone, isTabletDevice } from "./persistentStorage";
-import { getAIStatus, isLocalAIReady } from "./unifiedAIService";
+import { getAIStatus } from "./unifiedAIService";
 
 /**
  * Get device type

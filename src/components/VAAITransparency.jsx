@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   X,
   ExternalLink,
@@ -17,7 +17,7 @@ import {
   Scale,
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -29,8 +29,7 @@ import { useLanguage } from "../contexts/LanguageContext";
  * from department.va.gov/ai/
  */
 const VAAITransparency = ({ onClose }) => {
-  const { t } = useLanguage();
-  useBodyScrollLock(true);
+  const { _t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -225,7 +224,7 @@ const VAAITransparency = ({ onClose }) => {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700">
         <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-500" />
-          VA's AI Vision
+          VA&apos;s AI Vision
         </h4>
         <div className="space-y-3 text-gray-700 dark:text-gray-300">
           <p className="leading-relaxed">
@@ -233,8 +232,9 @@ const VAAITransparency = ({ onClose }) => {
               For Veterans:
             </strong>{" "}
             AI-powered digital assistants for scheduling appointments and
-            submitting forms, faster claim processing ("minutes not months"),
-            and improved healthcare diagnosis and treatment recommendations.
+            submitting forms, faster claim processing (&quot;minutes not
+            months&quot;), and improved healthcare diagnosis and treatment
+            recommendations.
           </p>
           <p className="leading-relaxed">
             <strong className="text-green-600 dark:text-green-400">
@@ -497,8 +497,8 @@ const VAAITransparency = ({ onClose }) => {
         </h4>
         <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
           VA takes veteran privacy seriously. All AI systems must pass rigorous
-          security reviews and follow strict federal requirements. Here's how
-          your data is protected:
+          security reviews and follow strict federal requirements. Here&apos;s
+          how your data is protected:
         </p>
 
         <div className="space-y-4">
@@ -572,7 +572,7 @@ const VAAITransparency = ({ onClose }) => {
         <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-r-lg">
           <h5 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
-            VA's Generative AI Policy
+            VA&apos;s Generative AI Policy
           </h5>
           <div className="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
             <p>
@@ -611,7 +611,7 @@ const VAAITransparency = ({ onClose }) => {
             <FileText className="h-12 w-12 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
             <div>
               <h5 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                227 AI Systems in VA's Public Inventory
+                227 AI Systems in VA&apos;s Public Inventory
               </h5>
               <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                 VA publishes a comprehensive inventory of all artificial
@@ -716,7 +716,7 @@ const VAAITransparency = ({ onClose }) => {
                 VA AI Strategy Document
               </div>
               <div className="text-sm text-blue-700 dark:text-blue-300">
-                VA's 5 priority areas for AI adoption
+                VA&apos;s 5 priority areas for AI adoption
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -752,7 +752,7 @@ const VAAITransparency = ({ onClose }) => {
                 Generative AI Guidance
               </div>
               <div className="text-sm text-green-700 dark:text-green-300">
-                VA's policies for AI chatbot usage
+                VA&apos;s policies for AI chatbot usage
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -784,8 +784,8 @@ const VAAITransparency = ({ onClose }) => {
             Provide Feedback to VA
           </h5>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-            Have concerns or questions about VA's AI systems? The VA AI team
-            collects feedback to improve transparency and address veteran
+            Have concerns or questions about VA&apos;s AI systems? The VA AI
+            team collects feedback to improve transparency and address veteran
             concerns.
           </p>
           <a
@@ -803,100 +803,101 @@ const VAAITransparency = ({ onClose }) => {
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 p-6 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <Brain className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white">
-                  VA AI Transparency Hub{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-blue-100 text-sm mt-1">
-                  Understanding How VA Uses Artificial Intelligence
-                </p>
-              </div>
-            </div>
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="va-ai-transparency-title"
+      footer={
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            Data from{" "}
+            <a
+              href="https://department.va.gov/ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 underline"
+            >
+              department.va.gov/ai/
+            </a>{" "}
+            (Updated January 2026)
+          </div>
+          <div className="flex items-center gap-3">
+            <ReportBugLink />
             <button
               onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
-              aria-label="Close"
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
             >
-              <X className="h-6 w-6" />
+              Close
             </button>
           </div>
         </div>
-
-        {/* Tabs */}
-        <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-full">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-colors whitespace-nowrap flex-1 justify-center ${
-                  activeTab === tab.id
-                    ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
-              >
-                <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === "overview" && renderOverview()}
-          {activeTab === "healthcare" && renderHealthcareAI()}
-          {activeTab === "benefits" && renderBenefitsAI()}
-          {activeTab === "privacy" && renderPrivacy()}
-          {activeTab === "inventory" && renderInventory()}
-        </div>
-
-        {/* Footer */}
-        <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 p-4 rounded-b-lg border-t border-gray-300 dark:border-gray-700">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Data from{" "}
-              <a
-                href="https://department.va.gov/ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                department.va.gov/ai/
-              </a>{" "}
-              (Updated January 2026)
-            </div>
-            <div className="flex items-center gap-3">
-              <ReportBugLink />
+      }
+      header={
+        <>
+          <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 p-6 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <Brain className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2
+                    id="va-ai-transparency-title"
+                    className="text-3xl font-bold text-white"
+                  >
+                    VA AI Transparency Hub{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    Understanding How VA Uses Artificial Intelligence
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                aria-label="Close"
               >
-                Close
+                <X className="h-6 w-6" />
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          {/* Tabs */}
+          <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+            <div className="flex min-w-full">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  aria-label={tab.label}
+                  className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-colors whitespace-nowrap flex-1 justify-center ${
+                    activeTab === tab.id
+                      ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <tab.icon
+                    className="h-3 w-3 sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                  />
+                  <span className="hidden xs:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      }
+    >
+      {activeTab === "overview" && renderOverview()}
+      {activeTab === "healthcare" && renderHealthcareAI()}
+      {activeTab === "benefits" && renderBenefitsAI()}
+      {activeTab === "privacy" && renderPrivacy()}
+      {activeTab === "inventory" && renderInventory()}
+    </ResponsiveModal>
   );
 };
 

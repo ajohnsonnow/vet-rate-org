@@ -1,0 +1,148 @@
+name: release
+
+# Triggered when a semver tag (vX.Y.Z) is pushed. Builds the production
+# artifacts, generates CycloneDX + SPDX SBOMs, signs every release asset
+# with Sigstore keyless cosign (no key storage — GitHub OIDC identity),
+# and attaches a SLSA Level 3 provenance attestation via the
+# slsa-github-generator reusable workflow. Downstream consumers can
+# verify the bundle's integrity end-to-end without trusting a long-lived
+# key:
+#
+#   cosign verify-blob \
+#     --certificate-identity-regexp '^https://github.com/<owner>/<repo>/.github/workflows/release.yml@' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#     --certificate <asset>.pem --signature <asset>.sig <asset>
+#
+#   slsa-verifier verify-artifact <asset> \
+#     --provenance-path *.intoto.jsonl \
+#     --source-uri github.com/<owner>/<repo>
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref (tag or commit) to release'
+        required: true
+        type: string
+
+# Default to no permissions — each job opts in explicitly.
+permissions: {}
+
+jobs:
+  build:
+    name: Build + SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Generate CycloneDX + SPDX SBOMs (production deps)
+        run: |
+          mkdir -p artifacts
+          npm sbom --sbom-format=cyclonedx --omit=dev > artifacts/sbom.cdx.json
+          npm sbom --sbom-format=spdx     --omit=dev > artifacts/sbom.spdx.json
+          echo "=== SBOM components: ==="
+          node -e "const s=JSON.parse(require('fs').readFileSync('artifacts/sbom.cdx.json','utf8')); console.log('CycloneDX components:', (s.components||[]).length);"
+
+      - name: Package dist as release tarball
+        run: tar -czf artifacts/dist.tar.gz -C dist .
+
+      - name: Compute sha256 digests (subject of provenance + signatures)
+        id: hash
+        working-directory: artifacts
+        run: |
+          set -euo pipefail
+          # base64-encoded "sha256sum"-format lines per SLSA generator spec.
+          echo "digests=$(sha256sum sbom.cdx.json sbom.spdx.json dist.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts for downstream jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ github.ref_name }}
+          path: artifacts/
+          retention-days: 90
+
+  publish:
+    name: Cosign + Publish Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # create/upload release assets
+      id-token: write   # Sigstore OIDC for keyless cosign
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ github.ref_name }}
+          path: artifacts/
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Keyless sign-blob (Sigstore OIDC, no key storage)
+        working-directory: artifacts
+        run: |
+          set -euo pipefail
+          for f in sbom.cdx.json sbom.spdx.json dist.tar.gz; do
+            cosign sign-blob --yes \
+              --output-signature "${f}.sig" \
+              --output-certificate "${f}.pem" \
+              "${f}"
+          done
+          echo "=== Signed artifacts: ==="
+          ls -la *.sig *.pem
+
+      - name: Create GitHub Release with signed artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          TAG="$GIT_REF_NAME"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then TAG="$INPUT_REF"; fi
+          # Create if missing; uploading to an existing release is idempotent via --clobber.
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" --clobber \
+            artifacts/sbom.cdx.json artifacts/sbom.cdx.json.sig artifacts/sbom.cdx.json.pem \
+            artifacts/sbom.spdx.json artifacts/sbom.spdx.json.sig artifacts/sbom.spdx.json.pem \
+            artifacts/dist.tar.gz artifacts/dist.tar.gz.sig artifacts/dist.tar.gz.pem
+
+  provenance:
+    name: SLSA-3 Provenance
+    needs: [build, publish]
+    permissions:
+      actions: read     # read workflow metadata for the attestation
+      id-token: write   # Sigstore OIDC
+      contents: write   # attach .intoto.jsonl to the release
+    # Pinned reusable workflow per SLSA generator's hardening guidance.
+    # Bump the tag deliberately — verifier checks the source ref of the
+    # attestor, so a silent bump breaks downstream `slsa-verifier` runs.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.digests }}
+      upload-assets: true
+      provenance-name: vet-rate-org-${{ github.ref_name }}.intoto.jsonl

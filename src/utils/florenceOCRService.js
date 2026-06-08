@@ -233,8 +233,11 @@ export async function processDocument(file, options = {}) {
         worker.removeEventListener("message", messageHandler);
 
         // Debug: Log raw Florence output to understand format
+        // eslint-disable-next-line no-console
         console.log("🔍 [FlorenceOCR] Raw worker response:", e.data);
+        // eslint-disable-next-line no-console
         console.log("🔍 [FlorenceOCR] Text type:", typeof text);
+        // eslint-disable-next-line no-console
         console.log("🔍 [FlorenceOCR] Text content:", text);
 
         // Extract text from result - handle various Florence output formats
@@ -249,6 +252,7 @@ export async function processDocument(file, options = {}) {
           extractedText = String(text || "");
         }
 
+        // eslint-disable-next-line no-console
         console.log(
           "🔍 [FlorenceOCR] Extracted text (first 500 chars):",
           extractedText?.substring(0, 500),
@@ -258,6 +262,7 @@ export async function processDocument(file, options = {}) {
         let parsedData = null;
         if (shouldParse) {
           parsedData = parseDD214Text(extractedText);
+          // eslint-disable-next-line no-console
           console.log(
             "🔍 [FlorenceOCR] Parsed DD214 data:",
             parsedData?.fields
@@ -281,6 +286,7 @@ export async function processDocument(file, options = {}) {
     worker.postMessage({ type: "ANALYZE", payload: { imageBlob } });
 
     // Debug logging
+    // eslint-disable-next-line no-console
     console.log("🔍 [FlorenceOCR] Sent image to worker for analysis...");
   });
 }

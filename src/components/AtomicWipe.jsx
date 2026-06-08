@@ -13,8 +13,9 @@
  * - Privacy-conscious data clearing
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 export default function AtomicWipe({ compact = false, onWipeComplete }) {
   const { isDark, isTbiComfort } = useTheme();
@@ -26,14 +27,17 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
 
     try {
       // 1. Clear all localStorage
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing localStorage...");
       localStorage.clear();
 
       // 2. Clear all sessionStorage
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing sessionStorage...");
       sessionStorage.clear();
 
       // 3. Clear cookies
+      // eslint-disable-next-line no-console
       console.log("Clearing cookies...");
       document.cookie.split(";").forEach((c) => {
         const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
@@ -46,6 +50,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       });
 
       // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing IndexedDB...");
       if (window.indexedDB) {
         try {
@@ -54,12 +59,14 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             const databases = await window.indexedDB.databases();
             const deletePromises = databases.map((db) => {
               if (db.name) {
+                // eslint-disable-next-line no-console
                 console.log(`  Deleting database: ${db.name}`);
                 return new Promise((resolve) => {
                   const req = window.indexedDB.deleteDatabase(db.name);
                   req.onsuccess = () => resolve();
                   req.onerror = () => resolve();
                   req.onblocked = () => {
+                    // eslint-disable-next-line no-console
                     console.log(`  Database ${db.name} blocked, forcing...`);
                     setTimeout(resolve, 100);
                   };
@@ -69,6 +76,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             await Promise.all(deletePromises);
           } else {
             // Fallback: delete known database names
+            // eslint-disable-next-line no-console
             console.log("  Using fallback database deletion...");
             const knownDbs = [
               "vetrate-storage",
@@ -86,6 +94,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
                 try {
                   const req = window.indexedDB.deleteDatabase(dbName);
                   req.onsuccess = () => {
+                    // eslint-disable-next-line no-console
                     console.log(`  Deleted: ${dbName}`);
                     resolve();
                   };
@@ -106,11 +115,13 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       }
 
       // 5. Clear Cache Storage (PWA caches)
+      // eslint-disable-next-line no-console
       console.log("🔥 Clearing Cache Storage...");
       if ("caches" in window) {
         try {
           const cacheNames = await caches.keys();
           const deletePromises = cacheNames.map((cacheName) => {
+            // eslint-disable-next-line no-console
             console.log(`  Deleting cache: ${cacheName}`);
             return caches.delete(cacheName);
           });
@@ -121,12 +132,14 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       }
 
       // 6. Unregister Service Workers
+      // eslint-disable-next-line no-console
       console.log("🔥 Unregistering Service Workers...");
       if ("serviceWorker" in navigator) {
         try {
           const registrations =
             await navigator.serviceWorker.getRegistrations();
           const unregisterPromises = registrations.map((registration) => {
+            // eslint-disable-next-line no-console
             console.log("  Unregistering service worker");
             return registration.unregister();
           });
@@ -136,6 +149,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log("✅ Atomic Wipe complete!");
 
       // Notify completion
@@ -171,14 +185,13 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             focus:outline-none focus:ring-2 focus:ring-red-500
             transition-colors
           `}
-          title="Clear all local data"
+          aria-label="Clear all local data"
         >
           🔥 Clear Data
         </button>
 
         {showConfirm && (
           <ConfirmModal
-            isDark={isDark || isTbiComfort}
             isWiping={isWiping}
             onConfirm={handleAtomicWipe}
             onCancel={() => setShowConfirm(false)}
@@ -202,13 +215,13 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
           focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
           transition-colors
         `}
-        title="Clear all local data"
+        aria-label="Clear all local data"
       >
         <span className="text-xl">🔥</span>
         <div className="text-left">
           <span className="block text-sm font-bold">Atomic Wipe</span>
           <span
-            className={`block text-xs ${isDark || isTbiComfort ? "text-red-500/70" : "text-red-500"}`}
+            className={`block text-xs ${isDark || isTbiComfort ? "text-red-400" : "text-red-500"}`}
           >
             Clear All Local Data
           </span>
@@ -227,103 +240,46 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
   );
 }
 
-function ConfirmModal({ isDark, isWiping, onConfirm, onCancel }) {
+function ConfirmModal({ isWiping, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div
-        className={`
-        max-w-md w-full rounded-2xl shadow-2xl overflow-hidden
-        ${isDark ? "bg-gray-900 border border-gray-700" : "bg-white border border-slate-200"}
-      `}
-      >
-        {/* Header */}
-        <div
-          className={`p-6 ${isDark ? "bg-red-900/30" : "bg-red-50"} border-b ${isDark ? "border-red-900" : "border-red-100"}`}
-        >
+    <ResponsiveModal
+      isOpen
+      onClose={onCancel}
+      dismissable={false}
+      size="sm"
+      zIndex={100}
+      labelledBy="atomic-wipe-title"
+      header={
+        <div className="p-6 bg-red-50 dark:bg-red-900/30 border-b border-red-100 dark:border-red-900">
           <div className="flex items-center gap-4">
             <span className="text-4xl">⚠️</span>
             <div>
               <h2
-                className={`text-xl font-black ${isDark ? "text-red-400" : "text-red-700"}`}
+                id="atomic-wipe-title"
+                className="text-xl font-black text-red-700 dark:text-red-400"
               >
                 ATOMIC WIPE
               </h2>
-              <p
-                className={`text-sm ${isDark ? "text-red-300/70" : "text-red-600"}`}
-              >
+              <p className="text-sm text-red-600 dark:text-red-300/70">
                 This action cannot be undone
               </p>
             </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-6">
-          <p
-            className={`text-sm ${isDark ? "text-gray-300" : "text-slate-700"} mb-4`}
-          >
-            This will permanently delete:
-          </p>
-
-          <ul
-            className={`text-sm ${isDark ? "text-gray-400" : "text-slate-600"} space-y-2 mb-6`}
-          >
-            <li className="flex items-center gap-2">
-              <span className="text-red-500">✗</span>
-              All saved conditions and claims data
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-red-500">✗</span>
-              Local AI models and vector databases
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-red-500">✗</span>
-              All preferences and settings
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-red-500">✗</span>
-              Cached files and offline data
-            </li>
-          </ul>
-
-          <div
-            className={`p-3 rounded-lg ${isDark ? "bg-amber-900/30 border border-amber-800" : "bg-amber-50 border border-amber-200"}`}
-          >
-            <p
-              className={`text-xs ${isDark ? "text-amber-300" : "text-amber-700"}`}
-            >
-              <strong>Note:</strong> If you want to keep your data, use "Export
-              Backup" in The Bunker first.
-            </p>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div
-          className={`p-4 flex gap-3 ${isDark ? "bg-gray-800/50" : "bg-slate-50"} border-t ${isDark ? "border-gray-700" : "border-slate-200"}`}
-        >
+      }
+      footer={
+        <div className="flex gap-3">
           <button
             onClick={onCancel}
             disabled={isWiping}
-            className={`
-              flex-1 px-4 py-3 rounded-xl font-medium min-h-touch
-              ${isDark ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"}
-              focus:outline-none focus:ring-2 focus:ring-blue-500
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
+            className="flex-1 px-4 py-3 rounded-xl font-medium min-h-touch bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isWiping}
-            className={`
-              flex-1 px-4 py-3 rounded-xl font-bold min-h-touch
-              bg-red-600 text-white hover:bg-red-700
-              focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors
-            `}
+            className="flex-1 px-4 py-3 rounded-xl font-bold min-h-touch bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isWiping ? (
               <span className="flex items-center justify-center gap-2">
@@ -353,8 +309,38 @@ function ConfirmModal({ isDark, isWiping, onConfirm, onCancel }) {
             )}
           </button>
         </div>
+      }
+    >
+      <p className="text-sm text-slate-700 dark:text-gray-300 mb-4">
+        This will permanently delete:
+      </p>
+
+      <ul className="text-sm text-slate-600 dark:text-gray-400 space-y-2 mb-6">
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span>
+          All saved conditions and claims data
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span>
+          Local AI models and vector databases
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span>
+          All preferences and settings
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span>
+          Cached files and offline data
+        </li>
+      </ul>
+
+      <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+        <p className="text-xs text-amber-700 dark:text-amber-300">
+          <strong>Note:</strong> If you want to keep your data, use &quot;Export
+          Backup&quot; in The Bunker first.
+        </p>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }
 
@@ -382,7 +368,7 @@ export function BunkerPrivacyNotice() {
           <p
             className={`text-sm ${isDark || isTbiComfort ? "text-gray-400" : "text-slate-600"} mt-1`}
           >
-            Your data is currently stored in your browser's local sandbox.
+            Your data is currently stored in your browser&apos;s local sandbox.
             Exporting a backup creates a private file on your computer.
             Vet-Rate.org never sees, stores, or transmits this data.
           </p>

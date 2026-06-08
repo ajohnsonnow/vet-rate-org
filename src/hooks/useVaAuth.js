@@ -13,6 +13,8 @@ import {
   VA_SCOPES,
   STORAGE_KEYS,
   validateConfig,
+  isVaApiEnabled,
+  VaApiDisabledError,
 } from "../config/vaAuth";
 import { generatePKCEPair, generateState } from "../utils/pkce";
 
@@ -36,6 +38,12 @@ export function useVaAuth() {
   const login = useCallback(
     async (usePopup = true) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError(
+            "VA login is disabled pending re-credentialing. Set VITE_VA_API_ENABLED=true once access is restored.",
+          );
+        }
+
         // Validate configuration
         if (!validateConfig()) {
           throw new Error(
@@ -43,6 +51,7 @@ export function useVaAuth() {
           );
         }
 
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Starting login flow...");
 
         // Generate PKCE parameters
@@ -64,6 +73,7 @@ export function useVaAuth() {
         authUrl.searchParams.set("code_challenge", challenge);
         authUrl.searchParams.set("code_challenge_method", "S256");
 
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Opening VA.gov authorization...");
 
         if (usePopup) {
@@ -102,6 +112,13 @@ export function useVaAuth() {
   const handleCallback = useCallback(
     async (code, state) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError(
+            "VA OAuth callback handled while API surface is disabled.",
+          );
+        }
+
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Handling callback...");
 
         // Validate state parameter (CSRF protection)
@@ -135,6 +152,7 @@ export function useVaAuth() {
         }
 
         // Exchange the authorization code for tokens FIRST, then clean up
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Exchanging code for tokens...");
         const tokenResponse = await fetch(VA_ENDPOINTS.token, {
           method: "POST",
@@ -160,6 +178,7 @@ export function useVaAuth() {
         }
 
         const tokens = await tokenResponse.json();
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Tokens received successfully");
 
         // Fetch user info
@@ -187,6 +206,7 @@ export function useVaAuth() {
    */
   const fetchUserInfo = async (token) => {
     try {
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Fetching user info...");
 
       const response = await fetch(VA_ENDPOINTS.userInfo, {
@@ -200,6 +220,7 @@ export function useVaAuth() {
       }
 
       const userInfo = await response.json();
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] User info retrieved");
 
       return userInfo;
@@ -216,6 +237,11 @@ export function useVaAuth() {
   const refreshAccessToken = useCallback(
     async (refreshToken) => {
       try {
+        if (!isVaApiEnabled()) {
+          throw new VaApiDisabledError();
+        }
+
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Refreshing access token...");
 
         const response = await fetch(VA_ENDPOINTS.token, {
@@ -243,6 +269,7 @@ export function useVaAuth() {
         // Update stored authentication
         setAuth(tokens, user);
 
+        // eslint-disable-next-line no-console
         console.log("[VA Auth] Token refreshed successfully");
         return { success: true };
       } catch (err) {
@@ -260,6 +287,7 @@ export function useVaAuth() {
    */
   const logout = useCallback(async () => {
     try {
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Logging out...");
 
       // Attempt to revoke the token at VA.gov
@@ -284,6 +312,7 @@ export function useVaAuth() {
       // Clear local authentication state
       clearAuth();
 
+      // eslint-disable-next-line no-console
       console.log("[VA Auth] Logout successful");
     } catch (err) {
       console.error("[VA Auth] Logout error:", err);

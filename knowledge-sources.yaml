@@ -1,0 +1,82 @@
+# knowledge-sources.yaml — registry of authoritative sources the
+# legal-index ingestion pipeline pulls from.
+#
+# Per knowledge-monitoring-best-practices.md, every long-lived knowledge
+# base needs an external-truth registry that maps {what we cite} → {where
+# the canonical version lives} so a freshness check can fail loudly when
+# a source drifts.
+#
+# Read by: `.github/workflows/legal-ingestion.yml` (informational — the
+# fetchers hard-code their own URLs for now, but planned freshness CI
+# will compare manifest.fetched_at against `refresh_cadence` here).
+#
+# Each entry shape:
+#   id:               kebab-case unique key matching the manifest source name
+#   name:             human-readable title
+#   jurisdiction:     federal | va | court
+#   canonical_url:    where a human reads the authoritative version
+#   api_endpoint:     where the fetcher pulls from
+#   refresh_cadence:  weekly | monthly | quarterly | event-driven
+#   fetcher:          path to the script that ingests this source
+#   verified_status:  verified (live and tested) | scaffold (URL needs probing)
+#   last_verified:    ISO date of the last successful end-to-end run
+
+version: 1
+sources:
+  - id: ecfr
+    name: Electronic Code of Federal Regulations — Title 38
+    jurisdiction: federal
+    canonical_url: https://www.ecfr.gov/current/title-38
+    api_endpoint: https://www.ecfr.gov/api/versioner/v1/structure/{date}/title-38.json
+    api_endpoint_renderer: https://www.ecfr.gov/api/renderer/v1/content/enhanced/{date}/title-38?part={part}&section={section}
+    refresh_cadence: weekly
+    fetcher: scripts/legal-ingestion/fetch-ecfr.mjs
+    verified_status: verified
+    last_verified: 2026-05-15
+    parts_in_scope: ["3", "4", "19", "20"]
+    parts_currently_indexed: ["4"]
+    notes: |
+      Part 4 (the rating schedule) is verified end-to-end. Parts 3/19/20
+      are in scope but not yet fetched — the structure walker handles
+      them; just run `node scripts/legal-ingestion/fetch-ecfr.mjs --part=3,19,20`
+      to add them.
+
+  - id: m21-1
+    name: VA M21-1 Adjudication Procedures Manual
+    jurisdiction: va
+    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000004003
+    api_endpoint: null
+    refresh_cadence: monthly
+    fetcher: scripts/legal-ingestion/fetch-m21-1.mjs
+    verified_status: scaffold
+    last_verified: null
+    notes: |
+      No public API. Scraper walks the chapter index then fetches each
+      article page. URL surface has changed in the past — verify selectors
+      against the live portal before promoting to cron. Listed in
+      AUDIT_FINDINGS as an S7 carryover.
+
+  - id: cavc
+    name: U.S. Court of Appeals for Veterans Claims — published opinions
+    jurisdiction: court
+    canonical_url: https://www.uscourts.cavc.gov/decisions/decisions.php
+    api_endpoint: null
+    refresh_cadence: weekly
+    fetcher: scripts/legal-ingestion/fetch-cavc.mjs
+    verified_status: scaffold
+    last_verified: null
+
+  - id: fedcir
+    name: U.S. Court of Appeals for the Federal Circuit — veterans-affairs slip opinions
+    jurisdiction: court
+    canonical_url: https://cafc.uscourts.gov/opinions-orders/
+    api_endpoint: null
+    refresh_cadence: weekly
+    fetcher: scripts/legal-ingestion/fetch-fedcir.mjs
+    verified_status: scaffold
+    last_verified: null
+
+# Out-of-scope (intentionally NOT in the index):
+#   - State-level VA benefits (per Sprint 7 plan)
+#   - BVA decisions (non-precedential — would inflate the index 100×)
+#   - VHA clinical guidance (medical, not adjudication)

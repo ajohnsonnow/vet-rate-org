@@ -17,13 +17,13 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   Map,
   Plus,
   ChevronRight,
-  ChevronDown,
   AlertTriangle,
   AlertCircle,
   CheckCircle,
@@ -47,20 +47,16 @@ import {
   Award,
   ExternalLink,
   ChevronLeft,
-  Stethoscope,
+  // eslint-disable-next-line no-unused-vars
   Link as LinkIcon,
-  Users,
-  Shield,
   Clipboard,
   Loader,
   BarChart2,
-  Settings,
   Info,
   Play,
   Flag,
   MessageSquare,
   Lightbulb,
-  RefreshCcw,
 } from "lucide-react";
 
 // Schema and engine imports
@@ -68,12 +64,9 @@ import {
   CLAIM_TYPES,
   CLAIM_PHASES,
   EVIDENCE_ITEMS,
-  DECISION_OUTCOMES,
-  DENIAL_REASONS,
   VA_FORMS,
   TRIAGE_QUESTIONS,
   URGENCY_LEVELS,
-  createClaimSchema,
   daysUntilDeadline,
   calculateEvidenceCompleteness,
   hasBigThree,
@@ -82,19 +75,13 @@ import {
 import {
   determineNextStep,
   analyzeMultipleClaims,
-  ACTION_TYPES,
 } from "../utils/claimNavigatorEngine";
 
 import {
   getAllClaims,
-  getClaimById,
   createClaim,
   updateClaim,
   deleteClaim,
-  advanceClaimPhase,
-  updateEvidenceItem,
-  recordDecision,
-  addClaimNote,
   exportClaimsData,
   importClaimsData,
   getClaimStatistics,
@@ -102,14 +89,11 @@ import {
 
 // Integration bridge - syncs with ClaimProgress & useClaimProgress
 import {
-  getBigThreeStatus,
   setBigThreeStatus,
-  syncEvidenceToBigThree,
   recordClaimCreated,
   recordPhaseAdvanced,
   markItfFiled,
   getOverallMilestoneProgress,
-  getSavedConditions,
   initIntegrationListeners,
   dispatchNavigatorUpdate,
 } from "../utils/claimIntegration";
@@ -140,6 +124,7 @@ const UrgencyIcons = {
 // MAIN COMPONENT
 // ============================================
 const ClaimNavigator = ({ onClose, onReportBug }) => {
+  // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
 
   // Lock background scroll when modal is open
@@ -178,6 +163,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
       window.removeEventListener("claimProgressUpdate", handleProgressUpdate);
       window.removeEventListener("bigThreeUpdate", handleProgressUpdate);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadClaims = useCallback(() => {
@@ -403,7 +389,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={() => setShowHelp(true)}
             className="p-2 text-slate-400 hover:text-white transition-colors"
-            title="Help"
+            aria-label="Help"
           >
             <HelpCircle className="w-5 h-5" />
           </button>
@@ -411,14 +397,14 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={handleExport}
             className="p-2 text-slate-400 hover:text-white transition-colors"
-            title="Export Claims"
+            aria-label="Export Claims"
           >
             <Download className="w-5 h-5" />
           </button>
 
           <label
             className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            title="Import Claims"
+            aria-label="Import Claims"
           >
             <Upload className="w-5 h-5" />
             <input
@@ -432,7 +418,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-            title="Close"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -782,7 +768,7 @@ const CommunityInsightsPanel = () => {
         <div className="bg-slate-900/50 rounded-lg p-4 text-center">
           <Lightbulb className="w-8 h-8 text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 text-sm">
-            We're working on bringing you curated insights from the veteran
+            We&apos;re working on bringing you curated insights from the veteran
             community.
           </p>
           <p className="text-slate-500 text-xs mt-2">
@@ -912,7 +898,7 @@ const RedditSummaryButton = ({ analysis, claim }) => {
           ? "bg-green-500 text-white"
           : "bg-orange-500 hover:bg-orange-600 text-white"
       }`}
-      title="Copy Reddit-formatted summary"
+      aria-label="Copy Reddit-formatted summary"
     >
       {copied ? (
         <>
@@ -1028,12 +1014,12 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
             <h2 className="text-xl font-bold text-white flex items-center gap-3">
               <Target className="w-6 h-6 text-amber-500" />
               Claim Triage Wizard{" "}
-              <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                 BETA
               </span>
             </h2>
             <p className="text-slate-300 mt-2">
-              Let's determine the best path for your claim. Answer a few
+              Let&apos;s determine the best path for your claim. Answer a few
               questions.
             </p>
           </div>
@@ -1052,6 +1038,7 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
                     onChange={(e) => setConditionName(e.target.value)}
                     placeholder="e.g., Sleep Apnea, Tinnitus, PTSD..."
                     className="mt-2 w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
+                    /* eslint-disable-next-line jsx-a11y/no-autofocus */
                     autoFocus
                   />
                 </label>
@@ -1174,6 +1161,7 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
   const [analysis, setAnalysis] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(claim.conditionName);
+  // eslint-disable-next-line no-unused-vars
   const [showDateEditor, setShowDateEditor] = useState(false);
 
   useEffect(() => {
@@ -1211,14 +1199,14 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
             <button
               onClick={() => setShowDateEditor(true)}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Edit Dates"
+              aria-label="Edit Dates"
             >
               <Calendar className="w-5 h-5" />
             </button>
             <button
               onClick={() => onDelete(claim.id)}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              title="Delete Claim"
+              aria-label="Delete Claim"
             >
               <Trash2 className="w-5 h-5" />
             </button>
@@ -1240,6 +1228,7 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       className="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-1 text-white"
+                      /* eslint-disable-next-line jsx-a11y/no-autofocus */
                       autoFocus
                     />
                     <button
@@ -1720,7 +1709,7 @@ const EvidenceTracker = ({ claim, onUpdate, onBack }) => {
             <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-3 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-amber-400" />
               <span className="text-amber-400 font-medium">
-                Complete the "Big 3" before submitting.
+                Complete the &quot;Big 3&quot; before submitting.
               </span>
             </div>
           )}
@@ -1850,109 +1839,117 @@ const EvidenceSection = ({
 // ============================================
 const HelpModal = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 z-60 flex items-center justify-center p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="lg"
+      className="!bg-slate-800 border border-slate-700"
+      labelledBy="claimnav-help-title"
+      header={
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800">
+          <h2 id="claimnav-help-title" className="text-lg font-bold text-white">
             How to Use Claim Navigator
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-slate-400 hover:text-white"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              🎯 The "Big 3" Evidence
-            </h3>
-            <p className="text-slate-300 text-sm">
-              Every successful VA claim needs three things:
-            </p>
-            <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
-              <li>
-                <strong className="text-white">Current Diagnosis</strong> - A
-                doctor says you have this condition
-              </li>
-              <li>
-                <strong className="text-white">In-Service Event</strong> -
-                Something happened during service
-              </li>
-              <li>
-                <strong className="text-white">Nexus Letter</strong> - A doctor
-                links your condition to service
-              </li>
-            </ul>
-          </section>
+      }
+    >
+      <div className="space-y-6">
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">
+            🎯 The &quot;Big 3&quot; Evidence
+          </h3>
+          <p className="text-slate-300 text-sm">
+            Every successful VA claim needs three things:
+          </p>
+          <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
+            <li>
+              <strong className="text-white">Current Diagnosis</strong> - A
+              doctor says you have this condition
+            </li>
+            <li>
+              <strong className="text-white">In-Service Event</strong> -
+              Something happened during service
+            </li>
+            <li>
+              <strong className="text-white">Nexus Letter</strong> - A doctor
+              links your condition to service
+            </li>
+          </ul>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              ⚠️ Critical Deadlines
-            </h3>
-            <p className="text-slate-300 text-sm">
-              The Claim Navigator tracks two critical 1-year deadlines:
-            </p>
-            <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
-              <li>
-                <strong className="text-white">Intent to File (ITF)</strong> -
-                You have 1 year to submit your full claim after filing an ITF
-              </li>
-              <li>
-                <strong className="text-white">Appeal Deadline</strong> - You
-                have 1 year from a decision to appeal
-              </li>
-            </ul>
-            <p className="text-red-400 text-sm mt-2">
-              Missing these deadlines can cost you years of backpay!
-            </p>
-          </section>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">
+            ⚠️ Critical Deadlines
+          </h3>
+          <p className="text-slate-300 text-sm">
+            The Claim Navigator tracks two critical 1-year deadlines:
+          </p>
+          <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
+            <li>
+              <strong className="text-white">Intent to File (ITF)</strong> - You
+              have 1 year to submit your full claim after filing an ITF
+            </li>
+            <li>
+              <strong className="text-white">Appeal Deadline</strong> - You have
+              1 year from a decision to appeal
+            </li>
+          </ul>
+          <p className="text-red-400 text-sm mt-2">
+            Missing these deadlines can cost you years of backpay!
+          </p>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">
-              🛤️ Claim Types
-            </h3>
-            <ul className="space-y-2 text-slate-400 text-sm">
-              <li>
-                <strong className="text-white">Original</strong> - First time
-                filing for this condition
-              </li>
-              <li>
-                <strong className="text-white">Increase</strong> - Your rated
-                condition got worse
-              </li>
-              <li>
-                <strong className="text-white">Secondary</strong> - New
-                condition caused by a rated condition
-              </li>
-              <li>
-                <strong className="text-white">Supplemental</strong> - Denied
-                but have new evidence
-              </li>
-              <li>
-                <strong className="text-white">HLR</strong> - VA made an error
-                (no new evidence)
-              </li>
-            </ul>
-          </section>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">🛤️ Claim Types</h3>
+          <ul className="space-y-2 text-slate-400 text-sm">
+            <li>
+              <strong className="text-white">Original</strong> - First time
+              filing for this condition
+            </li>
+            <li>
+              <strong className="text-white">Increase</strong> - Your rated
+              condition got worse
+            </li>
+            <li>
+              <strong className="text-white">Secondary</strong> - New condition
+              caused by a rated condition
+            </li>
+            <li>
+              <strong className="text-white">Supplemental</strong> - Denied but
+              have new evidence
+            </li>
+            <li>
+              <strong className="text-white">HLR</strong> - VA made an error (no
+              new evidence)
+            </li>
+          </ul>
+        </section>
 
-          <section>
-            <h3 className="text-amber-400 font-semibold mb-2">💾 Your Data</h3>
-            <p className="text-slate-300 text-sm">
-              All your claim data is stored locally on your device. Nothing is
-              sent to any server. Use the Export/Import buttons to back up your
-              data.
-            </p>
-          </section>
-        </div>
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={onClose}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium py-2 rounded-lg transition-colors"
-          >
-            Got It
-          </button>
-        </div>
+        <section>
+          <h3 className="text-amber-400 font-semibold mb-2">💾 Your Data</h3>
+          <p className="text-slate-300 text-sm">
+            All your claim data is stored locally on your device. Nothing is
+            sent to any server. Use the Export/Import buttons to back up your
+            data.
+          </p>
+        </section>
       </div>
-    </div>
+      <div className="pt-4">
+        <button
+          onClick={onClose}
+          className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium py-2 rounded-lg transition-colors"
+        >
+          Got It
+        </button>
+      </div>
+    </ResponsiveModal>
   );
 };
 

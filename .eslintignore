@@ -2,3 +2,14 @@ tests/e2e/
 playwright.config.ts
 src/examples/
 src/SECURITY_EXAMPLES.jsx
+
+# Build artifacts — never lint minified output
+dist/
+dist-supplylocker/
+
+# Archived files and audit tooling — not production source
+archive/
+audit/
+
+# LLM training / research directory — not production source
+llm-compiler/

@@ -7,7 +7,6 @@
  * Ensures user acknowledges they have reviewed AI-generated content
  */
 
-import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const CertificationCheckbox = ({
@@ -16,11 +15,12 @@ const CertificationCheckbox = ({
   disabled = false,
   className = "",
 }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   return (
     <div
       className={`bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 ${className}`}
     >
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="flex items-start gap-3 cursor-pointer">
         <input
           type="checkbox"

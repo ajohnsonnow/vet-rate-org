@@ -10,7 +10,6 @@
  * @version 1.0.0
  */
 
-import React from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
@@ -58,7 +57,7 @@ const ISSUE_COLORS = {
  * @param {string} props.className - Additional CSS classes
  */
 const DiffHighlighter = ({ text, issues = [], className = "" }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // If no text, return nothing
   if (!text) return null;
@@ -113,7 +112,7 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
     const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
 
     // Build tooltip text
-    const tooltipText = [
+    const _tooltipText = [
       `${colors.icon} ${issue.type}`,
       issue.severity ? `Severity: ${issue.severity}` : null,
       issue.explanation || null,
@@ -126,7 +125,6 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
       <span
         key={key}
         className={`${colors.bg} ${colors.text} ${colors.border} px-0.5 rounded cursor-help transition-all hover:opacity-80`}
-        title={tooltipText}
         role="mark"
         aria-label={`Issue: ${issue.type}`}
       >
@@ -190,8 +188,8 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
 /**
  * Standalone issue card for detailed view
  */
-export const IssueCard = ({ issue, index }) => {
-  const { t } = useLanguage();
+export const IssueCard = ({ issue, _index }) => {
+  const { _t } = useLanguage();
   const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
 
   return (
@@ -226,7 +224,9 @@ export const IssueCard = ({ issue, index }) => {
                 <span className="text-xs text-gray-500 uppercase">
                   You wrote:
                 </span>
-                <p className="text-red-200 italic">"{issue.quote_target}"</p>
+                <p className="text-red-200 italic">
+                  &quot;{issue.quote_target}&quot;
+                </p>
               </div>
             )}
             {issue.quote_reference && (
@@ -235,7 +235,7 @@ export const IssueCard = ({ issue, index }) => {
                   Evidence says:
                 </span>
                 <p className="text-blue-200 italic">
-                  "{issue.quote_reference}"
+                  &quot;{issue.quote_reference}&quot;
                 </p>
               </div>
             )}

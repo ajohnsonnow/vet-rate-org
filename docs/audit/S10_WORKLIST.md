@@ -1,0 +1,427 @@
+# S10 Discovery Worklist (mobile systematic refactor)
+
+> Generated 2026-05-31 by the `s10-discovery` workflow (7 agents, verified by two
+> independent completeness critics). Raw structured output: [s10-discovery.json](s10-discovery.json).
+> This is the authoritative input for S10 execution. Paused here at owner request
+> (usage limit) **before any code edits** — resume from "Execution clusters" below.
+
+## Headline corrections to the S9–S17 plan (from critic verification)
+
+1. **Modal surface count ≈ 103, not ~30.** The event-driven scan captured ~93; the
+   critic added ~10 surfaces it structurally missed + flipped 3 nested flags.
+   S10's "top-15" target is the high-risk head; the long tail continues as trailing
+   clusters (S10→S12). Do **not** treat full migration of all 103 as in-scope for one sprint.
+2. **The grid worklist in s10-discovery.json is NOT safe to apply.** Verified
+   undercount: ~200 `grid-cols-*` across 94 files (excl. index.css), vs 47/32 reported.
+   The "clean" bucket is unreliable — items with `col-span-*` children against a fixed
+   track count were mislabeled clean. **Re-run a dedicated grid codemod pass with a
+   `col-span`/fixed-child detector before touching any grid.** Treat existing grid items as
+   leads, not a worklist.
+3. **Detection consolidation is mostly a no-op.** 25 detections found; only **1** is a
+   genuine viewport-breakpoint decision safe to move onto `useBreakpoint`:
+   `SmallScreenWarning.jsx:15` (`window.innerWidth >= 640` guard → `useBreakpoint().width`,
+   gains live resize reactivity). All others are physical `screen.*`, UA sniffing,
+   `prefers-reduced-motion`/`prefers-color-scheme`/`display-mode` media features,
+   element-box measurement (→ `ResizeObserver`, e.g. WebOfConditions.jsx:721), drag-clamp
+   pixel math (AIAssistant.jsx), or non-component utils that can't call a hook. Leave them.
+4. **The mobile e2e gate already runs in CI.** `tests/e2e/mobile.spec.ts` self-applies
+   360/390/768 via `test.use({viewport})` and is picked up by `npx playwright test` in the
+   `e2e` job (no `continue-on-error`). The only missing "blocking" lever is **GitHub
+   branch-protection required checks**, which is repo-settings, not code (out of repo).
+   In-repo improvement = a dedicated bisectable `e2e-mobile` job + a `test:e2e:mobile`
+   package script (mirrors the `red-team` job pattern).
+
+## Warnings reconciliation (S10)
+
+- **SmallScreenWarning** — rendered once in [AppShellOverlays.jsx:24](../../src/features/app-shell/AppShellOverlays.jsx#L24)
+  (via App.jsx:129). Trigger: `innerWidth < 640` on mount, dismissal in sessionStorage
+  `vetrate-small-screen-dismissed`. Copy: "VetRate is optimized for tablet and desktop…".
+  **Removal GATED** on the mobile suite green across the top-20 surfaces (no overflow,
+  CTAs in viewport ≤innerHeight, tap≥44, per-modal) — never remove early.
+- **MobileNotice** — the `isPhone` branch is now **dead code** after S9 (deviceType is only
+  `'tablet'|null`). It still ships the contradictory "90% of veterans use mobile — built for
+  you" copy. **Minimal immediate cleanup: prune the dead `isPhone` branch** (emerald banner,
+  the "90%/built for you" lines, isPhone aria-label/emoji), collapsing it to the tablet-only
+  notice it already is. Leaves SmallScreenWarning as the single small-screen source of truth
+  until the gate removes it.
+
+## Execution clusters (modal → ResponsiveModal)
+
+ResponsiveModal API: `isOpen, onClose, title, size(sm|md|lg|xl|2xl|full), children, footer,
+closeOnBackdrop, labelledBy`. Renders at **z-[60]** — nested children must move to z-[70]+.
+Pattern per modal: replace the `fixed inset-0…` wrapper + panel with `<ResponsiveModal>`,
+move body → `children`, primary CTA → `footer`, drop the bespoke close button / scroll lock /
+backdrop handler (the shell owns them). Verify desktop snapshot unmoved + extend mobile.spec.ts.
+
+- **Cluster A — quick clean wins (low risk, role=dialog + clear CTA), prove the pattern:**
+  **DisclaimerSplash ✅**, **ContactUs ✅**, **TermsOfServiceModal ✅**, **PrivacyPolicyPage ✅**, **TimeMachine ✅**.
+  **Reality check (during execution):** ContactUs + PrivacyPolicyPage were the genuine clean
+  fits (plain title + close CTA). The other three needed the additive header slot first:
+  - *DisclaimerSplash* (z-100) and *TermsOfServiceModal* (z-99) are **mandatory consent gates**
+    — no close button, must-not ESC/backdrop-dismiss, custom gradient header, a read-gate
+    countdown (ToS). **Now migrated** (commit `74ec944`) using the `header` slot +
+    `showClose={false}` + `dismissable={false}` + `zIndex` + `backdropClassName` (splash's
+    branded gradient scrim). Behavioral contracts preserved; the un-seeded `consent gates`
+    block in mobile.spec.ts proves the footer CTA stays in view at 360/390/768.
+  - *TimeMachine* is **dual-mode** (`isWidget` inline vs. full modal) with an urgency-colored
+    gradient header that varies by state. **Now migrated** (commit `18fcc9e`): the full-modal
+    branch uses the header slot (urgency gradient + ReportBugLink + close); the `isWidget` inline
+    branch is untouched. `useBodyScrollLock` dropped (shell owns it).
+- **Cluster B — no-max-h modals (migration is pure overflow fix): all ✅.**
+  - **MissionProtocol ✅** — permanently-dark (gray-900 + va-gold); header slot for the gradient
+    banner, `className="!bg-gray-900 border-2 border-va-gold"` forces the dark panel, "Roger That"
+    button kept in the body (shell's light footer slot would clash). MODALS group (overflow).
+  - **StateBenefitHunter ✅** — standard-themed; header slot (green gradient + ReportBugLink +
+    close), `size="xl"`, and the BuyMeCoffee + Close bar moved to the sticky **footer slot**.
+    MIGRATED_MODALS group (sticky-CTA-in-viewport contract).
+  - **RetroPayHunter ✅** — permanently-dark; header slot (amber gradient), dark-panel override
+    `className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"`, disclaimer +
+    BuyMeCoffee footer kept in body as a `bg-gray-800/50` card. MODALS group (overflow).
+  - **DemoDashboard ✅** + **VaIntegrationTest ✅** — standard-themed, `size="2xl"` (`max-w-5xl`→
+    `max-w-6xl`); full hero (title + embedded `grid-cols-5` status bar) → header slot. DemoDashboard
+    wraps its full-bleed body sections in `-mx-4` (cancels the shell's `px-4` so the `border-b`
+    dividers reach the panel edge) and puts the status line in the footer slot; VaIntegrationTest
+    renders its nested `VaSandboxTest` (own root `z-50`) in a `relative z-[70]` wrapper to clear the
+    shell's z-60. **Both gated behind `isVaApiEnabled()`** (build-time `VITE_VA_API_ENABLED`, off by
+    default) so they never mount in the standard build — migrated and type-checked, but **not
+    e2e-coverable here**; manual check in a VA-demo build. *Follow-up:* their header rows pack an
+    inline action button next to the close-X in a `justify-between` flex — verify the close stays
+    reachable (add `flex-wrap`) when exercised on a phone in a demo build.
+- **Cluster C — medium single-CTA tools: all ✅** (C1 `f074b97` standard-light → MIGRATED_MODALS;
+  C2 `cb435bc` dark/nested → MODALS). SecondaryScoutLauncher, NexusBuilder (not e2e-listed),
+  DecisionDecoder, WorkflowGuide, SymptomLogger, VAResources, LegislativeWatchdog,
+  MOSHazardMatcher, VSOFinder, MillionDollarDashboard, RedTeam. See progress log for detail.
+- **Cluster D — multi-step wizards: all ✅** (D1 `1b796a1`, D2 `f86066d`). TDIUBuilder, BDDBuilder
+  (max-h-95vh), WitnessBench, PACTActNavigator, RiskAssessment, FOIAGenerator, FormsHelper, DD214Analyzer.
+  Per-step nav lives in-body (overflow contract); only DD214Analyzer's single action bar uses the footer slot.
+- **Cluster E — wide tables / page-scroll → size='full': all ✅** (`4d4f3cc`). SecondaryScout
+  results, ConsistencyEngine (2 shells), CommunityRoadmap, CFileAnalyzer, VAAITransparency,
+  RecordSearch, MusterCall → size="full". See progress log for grouping detail.
+- **Cluster F — nested children (z-index care, migrate child → its own ResponsiveModal): all ✅**
+  (F1 `e603d00`, F2 `e1971b4`, F3 `bcc194a`, F4 `ed9413c`, F5 `885a9c5`, F6 `9cbfb74`,
+  F7 `eb43814`, F8 `5cc1556`, F9 `7e1fc4a`). MyPacket (4 nested z-60 + confirm), CAPSimulator
+  (7 shells in one file), VKBTimeline, VKBViewer, PainPainter (nested confirm), BackupManager
+  (2 confirms), ClaimNavigator, TacticalCalculator (nested @2507), DD214Analyzer→DD214FormBuilder
+  (z-9999), PublicationsLibrary→PublicationDetailsModal, Pathfinder→File-Drop-In, plus
+  CloudSyncManager + DbqBrowser/PreFillModal/DbqShareMenu (BackupManager-nested follow-ups
+  discovered during F3). See progress log for detail.
+- **Cluster G — graphic/SVG reflow (hardest; may need layout work, not just shell): all ✅**
+  (G1 `8f6c787`, G2 `6cc8794`). G1 = the three standalone visualizers (WebOfConditions force
+  graph → responsive graph/panel stack, EvidenceGapVisualizer, BlueButtonXRay dense tables).
+  G2 = the two embedded full-page components whose chrome lived in cluster wrappers
+  (BodyMapSelector → SVG container drops to min-h-[340px] on phones; EvidenceTimeline → canvas
+  stays w-full/maxWidth:100%). UserManual is **intentionally NOT shell-migrated** — its two-pane
+  (sidebar + content) independent-scroll layout does not fit the single-scroll ResponsiveModal
+  body and it is already mobile-responsive (flex-col stack + mobile header + sidebar toggle +
+  scroll lock + ESC); it passes the overflow contract as-is, so a full swap is deferred to avoid
+  regressing the desktop two-pane scroll. See progress log for detail.
+- **Cluster H — critic-added surfaces: migrated ✅ (H1 `d7ad28e`, H2 `9585dff`, H3 `97906b2`).**
+  TermsOfServicePage (full-page legal variant ≠ TermsOfServiceModal) → `size="xl"`, red bar in the
+  header slot + Close in the footer slot → MIGRATED_MODALS. VisionSimulator (`openVisionSimulator`)
+  → wrapper adopts the shell `title` bar at `size="lg"`; the panel sheds its duplicate card + h3 →
+  MODALS. RegulationsReference (opened via a VAResources button, no bare event → **not
+  e2e-listable**) → `size="2xl"` `zIndex={70}`, blue tab bar in the header slot, in-body source
+  note; VAResources drops the now-dead `relative z-[70]` wrapper. **Deferred** (documented, not
+  shell-migrated): StressReliefDivision (z-9999 Doom easter egg — iframe input capture conflicts
+  with focus-trap/backdrop-dismiss; not a content modal), FeatureLookup + BugLookup (admin-gated
+  two-pane independent-scroll shells behind AdminAuthContext — same single-scroll mismatch as
+  UserManual, and outside the veteran mobile mandate).
+
+## S10 order of operations (when resumed)
+
+1. Prune MobileNotice dead phone branch (safe, immediate).
+2. Migrate Cluster A (prove pattern + extend mobile.spec.ts to cover each), commit.
+3. Migrate Cluster B, then C — one cluster per commit, e2e after each.
+4. Fresh grid codemod pass (with col-span detector) → apply clean bucket per-cluster w/ review.
+5. Clusters D–G as capacity allows; the rest become trailing clusters.
+6. SmallScreenWarning removal **only after** the top-20 mobile suite is green.
+7. Add `e2e-mobile` CI job + `test:e2e:mobile` script; note branch-protection is owner-run.
+8. S10 verification gate: full lint/type/unit/e2e green; desktop snapshots unmoved.
+
+## S10 progress (live)
+
+- **Grid mobile workstream — reporting-only detector + per-severity apply ✅
+  (`8e7b931`→`da3a205` detector; `7ea0c60` high; `e9a34f3` medium; `cc21391` ambiguous):**
+  the codemod-assisted, human-reviewed grid pass (plan Layer 3, "never bulk auto-commit").
+  - **Detector (`scripts/grid-mobile-audit.mjs`, reporting-only):** className-anchored,
+    string-aware (balanced-brace for cn()/clsx()/ternary; skips single-quoted strings so
+    JSX apostrophes — you're, don't — can't be mistaken for delimiters). Classifies each
+    unprefixed `grid-cols-N` (N≥2 = what a 360px phone renders) by mobile column count:
+    **high** 4+, **medium** 3, **low** 2; plus an `already-responsive` flag and a bounded
+    **subtree col-span scan** (next ~900 chars) that demotes fixed-child layouts to
+    ambiguous. `da3a205` fixed a real gap in `8e7b931`: child col-spans (on the grid's
+    *children*, not its own className) were mislabeled clean. Emits
+    `docs/audit/grid-mobile-worklist.{json,md}`. **72 findings / 49 files — 69 clean
+    (3 high, 10 medium, 56 low) + 3 ambiguous.**
+  - **High (`7ea0c60`)** — 3 genuine content grids; content-aware ladders (1-col would
+    waste space for small chips/cards): DemoDashboard `grid-cols-5 → 2/3/5`, PainPainter
+    `grid-cols-4 → 2/sm:4`, TacticalCalculator `grid-cols-6 → 3/sm:6`. e2e 153/153.
+  - **Medium (`e9a34f3`)** — 7 of 10 `grid-cols-3` grids fixed (stack for cards-with-desc /
+    form toggles: CFileClaimsCards, MillionDollarDashboard → `1/sm:3`; two-up for text
+    chips: AIModelQuickLoad, KnowledgeBaseStatus, SymptomLogger, TheTribunal,
+    TokenLimitConfig → `2/sm:3`). **Reviewed & kept** (acceptable at 360px): LanguageSelector
+    L527 (3 even short-label buttons), PresetSelector L78 (`text-xs` info pairs that fit),
+    TacticalCalculator L930 (3 compact number stat cards). e2e 153/153.
+  - **Ambiguous (`cc21391`)** — FOIAGenerator L556 address row hand-fixed
+    (`grid-cols-6` + col-span-3/1/2 → `grid-cols-2 sm:grid-cols-6` with responsive col-spans;
+    phone = City full / State|ZIP). **MyPacket L3281 reviewed & kept** — already a deliberate
+    `grid-cols-2 sm:flex` responsive layout (the col-span-2 select is intentional). e2e 153/153.
+  - **Low bucket (56 × `grid-cols-2`):** intentionally NOT mass-rewritten — 2 columns on a
+    360px phone is generally acceptable and many already carry an `sm:/md:` up-ladder (the
+    base IS the deliberate mobile layout). Per-site only if a future visual check flags one.
+  - **Deferred (structural two-pane, not a grid-prefix fix):** **WhatIfSandbox L369** —
+    `grid grid-cols-4 h-[calc(90vh-250px)]` is a desktop drag-drop sidebar+canvas (col-span-1
+    library + canvas, fixed height); needs a real mobile redesign (tabs / collapsible pane),
+    same class as the deferred UserManual/FeatureLookup/BugLookup two-pane shells.
+- **Cluster H migrated — all ✅ (H1 `d7ad28e`, H2 `9585dff`, H3 `97906b2`; three sub-commits,
+  e2e after each where listable):** the critic-added surfaces surfaced during the Cluster G review.
+  Full mobile suite grew 147 → 153 (+6 = 2 new event-listable labels × 3 viewports; H3 is opened
+  via an in-component button, not a bare event, so it is not e2e-listed).
+  1. **H1 (`d7ad28e`)** — **TermsOfServicePage**, a bespoke full-page legal shell (fixed-inset
+     scrim + `max-w-5xl min-h-screen` panel + sticky red header + sticky in-body footer), migrated
+     to `size="xl"`. The red gradient bar moved into the header slot (h1 gains
+     `id="terms-of-service-page-title"`); the always-on Close CTA moved into the sticky-footer slot;
+     the body shed `px-8 py-8` (the shell pads) and the title scales `text-2xl → sm:text-3xl`.
+     Footer always present on fresh open → MIGRATED_MODALS (`openTermsOfService`).
+  2. **H2 (`9585dff`)** — **VisionSimulator** wrapper dropped its bespoke `bg-black/60` backdrop +
+     `max-w-2xl max-h-[90vh]` scroller + floating corner-X for the shell's default `title` bar
+     (`size="lg"`, `title="Document Vision Simulator"`). VisionSimulatorPanel shed its now-redundant
+     outer card chrome (`bg-white … rounded-lg shadow-lg p-6` → `space-y-4`) and its duplicate h3
+     title; the OCR subtitle + "No Special Flags Required" badge stay as a context strip. Close in
+     the shell header, no fresh-open footer CTA → MODALS (`openVisionSimulator`).
+  3. **H3 (`97906b2`)** — **RegulationsReference** replaced its `max-w-5xl max-h-[90vh]` flex-col
+     panel + own `useBodyScrollLock(true)` with `size="2xl"` `zIndex={70}`. The blue gradient bar
+     (Scale icon, h2 `id="regulations-title"`, BETA badge, revision line, 6-tab strip) moved into
+     the header slot (padding `p-4 sm:p-6`); the eCFR source/date attribution stays an in-body note
+     (no CTA, no sticky slot needed). VAResources dropped the now-dead `relative z-[70]` wrapper.
+     Opened via a VAResources in-component button (no bare window event) → **not e2e-listable**;
+     proven via esbuild + type-check + full-suite regression instead.
+  - **Deferred (documented, intentionally not shell-migrated):** **StressReliefDivision** —
+     `z-[9999]` IDDQD Doom easter egg (CRT overlay embedding a DoomFrame iframe); iframe input
+     capture conflicts with the shell focus-trap + backdrop-dismiss, and it is not a content modal.
+     **FeatureLookup** + **BugLookup** — admin-gated (Ctrl+Shift+A + password/TOTP via
+     AdminAuthContext) two-pane (list + detail) independent-scroll shells, the same single-scroll
+     mismatch as UserManual, and outside the veteran-facing mobile mandate.
+- **Cluster G migrated — all ✅ (G1 `8f6c787`, G2 `6cc8794`; two sub-commits, e2e after each):**
+  the graphic/SVG-reflow modals — the cluster flagged as hardest because several needed internal
+  layout work, not just a shell swap. Full mobile suite grew 129 → 147 (+18 = 6 new modal labels
+  × 3 viewports).
+  1. **G1 (`8f6c787`)** — the three **standalone** visualizers (own their chrome, opened via bare
+     events). **WebOfConditions**: light yellow header slot over a permanently-dark `gray-900`
+     full-bleed body; the force-graph/details pane now stacks `flex-col → sm:flex-row`
+     (`w-full → sm:w-80`) and dimensions track `containerRef` + a resize listener so the graph
+     reflows on a phone. **EvidenceGapVisualizer**: permanently-dark purple modal (opaque gradient
+     via `className`); the 38 CFR disclaimer de-stickied into the body as the last element (a dark
+     panel avoids the light footer slot). **BlueButtonXRay**: standard light/dark modal; dropped
+     the `overflow-y-auto flex-1` body wrapper (kept the inner `max-w-4xl mx-auto`); CTAs surface
+     in-body only after a Blue Button file parses. All three: header-close-only / no fresh-open
+     footer CTA → MODALS (overflow probe).
+  2. **G2 (`6cc8794`)** — the two **embedded** full-page components whose modal chrome used to live
+     in their cluster wrappers. **BodyMapSelector** (was wrapped by BodyMappingCluster in a
+     `fixed inset-0` + `min-h-screen` + `max-w-6xl` backdrop) now owns a `size="2xl"` dark shell;
+     its title/description/close-X moved into a custom header slot and the SVG container drops to
+     `min-h-[340px] sm:min-h-[500px]` so the body map fits a phone. **EvidenceTimeline** (was
+     wrapped by SpecializedToolsCluster in a `max-w-6xl max-h-[90vh]` backdrop) now owns a
+     `size="2xl"` dark shell; the slate gradient bar moved into the header slot, the duplicate
+     in-body `h2` was dropped, and the canvas stays `w-full`/`maxWidth:100%` so it scales without
+     overflow. Both wrappers now render the component bare. **UserManual** was deliberately left on
+     its bespoke two-pane shell — a sidebar + content **independent-scroll** layout that the
+     single-scroll ResponsiveModal body cannot host without regressing the desktop two-pane scroll;
+     it is already mobile-responsive (flex-col stack, mobile header + sidebar toggle, body-scroll
+     lock, ESC) and was verified to pass the overflow contract as-is. All three G2 labels →
+     MODALS.
+- **Cluster F migrated — all ✅ (F1 `e603d00` → F9 `7e1fc4a`; nine sub-commits, one per
+  surface group, e2e after each):** nested-children modals where a child overlay had to become
+  its own body-portaled ResponsiveModal to clear its parent shell. Stacking is now purely the
+  inline `zIndex` (every instance `createPortal`s to `document.body`): parents at the default
+  z-60, in-shell children at `zIndex={70}`, deeper children at `zIndex={80}`, and the
+  DD214/`z-[9999]` cases preserved verbatim.
+  1. **F1 (`e603d00`)** — made `useBodyScrollLock` **ref-counted** (a child no longer unlocks the
+     body behind a still-open parent; single-modal behavior unchanged) — the foundation for the
+     rest of the cluster. Migrated PublicationsLibraryModal (`size="2xl"`), PublicationDetailsModal
+     (child `zIndex={70}`), DD214FormBuilder (`size="xl"` `zIndex={9999}`, section nav in header
+     slot + Prev/Next/Save in footer slot). Publications Library → MODALS.
+  2. **F2 (`e1971b4`)** — VKB pair. VKBTimeline (dark `size="2xl"`) + VKBViewer (`size="2xl"`,
+     data-gated header/footer, dropped createPortal + useBodyScrollLock, w-64 sidebar reflows to a
+     horizontal scroller < sm); each `absolute inset-0` overlay (Comparison / LLM Context) became
+     its own `size="xl"` sibling. Both → MODALS; nested children open only via interaction.
+  3. **F3 (`bcc194a`)** — BackupManager (`size="xl"`; Confirm-Clear → `size="sm"` `zIndex={70}`
+     sibling with footer CTA) + PainPainter (dark `size="2xl"`; Save Map → `size="sm"`
+     `zIndex={70}` sibling). The CloudSyncManager + DbqBrowser launches were deliberately left
+     intact here for independent migration (→ F8/F9). Both parents → MODALS.
+  4. **F4 (`ed9413c`)** — ClaimNavigator nested Help (`size="lg"`, dark header, CTA in body; the
+     main Mission Control surface stays a correct full-bleed takeover) + Pathfinder pair
+     (PathfinderModal `size="2xl"`; File Drop-In child `size="md"` `zIndex={70}`). Pathfinder +
+     Claim Navigator → MODALS.
+  5. **F5 (`885a9c5`)** — MyPacket main (`size="2xl"`) + four nested viewers (Pain Map Detail /
+     Form Viewer / Statement Viewer `size="xl"`, Import Confirm `size="sm"`), all lifted to
+     `zIndex={70}`; packetContentRef wraps the body. My Packet → MODALS.
+  6. **F6 (`9cbfb74`)** — CAPSimulator: all seven mode-branch modals (intro / exam-prep /
+     exam-prep-detail / select-condition / flashcard / simulation / results) → the shell; two dark
+     branches carry their gradient via className; the results branch stays headerless with an
+     sr-only title + labelledBy. "C&P Simulator" → MODALS (opens in the intro branch).
+  7. **F7 (`eb43814`)** — TacticalCalculator main (`size="2xl"`, header with ShareButton /
+     ReportBugLink / close-X, footer kept as the last body element) + Edit Condition (`size="md"`
+     `zIndex={70}`, Cancel/Save in the footer slot). VAGovRatingPaster (z-100) + Edit Condition
+     are fragment siblings. The existing overflow probe moved into the F group (Edit Condition is
+     `editingCondition`-gated — no bare event, exercised via flow).
+  8. **F8 (`5cc1556`)** — CloudSyncManager (BackupManager-nested, permanently-dark green panel) →
+     `size="xl"` `zIndex={70}` with the gradient via className. Not e2e-listed (no bare event; the
+     `openCloudSyncManager` event mounts MultiCloudManager, not this).
+  9. **F9 (`7e1fc4a`)** — DbqBrowser (`size="xl"` `zIndex={70}`), its PreFillModal (`size="lg"`
+     `zIndex={80}`, Cancel/Continue in the footer slot) and DbqShareMenu (`size="md"`
+     `zIndex={80}`, now owns its own backdrop); removed BackupManager's fixed-inset wrapper around
+     `<DbqBrowser>`. All three are BackupManager-nested with no bare open* event → not e2e-listed.
+- **Cluster E migrated — all ✅ (commit `4d4f3cc`; type-check + 803 unit + 0 lint errors +
+  105 full mobile e2e @360/390/768 chromium, no regression):** wide-table / page-scrolling
+  tools (legacy `max-w-6xl`/`max-w-7xl`) → `size="full"` so they go full-bleed on phones and
+  keep a desktop ceiling. Two overflow-contract groups in `mobile.spec.ts`:
+  - **MODALS (overflow-only probe):** Record Search, Consistency Engine, C-File Analyzer,
+    Muster Call. Their footer slot carries status/disclaimer text or a CTA that is conditional
+    and **absent on a fresh open**, so they are not asserted to have an in-viewport footer button.
+  - **MIGRATED_MODALS (footer Close CTA probe):** VA AI Transparency, Community Roadmap.
+  - **Not e2e-listed:** Secondary Scout *results* (DiscoverCluster wrapper) — migrated, but it
+    mounts only via the launcher `onLaunch` flow with no bare `open*` event to dispatch (mirrors
+    the existing NexusBuilder/DemoDashboard exclusions).
+  ConsistencyEngine has **two** shells (AI tab `size="full"` `!bg-gray-900`; rules tab
+  `size="2xl"`) sharing one `consistency-engine-title` id (never rendered together); its rules
+  status grid gained `grid-cols-2 sm:grid-cols-4`. CFileAnalyzer's privacy-consent gate is
+  lifted out of the body to a `z-[70]` Fragment sibling so its `fixed` overlay paints above the
+  z-60 shell. MusterCall uses `dismissable={!processing}` to keep its lock-during-processing
+  behavior (blocks ESC + backdrop close while a file is processing).
+- **Cluster D migrated — all ✅ (D1 commit `1b796a1`, D2 commit `f86066d`; type-check +
+  803 unit + 0 lint errors + 174 mobile e2e @360/390/768 across chromium/mobile-chrome):**
+  multi-step wizards. Their per-step nav (Back/Continue/Submit) lives inside each step
+  render in the scroll body, **not** a single shared footer, so the wizards assert the
+  overflow contract (MODALS group) rather than the sticky-footer-CTA one. DD214Analyzer is
+  the exception — it has one clean action bar, so it uses the footer slot (MIGRATED_MODALS).
+  1. **D1 (`1b796a1`)** — TDIUBuilder, BDDBuilder, WitnessBench, PACTActNavigator,
+     RiskAssessment, FOIAGenerator → shell via the header slot (gradient banner + badges +
+     ReportBugLink + close), `size="2xl"` (legacy `max-w-6xl`). ShareButton content refs
+     (TDIU, Witness) moved to a body wrapper `<div ref=…>`. The BuyMeCoffee/Luna popups in
+     TDIU/BDD/PACT/FOIA (`fixed z-50`) lifted to `relative z-[70]` Fragment siblings to clear
+     the z-60 shell; WitnessBench + RiskAssessment have no siblings (plain ResponsiveModal).
+  2. **D2 (`f86066d`)** — the two complex-nested wizards, `size="xl"` (legacy `max-w-4xl`):
+     - *FormsHelper* — header slot; footer slot = the privacy note only (no CTA button → MODALS
+       group). ShareButton ref → body wrapper. BuyMeCoffee/Luna (`fixed z-50`) **and** the
+       AIConsentModal gate (`fixed z-[60]`) lifted to `relative z-[70]` siblings.
+     - *DD214Analyzer* — header slot + the Clear/Save/Analyze action bar relocated into the
+       sticky **footer slot** (MIGRATED_MODALS). Its ProfileImportConfirmModal and the
+       `z-[9999]` DD214FormBuilder both already `createPortal` to `document.body`, so they clear
+       the shell without a lift wrapper.
+  3. **mobile.spec.ts** — the 6 D1 wizards + FormsHelper added to `MODALS` (overflow);
+     DD214Analyzer added to `MIGRATED_MODALS` (sticky-CTA). 162 → 174 tests.
+- **Cluster C migrated — all ✅ (C1 commit `f074b97`, C2 commit `cb435bc`):** medium
+  single-CTA tools.
+  1. **C1 (`f074b97`)** — standard-light modals migrated with a rich header slot + sticky
+     footer slot (encouragement/BuyMeCoffee + Close): DecisionDecoder, LegislativeWatchdog,
+     RedTeam, VSOFinder, SymptomLogger, WorkflowGuide → `MIGRATED_MODALS` (Workflow Guide moved
+     out of MODALS now that its Close CTA lives in the shell footer).
+  2. **C2 (`cb435bc`)** — dark-panel / nested-child tools (footerless; actions stay in-body) →
+     `MODALS` (overflow): MOSHazardMatcher, MillionDollarDashboard, SecondaryScoutLauncher,
+     VAResources. Nested children clear the z-60 shell — VAGovRatingPaster already paints at
+     z-100; RegulationsReference, AIConsentModal, DoctorsPacket and the BuyMeCoffee/Luna popups
+     are wrapped in a `relative z-[70]` lift. NexusBuilder also migrated but is **not e2e-listed**
+     — DiscoverCluster only mounts it once `nexusBuilderData` is set from the event detail, so a
+     bare event never mounts it (exercised via the Secondary Scout "Learn how" flow manually).
+- **Cluster B + TimeMachine migrated (type-check + 803 unit + 0 lint errors + 108 mobile e2e
+  @360/390/768 across chromium/firefox/mobile-chrome):**
+  1. **TimeMachine** (commit `18fcc9e`) — full-modal branch → ResponsiveModal via the urgency
+     header slot; `isWidget` inline branch untouched.
+  2. **Cluster B** — MissionProtocol, StateBenefitHunter, RetroPayHunter migrated to the shell
+     (header slot; dark panels override `className` and keep their action bar in the body, the
+     standard StateBenefitHunter uses the sticky footer slot). DemoDashboard + VaIntegrationTest
+     also migrated but are `isVaApiEnabled()`-gated (off by default) so they don't mount in the
+     standard build — not e2e-coverable here (manual check in a VA-demo build). See the Cluster B
+     list above for the per-modal detail.
+  3. **mobile.spec.ts** — added MissionProtocol + RetroPayHunter to the `MODALS` (overflow) group
+     and StateBenefitHunter to `MIGRATED_MODALS` (sticky-CTA) group; documented why the two
+     VA-demo modals are excluded.
+- **Gates migrated (commit `74ec944`; type-check + 803 unit + 0 lint errors + 24 mobile e2e @360/390/768):**
+  1. **ResponsiveModal** gained an additive `backdropClassName` prop (default `bg-black/60`
+     preserved) on top of the prior `header`/`showClose`/`dismissable`/`zIndex` enhancement.
+  2. **DisclaimerSplash** → ResponsiveModal (`size="lg"`, `dismissable={false}`,
+     `showClose={false}`, `zIndex={100}`, gradient header, branded `backdropClassName`; the sole
+     acknowledge button is the sticky footer, preserving the e2e "last button" contract).
+  3. **TermsOfServiceModal** → ResponsiveModal (`size="xl"`, `dismissable={false}`,
+     `zIndex={99}`, red warning header, read-gate countdown on the footer Accept button; still
+     reads/writes `vet-rate-tos-accepted` and dispatches `tosAccepted`).
+  4. **mobile.spec.ts** — returning-user fixture (seeds all first-run keys) + `openModalByEvent`
+     re-dispatch helper + a dedicated un-seeded `consent gates` block covering both gates; the
+     overflow metric now discounts bleed contained by an ancestor
+     `overflow-x:hidden/clip/auto/scroll` (fixes false positives from a clipped header flourish
+     in TacticalCalculator and the intentional scrollable tab bar in MyPacket — `getBoundingClientRect`
+     returns the unclipped box). Document scroll still asserted via `pageOverflow`.
+- **Done & verified (type-check + 798 unit + 0 lint errors + 18 mobile e2e @360/390/768):**
+  1. MobileNotice dead `isPhone` branch pruned → tablet-only banner; dropped the now-unused
+     `useLanguage`.
+  2. **PrivacyPolicyPage** → ResponsiveModal (`size="xl"`, header `ReportBugLink` relocated to
+     the sticky footer beside Close).
+  3. **ContactUs** → ResponsiveModal (`size="lg"`; the `type="submit"` Send button stays inside
+     the `<form>` in `children` — ResponsiveModal's `footer` renders outside the form, so it
+     can't host a submit. Footer carries Close + relocated `ReportBugLink`). Dropped
+     `useColorSchemas`/`useBodyScrollLock` (shell owns scroll lock).
+  4. **mobile.spec.ts** extended: a `MIGRATED_MODALS` group asserts the ResponsiveModal contract
+     (sticky `.modal-footer` button stays within the viewport) at all three baselines.
+- **Gate validity fix (important):** the spec now pre-dismisses `SmallScreenWarning` via
+  `addInitScript(sessionStorage…)` in `beforeEach`. Before this, at <640px the warning's
+  `.fixed.inset-0 z-[100]` overlay satisfied the "overlay found" poll *before* the lazy modal
+  loaded, so the existing modal tests were racing / measuring the warning, not the modal. The
+  warning has **no** `role="dialog"`, which is why the strict footer assertion caught it.
+- **Primitive gap resolved:** the additive ResponsiveModal enhancement — `header` node slot,
+  `showClose`, `dismissable` (ESC/backdrop), `zIndex` override (commit `a460126`), and
+  `backdropClassName` (commit `74ec944`) — is in place and backward-compatible (ContactUs/
+  PrivacyPolicy plain-`title` path untouched). The consent gates are migrated; TimeMachine +
+  the remaining rich-header modals (Clusters B–G) are the next targets, one cluster per commit.
+
+### S10 closeout workstreams (this session)
+
+- **Viewport detection consolidation (commit `f3c8259`):** the breakpoint px values
+  were extracted from `useBreakpoint.js` into a new framework-agnostic
+  [src/utils/breakpoints.js](../../src/utils/breakpoints.js) (`BREAKPOINTS` / `MOBILE_MAX`
+  / `DESKTOP_MIN` / pure `isMobileWidth`). The hook re-exports `BREAKPOINTS` (API stable);
+  the two non-React device utilities — `useDeviceCapability.js` and `dkbIndexedDB.js` —
+  now read `MOBILE_MAX` instead of each hardcoding `< 768`, killing the latent drift. Honest
+  scope note: of the 13 `innerWidth`/`matchMedia` hits the plan estimated, only these two
+  were width-threshold mobile checks; the rest are different concerns (the `prefers-*`
+  media-features in `ThemeContext`, the diagnostic `WxH` dumps in `bugReport*`/`debugDump`,
+  the drag-geometry math in `AIAssistant`, the scrollbar-width math in `useBodyScrollLock`,
+  the UA-regex/orientation reporting in `persistentStorage`, the `display-mode:standalone`
+  query in `PWAInstallButton`) and were intentionally left. The `640` outlier lived only in
+  `SmallScreenWarning`, resolved by its removal below. Value-identical (768 stays 768):
+  type-check + useBreakpoint unit 6/6 + mobile e2e 153/153 @360/390/768.
+- **Mobile CI gate (commit `50ca61e`):** added `test:e2e` and `test:e2e:mobile` package
+  scripts and a dedicated **blocking** `mobile` job in `.github/workflows/ci.yml` running
+  `tests/e2e/mobile.spec.ts` under the Pixel 5 `mobile-chrome` project (touch + mobile UA)
+  across 360/390/768. Split out from the full e2e job for at-a-glance, bisectable mobile
+  regressions — same rationale as the `red-team` gate. Verified green under both `chromium`
+  and `mobile-chrome` (153/153).
+- **SmallScreenWarning removed (gated deletion satisfied):** the gate — mobile suite green
+  across the top-20 surfaces at 360/390/768 — is met, so the component, its render in
+  `AppShellOverlays.jsx`, and the now-obsolete `vetrate-small-screen-dismissed` pre-dismissal
+  in both `mobile.spec.ts` `beforeEach` blocks were removed. The `consent gates` block now
+  boots with no pre-dismissal and stays green at sub-640 — proof the first-run flows work
+  with **no interstitial**. The `MobileNotice` comment was updated to reflect that small-screen
+  messaging is gone entirely (the responsive layouts are the support). Type-check + mobile
+  e2e 153/153.
+
+### S10 verification gate — GREEN (full suite, post-removal)
+
+Run after the SmallScreenWarning removal commit, across the whole repo:
+
+- **ESLint:** 0 errors (1349 pre-existing warnings — the `jsx-a11y`/`react-hooks`/`no-console`
+  backlog is S13 scope, not S10).
+- **Type-check (`tsc --noEmit`):** clean.
+- **Unit (vitest):** 803/803 across 46 files.
+- **E2E (Playwright, all projects):** 493/493 across `chromium` + `firefox` + `mobile-chrome`.
+  Desktop (chromium/firefox) green = desktop behavior unmoved; `mobile-chrome` green = the
+  mobile gate holds. No visual-regression baselines exist in this repo (no `toHaveScreenshot`
+  project), so "desktop snapshots unmoved" is proven via the green desktop e2e behavior.
+
+**S10 coding work is complete.** All modal clusters A–H migrated, grid workstream applied,
+viewport thresholds centralized, mobile CI gate added (blocking), SmallScreenWarning removed,
+MobileNotice reconciled. Documented intentional deferrals remain (the two-pane independent-scroll
+shells UserManual / FeatureLookup / BugLookup / WhatIfSandbox L369; the StressReliefDivision
+z-9999 easter egg; the VA-demo-gated DemoDashboard / VaIntegrationTest manual checks). Per the
+standing instruction, **no push / PR until the owner authorizes** — all work to date is local
+commits on `audit/s9-mobile-safety-net`.

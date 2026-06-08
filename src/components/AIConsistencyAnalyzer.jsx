@@ -13,7 +13,7 @@
  * @version 1.0.0
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
 import {
@@ -32,7 +32,7 @@ import {
  * AIConsistencyAnalyzer - The Cross-Examination Tool
  */
 const AIConsistencyAnalyzer = ({ onBack }) => {
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
   const [referenceText, setReferenceText] = useState("");
   const [targetText, setTargetText] = useState("");
   const [analysis, setAnalysis] = useState(null);
@@ -175,8 +175,8 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
               </span>
             </h1>
             <p className="text-gray-400 mt-2">
-              The "Red Team" for your story. Find contradictions before the VA
-              does.
+              The &quot;Red Team&quot; for your story. Find contradictions
+              before the VA does.
             </p>
           </div>
           {onBack && (
@@ -238,6 +238,7 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
         {/* Left: Reference Evidence (Compare mode only) */}
         {mode === "compare" && (
           <div className="space-y-2">
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <label className="block text-sm font-semibold text-blue-400 uppercase tracking-wide">
               📄 Reference Evidence
             </label>
@@ -256,11 +257,12 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 
         {/* Right: Target Statement */}
         <div className="space-y-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="block text-sm font-semibold text-orange-400 uppercase tracking-wide">
             📝 Your Statement Draft
           </label>
           <p className="text-xs text-gray-500 mb-2">
-            Paste the personal statement or nexus letter you're working on.
+            Paste the personal statement or nexus letter you&apos;re working on.
           </p>
           <textarea
             className={`w-full ${mode === "solo" ? "h-48" : "h-64"} bg-gray-900 border border-orange-900/50 rounded-lg p-4 text-sm text-gray-300 placeholder-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none`}
@@ -432,8 +434,8 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
                 automatic red flags
               </li>
               <li>
-                • Words like "always" and "never" are hard to prove and invite
-                scrutiny
+                • Words like &quot;always&quot; and &quot;never&quot; are hard
+                to prove and invite scrutiny
               </li>
               <li>
                 • Fix these issues <strong>before</strong> submission to

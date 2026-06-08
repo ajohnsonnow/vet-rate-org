@@ -14,15 +14,10 @@
  * - AAA compliant focus indicators
  */
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import disabilityData from "../data/disabilityData.json";
 
 // Extract diagnostic codes from disability data for quick search
@@ -230,6 +225,17 @@ export default function GlobalCommandSearch({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   const resultsRef = useRef(null);
+  const dialogRef = useRef(null);
+
+  // Trap Tab focus inside the palette and restore it to the opener on close.
+  // Declared before the input-focus effect below so it captures the opener as
+  // the restore target. autoFocus is off — the effect below owns initial focus
+  // (the search input); ESC routes through here so it works from any result row.
+  useFocusTrap(dialogRef, {
+    active: isOpen,
+    autoFocus: false,
+    onEscape: onClose,
+  });
 
   // Focus input when opened
   useEffect(() => {
@@ -276,7 +282,7 @@ export default function GlobalCommandSearch({
     } else {
       // Search by condition name
       matchedConditions = Object.entries(diagnosticCodes)
-        .filter(([code, data]) => {
+        .filter(([_code, data]) => {
           const name = (data.name || data.condition || "").toLowerCase();
           return name.includes(q);
         })
@@ -317,10 +323,8 @@ export default function GlobalCommandSearch({
         e.preventDefault();
         handleSelect(selectedIndex);
         break;
-      case "Escape":
-        e.preventDefault();
-        onClose();
-        break;
+      // Escape is handled by useFocusTrap (onEscape) so it also closes the
+      // palette when focus has moved off the input to a result row.
     }
   };
 
@@ -343,7 +347,7 @@ export default function GlobalCommandSearch({
   if (!isOpen) return null;
 
   return (
-    <div
+    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
       className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4"
       onClick={onClose}
     >
@@ -351,7 +355,9 @@ export default function GlobalCommandSearch({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       {/* Search Modal */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
       <div
+        ref={dialogRef}
         className={`
           relative w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden
           ${isDark || isTbiComfort ? "bg-gray-900 border border-gray-700" : "bg-white border border-slate-200"}

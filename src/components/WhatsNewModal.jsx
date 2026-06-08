@@ -18,7 +18,7 @@
  * 4. Deploy - modal will automatically show for users
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Sparkles,
@@ -31,7 +31,7 @@ import {
   Gift,
   Bug,
 } from "lucide-react";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import { generateWhatsNewChangelog } from "../utils/changelogGenerator";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -41,9 +41,6 @@ const WhatsNewModal = ({
   onClose,
 }) => {
   const { t } = useLanguage();
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
 
   // Use dynamic changelog if not provided via props
   const [dynamicData, setDynamicData] = useState(null);
@@ -122,13 +119,24 @@ const WhatsNewModal = ({
   };
 
   return (
-    <div
-      data-whats-new-modal="true"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    >
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header - Fancy gradient */}
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 rounded-t-2xl overflow-hidden">
+    <ResponsiveModal
+      isOpen
+      onClose={handleClose}
+      labelledBy="whats-new-title"
+      size="lg"
+      zIndex={50}
+      footer={
+        <div className="text-center">
+          <button
+            onClick={handleClose}
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            {t("whatsNew", "rogerThat")}
+          </button>
+        </div>
+      }
+      header={
+        <div className="relative bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
@@ -140,9 +148,9 @@ const WhatsNewModal = ({
                   <Gift className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">
+                  <h2 id="whats-new-title" className="text-2xl font-bold">
                     {t("whatsNew", "title")}{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
                       {t("common", "beta")}
                     </span>
                   </h2>
@@ -162,171 +170,160 @@ const WhatsNewModal = ({
             </button>
           </div>
         </div>
+      }
+    >
+      <div data-whats-new-modal="true">
+        {/* NEW FEATURES SECTION */}
+        {newFeatures.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-5 h-5 text-emerald-500" />
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                {t("whatsNew", "justDeployed")}
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {newFeatures.map((item, index) => (
+                <div
+                  key={`new-${index}`}
+                  className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:shadow-md transition-all"
+                >
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getIcon(item.type, true)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, true)}`}
+                      >
+                        {getTypeLabel(item.type, true)}
+                      </span>
+                    </div>
+                    <p className="text-gray-900 dark:text-white font-semibold mb-1">
+                      {item.title}
+                    </p>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Changelog Content - Scrollable */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          {/* NEW FEATURES SECTION */}
-          {newFeatures.length > 0 && (
-            <div className="mb-6">
+        {/* EXISTING FEATURES SECTION */}
+        {existingFeatures.length > 0 && (
+          <div>
+            {newFeatures.length > 0 && (
               <div className="flex items-center gap-2 mb-4">
-                <Star className="w-5 h-5 text-emerald-500" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {t("whatsNew", "justDeployed")}
+                <Sparkles className="w-5 h-5 text-gray-500" />
+                <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                  {t("whatsNew", "platformHighlights")}
                 </h3>
               </div>
-              <div className="space-y-3">
-                {newFeatures.map((item, index) => (
-                  <div
-                    key={`new-${index}`}
-                    className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:shadow-md transition-all"
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getIcon(item.type, true)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, true)}`}
-                        >
-                          {getTypeLabel(item.type, true)}
-                        </span>
-                      </div>
-                      <p className="text-gray-900 dark:text-white font-semibold mb-1">
-                        {item.title}
-                      </p>
-                      {item.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
+            )}
+            <div className="space-y-3">
+              {existingFeatures.map((item, index) => (
+                <div
+                  key={`existing-${index}`}
+                  className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getIcon(item.type, false)}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* EXISTING FEATURES SECTION */}
-          {existingFeatures.length > 0 && (
-            <div>
-              {newFeatures.length > 0 && (
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-gray-500" />
-                  <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">
-                    {t("whatsNew", "platformHighlights")}
-                  </h3>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, false)}`}
+                      >
+                        {getTypeLabel(item.type, false)}
+                      </span>
+                    </div>
+                    <p className="text-gray-900 dark:text-white font-medium mb-1">
+                      {item.title}
+                    </p>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-              <div className="space-y-3">
-                {existingFeatures.map((item, index) => (
-                  <div
-                    key={`existing-${index}`}
-                    className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getIcon(item.type, false)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, false)}`}
-                        >
-                          {getTypeLabel(item.type, false)}
-                        </span>
-                      </div>
-                      <p className="text-gray-900 dark:text-white font-medium mb-1">
-                        {item.title}
-                      </p>
-                      {item.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              ))}
+            </div>
+          </div>
+        )}
+
+        {changelog.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>{t("whatsNew", "noChangelog")}</p>
+          </div>
+        )}
+
+        {/* BUGS SQUASHED SECTION */}
+        {bugFixes.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Bug className="w-5 h-5 text-red-500" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {t("whatsNew", "bugsSquashed")}
+                </h3>
               </div>
+              <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                {totalBugsSquashed} {t("common", "total")}
+              </span>
             </div>
-          )}
-
-          {changelog.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>{t("whatsNew", "noChangelog")}</p>
-            </div>
-          )}
-
-          {/* BUGS SQUASHED SECTION */}
-          {bugFixes.length > 0 && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Bug className="w-5 h-5 text-red-500" />
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    {t("whatsNew", "bugsSquashed")}
-                  </h3>
+            <div className="space-y-2">
+              {bugFixes.map((bug, index) => (
+                <div
+                  key={`bug-${index}`}
+                  className="flex gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                >
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Wrench className="w-4 h-4 text-red-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      {bug.isNew && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
+                          {t("whatsNew", "justFixed")}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {bug.category}
+                      </span>
+                    </div>
+                    <p className="text-gray-800 dark:text-gray-200 font-medium text-sm">
+                      {bug.title}
+                    </p>
+                    {bug.description && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        {bug.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {totalBugsSquashed} {t("common", "total")}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {bugFixes.map((bug, index) => (
-                  <div
-                    key={`bug-${index}`}
-                    className="flex gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      <Wrench className="w-4 h-4 text-red-500" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {bug.isNew && (
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
-                            {t("whatsNew", "justFixed")}
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {bug.category}
-                        </span>
-                      </div>
-                      <p className="text-gray-800 dark:text-gray-200 font-medium text-sm">
-                        {bug.title}
-                      </p>
-                      {bug.description && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {bug.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                {t("whatsNew", "foundBug")}
-              </p>
+              ))}
             </div>
-          )}
-
-          {/* Footer Message */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-            <p className="text-sm text-emerald-900 dark:text-emerald-100">
-              <strong>{t("whatsNew", "missionReadyTitle")}</strong>{" "}
-              {t("whatsNew", "missionReadyMessage")}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+              {t("whatsNew", "foundBug")}
             </p>
           </div>
+        )}
 
-          {/* Action Button */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleClose}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              {t("whatsNew", "rogerThat")}
-            </button>
-          </div>
+        {/* Footer Message */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+          <p className="text-sm text-emerald-900 dark:text-emerald-100">
+            <strong>{t("whatsNew", "missionReadyTitle")}</strong>{" "}
+            {t("whatsNew", "missionReadyMessage")}
+          </p>
         </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 };
 

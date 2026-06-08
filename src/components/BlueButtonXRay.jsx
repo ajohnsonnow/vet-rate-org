@@ -9,9 +9,9 @@
  * Privacy: Text extraction happens locally. AI analysis uses your configured AI (Local or Cloud).
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -55,7 +55,7 @@ RESPOND IN JSON ONLY:
 {"conditions":[{"name":"ConditionName","dateFound":"Date","isClaimable":true,"category":"Category"}],"summary":"Brief summary"}`;
 
 // Legacy constant for backward compatibility
-const BLUE_BUTTON_AI_PROMPT =
+const _BLUE_BUTTON_AI_PROMPT =
   BLUE_BUTTON_AI_PROMPT_HEADER +
   `[DOCUMENT TEXT HERE]` +
   BLUE_BUTTON_AI_PROMPT_FOOTER;
@@ -64,7 +64,7 @@ const BLUE_BUTTON_AI_PROMPT =
  * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
  * These vary based on the export format (text vs PDF)
  */
-const PROBLEM_LIST_PATTERNS = [
+const _PROBLEM_LIST_PATTERNS = [
   // VA Blue Button common headers
   /(?:VA\s*)?Problem\s*List[:\s]*\n/gi,
   /Active\s*Problems?[:\s]*\n/gi,
@@ -80,15 +80,15 @@ const PROBLEM_LIST_PATTERNS = [
  * Patterns to extract individual diagnoses from the problem list
  * Handles various Blue Button formats
  */
-const DIAGNOSIS_PATTERNS = [
+const _DIAGNOSIS_PATTERNS = [
   // Format: "Condition Name - Date" or "Condition Name (Date)"
-  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})/gm,
+  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})/gm,
   // Format: "ICD-10: Code - Description"
   /(?:ICD[-\s]*10[:\s]*)?([A-Z]\d{2}(?:\.\d{1,4})?)\s*[-–—:]\s*(.+?)(?:\n|$)/gi,
   // Format: Simple "Condition Name" on its own line
-  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}))?$/gm,
+  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}))?$/gm,
   // Format: "Date: Condition" or "Date - Condition"
-  /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm,
+  /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm,
 ];
 
 /**
@@ -210,9 +210,7 @@ export default function BlueButtonXRay({
   onOpenAISettings,
   onReportBug,
 }) {
-  const { t } = useLanguage();
-  // Lock body scroll when modal is open
-  useBodyScrollLock(true);
+  const { _t } = useLanguage();
 
   // AI status state
   const [aiStatus, setAIStatus] = useState(getAIStatus());
@@ -281,6 +279,7 @@ export default function BlueButtonXRay({
       });
 
       setSavedToVKB(true);
+      // eslint-disable-next-line no-console
       console.log("✅ Blue Button saved to VKB (My Packet)");
 
       // Also save to My Packet permanent archive
@@ -299,6 +298,7 @@ export default function BlueButtonXRay({
           ocrMethod: "text_extraction",
           tags: ["blue_button", "medical"],
         });
+        // eslint-disable-next-line no-console
         console.log("📁 Blue Button archived in My Packet");
       } catch (pktErr) {
         console.warn("My Packet save failed (non-fatal):", pktErr.message);
@@ -377,7 +377,7 @@ export default function BlueButtonXRay({
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(new Error("Failed to read text file"));
+      reader.onerror = (_e) => reject(new Error("Failed to read text file"));
       reader.readAsText(file);
     });
   };
@@ -389,7 +389,6 @@ export default function BlueButtonXRay({
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
-      standardFontDataUrl: STANDARD_FONT_DATA_URL,
     }).promise;
     let fullText = "";
 
@@ -407,7 +406,7 @@ export default function BlueButtonXRay({
   /**
    * Parse the text to find Problem List section and extract diagnoses
    */
-  const parseBlueButtonText = (text) => {
+  const _parseBlueButtonText = (text) => {
     // Validate input
     if (!text || typeof text !== "string") {
       console.error("parseBlueButtonText received invalid input:", typeof text);
@@ -465,7 +464,7 @@ export default function BlueButtonXRay({
 
       // Check for date patterns
       const dateMatch = trimmedLine.match(
-        /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i,
+        /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i,
       );
       if (dateMatch) {
         dateFound = dateMatch[1];
@@ -687,12 +686,14 @@ export default function BlueButtonXRay({
       return formatConditionsResponse(parsed);
     } else {
       // Text is too large - process in chunks
+      // eslint-disable-next-line no-console
       console.log(
         `📄 Large document detected (${textTokens} tokens). Chunking for processing...`,
       );
       setProcessingStage(`Large document - processing in multiple parts...`);
 
       const chunks = chunkText(text, maxTextTokens);
+      // eslint-disable-next-line no-console
       console.log(`Split into ${chunks.length} chunks`);
 
       const allConditions = [];
@@ -740,6 +741,7 @@ export default function BlueButtonXRay({
               parsed.conditions &&
               Array.isArray(parsed.conditions)
             ) {
+              // eslint-disable-next-line no-console
               console.log(
                 `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
               );
@@ -753,12 +755,14 @@ export default function BlueButtonXRay({
 
             // If this was the last attempt, try regex fallback
             if (attempt === MAX_RETRIES - 1) {
+              // eslint-disable-next-line no-console
               console.log(
                 `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
               );
               const fallbackConditions = extractConditionsFromText(chunkText);
 
               if (fallbackConditions.length > 0) {
+                // eslint-disable-next-line no-console
                 console.log(
                   `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
                 );
@@ -826,6 +830,7 @@ export default function BlueButtonXRay({
         }
       }
 
+      // eslint-disable-next-line no-console
       console.log(
         `Found ${allConditions.length} total conditions, ${uniqueConditions.length} unique`,
       );
@@ -876,6 +881,7 @@ export default function BlueButtonXRay({
         parsed = JSON.parse(cleanResponse);
       } catch (jsonErr) {
         // AGGRESSIVE JSON REPAIR - we need this to work!
+        // eslint-disable-next-line no-console
         console.log("💡 Attempting advanced JSON repair...");
         let repaired = cleanResponse;
 
@@ -892,6 +898,7 @@ export default function BlueButtonXRay({
           if (afterLast.length > 0 && !afterLast.match(/^[}\]]*$/)) {
             // Truncate to last valid JSON structure
             repaired = repaired.substring(0, lastValidPos + 1);
+            // eslint-disable-next-line no-console
             console.log("🔧 Removed trailing garbage");
           }
         }
@@ -899,6 +906,7 @@ export default function BlueButtonXRay({
         // Strategy 2: Handle truncated strings (very common with token limits)
         const quoteCount = (repaired.match(/"/g) || []).length;
         if (quoteCount % 2 !== 0) {
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Detected unmatched quotes - finding last complete object",
           );
@@ -915,6 +923,7 @@ export default function BlueButtonXRay({
             if (match) {
               const cutPosition = match.index;
               repaired = repaired.substring(0, cutPosition);
+              // eslint-disable-next-line no-console
               console.log(
                 `🔧 Cut at position ${cutPosition} to remove incomplete content`,
               );
@@ -929,6 +938,7 @@ export default function BlueButtonXRay({
         const openBrackets = (repaired.match(/\[/g) || []).length;
         const closeBrackets = (repaired.match(/\]/g) || []).length;
 
+        // eslint-disable-next-line no-console
         console.log(
           `🔧 Brackets: ${openBrackets} open, ${closeBrackets} close | Braces: ${openBraces} open, ${closeBraces} close`,
         );
@@ -936,6 +946,7 @@ export default function BlueButtonXRay({
         // Close arrays first (conditions array)
         if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
           const missing = openBrackets - closeBrackets;
+          // eslint-disable-next-line no-console
           console.log(`🔧 Adding ${missing} closing brackets`);
           for (let i = 0; i < missing; i++) {
             repaired += "]";
@@ -946,6 +957,7 @@ export default function BlueButtonXRay({
         const currentCloseBraces = (repaired.match(/}/g) || []).length;
         const neededBraces = openBraces - currentCloseBraces;
         if (neededBraces > 0) {
+          // eslint-disable-next-line no-console
           console.log(`🔧 Adding ${neededBraces} closing braces`);
           for (let i = 0; i < neededBraces; i++) {
             repaired += "}";
@@ -955,8 +967,10 @@ export default function BlueButtonXRay({
         // Strategy 4: If still failing, try to extract just the conditions array
         try {
           parsed = JSON.parse(repaired);
+          // eslint-disable-next-line no-console
           console.log("✅ Repaired JSON successfully");
         } catch (stillFailing) {
+          // eslint-disable-next-line no-console
           console.log(
             "🔧 Standard repair failed, trying to extract conditions array directly...",
           );
@@ -984,6 +998,7 @@ export default function BlueButtonXRay({
 
             try {
               parsed = JSON.parse(reconstructed);
+              // eslint-disable-next-line no-console
               console.log("✅ Extracted conditions array successfully");
             } catch {
               throw jsonErr; // Give up, rethrow original
@@ -1061,9 +1076,11 @@ export default function BlueButtonXRay({
         !rawText.includes("error") &&
         !rawText.includes("Error")
       ) {
+        // eslint-disable-next-line no-console
         console.log("💡 Attempting text fallback extraction...");
         const extractedConditions = extractConditionsFromText(rawText);
         if (extractedConditions.length > 0) {
+          // eslint-disable-next-line no-console
           console.log(
             `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
           );
@@ -1301,6 +1318,7 @@ export default function BlueButtonXRay({
             sourceFile: file.name,
           });
           setSavedToVKB(true);
+          // eslint-disable-next-line no-console
           console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
         } catch (vkbErr) {
           console.warn(
@@ -1371,579 +1389,573 @@ export default function BlueButtonXRay({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="blue-button-xray-title"
+        header={
+          <div className="bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">📋</span>
+                <div>
+                  <h2
+                    id="blue-button-xray-title"
+                    className="text-xl font-bold text-white flex items-center gap-2"
+                  >
+                    Blue Button X-Ray
+                    <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                      AI
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-violet-100">
+                    AI-Powered Evidence Mining from VA Medical Records
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <LLMRecommendationBadge toolId="blue-button" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="Blue Button X-Ray"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       >
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">📋</span>
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto">
+          {/* Info Banner */}
+          <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💡</span>
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  Blue Button X-Ray
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                    AI
-                  </span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-violet-100">
-                  AI-Powered Evidence Mining from VA Medical Records
+                <h3 className="font-bold text-cyan-800 dark:text-cyan-200">
+                  What is the Blue Button Report?
+                </h3>
+                <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-1">
+                  The <strong>Blue Button</strong> is your instant-download VA
+                  medical record from{" "}
+                  <a
+                    href="https://www.va.gov/my-health/medical-records/download/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-cyan-600"
+                  >
+                    VA.gov
+                  </a>
+                  . Unlike the C-File (which takes 6+ months), you can get this{" "}
+                  <strong>today</strong>.
+                </p>
+                <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
+                  🤖 <strong>AI-Powered:</strong> Uses your{" "}
+                  {aiStatus.effectiveMode === AI_MODES.LOCAL
+                    ? "secure Local AI"
+                    : "Cloud AI"}{" "}
+                  to intelligently extract diagnoses.
+                  {aiStatus.effectiveMode === AI_MODES.LOCAL &&
+                    " Your data never leaves your device!"}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <LLMRecommendationBadge toolId="blue-button" />
-              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="Blue Button X-Ray"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
-        </div>
 
-        <div className="overflow-y-auto flex-1 p-4">
-          {/* Main Content */}
-          <div className="max-w-4xl mx-auto">
-            {/* Info Banner */}
-            <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
+          {/* Smart AI Load Button */}
+          {!isAnyAIAvailable() && (
+            <div className="mb-6">
+              <SmartAILoadButton
+                toolId="bluebutton-xray"
+                onLoadComplete={(model) =>
+                  // eslint-disable-next-line no-console
+                  console.log(
+                    "Smart AI loaded for BlueButton XRay:",
+                    model?.name,
+                  )
+                }
+              />
+            </div>
+          )}
+
+          {/* Large Document Info */}
+          {isAnyAIAvailable() && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-xl p-4 mb-6">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-bold text-cyan-800 dark:text-cyan-200">
-                    What is the Blue Button Report?
+                  <h3 className="font-bold text-blue-800 dark:text-blue-200">
+                    Large Files? No Problem!
                   </h3>
-                  <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-1">
-                    The <strong>Blue Button</strong> is your instant-download VA
-                    medical record from{" "}
-                    <a
-                      href="https://www.va.gov/my-health/medical-records/download/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-cyan-600"
-                    >
-                      VA.gov
-                    </a>
-                    . Unlike the C-File (which takes 6+ months), you can get
-                    this <strong>today</strong>.
+                  <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                    Got a big medical record? Don&apos;t worry! The system
+                    automatically handles large Blue Button files by breaking
+                    them into smaller sections and combining the results.{" "}
+                    <strong>You don&apos;t need to do anything special.</strong>
                   </p>
-                  <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
-                    🤖 <strong>AI-Powered:</strong> Uses your{" "}
-                    {aiStatus.effectiveMode === AI_MODES.LOCAL
-                      ? "secure Local AI"
-                      : "Cloud AI"}{" "}
-                    to intelligently extract diagnoses.
-                    {aiStatus.effectiveMode === AI_MODES.LOCAL &&
-                      " Your data never leaves your device!"}
+                  <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
+                    📄 Files of any size work • ⚡ Processing time depends on
+                    file size • 🔄 Multi-part files process automatically
                   </p>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Smart AI Load Button */}
-            {!isAnyAIAvailable() && (
-              <div className="mb-6">
-                <SmartAILoadButton
-                  toolId="bluebutton-xray"
-                  onLoadComplete={(model) =>
-                    console.log(
-                      "Smart AI loaded for BlueButton XRay:",
-                      model?.name,
-                    )
-                  }
+          {/* File Drop In Section */}
+          {!extractedConditions.length && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+                Step 1: Drop In Your Blue Button Report
+              </h3>
+
+              {/* Drop Zone */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div
+                className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                  isDragging
+                    ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
+                    : file
+                      ? "border-green-500 bg-green-50 dark:bg-green-900/30"
+                      : "border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500"
+                }`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,text/plain,application/pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
                 />
-              </div>
-            )}
 
-            {/* Large Document Info */}
-            {isAnyAIAvailable() && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h3 className="font-bold text-blue-800 dark:text-blue-200">
-                      Large Files? No Problem!
-                    </h3>
-                    <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-                      Got a big medical record? Don't worry! The system
-                      automatically handles large Blue Button files by breaking
-                      them into smaller sections and combining the results.{" "}
-                      <strong>You don't need to do anything special.</strong>
+                {file ? (
+                  <div className="space-y-2">
+                    <span className="text-4xl">✅</span>
+                    <p className="text-green-700 dark:text-green-300 font-semibold">
+                      {file.name}
                     </p>
-                    <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
-                      📄 Files of any size work • ⚡ Processing time depends on
-                      file size • 🔄 Multi-part files process automatically
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* File Drop In Section */}
-            {!extractedConditions.length && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-                  Step 1: Drop In Your Blue Button Report
-                </h3>
-
-                {/* Drop Zone */}
-                <div
-                  className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
-                    isDragging
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
-                      : file
-                        ? "border-green-500 bg-green-50 dark:bg-green-900/30"
-                        : "border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500"
-                  }`}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.txt,text/plain,application/pdf"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-
-                  {file ? (
-                    <div className="space-y-2">
-                      <span className="text-4xl">✅</span>
-                      <p className="text-green-700 dark:text-green-300 font-semibold">
-                        {file.name}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <span className="text-5xl">📄</span>
-                      <p className="text-gray-600 dark:text-gray-300 font-semibold">
-                        Drop your Blue Button report here
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Accepts PDF or TXT files from MyHealtheVet
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Process Button */}
-                {file && (
-                  <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                    {/* Save to VKB Button - Available immediately after upload */}
-                    <button
-                      onClick={handleSaveToVKB}
-                      disabled={savingToVKB || savedToVKB}
-                      className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
-                        savedToVKB
-                          ? "bg-green-600 text-white cursor-default"
-                          : savingToVKB
-                            ? "bg-gray-400 text-white cursor-wait"
-                            : "bg-purple-600 hover:bg-purple-700 text-white"
-                      }`}
-                    >
-                      <span>
-                        {savedToVKB ? "✓" : savingToVKB ? "⏳" : "📦"}
-                      </span>
-                      <span>
-                        {savedToVKB
-                          ? "Saved to My Packet!"
-                          : savingToVKB
-                            ? "Saving..."
-                            : "Save to My Packet"}
-                      </span>
-                    </button>
-
-                    {/* AI Scan Button */}
-                    <button
-                      onClick={handleProcessFile}
-                      disabled={isProcessing || !isAnyAIAvailable()}
-                      className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
-                        isProcessing || !isAnyAIAvailable()
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : "bg-blue-500 hover:bg-blue-600 text-white"
-                      }`}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                          <span>{processingStage}</span>
-                        </>
-                      ) : !isAnyAIAvailable() ? (
-                        <>
-                          <span>⚠️</span>
-                          <span>Configure AI First</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🤖</span>
-                          <span>AI Scan for Diagnoses</span>
-                        </>
-                      )}
-                    </button>
+                ) : (
+                  <div className="space-y-3">
+                    <span className="text-5xl">📄</span>
+                    <p className="text-gray-600 dark:text-gray-300 font-semibold">
+                      Drop your Blue Button report here
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Accepts PDF or TXT files from MyHealtheVet
+                    </p>
                   </div>
                 )}
-
-                {/* Explanation of options */}
-                {file && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                    💡 <strong>Save to My Packet</strong> stores the document
-                    now. <strong>AI Scan</strong> auto-saves first, then
-                    extracts diagnoses.
-                  </p>
-                )}
-
-                {/* How to Download Blue Button */}
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                    📥 How to Download Your Blue Button:
-                  </h4>
-                  <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
-                    <li>
-                      Go to{" "}
-                      <a
-                        href="https://www.va.gov/my-health/medical-records/download/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 dark:text-cyan-400 underline"
-                      >
-                        VA.gov Medical Records Download
-                      </a>
-                    </li>
-                    <li>Sign in with your Login.gov or ID.me account</li>
-                    <li>
-                      <strong>Step 1:</strong> Select date range (choose{" "}
-                      <strong>"All Time"</strong> for complete history)
-                    </li>
-                    <li>
-                      <strong>Step 2:</strong> Check{" "}
-                      <strong>"Select all VA records"</strong> (includes all
-                      conditions, labs, meds)
-                    </li>
-                    <li>
-                      <strong>Step 3:</strong> Choose{" "}
-                      <strong>"Text file"</strong> format (works best with
-                      X-Ray)
-                    </li>
-                    <li>
-                      Click <strong>"Download report"</strong> and drop the file
-                      in here
-                    </li>
-                  </ol>
-                </div>
               </div>
-            )}
 
-            {/* Error Display */}
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h3 className="font-bold text-red-800 dark:text-red-200">
-                      Issue Found
-                    </h3>
-                    <p className="text-red-700 dark:text-red-300 text-sm">
-                      {error}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Results Section */}
-            {extractedConditions.length > 0 && (
-              <div className="space-y-6">
-                {/* Summary Card */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-white/20 rounded-full p-3">
-                      <span className="text-4xl">🎯</span>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">
-                        Found {extractedConditions.length} Conditions!
-                      </h3>
-                      <p className="text-green-100">
-                        {getUnclaimedCount()} are commonly claimed VA
-                        disabilities
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={selectAllClaimable}
-                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
-                  >
-                    <span>✅</span> Select All Claimable
-                  </button>
+              {/* Process Button */}
+              {file && (
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  {/* Save to VKB Button - Available immediately after upload */}
                   <button
                     onClick={handleSaveToVKB}
                     disabled={savingToVKB || savedToVKB}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
                       savedToVKB
                         ? "bg-green-600 text-white cursor-default"
                         : savingToVKB
                           ? "bg-gray-400 text-white cursor-wait"
-                          : "bg-purple-600 text-white hover:bg-purple-700"
+                          : "bg-purple-600 hover:bg-purple-700 text-white"
                     }`}
                   >
                     <span>{savedToVKB ? "✓" : savingToVKB ? "⏳" : "📦"}</span>
-                    {savedToVKB
-                      ? "Saved to My Packet!"
-                      : savingToVKB
-                        ? "Saving..."
-                        : "Save to My Packet"}
+                    <span>
+                      {savedToVKB
+                        ? "Saved to My Packet!"
+                        : savingToVKB
+                          ? "Saving..."
+                          : "Save to My Packet"}
+                    </span>
                   </button>
+
+                  {/* AI Scan Button */}
                   <button
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                    onClick={handleProcessFile}
+                    disabled={isProcessing || !isAnyAIAvailable()}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+                      isProcessing || !isAnyAIAvailable()
+                        ? "bg-gray-400 cursor-not-allowed text-white"
+                        : "bg-blue-500 hover:bg-blue-600 text-white"
+                    }`}
                   >
-                    <span>🔄</span> Start Over
-                  </button>
-                  <button
-                    onClick={() => setShowRawText(!showRawText)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
-                  >
-                    <span>📝</span> {showRawText ? "Hide" : "Show"} Raw Text
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        <span>{processingStage}</span>
+                      </>
+                    ) : !isAnyAIAvailable() ? (
+                      <>
+                        <span>⚠️</span>
+                        <span>Configure AI First</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🤖</span>
+                        <span>AI Scan for Diagnoses</span>
+                      </>
+                    )}
                   </button>
                 </div>
+              )}
 
-                {/* Conditions List */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                      📋 Extracted Diagnoses
+              {/* Explanation of options */}
+              {file && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  💡 <strong>Save to My Packet</strong> stores the document now.{" "}
+                  <strong>AI Scan</strong> auto-saves first, then extracts
+                  diagnoses.
+                </p>
+              )}
+
+              {/* How to Download Blue Button */}
+              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  📥 How to Download Your Blue Button:
+                </h4>
+                <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                  <li>
+                    Go to{" "}
+                    <a
+                      href="https://www.va.gov/my-health/medical-records/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-600 dark:text-cyan-400 underline"
+                    >
+                      VA.gov Medical Records Download
+                    </a>
+                  </li>
+                  <li>Sign in with your Login.gov or ID.me account</li>
+                  <li>
+                    <strong>Step 1:</strong> Select date range (choose{" "}
+                    <strong>&quot;All Time&quot;</strong> for complete history)
+                  </li>
+                  <li>
+                    <strong>Step 2:</strong> Check{" "}
+                    <strong>&quot;Select all VA records&quot;</strong> (includes
+                    all conditions, labs, meds)
+                  </li>
+                  <li>
+                    <strong>Step 3:</strong> Choose{" "}
+                    <strong>&quot;Text file&quot;</strong> format (works best
+                    with X-Ray)
+                  </li>
+                  <li>
+                    Click <strong>&quot;Download report&quot;</strong> and drop
+                    the file in here
+                  </li>
+                </ol>
+              </div>
+            </div>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <h3 className="font-bold text-red-800 dark:text-red-200">
+                    Issue Found
+                  </h3>
+                  <p className="text-red-700 dark:text-red-300 text-sm">
+                    {error}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Results Section */}
+          {extractedConditions.length > 0 && (
+            <div className="space-y-6">
+              {/* Summary Card */}
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 rounded-full p-3">
+                    <span className="text-4xl">🎯</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">
+                      Found {extractedConditions.length} Conditions!
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Click a condition to select it, then add to your
-                      calculator or check rating criteria
+                    <p className="text-green-100">
+                      {getUnclaimedCount()} are commonly claimed VA disabilities
                     </p>
                   </div>
+                </div>
+              </div>
 
-                  <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
-                    {extractedConditions.map((condition) => (
-                      <div
-                        key={condition.id}
-                        className={`p-4 cursor-pointer transition-colors ${
-                          condition.selected
-                            ? "bg-cyan-50 dark:bg-cyan-900/30"
-                            : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                        }`}
-                        onClick={() => toggleConditionSelection(condition.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* Checkbox */}
-                          <div
-                            className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                              condition.selected
-                                ? "bg-cyan-600 border-cyan-600 text-white"
-                                : "border-gray-300 dark:border-gray-600"
-                            }`}
-                          >
-                            {condition.selected && (
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                          </div>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={selectAllClaimable}
+                  className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
+                >
+                  <span>✅</span> Select All Claimable
+                </button>
+                <button
+                  onClick={handleSaveToVKB}
+                  disabled={savingToVKB || savedToVKB}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    savedToVKB
+                      ? "bg-green-600 text-white cursor-default"
+                      : savingToVKB
+                        ? "bg-gray-400 text-white cursor-wait"
+                        : "bg-purple-600 text-white hover:bg-purple-700"
+                  }`}
+                >
+                  <span>{savedToVKB ? "✓" : savingToVKB ? "⏳" : "📦"}</span>
+                  {savedToVKB
+                    ? "Saved to My Packet!"
+                    : savingToVKB
+                      ? "Saving..."
+                      : "Save to My Packet"}
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                >
+                  <span>🔄</span> Start Over
+                </button>
+                <button
+                  onClick={() => setShowRawText(!showRawText)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                >
+                  <span>📝</span> {showRawText ? "Hide" : "Show"} Raw Text
+                </button>
+              </div>
 
-                          {/* Condition Info */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-gray-800 dark:text-gray-100">
-                                {condition.standardizedName}
-                              </span>
-                              {condition.isClaimable && (
-                                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
-                                  ⭐ Commonly Claimed
-                                </span>
-                              )}
-                            </div>
-                            {condition.rawName !==
-                              condition.standardizedName && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                From record: "{condition.rawName}"
-                              </p>
-                            )}
-                            {condition.dateFound && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                📅 Date in record: {condition.dateFound}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Quick Actions */}
-                          <div className="flex gap-2 flex-shrink-0">
-                            {onCheckRatingCriteria && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onCheckRatingCriteria(
-                                    condition.standardizedName,
-                                  );
-                                }}
-                                className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
-                                title="Search rating criteria for this condition"
-                              >
-                                🔍 Check Criteria
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Conditions List */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    📋 Extracted Diagnoses
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Click a condition to select it, then add to your calculator
+                    or check rating criteria
+                  </p>
                 </div>
 
-                {/* Add Selected to Calculator */}
-                {extractedConditions.some((c) => c.selected) &&
-                  onAddToCalculator && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-                      <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                          <p className="font-semibold text-gray-800 dark:text-gray-100">
-                            {
-                              extractedConditions.filter((c) => c.selected)
-                                .length
-                            }{" "}
-                            condition(s) selected
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Add to Pathfinder for strategic analysis
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            const selected = extractedConditions.filter(
-                              (c) => c.selected,
-                            );
-                            onAddToCalculator(selected);
-                          }}
-                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2"
+                <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                  {extractedConditions.map((condition) => (
+                    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+                      key={condition.id}
+                      className={`p-4 cursor-pointer transition-colors ${
+                        condition.selected
+                          ? "bg-cyan-50 dark:bg-cyan-900/30"
+                          : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      }`}
+                      onClick={() => toggleConditionSelection(condition.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Checkbox */}
+                        <div
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            condition.selected
+                              ? "bg-cyan-600 border-cyan-600 text-white"
+                              : "border-gray-300 dark:border-gray-600"
+                          }`}
                         >
-                          <span>🧭</span>
-                          Add to Pathfinder
-                        </button>
+                          {condition.selected && (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Condition Info */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-800 dark:text-gray-100">
+                              {condition.standardizedName}
+                            </span>
+                            {condition.isClaimable && (
+                              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
+                                ⭐ Commonly Claimed
+                              </span>
+                            )}
+                          </div>
+                          {condition.rawName !== condition.standardizedName && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                              From record: &quot;{condition.rawName}&quot;
+                            </p>
+                          )}
+                          {condition.dateFound && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                              📅 Date in record: {condition.dateFound}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="flex gap-2 flex-shrink-0">
+                          {onCheckRatingCriteria && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCheckRatingCriteria(
+                                  condition.standardizedName,
+                                );
+                              }}
+                              className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
+                              aria-label="Search rating criteria for this condition"
+                            >
+                              🔍 Check Criteria
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </div>
 
-                {/* Raw Text View */}
-                {showRawText && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                        📝 Raw Extracted Text
-                      </h3>
-                    </div>
-                    <div className="p-4 max-h-96 overflow-y-auto">
-                      <pre className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono">
-                        {rawText.substring(0, 10000)}
-                        {rawText.length > 10000 &&
-                          "\n\n... [Text truncated for display]"}
-                      </pre>
+              {/* Add Selected to Calculator */}
+              {extractedConditions.some((c) => c.selected) &&
+                onAddToCalculator && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <div>
+                        <p className="font-semibold text-gray-800 dark:text-gray-100">
+                          {extractedConditions.filter((c) => c.selected).length}{" "}
+                          condition(s) selected
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Add to Pathfinder for strategic analysis
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const selected = extractedConditions.filter(
+                            (c) => c.selected,
+                          );
+                          onAddToCalculator(selected);
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2"
+                      >
+                        <span>🧭</span>
+                        Add to Pathfinder
+                      </button>
                     </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Not Currently Claimed Alert */}
-            {extractedConditions.length > 0 && getUnclaimedCount() > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mt-6 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💰</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">
-                      Potential Unclaimed Disabilities Found!
+              {/* Raw Text View */}
+              {showRawText && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                      📝 Raw Extracted Text
                     </h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      You have{" "}
-                      <strong>{getUnclaimedCount()} condition(s)</strong> in
-                      your VA records that are commonly service-connected. Use
-                      the <strong>Pathfinder</strong> to analyze which ones
-                      might qualify for compensation!
-                    </p>
+                  </div>
+                  <div className="p-4 max-h-96 overflow-y-auto">
+                    <pre className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono">
+                      {rawText.substring(0, 10000)}
+                      {rawText.length > 10000 &&
+                        "\n\n... [Text truncated for display]"}
+                    </pre>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Support CTA after extraction */}
-            {extractedConditions.length > 0 && (
-              <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    src="/images/Anth.jpg"
-                    alt="Anthony - Vet-Rate Developer"
-                    className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-blue-200 font-semibold mb-1">
-                      🩺 That medical record parsing would cost $200+ at a law
-                      firm
-                    </p>
-                    <p className="text-blue-300/70 text-sm">
-                      This AI-powered tool scans your Blue Button records,
-                      extracts diagnoses, and cross-references VA's rating
-                      schedule - all locally in your browser. Help fund the
-                      servers and development that make this possible.
-                    </p>
-                  </div>
+          {/* Not Currently Claimed Alert */}
+          {extractedConditions.length > 0 && getUnclaimedCount() > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mt-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💰</span>
+                <div>
+                  <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                    Potential Unclaimed Disabilities Found!
+                  </h3>
+                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                    You have <strong>{getUnclaimedCount()} condition(s)</strong>{" "}
+                    in your VA records that are commonly service-connected. Use
+                    the <strong>Pathfinder</strong> to analyze which ones might
+                    qualify for compensation!
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Support CTA after extraction */}
+          {extractedConditions.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
+              <div className="flex items-center gap-4">
+                <img
+                  src="/images/Anth.jpg"
+                  alt="Anthony - Vet-Rate Developer"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <p className="text-blue-200 font-semibold mb-1">
+                    🩺 That medical record parsing would cost $200+ at a law
+                    firm
+                  </p>
+                  <p className="text-blue-300/70 text-sm">
+                    This AI-powered tool scans your Blue Button records,
+                    extracts diagnoses, and cross-references VA&apos;s rating
+                    schedule - all locally in your browser. Help fund the
+                    servers and development that make this possible.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </ResponsiveModal>
 
       {/* BuyMeCoffee - shows after successful extraction */}
       <BuyMeCoffee
@@ -1952,6 +1964,6 @@ export default function BlueButtonXRay({
         context={{ count: extractedConditions.length }}
         componentKey="blue-button-xray"
       />
-    </div>
+    </>
   );
 }

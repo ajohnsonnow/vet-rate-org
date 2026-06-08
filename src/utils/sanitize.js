@@ -12,8 +12,23 @@
 
 // Allowed URL protocols for different contexts
 const SAFE_LINK_PROTOCOLS = ["https:", "http:", "mailto:", "tel:"];
-const SAFE_BLOB_PROTOCOLS = ["blob:"];
+const _SAFE_BLOB_PROTOCOLS = ["blob:"];
 const GOV_DOMAIN_PATTERN = /^https:\/\/[^/]*\.gov(\/|$)/i;
+
+// LLM-output URL allow-list — anything outside this list is stripped before
+// the model's text reaches the DOM. Defends against indirect prompt injection
+// where an attacker plants a malicious link inside an OCR'd PDF / retrieved
+// chunk and tries to social-engineer the model into surfacing it.
+const LLM_OUTPUT_URL_ALLOWLIST = [
+  /^https:\/\/(?:[^/]+\.)?va\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?ecfr\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?federalregister\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?uscourts\.cavc\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?cafc\.uscourts\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?ssa\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?house\.gov(?:\/|$)/i,
+  /^https:\/\/(?:[^/]+\.)?senate\.gov(?:\/|$)/i,
+];
 
 /**
  * Validate and sanitize a URL for use in href attributes.
@@ -106,6 +121,7 @@ export function sanitizeErrorMessage(error, maxLength = 500) {
   // Strip HTML tags to prevent XSS
   message = message.replace(/<[^>]*>/g, "");
   // Strip control characters
+  // eslint-disable-next-line no-control-regex
   message = message.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
   // Limit length
   if (message.length > maxLength) {
@@ -129,6 +145,94 @@ export function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;");
+}
+
+/**
+ * Test whether a URL passes the LLM-output allow-list. Used by
+ * `stripUntrustedUrls` to decide between keep and replace.
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isLLMOutputUrlAllowed(url) {
+  if (!url || typeof url !== "string") return false;
+  return LLM_OUTPUT_URL_ALLOWLIST.some((re) => re.test(url));
+}
+
+/**
+ * Strip / replace URLs in LLM-emitted text. Anything outside the allow-list
+ * becomes `[link removed]`. Use this on any model output that will reach the
+ * DOM (claim analysis, statement drafts, decision-letter explanations).
+ *
+ * Why this defense: a malicious PDF / OCR / retrieved legal chunk can attempt
+ * to social-engineer the model into surfacing an attacker-controlled URL in
+ * its answer. Even with the dual-LLM split and spotlight delimiters, this is
+ * the last-mile filter — a belt to go with the suspenders.
+ *
+ * The allow-list intentionally only covers government / official-record
+ * sources. If a future feature needs to render a different origin (e.g.,
+ * veteran-service-organization websites), extend the allow-list explicitly
+ * rather than relaxing this function's signature.
+ *
+ * @param {string} text - LLM output (may contain http(s):// links)
+ * @returns {string}
+ */
+export function stripUntrustedUrls(text) {
+  if (!text || typeof text !== "string") return text;
+  // Match http(s) URLs. Conservative regex — stops at whitespace or common
+  // sentence terminators so trailing punctuation isn't captured.
+  return text.replace(/https?:\/\/[^\s)<>\]"'`]+/gi, (url) => {
+    // Trim trailing punctuation that's almost-always part of the sentence,
+    // not the URL (e.g., "see https://va.gov.").
+    let trimmed = url;
+    let trailing = "";
+    while (/[.,!?;:]$/.test(trimmed)) {
+      trailing = trimmed.slice(-1) + trailing;
+      trimmed = trimmed.slice(0, -1);
+    }
+    return isLLMOutputUrlAllowed(trimmed)
+      ? trimmed + trailing
+      : "[link removed]" + trailing;
+  });
+}
+
+/**
+ * Render a Markdown-lite snippet to safe HTML for `dangerouslySetInnerHTML`.
+ *
+ * Defense model — we explicitly DO NOT use DOMPurify (see
+ * packages/dompurify-noop/README.md for the design rationale). Instead this
+ * helper escapes everything by default and re-introduces a *fixed allow-list*
+ * of inline elements: `**bold**` → `<strong>`, `*italic*` → `<em>`,
+ * `` `code` `` → `<code>`, `[label](url)` → `<a>` with `sanitizeUrl()` on the
+ * href. Any other angle bracket survives only as `&lt;`/`&gt;`.
+ *
+ * Use this for any developer-controlled markup that needs lightweight
+ * formatting — never for veteran-supplied or AI-generated text.
+ *
+ * @param {string} markdownLite
+ * @returns {string} HTML-safe markup
+ */
+export function safeHtml(markdownLite) {
+  if (!markdownLite || typeof markdownLite !== "string") return "";
+
+  // 1. Escape the entire input first — this is the safety floor.
+  let html = escapeHtml(markdownLite);
+
+  // 2. Re-introduce links with sanitized hrefs. `escapeHtml` already turned
+  //    `<` / `>` into entities, so the markdown brackets `[ ]` and `( )` are
+  //    untouched and the link replacement is safe.
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
+    const safeUrl = sanitizeUrl(url);
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+
+  // 3. Re-introduce inline formatting. Inputs were already escaped, so the
+  //    replacement bodies contain entity-safe characters only.
+  html = html
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  return html;
 }
 
 /**
