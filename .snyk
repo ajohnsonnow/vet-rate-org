@@ -63,3 +63,43 @@ ignore:
           allow-list of huggingface.co, raw.githubusercontent.com, and ecfr.gov
           endpoints — no user-supplied scheme/host can reach urllib.request.
         expires: 2026-07-23T00:00:00.000Z
+  SNYK-PYTHON-AIOHTTP-17146576:
+    - '*':
+        reason: >-
+          No remediation available per Snyk as of 2026-06-08. aiohttp is used only
+          in the llm-compiler/scrapers offline data-pipeline; it never deserializes
+          untrusted objects — responses are read as text/bytes then parsed by
+          BeautifulSoup. Pinned to >=3.10.0 to track upstream fixes.
+        expires: 2026-09-08T00:00:00.000Z
+  SNYK-PYTHON-AIOHTTP-17146580:
+    - '*':
+        reason: >-
+          No remediation available per Snyk as of 2026-06-08. aiohttp is used only
+          in the llm-compiler/scrapers offline pipeline against a hard-coded
+          allow-list of federal domains; no user-supplied URLs reach the HTTP client.
+          Pinned to >=3.10.0 to track upstream fixes.
+        expires: 2026-09-08T00:00:00.000Z
+  SNYK-PYTHON-URLLIB3-16642024:
+    - '*':
+        reason: >-
+          No remediation available per Snyk as of 2026-06-08. urllib3 is a
+          transitive dep of requests used only in the offline scraper pipeline.
+          No credentials or sensitive headers are sent; requests target
+          public federal endpoints only. requests pinned to >=2.32.0.
+        expires: 2026-09-08T00:00:00.000Z
+  SNYK-PYTHON-URLLIB3-16642059:
+    - '*':
+        reason: >-
+          No remediation available per Snyk as of 2026-06-08. Decompression-bomb
+          risk is negligible: the scraper pipeline fetches from public federal
+          endpoints (ecfr.gov, huggingface.co) over a hard-coded allow-list and
+          stores responses to local disk only.
+        expires: 2026-09-08T00:00:00.000Z
+  SNYK-PYTHON-IDNA-16769942:
+    - '*':
+        reason: >-
+          No remediation available per Snyk as of 2026-06-08. idna is a transitive
+          dep of requests. All hostnames in the scraper pipeline come from a
+          hard-coded allow-list, not user input, so no attacker-controlled label
+          can trigger the ReDoS pattern.
+        expires: 2026-09-08T00:00:00.000Z
