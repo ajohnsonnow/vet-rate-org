@@ -9,6 +9,8 @@
  * to prevent code injection and ensure data integrity.
  */
 
+import { triggerBlobDownload } from "./sanitize.js";
+
 // Valid field names that can exist in a claim object
 const VALID_CLAIM_FIELDS = [
   "id",
@@ -316,18 +318,10 @@ export const importPacketData = (jsonString) => {
 export const downloadPacketBackup = (exportData, filename = null) => {
   const date = new Date().toISOString().split("T")[0];
   const defaultFilename = `vet-rate-packet-backup-${date}.json`;
-
-  const jsonString = JSON.stringify(exportData, null, 2);
-  const blob = new Blob([jsonString], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename || defaultFilename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: "application/json",
+  });
+  triggerBlobDownload(blob, filename || defaultFilename);
 };
 
 /**
