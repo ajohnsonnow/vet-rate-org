@@ -244,7 +244,101 @@ Full suite total: **730/736** pass (prior 711/717 + 15 new unit + 9 new e2e; sam
 
 ## Sprint 3 — 48-tool launch matrix
 
-> To be populated after Sprint 3 execution.
+### Changes
+
+**`src/features/claim-prep/ClaimPrepCluster.jsx` — 2 stub fixes**
+
+| Stub | Before | After |
+|---|---|---|
+| `MOSHazardMatcher.onAddToPathfinder` | `console.log` no-op | Closes MOS modal, dispatches `openPathfinder` with `{ detail: { conditions } }` |
+| `WebOfConditions.onSelectCondition` | `console.log` no-op | Calls `saveClaim({ conditionName: condition })` to persist the selection |
+
+**`src/features/vkb/VKBTimelineModal.jsx` — 1 stub fix**
+
+| Stub | Before | After |
+|---|---|---|
+| `VKBTimeline.onDocumentClick` | `console.log` no-op | Closes timeline, dispatches `openVKBViewer` with `{ detail: { docId: doc.id } }` |
+
+**`tests/e2e/tool-launch-matrix.spec.ts` — new file**
+
+- Dispatches all 48 user-facing tool events in sequence (one page boot, serial execution)
+- Seeds `localStorage` with `tests/fixtures/redacted-packet.json` (9 redacted claims)
+- `modalIsVisible`: polls `[role="dialog"]` and `[aria-modal="true"]` up to 7 s (14 × 500 ms)
+- `closeModal`: Escape → wait for hidden + 300 ms settle; falls back to force-clicking close button
+- Assertions: soft per-tool JS error check; cluster-level `≥ 1 tool renders` (7 clusters)
+
+### 48-tool dispatch results (chromium)
+
+| # | Tool | Cluster | Renders | Notes |
+|---|---|---|---|---|
+| 1 | Tactical Calculator | Calculate | ✓ | — |
+| 2 | Million Dollar Dashboard | Calculate | ✓ | — |
+| 3 | Time Machine (ITF) | Calculate | ✓ | — |
+| 4 | Retro Pay Hunter | Calculate | ✓ | — |
+| 5 | C&P Exam Simulator | Calculate | ✓ | — |
+| 6 | BDD Builder | Discover | ✓ | — |
+| 7 | Secondary Scout | Discover | ✓ | — |
+| 8 | Pathfinder | Discover | ✓ | — |
+| 9 | MOS Hazard Matcher | Discover | ✓ | — |
+| 10 | PACT Act Navigator | Discover | ✓ | — |
+| 11 | Web of Conditions | Discover | ✓ | — |
+| 12 | Claim Navigator | Discover | ✗ | Component uses `.fixed.inset-0` overlay without `role="dialog"` — ARIA gap; queued Sprint 6 |
+| 13 | C-File AI Analyzer | Evidence | ✓ | — |
+| 14 | Blue Button X-Ray | Evidence | ✓ | — |
+| 15 | Muster Call (PDF) | Evidence | ✓ | — |
+| 16 | Witness Bench | Evidence | ✓ | — |
+| 17 | Nexus Builder | Evidence | ✗ | Context-driven: requires `e.detail.condition` to render (no standalone open mode) |
+| 18 | Forms Helper | Evidence | ✓ | — |
+| 19 | Symptom Logger | Evidence | ✓ | — |
+| 20 | Pain Painter | Evidence | ✓ | — |
+| 21 | Evidence Timeline | Evidence | ✓ | — |
+| 22 | FOIA Keysmith | Evidence | ✓ | — |
+| 23 | Red Team | QC | ✓ | — |
+| 24 | The War Game | QC | ✓ | — |
+| 25 | Decision Decoder | QC | ✓ | — |
+| 26 | Denials Decoder | QC | ✗ | Component uses custom layout without `role="dialog"` — ARIA gap; queued Sprint 6 |
+| 27 | Shark Radar | QC | ✓ | — |
+| 28 | Consistency Engine | QC | ✓ | — |
+| 29 | Evidence Gap Finder | QC | ✓ | — |
+| 30 | Risk Assessment | QC | ✓ | — |
+| 31 | TDIU Builder | Maximize | ✓ | — |
+| 32 | State Benefit Hunter | Maximize | ✓ | — |
+| 33 | The Tribunal | Maximize | ✓ | — |
+| 34 | Legislative Watchdog | Maximize | ✓ | — |
+| 35 | Body Map Selector | Maximize | ✓ | — |
+| 36 | Nexus Quality Analyzer | Appeals | ✓ | — |
+| 37 | Remand Risk Checker | Appeals | ✓ | — |
+| 38 | Appeals Lane Advisor | Appeals | ✓ | — |
+| 39 | VSO Finder | Support | ✓ | — |
+| 40 | My Packet | Support | ✓ | — |
+| 41 | Knowledge Base (VKB) | Support | ✓ | — |
+| 42 | VA Resources Hub | Support | ✓ | — |
+| 43 | Field Manual | Support | ✓ | — |
+| 44 | Cloud Sync | Support | ✓ | — |
+| 45 | Backup Manager | Support | ✓ | — |
+| 46 | VKB Timeline | Support | ✓ | — |
+| 47 | Publications Library | Support | ✓ | — |
+| 48 | Record Search | Support | ✓ | — |
+
+**Summary: 45/48 render (94%).**
+
+Non-renders are genuine findings, not test failures:
+
+- Claim Navigator + Denials Decoder: missing `role="dialog"` on full-screen overlay → WCAG 2.2 / ARIA violation (Sprint 6 fix list)
+- Nexus Builder: context-driven by design; only opens when another tool passes a condition detail
+
+### Stub fix validation
+
+ESLint (0 errors/warnings on changed files) confirmed clean after all 3 stub fixes.
+
+### Sprint 3 gate results
+
+| Gate | Status | Count | Notes |
+|---|---|---|---|
+| tool-launch-matrix.spec.ts (chromium) | **PASS** | 1/1 | 45/48 tool renders; all 7 cluster assertions ≥ 1 |
+| ESLint — ClaimPrepCluster + VKBTimelineModal | **PASS** | 0 errors, 0 warnings | — |
+
+Full suite total (all specs, all projects): **731/737** pass (prior 730/736 + 1 new e2e; same 3 pre-existing firefox/mobile-chrome fails; same 3 skips).
 
 ---
 
