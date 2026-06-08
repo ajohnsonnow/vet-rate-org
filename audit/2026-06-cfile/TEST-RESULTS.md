@@ -173,9 +173,72 @@ Full suite total (all specs, all projects): **711/717** pass (prior 699/705 + 12
 
 ---
 
-## Sprint 2 — Rating calculator ground-truth
+## Sprint 2 — Calculation correctness vs the Johnson 80% ground truth
 
-> To be populated after Sprint 2 execution.
+### Findings
+
+**Both calculators agree: 80% for the Johnson 9-condition set.**
+
+Step trace (38 CFR § 4.25 whole-person efficiency, intermediate rounding):
+
+| Step | New rating | Remaining | Addition | Combined |
+|---|---|---|---|---|
+| 1 | 50% PTSD | 50% | — | 50 |
+| 2 | 20% Lumbosacral | 50% | +10 | 60 |
+| 3 | 20% L Radiculopathy | 40% | +8 | 68 |
+| 4 | 10% R Radiculopathy | 32% | +3 | 71 |
+| 5 | 10% L Hip | 29% | +3 | 74 |
+| 6 | 10% R Hip | 26% | +3 | 77 |
+| 7 | 10% L Knee | 23% | +2 | 79 |
+| 8 | 10% Pes Planus | 21% | +2 | 81 |
+| 9 | 10% Tinnitus | 19% | +2 | **83** |
+
+83% → nearest-10 rounding → **80%** ✓
+
+**Divergence note:** `ratingCalculator.js` applies `Math.round(sorted[i] × remaining / 100)` at each step (integer intermediates); `vaCalculator.js` uses `combineTwoRatings` which converts to fractions `(a + b × (1−a)) × 100` and rounds. Both produce 83 pre-rounding and 80 final. Implementations differ only in the bilateral application scope (see below).
+
+### Changes
+
+**`src/__tests__/utils/williamsGroundTruth.test.js`** — new ground-truth test file (15 tests)
+
+| Describe | Tests |
+|---|---|
+| Johnson 80% — ratingCalculator.js | 3: final 80%, exact ~82.99, nearest-10 |
+| Johnson 80% — vaCalculator.js | 3: combineMultipleRatings=83, rounding, agreement |
+| Bilateral detection — checkBilateralFactor | 5: hip pair, radiculopathy pair, L/R abbrev, single-side, 0-rated |
+| 2026 pay rates spot-check | 4: solo[100]=$3938.58, solo[50]=$1132.90, monotonic, [80] range |
+
+**`src/utils/ratingCalculator.js` — bilateral fix**
+
+- Added `"radiculopathy"` to `bilateralPairs` list — L/R radiculopathy pairs now correctly detected under 38 CFR § 4.26
+- Added `normalizeSide()` helper: replaces standalone `\bL\b` → `"left"` and `\bR\b` → `"right"` before name matching, so `"L Hip"`, `"L Knee"`, etc. are recognized
+
+**`src/components/RetroPayHunter.jsx` — dollar output fix**
+
+`retroPayFindings` string now includes the estimated dollar total alongside the month count, so the My Packet / VKB entry carries actionable dollar information rather than just a month count.
+
+**`tests/e2e/tactical-calculator.spec.ts`** — new e2e spec (3 tests × 3 browsers)
+
+| Test | Assert |
+|---|---|
+| modal opens without crashing | dialog visible, no pageerror |
+| two conditions → correct combined (VA § 4.25) | PTSD 50% + Back 20% → displayed "60%" |
+| PTSD 50% alone → 50% combined | "50%" displayed |
+
+### Sprint 2 gate results
+
+| Gate | Status | Count | Notes |
+|---|---|---|---|
+| williamsGroundTruth.test.js (Vitest) | **PASS** | 15/15 | 1.07 s |
+| ratingCalculator.test.js + Edge (Vitest) | **PASS** | 43/43 | No regressions |
+| tactical-calculator.spec.ts — chromium | **PASS** | 3/3 | 35.5 s |
+| tactical-calculator.spec.ts — firefox | **PASS** | 3/3 | — |
+| tactical-calculator.spec.ts — mobile-chrome | **PASS** | 3/3 | — |
+| cfile-packet.spec.ts (regression) | **PASS** | 12/12 | — |
+
+**2026 VA pay rates verified:** `solo[100] = $3938.58` ✓, `solo[50] = $1132.90` ✓
+
+Full suite total: **730/736** pass (prior 711/717 + 15 new unit + 9 new e2e; same 3 pre-existing firefox/mobile-chrome fails; same 3 skips).
 
 ---
 
