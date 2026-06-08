@@ -289,7 +289,14 @@ const WRAPPED_KEY_PREFIX = "vet_rate_wrapped_key_"; // AES-KW wrapped DEK (base6
 const ROTATING_KEY_PREFIX = "vet_rate_rotating_key_"; // temp wrapped DEK mid-rotation
 const KEK_META_KEY = "vet_rate_kek_meta"; // { v, salt, iterations, createdAt }
 const KEK_VERIFIER_KEY = "vet_rate_kek_verifier"; // AES-KW wrap of a throwaway key
+const KEK_VERIFIER_TAG_KEY = "vet_rate_kek_verifier_tag"; // SHA-256 of the verifier bytes (corruption check)
 const KEK_ROTATING_KEY = "vet_rate_kek_rotating"; // rotation commit marker (new meta + verifier)
+
+const KEYSTORE_LOCK_NAME = "vet_rate_keystore_rotation";
+const withKeystoreLock = (fn) =>
+  navigator?.locks?.request
+    ? navigator.locks.request(KEYSTORE_LOCK_NAME, fn)
+    : fn();
 
 // Unlocked KEK for this tab session only — never persisted.
 let sessionKEK = null;
@@ -360,6 +367,68 @@ const makeVerifier = async (kek) => {
   return arrayBufferToBase64(wrapped);
 };
 
+// AES-KW wrap of a 256-bit key is exactly 40 bytes (RFC 3394: n+1 64-bit blocks
+// = 4 + 1). A stored verifier/wrapped blob that decodes to any other length — or
+// is not valid base64 — is corrupt, NOT a wrong-passphrase case. Distinguishing
+// the two lets unlock report corruption honestly instead of telling the user
+// their (correct) passphrase is wrong.
+const WRAPPED_BLOB_BYTES = 40;
+
+const KEYSTORE_CORRUPT_MESSAGE =
+  "Device keystore is corrupted and cannot be unlocked. Restore a recovery export if you have one; otherwise this device's saved backup keys are unrecoverable.";
+
+// Decode a stored AES-KW blob, throwing a corruption error (never a wrong-
+// passphrase error) if it is missing, not base64, or the wrong length.
+const readWrappedBlob = (base64) => {
+  if (base64 === null) throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  let bytes;
+  try {
+    bytes = new Uint8Array(base64ToArrayBuffer(base64));
+  } catch {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  if (bytes.length !== WRAPPED_BLOB_BYTES) {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  return bytes;
+};
+
+// PBKDF2 iteration counts must be a positive 32-bit integer or Web Crypto's
+// deriveKey throws a raw, unhandled TypeError. A descriptor carrying a truthy-but-
+// invalid value (negative, non-numeric, out of range) falls back to the default —
+// which self-heals, since every descriptor this code writes uses PBKDF2_ITERATIONS.
+const validIterations = (n) =>
+  Number.isInteger(n) && n > 0 && n <= 0xffffffff ? n : PBKDF2_ITERATIONS;
+
+const computeVerifierTag = async (verifierBytes) =>
+  arrayBufferToBase64(
+    await window.crypto.subtle.digest("SHA-256", verifierBytes),
+  );
+
+// Parse + validate the KEK descriptor, returning the decoded salt and iteration
+// count. A corrupt descriptor (unparseable JSON, missing/invalid salt) throws a
+// clear corruption error rather than a raw SyntaxError that would escape unlock
+// unhandled and brick every future attempt.
+const readKeystoreMeta = () => {
+  let meta = null;
+  try {
+    meta = JSON.parse(localStorage.getItem(KEK_META_KEY));
+  } catch {
+    meta = null;
+  }
+  if (!meta || typeof meta.salt !== "string") {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  let salt;
+  try {
+    salt = new Uint8Array(base64ToArrayBuffer(meta.salt));
+  } catch {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  if (salt.length === 0) throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  return { salt, iterations: validIterations(meta.iterations) };
+};
+
 /**
  * Whether a device passphrase has been set up on this device.
  */
@@ -400,6 +469,20 @@ const migratePlaintextKey = async (backupId) => {
   localStorage.removeItem(KEY_STORAGE_PREFIX + backupId);
 };
 
+// Sweep every still-plaintext DEK into the wrapped store under the session KEK.
+// Per-key isolation: one un-wrappable key (e.g. a truncated crash-left blob)
+// is skipped so the others still heal — without it a single bad key would abort
+// the whole sweep and strand every later key in plaintext.
+const migrateAllPlaintextKeys = async () => {
+  for (const id of listBackupKeyIds()) {
+    try {
+      await migratePlaintextKey(id);
+    } catch {
+      /* skip this key; the others still heal */
+    }
+  }
+};
+
 const purgeRotatingTemp = () => {
   const stale = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -410,19 +493,50 @@ const purgeRotatingTemp = () => {
 };
 
 /**
- * Idempotent, forward-only completion of an interrupted passphrase rotation.
- * The commit marker is written LAST in phase 1, so its presence proves every
- * temp slot is ready: move any remaining temp→live, swap the KEK descriptor,
- * clear the marker. Pure localStorage moves — needs neither the old nor the new
- * KEK, so it is safe to run at boot/unlock before any passphrase is known.
+ * Idempotent, forward-only completion of an interrupted passphrase rotation:
+ * move any remaining temp→live, swap the KEK descriptor, clear the marker. Pure
+ * localStorage moves — it derives no KEK and is passphrase-free by design.
+ *
+ * Because it is passphrase-free it does NOT cryptographically verify the marker —
+ * it trusts the marker's descriptor + verifier and overwrites the live META/
+ * VERIFIER with them. It is therefore NOT safe to call on an unverified or
+ * injected marker before a passphrase is known: a shape-valid-but-garbage marker
+ * would commit an unconfirmed KEK over the only intact old material and brick the
+ * keystore. Callers must confirm the new KEK first — `unlockDeviceKeystore` gates
+ * this behind `unwrapsUnder`, and `rotateDevicePassphrase` writes a freshly
+ * derived marker immediately before calling it. Only a *structurally* broken
+ * marker (unparseable / wrong shape) is rolled back here; a shape-valid marker is
+ * assumed pre-confirmed by the caller.
  */
 export const completePendingRotation = () => {
   const markerRaw = localStorage.getItem(KEK_ROTATING_KEY);
   if (!markerRaw) {
-    purgeRotatingTemp(); // orphans from a phase-1 abort (never committed)
+    // No marker → no rotation, OR a sibling tab is mid-phase-1. Do NOT purge
+    // temp slots here: that would delete an in-flight rotation's staged work.
+    // Genuine orphans are cleared by rotateDevicePassphrase's own pre-purge.
     return false;
   }
-  const marker = JSON.parse(markerRaw);
+  let marker;
+  try {
+    marker = JSON.parse(markerRaw);
+  } catch {
+    marker = null;
+  }
+  if (
+    !marker ||
+    !marker.meta ||
+    typeof marker.meta.salt !== "string" ||
+    typeof marker.verifier !== "string"
+  ) {
+    // Corrupt commit marker: the new KEK it described was never confirmed, so
+    // the temp slots wrapped under it are unrecoverable. Roll back to the still
+    // intact old META/VERIFIER (the old passphrase keeps working) and discard
+    // the debris rather than throwing — an unguarded parse here would brick
+    // every future unlock.
+    purgeRotatingTemp();
+    localStorage.removeItem(KEK_ROTATING_KEY);
+    return false;
+  }
   const tempIds = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -437,6 +551,11 @@ export const completePendingRotation = () => {
   }
   localStorage.setItem(KEK_META_KEY, JSON.stringify(marker.meta));
   localStorage.setItem(KEK_VERIFIER_KEY, marker.verifier);
+  if (typeof marker.verifierTag === "string") {
+    localStorage.setItem(KEK_VERIFIER_TAG_KEY, marker.verifierTag);
+  } else {
+    localStorage.removeItem(KEK_VERIFIER_TAG_KEY);
+  }
   localStorage.removeItem(KEK_ROTATING_KEY);
   return true;
 };
@@ -444,7 +563,7 @@ export const completePendingRotation = () => {
 /**
  * Turn on the device passphrase and migrate existing plaintext keys to wrapped.
  */
-export const enableDevicePassphrase = async (passphrase) => {
+const _enableDevicePassphrase = async (passphrase) => {
   if (!isCryptoAvailable()) {
     throw new Error("Web Crypto API not available. Please use HTTPS.");
   }
@@ -468,43 +587,183 @@ export const enableDevicePassphrase = async (passphrase) => {
     }),
   );
   localStorage.setItem(KEK_VERIFIER_KEY, verifier);
+  localStorage.setItem(
+    KEK_VERIFIER_TAG_KEY,
+    await computeVerifierTag(new Uint8Array(base64ToArrayBuffer(verifier))),
+  );
   sessionKEK = kek;
-  for (const id of listBackupKeyIds()) {
-    await migratePlaintextKey(id);
-  }
+  await migrateAllPlaintextKeys();
   return true;
 };
 
-/**
- * Unlock the keystore for this session by deriving + verifying the KEK.
- */
-export const unlockDeviceKeystore = async (passphrase) => {
-  if (!isDevicePassphraseEnabled()) {
-    throw new Error("Device passphrase is not enabled.");
+// Read + structurally validate the rotation commit marker, returning the new
+// KEK descriptor (salt, iterations) and the decoded verifier bytes — or null if
+// there is no marker, or it is unparseable / wrong-shape / wrong-length. A
+// non-null result is only "shape valid": unlock still confirms the new KEK
+// cryptographically (unwrapsUnder) BEFORE committing, so a shape-valid marker
+// carrying a garbage verifier can never overwrite the intact old material.
+const readPendingRotation = () => {
+  const raw = localStorage.getItem(KEK_ROTATING_KEY);
+  if (raw === null) return null;
+  let marker;
+  try {
+    marker = JSON.parse(raw);
+  } catch {
+    return null;
   }
-  completePendingRotation(); // finish any interrupted rotation before reading meta
-  const meta = JSON.parse(localStorage.getItem(KEK_META_KEY));
-  const salt = new Uint8Array(base64ToArrayBuffer(meta.salt));
-  const kek = await deriveKEK(
-    passphrase,
+  if (
+    !marker ||
+    !marker.meta ||
+    typeof marker.meta.salt !== "string" ||
+    typeof marker.verifier !== "string"
+  ) {
+    return null;
+  }
+  let salt;
+  try {
+    salt = new Uint8Array(base64ToArrayBuffer(marker.meta.salt));
+  } catch {
+    return null;
+  }
+  if (salt.length === 0) return null;
+  let verifierBytes;
+  try {
+    verifierBytes = readWrappedBlob(marker.verifier);
+  } catch {
+    return null;
+  }
+  return {
     salt,
-    meta.iterations || PBKDF2_ITERATIONS,
-  );
-  // AES-KW unwrap throws on a wrong KEK → the verifier doubles as a passphrase check.
+    iterations: validIterations(marker.meta.iterations),
+    verifierBytes,
+  };
+};
+
+// True iff `verifierBytes` (an AES-KW blob) unwraps under `kek`. RFC 3394's
+// integrity check makes a wrong-KEK unwrap throw, so a success confirms the KEK
+// is the one the verifier was made under — i.e. the passphrase is correct.
+const unwrapsUnder = async (verifierBytes, kek) => {
   try {
     await window.crypto.subtle.unwrapKey(
       "raw",
-      base64ToArrayBuffer(localStorage.getItem(KEK_VERIFIER_KEY)),
+      verifierBytes,
       kek,
       { name: "AES-KW" },
       { name: "AES-GCM", length: 256 },
       false,
       ["encrypt", "decrypt"],
     );
+    return true;
   } catch {
+    return false;
+  }
+};
+
+// Whether every live wrapped DEK opens under `kek` (true when there are none).
+// Detects a phase-2 rotation crash: a confirmable marker is present and the OLD
+// passphrase verifies the still-intact old descriptor, but the live keys were
+// already promoted under the NEW KEK — so an old-passphrase unlock would report
+// success yet serve a keystore it cannot read. The unwrap attempts are pure reads.
+const wrappedKeysReadableUnder = async (kek) => {
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith(WRAPPED_KEY_PREFIX)) continue;
+    try {
+      await unwrapDEK(localStorage.getItem(k), kek);
+    } catch {
+      return false;
+    }
+  }
+  return true;
+};
+
+// Best-effort heal of any plaintext DEK once the session KEK is set. A single
+// un-wrappable key is skipped (migrateAllPlaintextKeys is per-key resilient) and
+// any larger failure is swallowed — the unlock has already succeeded; the
+// plaintext stays for the next unlock to retry.
+const sweepPlaintextKeys = async () => {
+  try {
+    await migrateAllPlaintextKeys();
+  } catch {
+    /* plaintext retained, retried later; unlock succeeded */
+  }
+};
+
+/**
+ * Unlock the keystore for this session by deriving + verifying the KEK.
+ */
+const _unlockDeviceKeystore = async (passphrase) => {
+  if (!isDevicePassphraseEnabled()) {
+    throw new Error("Device passphrase is not enabled.");
+  }
+  // Verify-before-commit: if a rotation is mid-flight, finish it ONLY once the
+  // passphrase is proven to derive the marker's NEW KEK (its verifier unwraps
+  // under it). A shape-valid marker carrying a garbage verifier is never
+  // committed, so the intact old META/VERIFIER survive for the old passphrase —
+  // the C1 brick (committing an unconfirmed KEK over the only good material)
+  // cannot happen.
+  const pending = readPendingRotation();
+  if (pending) {
+    const newKEK = await deriveKEK(
+      passphrase,
+      pending.salt,
+      pending.iterations,
+    ).catch(() => null);
+    if (newKEK && (await unwrapsUnder(pending.verifierBytes, newKEK))) {
+      completePendingRotation(); // promote temp→live, swap descriptor, clear marker
+      sessionKEK = newKEK;
+      await sweepPlaintextKeys();
+      return true;
+    }
+    // New KEK unconfirmed → leave the marker for a later forward completion and
+    // fall back to the still-intact old material below.
+  }
+  // A marker that is structurally broken (unparseable / wrong shape / wrong
+  // length) can never be completed forward; once the OLD passphrase is confirmed
+  // below, discard the debris.
+  const brokenMarker =
+    !pending && localStorage.getItem(KEK_ROTATING_KEY) !== null;
+  // Old path. readKeystoreMeta + readWrappedBlob throw KEYSTORE_CORRUPT on
+  // damaged material (an honest corruption error, never a bogus wrong-passphrase).
+  const { salt, iterations } = readKeystoreMeta();
+  const verifierBytes = readWrappedBlob(localStorage.getItem(KEK_VERIFIER_KEY));
+  const storedTag = localStorage.getItem(KEK_VERIFIER_TAG_KEY);
+  if (
+    storedTag !== null &&
+    (await computeVerifierTag(verifierBytes)) !== storedTag
+  ) {
+    throw new Error(KEYSTORE_CORRUPT_MESSAGE);
+  }
+  const kek = await deriveKEK(passphrase, salt, iterations).catch(() => null);
+  if (!kek || !(await unwrapsUnder(verifierBytes, kek))) {
     throw new Error("Incorrect device passphrase.");
   }
+  // A confirmable rotation marker is present but this passphrase derived only the
+  // OLD KEK (it verified the still-intact old descriptor, not the marker's new
+  // KEK). If the live keys were already promoted under the new KEK — a phase-2
+  // crash, the state pinned by the mid-phase-2 recovery test — the old KEK cannot
+  // read them, so don't report a false success. Steer the user to the new
+  // passphrase, which completes the rotation forward. A still-readable keystore
+  // (phase-1 interruption, keys untouched) unlocks normally and leaves the marker.
+  if (pending && !(await wrappedKeysReadableUnder(kek))) {
+    throw new Error(
+      "A device passphrase change is in progress. Unlock with your new passphrase.",
+    );
+  }
+  if (brokenMarker) {
+    purgeRotatingTemp();
+    localStorage.removeItem(KEK_ROTATING_KEY);
+  }
   sessionKEK = kek;
+  if (storedTag === null) {
+    localStorage.setItem(
+      KEK_VERIFIER_TAG_KEY,
+      await computeVerifierTag(verifierBytes),
+    );
+  }
+  // Heal any plaintext DEK left by a crash or a pre-keystore backup now that the
+  // KEK is in hand. Best-effort: the unlock itself has already succeeded.
+  await sweepPlaintextKeys();
   return true;
 };
 
@@ -520,7 +779,7 @@ export const lockDeviceKeystore = () => {
  * slots and a commit marker; phase 2 promotes them. An interruption is repaired
  * by completePendingRotation at the next unlock.
  */
-export const rotateDevicePassphrase = async (newPassphrase) => {
+const _rotateDevicePassphrase = async (newPassphrase) => {
   if (!isCryptoAvailable()) {
     throw new Error("Web Crypto API not available. Please use HTTPS.");
   }
@@ -535,26 +794,38 @@ export const rotateDevicePassphrase = async (newPassphrase) => {
   const newSalt = window.crypto.getRandomValues(new Uint8Array(16));
   const newKEK = await deriveKEK(newPassphrase, newSalt);
   const verifier = await makeVerifier(newKEK);
+  const verifierTag = await computeVerifierTag(
+    new Uint8Array(base64ToArrayBuffer(verifier)),
+  );
 
   // Phase 1 (abortable): re-wrap every DEK under the new KEK into temp slots.
   // Throwing here leaves live keys untouched — no marker means no commit.
-  const ids = listBackupKeyIds();
-  for (const id of ids) {
+  // Re-scan and fold until the id set stops growing, so a key a sibling tab
+  // stores mid-rotation is still captured (C3); each id is staged at most once.
+  const staged = new Set();
+  const stageId = async (id) => {
+    if (staged.has(id)) return;
     const wrapped = localStorage.getItem(WRAPPED_KEY_PREFIX + id);
     let dekBase64;
     if (wrapped !== null) {
       dekBase64 = await unwrapDEK(wrapped, oldKEK);
     } else {
       const plaintext = localStorage.getItem(KEY_STORAGE_PREFIX + id);
-      if (plaintext === null) continue;
+      if (plaintext === null) return;
       dekBase64 = plaintext;
     }
     localStorage.setItem(
       ROTATING_KEY_PREFIX + id,
       await wrapDEK(dekBase64, newKEK),
     );
+    staged.add(id);
+  };
+  let lastCount = -1;
+  while (staged.size !== lastCount) {
+    lastCount = staged.size;
+    for (const id of listBackupKeyIds()) await stageId(id);
   }
-  // Commit point — the marker carries the new descriptor + verifier.
+  // Commit point — the marker carries the new descriptor + verifier + tag.
   localStorage.setItem(
     KEK_ROTATING_KEY,
     JSON.stringify({
@@ -565,12 +836,13 @@ export const rotateDevicePassphrase = async (newPassphrase) => {
         createdAt: new Date().toISOString(),
       },
       verifier,
+      verifierTag,
     }),
   );
 
   // Phase 2: promote temp→live, swap descriptor, clear marker.
   completePendingRotation();
-  for (const id of ids) {
+  for (const id of staged) {
     if (localStorage.getItem(WRAPPED_KEY_PREFIX + id) !== null) {
       localStorage.removeItem(KEY_STORAGE_PREFIX + id); // drop superseded plaintext
     }
@@ -595,6 +867,7 @@ export const wipeLocalKeystore = () => {
         k.startsWith(ROTATING_KEY_PREFIX) ||
         k === KEK_META_KEY ||
         k === KEK_VERIFIER_KEY ||
+        k === KEK_VERIFIER_TAG_KEY ||
         k === KEK_ROTATING_KEY)
     ) {
       toRemove.push(k);
@@ -610,7 +883,7 @@ export const wipeLocalKeystore = () => {
  * passphrase is enabled the key is wrapped under the session KEK; refusing to
  * silently fall back to plaintext when locked.
  */
-export const storeLocalKey = async (backupId, keyExport) => {
+const _storeLocalKey = async (backupId, keyExport) => {
   if (!keyExport) return;
   if (isDevicePassphraseEnabled()) {
     if (sessionKEK === null) {
@@ -633,13 +906,14 @@ export const storeLocalKey = async (backupId, keyExport) => {
  * decryptFromCloud raw-key branch). Unwraps a wrapped key when present
  * (requires unlock); lazily migrates a plaintext key when unlocked.
  */
-export const getLocalKey = async (backupId) => {
+const _getLocalKey = async (backupId) => {
   const wrapped = localStorage.getItem(WRAPPED_KEY_PREFIX + backupId);
   if (wrapped !== null) {
     if (sessionKEK === null) {
-      throw new Error(
-        "Device keystore is locked. Unlock it to read this backup key.",
-      );
+      // Bare sentinel (not a sentence) so the restore UI can branch on it and
+      // render its own unlock prompt — mirrors the PASSPHRASE_REQUIRED sentinel
+      // the restore flow already keys on.
+      throw new Error("KEYSTORE_LOCKED");
     }
     const dekBase64 = await unwrapDEK(wrapped, sessionKEK);
     localStorage.removeItem(KEY_STORAGE_PREFIX + backupId); // drop any stale sibling
@@ -651,3 +925,14 @@ export const getLocalKey = async (backupId) => {
   }
   return plaintext;
 };
+
+export const enableDevicePassphrase = (passphrase) =>
+  withKeystoreLock(() => _enableDevicePassphrase(passphrase));
+export const unlockDeviceKeystore = (passphrase) =>
+  withKeystoreLock(() => _unlockDeviceKeystore(passphrase));
+export const storeLocalKey = (backupId, keyExport) =>
+  withKeystoreLock(() => _storeLocalKey(backupId, keyExport));
+export const getLocalKey = (backupId) =>
+  withKeystoreLock(() => _getLocalKey(backupId));
+export const rotateDevicePassphrase = (newPassphrase) =>
+  withKeystoreLock(() => _rotateDevicePassphrase(newPassphrase));
