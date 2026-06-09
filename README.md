@@ -281,9 +281,9 @@ This comprehensive platform represents significant development effort to create 
 - **Traditional Solo Development**: 30,327 hours (14.6 years full-time) @ $135/hr = $4,094,145
 - **Actual AI-Assisted Development**: 150 hours over 42 days = $63,000
 - **Productivity Multiplier**: 202x (AI-assisted development vs. traditional)
-- **Lines of Code**: 248,529 lines (src directory)
+- **Lines of Code**: 248,528 lines (src directory)
 - **Total Files**: 2,157 project files
-- **App Size**: 356.79 MB
+- **App Size**: 356.8 MB
 - **Components**: 167 React components (42 major tools + 125 supporting)
 - **Utilities**: 107 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR (250 hours validation work)
