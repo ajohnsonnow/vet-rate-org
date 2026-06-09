@@ -23,18 +23,18 @@ import ResponsiveModal from "./common/ResponsiveModal";
 const ITF_STORAGE_KEY = "vet_rate_itf_date";
 const ESTIMATED_RATING_KEY = "vet_rate_estimated_rating";
 
-// VA disability compensation rates (2024)
+// VA disability compensation rates (2026 — 2.8% COLA effective Dec 1, 2025)
 const VA_MONTHLY_RATES = {
-  10: 171,
-  20: 338,
-  30: 524,
-  40: 755,
-  50: 1075,
-  60: 1361,
-  70: 1716,
-  80: 1995,
-  90: 2241,
-  100: 3737,
+  10: 180.42,
+  20: 356.66,
+  30: 552.47,
+  40: 795.84,
+  50: 1132.9,
+  60: 1435.02,
+  70: 1808.45,
+  80: 2102.15,
+  90: 2362.3,
+  100: 3938.58,
 };
 
 export default function TimeMachine({
@@ -111,12 +111,16 @@ export default function TimeMachine({
     };
 
     calculateCountdown();
+    // Auto-persist whenever the date/rating changes so the countdown
+    // survives modal close/reopen even if the veteran never clicks the button.
+    localStorage.setItem(ITF_STORAGE_KEY, itfDate);
+    localStorage.setItem(ESTIMATED_RATING_KEY, estimatedRating.toString());
     const interval = setInterval(calculateCountdown, 1000 * 60 * 60); // Update every hour
 
     return () => clearInterval(interval);
   }, [itfDate, estimatedRating]);
 
-  // Save ITF date
+  // Save ITF date and switch to countdown view (also called via the button in edit mode)
   const handleSaveITF = () => {
     if (itfDate) {
       localStorage.setItem(ITF_STORAGE_KEY, itfDate);

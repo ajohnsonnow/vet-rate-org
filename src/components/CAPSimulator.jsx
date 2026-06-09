@@ -3491,6 +3491,41 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             ))}
           </div>
 
+          {/* Veterans Crisis Line — required when suicidal ideation option is selected */}
+          {currentQuestion.id === "q_symptoms" &&
+            (currentAnswer === "severe" || currentAnswer === "gross") && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="bg-red-50 dark:bg-red-900/30 border-2 border-red-500 rounded-lg p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl flex-shrink-0" aria-hidden="true">
+                    🆘
+                  </span>
+                  <div>
+                    <p className="font-bold text-red-800 dark:text-red-200 text-base">
+                      Veterans Crisis Line
+                    </p>
+                    <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+                      If you or a Veteran you know is in crisis, free,
+                      confidential support is available 24/7:
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-red-800 dark:text-red-200 font-semibold">
+                      <li>
+                        📞 Call <strong>988</strong>, then Press{" "}
+                        <strong>1</strong>
+                      </li>
+                      <li>
+                        💬 Text <strong>838255</strong>
+                      </li>
+                      <li>🌐 VeteransCrisisLine.net</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
           {/* Navigation */}
           <div className="flex gap-4 justify-between pt-4">
             <button

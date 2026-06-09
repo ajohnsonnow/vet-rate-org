@@ -101,6 +101,11 @@ export const triggerSoftExit = () => {
 const handleEscapeKey = (event) => {
   if (event.key !== "Escape") return;
 
+  // Don't count ESC presses that are dismissing an open dialog/modal.
+  // Those are consumed by the dialog — not a panic-exit gesture.
+  // Only rapid ESC presses with NO modal open count toward the threshold.
+  if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return;
+
   escapeKeyCount++;
 
   // Clear existing timer

@@ -79,8 +79,23 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
     // 1. Check for Diagnosis/Medical Description
     const diagnosisKey = `${storageKey}_diagnosis`;
     const medicalDescription = localStorage.getItem(diagnosisKey) || "";
+
+    // A condition saved to My Packet implies a confirmed diagnosis
+    let hasSavedClaim = false;
+    try {
+      const savedClaims = JSON.parse(
+        localStorage.getItem("vet_rate_saved_claims") || "[]",
+      );
+      if (conditionName) {
+        hasSavedClaim = savedClaims.some(
+          (c) => c.conditionName?.toLowerCase() === conditionName.toLowerCase(),
+        );
+      }
+    } catch (_) {}
+
     const hasDiagnosis =
       navigatorBig3.diagnosis ||
+      hasSavedClaim ||
       (medicalDescription && medicalDescription.trim().length > 50);
 
     // 2. Check for In-Service Event/Stressor

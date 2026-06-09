@@ -242,8 +242,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
             )}
             <button
               onClick={onClose}
-              className={`text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
-              aria-label="Close"
+              className={`h-11 w-11 flex items-center justify-center rounded text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
+              aria-label="Close About Us"
             >
               ×
             </button>
