@@ -33,7 +33,7 @@ export const AIStatusBadge = ({
   // eslint-disable-next-line no-unused-vars
   const { t } = useLanguage();
   // eslint-disable-next-line no-unused-vars
-  const [s_tatus, setStatus] = useState(getAIStatus());
+  const [status, setStatus] = useState(getAIStatus());
 
   useEffect(() => {
     // Refresh status periodically

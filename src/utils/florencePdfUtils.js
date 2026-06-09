@@ -16,10 +16,9 @@
  */
 
 import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-// Configure PDF.js worker - point to static copy in public folder
-// This prevents Vite bundler 404 errors
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN for PDF.js text rendering
 const STANDARD_FONT_DATA_URL =
