@@ -24,6 +24,7 @@ import {
 import { markBackupCreated } from "../utils/dataPersistence";
 import { downloadDossier, previewDossier } from "../utils/dossierExport";
 import CloudSyncManager from "./CloudSyncManager";
+import AtomicWipe from "./AtomicWipe";
 import DbqBrowser from "./DbqBrowser";
 import { getCacheStats } from "../utils/dbqOfflineStorage";
 
@@ -581,6 +582,8 @@ export default function BackupManager({ onClose }) {
               >
                 Clear All Data
               </button>
+
+              <AtomicWipe compact />
             </div>
 
             {/* Storage Stats Display */}

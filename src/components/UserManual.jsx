@@ -4,6 +4,8 @@ import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { triggerTourRestart } from "./BootCampTour";
 import { PROJECT_STATS } from "../data/projectStats";
+import { getTotalToolCount } from "../data/toolkitData";
+import { getDisabilityCount } from "../utils/disabilityCount";
 import { sanitizeUrl } from "../utils/sanitize";
 
 // Navigation structure matching the docs - organized by category
@@ -3746,7 +3748,12 @@ Available 24/7
 const renderContent = (content, onClose) => {
   if (!content) return null;
 
-  const lines = content.trim().split("\n");
+  // Resolve template variables embedded in markdown content strings
+  const resolved = content
+    .replace(/\{getTotalToolCount\(\)\}/g, String(getTotalToolCount()))
+    .replace(/\{getDisabilityCount\(\)\}/g, String(getDisabilityCount()));
+
+  const lines = resolved.trim().split("\n");
   const elements = [];
   let inTable = false;
   let tableRows = [];
@@ -4195,7 +4202,8 @@ const UserManual = ({ onClose, onReportBug }) => {
           <h1 className="font-bold">{t("userManual", "title")}</h1>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg"
+            className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded-lg"
+            aria-label="Close Field Manual"
           >
             <svg
               className="w-6 h-6"
@@ -4228,7 +4236,8 @@ const UserManual = ({ onClose, onReportBug }) => {
                 </h1>
                 <button
                   onClick={onClose}
-                  className="p-1 hover:bg-white/20 rounded"
+                  className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded"
+                  aria-label="Close Field Manual"
                 >
                   <svg
                     className="w-5 h-5"
