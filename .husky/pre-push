@@ -1,5 +1,11 @@
 # Auto-update docs, stats, and changelog before every push.
-# Staged changes are auto-committed so the push stays self-consistent.
+# Skips if the last commit was already a pre-push doc update (breaks feedback loop).
+
+LAST_MSG=$(git log -1 --format="%s")
+if echo "$LAST_MSG" | grep -q "\[pre-push\]"; then
+  echo "✅ [pre-push] Docs already current — skipping."
+  exit 0
+fi
 
 echo "🔄 [pre-push] Refreshing live stats..."
 node scripts/update-stats.js 2>&1 | tail -5
