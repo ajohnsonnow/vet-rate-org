@@ -175,7 +175,7 @@ const PWAInstallButton = ({ className = "" }) => {
           role="region"
           aria-label="Install Vet-Rate"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-2xl p-4">
+          <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-2xl p-4">
             <button
               onClick={handleDismiss}
               aria-label="Dismiss install prompt"
@@ -209,7 +209,7 @@ const PWAInstallButton = ({ className = "" }) => {
           role="status"
           aria-live="polite"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-2xl">
+          <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-2xl">
             <button
               onClick={handleDismiss}
               aria-label="Dismiss install prompt"

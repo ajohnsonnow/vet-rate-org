@@ -358,6 +358,56 @@ export const initializeSwarm = async (
       throw new Error("No compatible GPU found for Warrant Council.");
     }
 
+    // Shared with LocalAIPanel.jsx: patch navigator.gpu.requestAdapter so that
+    // when WebLLM internally calls requestDevice it gets the adapter's true max
+    // limits (required for Blackwell / RTX 5060 Ti and similar high-end GPUs).
+    if (!window._mlc_gpu_patched && navigator.gpu) {
+      const _origRequestAdapter = navigator.gpu.requestAdapter.bind(
+        navigator.gpu,
+      );
+      navigator.gpu.requestAdapter = async function (options) {
+        const a = await _origRequestAdapter(options);
+        if (!a) return a;
+        const aLimits = a.limits;
+        const aFeatures = a.features;
+        const _origRequestDevice = a.requestDevice.bind(a);
+        a.requestDevice = async function (descriptor = {}) {
+          const requiredLimits = {
+            ...descriptor.requiredLimits,
+            maxComputeInvocationsPerWorkgroup:
+              aLimits.maxComputeInvocationsPerWorkgroup || 1024,
+            maxStorageBufferBindingSize: aLimits.maxStorageBufferBindingSize,
+            maxBufferSize: aLimits.maxBufferSize,
+            maxComputeWorkgroupSizeX: aLimits.maxComputeWorkgroupSizeX,
+            maxComputeWorkgroupSizeY: aLimits.maxComputeWorkgroupSizeY,
+            maxComputeWorkgroupSizeZ: aLimits.maxComputeWorkgroupSizeZ,
+            maxComputeWorkgroupStorageSize:
+              aLimits.maxComputeWorkgroupStorageSize,
+            maxBindGroups: aLimits.maxBindGroups,
+            maxBindingsPerBindGroup: aLimits.maxBindingsPerBindGroup,
+            maxDynamicStorageBuffersPerPipelineLayout:
+              aLimits.maxDynamicStorageBuffersPerPipelineLayout,
+            maxStorageBuffersPerShaderStage:
+              aLimits.maxStorageBuffersPerShaderStage,
+          };
+          const requiredFeatures = [...(descriptor.requiredFeatures || [])];
+          if (
+            aFeatures.has("shader-f16") &&
+            !requiredFeatures.includes("shader-f16")
+          ) {
+            requiredFeatures.push("shader-f16");
+          }
+          return await _origRequestDevice({
+            ...descriptor,
+            requiredLimits,
+            requiredFeatures,
+          });
+        };
+        return a;
+      };
+      window._mlc_gpu_patched = true;
+    }
+
     const agentInfo =
       SWARM_AGENTS[agentId?.toUpperCase?.()] || SWARM_AGENTS["AUDITOR"];
     onProgress?.({
@@ -416,10 +466,15 @@ export const initializeSwarm = async (
     }
 
     if (!loadedModel) {
-      console.warn("💎 All WebLLM models failed, using placeholder mode");
+      swarmInitializing = false;
+      const loadErr = new Error(
+        "All WebLLM models failed to load. Check the browser console for details (GPU limits, network, or cache errors).",
+      );
+      onError?.(loadErr);
+      return false;
     }
 
-    // Mark as ready
+    // Mark as ready only when a model actually loaded
     loadedAgents.add(agentId);
     currentAgent = agentId;
     swarmReady = true;
