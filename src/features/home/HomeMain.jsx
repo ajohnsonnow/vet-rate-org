@@ -29,6 +29,7 @@ export default function HomeMain({
   setSelectedResult,
   isLoading,
   error,
+  hasSearched,
   setHasSearched,
   handleClearSearch,
   handleBuildStatementFromSearch,
@@ -142,6 +143,7 @@ export default function HomeMain({
         )}
 
         {!isLoading &&
+          hasSearched &&
           searchTerm.trim() !== "" &&
           results.length === 0 &&
           !error && (

@@ -1,13 +1,12 @@
+import { useEffect } from "react";
 import StressReliefDivision from "../../components/StressReliefDivision";
-import ToastContainer, { useToast } from "../../components/Toast";
+import ToastContainer, { useToast, toastManager } from "../../components/Toast";
 import OnboardingGate from "../onboarding/OnboardingGate";
 import { VaApiStatusBanner } from "../../components/VaApiStatus";
 import { isVaApiEnabled } from "../../config/vaAuth";
 import MobileNotice from "../../components/MobileNotice";
 import ActiveDevBanner from "../active-dev-banner/ActiveDevBanner";
 import GlobalCommandSearchWrapper from "../global-command-search/GlobalCommandSearchWrapper";
-import AtomicWipe from "../../components/AtomicWipe";
-
 /**
  * AppShellTop — everything that renders above AppHeader: the IDDQD
  * easter-egg listener, the toast container, the onboarding gate, the
@@ -30,6 +29,19 @@ import AtomicWipe from "../../components/AtomicWipe";
 export default function AppShellTop({ whatsNewOpen }) {
   const { toasts, onClose, onAction } = useToast();
 
+  useEffect(() => {
+    const handler = (e) => {
+      const { estimatedTokens, limit } = e.detail ?? {};
+      toastManager.warning(
+        "AI Prompt Too Long",
+        `Input was trimmed to fit the model's context window (${estimatedTokens?.toLocaleString() ?? "?"} tokens, limit ${limit?.toLocaleString() ?? "?"}).`,
+      );
+    };
+    window.addEventListener("diamondSwarm:tokenWarning", handler);
+    return () =>
+      window.removeEventListener("diamondSwarm:tokenWarning", handler);
+  }, []);
+
   return (
     <>
       <StressReliefDivision />
@@ -39,7 +51,6 @@ export default function AppShellTop({ whatsNewOpen }) {
       <MobileNotice />
       <ActiveDevBanner />
       <GlobalCommandSearchWrapper />
-      <AtomicWipe />
     </>
   );
 }

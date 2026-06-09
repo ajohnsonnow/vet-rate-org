@@ -65,7 +65,22 @@ const CATEGORY_PATTERNS = {
  */
 function getCommits(since = null) {
   try {
-    const sinceArg = since ? `--since="${since}"` : '--since="7 days ago"';
+    // Default: commits since last version tag, not a fixed time window (avoids duplication)
+    let sinceArg;
+    if (since) {
+      sinceArg = `--since="${since}"`;
+    } else {
+      try {
+        const lastTag = execSync('git tag -l "v*" --sort=-version:refname', {
+          encoding: "utf-8",
+        })
+          .trim()
+          .split("\n")[0];
+        sinceArg = lastTag ? `${lastTag}..HEAD` : '--since="7 days ago"';
+      } catch {
+        sinceArg = '--since="7 days ago"';
+      }
+    }
     const command = `git log ${sinceArg} --pretty=format:"%H|%s|%ad|%an" --date=short`;
     const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict
 
@@ -233,6 +248,14 @@ function getCurrentVersion() {
 function updateMarkdownChangelog(version, date, newSection) {
   const changelogPath = path.join(__dirname, "..", "CHANGELOG.md");
   let content = fs.readFileSync(changelogPath, "utf-8");
+
+  // Skip if this version already has an entry — prevents duplicate sections on repeated runs
+  if (content.includes(`## [${version}]`)) {
+    console.log(
+      `ℹ️  CHANGELOG.md already has a [${version}] entry — skipping insert.`,
+    );
+    return;
+  }
 
   // Insert after "## [Unreleased]"
   const unreleasedPattern = /## \[Unreleased\]\s*\n/;

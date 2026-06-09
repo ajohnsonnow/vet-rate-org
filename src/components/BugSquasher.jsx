@@ -12,14 +12,15 @@ import {
   copyToClipboard,
 } from "../utils/bugReportUtils";
 import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
+import { scrubPII } from "../utils/piiScrubber";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Developer contact email for bug reports
 const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
 
-// FormSubmit.co endpoint - sends directly to developer's email without opening email client
-const FORMSUBMIT_URL =
-  "https://formsubmit.co/ajax/Anth@StructuredForGrowth.com";
+// FormSubmit.co endpoint — configurable via VITE_BUG_REPORT_ENDPOINT.
+// Empty string disables remote send (local save still works).
+const FORMSUBMIT_URL = import.meta.env.VITE_BUG_REPORT_ENDPOINT ?? "";
 
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
   // eslint-disable-next-line no-unused-vars
@@ -271,61 +272,69 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
       // Note: This is best-effort. Local save is the primary success path.
-      try {
-        const severityLabel = formData.severity?.label || "Unknown";
+      // Remote send is skipped entirely when VITE_BUG_REPORT_ENDPOINT is unset.
+      if (FORMSUBMIT_URL)
+        try {
+          const severityLabel = formData.severity?.label || "Unknown";
 
-        const formPayload = {
-          _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
-          _template: "table",
-          report_id: reportId,
-          severity: severityLabel,
-          category: formData.category,
-          module: formData.module,
-          diagnostic_code: formData.diagnosticCode || "N/A",
-          description: formData.userDescription,
-          steps_to_reproduce: formData.stepsToReproduce || "Not provided",
-          expected_behavior: formData.expectedBehavior || "Not provided",
-          actual_behavior: formData.actualBehavior || "Not provided",
-          additional_context: formData.additionalContext || "None",
-          veteran_email:
-            formData.veteranEmail || "Anonymous (no reply requested)",
-          submitted_at: new Date().toISOString(),
-          full_report: generatedReport,
-        };
+          const formPayload = {
+            _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
+            _template: "table",
+            report_id: reportId,
+            severity: severityLabel,
+            category: formData.category,
+            module: formData.module,
+            diagnostic_code: formData.diagnosticCode || "N/A",
+            description: scrubPII(formData.userDescription),
+            steps_to_reproduce: scrubPII(
+              formData.stepsToReproduce || "Not provided",
+            ),
+            expected_behavior: scrubPII(
+              formData.expectedBehavior || "Not provided",
+            ),
+            actual_behavior: scrubPII(
+              formData.actualBehavior || "Not provided",
+            ),
+            additional_context: scrubPII(formData.additionalContext || "None"),
+            veteran_email:
+              formData.veteranEmail || "Anonymous (no reply requested)",
+            submitted_at: new Date().toISOString(),
+            full_report: scrubPII(generatedReport),
+          };
 
-        const response = await fetch(FORMSUBMIT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(formPayload),
-        });
+          const response = await fetch(FORMSUBMIT_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(formPayload),
+          });
 
-        if (!response.ok) {
-          console.warn(
-            `⚠️ FormSubmit returned ${response.status} - report saved locally`,
-          );
-        } else {
-          const result = await response.json();
-
-          if (result.success) {
-            // eslint-disable-next-line no-console
-            console.log(
-              `✅ Bug report ${reportId} sent via FormSubmit AND saved locally`,
+          if (!response.ok) {
+            console.warn(
+              `⚠️ FormSubmit returned ${response.status} - report saved locally`,
             );
           } else {
-            console.warn(
-              `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - report saved locally`,
-            );
+            const result = await response.json();
+
+            if (result.success) {
+              // eslint-disable-next-line no-console
+              console.log(
+                `✅ Bug report ${reportId} sent via FormSubmit AND saved locally`,
+              );
+            } else {
+              console.warn(
+                `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - report saved locally`,
+              );
+            }
           }
+        } catch (emailError) {
+          // Log but don't fail - local save is what matters
+          console.warn(
+            `⚠️ Could not send email notification (${emailError.message}). Your report was saved locally in My Tickets.`,
+          );
         }
-      } catch (emailError) {
-        // Log but don't fail - local save is what matters
-        console.warn(
-          `⚠️ Could not send email notification (${emailError.message}). Your report was saved locally in My Tickets.`,
-        );
-      }
 
       // Always succeed if we got this far (local save succeeded)
       setSubmitted(true);

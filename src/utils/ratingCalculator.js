@@ -147,20 +147,29 @@ export function checkBilateralFactor(conditions) {
     "eye",
     "arm",
     "leg",
+    "radiculopathy",
   ];
+
+  // Expand standalone "L" / "R" abbreviations so "L Hip" matches as "left hip"
+  function normalizeSide(name) {
+    return name
+      .toLowerCase()
+      .replace(/\bl\b/g, "left")
+      .replace(/\br\b/g, "right");
+  }
 
   for (const bodyPart of bilateralPairs) {
     const left = conditions.find(
       (c) =>
-        c.name.toLowerCase().includes(bodyPart) &&
-        c.name.toLowerCase().includes("left") &&
+        normalizeSide(c.name).includes(bodyPart) &&
+        normalizeSide(c.name).includes("left") &&
         c.rating > 0,
     );
 
     const right = conditions.find(
       (c) =>
-        c.name.toLowerCase().includes(bodyPart) &&
-        c.name.toLowerCase().includes("right") &&
+        normalizeSide(c.name).includes(bodyPart) &&
+        normalizeSide(c.name).includes("right") &&
         c.rating > 0,
     );
 

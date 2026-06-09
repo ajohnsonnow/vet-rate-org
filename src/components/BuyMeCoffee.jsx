@@ -74,6 +74,17 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
     setIsDismissed(false);
   }, [trigger]);
 
+  // Auto-dismiss after 7 seconds so Luna doesn't block the UI
+  useEffect(() => {
+    if (!isVisible) return;
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      setIsDismissed(true);
+      setSessionDismissCount((prev) => prev + 1);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, [isVisible]);
+
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);

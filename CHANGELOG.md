@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.1] - 2026-06-08
+
+### Fixed
+
+- 🐛 **AI Service**: MEDIUM audit fixes — routing and tool-count mismatches from mega-audit 2026-06-08
+- 🐛 **UX/Safety**: CRITICAL+HIGH fixes from mega-audit 2026-06-08 (UI dead-ends, safety guardrails)
+- 🐛 **Diamond Swarm**: apply WebGPU adapter patch + fail loudly when all models fail
+- 🐛 **Discovery**: hydrate NexusBuilder from localStorage when no event detail present
+
+### Documentation
+
+- 📚 add 2026-06-08 mega-audit reports and sprint instructions to docs/
+
 ## [1.23.0] - 2026-06-08
 
 ### Added
@@ -47,4 +60,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📚 record Cluster C + D migration in progress log
 - 📚 record consent-gate migration + honest overflow metric in worklist
 - 📚 discovery worklist + verified inventory (audit S9-S17)
-

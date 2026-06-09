@@ -9,6 +9,7 @@
 
 // Import dynamic stats from JSON (updated by scripts/update-stats.js)
 import dynamicStats from "./projectStats.json";
+import { getTotalToolCount as getToolkitToolCount } from "./toolkitData";
 
 // Helper to parse numeric strings with commas
 const parseNumeric = (str) => {
@@ -35,7 +36,7 @@ export const PROJECT_STATS = {
   majorTools:
     dynamicStats.live?.toolCount ||
     parseNumeric(dynamicStats.major_tools) ||
-    40,
+    getToolkitToolCount(),
   supportingComponents: dynamicStats.live?.supportingComponents || 75,
   utilities:
     dynamicStats.live?.utilityCount ||
@@ -149,11 +150,9 @@ export const formatNumber = (num) => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
-// Helper to get total tool count from categories
-export const getTotalToolCount = () => {
-  const counts = PROJECT_STATS.toolCounts;
-  return Object.values(counts).reduce((sum, count) => sum + count, 0);
-};
+// Delegate to toolkitData's authoritative dynamic count — toolCounts below is
+// retained for the per-category breakdown but the total uses the live source.
+export const getTotalToolCount = () => getToolkitToolCount();
 
 // Pre-formatted values for easy use
 export const FORMATTED_STATS = {

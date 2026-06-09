@@ -520,16 +520,15 @@ for (const vp of VIEWPORTS) {
     });
 
     test("What's New modal keeps its CTA in view", async ({ page }) => {
-      await expect
-        .poll(async () => (await inspectResponsiveModal(page)).found, {
-          timeout: 6000,
-        })
-        .toBe(true);
-
+      const footerBtn = page.locator(
+        '[role="dialog"][aria-labelledby="whats-new-title"] .modal-footer button',
+      );
+      // toBeVisible + toBeInViewport use Playwright's built-in auto-retry, so they
+      // ride through React.StrictMode's unmount→remount cycle without a false pass.
+      await expect(footerBtn).toBeVisible({ timeout: 8000 });
+      await expect(footerBtn).toBeInViewport();
       const m = await inspectResponsiveModal(page);
       expect(m.overflow).toBeLessThanOrEqual(1);
-      expect(m.hasButton).toBe(true);
-      expect(m.ctaInViewport).toBe(true);
       expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
     });
   });

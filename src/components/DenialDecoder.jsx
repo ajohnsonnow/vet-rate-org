@@ -263,14 +263,21 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
   };
 
   return (
-    <div className={`denial-decoder ${className}`}>
+    <div
+      className={`denial-decoder ${className}`}
+      role="dialog"
+      aria-labelledby="denial-decoder-title"
+    >
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FileText className="w-8 h-8" />
             <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2">
+              <h2
+                id="denial-decoder-title"
+                className="text-2xl font-bold flex items-center gap-2"
+              >
                 {t("denialDecoder.title")}
                 <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
                   {t("denialDecoder.ai")}
