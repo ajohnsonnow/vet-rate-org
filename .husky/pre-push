@@ -1,0 +1,28 @@
+# Auto-update docs, stats, and changelog before every push.
+# Skips if the last commit was already a pre-push doc update (breaks feedback loop).
+
+LAST_MSG=$(git log -1 --format="%s")
+if echo "$LAST_MSG" | grep -q "\[pre-push\]"; then
+  echo "✅ [pre-push] Docs already current — skipping."
+  exit 0
+fi
+
+echo "🔄 [pre-push] Refreshing live stats..."
+node scripts/update-stats.js 2>&1 | tail -5
+
+echo "🔄 [pre-push] Syncing doc counts..."
+node scripts/update-docs.js 2>&1 | tail -3
+
+echo "🔄 [pre-push] Updating changelog from recent commits..."
+node scripts/update-changelog.js 2>&1 | tail -5
+
+# Stage only doc artifacts; auto-commit if anything changed
+CHANGED=$(git status --porcelain -- README.md CHANGELOG.md AGENTIC_VALUE_PROPOSITION.md src/data/projectStats.json src/data/changelog.json 2>/dev/null)
+if [ -n "$CHANGED" ]; then
+  echo "📄 [pre-push] Staging updated docs..."
+  git add README.md CHANGELOG.md AGENTIC_VALUE_PROPOSITION.md src/data/projectStats.json src/data/changelog.json 2>/dev/null
+  git commit -m "chore(docs): auto-update stats + changelog [pre-push]" --no-verify
+  echo "✅ [pre-push] Doc update committed."
+else
+  echo "✅ [pre-push] Docs already up to date."
+fi

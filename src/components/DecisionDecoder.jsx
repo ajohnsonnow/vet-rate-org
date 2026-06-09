@@ -272,6 +272,168 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
   };
 
+  const patternMatchDenial = (text) => {
+    const t = text.toLowerCase();
+    const DENIAL_PATTERNS = [
+      {
+        test: () =>
+          /no nexus|does not establish a nexus|nexus between.*service|lacks.*nexus|absence of nexus/i.test(
+            text,
+          ),
+        decision_type: "Full Denial",
+        plain_english:
+          "The VA denied your claim because there is no documented medical link (nexus) between your current condition and your military service.",
+        va_reasoning:
+          "VA policy requires a 'nexus' — a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
+        missing_elements: [
+          "A Nexus Letter from a licensed physician stating your condition is 'at least as likely as not' related to service",
+          "Medical records documenting in-service treatment or incident",
+        ],
+        action_plan: [
+          "Obtain a Nexus Letter from a private physician familiar with VA claims",
+          "Request an Independent Medical Opinion (IMO) from a doctor who reviews your service records",
+          "File a Supplemental Claim with the nexus letter as new and relevant evidence",
+          "Contact a Veterans Service Organization (VSO) for free claim assistance",
+        ],
+        appeal_options:
+          "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
+        deadline_warning:
+          "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately — do not wait.",
+      },
+      {
+        test: () =>
+          /not service.connected|no service connection|not connected to.*service|failed to establish service/i.test(
+            text,
+          ),
+        decision_type: "Full Denial",
+        plain_english:
+          "The VA decided your condition is not related to your military service.",
+        va_reasoning:
+          "The VA requires proof of three things: (1) a current diagnosis, (2) an in-service event or stressor, and (3) a nexus linking them. One or more of these is missing.",
+        missing_elements: [
+          "Evidence of an in-service event, injury, or stressor that caused the condition",
+          "A medical nexus linking service to the current diagnosis",
+          "Buddy letters or lay statements from fellow service members witnessing the event",
+        ],
+        action_plan: [
+          "Pull your service records (DD214, service treatment records) for documentation",
+          "Get a buddy letter from fellow veterans who witnessed the incident",
+          "Obtain a medical nexus letter from a private physician",
+          "Consider filing a direct service connection, secondary service connection, or aggravation claim",
+        ],
+        appeal_options:
+          "You can file a Supplemental Claim with new evidence, a Higher-Level Review, or a Board Appeal.",
+        deadline_warning:
+          "You have 1 year from this decision to appeal. Contact a VSO immediately if you are unsure how to proceed.",
+      },
+      {
+        test: () =>
+          /insufficient evidence|lack of.*evidence|no probative evidence|evidence does not|evidence is not/i.test(
+            text,
+          ),
+        decision_type: "Full Denial",
+        plain_english:
+          "The VA says there is not enough evidence in your claim file to approve your request.",
+        va_reasoning:
+          "VA adjudicators weigh the evidence of record. When the evidence for and against a claim is roughly equal, VA rules require denial.",
+        missing_elements: [
+          "Additional medical evidence supporting your claim",
+          "Private medical opinions or independent medical examinations (IME)",
+          "Buddy letters (lay statements) from people who observed your condition",
+        ],
+        action_plan: [
+          "Gather all private medical records not already in your file and submit them",
+          "Request a copy of your C-File to see exactly what VA has on record",
+          "Submit a personal statement describing your symptoms and their impact on daily life",
+          "Seek an IME from a private physician to counter the C&P exam findings",
+        ],
+        appeal_options:
+          "A Supplemental Claim is the right path if you have new, relevant evidence. A Higher-Level Review is appropriate if you believe the rater made a clear error.",
+        deadline_warning:
+          "Appeal deadlines apply. File within 1 year of this decision to preserve your effective date.",
+      },
+      {
+        test: () =>
+          /granted|service.connected.*at.*%|assigned.*rating.*%|%.*(combined|combined rating)/i.test(
+            text,
+          ) && !/denied|not.*service.connected/i.test(t),
+        decision_type: "Granted",
+        plain_english:
+          "Congratulations — the VA approved at least part of your claim!",
+        va_reasoning:
+          "The VA found sufficient evidence to establish service connection and assigned a disability rating.",
+        missing_elements: [],
+        action_plan: [
+          "Review your rating decision carefully — ensure each condition is rated correctly",
+          "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
+          "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
+          "File an Intent to File immediately if you plan to claim additional conditions",
+        ],
+        appeal_options:
+          "If the rating percentage seems too low, compare against 38 CFR Part 4 diagnostic codes and file a Higher-Level Review citing a clear error.",
+        deadline_warning: null,
+      },
+      {
+        test: () =>
+          /deferred pending|claim deferred|examination.*scheduled/i.test(text),
+        decision_type: "Deferred",
+        plain_english:
+          "The VA has not yet made a final decision on your claim — it is waiting for additional information or a C&P exam.",
+        va_reasoning:
+          "VA defers claims when it needs additional evidence, such as a Compensation & Pension (C&P) exam or more medical records.",
+        missing_elements: [
+          "C&P exam results (if an exam has been scheduled)",
+          "Additional medical records requested by VA",
+        ],
+        action_plan: [
+          "Attend any scheduled C&P exam — missing it can result in denial",
+          "Prepare for your C&P exam using the C&P Simulator in Vet-Rate",
+          "Submit any outstanding evidence as soon as possible",
+          "Contact VA or your VSO to confirm the status of your deferred claim",
+        ],
+        appeal_options:
+          "No appeal action needed yet — wait for the final decision. Once issued, you have 1 year to appeal.",
+        deadline_warning:
+          "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
+      },
+    ];
+
+    for (const pattern of DENIAL_PATTERNS) {
+      if (pattern.test()) {
+        return pattern;
+      }
+    }
+
+    // Generic fallback when no specific pattern matches
+    const isDenied = /denied|denial|not.*granted|not.*service.connected/i.test(
+      text,
+    );
+    if (isDenied) {
+      return {
+        decision_type: "Full Denial",
+        plain_english:
+          "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
+        va_reasoning:
+          "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
+        missing_elements: [
+          "Specific denial reason not detected — load AI for full analysis",
+        ],
+        action_plan: [
+          "Load the Warrant Council AI (button above) for a full plain-English translation",
+          "Contact a VSO for free claim assistance",
+          "Request a copy of your C-File to understand what evidence VA used",
+          "You have 1 year from this decision to file an appeal",
+        ],
+        appeal_options:
+          "You can file a Supplemental Claim, Higher-Level Review, or Board Appeal within 1 year.",
+        deadline_warning:
+          "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
+      };
+    }
+
+    return null;
+  };
+
   const handleDecode = async () => {
     if (!denialText.trim()) {
       setError("Please paste your denial letter or decision text first.");
@@ -286,9 +448,20 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
 
     if (!isAIAvailable()) {
-      setError(
-        "AI features are not available. Please load the Warrant Council AI using the button above, or configure your API key in Settings.",
-      );
+      const matched = patternMatchDenial(denialText);
+      if (matched) {
+        setResults({
+          ...matched,
+          _usedFallback: true,
+          _fallbackReason: "pattern_match",
+          _fallbackNote:
+            "AI is not loaded. This analysis uses keyword pattern matching — load the Warrant Council AI for a complete, personalized translation.",
+        });
+      } else {
+        setError(
+          "No AI available and no recognizable denial patterns detected. Load the Warrant Council AI above for a full analysis.",
+        );
+      }
       return;
     }
 
@@ -871,6 +1044,24 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 
           {results && (
             <div className="space-y-4">
+              {/* Pattern-Match Fallback Notice (when AI is not loaded) */}
+              {results._usedFallback &&
+                results._fallbackReason === "pattern_match" && (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-500">🔍</span>
+                      <div>
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                          Pattern-Match Analysis (No AI Loaded)
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          {results._fallbackNote}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               {/* Cloud AI Fallback Notice (when document was too large for Local AI) */}
               {results._usedFallback &&
                 results._fallbackReason === "context_overflow" && (

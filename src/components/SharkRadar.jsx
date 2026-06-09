@@ -242,15 +242,6 @@ export default function SharkRadar() {
       return;
     }
 
-    // Check if ANY AI is available (Cloud or Local)
-    if (!isAnyAIAvailable()) {
-      setError(
-        "No AI available. Please set up an API key or enable Local AI in settings.",
-      );
-      setShowAISettings(true);
-      return;
-    }
-
     setIsAnalyzing(true);
     setError(null);
     setResults(null);
@@ -480,6 +471,21 @@ Example red flags to look for:
                   </div>
                 </div>
               </div>
+
+              {/* Pattern-match fallback notice */}
+              {results.data._usedFallback && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg flex items-start gap-2">
+                  <span className="text-amber-500 flex-shrink-0">🔍</span>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Keyword Analysis (No AI Loaded)
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                      {results.data._fallbackNote}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Red Flags */}
               {results.data.flags && results.data.flags.length > 0 && (

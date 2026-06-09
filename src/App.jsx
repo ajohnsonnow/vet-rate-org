@@ -104,6 +104,7 @@ function App() {
           setSelectedResult={setSelectedResult}
           isLoading={isLoading}
           error={error}
+          hasSearched={hasSearched}
           setHasSearched={setHasSearched}
           handleClearSearch={handleClearSearch}
           handleBuildStatementFromSearch={handleBuildStatementFromSearch}

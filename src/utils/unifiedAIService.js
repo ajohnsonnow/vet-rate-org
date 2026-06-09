@@ -349,12 +349,17 @@ export const registerLocalAIEngine = (
         : "auditor";
     registerSwarmEngine(engine, ready, initializing, agentId);
   } else if (!ready && !initializing) {
-    // AI unloaded or failed - dispatch status change
-    window.dispatchEvent(
-      new CustomEvent("local-ai-status-change", {
-        detail: { ready: false, fullDKBAvailable: false },
-      }),
-    );
+    // Only broadcast "not ready" if the swarm isn't already covering inference.
+    // LocalAIPanel calls registerLocalAIEngine(null, false) on model-load failure
+    // even when the Diamond Swarm loaded successfully moments earlier, which would
+    // incorrectly pull the DKB status banner back to "offline".
+    if (!swarmReady) {
+      window.dispatchEvent(
+        new CustomEvent("local-ai-status-change", {
+          detail: { ready: false, fullDKBAvailable: false },
+        }),
+      );
+    }
   }
 };
 
@@ -1794,22 +1799,16 @@ const generateAIInternal = async (prompt, options = {}) => {
     let usedMode;
     let agentUsed = null;
 
-    // Determine which AI to use - Warrant Council is primary, then Wllama, then Local Server
-    const useSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
-    const useWllama =
-      effectiveMode === AI_MODES.WLLAMA || (!useSwarm && isWllamaAvailable());
-    const useLocalServer =
-      effectiveMode === AI_MODES.LOCAL_SERVER ||
-      (!useSwarm && !useWllama && isLocalServerAvailable());
+    // Dispatch follows getEffectiveAIMode() — never implicitly upgrade to a
+    // backend the user didn't choose. getEffectiveAIMode() already handles the
+    // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
+    const useSwarm = effectiveMode === AI_MODES.SWARM;
+    const useWllama = effectiveMode === AI_MODES.WLLAMA;
+    const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
     const useCloud =
-      (options.preferCloud && isCloudAIAvailable()) ||
-      effectiveMode === AI_MODES.CLOUD;
-    const useLocal =
-      !useSwarm &&
-      !useWllama &&
-      !useLocalServer &&
-      !useCloud &&
-      effectiveMode === AI_MODES.LOCAL;
+      effectiveMode === AI_MODES.CLOUD ||
+      (options.preferCloud === true && isCloudAIAvailable());
+    const useLocal = effectiveMode === AI_MODES.LOCAL;
 
     if (useSwarm && isDiamondSwarmReady()) {
       // 🎖️ Warrant Council - Primary AI Engine (WebGPU)

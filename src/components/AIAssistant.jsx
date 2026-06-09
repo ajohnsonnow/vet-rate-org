@@ -310,24 +310,25 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error("Navigator AI error:", error);
+      const errMsg = error?.message ?? "";
+      console.error("Navigator AI error:", errMsg || error);
       let errorMessage = t("aiAssistant", "errorGeneric");
 
-      if (error.message === "CRISIS_DETECTED") {
+      if (errMsg === "CRISIS_DETECTED") {
         errorMessage = t("aiAssistant", "errorCrisis");
-      } else if (error.message.includes("No AI available")) {
+      } else if (errMsg.includes("No AI available")) {
         errorMessage = t("aiAssistant", "errorNoAI");
-      } else if (error.message.includes("temporarily disabled")) {
+      } else if (errMsg.includes("temporarily disabled")) {
         errorMessage = t("aiAssistant", "errorDisabled");
-      } else if (error.message.includes("empty response")) {
+      } else if (errMsg.includes("empty response")) {
         errorMessage = t("aiAssistant", "errorEmptyResponse");
       } else if (
-        error.message.includes("not initialized") ||
-        error.message.includes("not loaded")
+        errMsg.includes("not initialized") ||
+        errMsg.includes("not loaded")
       ) {
         errorMessage = t("aiAssistant", "errorNotReady");
-      } else if (error.message) {
-        errorMessage = `⚠️ ${error.message}`;
+      } else if (errMsg) {
+        errorMessage = `⚠️ ${errMsg}`;
       }
 
       setMessages((prev) => [

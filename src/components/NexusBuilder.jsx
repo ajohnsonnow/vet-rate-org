@@ -128,7 +128,7 @@ const NexusBuilder = ({
     }
 
     statement += `**Onset and Progression:**\n`;
-    statement += `I first noted symptoms of ${condition} around ${answers.symptomOnsetDate || "[Date]"}. These symptoms have persisted and worsened over time. `;
+    statement += `I first noted symptoms of ${condition} around ${answers.symptomOnsetDate || new Date().toLocaleDateString()}. These symptoms have persisted and worsened over time. `;
 
     if (answers.hasTreatment === "yes-va") {
       statement += `I have sought treatment through the VA medical system for this condition.\n\n`;
@@ -222,7 +222,9 @@ Sincerely,
       );
 
       if (result.success) {
-        setAiEnhancedStatement(result.content);
+        setAiEnhancedStatement(
+          result.content.replace(/\[Date\]/g, new Date().toLocaleDateString()),
+        );
         setUseAIVersion(true);
       } else {
         setAiError(result.error);
