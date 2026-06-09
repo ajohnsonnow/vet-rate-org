@@ -573,6 +573,17 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     console.warn(
       `💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${availableForInput})`,
     );
+    // Notify UI so tools can surface a visible warning to the user
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("diamondSwarm:tokenWarning", {
+          detail: {
+            estimatedTokens: estimatedTotalTokens,
+            limit: availableForInput,
+          },
+        }),
+      );
+    }
 
     // Calculate max chars for prompt (keep system prompt, truncate user prompt)
     const maxPromptChars = Math.max(

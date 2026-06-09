@@ -349,12 +349,17 @@ export const registerLocalAIEngine = (
         : "auditor";
     registerSwarmEngine(engine, ready, initializing, agentId);
   } else if (!ready && !initializing) {
-    // AI unloaded or failed - dispatch status change
-    window.dispatchEvent(
-      new CustomEvent("local-ai-status-change", {
-        detail: { ready: false, fullDKBAvailable: false },
-      }),
-    );
+    // Only broadcast "not ready" if the swarm isn't already covering inference.
+    // LocalAIPanel calls registerLocalAIEngine(null, false) on model-load failure
+    // even when the Diamond Swarm loaded successfully moments earlier, which would
+    // incorrectly pull the DKB status banner back to "offline".
+    if (!swarmReady) {
+      window.dispatchEvent(
+        new CustomEvent("local-ai-status-change", {
+          detail: { ready: false, fullDKBAvailable: false },
+        }),
+      );
+    }
   }
 };
 
