@@ -26,7 +26,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| **Lines of Code** | 248,529 | Production React/JavaScript |
+| **Lines of Code** | 248,528 | Production React/JavaScript |
 | **Total Files** | 2,157 | Organized codebase |
 | **React Components** | 167 | 42 major tools + 125 supporting |
 | **Utility Modules** | 107 | Reusable helper functions |
@@ -117,7 +117,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | **Billable Hours** | 150 hours |
 | **Hourly Rate** | $420/hr |
 | **Total Cost** | $63,000 |
-| **Lines of Code** | 248,529 |
+| **Lines of Code** | 248,528 |
 | **Effective LOC/Hour** | 1,292 |
 | **Commits** | 241 |
 | **Commits per Day** | 11 average |
