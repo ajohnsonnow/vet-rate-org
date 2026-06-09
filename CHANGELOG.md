@@ -7,28 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.23.1] - 2026-06-09
-
-### Fixed
-
-- 🐛 MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08
-- 🐛 CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08
-- 🐛 **Local AI**: apply WebGPU adapter patch + fail loudly on all-models-fail
-- 🐛 **Local AI**: hydrate NexusBuilder from localStorage when no event detail
-- 🐛 add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder
-- 🐛 **Evidence Building**: strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks
-- 🐛 **Security**: env-configurable bug-report endpoint + PII guard before send
-- 🐛 **Calculators**: reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth
-- 🐛 date-stamp OUTPUT_PATH; add redacted fixture + e2e import test
-- 🐛 unblock chromium Playwright gate + record audit baseline
-- 🐛 **Security**: bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell
-
-### Documentation
-
-- 📚 add 2026-06-08 mega-audit reports and sprint instructions
-- 📚 consolidated C-File audit report (Sprints 0-6)
-- 📚 Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe
-
 ## [1.23.1] - 2026-06-08
 
 ### Fixed
