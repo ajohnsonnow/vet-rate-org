@@ -249,6 +249,14 @@ function updateMarkdownChangelog(version, date, newSection) {
   const changelogPath = path.join(__dirname, "..", "CHANGELOG.md");
   let content = fs.readFileSync(changelogPath, "utf-8");
 
+  // Skip if this version already has an entry — prevents duplicate sections on repeated runs
+  if (content.includes(`## [${version}]`)) {
+    console.log(
+      `ℹ️  CHANGELOG.md already has a [${version}] entry — skipping insert.`,
+    );
+    return;
+  }
+
   // Insert after "## [Unreleased]"
   const unreleasedPattern = /## \[Unreleased\]\s*\n/;
   content = content.replace(

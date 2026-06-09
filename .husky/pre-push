@@ -1,19 +1,16 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Auto-update docs, stats, and changelog before every push.
-# Staged changes produced here are auto-committed so the push stays clean.
+# Staged changes are auto-committed so the push stays self-consistent.
 
 echo "🔄 [pre-push] Refreshing live stats..."
-node scripts/update-stats.js --quiet 2>&1 | tail -5
+node scripts/update-stats.js 2>&1 | tail -5
 
 echo "🔄 [pre-push] Syncing doc counts..."
-node scripts/update-docs.js --quiet 2>&1 | tail -3
+node scripts/update-docs.js 2>&1 | tail -3
 
 echo "🔄 [pre-push] Updating changelog from recent commits..."
 node scripts/update-changelog.js 2>&1 | tail -5
 
-# If any doc files changed, stage and amend so the push is self-consistent.
+# Stage only doc artifacts; auto-commit if anything changed
 CHANGED=$(git status --porcelain -- README.md CHANGELOG.md AGENTIC_VALUE_PROPOSITION.md src/data/projectStats.json src/data/changelog.json 2>/dev/null)
 if [ -n "$CHANGED" ]; then
   echo "📄 [pre-push] Staging updated docs..."
