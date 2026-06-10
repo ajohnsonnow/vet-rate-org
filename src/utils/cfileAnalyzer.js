@@ -36,12 +36,17 @@ import { validateDiagnosticCode } from "./hallucinationTrap";
 // into thousands of sequential generations (hours of analysis time).
 const TOKEN_LIMITS = {
   GEMINI: 800000, // 800K tokens (conservative for 1M context)
-  SWARM_8K: 4500, // 8192 − 900 − 1500, with margin for DKB context injection
+  // context_window_size raised to 12288: available input = 12288 - 2048 output - 62 system = 10178.
+  // At CHARS_PER_TOKEN=3.4 => 8200 * 3.4 ≈ 28K chars/chunk, ~196 chunks (was 4500→18K→304 chunks).
+  // Conservative token estimate in generateWithSwarm (÷3) ensures no CWSE even on dense pages.
+  SWARM_8K: 8200, // 12288 − 2048 output − 62 system ≈ 10178 available; 8200 tokens ≈ 28K chars
   LOCAL_4K: 1500, // 4096 − 900 − 1500, with margin
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
-const CHARS_PER_TOKEN = 4;
+// OCR'd military/medical text averages ~3.4 chars/token (vs 4 for generic text).
+// Used only for chunk-size budgeting; generateWithSwarm uses /3 for its truncation guard.
+const CHARS_PER_TOKEN = 3.4;
 
 // Maximum characters per chunk based on AI mode
 const getMaxCharsPerChunk = (aiMode) => {
@@ -1100,6 +1105,34 @@ export async function analyzeCFile(
 
     const chunk = chunks[i];
     const chunkNum = i + 1;
+
+    // Skip chunks that are clearly blank/administrative pages: cover sheets,
+    // index pages, blank separators. Threshold is conservative — requires both
+    // very short text AND few alphabetic chars so no real medical content slips.
+    const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
+    if (chunk.text.trim().length < 250 || alphaCount < 120) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
+      );
+      chunkResults.push({
+        summary: "",
+        servicePeriod: {},
+        timeline: [],
+        potential_claims: [],
+        exposures: [],
+        combatIndicators: [],
+        redFlags: [],
+        actionItems: [],
+        mentalHealth: {
+          diagnoses: [],
+          indicators: [],
+          stressors: [],
+          pages: [],
+        },
+      });
+      continue;
+    }
 
     onProgress(
       `Analyzing chunk ${chunkNum} of ${totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
