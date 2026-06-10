@@ -1135,9 +1135,11 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
               </p>
             </div>
           </div>
+          {/* mr-20 keeps the close button clear of the fixed Quick Exit
+              panic button on phones (WCAG 2.5.8 target collision) */}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-gray-700 sm:mr-0"
             aria-label="Close"
           >
             <X className="w-6 h-6 text-gray-400 hover:text-white" />

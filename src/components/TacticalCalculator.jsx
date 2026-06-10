@@ -22,6 +22,10 @@ import {
   removeRating,
   hasMyRatings,
 } from "../utils/veteranProfile";
+import {
+  getLoadableConditions,
+  normalizeConditionName,
+} from "../utils/veteranContextProvider";
 
 /**
  * TacticalCalculator - "The Rate You Deserve"
@@ -105,6 +109,42 @@ const TacticalCalculator = ({
       setActiveTab("capresults");
     }
   }, [capSimulatorResults]);
+
+  // Rated conditions found in the veteran's records (saved claims + C-File
+  // analyzer output in the VKB) that aren't in My Ratings yet — offered via
+  // a one-click load banner instead of silent auto-import.
+  const [recordCandidates, setRecordCandidates] = useState([]);
+  const [recordsAnnouncement, setRecordsAnnouncement] = useState("");
+  useEffect(() => {
+    let alive = true;
+    getLoadableConditions()
+      .then((found) => {
+        if (alive) setRecordCandidates(found);
+      })
+      .catch((err) => {
+        console.warn("Could not load conditions from records:", err);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleLoadFromRecords = () => {
+    let added = 0;
+    setConditions((prev) => {
+      const have = new Set(prev.map((c) => normalizeConditionName(c.name)));
+      const fresh = recordCandidates.filter(
+        (c) => !have.has(normalizeConditionName(c.name)),
+      );
+      added = fresh.length;
+      return [...prev, ...fresh];
+    });
+    setRecordCandidates([]);
+    setRecordsAnnouncement(
+      `${added} condition${added === 1 ? "" : "s"} loaded from your records.`,
+    );
+    setActiveTab("calculator");
+  };
 
   // Load my ratings from storage when saved ratings change
   const loadMyRatings = () => {
@@ -1162,6 +1202,25 @@ const TacticalCalculator = ({
                       {t("tacticalCalc", "addToCalculatorBtn")}
                     </button>
                   </div>
+
+                  <div aria-live="polite" className="sr-only">
+                    {recordsAnnouncement}
+                  </div>
+                  {recordCandidates.length > 0 && (
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+                      <p className="text-sm text-blue-900 dark:text-blue-200">
+                        📂 {recordCandidates.length} rated condition
+                        {recordCandidates.length === 1 ? "" : "s"} found in your
+                        records (saved claims &amp; analyzed documents).
+                      </p>
+                      <button
+                        onClick={handleLoadFromRecords}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      >
+                        Load into calculator
+                      </button>
+                    </div>
+                  )}
 
                   {/* Conditions List - Expands to fill remaining space */}
                   <div className="flex flex-col flex-1 min-h-0">

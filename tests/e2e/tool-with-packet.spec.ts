@@ -109,25 +109,23 @@ test.describe("Calculate cluster — with 9-condition packet", () => {
     await bootWithPacket(page);
     await openTool(page, "openTacticalCalculator");
 
-    // The calculator should list the pre-loaded conditions
+    // WS-7 acceptance: the calculator must surface the packet's 9 rated
+    // conditions via "Load from My Records" and compute the verified 80%
+    // combined rating with zero manual typing. (The previous version of
+    // this test passed vacuously on Chromium — innerText included <option>
+    // values containing "50"/"80" — while the conditions never hydrated.)
     const dialog = page.locator('[role="dialog"]').first();
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
-    const dialogText = await dialog.innerText().catch(() => "");
+    const loadBtn = dialog.getByRole("button", {
+      name: "Load into calculator",
+    });
+    await expect(loadBtn).toBeVisible({ timeout: 7000 });
+    await loadBtn.click();
 
-    // At least one condition name should be visible, OR the calculator
-    // should show a rating percentage (we pre-loaded 9 conditions)
-    const hasConditionData =
-      dialogText.includes("PTSD") ||
-      dialogText.includes("50") ||
-      dialogText.includes("80") ||
-      dialogText.includes("Tinnitus") ||
-      dialogText.includes("Lumbosacral");
-
-    expect(
-      hasConditionData,
-      `Calculator dialog text: "${dialogText.slice(0, 300)}"`,
-    ).toBe(true);
+    await expect(dialog).toContainText("PTSD", { timeout: 7000 });
+    await expect(dialog).toContainText("Tinnitus");
+    await expect(dialog).toContainText("80%", { timeout: 7000 });
     await closeTool(page);
   });
 
