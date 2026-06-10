@@ -10,7 +10,11 @@ test.describe("Accessibility: keyboard navigation", () => {
   test("Tab key cycles through interactive elements", async ({ page }) => {
     await page.keyboard.press("Tab");
     const focused = await page.evaluate(() => document.activeElement?.tagName);
-    expect(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA"]).toContain(focused);
+    // DIV: ResponsiveModal's scroll region carries an intentional tabIndex=0
+    // when its content overflows (axe scrollable-region-focusable).
+    expect(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA", "DIV"]).toContain(
+      focused,
+    );
   });
 
   test("interactive elements have visible focus indicators", async ({

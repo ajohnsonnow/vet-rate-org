@@ -21,7 +21,7 @@
  * (docs/SPRINT_PLAN_S9-S17.md, Layer 3).
  */
 
-import { useRef, useId } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import useBodyScrollLock from "../../utils/useBodyScrollLock";
@@ -54,6 +54,8 @@ export default function ResponsiveModal({
   backdropClassName = "",
 }) {
   const panelRef = useRef(null);
+  const bodyRef = useRef(null);
+  const [bodyScrollable, setBodyScrollable] = useState(false);
   const generatedId = useId();
   const titleId = labelledBy || `responsive-modal-${generatedId}`;
 
@@ -62,6 +64,17 @@ export default function ResponsiveModal({
     active: isOpen,
     onEscape: dismissable ? onClose : undefined,
   });
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!isOpen || !el) return undefined;
+    const measure = () => setBodyScrollable(el.scrollHeight > el.clientHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, children]);
 
   if (!isOpen) return null;
 
@@ -115,10 +128,12 @@ export default function ResponsiveModal({
 
         {/* tabIndex=0 gives keyboard users arrow-key access to the scroll region
             even when a modal's body holds no focusable control (axe
-            scrollable-region-focusable). */}
+            scrollable-region-focusable). Applied only when content actually
+            overflows so fitting content adds no pointless tab stop. */}
         <div
+          ref={bodyRef}
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-          tabIndex={0}
+          tabIndex={bodyScrollable ? 0 : undefined}
           className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
         >
           {children}
