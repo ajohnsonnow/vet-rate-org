@@ -45,6 +45,8 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
+import { getMyRatings } from "../utils/veteranProfile";
+import { checkTDIUEligibility } from "../utils/smcDetector";
 
 /**
  * Common disability categories for quick selection
@@ -446,6 +448,12 @@ export default function TDIUBuilder({
   const [vocationalAnalysis, setVocationalAnalysis] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
+  // Schedular TDIU check from saved VA ratings (38 CFR § 4.16(a))
+  const [savedRatingsTdiu] = useState(() => {
+    const ratings = getMyRatings();
+    return { hasRatings: ratings.length > 0, ...checkTDIUEligibility(ratings) };
+  });
+
   /**
    * Add current disability to list
    */
@@ -716,6 +724,38 @@ export default function TDIUBuilder({
           </div>
         </div>
       </div>
+
+      {/* Schedular eligibility from saved ratings (38 CFR § 4.16(a)) */}
+      {savedRatingsTdiu.hasRatings &&
+        (savedRatingsTdiu.eligible ? (
+          <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <h3 className="font-bold text-blue-800 dark:text-blue-200">
+              ✅ Your saved ratings meet the schedular TDIU threshold
+            </h3>
+            <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+              Your saved VA ratings ({savedRatingsTdiu.combined}% combined,
+              highest single {savedRatingsTdiu.highest}%) meet the schedular
+              requirement of 38 CFR § 4.16(a). If your service-connected
+              conditions prevent you from maintaining substantially gainful
+              employment, you may qualify for TDIU — speak with a VSO before
+              filing.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-gray-50 dark:bg-gray-800/50 border-l-4 border-gray-400 p-4 rounded-r-lg">
+            <h3 className="font-bold text-gray-800 dark:text-gray-200">
+              Your saved ratings are below the schedular TDIU threshold
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+              Your saved VA ratings ({savedRatingsTdiu.combined}% combined,
+              highest single {savedRatingsTdiu.highest}%) do not meet the
+              schedular requirement of 38 CFR § 4.16(a) (one rating of 60%+, or
+              70%+ combined with one rating of 40%+). You may still qualify for
+              extraschedular TDIU under § 4.16(b) if you cannot work — speak
+              with a VSO.
+            </p>
+          </div>
+        ))}
 
       {/* Added Disabilities */}
       {disabilities.length > 0 && (

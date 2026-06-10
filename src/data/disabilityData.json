@@ -18795,7 +18795,17 @@
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
       "relatedSecondaryConditions": [],
-      "lastVerifiedDate": "2026-01-18"
+      "ratingCriteria": {
+        "type": "direct",
+        "ratings": {
+          "80": "Complete paralysis; the foot dangles and drops, no active movement possible of muscles below the knee, flexion of knee weakened or (very rarely) lost",
+          "60": "Severe incomplete paralysis, with marked muscular atrophy",
+          "40": "Moderately severe incomplete paralysis",
+          "20": "Moderate incomplete paralysis",
+          "10": "Mild incomplete paralysis"
+        }
+      },
+      "lastVerifiedDate": "2026-06-09"
     },
     {
       "id": 662,
