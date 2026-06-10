@@ -2135,7 +2135,7 @@ const TacticalCalculator = ({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        $180.42
+                        ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         10% Rating
@@ -2143,7 +2143,7 @@ const TacticalCalculator = ({
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        $356.66
+                        ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         20% Rating

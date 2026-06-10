@@ -513,6 +513,13 @@ export const getHistoricalRate = (year, rating, dependents = {}) => {
     dependentParents = 0,
   } = dependents;
 
+  // Dependent counts arrive from free-form UI input — clamp to a sane range
+  // so a typo (e.g. "200" children) cannot produce an absurd payment figure.
+  const clampCount = (n) =>
+    Math.min(Math.max(Math.trunc(Number(n) || 0), 0), 20);
+  const kidsUnder18 = clampCount(childrenUnder18);
+  const kidsSchool = clampCount(childrenSchool);
+
   const baseRate = yearData.solo[rating] || 0;
   let total = baseRate;
   const breakdown = { baseRate };
@@ -524,13 +531,13 @@ export const getHistoricalRate = (year, rating, dependents = {}) => {
       total += spouseAdd;
       breakdown.spouse = spouseAdd;
     }
-    if (childrenUnder18 > 0) {
-      const childAdd = (yearData.childUnder18[rating] || 0) * childrenUnder18;
+    if (kidsUnder18 > 0) {
+      const childAdd = (yearData.childUnder18[rating] || 0) * kidsUnder18;
       total += childAdd;
       breakdown.childrenUnder18 = childAdd;
     }
-    if (childrenSchool > 0) {
-      const schoolAdd = (yearData.childSchool[rating] || 0) * childrenSchool;
+    if (kidsSchool > 0) {
+      const schoolAdd = (yearData.childSchool[rating] || 0) * kidsSchool;
       total += schoolAdd;
       breakdown.childrenSchool = schoolAdd;
     }
@@ -566,8 +573,17 @@ export const analyzeRetroactivePay = (ratingHistory) => {
     return { periods: [], totalPotentialUnderpayment: 0 };
   }
 
+  // A malformed effectiveDate would poison the sort and the month iteration
+  // below (Invalid Date compares as NaN) — drop those entries up front.
+  const validHistory = ratingHistory.filter(
+    (p) => p && !Number.isNaN(new Date(p.effectiveDate).getTime()),
+  );
+  if (validHistory.length === 0) {
+    return { periods: [], totalPotentialUnderpayment: 0 };
+  }
+
   // Sort by date
-  const sorted = [...ratingHistory].sort(
+  const sorted = [...validHistory].sort(
     (a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate),
   );
 
@@ -581,8 +597,10 @@ export const analyzeRetroactivePay = (ratingHistory) => {
         ? new Date(sorted[index + 1].effectiveDate)
         : new Date();
 
-    // Calculate months covered
+    // Calculate months covered. Iterate from the 1st of the starting month —
+    // setMonth() on day 29-31 can skip a month (Jan 31 → Mar 3).
     let currentDate = new Date(startDate);
+    currentDate.setDate(1);
     while (currentDate < endDate) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();

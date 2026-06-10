@@ -17,25 +17,21 @@ import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
 } from "../utils/vaCalculator";
+import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const ITF_STORAGE_KEY = "vet_rate_itf_date";
 const ESTIMATED_RATING_KEY = "vet_rate_estimated_rating";
 
-// VA disability compensation rates (2026 — 2.8% COLA effective Dec 1, 2025)
-const VA_MONTHLY_RATES = {
-  10: 180.42,
-  20: 356.66,
-  30: 552.47,
-  40: 795.84,
-  50: 1132.9,
-  60: 1435.02,
-  70: 1808.45,
-  80: 2102.15,
-  90: 2362.3,
-  100: 3938.58,
-};
+// Current-year solo compensation rates from the single source of truth
+// (vaPayRatesHistorical.js). 0% is excluded — it pays nothing and would
+// add a useless option to the rating dropdown.
+const VA_MONTHLY_RATES = Object.fromEntries(
+  Object.entries(getCurrentYearRates().rates.solo).filter(
+    ([rating]) => Number(rating) >= 10,
+  ),
+);
 
 export default function TimeMachine({
   isWidget = false,

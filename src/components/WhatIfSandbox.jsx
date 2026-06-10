@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 
 export default function WhatIfSandbox({ onClose }) {
   const { _t } = useLanguage();
@@ -71,20 +72,8 @@ export default function WhatIfSandbox({ onClose }) {
     },
   ];
 
-  // 2025 VA Compensation Rates (Veterans without dependents)
-  const compensationRates = {
-    0: 0,
-    10: 171.23,
-    20: 338.49,
-    30: 524.31,
-    40: 755.28,
-    50: 1075.16,
-    60: 1361.88,
-    70: 1716.28,
-    80: 1995.01,
-    90: 2241.91,
-    100: 3737.85,
-  };
+  // Current-year solo compensation rates from the single source of truth
+  const compensationRates = getCurrentYearRates().rates.solo;
 
   useEffect(() => {
     // Generate all possible condition combinations
