@@ -27,12 +27,16 @@ import { validateDiagnosticCode } from "./hallucinationTrap";
 // CONFIGURATION - Token limits and chunking settings
 // ============================================================================
 
-// Conservative token limits (leaving room for system prompt + response)
-// System prompt is ~900 tokens, need ~1500 tokens for JSON response
-// 4096 context - 900 system - 1500 output = ~1700 for document
+// Token budgets per engine, leaving room for system prompt + response:
+// budget = context − ~900 (system prompt) − ~1500 (JSON response) − margin.
+// The Warrant Council loads WebLLM with context_window_size 8192
+// (diamondSwarm.js); wllama runs n_ctx 4096 (wllamaService.js). The old
+// flat LOCAL=400 was 4-14x below those budgets and turned a large C-File
+// into thousands of sequential generations (hours of analysis time).
 const TOKEN_LIMITS = {
   GEMINI: 800000, // 800K tokens (conservative for 1M context)
-  LOCAL: 400, // 400 tokens (~1600 chars) for document in 4K context
+  SWARM_8K: 4500, // 8192 − 900 − 1500, with margin for DKB context injection
+  LOCAL_4K: 1500, // 4096 − 900 − 1500, with margin
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
@@ -40,13 +44,15 @@ const CHARS_PER_TOKEN = 4;
 
 // Maximum characters per chunk based on AI mode
 const getMaxCharsPerChunk = (aiMode) => {
+  if (aiMode === AI_MODES.SWARM) {
+    return TOKEN_LIMITS.SWARM_8K * CHARS_PER_TOKEN; // ~18K chars
+  }
   if (
     aiMode === AI_MODES.LOCAL ||
-    aiMode === AI_MODES.SWARM ||
     aiMode === AI_MODES.WLLAMA ||
     aiMode === AI_MODES.LOCAL_SERVER
   ) {
-    return TOKEN_LIMITS.LOCAL * CHARS_PER_TOKEN; // ~2400 chars for local (fits in 4K context with prompt+output)
+    return TOKEN_LIMITS.LOCAL_4K * CHARS_PER_TOKEN; // ~6K chars
   }
   return TOKEN_LIMITS.GEMINI * CHARS_PER_TOKEN; // ~3.2M chars for cloud
 };
@@ -432,17 +438,74 @@ function splitIntoChunks(fullText, aiMode) {
   return chunks;
 }
 
+// Signals that a page is worth sending to the (slow, sequential) local LLM.
+// VA C-Files are full of cover sheets, blank separators, and form
+// instructions; a page with no date and no claim-relevant vocabulary
+// cannot contribute an in-service event, symptom, or nexus finding.
+// Deliberately keep-biased: any date or any medical/service term keeps it.
+const PAGE_RELEVANCE_PATTERN = new RegExp(
+  [
+    "\\b(19|20)\\d{2}\\b", // any year
+    "\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}", // numeric dates
+    "diagnos|symptom|treat|pain|injur|condition|exam|clinic|medical|health",
+    "service[- ]connect|rating|disab|compensat|claim|nexus|c&p|dbq",
+    "surger|prescri|medicat|therap|mental|ptsd|anxiet|depress",
+    "hearing|tinnitus|knee|back|spine|shoulder|hip|ankle|migraine|sleep",
+    "deploy|combat|duty|discharge|dd[- ]?214|enlist",
+  ].join("|"),
+  "i",
+);
+
 /**
- * Estimate how long processing will take based on file size and chunk count
+ * Drop boilerplate pages before local-AI chunking. Returns the screened
+ * text (page markers preserved so page references stay accurate) plus
+ * counts for the metadata/UI. Never screens below a safety floor — if the
+ * filter would discard nearly everything, the original text is returned.
+ */
+export function screenRelevantPages(fullText) {
+  const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
+  const markers = [...fullText.matchAll(pageRegex)];
+  if (markers.length < 10) {
+    return { text: fullText, totalPages: markers.length, skippedPages: 0 };
+  }
+
+  const kept = [];
+  let skippedPages = 0;
+  for (let i = 0; i < markers.length; i++) {
+    const start = markers[i].index;
+    const end = i + 1 < markers.length ? markers[i + 1].index : fullText.length;
+    const block = fullText.slice(start, end);
+    const body = block.slice(markers[i][0].length);
+    if (PAGE_RELEVANCE_PATTERN.test(body)) {
+      kept.push(block);
+    } else {
+      skippedPages++;
+    }
+  }
+
+  if (kept.length < markers.length * 0.1) {
+    // Filter looks wrong for this document — analyze everything instead.
+    return { text: fullText, totalPages: markers.length, skippedPages: 0 };
+  }
+  return {
+    text: kept.join(""),
+    totalPages: markers.length,
+    skippedPages,
+  };
+}
+
+/**
+ * Estimate how long processing will take based on chunk count.
+ * Chunk count already scales with document size — the old extra
+ * textLength multiplier double-counted size and inflated a large
+ * C-File's estimate by two orders of magnitude (~12 hours shown).
  */
 function estimateProcessingTime(textLength, chunkCount, aiMode) {
-  // Base time per chunk (seconds)
-  const baseTimePerChunk = aiMode === AI_MODES.CLOUD ? 30 : 60; // Cloud is faster
+  // Base time per chunk (seconds): cloud round-trip vs local generation
+  const baseTimePerChunk =
+    aiMode === AI_MODES.CLOUD ? 30 : aiMode === AI_MODES.SWARM ? 25 : 45;
 
-  // Additional time based on text size
-  const sizeMultiplier = Math.max(1, textLength / 100000);
-
-  const totalSeconds = chunkCount * baseTimePerChunk * sizeMultiplier;
+  const totalSeconds = chunkCount * baseTimePerChunk;
 
   if (totalSeconds < 60) {
     return `~${Math.ceil(totalSeconds)} seconds`;
@@ -962,8 +1025,25 @@ export async function analyzeCFile(
 
   onProgress("Analyzing document size...", { phase: "prepare" });
 
+  // Local engines generate sequentially — skip boilerplate pages (cover
+  // sheets, blanks, form instructions) so only claim-relevant content
+  // spends LLM time. Cloud mode reads everything (1M context, few calls).
+  let analysisText = fullText;
+  let skippedPages = 0;
+  if (aiMode !== AI_MODES.CLOUD) {
+    const screened = screenRelevantPages(fullText);
+    analysisText = screened.text;
+    skippedPages = screened.skippedPages;
+    if (skippedPages > 0) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `🧹 Skipping ${skippedPages}/${screened.totalPages} boilerplate pages before AI analysis`,
+      );
+    }
+  }
+
   // Split into chunks based on AI context limits
-  const chunks = splitIntoChunks(fullText, aiMode);
+  const chunks = splitIntoChunks(analysisText, aiMode);
   const totalChunks = chunks.length;
 
   // eslint-disable-next-line no-console
@@ -990,6 +1070,7 @@ export async function analyzeCFile(
         textLength: fullText.length,
         aiMode: aiMode,
         chunksProcessed: 1,
+        boilerplatePagesSkipped: skippedPages,
         rejectedDiagnosticCodes: rejectedCodes,
       },
     };
@@ -1142,6 +1223,7 @@ export async function analyzeCFile(
       chunksProcessed: chunkResults.length,
       totalChunks: totalChunks,
       failedChunkCount: failedChunks.length,
+      boilerplatePagesSkipped: skippedPages,
       rejectedDiagnosticCodes: rejectedCodes,
     },
   };
