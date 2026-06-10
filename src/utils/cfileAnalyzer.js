@@ -23,6 +23,7 @@ import {
   AI_MODES,
 } from "./unifiedAIService";
 import { validateDiagnosticCode } from "./hallucinationTrap";
+import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -48,19 +49,22 @@ const TOKEN_LIMITS = {
 // Used only for chunk-size budgeting; generateWithSwarm uses /3 for its truncation guard.
 const CHARS_PER_TOKEN = 3.4;
 
-// Maximum characters per chunk based on AI mode
+// Maximum characters per chunk based on AI mode.
+// For SWARM (WebLLM), use the device profile's adaptive chunk size if available
+// (set by detectDeviceCapabilities in diamondSwarm.js at model-load time).
 const getMaxCharsPerChunk = (aiMode) => {
   if (aiMode === AI_MODES.SWARM) {
-    return TOKEN_LIMITS.SWARM_8K * CHARS_PER_TOKEN; // ~18K chars
+    const deviceMaxChars = getCachedDeviceProfile()?.maxChunkChars;
+    return deviceMaxChars ?? TOKEN_LIMITS.SWARM_8K * CHARS_PER_TOKEN; // ~28K on desktop-high
   }
   if (
     aiMode === AI_MODES.LOCAL ||
     aiMode === AI_MODES.WLLAMA ||
     aiMode === AI_MODES.LOCAL_SERVER
   ) {
-    return TOKEN_LIMITS.LOCAL_4K * CHARS_PER_TOKEN; // ~6K chars
+    return TOKEN_LIMITS.LOCAL_4K * CHARS_PER_TOKEN; // ~5K chars
   }
-  return TOKEN_LIMITS.GEMINI * CHARS_PER_TOKEN; // ~3.2M chars for cloud
+  return TOKEN_LIMITS.GEMINI * CHARS_PER_TOKEN; // ~2.7M chars for cloud
 };
 
 // Overlap between chunks (in pages) to catch context that spans boundaries
@@ -1407,7 +1411,9 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
 
   const response = await generateAI(userPrompt, {
     temperature: isLocalAI ? 0.1 : 0.2,
-    maxTokens: isLocalAI ? 2048 : 32768,
+    maxTokens: isLocalAI
+      ? (getCachedDeviceProfile()?.maxOutputTokens ?? 2048)
+      : 32768,
     expectJSON: true,
     skipCrisisCheck: true,
     skipHallucinationCheck: true,

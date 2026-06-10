@@ -16,6 +16,10 @@ import {
   enforceAgentBoundary,
   resolveAgentForTool,
 } from "./agentBoundaries";
+import {
+  detectDeviceCapabilities,
+  getCachedDeviceProfile,
+} from "./deviceCapabilityDetector";
 
 // Storage keys
 const SWARM_CONFIG_KEY = "vetrate_diamond_swarm_config";
@@ -270,13 +274,13 @@ export const registerSwarmEngine = (
 // WebLLM engine reference for real inference
 let webllmEngine = null;
 
-// Fallback models for Warrant Council — q4f16_1 first on shader-f16 GPUs
-// (RTX 5060 Ti and similar); falls back to q4f32_1 if the build is absent.
-const DIAMOND_MODELS = [
-  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16 weights, ~20-40% faster on shader-f16 GPUs
-  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2GB - f32 fallback
-  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1GB - faster
-  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative
+// Default model list used before device probe completes. The device profile
+// (detectDeviceCapabilities) overrides this in initializeSwarm at runtime.
+const DIAMOND_MODELS_DEFAULT = [
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16, fast on shader-f16 GPUs
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0GB - f32 fallback
+  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1.0GB - lower-VRAM fallback
+  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative architecture
 ];
 
 /**
@@ -421,9 +425,27 @@ export const initializeSwarm = async (
     // eslint-disable-next-line no-console
     console.log(`🎖️ Initializing Warrant Council agent: ${agentId}`);
 
-    // Load real WebLLM model for inference - try multiple models
+    // Probe device capabilities once; select the right model list and context
+    // window for the device tier (mobile/tablet/laptop/desktop).
+    const deviceProfile = await detectDeviceCapabilities();
+    const modelList =
+      deviceProfile.recommendedModels?.length > 0
+        ? deviceProfile.recommendedModels
+        : DIAMOND_MODELS_DEFAULT;
+    const contextWindowSize = deviceProfile.contextWindowSize ?? 12288;
+
+    if (!deviceProfile.canUseWebLLM) {
+      swarmInitializing = false;
+      throw new Error(
+        `Warrant Council requires a WebGPU-capable device. ` +
+          `Detected: ${deviceProfile.tier} (no WebGPU). ` +
+          `Please use a laptop or desktop for local AI analysis.`,
+      );
+    }
+
+    // Load real WebLLM model for inference - try models in device-optimal order
     let loadedModel = null;
-    for (const modelId of DIAMOND_MODELS) {
+    for (const modelId of modelList) {
       try {
         const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
 
@@ -446,27 +468,24 @@ export const initializeSwarm = async (
             },
             logLevel: "SILENT",
           },
-          // ChatOptions (third argument) — raised from 8192 → 12288 to fit
-          // dense OCR chunks (~8.5K tokens) that triggered
-          // ContextWindowSizeExceededError at 8K. Extra KV-cache VRAM cost
-          // is ~0.3 GB (safe on 8GB+ cards). WebLLM v0.2.83+ overrides this
-          // at runtime — no custom WASM compilation needed.
-          { context_window_size: 12288 },
+          // Device-adaptive context window: high-end desktops get 12288 (28K-char
+          // chunks); tablets/laptops fall back to 8192 or 4096. Extra KV-cache
+          // cost per 4K tokens is ~0.3 GB (safe on 8GB+ cards).
+          { context_window_size: contextWindowSize },
         );
 
         loadedModel = modelId;
         loadedModelId = modelId; // Store globally for status reporting
         // eslint-disable-next-line no-console
-        console.log(`🎖️ WebLLM engine loaded for Warrant Council: ${modelId}`);
+        console.log(
+          `🎖️ WebLLM loaded: ${modelId} | context: ${contextWindowSize} | tier: ${deviceProfile.tier}`,
+        );
         break; // Success!
       } catch (modelError) {
         console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
 
         // If cache error, try to clear and retry once
-        if (
-          modelError.message?.includes("Cache") &&
-          modelId === DIAMOND_MODELS[0]
-        ) {
+        if (modelError.message?.includes("Cache") && modelId === modelList[0]) {
           // eslint-disable-next-line no-console
           console.log("💎 Attempting to clear corrupted cache...");
           await clearCorruptedCache();
@@ -578,12 +597,10 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 3);
   const estimatedPromptTokens = Math.ceil(prompt.length / 3);
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
-  // Must match the context_window_size the WebLLM engine is loaded with
-  // (see initializeSwarm). Raised from 8192 → 12288: KV-cache VRAM cost is
-  // only ~0.3 GB extra on 8GB+ cards, but comfortably fits the densest OCR
-  // chunks (~8.5K tokens) that were hitting ContextWindowSizeExceededError
-  // at 8192. WebLLM v0.2.83+ treats this as a pure runtime override.
-  const contextLimit = 12288;
+  // Match the context_window_size the engine was initialized with.
+  // Reading from the cached device profile keeps this in sync with the value
+  // passed to CreateMLCEngine; defaults to 12288 before the probe completes.
+  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 12288;
   const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
