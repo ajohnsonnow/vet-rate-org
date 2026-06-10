@@ -336,7 +336,7 @@ export default function WhatIfSandbox({ onClose }) {
             className="mb-1 text-xl font-bold sm:mb-2 sm:text-3xl"
           >
             🎯 The What-If Sandbox{" "}
-            <span className="rounded bg-amber-500 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+            <span className="rounded bg-amber-700 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
               BETA
             </span>
           </h2>
@@ -414,7 +414,12 @@ export default function WhatIfSandbox({ onClose }) {
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-0">
         {/* Sidebar - Available Conditions */}
-        <div className="md:col-span-1 md:max-h-[55vh] md:overflow-y-auto md:border-r md:border-gray-300 md:pr-3 dark:md:border-gray-700">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Condition library"
+          className="md:col-span-1 md:max-h-[55vh] md:overflow-y-auto md:border-r md:border-gray-300 md:pr-3 dark:md:border-gray-700"
+        >
           <h3 className="mb-3 text-lg font-bold text-gray-800 dark:text-white">
             📦 Condition Library
           </h3>
@@ -465,7 +470,12 @@ export default function WhatIfSandbox({ onClose }) {
         </div>
 
         {/* Canvas - Current Scenario */}
-        <div className="border-t border-gray-200 pt-4 dark:border-gray-700 md:col-span-3 md:max-h-[55vh] md:overflow-y-auto md:border-t-0 md:pl-4 md:pt-0">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Current scenario"
+          className="border-t border-gray-200 pt-4 dark:border-gray-700 md:col-span-3 md:max-h-[55vh] md:overflow-y-auto md:border-t-0 md:pl-4 md:pt-0"
+        >
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">
               🎨 Current Scenario ({currentConditions.length} conditions)
