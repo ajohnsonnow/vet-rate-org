@@ -446,10 +446,12 @@ export const initializeSwarm = async (
             },
             logLevel: "SILENT",
           },
-          // ChatOptions (third argument) — context_window_size in the engine
-          // config above is silently ignored by WebLLM, which left the
-          // runtime at the model default of 4096 despite this setting.
-          { context_window_size: 8192 },
+          // ChatOptions (third argument) — raised from 8192 → 12288 to fit
+          // dense OCR chunks (~8.5K tokens) that triggered
+          // ContextWindowSizeExceededError at 8K. Extra KV-cache VRAM cost
+          // is ~0.3 GB (safe on 8GB+ cards). WebLLM v0.2.83+ overrides this
+          // at runtime — no custom WASM compilation needed.
+          { context_window_size: 12288 },
         );
 
         loadedModel = modelId;
@@ -569,15 +571,20 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   // Use custom system prompt or agent's default
   const finalSystemPrompt = systemPrompt || agent.systemPrompt;
 
-  // Rough token estimation (1 token ≈ 4 characters)
-  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 4);
-  const estimatedPromptTokens = Math.ceil(prompt.length / 4);
+  // OCR'd military/medical text tokenizes at ~3 chars/token (not the generic
+  // 4 chars/token); using / 3 is deliberately conservative so the truncation
+  // guard fires with enough margin that WebLLM never sees a prompt that exceeds
+  // context_window_size even on dense chunks.
+  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 3);
+  const estimatedPromptTokens = Math.ceil(prompt.length / 3);
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
   // Must match the context_window_size the WebLLM engine is loaded with
-  // (see initializeSwarm) — a stale 4096 here silently middle-truncated
-  // every C-File chunk down to ~11K chars and corrupted analysis prompts.
-  const contextLimit = 8192;
-  const reservedForOutput = Math.min(maxTokens, 1024); // Reserve 1024 tokens for complete JSON output
+  // (see initializeSwarm). Raised from 8192 → 12288: KV-cache VRAM cost is
+  // only ~0.3 GB extra on 8GB+ cards, but comfortably fits the densest OCR
+  // chunks (~8.5K tokens) that were hitting ContextWindowSizeExceededError
+  // at 8192. WebLLM v0.2.83+ treats this as a pure runtime override.
+  const contextLimit = 12288;
+  const reservedForOutput = Math.min(maxTokens, 1200); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
   // Warn and truncate if prompt is too large
@@ -600,7 +607,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     // Calculate max chars for prompt (keep system prompt, truncate user prompt)
     const maxPromptChars = Math.max(
       1000,
-      (availableForInput - estimatedSystemTokens) * 4,
+      (availableForInput - estimatedSystemTokens) * 3,
     );
     if (prompt.length > maxPromptChars) {
       // eslint-disable-next-line no-console
