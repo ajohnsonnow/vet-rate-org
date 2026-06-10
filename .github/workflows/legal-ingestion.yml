@@ -66,6 +66,14 @@ jobs:
           tail -200 ingest.log || true
           exit 0  # Never fail the step itself; downstream branches on exitcode.
 
+      - name: Eval regression gate
+        # Blocks the PR: a rebuilt index whose retrieval metrics regress more
+        # than 5% relative to eval/baseline.json fails the job here.
+        if: steps.ingest.outputs.exitcode == '2'
+        run: |
+          VERSION=$(ls public/legal-index | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort | tail -1)
+          node scripts/legal-ingestion/eval/run-eval.mjs --version "$VERSION" --check-baseline
+
       - name: Open PR on diff
         if: steps.ingest.outputs.exitcode == '2'
         env:
