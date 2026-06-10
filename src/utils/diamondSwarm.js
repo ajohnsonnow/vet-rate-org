@@ -640,11 +640,14 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         max_tokens: maxTokens,
         temperature,
         stream: !!onStream,
-        // Penalize repeated tokens to break the "de compte de compte..." loops
-        // that small quantized models produce in long string values. Elevated
-        // when XGrammar is active because the grammar allows arbitrarily long
-        // string content and the model has nothing else to stop it.
-        frequency_penalty: responseFormat ? 1.3 : 0,
+        // Penalize repeated tokens to break repetition loops in small quantized
+        // models. XGrammar masks EOS while grammar expects more tokens, which
+        // amplifies loops — frequency_penalty 1.15 breaks them while keeping
+        // factual field values intact (vLLM issue #40080). top_k/top_p narrow
+        // the token distribution for deterministic extraction (Qwen2.5 docs).
+        frequency_penalty: responseFormat ? 1.15 : 0,
+        top_p: responseFormat ? 0.8 : 1,
+        top_k: responseFormat ? 20 : -1,
         // XGrammar per-token constrained decoding — guarantees valid JSON,
         // eliminates repair retries. Keep one constant schema per engine
         // instance (WebLLM issue #560: changing schemas disposes the matcher).
