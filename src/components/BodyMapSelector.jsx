@@ -646,7 +646,7 @@ const BodyMapSelector = ({
               onClick={() => setActiveCategory(key)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 activeCategory === key
-                  ? "bg-yellow-500 text-gray-900"
+                  ? "bg-yellow-500 text-gray-900 dark:text-gray-900"
                   : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
@@ -662,7 +662,7 @@ const BodyMapSelector = ({
           onClick={() => setView("front")}
           className={`px-4 py-2 rounded font-semibold transition ${
             view === "front"
-              ? "bg-yellow-500 text-gray-900"
+              ? "bg-yellow-500 text-gray-900 dark:text-gray-900"
               : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
         >
@@ -672,7 +672,7 @@ const BodyMapSelector = ({
           onClick={() => setView("back")}
           className={`px-4 py-2 rounded font-semibold transition ${
             view === "back"
-              ? "bg-yellow-500 text-gray-900"
+              ? "bg-yellow-500 text-gray-900 dark:text-gray-900"
               : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
         >
@@ -984,7 +984,7 @@ const BodyMapSelector = ({
                       navigator.clipboard.writeText(text);
                       alert("Medical terminology copied to clipboard!");
                     }}
-                    className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold rounded transition"
+                    className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 dark:text-gray-900 font-bold rounded transition"
                   >
                     📋 Copy Medical Text
                   </button>

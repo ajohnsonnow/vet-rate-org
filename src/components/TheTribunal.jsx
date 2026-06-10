@@ -775,7 +775,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 AI
               </span>
-              <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              <span className="rounded bg-amber-700 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 BETA
               </span>
             </h2>
