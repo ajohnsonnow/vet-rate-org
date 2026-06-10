@@ -431,18 +431,24 @@ export const initializeSwarm = async (
           progress: 10,
         });
 
-        webllmEngine = await CreateMLCEngine(modelId, {
-          initProgressCallback: (report) => {
-            const progress = Math.round(report.progress * 80) + 10; // 10-90%
-            onProgress?.({
-              stage: "loading",
-              message: report.text || `Loading ${agentInfo?.name}...`,
-              progress,
-            });
+        webllmEngine = await CreateMLCEngine(
+          modelId,
+          {
+            initProgressCallback: (report) => {
+              const progress = Math.round(report.progress * 80) + 10; // 10-90%
+              onProgress?.({
+                stage: "loading",
+                message: report.text || `Loading ${agentInfo?.name}...`,
+                progress,
+              });
+            },
+            logLevel: "SILENT",
           },
-          logLevel: "SILENT",
-          context_window_size: 8192, // Increase context window to handle larger prompts
-        });
+          // ChatOptions (third argument) — context_window_size in the engine
+          // config above is silently ignored by WebLLM, which left the
+          // runtime at the model default of 4096 despite this setting.
+          { context_window_size: 8192 },
+        );
 
         loadedModel = modelId;
         loadedModelId = modelId; // Store globally for status reporting
@@ -660,7 +666,11 @@ export const generateWithSwarm = async (prompt, options = {}) => {
       };
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
-      // Fall through to placeholder response
+      // The engine exists and genuinely failed — rethrow so callers see the
+      // real error (e.g. ContextWindowSizeExceededError triggers their
+      // deterministic bailout). Falling through to the "still loading"
+      // placeholder masked failures as a retryable loading state.
+      throw inferenceError;
     }
   }
 
