@@ -1110,31 +1110,29 @@ export async function analyzeCFile(
     const chunk = chunks[i];
     const chunkNum = i + 1;
 
-    // Skip chunks that are clearly blank/administrative pages: cover sheets,
-    // index pages, blank separators. Threshold is conservative — requires both
-    // very short text AND few alphabetic chars so no real medical content slips.
+    // --- Gate 1: low-content skip ---
+    // Near-blank pages: cover sheets, index separators, blank pages.
+    // Conservative thresholds — both conditions must hold.
     const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
     if (chunk.text.trim().length < 250 || alphaCount < 120) {
       // eslint-disable-next-line no-console
       console.log(
         `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
       );
-      chunkResults.push({
-        summary: "",
-        servicePeriod: {},
-        timeline: [],
-        potential_claims: [],
-        exposures: [],
-        combatIndicators: [],
-        redFlags: [],
-        actionItems: [],
-        mentalHealth: {
-          diagnoses: [],
-          indicators: [],
-          stressors: [],
-          pages: [],
-        },
-      });
+      chunkResults.push(EMPTY_CHUNK_RESULT);
+      continue;
+    }
+
+    // --- Gate 2: medical content pre-filter ---
+    // Text-heavy but purely administrative pages (routing slips, consent forms,
+    // SF authorization sheets, index pages) have none of: dates, medical terms,
+    // VA/claims language, or body-part references. Any ONE signal → send to LLM.
+    if (!chunkHasMedicalContent(chunk.text)) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
+      );
+      chunkResults.push(EMPTY_CHUNK_RESULT);
       continue;
     }
 
@@ -1289,6 +1287,38 @@ export async function analyzeCFile(
 // so the OUTPUT FORMAT example is removed to save ~80 prefill tokens per chunk
 // (paid 304 times with no KV caching between calls).
 const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records and extract service-connected conditions, timeline events, and evidence. Only report findings present in the text. Track "--- PAGE X ---" markers for page numbers. Output valid JSON only.`;
+
+// Reused empty result for skipped chunks (low-content and admin-only pages).
+const EMPTY_CHUNK_RESULT = {
+  summary: "",
+  servicePeriod: {},
+  timeline: [],
+  potential_claims: [],
+  exposures: [],
+  combatIndicators: [],
+  redFlags: [],
+  actionItems: [],
+  mentalHealth: { diagnoses: [], indicators: [], stressors: [], pages: [] },
+};
+
+// Patterns indicating the chunk has meaningful medical/claims content.
+// ANY single match → send to LLM. Zero matches → administrative page, skip.
+// Conservative: single patterns cover dates, clinical terms, VA language, body parts.
+const MEDICAL_SIGNAL_PATTERNS = [
+  // US date formats and month-year patterns
+  /\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{2,4})\b/,
+  /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember))\.?\s+\d{4}\b/i,
+  // Clinical/medical terminology
+  /\b(diagnos\w+|condition|treatment|injur\w+|disease|disorder|syndrome|chronic|acute|pain|surger\w+|operat\w+|medic\w+|prescribed|examin\w+|evaluation|assessment|symptom\w*|complaint|prognos\w+)\b/i,
+  // VA / claims language
+  /\b(service.?connect\w*|nexus|38\s*cfr|disability|rating|claim|compensation|ptsd|tbi|traumatic|combat|deployment|exposure|agent orange|burn pit|pact act|c&p|service record)\b/i,
+  // Body parts and specific conditions
+  /\b(knee|shoulder|hip|ankle|wrist|elbow|lumbar|cervical|thoracic|tinnitus|hearing loss|vision|anxiety|depression|headache|migraine|diabetes|hypertension|blood pressure|cardiac|pulmonary|respirat\w+)\b/i,
+];
+
+function chunkHasMedicalContent(text) {
+  return MEDICAL_SIGNAL_PATTERNS.some((p) => p.test(text));
+}
 
 // JSON Schema for XGrammar constrained decoding — enforces valid JSON output
 // per-token so parse errors and repair retries are impossible. Keep this schema
