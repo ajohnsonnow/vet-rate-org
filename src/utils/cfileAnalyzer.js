@@ -263,7 +263,18 @@ function attemptJSONRepair(jsonStr) {
       }
       return null;
     },
-    // Strategy 3: Extract just the core fields we need
+    // Strategy 3: Fix unquoted property names (JSON5-style output from the model)
+    // e.g.  {summary: "...", timeline: [...]} → {"summary": "...", "timeline": [...]}
+    // Applies the substitution only at structural positions ({, or ,) to avoid
+    // touching identifier-like text inside string values.
+    () => {
+      const fixed = content.replace(
+        /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
+        '$1 "$2":',
+      );
+      return JSON.parse(fixed);
+    },
+    // Strategy 4: Extract just the core fields we need
     () => {
       // Try to find and extract key fields
       const result = {
