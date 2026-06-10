@@ -584,7 +584,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   // chunks (~8.5K tokens) that were hitting ContextWindowSizeExceededError
   // at 8192. WebLLM v0.2.83+ treats this as a pure runtime override.
   const contextLimit = 12288;
-  const reservedForOutput = Math.min(maxTokens, 1200); // Reserve for JSON output
+  const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
   // Warn and truncate if prompt is too large
@@ -640,6 +640,11 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         max_tokens: maxTokens,
         temperature,
         stream: !!onStream,
+        // Penalize repeated tokens to break the "de compte de compte..." loops
+        // that small quantized models produce in long string values. Elevated
+        // when XGrammar is active because the grammar allows arbitrarily long
+        // string content and the model has nothing else to stop it.
+        frequency_penalty: responseFormat ? 1.3 : 0,
         // XGrammar per-token constrained decoding — guarantees valid JSON,
         // eliminates repair retries. Keep one constant schema per engine
         // instance (WebLLM issue #560: changing schemas disposes the matcher).
