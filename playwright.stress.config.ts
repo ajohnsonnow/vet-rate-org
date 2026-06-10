@@ -10,8 +10,9 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  // 30 min per test; muster-call-batch.spec.ts raises its own budget.
-  timeout: 1_800_000,
+  // 3h per test: a full 313MB C-File pipeline (stream-extract ~5,700 pages,
+  // then local-AI analysis) legitimately runs past 30 minutes.
+  timeout: 10_800_000,
   reporter: [
     ["list"],
     // The stress runner parses this fixed path after every invocation.
