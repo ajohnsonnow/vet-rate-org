@@ -53,6 +53,22 @@ export default function CFileAnalyzer({
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
+  // Heartbeat while processing: long phases (opening a 300MB document,
+  // first model generation) are otherwise silent for minutes — a ticking
+  // clock tells the veteran the pipeline is alive, not frozen.
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (!isProcessing) {
+      setElapsedSeconds(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const tick = setInterval(
+      () => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)),
+      1000,
+    );
+    return () => clearInterval(tick);
+  }, [isProcessing]);
   const [extractionProgress, setExtractionProgress] = useState({
     current: 0,
     total: 0,
@@ -553,8 +569,13 @@ export default function CFileAnalyzer({
             : t("cfileAnalyzer", "analyzingYourCFile")}
         </h3>
 
-        <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
           {processingStage}
+        </p>
+
+        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          ⏱️ Elapsed: {Math.floor(elapsedSeconds / 60)}:
+          {String(elapsedSeconds % 60).padStart(2, "0")} — still working
         </p>
 
         {/* PDF Extraction Progress */}
