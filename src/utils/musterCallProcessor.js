@@ -41,7 +41,10 @@ import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
 // ============================================================
-import { attemptJSONRepair } from "./cfileAnalyzer";
+import {
+  attemptJSONRepair,
+  enforceValidDiagnosticCodes,
+} from "./cfileAnalyzer";
 // ============================================================
 // FLORENCE-2 VISION AI SERVICE (v1.16.2)
 // Fallback for poor OCR quality on scanned/aged documents
@@ -68,6 +71,48 @@ import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
 let visionInitialized = false;
 let visionInitializing = false;
+
+/**
+ * Adaptive ETA: rolling average of pages/sec over the most recent extraction
+ * batches. Static formulas drift badly on a 313MB C-File where per-page cost
+ * varies between text-layer and scanned sections.
+ */
+const createEtaTracker = (windowSize = 5) => {
+  const samples = [];
+  let lastPages = 0;
+  let lastTime = Date.now();
+
+  const rate = () => {
+    let pages = 0;
+    let ms = 0;
+    for (const s of samples) {
+      pages += s.pages;
+      ms += s.ms;
+    }
+    if (pages === 0 || ms === 0) return null;
+    return (pages / ms) * 1000;
+  };
+
+  return {
+    sample(processedPages) {
+      const now = Date.now();
+      const pages = processedPages - lastPages;
+      const ms = now - lastTime;
+      lastPages = processedPages;
+      lastTime = now;
+      if (pages > 0 && ms > 0) {
+        samples.push({ pages, ms });
+        if (samples.length > windowSize) samples.shift();
+      }
+    },
+    pagesPerSecond: rate,
+    etaSeconds(remainingPages) {
+      const r = rate();
+      if (!r || remainingPages <= 0) return null;
+      return Math.ceil(remainingPages / r);
+    },
+  };
+};
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -144,6 +189,7 @@ RULES: Only include findings present in text. Be concise.`;
     }
 
     if (result) {
+      const rejectedCodes = enforceValidDiagnosticCodes(result);
       // eslint-disable-next-line no-console
       console.log(
         `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
@@ -152,6 +198,9 @@ RULES: Only include findings present in text. Be concise.`;
         ...result,
         analyzedAt: new Date().toISOString(),
         aiPowered: true,
+        ...(rejectedCodes.length > 0 && {
+          rejectedDiagnosticCodes: rejectedCodes,
+        }),
       };
     }
 
@@ -464,6 +513,7 @@ const processSingleDocument = async (file, onProgress) => {
         console.log(
           `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
         );
+        const etaTracker = createEtaTracker();
         const largeResult = await processLargePDF(file, {
           batchSize: 20,
           onProgress: (cur, total, pct) => {
@@ -475,9 +525,12 @@ const processSingleDocument = async (file, onProgress) => {
               message: `Streaming page ${cur}/${total} (${pct}%)...`,
               currentPage: cur,
               totalPages: total,
+              etaSeconds: etaTracker.etaSeconds(total - cur),
+              pagesPerSecond: etaTracker.pagesPerSecond(),
             });
           },
           onBatch: (batch) => {
+            etaTracker.sample(batch.processedSoFar);
             // Forward per-batch updates for responsive UI on very large files
             onProgress?.({
               filename: file.name,
@@ -487,6 +540,10 @@ const processSingleDocument = async (file, onProgress) => {
               message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
               currentPage: batch.processedSoFar,
               totalPages: batch.totalPages,
+              etaSeconds: etaTracker.etaSeconds(
+                batch.totalPages - batch.processedSoFar,
+              ),
+              pagesPerSecond: etaTracker.pagesPerSecond(),
             });
           },
         });

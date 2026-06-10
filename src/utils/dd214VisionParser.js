@@ -178,7 +178,7 @@ export function parseDD214Text(rawText) {
       : 0;
 
   return {
-    fields,
+    fields: normalizeParsedFields(fields),
     confidence,
     extractionNotes,
     rawTextLength: text.length,
@@ -187,6 +187,65 @@ export function parseDD214Text(rawText) {
 }
 
 // === HELPER FUNCTIONS ===
+
+// Every field a consumer may read off parsedData.fields — guarantees
+// present-or-null so missing extractions never propagate `undefined`
+const PARSED_FIELD_KEYS = [
+  "name",
+  "lastName",
+  "firstName",
+  "middleName",
+  "ssn",
+  "ssnMasked",
+  "serviceNumber",
+  "branch",
+  "component",
+  "rank",
+  "payGrade",
+  "mos",
+  "mosTitle",
+  "entryDate",
+  "entryDateFormatted",
+  "separationDate",
+  "separationDateFormatted",
+  "yearsService",
+  "monthsService",
+  "daysService",
+  "totalMonthsService",
+  "characterOfService",
+  "separationCode",
+  "separationCodeMeaning",
+  "reentryCode",
+  "reentryCodeMeaning",
+  "narrativeReason",
+  "hasCombatAwards",
+  "foreignService",
+  "documentType",
+];
+
+function normalizeParsedFields(fields) {
+  for (const key of PARSED_FIELD_KEYS) {
+    if (fields[key] === undefined) {
+      fields[key] = null;
+    }
+  }
+  if (!Array.isArray(fields.awards)) {
+    fields.awards = [];
+  }
+  if (!Array.isArray(fields.foreignServiceLocations)) {
+    fields.foreignServiceLocations = [];
+  }
+  if (!fields.combatService || typeof fields.combatService !== "object") {
+    fields.combatService = { hasVerifiedCombat: false, indicators: [] };
+  }
+  if (typeof fields.awardCount !== "number") {
+    fields.awardCount = fields.awards.length;
+  }
+  if (typeof fields.overallConfidence !== "number") {
+    fields.overallConfidence = 0;
+  }
+  return fields;
+}
 
 /**
  * Normalize OCR text - handle common recognition errors
