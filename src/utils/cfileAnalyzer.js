@@ -1248,23 +1248,100 @@ export async function analyzeCFile(
   };
 }
 
-// Simplified prompt for local AI (smaller context window)
-const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File text and extract claims evidence.
+// Compact system prompt for local AI — JSON structure is enforced by XGrammar,
+// so the OUTPUT FORMAT example is removed to save ~80 prefill tokens per chunk
+// (paid 304 times with no KV caching between calls).
+const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records and extract service-connected conditions, timeline events, and evidence. Only report findings present in the text. Track "--- PAGE X ---" markers for page numbers. Output valid JSON only.`;
 
-OUTPUT FORMAT: Valid JSON only, no markdown. Structure:
-{
-  "summary": "2-sentence overview",
-  "servicePeriod": {"branch":"","entryDate":"","separationDate":"","mos":""},
-  "timeline": [{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}],
-  "potential_claims": [{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],
-  "exposures": [{"type":"","location":"","timeframe":""}],
-  "combatIndicators": [{"indicator":"","page_number":0}],
-  "mentalHealth": {"indicators":[],"diagnoses":[]},
-  "redFlags": [{"issue":"","suggestion":""}],
-  "actionItems": [""]
-}
-
-RULES: Only include findings present in text. Track "--- PAGE X ---" markers for page numbers. Focus on medical evidence.`;
+// JSON Schema for XGrammar constrained decoding — enforces valid JSON output
+// per-token so parse errors and repair retries are impossible. Keep this schema
+// constant across all 304 chunk calls (WebLLM issue #560: changing schemas on a
+// live engine disposes the matcher and throws).
+const CFILE_CHUNK_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    servicePeriod: {
+      type: "object",
+      properties: {
+        branch: { type: "string" },
+        entryDate: { type: "string" },
+        separationDate: { type: "string" },
+        mos: { type: "string" },
+      },
+    },
+    timeline: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          date: { type: "string" },
+          page_number: { type: "integer" },
+          category: { type: "string" },
+          description: { type: "string" },
+          significance: { type: "string", enum: ["high", "medium", "low"] },
+        },
+        required: ["date", "description"],
+      },
+    },
+    potential_claims: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          condition: { type: "string" },
+          likelihood: { type: "string", enum: ["high", "medium", "low"] },
+          inServiceEvent: { type: "string" },
+          currentDiagnosis: { type: "string", enum: ["yes", "no", "unclear"] },
+          missing_element: { type: "string" },
+        },
+        required: ["condition"],
+      },
+    },
+    exposures: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          type: { type: "string" },
+          location: { type: "string" },
+          timeframe: { type: "string" },
+        },
+      },
+    },
+    combatIndicators: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          indicator: { type: "string" },
+          page_number: { type: "integer" },
+        },
+      },
+    },
+    mentalHealth: {
+      type: "object",
+      properties: {
+        indicators: { type: "array", items: { type: "string" } },
+        diagnoses: { type: "array", items: { type: "string" } },
+        stressors: { type: "array", items: { type: "string" } },
+        pages: { type: "array", items: { type: "integer" } },
+      },
+    },
+    redFlags: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          issue: { type: "string" },
+          suggestion: { type: "string" },
+        },
+      },
+    },
+    actionItems: { type: "array", items: { type: "string" } },
+  },
+  required: ["summary"],
+};
 
 /**
  * Analyze a single chunk of text
@@ -1297,17 +1374,18 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
 
   const response = await generateAI(userPrompt, {
     temperature: 0.2,
-    // Decode time dominates local chunk analysis (~30 tok/s on consumer
-    // GPUs); extraction JSON is compact, and attemptJSONRepair + retry
-    // cover the rare truncated response. 2048 made every chunk ~40s.
     maxTokens: isLocalAI ? 1200 : 32768,
     expectJSON: true,
-    skipCrisisCheck: true, // C-Files contain clinical records
-    skipHallucinationCheck: true, // C-File analysis has different JSON structure (potential_claims), trap expects conditions array
-    useDKB: false, // Chunk extraction carries its own instructions; DKB Q&A context would burn ~2K tokens of context per call (enforceValidDiagnosticCodes still validates DCs afterwards)
-    timeout: isLocalAI ? 300000 : 120000, // A dense local chunk (5K-token prefill + 2K-token JSON) can legitimately run past 120s
+    skipCrisisCheck: true,
+    skipHallucinationCheck: true,
+    useDKB: false,
+    timeout: isLocalAI ? 300000 : 120000,
     toolContext: "C-File Analyzer",
-    systemPrompt: systemPrompt, // Pass custom system prompt to avoid double prompting
+    systemPrompt: systemPrompt,
+    // XGrammar constrained decoding: guarantees valid JSON on every chunk,
+    // eliminates JSON-repair retries, and bounds decode tokens to schema.
+    // Only for local AI — cloud models handle JSON reliably via prompting.
+    responseFormat: isLocalAI ? CFILE_CHUNK_SCHEMA : undefined,
   });
 
   const content = response?.text || response;

@@ -1020,6 +1020,13 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
       toolId,
       maxTokens,
       temperature,
+      // Thread caller-supplied system prompt and schema through so analyzeChunk
+      // can replace the AUDITOR default prompt with the compact C-File version
+      // and enable XGrammar constrained decoding for the chunk loop.
+      ...(options.systemPrompt ? { systemPrompt: options.systemPrompt } : {}),
+      ...(options.responseFormat
+        ? { responseFormat: options.responseFormat }
+        : {}),
     });
 
     swarmGenerating = false;

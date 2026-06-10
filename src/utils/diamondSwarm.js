@@ -270,9 +270,11 @@ export const registerSwarmEngine = (
 // WebLLM engine reference for real inference
 let webllmEngine = null;
 
-// Fallback models for Warrant Council - try smaller models first to avoid cache issues
+// Fallback models for Warrant Council — q4f16_1 first on shader-f16 GPUs
+// (RTX 5060 Ti and similar); falls back to q4f32_1 if the build is absent.
 const DIAMOND_MODELS = [
-  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2GB - good balance
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16 weights, ~20-40% faster on shader-f16 GPUs
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2GB - f32 fallback
   "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1GB - faster
   "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative
 ];
@@ -539,6 +541,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     temperature = 0.7,
     systemPrompt = null,
     onStream = null,
+    responseFormat = null, // JSON Schema object — enables XGrammar per-token constrained decoding
   } = options;
 
   // Resolve effective agent. When a toolId is supplied, derive the agent
@@ -630,6 +633,17 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         max_tokens: maxTokens,
         temperature,
         stream: !!onStream,
+        // XGrammar per-token constrained decoding — guarantees valid JSON,
+        // eliminates repair retries. Keep one constant schema per engine
+        // instance (WebLLM issue #560: changing schemas disposes the matcher).
+        ...(responseFormat
+          ? {
+              response_format: {
+                type: "json_object",
+                schema: JSON.stringify(responseFormat),
+              },
+            }
+          : {}),
       };
 
       let responseText = "";
