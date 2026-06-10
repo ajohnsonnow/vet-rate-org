@@ -21,6 +21,7 @@ import {
   getAIStatus,
   AI_MODES,
 } from "./unifiedAIService";
+import { validateDiagnosticCode } from "./hallucinationTrap";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -55,6 +56,10 @@ const CHUNK_OVERLAP_PAGES = 2; // Reduced from 5 to minimize processing time
 
 // Minimum pages per chunk (don't create tiny chunks)
 const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks better
+
+// Retry failed chunks before recording them in the failedChunks manifest
+const MAX_CHUNK_RETRIES = 2;
+const CHUNK_RETRY_BACKOFF_MS = 1000;
 
 // ============================================================================
 // SYSTEM PROMPTS
@@ -631,13 +636,70 @@ function createMetaSummary(summaries) {
 }
 
 /**
- * Deduplicate timeline entries by page number and description similarity
+ * Normalize a date string to a "year-month-day" key so equivalent formats
+ * ("Jan 2005", "January 2005", "2005-01") produce the same dedup key.
+ * Avoids Date.parse for keying — it mixes local/UTC interpretation across formats.
  */
-function deduplicateTimeline(timeline) {
+function normalizeDateKey(dateStr) {
+  if (!dateStr) return "";
+  const str = String(dateStr).toLowerCase().trim();
+
+  const yearMatch = str.match(/\b(\d{4})\b/);
+  if (!yearMatch) return str;
+  const year = yearMatch[1];
+
+  const monthNames = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ];
+
+  let month = 0;
+  let day = 0;
+  for (let i = 0; i < monthNames.length; i++) {
+    if (str.includes(monthNames[i])) {
+      month = i + 1;
+      break;
+    }
+  }
+
+  if (month) {
+    const dayMatch = str.match(/\b(\d{1,2})\b/);
+    if (dayMatch) day = parseInt(dayMatch[1], 10);
+  } else {
+    const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
+    if (ymd) {
+      month = parseInt(ymd[1], 10);
+      day = ymd[2] ? parseInt(ymd[2], 10) : 0;
+    } else {
+      const mdy = str.match(/\b(\d{1,2})[/](?:(\d{1,2})[/])?\d{4}/);
+      if (mdy) {
+        month = parseInt(mdy[1], 10);
+        day = mdy[2] ? parseInt(mdy[2], 10) : 0;
+      }
+    }
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Deduplicate timeline entries by normalized date, page number and category
+ */
+export function deduplicateTimeline(timeline) {
   const seen = new Map();
 
   for (const event of timeline) {
-    const key = `${event.page_number || 0}_${(event.body_part || "").toLowerCase()}_${event.category || ""}`;
+    const key = `${normalizeDateKey(event.date)}_${event.page_number || 0}_${(event.body_part || "").toLowerCase()}_${event.category || ""}`;
 
     if (!seen.has(key)) {
       seen.set(key, event);
@@ -819,6 +881,42 @@ function parseApproxDate(dateStr) {
 }
 
 // ============================================================================
+// ANTI-HALLUCINATION (merge-level)
+// ============================================================================
+
+/**
+ * Strip hallucinated diagnostic codes from a final (merged) analysis result.
+ * Claims keep their condition text — only the invalid code is removed, so a
+ * real condition is never dropped because the AI guessed a wrong DC.
+ * @param {Object} analysis - Merged analysis result (mutated in place)
+ * @returns {Array<{condition: string, diagnosticCode: string, reason: string}>} rejected codes
+ */
+export function enforceValidDiagnosticCodes(analysis) {
+  const rejected = [];
+  if (!analysis || !Array.isArray(analysis.potential_claims)) {
+    return rejected;
+  }
+
+  for (const claim of analysis.potential_claims) {
+    if (!claim || !claim.diagnosticCode) continue;
+    const validation = validateDiagnosticCode(claim.diagnosticCode);
+    if (!validation.isValid) {
+      console.warn(
+        `🚫 Rejected hallucinated diagnostic code ${claim.diagnosticCode} for "${claim.condition || "unknown condition"}"`,
+      );
+      rejected.push({
+        condition: claim.condition || "",
+        diagnosticCode: String(claim.diagnosticCode),
+        reason: validation.reason,
+      });
+      claim.diagnosticCode = null;
+    }
+  }
+
+  return rejected;
+}
+
+// ============================================================================
 // MAIN ANALYSIS FUNCTION
 // ============================================================================
 
@@ -879,6 +977,8 @@ export async function analyzeCFile(
       total: 1,
     });
     const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+    const rejectedCodes = enforceValidDiagnosticCodes(result);
+    result.failedChunks = [];
 
     onProgress("Analysis complete!", { phase: "complete" });
 
@@ -890,6 +990,7 @@ export async function analyzeCFile(
         textLength: fullText.length,
         aiMode: aiMode,
         chunksProcessed: 1,
+        rejectedDiagnosticCodes: rejectedCodes,
       },
     };
   }
@@ -907,6 +1008,7 @@ export async function analyzeCFile(
   });
 
   const chunkResults = [];
+  const failedChunks = [];
 
   for (let i = 0; i < chunks.length; i++) {
     // Check if aborted
@@ -928,13 +1030,57 @@ export async function analyzeCFile(
       },
     );
 
-    try {
-      const result = await analyzeChunk(
-        chunk,
-        chunkNum,
-        totalChunks,
-        onProgress,
-      );
+    let result = null;
+    let lastError = null;
+
+    for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
+      if (abortController?.signal.aborted) {
+        throw new Error("Analysis cancelled by user");
+      }
+
+      try {
+        if (attempt > 0) {
+          onProgress(
+            `Retrying chunk ${chunkNum}/${totalChunks} (attempt ${attempt + 1} of ${MAX_CHUNK_RETRIES + 1})...`,
+            {
+              phase: "chunk-retry",
+              current: chunkNum,
+              total: totalChunks,
+              attempt: attempt + 1,
+            },
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, CHUNK_RETRY_BACKOFF_MS * attempt),
+          );
+        }
+
+        result = await analyzeChunk(chunk, chunkNum, totalChunks, onProgress);
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error;
+        console.error(
+          `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}):`,
+          error,
+        );
+
+        // Context window errors are deterministic — retrying cannot help
+        if (
+          error.message?.includes("context window") ||
+          error.message?.includes("ContextWindowSizeExceededError")
+        ) {
+          throw new Error(
+            `Context window exceeded. This document is too large for the current AI model. Try using Cloud AI (Gemini) instead, or split your document into smaller files.`,
+          );
+        }
+
+        if (error.message === "Analysis cancelled by user") {
+          throw error;
+        }
+      }
+    }
+
+    if (result) {
       chunkResults.push(result);
 
       onProgress(`Chunk ${chunkNum}/${totalChunks} complete`, {
@@ -942,26 +1088,25 @@ export async function analyzeCFile(
         current: chunkNum,
         total: totalChunks,
       });
-    } catch (error) {
-      console.error(`Error analyzing chunk ${chunkNum}:`, error);
-
-      // Special handling for context window errors
-      if (
-        error.message?.includes("context window") ||
-        error.message?.includes("ContextWindowSizeExceededError")
-      ) {
-        throw new Error(
-          `Context window exceeded. This document is too large for the current AI model. Try using Cloud AI (Gemini) instead, or split your document into smaller files.`,
-        );
-      }
-
-      // Continue with other chunks even if one fails
-      onProgress(`⚠️ Chunk ${chunkNum} failed, continuing...`, {
-        phase: "chunk-error",
-        current: chunkNum,
-        total: totalChunks,
-        error: error.message,
+    } else {
+      // Record the failure so the final result can show what's missing,
+      // then continue — one bad chunk must not abort the run
+      failedChunks.push({
+        chunkIndex: i,
+        startPage: chunk.startPage,
+        endPage: chunk.endPage,
+        error: lastError?.message || "Unknown error",
       });
+
+      onProgress(
+        `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
+        {
+          phase: "chunk-error",
+          current: chunkNum,
+          total: totalChunks,
+          error: lastError?.message,
+        },
+      );
     }
 
     // Small delay between chunks to avoid rate limiting
@@ -980,6 +1125,11 @@ export async function analyzeCFile(
   onProgress("Merging analysis results...", { phase: "merge" });
   const mergedResult = mergeChunkResults(chunkResults);
 
+  // Anti-hallucination gate on the MERGED result: any diagnostic code not in
+  // the 38 CFR Part 4 database is stripped before the veteran ever sees it
+  const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
+  mergedResult.failedChunks = failedChunks;
+
   onProgress("Analysis complete!", { phase: "complete" });
 
   return {
@@ -991,7 +1141,8 @@ export async function analyzeCFile(
       aiMode: aiMode,
       chunksProcessed: chunkResults.length,
       totalChunks: totalChunks,
-      failedChunks: totalChunks - chunkResults.length,
+      failedChunkCount: failedChunks.length,
+      rejectedDiagnosticCodes: rejectedCodes,
     },
   };
 }

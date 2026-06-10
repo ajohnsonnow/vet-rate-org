@@ -359,6 +359,16 @@ export const registerLocalAIEngine = (
           detail: { ready: false, fullDKBAvailable: false },
         }),
       );
+      // Let UI layers surface the failure — without this, the fallback to
+      // cloud/other backends is silent and the veteran never learns why
+      window.dispatchEvent(
+        new CustomEvent("vetrate:ai-engine-failed", {
+          detail: {
+            engine: modelId || "local-ai",
+            error: "Local AI engine failed to load or was unloaded",
+          },
+        }),
+      );
     }
   }
 };
@@ -767,49 +777,53 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     }
   }
 
-  // Create abort controller for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const requestBody = JSON.stringify({
+    contents: [{ parts: [{ text: fullPrompt }] }],
+    generationConfig: {
+      temperature: finalConfig.temperature,
+      maxOutputTokens: finalConfig.maxTokens,
+      topK: finalConfig.topK,
+      topP: finalConfig.topP,
+    },
+    safetySettings: [
+      {
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+    ],
+  });
 
-  let response;
-  try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          temperature: finalConfig.temperature,
-          maxOutputTokens: finalConfig.maxTokens,
-          topK: finalConfig.topK,
-          topP: finalConfig.topP,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-        ],
-      }),
-    });
-  } catch (fetchError) {
-    clearTimeout(timeoutId);
-    // Handle network errors and timeouts
+  // Each attempt gets its own abort controller + timeout
+  const fetchWithTimeout = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      return await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: requestBody,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  const toFriendlyFetchError = (fetchError) => {
     if (fetchError.name === "AbortError") {
-      throw new Error(
+      return new Error(
         "Request timed out. The AI is taking too long to respond. Please try again with a shorter prompt, or switch to Local AI.",
       );
     }
@@ -817,15 +831,31 @@ const generateWithCloudAI = async (prompt, options = {}) => {
       fetchError.message?.includes("Failed to fetch") ||
       fetchError.message?.includes("NetworkError")
     ) {
-      throw new Error(
+      return new Error(
         "Network error. Please check your internet connection. If you are offline, try Local AI which works without internet.",
       );
     }
-    throw new Error(
+    return new Error(
       `Connection failed: ${fetchError.message}. If this persists, try switching to Local AI.`,
     );
-  } finally {
-    clearTimeout(timeoutId);
+  };
+
+  let response;
+  try {
+    response = await fetchWithTimeout();
+  } catch (fetchError) {
+    if (fetchError.name !== "AbortError") {
+      throw toFriendlyFetchError(fetchError);
+    }
+    // Timeouts are often transient backend slowness — retry once
+    console.warn(
+      `⏱️ Cloud AI request timed out after ${timeout / 1000}s — retrying once...`,
+    );
+    try {
+      response = await fetchWithTimeout();
+    } catch (retryError) {
+      throw toFriendlyFetchError(retryError);
+    }
   }
 
   if (!response.ok) {
@@ -1678,7 +1708,31 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
  * @param {number} options.timeout - Timeout in milliseconds (default: 120000 = 2 minutes)
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
+
+// Circuit breaker: after 3 consecutive generation failures, stop hammering the
+// backends (each attempt can burn a full 60-120s timeout) and surface a clear
+// error instead. Half-opens after a cooldown so a fixed setup can recover.
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_COOLDOWN_MS = 30000;
+let consecutiveGenerationFailures = 0;
+let circuitBreakerOpenedAt = 0;
+
+export const resetAICircuitBreaker = () => {
+  consecutiveGenerationFailures = 0;
+  circuitBreakerOpenedAt = 0;
+};
+
 export const generateAI = async (prompt, options = {}) => {
+  if (
+    consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD &&
+    Date.now() - circuitBreakerOpenedAt < CIRCUIT_BREAKER_COOLDOWN_MS
+  ) {
+    throw new Error(
+      `AI_CIRCUIT_OPEN: AI generation has failed ${consecutiveGenerationFailures} times in a row, so further attempts are paused. ` +
+        `Please check your AI settings (is the local model loaded? is your API key valid? are you online?) and try again in ${Math.ceil(CIRCUIT_BREAKER_COOLDOWN_MS / 1000)} seconds.`,
+    );
+  }
+
   // Apply timeout wrapper to prevent indefinite hangs
   const TIMEOUT_MS = options.timeout || 120000; // 2 minutes default
   let timeoutId;
@@ -1702,10 +1756,19 @@ export const generateAI = async (prompt, options = {}) => {
 
     // Clear timeout on success
     clearTimeout(timeoutId);
+    resetAICircuitBreaker();
     return result;
   } catch (err) {
     // Clear timeout on error
     if (timeoutId) clearTimeout(timeoutId);
+
+    // Crisis interception is a safety block, not an engine failure
+    if (err.message !== "CRISIS_DETECTED") {
+      consecutiveGenerationFailures++;
+      if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+        circuitBreakerOpenedAt = Date.now();
+      }
+    }
 
     // Enhance timeout errors with helpful message
     if (err.message && err.message.includes("AI_TIMEOUT")) {
@@ -2293,6 +2356,7 @@ export default {
   registerSwarmEngine,
   generateAI,
   generateAIWithImage,
+  resetAICircuitBreaker,
   // Dual-LLM lethal-trifecta defense
   dualLLMExtract,
   dualLLMSynthesize,
