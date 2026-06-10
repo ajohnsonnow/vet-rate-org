@@ -680,8 +680,70 @@ export const generateWithSwarm = async (prompt, options = {}) => {
 
       let responseText = "";
 
-      if (onStream) {
-        // Streaming response
+      if (responseFormat) {
+        // JSON mode: always stream internally so we can interrupt the moment
+        // the root closing "}" is emitted. This saves all remaining tokens
+        // once the JSON object is structurally complete — common on simple/
+        // sparse chunks where the schema fills in well under max_tokens.
+        // Caller's onStream callback still fires on each delta if provided.
+        const jsonStream = await webllmEngine.chat.completions.create({
+          ...generationConfig,
+          stream: true,
+        });
+
+        let bracketDepth = 0;
+        let inString = false;
+        let escape = false;
+
+        for await (const piece of jsonStream) {
+          const delta = piece.choices[0]?.delta?.content || "";
+          if (delta) {
+            responseText += delta;
+            onStream?.(delta, responseText);
+
+            // Track bracket depth to detect JSON root completion.
+            // Handles escaped chars and string literals so inner braces
+            // (e.g. in "description" values) don't trigger a false close.
+            for (const ch of delta) {
+              if (escape) {
+                escape = false;
+                continue;
+              }
+              if (ch === "\\" && inString) {
+                escape = true;
+                continue;
+              }
+              if (ch === '"') {
+                inString = !inString;
+                continue;
+              }
+              if (inString) continue;
+              if (ch === "{") {
+                bracketDepth++;
+              } else if (ch === "}") {
+                bracketDepth--;
+                if (
+                  bracketDepth === 0 &&
+                  responseText.trimStart().startsWith("{")
+                ) {
+                  // Root JSON object closed — stop generation immediately.
+                  try {
+                    webllmEngine.interruptGenerate();
+                  } catch {
+                    // interruptGenerate is best-effort; continue if unavailable
+                  }
+                  break;
+                }
+              }
+            }
+          }
+
+          if (bracketDepth === 0 && responseText.trimStart().startsWith("{"))
+            break;
+          if (piece.choices[0]?.finish_reason) break;
+        }
+      } else if (onStream) {
+        // Non-JSON caller-driven streaming
         const chunks = await webllmEngine.chat.completions.create({
           ...generationConfig,
           stream: true,
@@ -690,10 +752,10 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         for await (const chunk of chunks) {
           const delta = chunk.choices[0]?.delta?.content || "";
           responseText += delta;
-          onStream(delta, responseText); // Pass both delta and full accumulated text
+          onStream(delta, responseText);
         }
       } else {
-        // Non-streaming response
+        // Non-streaming non-JSON response
         const response =
           await webllmEngine.chat.completions.create(generationConfig);
         responseText = response.choices[0]?.message?.content || "";
