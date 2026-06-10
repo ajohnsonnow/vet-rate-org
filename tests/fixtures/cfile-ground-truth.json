@@ -1,0 +1,60 @@
+{
+  "description": "WS-1 ground truth for the 313MB C-File stress harness. Synthetic and PII-free: condition names, diagnostic codes, and ratings mirror tests/fixtures/redacted-packet.json (a real combined-80% rating scenario). Nothing here is derived from real document content.",
+  "derivedFrom": "tests/fixtures/redacted-packet.json",
+  "validDcSource": "src/data/disabilityData.json",
+  "expectedCombined": 80,
+  "minInServiceEvents": 5,
+  "conservativeConditionSubstrings": [
+    "PTSD",
+    "Tinnitus",
+    "Radiculopathy",
+    "Pes Planus"
+  ],
+  "conditions": [
+    {
+      "conditionName": "Post-Traumatic Stress Disorder (PTSD)",
+      "diagnosticCode": 9411,
+      "rating": 50
+    },
+    {
+      "conditionName": "Lumbosacral Strain",
+      "diagnosticCode": 5237,
+      "rating": 20
+    },
+    {
+      "conditionName": "Radiculopathy, Lower Extremity, Left",
+      "diagnosticCode": 8520,
+      "rating": 20
+    },
+    {
+      "conditionName": "Radiculopathy, Lower Extremity, Right",
+      "diagnosticCode": 8521,
+      "rating": 10
+    },
+    {
+      "conditionName": "Hip, Limitation of Motion, Left",
+      "diagnosticCode": 5252,
+      "rating": 10
+    },
+    {
+      "conditionName": "Hip, Limitation of Motion, Right",
+      "diagnosticCode": 5252,
+      "rating": 10
+    },
+    {
+      "conditionName": "Knee, Limitation of Flexion, Left",
+      "diagnosticCode": 5260,
+      "rating": 10
+    },
+    {
+      "conditionName": "Pes Planus, Bilateral",
+      "diagnosticCode": 5276,
+      "rating": 10
+    },
+    {
+      "conditionName": "Tinnitus",
+      "diagnosticCode": 6260,
+      "rating": 10
+    }
+  ]
+}

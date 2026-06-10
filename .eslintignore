@@ -1,5 +1,7 @@
 tests/e2e/
+tests/stress/
 playwright.config.ts
+playwright.stress.config.ts
 src/examples/
 src/SECURITY_EXAMPLES.jsx
 
