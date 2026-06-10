@@ -316,13 +316,16 @@ async function overlayOverflow(
  * the panel's worst right-edge overflow plus the sticky-footer contract: a button
  * exists and its bottom stays within the viewport (no scroll-to-submit on mobile).
  */
-async function inspectResponsiveModal(page: Page): Promise<{
+async function inspectResponsiveModal(
+  page: Page,
+  labelledBy?: string,
+): Promise<{
   found: boolean;
   overflow: number;
   hasButton: boolean;
   ctaInViewport: boolean;
 }> {
-  return page.evaluate(() => {
+  return page.evaluate((labelId) => {
     const containsX = (el: Element, root: Element): boolean => {
       let p = el.parentElement;
       while (p) {
@@ -340,7 +343,11 @@ async function inspectResponsiveModal(page: Page): Promise<{
       return false;
     };
 
-    const footer = document.querySelector(".modal-footer");
+    const footer = labelId
+      ? document.querySelector(
+          `[role="dialog"][aria-labelledby="${labelId}"] .modal-footer`,
+        )
+      : document.querySelector(".modal-footer");
     const panel = footer?.closest('[role="dialog"]');
     if (!footer || !panel)
       return {
@@ -367,7 +374,7 @@ async function inspectResponsiveModal(page: Page): Promise<{
       hasButton: footer.querySelector("button") !== null,
       ctaInViewport: fr.bottom <= window.innerHeight + 1,
     };
-  });
+  }, labelledBy);
 }
 
 /**
@@ -536,11 +543,11 @@ for (const vp of VIEWPORTS) {
   // Atomic Wipe (S12): the panic-button confirm dialog migrated to
   // ResponsiveModal (dismissable=false, size="sm") with its ⚠️ header in the
   // custom header slot and the Cancel / Confirm Wipe pair in the sticky-footer
-  // slot. It is the one non-dismissable gate in this chunk reachable in a
-  // standard build — the AtomicWipe trigger renders in AppShellTop — so it is
-  // opened by a real click (never the destructive Confirm) rather than an event.
-  // VaDataConsentPrompt, the other Chunk-3 gate, is VA-OAuth-gated with no
-  // automatable trigger; it uses the same shell and is verified manually.
+  // slot. The trigger now lives inside the Backup Manager (The Bunker), so the
+  // test opens that modal first via its lazy-safe event, then clicks the real
+  // trigger (never the destructive Confirm). Assertions are scoped to the
+  // atomic-wipe dialog because Backup Manager's own sub-modals also render
+  // `.modal-footer`.
   test.describe(`Atomic Wipe @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
@@ -555,15 +562,31 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Atomic Wipe confirm keeps its CTA in view", async ({ page }) => {
-      await page.getByRole("button", { name: "Clear all local data" }).click();
+      const trigger = page.getByRole("button", {
+        name: "Clear all local data",
+      });
+      await expect
+        .poll(
+          async () => {
+            await page.evaluate(() => {
+              window.dispatchEvent(new CustomEvent("openBackupManager"));
+            });
+            return trigger.isVisible();
+          },
+          { timeout: 6000 },
+        )
+        .toBe(true);
+      await trigger.click();
 
       await expect
-        .poll(async () => (await inspectResponsiveModal(page)).found, {
-          timeout: 6000,
-        })
+        .poll(
+          async () =>
+            (await inspectResponsiveModal(page, "atomic-wipe-title")).found,
+          { timeout: 6000 },
+        )
         .toBe(true);
 
-      const m = await inspectResponsiveModal(page);
+      const m = await inspectResponsiveModal(page, "atomic-wipe-title");
       expect(m.overflow).toBeLessThanOrEqual(1);
       expect(m.hasButton).toBe(true);
       expect(m.ctaInViewport).toBe(true);
