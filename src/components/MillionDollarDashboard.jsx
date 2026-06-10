@@ -15,66 +15,11 @@ import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
+import {
+  getCurrentYearRates,
+  getHistoricalRate,
+} from "../data/vaPayRatesHistorical";
 import ReportBugLink from "./ReportBugLink";
-
-/**
- * 2026 VA Disability Pay Rates (Monthly)
- * Source: VA.gov - Updated annually with COLA
- */
-const VA_PAY_RATES_2026 = {
-  single: {
-    10: 175.51,
-    20: 346.99,
-    30: 537.24,
-    40: 773.82,
-    50: 1101.97,
-    60: 1394.89,
-    70: 1758.27,
-    80: 2044.16,
-    90: 2297.31,
-    100: 3832.65,
-  },
-  withSpouse: {
-    30: 600.24,
-    40: 859.82,
-    50: 1211.97,
-    60: 1528.89,
-    70: 1916.27,
-    80: 2226.16,
-    90: 2503.31,
-    100: 4063.65,
-  },
-  withSpouseAnd1Child: {
-    30: 651.24,
-    40: 925.82,
-    50: 1292.97,
-    60: 1624.89,
-    70: 2027.27,
-    80: 2352.16,
-    90: 2644.31,
-    100: 4204.65,
-  },
-  withSpouseAnd2Children: {
-    30: 702.24,
-    40: 991.82,
-    50: 1373.97,
-    60: 1720.89,
-    70: 2138.27,
-    80: 2478.16,
-    90: 2785.31,
-    100: 4345.65,
-  },
-  perAdditionalChild: {
-    30: 51,
-    40: 66,
-    50: 81,
-    60: 96,
-    70: 111,
-    80: 126,
-    90: 141,
-    100: 141,
-  },
-};
 
 /**
  * State Property Tax Exemptions for 100% Disabled Veterans
@@ -177,37 +122,16 @@ const formatCurrency = (num) => {
 
 /**
  * Calculate monthly VA pay based on rating and dependents
+ * Rates come from the single source of truth (vaPayRatesHistorical.js),
+ * which handles the 30%+ dependent threshold and per-child additions.
  */
 const calculateMonthlyPay = (rating, hasSpouse, numChildren) => {
-  if (rating < 30) {
-    return VA_PAY_RATES_2026.single[rating] || 0;
-  }
-
-  if (!hasSpouse && numChildren === 0) {
-    return VA_PAY_RATES_2026.single[rating] || 0;
-  }
-
-  let basePay;
-  if (hasSpouse && numChildren === 0) {
-    basePay = VA_PAY_RATES_2026.withSpouse[rating] || 0;
-  } else if (hasSpouse && numChildren === 1) {
-    basePay = VA_PAY_RATES_2026.withSpouseAnd1Child[rating] || 0;
-  } else if (hasSpouse && numChildren >= 2) {
-    basePay = VA_PAY_RATES_2026.withSpouseAnd2Children[rating] || 0;
-    // Add for additional children beyond 2
-    if (numChildren > 2) {
-      basePay +=
-        VA_PAY_RATES_2026.perAdditionalChild[rating] * (numChildren - 2);
-    }
-  } else if (!hasSpouse && numChildren > 0) {
-    // Single with children - approximate by taking single + child additions
-    basePay = VA_PAY_RATES_2026.single[rating] || 0;
-    if (rating >= 30) {
-      basePay += VA_PAY_RATES_2026.perAdditionalChild[rating] * numChildren;
-    }
-  }
-
-  return basePay || VA_PAY_RATES_2026.single[rating] || 0;
+  const { year } = getCurrentYearRates();
+  const result = getHistoricalRate(year, rating, {
+    married: hasSpouse,
+    childrenUnder18: numChildren,
+  });
+  return result.monthly || 0;
 };
 
 /**
