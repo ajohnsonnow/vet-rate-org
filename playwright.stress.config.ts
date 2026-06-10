@@ -10,9 +10,10 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  // 3h per test: a full 313MB C-File pipeline (stream-extract ~5,700 pages,
-  // then local-AI analysis) legitimately runs past 30 minutes.
-  timeout: 10_800_000,
+  // 5h per test: the full 313MB pipeline is generation-bound (GPU >50%
+  // utilized for 95% of a 3h run that still didn't finish 304 chunks) —
+  // the budget must outlast the slowest honest run, not race it.
+  timeout: 18_000_000,
   reporter: [
     ["list"],
     // The stress runner parses this fixed path after every invocation.
