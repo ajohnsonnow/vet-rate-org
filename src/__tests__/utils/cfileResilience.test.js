@@ -86,11 +86,11 @@ const FAKE_DC = "99999";
 
 /**
  * Fake multi-page C-File text large enough to force exactly 2 chunks in
- * LOCAL mode (6,000-char budget: ~720 chars/page x 14 pages ≈ 10KB splits
- * after ~8 pages). Every page carries medical vocabulary so the
- * boilerplate screen keeps them all.
+ * LOCAL mode (5,100-char budget at CHARS_PER_TOKEN=3.4: ~703 chars/page x 12
+ * pages ≈ 8.4KB, splits after ~7 pages). Every page carries medical
+ * vocabulary ("knee pain") so the medical-content gate keeps them all.
  */
-function makeCFileText(pageCount = 14) {
+function makeCFileText(pageCount = 12) {
   let text = "";
   for (let p = 1; p <= pageCount; p++) {
     text += `--- PAGE ${p} ---\n`;
