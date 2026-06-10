@@ -18,6 +18,7 @@
  */
 
 import { markAsModified } from "./persistentStorage";
+import { ensureQuota } from "./storage";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -211,6 +212,10 @@ export const saveDocumentToPacket = async (doc) => {
       notes: sanitize(doc.notes || "", 5000),
     };
 
+    // Pre-flight quota check — still attempt the write either way, but
+    // attach a warning the caller can surface to the veteran
+    const quota = await ensureQuota(JSON.stringify(document).length);
+
     // Save the full document to IndexedDB
     await new Promise((resolve, reject) => {
       const tx = db.transaction(
@@ -247,9 +252,19 @@ export const saveDocumentToPacket = async (doc) => {
 
     // eslint-disable-next-line no-console
     console.log(`📁 Saved to My Packet: ${document.fileName} (${id})`);
-    return { success: true, documentId: id };
+    const result = { success: true, documentId: id };
+    if (!quota.ok) result.quotaWarning = quota.message;
+    return result;
   } catch (error) {
     console.error("Failed to save document to My Packet:", error);
+    if (error?.name === "QuotaExceededError") {
+      return {
+        success: false,
+        quotaExceeded: true,
+        error:
+          "Your device storage is full, so this document could not be saved. Export a backup and free up space, then try again.",
+      };
+    }
     return { success: false, error: error.message };
   }
 };

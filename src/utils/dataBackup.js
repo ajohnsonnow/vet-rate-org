@@ -9,8 +9,13 @@
  * Prevents data loss from cache clearing or device changes
  */
 
+import { storage } from "./storage";
+
 // Schema version for future compatibility
 const SCHEMA_VERSION = "1.0.0";
+
+// IndexedDB key for the pre-import restore point (one slot, overwritten each import)
+const RESTORE_POINT_KEY = "vetrate_import_restore_point";
 
 // All localStorage keys used by Vet-Rate.org
 const STORAGE_KEYS = [
@@ -206,6 +211,59 @@ export const importData = (backupData, merge = false) => {
       message: error.message || "Failed to import backup data.",
     };
   }
+};
+
+/**
+ * Snapshot the current data to IndexedDB before an import overwrites it.
+ * One slot — each call overwrites the previous restore point.
+ * @returns {Promise<boolean>} Success status
+ */
+export const createRestorePoint = async () => {
+  try {
+    const snapshot = exportData();
+    await storage.setItem(
+      RESTORE_POINT_KEY,
+      JSON.stringify({ savedAt: new Date().toISOString(), backup: snapshot }),
+    );
+    return true;
+  } catch (error) {
+    console.error("Failed to create restore point:", error);
+    return false;
+  }
+};
+
+/**
+ * Read the stored restore point, if any
+ * @returns {Promise<{savedAt: string, backup: Object}|null>}
+ */
+export const getRestorePoint = async () => {
+  try {
+    const raw = await storage.getItem(RESTORE_POINT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error("Failed to read restore point:", error);
+    return null;
+  }
+};
+
+/**
+ * Roll the device back to the pre-import restore point
+ * @returns {Promise<Object>} Import result
+ */
+export const restoreFromRestorePoint = async () => {
+  const point = await getRestorePoint();
+  if (!point?.backup) {
+    return { success: false, message: "No restore point found." };
+  }
+  // Validate BEFORE clearing anything — never wipe data for a bad snapshot
+  const validation = validateBackup(point.backup);
+  if (!validation.success) {
+    return { success: false, message: validation.message };
+  }
+  // True rollback: clear current keys first so keys added by the import
+  // (but absent from the snapshot) don't linger
+  STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  return importData(point.backup, false);
 };
 
 /**

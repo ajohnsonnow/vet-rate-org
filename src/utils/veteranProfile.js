@@ -191,7 +191,13 @@ export const saveVeteranProfile = (profile) => {
 
     return true;
   } catch (error) {
-    console.error("Error saving veteran profile:", error);
+    if (error?.name === "QuotaExceededError") {
+      console.error(
+        "Veteran profile NOT saved — browser storage is full. Export a backup and free up space, then try again.",
+      );
+    } else {
+      console.error("Error saving veteran profile:", error);
+    }
     return false;
   }
 };
@@ -448,11 +454,19 @@ export const importVeteranData = (data, mode = "replace") => {
 
     // Import profile
     if (data.profile && typeof data.profile === "object") {
+      let profileSaved;
       if (mode === "replace") {
-        saveVeteranProfile(data.profile);
+        profileSaved = saveVeteranProfile(data.profile);
       } else {
         const current = getVeteranProfile();
-        saveVeteranProfile({ ...current, ...data.profile });
+        profileSaved = saveVeteranProfile({ ...current, ...data.profile });
+      }
+      if (!profileSaved) {
+        return {
+          success: false,
+          message:
+            "Your profile could not be saved — your device storage may be full. Free up space and try the import again.",
+        };
       }
     }
 
