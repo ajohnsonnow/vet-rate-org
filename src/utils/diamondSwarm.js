@@ -564,7 +564,10 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 4);
   const estimatedPromptTokens = Math.ceil(prompt.length / 4);
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
-  const contextLimit = 4096; // Qwen2.5-3B actual context window
+  // Must match the context_window_size the WebLLM engine is loaded with
+  // (see initializeSwarm) — a stale 4096 here silently middle-truncated
+  // every C-File chunk down to ~11K chars and corrupted analysis prompts.
+  const contextLimit = 8192;
   const reservedForOutput = Math.min(maxTokens, 1024); // Reserve 1024 tokens for complete JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
