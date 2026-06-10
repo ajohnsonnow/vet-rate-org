@@ -22,6 +22,7 @@
  */
 
 import { storage } from "./storage";
+import { CURRENT_PACKET_VERSION } from "./migrationManager";
 
 // ============================================================================
 // CONFIGURATION
@@ -35,7 +36,7 @@ const CONFIG = {
   FILE_HANDLE_KEY: "vetrate_file_handle_metadata",
   UNSAVED_FLAG_KEY: "vetrate_unsaved_changes",
   LAST_SAVE_KEY: "vetrate_last_save_timestamp",
-  PACKET_VERSION: "2.0.0",
+  PACKET_VERSION: CURRENT_PACKET_VERSION,
 };
 
 // ============================================================================

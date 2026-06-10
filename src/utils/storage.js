@@ -343,6 +343,47 @@ export async function importAllData(exportedData) {
 }
 
 /**
+ * Pre-flight check that an upcoming write of roughly `estimatedBytes`
+ * fits within the browser's storage quota.
+ * Never throws; resolves ok:true when the quota API is unavailable so
+ * unsupported browsers are never blocked.
+ * @param {number} estimatedBytes - Rough size of the pending write
+ * @returns {Promise<{ok: boolean, remaining: number|null, message: string}>}
+ */
+export async function ensureQuota(estimatedBytes) {
+  try {
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.storage ||
+      typeof navigator.storage.estimate !== "function"
+    ) {
+      return { ok: true, remaining: null, message: "" };
+    }
+
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    if (!quota) {
+      return { ok: true, remaining: null, message: "" };
+    }
+
+    const remaining = quota - usage;
+    if (estimatedBytes > remaining) {
+      const neededMB = (estimatedBytes / (1024 * 1024)).toFixed(1);
+      const remainingMB = (remaining / (1024 * 1024)).toFixed(1);
+      return {
+        ok: false,
+        remaining,
+        message: `This save needs about ${neededMB} MB but your browser only has about ${remainingMB} MB of storage left. Export a backup and free up space to avoid losing data.`,
+      };
+    }
+
+    return { ok: true, remaining, message: "" };
+  } catch (error) {
+    console.warn("Storage quota check failed:", error);
+    return { ok: true, remaining: null, message: "" };
+  }
+}
+
+/**
  * Get storage statistics
  * @returns {Promise<Object>} Storage stats
  */
