@@ -14,6 +14,7 @@ import {
   BODY_PARTS,
   VA_PAY_RATES_2026,
 } from "../utils/vaCalculator";
+import { checkTDIUEligibility } from "../utils/smcDetector";
 import {
   getMyRatings,
   saveMyRatings,
@@ -180,6 +181,7 @@ const TacticalCalculator = ({
     dependents,
   );
   const pyramiding = detectPyramiding(conditions);
+  const tdiu = checkTDIUEligibility(conditions);
   const whatIfResults = calculateWhatIf(
     conditions,
     whatIfRating,
@@ -1371,6 +1373,25 @@ const TacticalCalculator = ({
                       </div>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
                         {t("tacticalCalc", "automatedCheck")}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* TDIU Advisory (38 CFR § 4.16(a)) */}
+                  {tdiu.eligible && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-400 dark:border-indigo-600 rounded-xl p-4">
+                      <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                        <span>💼</span> You may qualify for TDIU
+                      </h4>
+                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        {tdiu.basis === "single60"
+                          ? "One of these conditions is rated 60% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."
+                          : "These ratings combine to 70% or higher with at least one condition rated 40% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."}{" "}
+                        If your service-connected conditions prevent you from
+                        maintaining substantially gainful employment, TDIU pays
+                        at the 100% rate even below a 100% schedular rating. The
+                        TDIU Work Impact Builder tool can help you prepare VA
+                        Form 21-8940 — and speak with a VSO before filing.
                       </p>
                     </div>
                   )}

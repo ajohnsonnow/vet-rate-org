@@ -15,6 +15,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
+import { checkSMCSHousebound } from "../utils/smcDetector";
 import {
   getCurrentYearRates,
   getHistoricalRate,
@@ -217,6 +218,9 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   // Animation state
   const [animatedTotal, setAnimatedTotal] = useState(0);
   const [showBreakdown, setShowBreakdown] = useState(false);
+
+  // SMC-S statutory housebound check from saved ratings (38 U.S.C. § 1114(s))
+  const [smcSCheck] = useState(() => checkSMCSHousebound(getMyRatings()));
 
   // Auto-load rating from veteranProfile on mount
   useEffect(() => {
@@ -845,6 +849,29 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
               </span>
               .
             </p>
+          </div>
+
+          {/* Not calculated here: SMC / CRSC / CRDP */}
+          <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <h3 className="text-lg font-bold text-white mb-2">
+              ℹ️ Not included: SMC, CRSC &amp; CRDP
+            </h3>
+            <p className="text-sm text-gray-400">
+              Special Monthly Compensation (SMC), Combat-Related Special
+              Compensation (CRSC), and Concurrent Retirement and Disability Pay
+              (CRDP) are not calculated in this projection. If you are a
+              military retiree or have severe disabilities (housebound, aid and
+              attendance, loss of use), your actual benefits may differ — speak
+              with a VSO about your specific situation.
+            </p>
+            {smcSCheck.potentiallyEligible && (
+              <p className="text-sm text-amber-300 mt-3">
+                Your saved ratings show a single 100% disability plus additional
+                separate ratings that combine to 60% or more. You may qualify
+                for SMC-S (statutory housebound, 38 U.S.C. § 1114(s)) — ask a
+                VSO to review your ratings.
+              </p>
+            )}
           </div>
 
           {/* Disclaimer */}
