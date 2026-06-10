@@ -1270,13 +1270,17 @@ RULES: Only include findings present in text. Track "--- PAGE X ---" markers for
  * Analyze a single chunk of text
  */
 async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
-  // Detect if we're using local AI (smaller context)
+  // Detect if we're using local AI (smaller context). effectiveMode is the
+  // resolved routing target — the raw stored mode can disagree with it
+  // (e.g. "auto"), which silently gave local generations the short cloud
+  // timeout and the full-size prompt.
   const status = getAIStatus();
+  const effectiveMode = status.effectiveMode || status.mode;
   const isLocalAI =
-    status.mode === AI_MODES.LOCAL ||
-    status.mode === AI_MODES.SWARM ||
-    status.mode === AI_MODES.WLLAMA ||
-    status.mode === AI_MODES.LOCAL_SERVER;
+    effectiveMode === AI_MODES.LOCAL ||
+    effectiveMode === AI_MODES.SWARM ||
+    effectiveMode === AI_MODES.WLLAMA ||
+    effectiveMode === AI_MODES.LOCAL_SERVER;
 
   // Use compact prompt for local AI to maximize document space
   let systemPrompt = isLocalAI
