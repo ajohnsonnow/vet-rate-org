@@ -1,4 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, extname, join } from "node:path";
 import { test, expect, Page, BrowserContext, TestInfo } from "@playwright/test";
 import { dismissDisclaimer } from "../e2e/helpers";
@@ -144,12 +151,38 @@ export async function startTelemetry(
     crashed: false,
   };
 
-  page.on("pageerror", (err) => report.pageErrors.push(err.message));
+  // Live error stream: a hung/killed run never reaches stop(), so every
+  // error is appended to disk the moment it happens — readable mid-run.
+  const RESULTS_DIR = "audit/stress-results";
+  mkdirSync(RESULTS_DIR, { recursive: true });
+  const liveLog = join(
+    RESULTS_DIR,
+    `console-${STRESS_MODE}-${Date.now()}.jsonl`,
+  );
+  const stream = (kind: string, text: string) => {
+    try {
+      appendFileSync(
+        liveLog,
+        JSON.stringify({ ts: new Date().toISOString(), kind, text }) + "\n",
+      );
+    } catch {
+      // disk hiccups must never break the run under test
+    }
+  };
+
+  page.on("pageerror", (err) => {
+    report.pageErrors.push(err.message);
+    stream("pageerror", err.message);
+  });
   page.on("console", (msg) => {
-    if (msg.type() === "error") report.consoleErrors.push(msg.text());
+    if (msg.type() === "error") {
+      report.consoleErrors.push(msg.text());
+      stream("console.error", msg.text());
+    }
   });
   page.on("crash", () => {
     report.crashed = true;
+    stream("crash", "page crashed");
   });
 
   const timer = setInterval(async () => {
@@ -180,6 +213,14 @@ export async function startTelemetry(
         body: JSON.stringify(report, null, 2),
         contentType: "application/json",
       });
+      try {
+        writeFileSync(
+          join(RESULTS_DIR, `telemetry-${STRESS_MODE}-${Date.now()}.json`),
+          JSON.stringify(report, null, 2),
+        );
+      } catch {
+        // attachment above still carries the data
+      }
       return report;
     },
   };
