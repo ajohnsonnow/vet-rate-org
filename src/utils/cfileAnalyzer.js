@@ -19,6 +19,7 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
+  resetAICircuitBreaker,
   AI_MODES,
 } from "./unifiedAIService";
 import { validateDiagnosticCode } from "./hallucinationTrap";
@@ -1113,6 +1114,11 @@ export async function analyzeCFile(
 
     let result = null;
     let lastError = null;
+    // The circuit breaker protects interactive callers, but this batch loop
+    // is the legitimate retry owner: when the circuit opens mid-batch, wait
+    // out the cooldown and resume instead of letting every remaining chunk
+    // fail instantly. Bounded so a genuinely dead engine still aborts.
+    let circuitWaits = 0;
 
     for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
       if (abortController?.signal.aborted) {
@@ -1145,6 +1151,18 @@ export async function analyzeCFile(
         console.error(
           `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
         );
+
+        if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+          circuitWaits++;
+          onProgress(
+            `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${totalChunks}...`,
+            { phase: "circuit-wait", current: chunkNum, total: totalChunks },
+          );
+          await new Promise((resolve) => setTimeout(resolve, 31000));
+          resetAICircuitBreaker();
+          attempt--; // circuit downtime doesn't consume a retry
+          continue;
+        }
 
         // Context window errors are deterministic — retrying cannot help
         if (
@@ -1280,6 +1298,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
     skipCrisisCheck: true, // C-Files contain clinical records
     skipHallucinationCheck: true, // C-File analysis has different JSON structure (potential_claims), trap expects conditions array
     useDKB: false, // Chunk extraction carries its own instructions; DKB Q&A context would burn ~2K tokens of context per call (enforceValidDiagnosticCodes still validates DCs afterwards)
+    timeout: isLocalAI ? 300000 : 120000, // A dense local chunk (5K-token prefill + 2K-token JSON) can legitimately run past 120s
     toolContext: "C-File Analyzer",
     systemPrompt: systemPrompt, // Pass custom system prompt to avoid double prompting
   });
