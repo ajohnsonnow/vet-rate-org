@@ -325,110 +325,128 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     ? config.CANVAS_SCALES_DEGRADED
     : config.CANVAS_SCALES;
 
-  // eslint-disable-next-line no-console
-  console.log(
-    `🔬 Using ${isDegraded ? "HIGH" : "standard"} resolution scales: [${baseScales.join(", ")}] for strategy: ${strategy}`,
+  // Worker pool: a single Tesseract worker processed pages strictly
+  // sequentially while the rest of the CPU sat idle — the dominant cost on
+  // multi-page scans. Pool size respects low-end devices via
+  // hardwareConcurrency and is capped to keep canvas memory bounded.
+  const poolSize = Math.min(
+    Math.max(2, (navigator.hardwareConcurrency || 4) - 2),
+    8,
+    pagesToProcess,
   );
 
-  // Initialize Tesseract worker with optimized settings for v7
-  const worker = await Tesseract.createWorker(config.LANGUAGES);
+  // eslint-disable-next-line no-console
+  console.log(
+    `🔬 OCR: ${poolSize} workers, ${isDegraded ? "HIGH" : "standard"} scales [${baseScales.join(", ")}], strategy: ${strategy}`,
+  );
 
-  // Configure Tesseract for maximum accuracy
-  await worker.setParameters({
-    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-    preserve_interword_spaces: "1",
-  });
+  const scheduler = Tesseract.createScheduler();
+  await Promise.all(
+    Array.from({ length: poolSize }, async () => {
+      const worker = await Tesseract.createWorker(config.LANGUAGES);
+      await worker.setParameters({
+        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+        preserve_interword_spaces: "1",
+      });
+      scheduler.addWorker(worker);
+    }),
+  );
+
+  const recognize = async (page, scale, preprocessStrategy) => {
+    const canvas = await renderPageToCanvas(page, scale);
+    const processedCanvas = applyAdvancedPreprocessing(
+      canvas,
+      preprocessStrategy,
+    );
+    const imageData = processedCanvas.toDataURL("image/png");
+    canvas.remove();
+    processedCanvas.remove();
+    const result = await scheduler.addJob("recognize", imageData);
+    return {
+      text: result.data.text,
+      confidence: result.data.confidence,
+      scale,
+    };
+  };
+
+  let completedPages = 0;
+
+  const processPage = async (pageNum) => {
+    const page = await pdf.getPage(pageNum);
+
+    // Fast path: one pass at the highest base scale. The full multi-scale
+    // ensemble only runs when that pass reads poorly — most pages of a
+    // typical scan are legible and don't need 3x the OCR work.
+    const primary = await recognize(
+      page,
+      baseScales[baseScales.length - 1],
+      strategy,
+    );
+
+    const pageResults = [primary];
+    const needsEnsemble =
+      config.ENABLE_ENSEMBLE &&
+      (primary.confidence < config.MIN_CONFIDENCE ||
+        primary.text.trim().length < config.MIN_USEFUL_TEXT_LENGTH);
+
+    if (needsEnsemble) {
+      for (const scale of baseScales.slice(0, -1)) {
+        pageResults.push(await recognize(page, scale, strategy));
+      }
+    }
+
+    let pageText =
+      pageResults.length > 1 ? ensembleVote(pageResults) : primary.text;
+    const avgConfidence =
+      pageResults.reduce((sum, r) => sum + r.confidence, 0) /
+      pageResults.length;
+
+    // RETRY LOGIC: If OCR extracted very little text, try maximum scale
+    // with the most aggressive preprocessing
+    const textLength = pageText.trim().length;
+    if (
+      textLength < config.MIN_USEFUL_TEXT_LENGTH &&
+      config.ENABLE_RETRY_WITH_HIGHER_SCALE
+    ) {
+      const retry = await recognize(
+        page,
+        8.0,
+        PREPROCESS_STRATEGIES.SEVERELY_AGED,
+      );
+      if (retry.text.trim().length > textLength) {
+        pageText = retry.text;
+      }
+    }
+
+    completedPages++;
+    onProgress({
+      stage: "ocr",
+      progress: 10 + (completedPages / pagesToProcess) * 85,
+      message: `OCR processing page ${completedPages}/${pagesToProcess}...`,
+      currentPage: completedPages,
+      totalPages: pagesToProcess,
+    });
+
+    return { pageNum, text: pageText, confidence: avgConfidence };
+  };
 
   try {
-    // Process pages
-    for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
-      onProgress({
-        stage: "ocr",
-        progress: 10 + (pageNum / pagesToProcess) * 85,
-        message: `OCR processing page ${pageNum}/${pagesToProcess}...`,
-        currentPage: pageNum,
-        totalPages: pagesToProcess,
-      });
-
-      // Get page canvas
-      const page = await pdf.getPage(pageNum);
-
-      // Multi-scale ensemble (if enabled)
-      const pageResults = [];
-      const scales = config.ENABLE_ENSEMBLE
-        ? baseScales
-        : [baseScales[baseScales.length - 1]]; // Use highest scale if single pass
-
-      for (const scale of scales) {
-        const canvas = await renderPageToCanvas(page, scale);
-        const processedCanvas = applyAdvancedPreprocessing(canvas, strategy);
-        const imageData = processedCanvas.toDataURL("image/png");
-
-        // Run OCR
-        const result = await worker.recognize(imageData);
-        pageResults.push({
-          text: result.data.text,
-          confidence: result.data.confidence,
-          scale: scale,
-        });
-
-        canvas.remove();
-        processedCanvas.remove();
+    // Bounded page-level concurrency: poolSize pages in flight at once
+    const pageNumbers = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
+    const inFlight = pageNumbers.splice(0, poolSize).map((n) => processPage(n));
+    const settled = [];
+    while (inFlight.length > 0) {
+      const done = await Promise.race(
+        inFlight.map((p, idx) => p.then((r) => ({ r, idx }))),
+      );
+      settled.push(done.r);
+      inFlight.splice(done.idx, 1);
+      if (pageNumbers.length > 0) {
+        inFlight.push(processPage(pageNumbers.shift()));
       }
-
-      // Combine results using ensemble voting
-      let pageText = config.ENABLE_ENSEMBLE
-        ? ensembleVote(pageResults)
-        : pageResults[0].text;
-
-      const avgConfidence =
-        pageResults.reduce((sum, r) => sum + r.confidence, 0) /
-        pageResults.length;
-
-      // RETRY LOGIC: If OCR extracted very little text, try with even higher scale
-      const textLength = pageText.trim().length;
-      if (
-        textLength < config.MIN_USEFUL_TEXT_LENGTH &&
-        config.ENABLE_RETRY_WITH_HIGHER_SCALE
-      ) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `⚠️ Page ${pageNum}: Only ${textLength} chars extracted. Retrying with maximum scale...`,
-        );
-
-        // Try with maximum scale (8.0) and most aggressive preprocessing
-        const maxScale = 8.0;
-        const retryCanvas = await renderPageToCanvas(page, maxScale);
-        const retryProcessed = applyAdvancedPreprocessing(
-          retryCanvas,
-          PREPROCESS_STRATEGIES.SEVERELY_AGED,
-        );
-        const retryImageData = retryProcessed.toDataURL("image/png");
-
-        const retryResult = await worker.recognize(retryImageData);
-
-        retryCanvas.remove();
-        retryProcessed.remove();
-
-        // Use retry result if it's better
-        if (retryResult.data.text.trim().length > textLength) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Retry successful: ${retryResult.data.text.trim().length} chars (was ${textLength})`,
-          );
-          pageText = retryResult.data.text;
-        } else {
-          // eslint-disable-next-line no-console
-          console.log(`❌ Retry did not improve results`);
-        }
-      }
-
-      results.push({
-        pageNum,
-        text: pageText,
-        confidence: avgConfidence,
-      });
     }
+    settled.sort((a, b) => a.pageNum - b.pageNum);
+    results.push(...settled);
 
     // Combine all pages
     const fullText = results
@@ -465,7 +483,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       totalCharsExtracted: totalChars,
     };
   } finally {
-    await worker.terminate();
+    await scheduler.terminate();
   }
 }
 

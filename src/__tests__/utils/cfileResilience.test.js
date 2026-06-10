@@ -84,14 +84,19 @@ const VALID_GEMINI_KEY = "AIzaSyValidKey12345678901234567890123";
 const VALID_DC = "6260";
 const FAKE_DC = "99999";
 
-/** Fake multi-page C-File text large enough to force 2 chunks in LOCAL mode */
-function makeCFileText(pageCount = 7) {
+/**
+ * Fake multi-page C-File text large enough to force exactly 2 chunks in
+ * LOCAL mode (6,000-char budget: ~720 chars/page x 14 pages ≈ 10KB splits
+ * after ~8 pages). Every page carries medical vocabulary so the
+ * boilerplate screen keeps them all.
+ */
+function makeCFileText(pageCount = 14) {
   let text = "";
   for (let p = 1; p <= pageCount; p++) {
     text += `--- PAGE ${p} ---\n`;
     text +=
       `Clinic visit note number ${p}. Veteran reports right knee pain after airborne operations. `.repeat(
-        3,
+        8,
       ) + "\n";
   }
   return text;
