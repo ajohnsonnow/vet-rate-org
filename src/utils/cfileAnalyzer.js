@@ -1418,7 +1418,21 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
     skipCrisisCheck: true,
     skipHallucinationCheck: true,
     useDKB: false,
-    timeout: isLocalAI ? 300000 : 120000,
+    // Timeout scales with chunk size: prefill at ~25 tok/s (conservative) +
+    // output at ~30 tok/s + 120s overhead, with 2× safety margin.
+    // Minimum 600s; a 28K-char chunk takes ~342s in practice on a mid GPU.
+    timeout: isLocalAI
+      ? Math.max(
+          600000,
+          (Math.ceil(chunk.text.length / CHARS_PER_TOKEN / 25) +
+            Math.ceil(
+              (getCachedDeviceProfile()?.maxOutputTokens ?? 2048) / 30,
+            ) +
+            120) *
+            2 *
+            1000,
+        )
+      : 120000,
     toolContext: "C-File Analyzer",
     systemPrompt: systemPrompt,
     // XGrammar constrained decoding: guarantees valid JSON on every chunk,
