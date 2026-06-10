@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 
 export default function WhatIfSandbox({ onClose }) {
@@ -115,17 +116,21 @@ export default function WhatIfSandbox({ onClose }) {
 
   const loadCurrentClaims = () => {
     try {
-      const saved = localStorage.getItem("savedClaims");
-      if (saved) {
-        const claims = JSON.parse(saved);
-        const conditions = claims
-          .filter((c) => c.rating && c.rating > 0)
-          .map((c) => ({
-            id: `${c.condition}-${c.rating}-${Date.now()}-${Math.random()}`,
-            name: c.condition,
-            rating: c.rating,
-            category: "saved",
-          }));
+      // Canonical claims store ("savedClaims" was a key nothing writes, so
+      // this loader had been a silent no-op since the store was renamed)
+      const claims = getSavedClaims();
+      const conditions = claims
+        .filter((c) => {
+          const rating = c.selectedRating ?? c.ratingPercent;
+          return typeof rating === "number" && rating > 0;
+        })
+        .map((c) => ({
+          id: `${c.conditionName}-${Date.now()}-${Math.random()}`,
+          name: c.conditionName,
+          rating: c.selectedRating ?? c.ratingPercent,
+          category: "saved",
+        }));
+      if (conditions.length > 0) {
         setCurrentConditions(conditions);
       }
     } catch (e) {
@@ -414,6 +419,9 @@ export default function WhatIfSandbox({ onClose }) {
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-0">
         {/* Sidebar - Available Conditions */}
+        {/* Scrollable region must be keyboard-focusable (axe
+            scrollable-region-focusable), hence the intentional tabIndex */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
         <div
           tabIndex={0}
           role="region"
@@ -470,6 +478,7 @@ export default function WhatIfSandbox({ onClose }) {
         </div>
 
         {/* Canvas - Current Scenario */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
         <div
           tabIndex={0}
           role="region"
