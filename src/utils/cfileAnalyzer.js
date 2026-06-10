@@ -1140,9 +1140,10 @@ export async function analyzeCFile(
         break;
       } catch (error) {
         lastError = error;
+        // Message inlined in the string: the console capture wrapper only
+        // records the first argument, so a bare error object logs as blank
         console.error(
-          `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}):`,
-          error,
+          `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
         );
 
         // Context window errors are deterministic — retrying cannot help
@@ -1278,6 +1279,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
     expectJSON: true,
     skipCrisisCheck: true, // C-Files contain clinical records
     skipHallucinationCheck: true, // C-File analysis has different JSON structure (potential_claims), trap expects conditions array
+    useDKB: false, // Chunk extraction carries its own instructions; DKB Q&A context would burn ~2K tokens of context per call (enforceValidDiagnosticCodes still validates DCs afterwards)
     toolContext: "C-File Analyzer",
     systemPrompt: systemPrompt, // Pass custom system prompt to avoid double prompting
   });
