@@ -10,10 +10,10 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  // 5h per test: the full 313MB pipeline is generation-bound (GPU >50%
-  // utilized for 95% of a 3h run that still didn't finish 304 chunks) —
-  // the budget must outlast the slowest honest run, not race it.
-  timeout: 18_000_000,
+  // 8h per test: the full 313MB pipeline is generation-bound (measured
+  // ~50s/chunk x 304 chunks ≈ 4.5-5h on an RTX 5060 Ti) — the budget must
+  // comfortably outlast the slowest honest run, not race it.
+  timeout: 28_800_000,
   reporter: [
     ["list"],
     // The stress runner parses this fixed path after every invocation.
