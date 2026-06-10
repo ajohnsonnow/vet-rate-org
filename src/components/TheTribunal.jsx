@@ -139,6 +139,8 @@ export default function TheTribunal({
   // Speech control state
   const [speechEnabled, setSpeechEnabled] = useState(true); // Judge TTS enabled
   const [pendingSpeech, setPendingSpeech] = useState(null); // Queued speech to play
+  const [captionText, setCaptionText] = useState(""); // Live caption of the current judge utterance
+  const [micSupported, setMicSupported] = useState(true);
   // eslint-disable-next-line no-unused-vars
   const [hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
@@ -314,18 +316,25 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     }
   }, []);
 
-  // Initialize speech recognition
+  // Initialize speech recognition. Voice input is optional — the hearing
+  // (captions + typed responses) must work even when the browser has no
+  // SpeechRecognition (e.g. Firefox).
   useEffect(() => {
-    if (
-      !("webkitSpeechRecognition" in window) &&
-      !("SpeechRecognition" in window)
-    ) {
-      console.error("Speech Recognition not supported");
-      return;
-    }
+    setIsInitialized(true);
+
+    // Load user claims for context
+    const claims = getSavedClaims();
+    setUserClaims(claims);
 
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMicSupported(false);
+      return () => {
+        window.speechSynthesis?.cancel();
+      };
+    }
+
     const recognition = new SpeechRecognition();
 
     recognition.continuous = false;
@@ -348,17 +357,10 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     };
 
     recognitionRef.current = recognition;
-    setIsInitialized(true);
-
-    // Load user claims for context
-    const claims = getSavedClaims();
-    setUserClaims(claims);
 
     return () => {
-      if (recognition) {
-        recognition.abort();
-      }
-      window.speechSynthesis.cancel();
+      recognition.abort();
+      window.speechSynthesis?.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -385,6 +387,13 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
   // Stop any ongoing speech synthesis safely
   const stopSpeaking = () => {
     if ("speechSynthesis" in window) {
+      // Detach the cancelled utterance's handlers so its flow callback
+      // (next question / auto mic start) doesn't fire after a deliberate
+      // interruption such as typing a response mid-speech.
+      if (synthesisRef.current) {
+        synthesisRef.current.onend = null;
+        synthesisRef.current.onerror = null;
+      }
       // Only cancel if actually speaking to avoid 'interrupted' error
       if (isSpeakingRef.current || window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
@@ -434,6 +443,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         utterance.onstart = () => {
           isSpeakingRef.current = true;
           setIsSpeaking(true);
+          setCaptionText(text);
         };
 
         utterance.onend = () => {
@@ -736,6 +746,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     e.preventDefault();
     const input = e.target.elements.manualText.value.trim();
     if (input) {
+      stopSpeaking();
       handleUserResponse(input);
       e.target.reset();
     }
@@ -821,6 +832,29 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
 
   const hearingFooter = (
     <div>
+      {/* Live Captions — real-time text of the judge's voice (WCAG 1.2.x) */}
+      <div className="mb-3 rounded-lg border border-gray-700 bg-gray-900 px-4 py-3">
+        <div className="mb-1 flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-300">
+            💬 Live Captions
+          </span>
+          {isSpeaking && (
+            <span className="animate-pulse rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white">
+              Judge Speaking
+            </span>
+          )}
+        </div>
+        <p
+          data-testid="tribunal-captions"
+          aria-live="polite"
+          aria-atomic="true"
+          className="text-sm font-medium text-white"
+        >
+          {captionText ||
+            "Captions of the judge's voice appear here when audio plays."}
+        </p>
+      </div>
+
       {/* Voice Status Indicators */}
       <div className="mb-3 hidden items-center justify-center gap-6 sm:flex">
         <div
@@ -911,7 +945,9 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
           <div className="flex gap-2">
             <button
               onClick={startListening}
-              disabled={isListening || isSpeaking || isAIProcessing}
+              disabled={
+                !micSupported || isListening || isSpeaking || isAIProcessing
+              }
               className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -930,21 +966,30 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
               Stop
             </button>
           </div>
+          {!micSupported && (
+            <p className="mt-2 text-xs text-red-800 dark:text-red-300">
+              Voice input isn&apos;t supported in this browser — type your
+              response below instead.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Manual Text Input Fallback */}
+      {/* Manual Text Input — always available, even while the judge speaks.
+          Submitting mid-speech cancels the judge's audio (the captions and
+          transcript keep the text). */}
       <form onSubmit={handleManualInput} className="mb-3 flex gap-2">
         <input
           type="text"
           name="manualText"
+          aria-label="Type your response"
           placeholder="Or type your response here..."
-          disabled={isAIProcessing || isSpeaking}
+          disabled={isAIProcessing}
           className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={isAIProcessing || isSpeaking}
+          disabled={isAIProcessing}
           className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
         >
           Send
@@ -994,14 +1039,14 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
 
           {/* AI Required Warning */}
           {!aiAvailable && (
-            <div className="mb-4 p-4 bg-amber-900/30 rounded-lg border border-amber-600/50">
+            <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-400 dark:border-amber-600/50">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-bold text-amber-300">
+                  <h3 className="font-bold text-amber-900 dark:text-amber-300">
                     AI Required for Analysis
                   </h3>
-                  <p className="text-amber-200 text-sm mt-1">
+                  <p className="text-amber-800 dark:text-amber-200 text-sm mt-1">
                     Click the <strong>AI Status button</strong> in the header
                     above to load your secure Local AI (100% private) or enter
                     your Gemini API key.
@@ -1100,22 +1145,28 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                   Audio Technology Notice
                 </h4>
                 <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
-                  This feature uses <strong>speech synthesis</strong>{" "}
+                  This feature can use <strong>speech synthesis</strong>{" "}
                   (text-to-speech) and <strong>speech recognition</strong>{" "}
-                  (microphone input) for an interactive hearing simulation.
+                  (microphone input). Both are optional — every word the judge
+                  says is also shown as text.
                 </p>
                 <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
                   <li>
-                    🔊 <strong>Speakers/Headphones:</strong> The AI judge will
-                    speak aloud. Ensure your volume is appropriate.
+                    💬 <strong>Live captions:</strong> Everything the judge says
+                    appears in the on-screen caption panel and transcript — no
+                    audio needed.
                   </li>
                   <li>
-                    🎤 <strong>Microphone:</strong> You&apos;ll need to grant
-                    microphone permissions to respond by voice.
+                    🔊 <strong>Speakers/Headphones (optional):</strong> The AI
+                    judge can speak aloud. Voice can be turned off at any time.
                   </li>
                   <li>
-                    ⌨️ <strong>Alternative:</strong> You can also type responses
-                    if you prefer not to use voice.
+                    🎤 <strong>Microphone (optional):</strong> Grant microphone
+                    permission only if you want to answer by voice.
+                  </li>
+                  <li>
+                    ⌨️ <strong>Typing always works:</strong> The text box stays
+                    active at all times — even while the judge is speaking.
                   </li>
                   <li>
                     🔒 <strong>Privacy:</strong> Voice data is processed locally

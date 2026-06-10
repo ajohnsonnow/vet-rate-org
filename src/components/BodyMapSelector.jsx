@@ -22,6 +22,7 @@ const BodyMapSelector = ({
   const [symptoms, setSymptoms] = useState(existingSymptoms);
   const [activeZones, setActiveZones] = useState(new Set());
   const [activeCategory, setActiveCategory] = useState("musculoskeletal"); // Category filter
+  const [announcement, setAnnouncement] = useState(""); // aria-live for zone/symptom actions
 
   // Comprehensive Body zones with their medical translations - ALL body systems
   const BODY_ZONES = {
@@ -493,6 +494,35 @@ const BodyMapSelector = ({
 
   const handleZoneClick = (zoneId) => {
     setSelectedZone(zoneId);
+    const zone = BODY_ZONES[zoneId];
+    setAnnouncement(
+      `${zone.name} selected, ${Object.keys(zone.symptoms).length} symptoms available`,
+    );
+  };
+
+  // Shared interactive props for the SVG body zones: keyboard operation
+  // (Enter/Space = click), button semantics, visible focus ring, and a
+  // thicker stroke so logged zones are not conveyed by fill color alone.
+  const zoneProps = (zoneId) => {
+    const hasSymptoms = activeZones.has(zoneId);
+    return {
+      fill: hasSymptoms ? "#ef4444" : "#4b5563",
+      stroke: "#fbbf24",
+      strokeWidth: hasSymptoms ? "5" : "2",
+      tabIndex: 0,
+      role: "button",
+      "aria-label": `${BODY_ZONES[zoneId].name} — select to log symptoms`,
+      "aria-pressed": hasSymptoms,
+      className:
+        "cursor-pointer transition hover:fill-yellow-600 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+      onClick: () => handleZoneClick(zoneId),
+      onKeyDown: (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleZoneClick(zoneId);
+        }
+      },
+    };
   };
 
   const handleSymptomSelect = (symptomType, medicalTerm) => {
@@ -511,6 +541,8 @@ const BodyMapSelector = ({
       onSymptomUpdate(updatedSymptoms);
     }
 
+    // The symptom panel closes on select — announce so SR users know it landed.
+    setAnnouncement(`${symptomType} logged for ${newSymptom.zoneName}`);
     setSelectedZone(null);
   };
 
@@ -591,6 +623,16 @@ const BodyMapSelector = ({
         </div>
       }
     >
+      {/* SR announcement for zone selection / symptom logging */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+
       {/* Body System Category Selector */}
       <div className="mb-4">
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
@@ -655,11 +697,7 @@ const BodyMapSelector = ({
                   cy="50"
                   rx="30"
                   ry="35"
-                  fill={activeZones.has("head") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("head")}
+                  {...zoneProps("head")}
                 />
 
                 {/* Neck */}
@@ -668,11 +706,7 @@ const BodyMapSelector = ({
                   y="85"
                   width="30"
                   height="25"
-                  fill={activeZones.has("neck") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("neck")}
+                  {...zoneProps("neck")}
                 />
 
                 {/* Shoulders */}
@@ -680,25 +714,13 @@ const BodyMapSelector = ({
                   cx="100"
                   cy="130"
                   r="25"
-                  fill={
-                    activeZones.has("shoulder_left") ? "#ef4444" : "#4b5563"
-                  }
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("shoulder_left")}
+                  {...zoneProps("shoulder_left")}
                 />
                 <circle
                   cx="200"
                   cy="130"
                   r="25"
-                  fill={
-                    activeZones.has("shoulder_right") ? "#ef4444" : "#4b5563"
-                  }
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("shoulder_right")}
+                  {...zoneProps("shoulder_right")}
                 />
 
                 {/* Upper Back/Chest */}
@@ -707,11 +729,7 @@ const BodyMapSelector = ({
                   y="110"
                   width="70"
                   height="80"
-                  fill={activeZones.has("upper_back") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("upper_back")}
+                  {...zoneProps("upper_back")}
                 />
 
                 {/* Lower Back */}
@@ -720,34 +738,12 @@ const BodyMapSelector = ({
                   y="190"
                   width="60"
                   height="70"
-                  fill={activeZones.has("lower_back") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("lower_back")}
+                  {...zoneProps("lower_back")}
                 />
 
                 {/* Hips */}
-                <circle
-                  cx="130"
-                  cy="280"
-                  r="20"
-                  fill={activeZones.has("hip_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("hip_left")}
-                />
-                <circle
-                  cx="170"
-                  cy="280"
-                  r="20"
-                  fill={activeZones.has("hip_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("hip_right")}
-                />
+                <circle cx="130" cy="280" r="20" {...zoneProps("hip_left")} />
+                <circle cx="170" cy="280" r="20" {...zoneProps("hip_right")} />
 
                 {/* Knees */}
                 <ellipse
@@ -755,22 +751,14 @@ const BodyMapSelector = ({
                   cy="400"
                   rx="22"
                   ry="28"
-                  fill={activeZones.has("knee_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("knee_left")}
+                  {...zoneProps("knee_left")}
                 />
                 <ellipse
                   cx="175"
                   cy="400"
                   rx="22"
                   ry="28"
-                  fill={activeZones.has("knee_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("knee_right")}
+                  {...zoneProps("knee_right")}
                 />
 
                 {/* Ankles/Feet */}
@@ -779,22 +767,14 @@ const BodyMapSelector = ({
                   cy="550"
                   rx="18"
                   ry="25"
-                  fill={activeZones.has("ankle_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("ankle_left")}
+                  {...zoneProps("ankle_left")}
                 />
                 <ellipse
                   cx="175"
                   cy="550"
                   rx="18"
                   ry="25"
-                  fill={activeZones.has("ankle_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("ankle_right")}
+                  {...zoneProps("ankle_right")}
                 />
               </>
             ) : (
@@ -806,11 +786,7 @@ const BodyMapSelector = ({
                   cy="50"
                   rx="30"
                   ry="35"
-                  fill={activeZones.has("head") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("head")}
+                  {...zoneProps("head")}
                 />
 
                 {/* Neck - Back */}
@@ -819,11 +795,7 @@ const BodyMapSelector = ({
                   y="85"
                   width="30"
                   height="25"
-                  fill={activeZones.has("neck") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("neck")}
+                  {...zoneProps("neck")}
                 />
 
                 {/* Shoulders - Back */}
@@ -831,25 +803,13 @@ const BodyMapSelector = ({
                   cx="100"
                   cy="130"
                   r="25"
-                  fill={
-                    activeZones.has("shoulder_left") ? "#ef4444" : "#4b5563"
-                  }
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("shoulder_left")}
+                  {...zoneProps("shoulder_left")}
                 />
                 <circle
                   cx="200"
                   cy="130"
                   r="25"
-                  fill={
-                    activeZones.has("shoulder_right") ? "#ef4444" : "#4b5563"
-                  }
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("shoulder_right")}
+                  {...zoneProps("shoulder_right")}
                 />
 
                 {/* Upper Back */}
@@ -858,11 +818,7 @@ const BodyMapSelector = ({
                   y="110"
                   width="70"
                   height="80"
-                  fill={activeZones.has("upper_back") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("upper_back")}
+                  {...zoneProps("upper_back")}
                 />
 
                 {/* Lower Back - Emphasized in back view */}
@@ -871,91 +827,54 @@ const BodyMapSelector = ({
                   y="190"
                   width="60"
                   height="70"
-                  fill={activeZones.has("lower_back") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("lower_back")}
+                  {...zoneProps("lower_back")}
                 />
 
                 {/* Rest same as front */}
-                <circle
-                  cx="130"
-                  cy="280"
-                  r="20"
-                  fill={activeZones.has("hip_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("hip_left")}
-                />
-                <circle
-                  cx="170"
-                  cy="280"
-                  r="20"
-                  fill={activeZones.has("hip_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("hip_right")}
-                />
+                <circle cx="130" cy="280" r="20" {...zoneProps("hip_left")} />
+                <circle cx="170" cy="280" r="20" {...zoneProps("hip_right")} />
                 <ellipse
                   cx="125"
                   cy="400"
                   rx="22"
                   ry="28"
-                  fill={activeZones.has("knee_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("knee_left")}
+                  {...zoneProps("knee_left")}
                 />
                 <ellipse
                   cx="175"
                   cy="400"
                   rx="22"
                   ry="28"
-                  fill={activeZones.has("knee_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("knee_right")}
+                  {...zoneProps("knee_right")}
                 />
                 <ellipse
                   cx="125"
                   cy="550"
                   rx="18"
                   ry="25"
-                  fill={activeZones.has("ankle_left") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("ankle_left")}
+                  {...zoneProps("ankle_left")}
                 />
                 <ellipse
                   cx="175"
                   cy="550"
                   rx="18"
                   ry="25"
-                  fill={activeZones.has("ankle_right") ? "#ef4444" : "#4b5563"}
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:fill-yellow-600 transition"
-                  onClick={() => handleZoneClick("ankle_right")}
+                  {...zoneProps("ankle_right")}
                 />
               </>
             )}
           </svg>
 
-          {/* Legend */}
+          {/* Legend — thin vs thick border mirrors the zones' stroke weight so
+              the logged state never relies on the red fill alone */}
           <div className="absolute bottom-4 left-4 bg-gray-900/90 p-2 rounded text-xs">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-4 h-4 bg-gray-600 border border-yellow-500 rounded"></div>
-              <span className="text-gray-300">No symptoms</span>
+              <span className="text-gray-300">No symptoms (thin border)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 border border-yellow-500 rounded"></div>
-              <span className="text-gray-300">Has symptoms</span>
+              <div className="w-4 h-4 bg-red-500 border-[3px] border-yellow-500 rounded"></div>
+              <span className="text-gray-300">Has symptoms (thick border)</span>
             </div>
           </div>
 
@@ -969,12 +888,15 @@ const BodyMapSelector = ({
                 <button
                   key={zoneId}
                   onClick={() => handleZoneClick(zoneId)}
-                  className={`text-xs px-2 py-1 rounded transition ${
+                  aria-label={`${zone.name} — select to log symptoms`}
+                  aria-pressed={activeZones.has(zoneId)}
+                  className={`text-xs px-2 py-1.5 rounded transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                     activeZones.has(zoneId)
-                      ? "bg-red-500 text-white"
+                      ? "bg-red-600 text-white"
                       : "bg-gray-700 text-gray-300 hover:bg-yellow-600 hover:text-gray-900"
                   }`}
                 >
+                  {activeZones.has(zoneId) && "✓ "}
                   {zone.name.split("/")[0].split(" ")[0]}
                 </button>
               ))}
@@ -998,10 +920,10 @@ const BodyMapSelector = ({
                     <button
                       key={symptom}
                       onClick={() => handleSymptomSelect(symptom, medical)}
-                      className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded transition border border-gray-600 hover:border-yellow-500"
+                      className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded transition border border-gray-600 hover:border-yellow-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500"
                     >
                       <div className="font-semibold text-white">{symptom}</div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-300 mt-1">
                         Translates to: &quot;{medical}&quot;
                       </div>
                     </button>
@@ -1022,7 +944,8 @@ const BodyMapSelector = ({
               </h3>
               {symptoms.length === 0 ? (
                 <p className="text-gray-400 text-sm">
-                  Click a body part on the diagram to start logging symptoms.
+                  Click a body part on the diagram (or Tab to it and press
+                  Enter) to start logging symptoms.
                 </p>
               ) : (
                 <>
@@ -1038,7 +961,8 @@ const BodyMapSelector = ({
                           </span>
                           <button
                             onClick={() => removeSymptom(index)}
-                            className="text-red-400 hover:text-red-300 text-xs"
+                            aria-label={`Remove ${symptom.userDescription} (${symptom.zoneName})`}
+                            className="flex h-6 w-6 items-center justify-center rounded text-red-400 hover:text-red-300 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                           >
                             ✕
                           </button>
@@ -1046,7 +970,7 @@ const BodyMapSelector = ({
                         <div className="text-white text-sm">
                           {symptom.userDescription}
                         </div>
-                        <div className="text-gray-400 text-xs mt-1 italic">
+                        <div className="text-gray-300 text-xs mt-1 italic">
                           Medical: {symptom.medicalTerminology}
                         </div>
                       </div>
@@ -1121,7 +1045,10 @@ const BodyMapSelector = ({
           <li>
             • Copy the medical text and paste it into your Personal Statement
           </li>
-          <li>• Red zones show where you&apos;ve logged symptoms</li>
+          <li>
+            • Red zones with a thick border show where you&apos;ve logged
+            symptoms
+          </li>
         </ul>
       </div>
     </ResponsiveModal>
