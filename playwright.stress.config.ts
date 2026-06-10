@@ -33,6 +33,10 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
+          // Headed: default headless Chromium exposes no WebGPU adapter on
+          // Windows ("No available adapters"), which silently keeps the
+          // Warrant Council from loading and the Analyze button disabled.
+          headless: false,
           // Same WebGPU flags as scripts/launch-chrome-dev.ps1 — Dawn/Vulkan
           // unlock the Warrant Council swarm on the dev GPU.
           args: [
