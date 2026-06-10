@@ -55,6 +55,26 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+  validate-dkb:
+    name: DKB Consistency Gate
+    runs-on: ubuntu-latest
+    # Blocking gate for the Diamond Knowledge Base static data:
+    # disabilityData.json schema (diagnostic codes, eCFR URLs, verification
+    # dates), tier counts vs dkbIndexedDB.js constants, secondary-condition
+    # DC cross-references, and ecfr-dc-map.json sync. Zero-dependency script
+    # (node builtins only), so no npm ci. The 130MB full-tier file is a Git
+    # LFS pointer in CI; the validator detects that and skips its count.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Diamond Knowledge Base (blocking)
+        run: node scripts/validate-dkb.mjs
+
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest

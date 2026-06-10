@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-06-10T06:03:36.391Z",
+  "alerts": [
+    {
+      "id": "2026-03068",
+      "title": "Evaluative Rating: Impact of Medication",
+      "type": "final_rule",
+      "status": "comment_period",
+      "publicationDate": "2026-02-17",
+      "commentDeadline": "2026-04-20",
+      "summary": "The Department of Veterans Affairs (VA) amends 38 CFR 4.10 within the VA Schedule for Rating Disabilities (VASRD). This amendment clarifies VA's longstanding interpretation of Sec. 4.10 and, in doing so, amends the text to correct judicial interpretations that VA has concluded misconstrue the role of medication and treatment in evaluating functional impairment. Specifically, this amendment clarifies that veterans should be compensated for the actual level of functional impairment they experience and, therefore, that the ameliorative effects of medication should not be estimated or discounted when evaluating the severity of a veteran's disability at the time of the disability examination. This regulation is needed immediately to minimize the negative impact of an erroneous line of cases culminating in the recent decision of Ingram v. Collins, 38 Vet. App. 130 (2025), which could be applied broadly to over 500 separate diagnostic codes, requiring re-adjudications of over 350,000 currently pending claims. This in turn would overburden VA's claims adjudicatory capacity. In addition, Ingram requires VA to retrain all of its medical examiners and adjudicators to make assessments and decisions based not on the evidence before them but instead based on what they hypothesize the evidence would show if a veteran's disability were left untreated. For these and other reasons explained below, this regulation is critical to the integrity of the VA disability claims system.",
+      "link": "https://www.federalregister.gov/documents/2026/02/17/2026-03068/evaluative-rating-impact-of-medication",
+      "source": "Federal Register",
+      "urgency": "high"
+    },
+    {
+      "id": "2026-01188",
+      "title": "Clarification of VA's Processing of Survivors Benefits Claims",
+      "type": "final_rule",
+      "status": "active",
+      "publicationDate": "2026-01-22",
+      "commentDeadline": null,
+      "summary": "The Department of Veterans Affairs (VA) amends its adjudication regulations concerning survivors benefits claims to ensure that VA provides the most beneficial outcome for surviving spouses and children. This final rule clarifies that a surviving spouse or child claimant for either Survivors Pension or dependency and indemnity compensation (DIC) is entitled to the greater benefit. Thus, with respect to claims processing, VA will concurrently deny Survivors Pension and award DIC, except where paying Survivors Pension would be more beneficial to the claimant, which will only be the case if the claimant is the veteran's surviving spouse and the claimant's application indicates that the claimant does not have any dependents, is currently in a nursing home, and has applied for or is currently receiving Medicaid.",
+      "link": "https://www.federalregister.gov/documents/2026/01/22/2026-01188/clarification-of-vas-processing-of-survivors-benefits-claims",
+      "source": "Federal Register",
+      "urgency": "high"
+    },
+    {
+      "id": "2025-23682",
+      "title": "Servicemembers' Group Life Insurance Traumatic Injury Protection Program Amendments",
+      "type": "final_rule",
+      "status": "active",
+      "publicationDate": "2025-12-23",
+      "commentDeadline": null,
+      "summary": "The Department of Veterans Affairs (VA) is amending its regulations that govern the Servicemembers' Group Life Insurance (SGLI) Traumatic Injury Protection (TSGLI) program to correct an unintended amendment to the TSGLI Schedule of Losses for payments for inability to perform at least two activities of daily living (ADL) for 15, 30, 60, and 90 consecutive day periods as a result of a traumatic injury other than a traumatic brain injury.",
+      "link": "https://www.federalregister.gov/documents/2025/12/23/2025-23682/servicemembers-group-life-insurance-traumatic-injury-protection-program-amendments",
+      "source": "Federal Register",
+      "urgency": "low"
+    }
+  ]
+}
