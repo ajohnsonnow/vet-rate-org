@@ -12,6 +12,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import useFocusTrap from "../hooks/useFocusTrap";
 import {
   Camera,
   Upload,
@@ -85,6 +86,9 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const dialogRef = useRef(null);
+
+  useFocusTrap(dialogRef, { active: true, onEscape: onClose });
 
   // Monitor AI status
   useEffect(() => {
@@ -264,8 +268,10 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
 
   return (
     <div
+      ref={dialogRef}
       className={`denial-decoder ${className}`}
       role="dialog"
+      aria-modal="true"
       aria-labelledby="denial-decoder-title"
     >
       {/* Header */}
