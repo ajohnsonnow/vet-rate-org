@@ -23,6 +23,7 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import Tesseract from "tesseract.js";
+import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -327,13 +328,14 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
 
   // Worker pool: a single Tesseract worker processed pages strictly
   // sequentially while the rest of the CPU sat idle — the dominant cost on
-  // multi-page scans. Pool size respects low-end devices via
-  // hardwareConcurrency and is capped to keep canvas memory bounded.
-  const poolSize = Math.min(
-    Math.max(2, (navigator.hardwareConcurrency || 4) - 2),
-    8,
-    pagesToProcess,
-  );
+  // multi-page scans. Pool size adapts to device tier (deviceCapabilityDetector):
+  // desktop-high→8, desktop-mid→6, laptop→4, tablet→2, mobile→1.
+  // Falls back to hardwareConcurrency - 2 when the device profile is not yet cached.
+  const deviceOCRWorkers =
+    (typeof getCachedDeviceProfile !== "undefined" &&
+      getCachedDeviceProfile?.()?.ocrWorkers) ||
+    Math.max(2, (navigator.hardwareConcurrency || 4) - 2);
+  const poolSize = Math.min(deviceOCRWorkers, 8, pagesToProcess);
 
   // eslint-disable-next-line no-console
   console.log(
@@ -374,7 +376,32 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
   const processPage = async (pageNum) => {
     const page = await pdf.getPage(pageNum);
 
-    // Fast path: one pass at the highest base scale. The full multi-scale
+    // Text-layer fast path: digitally-generated pages (VA forms, typed medical
+    // records, decision letters) already have a UTF-8 text layer embedded in
+    // the PDF — reusing it is both faster and more accurate than rendering to
+    // a canvas and running Tesseract. We consider the layer "sufficient" when
+    // it has > 20 text items AND > 100 characters (blank/stamp pages have few
+    // items; cover sheets may have 1-5 lines). Scanned pages return items=0.
+    try {
+      const textContent = await page.getTextContent();
+      const layerText = textContent.items
+        .map((item) => item.str)
+        .join(" ")
+        .trim();
+      if (textContent.items.length > 20 && layerText.length > 100) {
+        completedPages++;
+        onProgress({
+          stage: "ocr",
+          progress: 10 + (completedPages / pagesToProcess) * 85,
+          message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
+        });
+        return { text: layerText, confidence: 100, usedTextLayer: true };
+      }
+    } catch {
+      // getTextContent can fail on corrupt pages — fall through to OCR
+    }
+
+    // Image-only page: one pass at the highest base scale. The full multi-scale
     // ensemble only runs when that pass reads poorly — most pages of a
     // typical scan are legible and don't need 3x the OCR work.
     const primary = await recognize(

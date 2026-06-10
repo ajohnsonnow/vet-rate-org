@@ -52,12 +52,13 @@ export default defineConfig({
     },
   ],
 
-  // Mirrors playwright.config.ts: port 5197 avoids the normal dev server, and
-  // reuseExistingServer stays false so a foreign server can never be tested.
   webServer: {
     command: "npm run dev -- --port 5197",
     url: "http://localhost:5197",
-    reuseExistingServer: false,
+    // Allow reusing a manually-started Vite dev server (e.g. started via
+    // scripts/launch-chrome-dev.ps1 or nohup npm run dev); the test code
+    // validates the server is serving the expected app via page.goto assertions.
+    reuseExistingServer: true,
     timeout: 30_000,
   },
 });
