@@ -1406,7 +1406,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
   const userPrompt = `--- BEGIN C-FILE TEXT ---\n\n${chunk.text}\n\n--- END C-FILE TEXT ---\n\nAnalyze and return ONLY the JSON object.`;
 
   const response = await generateAI(userPrompt, {
-    temperature: 0.2,
+    temperature: isLocalAI ? 0.1 : 0.2,
     maxTokens: isLocalAI ? 2048 : 32768,
     expectJSON: true,
     skipCrisisCheck: true,
