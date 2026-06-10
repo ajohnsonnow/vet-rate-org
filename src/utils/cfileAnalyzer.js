@@ -1374,7 +1374,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, _onProgress) {
 
   const response = await generateAI(userPrompt, {
     temperature: 0.2,
-    maxTokens: isLocalAI ? 1200 : 32768,
+    maxTokens: isLocalAI ? 2048 : 32768,
     expectJSON: true,
     skipCrisisCheck: true,
     skipHallucinationCheck: true,
