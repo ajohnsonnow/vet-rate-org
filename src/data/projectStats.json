@@ -1,5 +1,5 @@
 {
-  "total_files": "2,157",
+  "total_files": "1,234",
   "loc_count": "248,528",
   "component_count": "167",
   "major_tools": "42",
@@ -11,7 +11,7 @@
   "total_hours": "30,327",
   "coding_hours": "25,438",
   "actual_hours": "150",
-  "coding_sessions": "42",
+  "coding_sessions": "2",
   "years_dev": "14.6",
   "traditional_cost": "4,094,145",
   "actual_cost": "63,000",
@@ -29,9 +29,9 @@
     "research": 150,
     "deployment": 73
   },
-  "days_dev": "145",
+  "days_dev": "151",
   "productivity_multiplier": "202",
-  "total_commits": "499",
+  "total_commits": "2",
   "ai_tools": {
     "planning": "Gemini 3",
     "coding": [
@@ -47,8 +47,8 @@
     ]
   },
   "first_commit": "January 15, 2026",
-  "last_updated": "2026-06-08",
-  "version": "20260608",
+  "last_updated": "2026-06-15",
+  "version": "20260615",
   "total_hours_numeric": 30327,
   "coding_hours_numeric": 25438,
   "loc_count_numeric": 248528,
@@ -56,11 +56,11 @@
   "traditional_cost_numeric": 4094145,
   "actual_cost_numeric": 63000,
   "cost_savings_numeric": 4031145,
-  "coding_sessions_numeric": 42,
+  "coding_sessions_numeric": 2,
   "productivity_multiplier_numeric": 202,
   "component_hours_numeric": 11380,
   "live": {
-    "totalFiles": 2157,
+    "totalFiles": 1234,
     "linesOfCode": 248528,
     "componentCount": 167,
     "toolCount": 42,
@@ -72,7 +72,7 @@
     "secondaryCount": 410,
     "vaFormsCount": 94,
     "localAIModels": 6,
-    "appSizeMB": 356.81,
-    "calculatedAt": "2026-06-09T06:48:59.593Z"
+    "appSizeMB": 202.9,
+    "calculatedAt": "2026-06-15T05:47:50.305Z"
   }
 }

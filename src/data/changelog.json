@@ -1,8 +1,28 @@
 {
   "version": "1.23.1",
-  "lastUpdated": "2026-06-09",
+  "lastUpdated": "2026-06-15",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.23.1",
+      "date": "2026-06-15",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
+      "changelog": [
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "refresh index → v0.2.0",
+          "description": "refresh index → v0.2.0"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        }
+      ]
+    },
     {
       "version": "1.23.1",
       "date": "2026-06-09",
@@ -2394,38 +2414,6 @@
           "category": "DX",
           "title": "Diátaxis categorical doc index",
           "description": "docs/DOCS_INDEX.md places every engineering doc in one of four quadrants (Tutorials, How-to, Reference, Explanation) with a one-line hook. Veteran-facing manual at docs/index.md stays separate. Closes audit row #37."
-        }
-      ]
-    },
-    {
-      "version": "1.21.0",
-      "date": "2026-05-15",
-      "isFirstRelease": false,
-      "releaseTitle": "Best-Practices Audit Complete — Legal-RAG + Supply-Chain Hardening",
-      "changelog": [
-        {
-          "type": "feat",
-          "category": "AI / Legal-RAG",
-          "title": "Legal-RAG runtime over 38 CFR Part 4",
-          "description": "New legalRag.js + legalAnswerer.js services with dual-LLM split (extractor → JSON facts → synthesizer) and LegalCitation badges that link to canonical .gov sources with fetched_at currency dates."
-        },
-        {
-          "type": "feat",
-          "category": "Knowledge / Ops",
-          "title": "Weekly legal-index ingestion cron",
-          "description": "GitHub Action refreshes the legal-index every Monday, opens a PR on content diff, and files a stale-source issue on fetcher failure. External-truth registry at knowledge-sources.yaml."
-        },
-        {
-          "type": "chore",
-          "category": "Supply chain",
-          "title": "Zero npm audit vulnerabilities + SBOM on release",
-          "description": "protobufjs and @xmldom/xmldom advisories resolved via npm overrides. Release tag now generates CycloneDX + SPDX SBOMs and attaches them to the GitHub Release."
-        },
-        {
-          "type": "chore",
-          "category": "DevSecOps",
-          "title": "CI security gates flipped to blocking",
-          "description": "npm audit (prod, ≥high) and semgrep SAST (--strict) now block CI. Preflight contract enforcement defaults to STRICT_AUDIT=true."
         }
       ]
     }
