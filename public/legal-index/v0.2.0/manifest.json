@@ -1,0 +1,9 @@
+{
+  "version": "v0.2.0",
+  "fetched_at": "2026-06-15T05:47:48.440Z",
+  "embedding_model": "Xenova/bge-small-en-v1.5",
+  "embedding_dim": 384,
+  "quantization": "int8",
+  "total_chunks": 0,
+  "sources": {}
+}
