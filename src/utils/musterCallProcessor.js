@@ -26,6 +26,7 @@
 import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
 import { processLargePDF } from "./pdfExtractor";
 import { formatFileSize } from "./ocr";
+import { scanDocumentForCrisis } from "./crisisInterceptor";
 import {
   classifyDocument,
   classifyDocumentBatch,
@@ -153,6 +154,9 @@ OUTPUT FORMAT: Valid JSON only. Structure:
 RULES: Only include findings present in text. Be concise.`;
 
   const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${text.substring(0, 15000)}`;
+
+  // AIS-05: non-blocking crisis scan over the raw C-File excerpt.
+  scanDocumentForCrisis(text);
 
   try {
     const response = await generateAI(userPrompt, {

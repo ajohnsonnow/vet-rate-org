@@ -23,6 +23,7 @@ import {
   AI_MODES,
 } from "./unifiedAIService";
 import { validateDiagnosticCode } from "./hallucinationTrap";
+import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
@@ -1706,6 +1707,9 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
         }, 30000)
       : null;
 
+  // AIS-05: non-blocking crisis scan over this C-file chunk's raw text — surfaces a
+  // passive resources banner if the records contain ideation history, never blocks.
+  scanDocumentForCrisis(chunk?.text);
   let response;
   try {
     response = await generateAI(userPrompt, {
@@ -1912,6 +1916,8 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
         }, 30000)
       : null;
 
+  // AIS-05: non-blocking crisis scan over this page's raw text.
+  scanDocumentForCrisis(pageText);
   let response;
   try {
     response = await generateAI(userPrompt, {

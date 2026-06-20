@@ -203,6 +203,26 @@ export function detectCrisisLanguage(text) {
 }
 
 /**
+ * AIS-05: Non-blocking crisis scan for UPLOADED DOCUMENT text. Unlike
+ * interceptBeforeAICall (used on live user input, which BLOCKS the AI call), this
+ * NEVER blocks document analysis — it only surfaces a passive, dismissible
+ * crisis-resources banner (via the `vetrate:crisis-resources` event) when the
+ * document itself contains crisis language (e.g. ideation history in a C-file or
+ * health record). Document paths previously passed `skipCrisisCheck` and so
+ * silently no-op'd safety on exactly the records most likely to mention crisis.
+ * Browser-guarded; safe to call from utils. Returns whether crisis text was found.
+ * @param {string} text - Extracted document text to scan
+ * @returns {boolean}
+ */
+export function scanDocumentForCrisis(text) {
+  const { isCrisis } = detectCrisisLanguage(text);
+  if (isCrisis && typeof window !== "undefined" && window.dispatchEvent) {
+    window.dispatchEvent(new CustomEvent("vetrate:crisis-resources"));
+  }
+  return isCrisis;
+}
+
+/**
  * Pre-flight check before ANY AI API call
  * This MUST be called before sending text to external AI services
  *
