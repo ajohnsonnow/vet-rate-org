@@ -565,6 +565,8 @@ for (const vp of VIEWPORTS) {
       const trigger = page.getByRole("button", {
         name: "Clear all local data",
       });
+      // BackupManager is React.lazy — first load in CI (dev server, JIT compile)
+      // can exceed 6 s; 15 s matches the webServer startup budget.
       await expect
         .poll(
           async () => {
@@ -573,7 +575,7 @@ for (const vp of VIEWPORTS) {
             });
             return trigger.isVisible();
           },
-          { timeout: 6000 },
+          { timeout: 15_000 },
         )
         .toBe(true);
       await trigger.click();
