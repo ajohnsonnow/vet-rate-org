@@ -18,6 +18,7 @@ import {
   OCR_STATES,
   getProgressStyling as getOCRProgressStyling,
 } from "./ocr";
+import { describePdfPasswordError } from "./fileTypeGuards";
 
 // Re-export for convenience
 export { OCR_STATES };
@@ -471,6 +472,8 @@ export async function renderPDFToImages(
     };
   } catch (error) {
     console.error("Error rendering PDF to images:", error);
+    const pwError = describePdfPasswordError(error);
+    if (pwError) throw pwError;
     throw new Error(`Failed to render PDF: ${error.message}`);
   }
 }
