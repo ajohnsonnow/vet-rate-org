@@ -18,6 +18,7 @@ import {
   analyzePII,
   containsSignificantNonLatin,
 } from "./piiScrubber";
+import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
 import { isFeatureEnabled } from "./featureFlags";
 import {
@@ -1779,6 +1780,20 @@ export const generateAI = async (prompt, options = {}) => {
     // Clear timeout on success
     clearTimeout(timeoutId);
     resetAICircuitBreaker();
+
+    // PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
+    // that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
+    // the model into surfacing an attacker URL). Opt out for JSON-only / internal calls,
+    // whose output is parsed not rendered as free text and would be corrupted. Gov links
+    // survive (see sanitize.LLM_OUTPUT_URL_ALLOWLIST).
+    if (!options.expectJSON && !options.skipUrlStrip) {
+      if (typeof result === "string") {
+        return stripUntrustedUrls(result);
+      }
+      if (result && typeof result.text === "string") {
+        result.text = stripUntrustedUrls(result.text);
+      }
+    }
     return result;
   } catch (err) {
     // Clear timeout on error
