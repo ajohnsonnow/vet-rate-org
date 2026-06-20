@@ -3,7 +3,7 @@
 > Autonomous execution of [RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md).
 > Branch: `audit/fable-master-plan` · Commits **local only** (no push, no PRs).
 
-**Last updated:** 2026-06-20 (chunk 14)
+**Last updated:** 2026-06-20 (chunk 15)
 **Verification:** `npm run build` green. Verify tests with **individual** `npx vitest run <file>` (full `npm test` flakes under load). Baseline: 3 pre-existing `cfileResilience.test.js` fails; only NEW fails matter.
 
 ---
@@ -22,7 +22,8 @@
 | RT-3 crisis/non-English | ✅      | AIS-04/05 + i18n test + RT3-4.                                                                                                                                                                                |
 | RT-4 injection wiring   | ✅      | **PI-01 (`abcb766`) + PI-02 (`af23975`).**                                                                                                                                                                    |
 | RT-5 XSS/CSP            | ✅      | `63eca37` sanitizeInlineHtml/DbqFinder/RT3-5 · `c8ba9f2` BadgeDisplay SVG scrub + UserManual escape · `9a96f46` CSP drop unsafe-eval (boot smoke test clean). RESIDUAL: manual WASM-model-load check (owner). |
-| RT-6..RT-12             | ⏳      |                                                                                                                                                                                                               |
+| RT-6 crypto             | 🟡      | **CRYPTO-04 (`0e7faff`) + PARSE-002 (`1555c0a`) done.** CRYPTO-03/CRYPTO-02 next. RT6-3 at-rest default 🚩 owner.                                                                                              |
+| RT-7..RT-12             | ⏳      |                                                                                                                                                                                                               |
 | RT-14 brand enrichment  | ⏳      | After RT-15 review.                                                                                                                                                                                           |
 
 ---
