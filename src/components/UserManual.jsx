@@ -493,7 +493,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 ### Core Intelligence Tools
 | Tool | What It Does |
 |------|--------------|
-| **Smart Search** | Find any of {PROJECT_STATS.disabilitiesValidated} rated disabilities |
+| **Smart Search** | Find any of {getDisabilityCount()} rated disabilities |
 | **PACT Act Navigator** | Identify toxic exposure presumptive conditions |
 | **Web of Conditions** | Interactive visualization of connected disabilities |
 | **Legislative Watchdog** | Track Federal Register changes affecting veterans |
@@ -640,7 +640,7 @@ This shows you the "gold standard" before you start your own.
 After acknowledging the disclaimer, you'll see:
 
 1. **Header** - Navigation to main features
-2. **Search Bar** - Search ${PROJECT_STATS.disabilitiesValidated} disabilities
+2. **Search Bar** - Search {getDisabilityCount()} disabilities
 3. **Feature Cards** - Quick access to tools
 4. **Footer** - Links to policies and support
 
@@ -741,7 +741,7 @@ Master the search functionality to find any VA disability condition.
 
 ## What You Can Search
 
-- **${PROJECT_STATS.disabilitiesValidated} disabilities** from 38 CFR Part 4
+- **{getDisabilityCount()} disabilities** from 38 CFR Part 4
 - **Condition names** (e.g., "PTSD", "tinnitus")
 - **Diagnostic codes** (e.g., "9411", "6260")
 - **Keywords** (e.g., "knee", "back", "anxiety")
