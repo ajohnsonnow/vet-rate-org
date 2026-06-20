@@ -5,9 +5,9 @@
  * See src/COPYRIGHT.js for full license terms.
  *
  * DbqShareMenu Component
- * "Secure Document Exchange" - Three-tab sharing interface
+ * "Document Exchange" - Three-tab sharing interface
  * Tab 1: Direct Download (Standard)
- * Tab 2: Encrypted Package (For Email)
+ * Tab 2: Email Bundle (.zip — NOT encrypted)
  * Tab 3: Mobile Handoff (AirDrop/Share)
  */
 
@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import {
   generateDraftDbq,
   downloadPdfBlob,
-  createEncryptedZip,
+  createDocumentZip,
   sharePdfNatively,
   copyDbqSummaryToClipboard,
 } from "../utils/pdfDbqFiller";
@@ -36,8 +36,6 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   const [activeTab, setActiveTab] = useState("download");
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState(null);
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
 
   // Check for native share support on mount
@@ -92,18 +90,10 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
     }
   };
 
-  // Tab 2: Encrypted ZIP
-  const handleEncryptedDownload = async () => {
-    if (!password || password.length < 4) {
-      setStatus({
-        type: "error",
-        message: "❌ Please enter a password (at least 4 characters)",
-      });
-      return;
-    }
-
+  // Tab 2: Email Bundle (.zip — NOT encrypted)
+  const handleZipDownload = async () => {
     setIsGenerating(true);
-    setStatus({ type: "info", message: "Generating secure package..." });
+    setStatus({ type: "info", message: "Generating ZIP bundle..." });
 
     try {
       const pdfBlob = await generateDraftDbq(formId, formData, {
@@ -115,23 +105,19 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
         throw new Error("Failed to generate PDF");
       }
 
-      const zipBlob = await createEncryptedZip(
-        pdfBlob,
-        getFilename(),
-        password,
-      );
+      const zipBlob = await createDocumentZip(pdfBlob, getFilename());
 
       if (!zipBlob) {
         throw new Error("Failed to create ZIP");
       }
 
       const date = new Date().toISOString().split("T")[0];
-      downloadPdfBlob(zipBlob, `Secure_DBQ_Package_${date}.zip`);
+      downloadPdfBlob(zipBlob, `DBQ_Package_${date}.zip`);
 
       setStatus({
         type: "success",
         message:
-          "✅ Secure package downloaded! Share the password separately (call/text).",
+          "✅ ZIP bundle downloaded. It is not encrypted — send it over a secure channel (VA portal / in person), not ordinary email.",
       });
     } catch (error) {
       setStatus({ type: "error", message: `❌ Error: ${error.message}` });
@@ -199,7 +185,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
 
   const tabs = [
     { id: "download", label: "📥 Download", icon: "📥" },
-    { id: "encrypt", label: "🔐 Encrypt", icon: "🔐" },
+    { id: "encrypt", label: "📧 Email Zip", icon: "📧" },
     { id: "share", label: "📲 Share", icon: "📲" },
   ];
 
@@ -315,62 +301,43 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
             </div>
           )}
 
-          {/* Tab 2: Encrypted ZIP */}
+          {/* Tab 2: Email Bundle (.zip — NOT encrypted) */}
           {activeTab === "encrypt" && (
             <div className="space-y-4">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <h4 className="font-semibold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
-                  🔐 Password-Protected Package
+                  📧 Email Bundle (.zip)
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Create a secure ZIP file to email to your doctor. Share the
-                  password separately (call or text) for security.
+                  Bundle the draft DBQ into a single .zip with a short README
+                  for your doctor — handy as an email attachment.
                 </p>
                 <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  <li>✓ Safe to send over email</li>
-                  <li>✓ Protected even if email is compromised</li>
-                  <li>✓ Includes instructions for your doctor</li>
+                  <li>✓ One file: the DBQ PDF + instructions for your doctor</li>
+                  <li>✓ Opens with any standard zip tool</li>
                 </ul>
               </div>
 
-              <div>
-                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Set a Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter a password (min 4 characters)"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
-                  >
-                    {showPassword ? "🙈" : "👁️"}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  💡 Tip: Use your birth year or last 4 of phone # - easy to
-                  share verbally
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  ⚠️ This ZIP is <strong>not encrypted or password-protected</strong>.
+                  Ordinary email is not secure. For your medical records, send it
+                  through your VA patient portal / secure messaging, or hand it off
+                  in person.
                 </p>
               </div>
 
               <button
-                onClick={handleEncryptedDownload}
-                disabled={isGenerating || password.length < 4}
+                onClick={handleZipDownload}
+                disabled={isGenerating}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 {isGenerating ? (
                   <>
-                    <span className="animate-spin">⏳</span> Creating Package...
+                    <span className="animate-spin">⏳</span> Creating Bundle...
                   </>
                 ) : (
-                  <>🔒 Generate Secure ZIP</>
+                  <>📦 Create ZIP Bundle</>
                 )}
               </button>
             </div>
