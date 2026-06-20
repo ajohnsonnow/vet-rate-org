@@ -3,7 +3,7 @@
 > Autonomous execution of [RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md).
 > Branch: `audit/fable-master-plan` · Commits **local only** (no push, no PRs).
 
-**Last updated:** 2026-06-20 (chunk 16)
+**Last updated:** 2026-06-20 (chunk 17)
 **Verification:** `npm run build` green. Verify tests with **individual** `npx vitest run <file>` (full `npm test` flakes under load). Baseline: 3 pre-existing `cfileResilience.test.js` fails; only NEW fails matter.
 
 ---
@@ -29,7 +29,8 @@
 | RT-10 tools/CMD+K       | ✅ / 🚩 | `6692bd0` CMD+K prop-name fix + diagnostic-code search fix + placeholder fix. 🚩 RT10-3/4 tool-roster single source + appeals instructions (larger effort).                                                                                                                      |
 | RT-11 accessibility     | ✅ / ⏭️ | `826c5d1` AccessibilityMenu section landmark + aria-live on AI outputs (LocalAIPanel, ClaimNavigator, MusterCall) + pa11y URL. ⏭️ RT11-5 gold contrast (browser check needed).                                                                                                   |
 | RT-12 architecture      | 🟡 / 🚩 | `ae7620a` RT12-1 beforeunload consolidated + RT12-2 PII console logs redacted. ADR-001 for overlapping modules. 🚩 RT12-3 per-file coverage thresholds (security-critical utils) · RT12-4 LanguageContext code-split (needs-decision).                                           |
-| RT-13 CI                | 🟡      | RT13-6 ✅ (`97d9675`). Others pending.                                                                                                                                                                                                                                           |
+| RT-13 CI                | 🟡 / 🚩 | RT13-6 ✅. RT13-5 gitleaks paths anchored ✅. RT13-7 pre-push --no-verify removed ✅. RT13-8 Renovate automerge disabled ✅. 🚩 RT13-1 SHA-pin (needs pinact) · RT13-2 overlapping CI · RT13-3 inert PR gates · RT13-4 semgrep wiring · RT13-9 scorecard dedup.                  |
+| RT-1 egress             | 🟡 / 🚩 | RT1-1/2/6 ✅. RT8-7 covered RT1-7 Google APIs. 🚩 RT1-3/5 parallel actor · RT1-7 flag-icons jsDelivr (needs package.json, parallel actor owns it).                                                                                                                               |
 | RT-14 brand enrichment  | ⏳      | After RT-15 review.                                                                                                                                                                                                                                                              |
 
 ---

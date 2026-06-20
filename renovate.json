@@ -7,11 +7,11 @@
     ":semanticCommits"
   ],
   "schedule": ["every weekend"],
-  "platformAutomerge": true,
+  "platformAutomerge": false,
   "automergeType": "pr",
   "vulnerabilityAlerts": {
     "labels": ["security"],
-    "automerge": true
+    "automerge": false
   },
   "packageRules": [
     {
