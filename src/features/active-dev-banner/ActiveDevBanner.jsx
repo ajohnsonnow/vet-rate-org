@@ -1,23 +1,19 @@
 /**
- * ActiveDevBanner — the orange "ACTIVE DEVELOPMENT" strip that sits
- * above the header to remind users to save their work often.
+ * ActiveDevBanner — a calm, on-brand strip above the header.
  *
- * Pure presentational, no props. Extracted from App.jsx (audit #35,
- * B71) so the marker can be toggled / re-themed / hidden without
- * touching the root component.
+ * Replaces the former alarming orange/red "ACTIVE DEVELOPMENT… save your work
+ * often" marker (red-team D14 / RT15-6): a "this may break, save often" tone
+ * undercut trust for a tool handling veterans' most sensitive records. Now a
+ * quiet, reassuring brand line with no alarm color, no pulse, no emoji.
+ *
+ * Pure presentational, no props. Extracted from App.jsx (audit #35, B71).
  */
 export default function ActiveDevBanner() {
   return (
-    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4 text-center shadow-md">
-      <div className="flex items-center justify-center space-x-2 text-sm">
-        <span className="animate-pulse text-lg">🎖️</span>
-        <span className="font-semibold">ACTIVE DEVELOPMENT:</span>
-        <span>
-          We&apos;re on a ruck march bringing code improvements to you! Save
-          your work often.
-        </span>
-        <span className="animate-pulse text-lg">🎖️</span>
-      </div>
+    <div className="bg-va-blue text-white py-1.5 px-4 text-center">
+      <p className="text-sm">
+        Built by a veteran, for veterans — continuously improved.
+      </p>
     </div>
   );
 }
