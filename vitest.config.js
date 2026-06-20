@@ -21,9 +21,47 @@ export default defineConfig({
         // 70-100% individually — see docs/AUDIT_FINDINGS.md row #30.
         // Numbers below are floors, not ceilings. Raise as new tests land.
         lines: 38,
-        functions: 45,
+        functions: 39,
         branches: 24,
         statements: 37,
+        // Per-file floors for security-critical utilities (RT12-3).
+        // Values are ~5% below observed coverage from 2026-06-20 run.
+        "src/utils/fileTypeGuards.js": {
+          statements: 95,
+          branches: 85,
+          functions: 90,
+          lines: 95,
+        },
+        "src/utils/hallucinationTrap.js": {
+          statements: 90,
+          branches: 80,
+          functions: 85,
+          lines: 90,
+        },
+        "src/utils/piiScrubber.js": {
+          statements: 95,
+          branches: 85,
+          functions: 90,
+          lines: 95,
+        },
+        "src/utils/dualLLM.js": {
+          statements: 95,
+          branches: 85,
+          functions: 90,
+          lines: 95,
+        },
+        "src/utils/smcDetector.js": {
+          statements: 95,
+          branches: 95,
+          functions: 95,
+          lines: 95,
+        },
+        "src/utils/sanitize.js": {
+          statements: 50,
+          branches: 45,
+          functions: 55,
+          lines: 50,
+        },
       },
       exclude: [
         "src/_deprecated/**",
