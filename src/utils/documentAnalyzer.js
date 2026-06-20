@@ -150,7 +150,21 @@ async function analyzePDFDocument(file, onProgress) {
 /**
  * Analyze DOCX file (Word document)
  */
+// RT7-4: a .docx is a zip; mammoth decompresses it into memory on the main
+// thread. A small file can still expand enormously (zip bomb / runaway doc).
+// Reject oversized uploads up front as a cheap first line of defense — a real
+// DBQ / letter .docx is a few MB. (Worker offload is a flagged follow-up.)
+const MAX_DOCX_BYTES = 25 * 1024 * 1024; // 25 MB compressed
+
 async function analyzeDOCXDocument(file, onProgress) {
+  if (file.size > MAX_DOCX_BYTES) {
+    throw new Error(
+      `This Word document is too large to process safely (${Math.round(
+        file.size / (1024 * 1024),
+      )} MB; limit ${MAX_DOCX_BYTES / (1024 * 1024)} MB). Convert it to PDF or split it into smaller files, then try again.`,
+    );
+  }
+
   onProgress({
     state: OCR_STATES.LOADING,
     progress: 10,
