@@ -78,6 +78,10 @@ export const isFileSupported = (file) => {
   return allExtensions.includes(ext);
 };
 
+// Shared PDF guard lives in a pdf.js-free module so it stays unit-testable;
+// re-exported here to keep documentAnalyzer's public API intact.
+export { isPdfFile } from "./fileTypeGuards";
+
 /**
  * Get file type label
  */
