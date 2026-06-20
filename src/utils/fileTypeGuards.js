@@ -37,3 +37,26 @@ export const isPdfFile = (file) => {
     ext === ".pdf" || mime === "application/pdf" || mime === "application/x-pdf"
   );
 };
+
+/**
+ * Map a pdf.js load error to user-facing, actionable copy.
+ *
+ * The VA ships C-files as password-protected PDFs; pdf.js rejects those with a
+ * `PasswordException`. Return a specific Error (tagged `code:
+ * "PDF_PASSWORD_REQUIRED"`) for that case so callers can show actionable copy
+ * instead of a generic "Failed to read PDF". Returns null for any other error.
+ *
+ * @param {unknown} error
+ * @returns {Error|null}
+ */
+export const describePdfPasswordError = (error) => {
+  const isPasswordIssue =
+    error?.name === "PasswordException" ||
+    error?.code === "PDF_PASSWORD_REQUIRED";
+  if (!isPasswordIssue) return null;
+  const e = new Error(
+    "This PDF is password-protected. Enter the correct password when prompted, or remove the protection (open it, then re-save or print to PDF) and upload again.",
+  );
+  e.code = "PDF_PASSWORD_REQUIRED";
+  return e;
+};

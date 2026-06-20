@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { isPdfFile } from "../../utils/fileTypeGuards";
+import {
+  isPdfFile,
+  describePdfPasswordError,
+} from "../../utils/fileTypeGuards";
 
 // RT7-3 / PARSE-003: the VA, some OSes, and cloud downloads ship PDFs with an
 // empty or application/octet-stream MIME type. Exact-MIME matching wrongly
@@ -41,5 +44,25 @@ describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   it("rejects null/undefined", () => {
     expect(isPdfFile(null)).toBe(false);
     expect(isPdfFile(undefined)).toBe(false);
+  });
+});
+
+describe("describePdfPasswordError — encrypted-PDF copy (RT7-1 / PARSE-001)", () => {
+  it("maps a pdf.js PasswordException to specific, tagged copy", () => {
+    const err = describePdfPasswordError({ name: "PasswordException" });
+    expect(err).toBeInstanceOf(Error);
+    expect(err.code).toBe("PDF_PASSWORD_REQUIRED");
+    expect(err.message).toMatch(/password-protected/i);
+  });
+
+  it("maps an already-tagged PDF_PASSWORD_REQUIRED error", () => {
+    const err = describePdfPasswordError({ code: "PDF_PASSWORD_REQUIRED" });
+    expect(err?.code).toBe("PDF_PASSWORD_REQUIRED");
+  });
+
+  it("returns null for unrelated errors (caller keeps generic copy)", () => {
+    expect(describePdfPasswordError(new Error("network blip"))).toBeNull();
+    expect(describePdfPasswordError(null)).toBeNull();
+    expect(describePdfPasswordError(undefined)).toBeNull();
   });
 });
