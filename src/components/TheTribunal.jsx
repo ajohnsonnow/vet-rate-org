@@ -1136,6 +1136,18 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
             </li>
           </ul>
 
+          {/* RT9-2: UPL / 38 C.F.R. 14.629 self-help disclaimer */}
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              <strong>Educational self-help only.</strong> The Tribunal is a
+              practice tool, not legal representation. Vet-Rate.org does not
+              prepare or present claims to the VA on your behalf and is not an
+              accredited claims agent or attorney (38 C.F.R. § 14.629). For
+              complex claims or appeals, consult an accredited VSO, claims
+              agent, or attorney.
+            </p>
+          </div>
+
           {/* Speech/Hearing Technology Warning */}
           <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
             <div className="flex items-start gap-3">
