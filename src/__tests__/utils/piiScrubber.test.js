@@ -5,6 +5,7 @@ import {
   analyzePII,
   scrubAndSpotlight,
   spotlight,
+  containsSignificantNonLatin,
 } from "../../utils/piiScrubber";
 
 describe("scrubPII — base cases", () => {
@@ -381,5 +382,49 @@ describe("scrubPII — adversarial inputs (red-team)", () => {
       customPatterns: [{ pattern: /x/g, label: "weird[label]" }],
     });
     expect(result.scrubbedText).toContain("[REDACTED_WEIRD[LABEL]]");
+  });
+});
+
+describe("containsSignificantNonLatin (RT3-4)", () => {
+  it("flags predominantly non-Latin text (Korean / Arabic / Japanese)", () => {
+    expect(
+      containsSignificantNonLatin("환자는 매우 우울하고 정신건강 문제가 있습니다"),
+    ).toBe(true);
+    expect(
+      containsSignificantNonLatin("المريض يعاني من اكتئاب شديد ومشاكل صحية"),
+    ).toBe(true);
+    expect(
+      containsSignificantNonLatin("患者は重度のうつ病と精神的健康問題を抱えている"),
+    ).toBe(true);
+  });
+
+  it("does NOT flag Latin-script locales (English / Spanish / Tagalog)", () => {
+    expect(
+      containsSignificantNonLatin("Veteran has tinnitus and knee pain"),
+    ).toBe(false);
+    expect(
+      containsSignificantNonLatin(
+        "El veterano tiene tinnitus y dolor de rodilla",
+      ),
+    ).toBe(false);
+    expect(
+      containsSignificantNonLatin(
+        "Ang beterano ay may tinnitus at sakit sa tuhod",
+      ),
+    ).toBe(false);
+  });
+
+  it("does NOT flag a few stray non-Latin characters in mostly-Latin text", () => {
+    expect(
+      containsSignificantNonLatin(
+        "Patient surname is 김 but the rest of this note is English text.",
+      ),
+    ).toBe(false);
+  });
+
+  it("handles empty / non-string input safely", () => {
+    expect(containsSignificantNonLatin("")).toBe(false);
+    expect(containsSignificantNonLatin(null)).toBe(false);
+    expect(containsSignificantNonLatin(undefined)).toBe(false);
   });
 });
