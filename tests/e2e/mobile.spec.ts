@@ -555,7 +555,23 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Atomic Wipe confirm keeps its CTA in view", async ({ page }) => {
-      await page.getByRole("button", { name: "Clear all local data" }).click();
+      const trigger = page.getByRole("button", {
+        name: "Clear all local data",
+      });
+      // BackupManager is React.lazy — first load in CI (dev server, JIT compile)
+      // can exceed 6 s; 15 s matches the webServer startup budget.
+      await expect
+        .poll(
+          async () => {
+            await page.evaluate(() => {
+              window.dispatchEvent(new CustomEvent("openBackupManager"));
+            });
+            return trigger.isVisible();
+          },
+          { timeout: 15_000 },
+        )
+        .toBe(true);
+      await trigger.click();
 
       await expect
         .poll(async () => (await inspectResponsiveModal(page)).found, {
