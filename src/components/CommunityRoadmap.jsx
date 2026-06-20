@@ -17,6 +17,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import changelogData from "../data/changelog.json";
 import { SQUASHED_BUGS } from "../data/squashedBugs";
+import { scrubPII } from "../utils/piiScrubber";
 
 // ============================================
 // CONFIGURATION
@@ -24,9 +25,10 @@ import { SQUASHED_BUGS } from "../data/squashedBugs";
 const STORAGE_KEY_VOTES = "vetrate_roadmap_votes";
 const STORAGE_KEY_SUBMISSIONS = "vetrate_roadmap_submissions";
 
-// FormSubmit.co endpoint - sends directly to developer's email
-const FORMSUBMIT_URL =
-  "https://formsubmit.co/ajax/Anth@StructuredForGrowth.com";
+// RT1-2: optional remote feedback endpoint, configured via VITE_ROADMAP_ENDPOINT.
+// Unset/empty = NO remote send — submissions save locally only and nothing leaves
+// the device (previously hardcoded a third-party broker + the developer's email).
+const FORMSUBMIT_URL = import.meta.env.VITE_ROADMAP_ENDPOINT ?? "";
 
 // ============================================
 // ROADMAP COLUMNS (Kanban-style)
@@ -388,28 +390,32 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
 
     // Send email notification to developer via FormSubmit
     try {
+      // Scrub PII from user free-text before any remote send (RT1-2).
       const formPayload = {
-        _subject: `[ROADMAP] New Feature Request: ${newItem.title}`,
+        _subject: `[ROADMAP] New Feature Request: ${scrubPII(newItem.title)}`,
         _template: "table",
         request_id: newItem.id,
-        title: newItem.title,
+        title: scrubPII(newItem.title),
         category: newItem.category,
-        description: newItem.description,
+        description: scrubPII(newItem.description),
         submitted_at: new Date().toISOString(),
         source: "Community Roadmap",
       };
 
-      await fetch(FORMSUBMIT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(formPayload),
-      });
+      // Remote send only when the operator has configured an endpoint.
+      if (FORMSUBMIT_URL) {
+        await fetch(FORMSUBMIT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(formPayload),
+        });
 
-      // eslint-disable-next-line no-console
-      console.log("✅ Roadmap feature request sent to developer");
+        // eslint-disable-next-line no-console
+        console.log("✅ Roadmap feature request sent to developer");
+      }
     } catch (error) {
       // Don't fail the submission if email fails - local save is what matters
       console.warn("⚠️ Could not send email notification:", error.message);
