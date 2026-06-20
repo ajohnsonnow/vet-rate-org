@@ -3,6 +3,7 @@ import {
   detectCrisisLanguage,
   CRISIS_RESOURCES,
   interceptBeforeAICall,
+  scanDocumentForCrisis,
 } from "../../utils/crisisInterceptor";
 
 describe("crisisInterceptor", () => {
@@ -101,6 +102,36 @@ describe("crisisInterceptor", () => {
       const result = interceptBeforeAICall("What is my combined rating?");
       expect(result.shouldBlock).toBe(false);
       expect(result.crisisDetected).toBe(false);
+    });
+  });
+
+  describe("scanDocumentForCrisis (AIS-05, non-blocking)", () => {
+    it("returns true and fires a passive crisis-resources event on a hit", () => {
+      let fired = false;
+      const handler = () => {
+        fired = true;
+      };
+      window.addEventListener("vetrate:crisis-resources", handler);
+      const result = scanDocumentForCrisis(
+        "Patient has a documented history of suicidal thoughts.",
+      );
+      window.removeEventListener("vetrate:crisis-resources", handler);
+      expect(result).toBe(true);
+      expect(fired).toBe(true);
+    });
+
+    it("returns false and fires nothing for benign document text", () => {
+      let fired = false;
+      const handler = () => {
+        fired = true;
+      };
+      window.addEventListener("vetrate:crisis-resources", handler);
+      const result = scanDocumentForCrisis(
+        "Veteran has tinnitus, knee pain, and sleep apnea.",
+      );
+      window.removeEventListener("vetrate:crisis-resources", handler);
+      expect(result).toBe(false);
+      expect(fired).toBe(false);
     });
   });
 });

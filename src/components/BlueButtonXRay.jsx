@@ -13,6 +13,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
+import { scanDocumentForCrisis } from "../utils/crisisInterceptor";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
@@ -672,6 +673,9 @@ export default function BlueButtonXRay({
       const fullPrompt =
         BLUE_BUTTON_AI_PROMPT_HEADER + text + BLUE_BUTTON_AI_PROMPT_FOOTER;
 
+      // AIS-05: non-blocking crisis scan over the raw health-record text.
+      scanDocumentForCrisis(text);
+
       const aiResponse = await generateAI(fullPrompt, {
         temperature: 0.2,
         maxTokens: 2000,
@@ -722,6 +726,9 @@ export default function BlueButtonXRay({
               BLUE_BUTTON_AI_PROMPT_HEADER +
               chunkText +
               BLUE_BUTTON_AI_PROMPT_FOOTER;
+
+            // AIS-05: non-blocking crisis scan over this raw record chunk.
+            scanDocumentForCrisis(chunkText);
 
             const aiResponse = await generateAI(chunkPrompt, {
               temperature: strategy.temp,
