@@ -2,60 +2,51 @@
 
 > Live status of the autonomous execution of [RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md).
 > Branch: `audit/fable-master-plan` · Commits are **local only** (no push, no PRs).
-> Updated each chunk. Source of truth for "where am I" across wake cycles.
+> Source of truth for "where am I" across wake cycles.
 
-**Last updated:** 2026-06-20 (chunk 4)
-**Verification baseline:** `npm run build` green (✓ ~17-21s). `npm test` (vitest) now RUNS after the test-infra fix: **1011 passing, 3 pre-existing failures** in `cfileResilience.test.js` (unrelated to this work — see below).
+**Last updated:** 2026-06-20 (chunk 5)
+**Verification baseline:** `npm run build` green (✓ ~17s). `npm test`: **1011 passing**, 3 pre-existing `cfileResilience.test.js` failures (unrelated). Only NEW failures matter.
 
 ---
 
 ## Order & status
 
-Legend: ✅ done · 🟡 partial/in-progress · ⏳ pending · 🚩 blocked (needs you) · ⏭️ deferred-for-review
+Legend: ✅ done · 🟡 partial · ⏳ pending · 🚩 blocked-needs-you · 🔒 blocked-by-parallel-edits · ⏭️ deferred-for-review
 
-| Sprint                        | Status  | Notes                                                                                                                                                                                                                                                        |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Baseline + test infra**     | ✅      | Plan doc (`95a835f`); WIP checkpoint (`005affc`); restored vitest suite by adding missing `@testing-library/dom` peer dep (`e287c03`).                                                                                                                       |
-| **RT-13**                     | 🟡      | RT13-6 ✅ (`97d9675`). Rest pending. (New: lint-staged pattern `*.{…js…}` omits `.jsx`, so JSX skips eslint on commit — fold into RT13.)                                                                                                                     |
-| **RT-15 — Calm restyle**      | 🟡 / ⏭️ | RT15-6 ✅, RT15-1/D2 ✅ (`bd5ebed`), RT15-2 central ✅ (`6a88014`). **Long-tail DEFERRED FOR OWNER VISUAL REVIEW** — see note.                                                                                                                               |
-| **RT-1 — Egress honesty**     | 🟡      | RT1-2 ✅ (`7023029`) feedback egress env-gated + PII-scrubbed. Next: RT1-1 (code: drop Gemini env-key fallback + dist-leak gate; 🚩 key rotation is external), RT1-5 (README "no analytics"), RT1-3 (privacy-policy {t()} render), RT1-6 (egress inventory). |
-| **RT-2 — Evidence integrity** | ⏳      |                                                                                                                                                                                                                                                              |
-| **RT-3 — Crisis/non-English** | ⏳      |                                                                                                                                                                                                                                                              |
-| **RT-4..RT-12**               | ⏳      |                                                                                                                                                                                                                                                              |
-| **RT-14 — Brand enrichment**  | ⏳      | Builds on RT-15.                                                                                                                                                                                                                                             |
+| Sprint                        | Status  | Notes                                                                                                                                                                                                                                                                   |
+| ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Baseline + test infra**     | ✅      | Plan (`95a835f`), WIP checkpoint (`005affc`), vitest restored via `@testing-library/dom` (`e287c03`).                                                                                                                                                                   |
+| **RT-13**                     | 🟡      | RT13-6 ✅ (`97d9675`). Rest pending. (Note: lint-staged omits `.jsx` from eslint.)                                                                                                                                                                                      |
+| **RT-15 — Calm restyle**      | 🟡 / ⏭️ | Systemic de-rainbow done (`bd5ebed`, `6a88014`). Long-tail (HomeFeatureCards sections, Header pills, per-modal) **DEFERRED FOR OWNER VISUAL REVIEW** — mapping in prior tracker note.                                                                                   |
+| **RT-1 — Egress honesty**     | 🟡      | RT1-2 ✅ (`7023029`), RT1-1 ✅ (`2252992`), RT1-6 ✅ (`c9e310d`). **RT1-5 (README), RT1-3 (privacy-policy render) = 🔒** the parallel actor is actively editing README/legal HTML right now — route around to avoid entangling. RT1-7 (self-host CDN/lazy GSI) pending. |
+| **RT-2 — Evidence integrity** | ⏳ NEXT | Files clean (not touched by parallel actor). Start AIS-01 (re-enable dead validator).                                                                                                                                                                                   |
+| **RT-3 — Crisis/non-English** | ⏳      |                                                                                                                                                                                                                                                                         |
+| **RT-4..RT-12**               | ⏳      |                                                                                                                                                                                                                                                                         |
+| **RT-14 — Brand enrichment**  | ⏳      | After RT-15 review.                                                                                                                                                                                                                                                     |
 
 ---
 
 ## Done (commits, newest first)
 
-- `7023029` fix(privacy): RT1-2 — env-gate + PII-scrub feedback egress (FeatureRequest, CommunityRoadmap, .env.example). Build green; no new test failures.
-- `e287c03` fix(test): install missing `@testing-library/dom` — restores the vitest suite (was 100% broken at import).
-- `6a88014` feat(brand): RT15-2 — de-rainbow central HEADER_GRADIENTS + hero → green.
-- `bd5ebed` feat(brand): RT15 — calm dev banner (D14) + unify va-blue/va-gold to theme vars (D2).
-- `97d9675` fix(ci): RT13-6 — dedupe lint-staged + drop uninstalled stylelint hook.
-- `005affc` chore: WIP checkpoint (83 files). · `95a835f` docs(audit): plan.
+- `c9e310d` docs(privacy): RT1-6 — egress inventory from the CSP allowlist.
+- `2252992` fix(privacy): RT1-1 — BYOK only; drop Gemini build-env key fallback + dist-secret scan + release gate. Verified (build, dist scan, routing tests 29/29).
+- `7023029` fix(privacy): RT1-2 — env-gate + PII-scrub feedback egress.
+- `e287c03` fix(test): restore vitest (`@testing-library/dom`).
+- `6a88014` feat(brand): RT15-2 central de-rainbow + hero. · `bd5ebed` RT15 banner + va-vars.
+- `97d9675` fix(ci): RT13-6. · `005affc` WIP checkpoint. · `95a835f` plan.
 
-## ⏭️ RT-15 long-tail — DEFERRED FOR OWNER VISUAL REVIEW (per the loop's escape-hatch instruction)
+## 🔒 Parallel actor on this branch
 
-The systemic de-rainbow is done (banner, va-vars, central tool-header gradients, flagship hero). The **remaining** rainbow is hardcoded across many files with no central control and is too subjective to finish well _blind_ in an autonomous loop (and hard to verify — the home grid renders only behind modals). Proposed mapping for the owner to greenlight, then I (or a Sonnet pass) can apply it quickly:
+Commits `d788a01` (e2e), `933e8a6` (`[pre-push]` stats auto-commit) appeared from elsewhere, and the working tree has **uncommitted** changes (not mine) to `README.md`, `public/privacy-policy.html`, `public/terms-of-service.html`, `AGENTIC_VALUE_PROPOSITION.md`, `docs/LEGAL_PAGES_SYNC.md`, `public/version.json`, `src/data/projectStats.json` — i.e. someone is doing a **legal-pages/README/marketing pass right now** (overlaps RT1-3/RT1-5). I am committing only my own explicit file paths (never `git add -A`) and routing around their files. If history diverges, STOP and report — never force.
 
-- `HomeFeatureCards.jsx` (~40 bespoke section gradients): teal/violet/rose/amber/blue card+button+icon+badge gradients → deep green (`green-700/800`) for most; **keep** semantic green FREE badges, red ACTIVE-DUTY/danger badges, and one muted-gold (`amber-700`) accent for the "Maximize" section.
-- `Header.jsx` nav pills (the blue/teal/yellow/pink/purple/indigo row).
-- Per-tool modal headers/buttons (e.g. Symptom Logger orange, MyPacket "Analyze Strategy" purple).
-- Then RT15-3/4 (emoji→lucide), RT15-5 (calm default/motion), RT15-7 (lint rule), RT15-8/D1 (per-theme `--va-gold-text`).
-  **Recommendation:** do this as one focused pass with the dev server up so each screen can be eyeballed.
+## ⏭️ / 🚩 Deferred & needs-you
 
-## ⚠️ Pre-existing test failures (NOT from this work)
-
-`cfileResilience.test.js` — 3 failures ("strips a hallucinated diagnostic code from the merged result", `Cannot read properties of undefined (reading 'diagnosticCode')`). In the in-flight C-file analyzer work present at session start; relates to AIS hallucination-stripping. Flagged for the owner — not touched by these sprints.
-
-## Blocked / needs-you (do NOT auto-complete)
-
-- 🚩 **RT1-1** — rotate the live `VITE_GEMINI_API_KEY` in Google Cloud Console (external). Code side (drop env fallback + dist-leak CI gate) is doable and next.
-- 🚩 **RT9-1/2/3** counsel (CCPA/GDPR, UPL, FTC). 🚩 **RT6-3** at-rest-encryption default. 🚩 keep-BYOK-or-not. 🚩 VA-OAuth data-classification. 🚩 **RT8-8** LH mobile baseline.
+- ⏭️ RT-15 long-tail → owner visual review.
+- 🔒 RT1-5 / RT1-3 → wait for the parallel legal/README edits to settle, then reconcile.
+- 🚩 RT1-1 key **rotation** (Google Cloud Console). 🚩 RT9 counsel. 🚩 RT6-3 / keep-BYOK / VA-OAuth classification. 🚩 RT8-8 LH baseline.
+- ⚠️ Pre-existing: `cfileResilience.test.js` ×3 (in-flight C-file work, not mine).
 
 ## Notes for next chunk
 
-- Next: RT1-1 code — in `unifiedAIService.js` (~498, ~684) and `aiStatementHelper.js:47`, drop the `import.meta.env.VITE_GEMINI_API_KEY` fallback so the cloud key comes ONLY from the user's localStorage BYOK entry; add a release/CI grep that fails if `dist/` contains an `AIza…` key. Then RT1-5 (README), RT1-3 (sync-legal-pages {t()} render).
-- Parallel-actor watch: `d788a01` (e2e) appeared earlier from elsewhere; reconcile cleanly, no force.
-- Port leakage from stopped dev servers (5173/5174/5175) — clean stray node when convenient.
+- **RT-2 (AIS-01)**: `unifiedAIService.js:1971-1973` passes `taskType` where `validateAIResponse` expects a `{taskType, loadedRegulations}` context object → the forbidden-phrase + CFR-grounding validator is dead. Fix the call shape; make the forbidden-phrase block run unconditionally; add a test driving the real `generateAI` return path. Files: `unifiedAIService.js` (mine/clean), `aiSystemPrompts.js`. Then AIS-02 (nexus packet), AIS-03 (buddy statement), LEGAL-03 + in-doc 18 USC 1001 warnings.
+- Avoid README / public/\*.html / AGENTIC_VALUE_PROPOSITION.md / LEGAL_PAGES_SYNC.md until the parallel edits land.
