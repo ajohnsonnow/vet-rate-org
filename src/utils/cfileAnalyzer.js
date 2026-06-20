@@ -24,6 +24,7 @@ import {
 } from "./unifiedAIService";
 import { validateDiagnosticCode } from "./hallucinationTrap";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
+import { untrustedSection } from "./aiSystemPrompts";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
@@ -1684,7 +1685,10 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   }
 
   // User prompt is just the document text - system prompt is passed separately
-  const userPrompt = `--- BEGIN C-FILE TEXT ---\n\n${chunk.text}\n\n--- END C-FILE TEXT ---\n\nAnalyze and return ONLY the JSON object.`;
+  // PI-02: wrap the untrusted C-file text in spotlight delimiters so the
+  // <untrusted_content> tags the BASE_SYSTEM_PROMPT relies on are actually present
+  // (an injected instruction inside the document is then framed as DATA, not command).
+  const userPrompt = `${untrustedSection("C-FILE TEXT", chunk.text)}\n\nAnalyze and return ONLY the JSON object.`;
 
   // Local AI: cap output at 1024 tokens. Without XGrammar schema enforcement,
   // maxTokens is respected and decode runs at 30+ tok/s instead of 1.5-3 tok/s.
@@ -1898,7 +1902,8 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
     AI_MODES.LOCAL_SERVER,
   ].includes(effectiveMode);
 
-  const userPrompt = `--- PAGE ${pageNum} ---\n\n${pageText}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
+  // PI-02: spotlight the untrusted page text (treat-as-data delimiters).
+  const userPrompt = `${untrustedSection(`C-FILE PAGE ${pageNum}`, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
 
   // 256 output tokens per page is generous — a single VA record page rarely has
   // more than 5-6 conditions + a few timeline entries.
