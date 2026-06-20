@@ -20,7 +20,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write   # PR comments (dependency review, size-limit)
+  pull-requests: write # PR comments (dependency review, size-limit)
   security-events: write # SARIF upload (CodeQL via reusable workflow)
 
 concurrency:
@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22'     # CUSTOMIZE: match the project's .nvmrc / engines field
+  NODE_VERSION: "22" # CUSTOMIZE: match the project's .nvmrc / engines field
 
 jobs:
   # ---------------------------------------------------------------- detect --
@@ -142,6 +142,7 @@ jobs:
           --config p/python
           --config p/owasp-top-ten
           --config p/security-audit
+          --config .semgrep/custom-rules.yaml
         env:
           # Optional: connect to Semgrep AppSec Platform for triage/dedup
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
@@ -361,9 +362,10 @@ jobs:
   # --------------------------------------------------------- e2e-user-journeys --
   e2e-user-journeys:
     name: E2E User Journeys
+    needs: [detect]
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: "contains(github.event.pull_request.changed_files, 'src/') || contains(github.event.pull_request.changed_files, 'e2e/')"
+    if: needs.detect.outputs.code == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -371,7 +373,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
 
       - name: Install dependencies
@@ -406,10 +408,11 @@ jobs:
   # --------------------------------------------------------- visual-regression --
   visual-regression:
     name: Visual Regression
+    needs: [detect]
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: "contains(github.event.pull_request.changed_files, 'src/') || contains(github.event.pull_request.changed_files, 'e2e/visual/')"
-    continue-on-error: true  # Informational until baseline is stable
+    if: needs.detect.outputs.code == 'true'
+    continue-on-error: true # Informational until baseline is stable
     steps:
       - name: Checkout (full history for baseline comparison)
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -419,7 +422,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
 
       - name: Install dependencies
@@ -467,9 +470,11 @@ jobs:
   # ------------------------------------------------------------ ux-perf-check --
   ux-perf-check:
     name: UX Performance Check
+    needs: [detect]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "contains(github.event.pull_request.changed_files, 'src/')"
+    if: needs.detect.outputs.code == 'true'
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -477,7 +482,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
 
       - name: Install dependencies
