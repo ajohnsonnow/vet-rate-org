@@ -52,7 +52,7 @@ export function generateState() {
  */
 function base64UrlEncode(buffer) {
   // Convert buffer to base64
-  let base64 = btoa(String.fromCharCode(...buffer));
+  const base64 = btoa(String.fromCharCode(...buffer));
 
   // Make it URL-safe:
   // Replace + with - (minus)

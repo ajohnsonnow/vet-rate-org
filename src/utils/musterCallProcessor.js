@@ -1655,9 +1655,9 @@ const parseServiceRecord = async (text) => {
     for (const pattern of namePatterns) {
       const match = box1Text.match(pattern);
       if (match) {
-        let potentialLastName = match[1]?.trim().toUpperCase();
-        let potentialFirstName = match[2]?.trim().toUpperCase();
-        let potentialMiddleName = match[3]?.trim().toUpperCase() || null;
+        const potentialLastName = match[1]?.trim().toUpperCase();
+        const potentialFirstName = match[2]?.trim().toUpperCase();
+        const potentialMiddleName = match[3]?.trim().toUpperCase() || null;
 
         // === VALIDATION ===
         // Reject if ANY part matches a DD214 field label

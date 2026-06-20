@@ -170,7 +170,7 @@ export const TOOL_AGENT_MAP = {
 let swarmEngine = null;
 let swarmReady = false;
 let swarmInitializing = false;
-let loadedAgents = new Set();
+const loadedAgents = new Set();
 let currentAgent = null;
 let loadedModelId = null; // Tracks which model was actually loaded
 
@@ -277,7 +277,7 @@ let webllmEngine = null;
 // Default model list used before device probe completes. The device profile
 // (detectDeviceCapabilities) overrides this in initializeSwarm at runtime.
 const DIAMOND_MODELS_DEFAULT = [
-  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16, fast on shader-f16 GPUs
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16, proven ~55 s/chunk on 4080 SUPER (stream:false)
   "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0GB - f32 fallback
   "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1.0GB - lower-VRAM fallback
   "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative architecture
@@ -432,7 +432,7 @@ export const initializeSwarm = async (
       deviceProfile.recommendedModels?.length > 0
         ? deviceProfile.recommendedModels
         : DIAMOND_MODELS_DEFAULT;
-    const contextWindowSize = deviceProfile.contextWindowSize ?? 12288;
+    const contextWindowSize = deviceProfile.contextWindowSize ?? 8192;
 
     if (!deviceProfile.canUseWebLLM) {
       swarmInitializing = false;
@@ -468,9 +468,8 @@ export const initializeSwarm = async (
             },
             logLevel: "SILENT",
           },
-          // Device-adaptive context window: high-end desktops get 12288 (28K-char
-          // chunks); tablets/laptops fall back to 8192 or 4096. Extra KV-cache
-          // cost per 4K tokens is ~0.3 GB (safe on 8GB+ cards).
+          // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
+          // desktop-mid/laptop/mobile fall back to 8192 or 4096.
           { context_window_size: contextWindowSize },
         );
 
@@ -599,8 +598,8 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
   // Match the context_window_size the engine was initialized with.
   // Reading from the cached device profile keeps this in sync with the value
-  // passed to CreateMLCEngine; defaults to 12288 before the probe completes.
-  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 12288;
+  // passed to CreateMLCEngine; defaults to 8192 (Qwen2.5-3B model max).
+  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 8192;
   const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
@@ -741,6 +740,14 @@ export const generateWithSwarm = async (prompt, options = {}) => {
           if (bracketDepth === 0 && responseText.trimStart().startsWith("{"))
             break;
           if (piece.choices[0]?.finish_reason) break;
+          // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
+          // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
+          if (responseText.length > 4500) {
+            try {
+              webllmEngine.interruptGenerate();
+            } catch { /* interruptGenerate may throw if no generation is in progress */ }
+            break;
+          }
         }
       } else if (onStream) {
         // Non-JSON caller-driven streaming
@@ -755,10 +762,15 @@ export const generateWithSwarm = async (prompt, options = {}) => {
           onStream(delta, responseText);
         }
       } else {
-        // Non-streaming non-JSON response
-        const response =
-          await webllmEngine.chat.completions.create(generationConfig);
-        responseText = response.choices[0]?.message?.content || "";
+        // stream:true has ~700 ms/token GPU-CPU sync latency on Ada (SM 8.9),
+        // turning 1024-token decodes into 12-minute timeouts. stream:false issues
+        // one batch readback; the stress harness PROGRESS_STALL_LIMIT_MS (300 s)
+        // is set high enough for the decode to complete before the stall fires.
+        const result = await webllmEngine.chat.completions.create({
+          ...generationConfig,
+          stream: false,
+        });
+        responseText = result.choices[0]?.message?.content || "";
       }
 
       return {

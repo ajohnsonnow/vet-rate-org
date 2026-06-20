@@ -610,7 +610,7 @@ function extractDate(text, context) {
 
   if (match) {
     let month = match[3];
-    let day = match[2];
+    const day = match[2];
     let year = match[4];
 
     // Handle 2-digit year

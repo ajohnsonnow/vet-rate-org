@@ -48,7 +48,7 @@ import {
   Award,
   ExternalLink,
   ChevronLeft,
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars, sonarjs/unused-import
   Link as LinkIcon,
   Clipboard,
   Loader,

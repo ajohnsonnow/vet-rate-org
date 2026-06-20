@@ -135,7 +135,7 @@ const generateRoadmapFromChangelog = () => {
     update.changelog.forEach((entry) => {
       items.push({
         id: `changelog-${itemIndex++}`,
-        // eslint-disable-next-line no-misleading-character-class
+        // eslint-disable-next-line no-misleading-character-class, sonarjs/no-misleading-character-class
         title: entry.title.replace(/^[🎖️🌐🖥️⚡🧹💰🔍📝🎯🤝🛡️]+\s*/g, "").trim(),
         description: entry.description,
         category: categoryMap[entry.category] || "Tools",

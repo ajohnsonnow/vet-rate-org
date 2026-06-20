@@ -38,12 +38,14 @@ const VALID_DCS: Set<string> = new Set(
   ),
 );
 
-// WS-1 pass bar: the progress UI must keep visibly moving. 10s was too
-// aggressive — model downloads and dense-page OCR legitimately pause the
-// text for >10s without the pipeline being hung (observed 11.1s on a green
-// run). A genuine hang (dead worker, frozen main thread) shows minutes of
-// silence, so 45s separates the two cleanly.
-const PROGRESS_STALL_LIMIT_MS = 45_000;
+// WS-1 pass bar: the progress UI must keep visibly moving.
+// stream:false decode (batch GPU readback) starves setInterval macrotasks,
+// so the heartbeat cannot fire during generation. On a 4080 SUPER the decode
+// of a 1024-token chunk takes up to ~5 min for large chunks (high context
+// utilisation + long JSON output); 360 s matches PHASE_TRANSITION_LIMIT_MS
+// and gives safe margin without letting a genuine hang go undetected.
+// Run br7dlofgw2 failed at 300342 ms (342 ms over the 300 s limit).
+const PROGRESS_STALL_LIMIT_MS = 360_000;
 // Document open / model warm-up phases are silent by nature on a 313MB file
 const PHASE_TRANSITION_LIMIT_MS = 360_000;
 const PROGRESS_POLL_MS = 1_000;
@@ -63,6 +65,20 @@ test.describe("WS-1 stress: 313MB C-File full pipeline", () => {
 
     await bootStressPage(page);
     const telemetry = await startTelemetry(context, page);
+
+    // Pipe browser console errors to Node stdout so they appear in the output
+    // file and make chunk-level failure reasons visible without DevTools.
+    page.on("console", (msg) => {
+      if (
+        msg.type() === "error" ||
+        msg.text().includes("❌") ||
+        msg.text().includes("JSON Parse") ||
+        msg.text().includes("Failed to parse") ||
+        msg.text().includes("failedChunk")
+      ) {
+        console.log(`BROWSER [${msg.type()}]: ${msg.text()}`);
+      }
+    });
 
     await openToolByEvent(page, "openCFileAnalyzer");
     const dialog = page.locator(

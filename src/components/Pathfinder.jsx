@@ -498,6 +498,7 @@ export default function Pathfinder({
   const handlePastedRatings = (parsedRatings) => {
     // Save each rating to veteranProfile for use across app
     parsedRatings.forEach((rating) => {
+      // eslint-disable-next-line sonarjs/no-extra-arguments
       addRating(rating);
     });
 

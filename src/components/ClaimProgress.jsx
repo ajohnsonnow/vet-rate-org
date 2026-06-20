@@ -91,7 +91,7 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
           (c) => c.conditionName?.toLowerCase() === conditionName.toLowerCase(),
         );
       }
-    } catch (_) {}
+    } catch (_) { /* navigator lookup may fail in restricted contexts */ }
 
     const hasDiagnosis =
       navigatorBig3.diagnosis ||

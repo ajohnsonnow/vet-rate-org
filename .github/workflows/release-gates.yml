@@ -1,0 +1,284 @@
+# .github/workflows/release-gates.yml
+#
+# Vet-Rate.org — Release gates: SBOM, provenance, DAST, full SAST,
+# license scan, smoke test, and a consolidated gate summary.
+#
+# Runs on every push to main/master (and version tags for provenance),
+# plus manual dispatch.
+#
+# Repository variables used (Settings → Secrets and variables → Variables):
+#   STAGING_URL — base URL of the staging deployment (enables DAST + headers)
+#
+# PINNING: run `pinact run` to pin @vN tags to SHAs before production use.
+
+name: Release Gates
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-gates-${{ github.ref }}
+  cancel-in-progress: false # never cancel a release pipeline mid-flight
+
+env:
+  NODE_VERSION: '22' # CUSTOMIZE
+
+jobs:
+  # --------------------------------------------------------------------- sbom --
+  sbom:
+    name: Generate SBOM (CycloneDX + SPDX)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # attach SBOM to releases on tag pushes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0 # pinact
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          artifact-name: sbom-cyclonedx.json
+          upload-release-assets: true # attaches to release when triggered by a tag
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0 # pinact
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+          artifact-name: sbom-spdx.json
+          upload-release-assets: true
+
+  # --------------------------------------------------------------- provenance --
+  provenance:
+    name: SLSA build provenance
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      id-token: write     # OIDC token for Sigstore signing
+      attestations: write # store the attestation
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Build release artifacts
+        # CUSTOMIZE: replace with the project's real build + package steps
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then
+            npm ci && npm run build
+            mkdir -p release-artifacts
+            tar -czf release-artifacts/Vet-Rate.org-${GITHUB_REF_NAME}.tar.gz dist/
+          else
+            echo "::warning::No build script found — add project-specific build steps here."
+            mkdir -p release-artifacts
+            git archive --format=tar.gz -o "release-artifacts/Vet-Rate.org-${GITHUB_REF_NAME}.tar.gz" HEAD
+          fi
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2 # pinact
+        with:
+          subject-path: 'release-artifacts/*'
+
+  # ------------------------------------------------------------- dast-baseline --
+  dast-baseline:
+    name: DAST baseline (OWASP ZAP, informational)
+    if: vars.STAGING_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    env:
+      TARGET_URL: ${{ vars.STAGING_URL }}
+    steps:
+      - name: ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.12.0 # pinact
+        with:
+          target: ${{ env.TARGET_URL }}
+          allow_issue_writing: false       # report via artifact, not auto-issues
+          artifact_name: zap-baseline-report
+          # CUSTOMIZE: rules_file_name: .zap/rules.tsv  (to suppress known FPs)
+
+  # ----------------------------------------------------------- security-headers --
+  security-headers:
+    name: Security headers check (informational)
+    if: vars.STAGING_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: Check response headers
+        run: |
+          URL="${{ vars.STAGING_URL }}"
+          HEADERS=$(curl -sIL --max-time 30 "$URL")
+          echo "$HEADERS"
+          MISSING=""
+          for h in "strict-transport-security" "content-security-policy" \
+                   "x-content-type-options" "referrer-policy" \
+                   "permissions-policy" "x-frame-options"; do
+            if ! echo "$HEADERS" | grep -qi "^$h:"; then
+              MISSING="$MISSING $h"
+            fi
+          done
+          {
+            echo "## Security headers — $URL"
+            if [ -n "$MISSING" ]; then
+              echo "Missing headers:"
+              for m in $MISSING; do echo "- \`$m\`"; done
+            else
+              echo "All expected security headers present."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$MISSING" ] # non-zero exit = visible warning (job is continue-on-error)
+
+  # ----------------------------------------------------------------- full-sast --
+  full-sast-semgrep:
+    name: Full SAST (Semgrep, whole codebase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: semgrep/semgrep # pinact: pin to image digest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Semgrep full scan (not diff-aware)
+        run: >
+          semgrep scan --error
+          --config p/typescript
+          --config p/javascript
+          --config p/python
+          --config p/owasp-top-ten
+          --config p/security-audit
+
+  full-sast-codeql:
+    name: Full SAST (CodeQL)
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  # -------------------------------------------------------------- license-scan --
+  license-scan:
+    name: License scan (fail on copyleft in prod deps)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Trivy license scan
+        uses: aquasecurity/trivy-action@0.28.0 # pinact
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: license
+          # Trivy classifies GPL/LGPL/AGPL as HIGH/CRITICAL ("restricted"/"forbidden")
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          # CUSTOMIZE: add trivy.yaml with license.ignored for approved exceptions
+
+  # ---------------------------------------------------------------- smoke-test --
+  smoke-test:
+    name: Smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Run smoke test if one exists
+        # CUSTOMIZE: standardize on scripts/smoke-test.sh or "test:smoke" npm script
+        run: |
+          if [ -x scripts/smoke-test.sh ] || [ -f scripts/smoke-test.sh ]; then
+            bash scripts/smoke-test.sh
+          elif [ -f package.json ] && jq -e '.scripts["test:smoke"]' package.json > /dev/null; then
+            npm ci
+            npm run test:smoke
+          else
+            echo "No smoke test found (scripts/smoke-test.sh or npm test:smoke) — skipping."
+          fi
+
+  # --------------------------------------------------------- post-deploy-notify --
+  post-deploy-notify:
+    name: Release gate summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      - sbom
+      - provenance
+      - dast-baseline
+      - security-headers
+      - full-sast-semgrep
+      - full-sast-codeql
+      - license-scan
+      - smoke-test
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Write gate summary
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo "## Vet-Rate.org — release gates for \`${GITHUB_REF_NAME}\`"
+            echo ""
+            echo "| Gate | Result |"
+            echo "|------|--------|"
+            echo "$NEEDS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record GitHub deployment
+        # Records that the release gates ran for this ref. CUSTOMIZE the
+        # environment name / URL to match the real deployment target.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          STATE=success
+          if echo "$NEEDS" | jq -e '[.[] | select(.result == "failure")] | length > 0' > /dev/null; then
+            STATE=failure
+          fi
+          DEPLOYMENT_ID=$(gh api "repos/${GITHUB_REPOSITORY}/deployments" \
+            -f ref="${GITHUB_SHA}" \
+            -f environment="release-gates" \
+            -F auto_merge=false \
+            -f description="Release gate run for ${GITHUB_REF_NAME}" \
+            -F required_contexts[] --jq '.id' 2>/dev/null) || true
+          if [ -n "${DEPLOYMENT_ID:-}" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
+              -f state="$STATE" \
+              -f description="Release gates: $STATE" || true
+          fi
+
+      - name: Fail if any blocking gate failed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          # dast-baseline and security-headers are continue-on-error (informational)
+          if echo "$NEEDS" | jq -e '
+              [to_entries[]
+               | select(.key != "dast-baseline" and .key != "security-headers")
+               | select(.value.result == "failure" or .value.result == "cancelled")
+              ] | length > 0' > /dev/null; then
+            echo "::error::One or more blocking release gates failed."
+            exit 1
+          fi

@@ -10,7 +10,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { formatFileSize, estimateProcessingTime } from "../utils/pdfExtractor";
+import { formatFileSize } from "../utils/pdfExtractor";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   processFormationDocument,
   PROCESSING_STATES,
@@ -484,8 +485,16 @@ export default function CFileAnalyzer({
         </div>
       )}
 
+      {/* System requirements + timing notice */}
+      <div className="mt-6">
+        <SystemRequirementsNotice
+          fileSizeMB={file ? file.size / 1024 / 1024 : null}
+          toolName="C-File Analyzer"
+        />
+      </div>
+
       {/* Analyze Button */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <button
           onClick={handleStartAnalysis}
           disabled={!file || !isAnyAIAvailable()}
@@ -498,13 +507,6 @@ export default function CFileAnalyzer({
           🔍 {t("cfileAnalyzer", "analyzeMyFile")}
         </button>
       </div>
-
-      {file && (
-        <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          {t("cfileAnalyzer", "estimatedProcessingTime")}{" "}
-          {estimateProcessingTime(Math.ceil(file.size / 5000))}
-        </div>
-      )}
     </div>
   );
 

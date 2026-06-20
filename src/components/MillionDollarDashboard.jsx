@@ -278,7 +278,7 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   const chartData = useMemo(() => {
     const points = [];
     // eslint-disable-next-line no-unused-vars
-    let cumulative = 0;
+    const cumulative = 0;
     const startYear = currentAge;
     const yearsToShow = Math.min(calculation.yearsRemaining, 50);
 

@@ -12619,11 +12619,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "{total}개 청크를 최종 보고서로 병합 중...",
     },
     largeFileDetected: {
-      en: "Large file detected! Processing in {total} chunks. This may take 5-15 minutes. Please keep this tab open.",
-      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. Esto puede tomar 5-15 minutos. Por favor mantén esta pestaña abierta.",
-      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Maaaring tumagal ng 5-15 minuto. Mangyaring panatilihing bukas ang tab na ito.",
-      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. Có thể mất 5-15 phút. Vui lòng giữ tab này mở.",
-      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 5-15분이 소요될 수 있습니다. 이 탭을 열어두세요.",
+      en: "Large file detected! Processing in {total} chunks. On-device AI takes ~2 min per section — see the time estimate above. Please keep this tab open.",
+      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. La IA local toma ~2 min por sección. Por favor mantén esta pestaña abierta.",
+      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Ang on-device AI ay tumatagal ng ~2 min bawat seksyon. Mangyaring panatilihing bukas ang tab na ito.",
+      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. AI trên thiết bị mất ~2 phút mỗi phần. Vui lòng giữ tab này mở.",
+      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 온디바이스 AI는 섹션당 약 2분 소요됩니다. 이 탭을 열어두세요.",
     },
     largeFileMayTake: {
       en: "Large files may take several minutes. Please keep this tab open.",

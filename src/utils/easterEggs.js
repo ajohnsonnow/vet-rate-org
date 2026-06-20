@@ -154,7 +154,7 @@ export const useGamepadBridge = (isActive) => {
     if (!isActive) return;
 
     let animationId;
-    let lastButtonState = {};
+    const lastButtonState = {};
 
     const BUTTON_MAP = {
       0: " ", // A/X → Space (Use/Shoot)
