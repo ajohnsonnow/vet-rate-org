@@ -4,6 +4,7 @@ import {
   decryptData,
   selectWriteKey,
   selectRestoreKey,
+  isWeakWriteKey,
   LEGACY_DEFAULT_KEY,
 } from "../../utils/cloudSync";
 
@@ -148,5 +149,14 @@ describe("cloudSync — key selection (S16 commit G, default-key retirement)", (
     );
     expect(selectRestoreKey(null, null)).toBe(LEGACY_DEFAULT_KEY);
     expect(selectRestoreKey(null, {})).toBe(LEGACY_DEFAULT_KEY);
+  });
+
+  it("isWeakWriteKey flags passphrase-less (email-derived) writes", () => {
+    // No passphrase → the write falls back to the email-derived key: weak.
+    expect(isWeakWriteKey(null)).toBe(true);
+    expect(isWeakWriteKey("")).toBe(true);
+    expect(isWeakWriteKey(undefined)).toBe(true);
+    // A real passphrase → strong.
+    expect(isWeakWriteKey("correct horse battery staple")).toBe(false);
   });
 });

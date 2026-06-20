@@ -125,7 +125,11 @@ const CloudSyncManager = ({ onClose }) => {
       // Save to Google Drive
       const result = await saveBackupToGoogleDrive(appData);
 
-      setStatus(`✅ Backup saved: ${result.fileName}`);
+      setStatus(
+        result.weakKey
+          ? `✅ Backup saved: ${result.fileName} — ⚠️ protected by an email-derived key (not a secret passphrase). Anyone who knows your email and obtains the file could decrypt it. Set a passphrase for stronger encryption.`
+          : `✅ Backup saved: ${result.fileName}`,
+      );
 
       // Refresh backup list
       await loadBackups();
