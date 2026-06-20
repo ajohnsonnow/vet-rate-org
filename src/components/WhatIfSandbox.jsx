@@ -14,6 +14,11 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
+import {
+  combineMultipleRatings,
+  calculateBilateralFactor,
+  roundToNearest10,
+} from "../utils/vaCalculator";
 
 export default function WhatIfSandbox({ onClose }) {
   const { _t } = useLanguage();
@@ -163,18 +168,13 @@ export default function WhatIfSandbox({ onClose }) {
       return 0;
     }
 
-    // Sort ratings highest to first
-    const ratings = [...currentConditions]
-      .sort((a, b) => b.rating - a.rating)
-      .map((c) => c.rating);
-
-    // Check for bilateral conditions
+    // Single source of truth for the math: 38 CFR § 4.25 combine + § 4.26
+    // bilateral factor, via vaCalculator. Bilateral detection (knees/shoulders
+    // by L/R name) stays here; the arithmetic is the canonical VA-table engine.
     const hasBilateralKnees = hasMatchingBilateral("Knee");
     const hasBilateralShoulders = hasMatchingBilateral("Shoulder");
 
-    let combined = ratings[0];
-
-    // Apply bilateral factor if applicable
+    let groupRatings;
     if (hasBilateralKnees || hasBilateralShoulders) {
       const bilateralRatings = [];
       const otherRatings = [];
@@ -190,38 +190,18 @@ export default function WhatIfSandbox({ onClose }) {
         }
       });
 
-      if (bilateralRatings.length === 2) {
-        // Calculate bilateral combined rating
-        bilateralRatings.sort((a, b) => b - a);
-        let bilateralCombined = bilateralRatings[0];
-        const efficiency = 100 - bilateralCombined;
-        const addition = Math.round((bilateralRatings[1] * efficiency) / 100);
-        bilateralCombined += addition;
-
-        // Apply 10% bilateral factor
-        bilateralCombined = Math.round(bilateralCombined * 1.1);
-
-        // Now combine with other ratings
-        otherRatings.sort((a, b) => b - a);
-        combined = bilateralCombined;
-
-        for (let i = 0; i < otherRatings.length; i++) {
-          const efficiency = 100 - combined;
-          const addition = Math.round((otherRatings[i] * efficiency) / 100);
-          combined += addition;
-        }
-      }
+      // The bilateral group (combined + 10% factor) becomes one rating, then
+      // combines with the rest. Handles >2 paired conditions too — the old
+      // code silently dropped everything unless exactly two were present.
+      groupRatings = [
+        calculateBilateralFactor(bilateralRatings),
+        ...otherRatings,
+      ];
     } else {
-      // Standard VA combined rating formula
-      for (let i = 1; i < ratings.length; i++) {
-        const efficiency = 100 - combined;
-        const addition = Math.round((ratings[i] * efficiency) / 100);
-        combined += addition;
-      }
+      groupRatings = currentConditions.map((c) => c.rating);
     }
 
-    // Round to nearest 10
-    const finalRating = Math.round(combined / 10) * 10;
+    const finalRating = roundToNearest10(combineMultipleRatings(groupRatings));
     setCombinedRating(finalRating);
 
     // Calculate monthly pay
