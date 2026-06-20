@@ -70,6 +70,7 @@
     "check:markdown": "node scripts/preflight-extras.mjs --only=markdown",
     "check:knip": "node scripts/preflight-extras.mjs --only=knip",
     "check:licenses": "node scripts/preflight-extras.mjs --only=licenses",
+    "check:dist-secrets": "node scripts/check-dist-secrets.mjs",
     "check-bundle-budget": "node scripts/check-bundle-budget.mjs",
     "build:tokens": "node scripts/build-tokens.mjs",
     "build:tokens:verify": "node scripts/build-tokens.mjs --verify",

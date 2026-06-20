@@ -84,6 +84,10 @@ jobs:
             git archive --format=tar.gz -o "release-artifacts/Vet-Rate.org-${GITHUB_REF_NAME}.tar.gz" HEAD
           fi
 
+      - name: Scan dist for leaked secrets (RT1-1)
+        # Fails the release if a real API key (e.g. a VITE_*-inlined BYOK key) shipped in dist/.
+        run: node scripts/check-dist-secrets.mjs
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2 # pinact
         with:
