@@ -261,6 +261,27 @@ export function sanitizeInlineHtml(html) {
 }
 
 /**
+ * Strip the common XSS vectors from an SVG string before rendering it via
+ * `dangerouslySetInnerHTML`. NOT a full SVG sanitizer (use a real one for
+ * untrusted SVG) — a defense-in-depth scrub for DEVELOPER-CURATED SVG (e.g. the
+ * badge templates in badgeData.js) so a future contributor cannot land a
+ * `<script>`, an event handler, or a `javascript:` URL. Removes:
+ * `<script>…</script>`, `<foreignObject>…</foreignObject>` (can embed arbitrary
+ * HTML), `on*=` event-handler attributes, and `javascript:` in href/xlink:href.
+ *
+ * @param {string} svg
+ * @returns {string}
+ */
+export function scrubSvg(svg) {
+  if (!svg || typeof svg !== "string") return "";
+  return svg
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/(href|xlink:href)\s*=\s*("|'|)\s*javascript:[^"'>\s]*/gi, "$1=$2#");
+}
+
+/**
  * Sanitize a Google Maps directions URL.
  * Validates coordinates are numeric and builds a safe URL.
  *
