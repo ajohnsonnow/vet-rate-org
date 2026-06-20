@@ -12,6 +12,236 @@
         {
           "type": "fix",
           "category": "Other",
+          "title": "green the pipeline — Node-20 crypto/jsdom, npm audit, job timeouts",
+          "description": "green the pipeline — Node-20 crypto/jsdom, npm audit, job timeouts"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "increase Atomic Wipe poll timeout for CI lazy-load",
+          "description": "increase Atomic Wipe poll timeout for CI lazy-load"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add blob: to connect-src for PDF.js large file streaming",
+          "description": "add blob: to connect-src for PDF.js large file streaming"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge branch 'audit/cfile-fullsweep'",
+          "description": "Merge branch 'audit/cfile-fullsweep'"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CSP hf.co CDN, AI badge state, PDF.js worker version",
+          "description": "CSP hf.co CDN, AI badge state, PDF.js worker version"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep",
+          "description": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "break doc-update feedback loop by skipping if last commit was [pre-push]",
+          "description": "break doc-update feedback loop by skipping if last commit was [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "idempotent update-changelog + remove husky deprecation warning",
+          "description": "idempotent update-changelog + remove husky deprecation warning"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "clean duplicate CHANGELOG entry + fix update-changelog baseline",
+          "description": "clean duplicate CHANGELOG entry + fix update-changelog baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "add 2026-06-08 mega-audit reports and sprint instructions",
+          "description": "add 2026-06-08 mega-audit reports and sprint instructions"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08",
+          "description": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08",
+          "description": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "apply WebGPU adapter patch + fail loudly on all-models-fail",
+          "description": "apply WebGPU adapter patch + fail loudly on all-models-fail"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "hydrate NexusBuilder from localStorage when no event detail",
+          "description": "hydrate NexusBuilder from localStorage when no event detail"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "LLM pipeline audit — routing fix + PDCA test coverage",
+          "description": "LLM pipeline audit — routing fix + PDCA test coverage"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "consolidated C-File audit report (Sprints 0-6)",
+          "description": "consolidated C-File audit report (Sprints 0-6)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder",
+          "description": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks",
+          "description": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe",
+          "description": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "env-configurable bug-report endpoint + PII guard before send",
+          "description": "env-configurable bug-report endpoint + PII guard before send"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs",
+          "description": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth",
+          "description": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test",
+          "description": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "unblock chromium Playwright gate + record audit baseline",
+          "description": "unblock chromium Playwright gate + record audit baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net",
+          "description": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
+          "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
+        }
+      ]
+    },
+    {
+      "version": "1.23.1",
+      "date": "2026-06-20",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
+      "changelog": [
+        {
+          "type": "fix",
+          "category": "Other",
           "title": "increase Atomic Wipe poll timeout for CI lazy-load",
           "description": "increase Atomic Wipe poll timeout for CI lazy-load"
         },
@@ -2580,38 +2810,6 @@
           "category": "Other",
           "title": "discovery worklist + verified inventory (audit S9-S17)",
           "description": "discovery worklist + verified inventory (audit S9-S17)"
-        }
-      ]
-    },
-    {
-      "version": "1.23.0",
-      "date": "2026-05-18",
-      "isFirstRelease": false,
-      "releaseTitle": "Audit Closeout — Lazy Chunks + Signed Releases + Local-First Logging",
-      "changelog": [
-        {
-          "type": "perf",
-          "category": "Frontend",
-          "title": "67 modal-shaped feature surfaces moved behind React.lazy()",
-          "description": "App.jsx no longer eager-imports the entire tool catalog. Each feature surface (PrivacyPolicy, MyPacket, CAPSimulator, NexusBuilder, AICommandCenter, PACTActNavigator, …) is its own vite chunk fetched on first open. Main entry: 196 KB gz. Modal cluster wrapped in a single <Suspense fallback={<LoadingBunker />}> boundary. Closes audit rows #23 + #28."
-        },
-        {
-          "type": "feat",
-          "category": "Supply chain",
-          "title": "Sigstore keyless cosign + SLSA-3 provenance on every release",
-          "description": ".github/workflows/release.yml now signs SBOMs + dist.tar.gz with cosign (GitHub OIDC, no key storage) and emits a SLSA Level 3 provenance attestation via the pinned slsa-github-generator@v2.0.0 reusable workflow. Verification recipes in docs/SUPPLY_CHAIN.md. Closes audit rows #20 + #21."
-        },
-        {
-          "type": "feat",
-          "category": "Observability",
-          "title": "Local-first structured logger (zero-knowledge friendly)",
-          "description": "src/utils/logger.js: debug/info/warn/error levels, 500-entry FIFO ring buffer, dev console passthrough, opt-in IndexedDB persistence (vet_rate_log_persist localStorage flag), single exportLogs() egress. No OTel/Sentry/Datadog — those rejections are explained in docs/OBSERVABILITY.md. Closes audit row #38."
-        },
-        {
-          "type": "docs",
-          "category": "DX",
-          "title": "Diátaxis categorical doc index",
-          "description": "docs/DOCS_INDEX.md places every engineering doc in one of four quadrants (Tutorials, How-to, Reference, Explanation) with a one-line hook. Veteran-facing manual at docs/index.md stays separate. Closes audit row #37."
         }
       ]
     }
