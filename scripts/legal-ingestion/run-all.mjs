@@ -81,20 +81,38 @@ async function main() {
   console.log(`[run-all] target index version: ${version}`);
 
   // 1. Fetchers
+  let fetched = 0;
+  let attempted = 0;
   for (const f of FETCHERS) {
     if (args.skip.has(f.name)) {
       console.log(`[run-all] SKIP fetcher ${f.name}`);
       continue;
     }
+    attempted += 1;
     try {
       await runStep(
         `FETCH ${f.name}`,
         path.join(__dirname, f.script),
       );
+      fetched += 1;
     } catch (e) {
       console.error(`[run-all] fetcher ${f.name} failed: ${e.message}`);
       // Continue with other sources — the workflow opens a 'stale' issue.
     }
+  }
+
+  // Scraping live .gov sources is inherently flaky: a transient outage or a
+  // moved URL is an upstream problem, not a pipeline regression. If EVERY
+  // source failed there is nothing fresh to rebuild — leave the existing index
+  // untouched and exit 0 so the weekly cron does not go red (and desensitize
+  // the owner to real failures) on an external outage. A partial result (>=1
+  // source) still rebuilds below. See best-practices lessons-learned CI-21.
+  if (attempted > 0 && fetched === 0) {
+    console.warn(
+      `[run-all] WARNING: all ${attempted} source fetchers failed — likely an upstream outage or a moved URL. ` +
+        `Skipping rebuild and leaving the existing index in place. Re-run after verifying the source endpoints.`,
+    );
+    process.exit(0);
   }
 
   // 2. Chunk
