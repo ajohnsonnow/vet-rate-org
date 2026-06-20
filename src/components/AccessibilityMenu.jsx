@@ -202,11 +202,10 @@ export default function AccessibilityMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div
+        <section
           ref={menuRef}
           className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-auto mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-          role="menu"
-          aria-orientation="vertical"
+          aria-label="Accessibility settings"
           aria-labelledby="accessibility-menu"
         >
           {/* Header */}
@@ -624,7 +623,7 @@ export default function AccessibilityMenu() {
               🏛️ {t("accessibility", "complianceFooter")}
             </p>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );
