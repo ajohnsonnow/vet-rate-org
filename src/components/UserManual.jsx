@@ -6,7 +6,7 @@ import { triggerTourRestart } from "./BootCampTour";
 import { PROJECT_STATS } from "../data/projectStats";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getDisabilityCount } from "../utils/disabilityCount";
-import { sanitizeUrl } from "../utils/sanitize";
+import { sanitizeUrl, escapeHtml } from "../utils/sanitize";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -3844,6 +3844,12 @@ const renderContent = (content, onClose) => {
   const renderInline = (text) => {
     if (!text) return text;
 
+    // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
+    // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
+    // edit to the manual strings is inert. The CSP is NOT a backstop here
+    // (script-src 'unsafe-inline' is set).
+    text = escapeHtml(text);
+
     // Handle bold
     text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     // Handle inline code
@@ -3859,10 +3865,9 @@ const renderContent = (content, onClose) => {
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
     });
 
-    // Safe-by-construction: `text` is developer-controlled manual content
-    // (static strings in this file). Bold / code / link replacements only
-    // emit a fixed allow-list of tags. Link hrefs are sanitizeUrl()-wrapped
-    // above. CSP in index.html blocks unknown script/connect origins.
+    // Safe-by-construction: input is escapeHtml()'d first (above), then only a
+    // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
+    // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
     // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
   };
