@@ -11,10 +11,10 @@ useDefault = true
     '''YOUR_API_KEY''',
   ]
   paths = [
-    '''(?i).*test.*''',
-    '''(?i).*spec.*''',
-    '''(?i).*fixture.*''',
-    '''(?i).*mock.*''',
+    '''src[/\\]__tests__[/\\]''',
+    '''tests[/\\]''',
+    '''src[/\\].+\.test\.(js|jsx|ts|tsx)$''',
+    '''src[/\\].+\.spec\.(js|jsx|ts|tsx)$''',
     '''node_modules''',
     '''dist''',
     '''coverage''',
