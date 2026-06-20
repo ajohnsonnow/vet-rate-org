@@ -11,6 +11,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { formatFileSize } from "../utils/pdfExtractor";
+import { isPdfFile } from "../utils/fileTypeGuards";
 import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   processFormationDocument,
@@ -114,7 +115,11 @@ export default function CFileAnalyzer({
 
       const droppedFile = e.dataTransfer?.files?.[0];
       if (droppedFile) {
-        if (droppedFile.type !== "application/pdf") {
+        if (!droppedFile.size) {
+          setError(t("cfileAnalyzer", "emptyPdfFile"));
+          return;
+        }
+        if (!isPdfFile(droppedFile)) {
           setError(t("cfileAnalyzer", "pleaseDropPdf"));
           return;
         }
@@ -140,7 +145,11 @@ export default function CFileAnalyzer({
     (e) => {
       const selectedFile = e.target.files?.[0];
       if (selectedFile) {
-        if (selectedFile.type !== "application/pdf") {
+        if (!selectedFile.size) {
+          setError(t("cfileAnalyzer", "emptyPdfFile"));
+          return;
+        }
+        if (!isPdfFile(selectedFile)) {
           setError(t("cfileAnalyzer", "pleaseDropPdf"));
           return;
         }

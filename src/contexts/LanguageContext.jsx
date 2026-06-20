@@ -12449,6 +12449,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Vui lòng thả tệp PDF (lưu trong trình duyệt).",
       ko: "PDF 파일을 놓으세요 (브라우저에 저장됨).",
     },
+    emptyPdfFile: {
+      en: "This PDF appears to be empty (0 bytes). Try re-downloading or re-exporting it.",
+      es: "Este PDF parece estar vacío (0 bytes). Intenta descargarlo o exportarlo de nuevo.",
+      tl: "Mukhang walang laman ang PDF na ito (0 bytes). Subukang i-download o i-export itong muli.",
+      vi: "Tệp PDF này có vẻ trống (0 byte). Hãy thử tải xuống hoặc xuất lại tệp.",
+      ko: "이 PDF가 비어 있는 것 같습니다 (0바이트). 다시 다운로드하거나 내보내 보세요.",
+    },
     pleaseDropInPdf: {
       en: "Please drop in a PDF file.",
       es: "Por favor suelta un archivo PDF.",
