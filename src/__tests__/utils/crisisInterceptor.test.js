@@ -41,6 +41,38 @@ describe("crisisInterceptor", () => {
       const result = detectCrisisLanguage("I WANT TO KILL MYSELF");
       expect(result.isCrisis).toBe(true);
     });
+
+    // AIS-04: obfuscation, modern slang, and non-English coverage
+    it("detects no-space obfuscation (iwanttodie)", () => {
+      expect(detectCrisisLanguage("iwanttodie").isCrisis).toBe(true);
+    });
+
+    it("detects leetspeak obfuscation (w4nt to die)", () => {
+      expect(detectCrisisLanguage("w4nt to die").isCrisis).toBe(true);
+    });
+
+    it("detects modern self-harm slang (kms, unalive)", () => {
+      expect(detectCrisisLanguage("honestly kms at this point").isCrisis).toBe(
+        true,
+      );
+      expect(detectCrisisLanguage("i might unalive").isCrisis).toBe(true);
+    });
+
+    it("does NOT false-positive on 'kms' inside a distance (20kms)", () => {
+      expect(detectCrisisLanguage("I marched 20kms today").isCrisis).toBe(false);
+    });
+
+    it("detects non-English ideation (Spanish: quiero morir)", () => {
+      expect(
+        detectCrisisLanguage("ya no aguanto, quiero morir").isCrisis,
+      ).toBe(true);
+    });
+
+    it("ignores broad 'universal' keywords like 'no point' (handled by precise English patterns)", () => {
+      expect(
+        detectCrisisLanguage("there's no point in appealing this").isCrisis,
+      ).toBe(false);
+    });
   });
 
   describe("CRISIS_RESOURCES", () => {
