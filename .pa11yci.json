@@ -6,8 +6,10 @@
     "timeout": 30000,
     "wait": 1000,
     "runners": ["axe", "htmlcs"],
-    "chromeLaunchConfig": {"args": ["--no-sandbox","--disable-setuid-sandbox"]}
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    }
   },
   "threshold": 0,
-  "urls": ["CUSTOMIZE: add your pages here, e.g. http://localhost:3000"]
+  "urls": ["http://localhost:5173"]
 }
