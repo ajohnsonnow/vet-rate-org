@@ -78,7 +78,7 @@ const checkIsMobile = () => {
  */
 const checkDataSaverMode = () => {
   try {
-    // @ts-ignore - navigator.connection is not in all browsers
+    // @ts-expect-error - navigator.connection is not in all browsers
     const connection =
       navigator.connection ||
       navigator.mozConnection ||
@@ -103,7 +103,7 @@ const checkDataSaverMode = () => {
  */
 const getDeviceMemory = () => {
   try {
-    // @ts-ignore - deviceMemory is not in all browsers
+    // @ts-expect-error - deviceMemory is not in all browsers
     return navigator.deviceMemory || null;
   } catch {
     return null;

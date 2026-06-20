@@ -235,7 +235,7 @@ async function analyzeRTFDocument(file, onProgress) {
 
     // Basic RTF to plain text conversion
     // Remove RTF control sequences
-    let plainText = text
+    const plainText = text
       .replace(/\\[a-z]+[-]?\d*[ ]?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars

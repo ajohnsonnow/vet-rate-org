@@ -1013,7 +1013,7 @@ export function parseDD214Badges(rawText, branch = "Army") {
   }
 
   // Clean the text
-  let cleanedText = rawText
+  const cleanedText = rawText
     .replace(/\([^)]*\)/g, " ") // Remove parenthetical
     .replace(/[a-z]{3,}/g, " ") // Remove lowercase words
     .toUpperCase()

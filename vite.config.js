@@ -188,6 +188,11 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: false,
     minify: "terser",
+    terserOptions: {
+      compress: {
+        pure_funcs: ["console.log", "console.debug", "console.info"],
+      },
+    },
     target: "esnext", // Required for top-level await in WebGPU models
     chunkSizeWarningLimit: 7000, // Suppress for WebLLM (6MB), main bundle, PDF libs - all optimally chunked
     rollupOptions: {

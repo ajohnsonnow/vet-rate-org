@@ -31,6 +31,7 @@ import {
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
 import { smolVLMService, isSmolVLMSupported } from "../utils/smolVLMService";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   saveDD214Data,
   getServiceHistory,
@@ -1728,6 +1729,8 @@ const DD214Analyzer = ({
           {/* Upload Input */}
           {inputMethod === "upload" && (
             <div className="space-y-4">
+              {/* System requirements notice */}
+              <SystemRequirementsNotice compact toolName="DD214 Analyzer" />
               {/* Drop Zone */}
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div

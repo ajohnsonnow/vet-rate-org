@@ -1,0 +1,68 @@
+# .github/workflows/scorecard.yml
+#
+# Vet-Rate.org — OpenSSF Scorecard: supply-chain security posture.
+#
+# Scores the repo on branch protection, dependency pinning, token permissions,
+# dangerous workflow patterns, SAST coverage, and more. Results appear in the
+# GitHub Security tab (SARIF) and as a workflow artifact.
+#
+# Schedule: Sundays 23:17 UTC (odd minute offsets avoid GitHub's on-the-hour
+# scheduler congestion). Also runs on push to the default branch so posture
+# changes (e.g. branch protection edits) are scored promptly.
+#
+# scorecard-action requirements: must run on the default branch;
+# publish_results requires id-token: write.
+
+name: OpenSSF Scorecard
+
+on:
+  schedule:
+    - cron: '17 23 * * 0' # Sundays 23:17 UTC
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Default-deny; the job elevates only what it needs.
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      security-events: write # upload SARIF to the Security tab
+      id-token: write        # publish results to the OpenSSF REST API / badge
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false # Scorecard requirement — no ambient token
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publishes to the OpenSSF API — enables the Scorecard badge and
+          # public scoring. Set to false for private repos.
+          # CUSTOMIZE: publish_results: false  (private repos)
+          publish_results: true
+          # CUSTOMIZE: a fine-grained PAT in secrets.SCORECARD_TOKEN improves
+          # the Branch-Protection check accuracy (GITHUB_TOKEN can't read it):
+          # repo_token: ${{ secrets.SCORECARD_TOKEN }}
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4 # pinact: pin to release SHA
+        with:
+          name: scorecard-results
+          path: results.sarif
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3 # pinact: pin to release SHA
+        with:
+          sarif_file: results.sarif

@@ -136,15 +136,10 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     // eslint-disable-next-line no-console
     console.log(`[Wllama] Initializing ${modelConfig.name}...`);
 
-    // Create Wllama instance
+    // v3.4.1: single WASM file handles multi-thread/single-thread automatically.
+    // WebGPU acceleration enabled by default when navigator.gpu is available.
     wllamaInstance = new WllamaClass({
-      // Use multi-threaded WASM for better performance
-      "multi-thread/wllama.js": "/wasm/multi-thread/wllama.js",
-      "multi-thread/wllama.wasm": "/wasm/multi-thread/wllama.wasm",
-      "multi-thread/wllama.worker.mjs": "/wasm/multi-thread/wllama.worker.mjs",
-      // Single-thread fallback
-      "single-thread/wllama.js": "/wasm/single-thread/wllama.js",
-      "single-thread/wllama.wasm": "/wasm/single-thread/wllama.wasm",
+      default: "/wasm/wllama.wasm",
     });
 
     // Try primary URL first, then fallback
@@ -160,12 +155,14 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
       modelUrl = modelConfig.fallbackUrl;
     }
 
-    // Load the model
+    // Load the model. n_gpu_layers: all layers on WebGPU when available (v3.1+
+    // enables WebGPU automatically; 0 forces CPU-only for iOS/WASM fallback).
     await wllamaInstance.loadModelFromUrl(modelUrl, {
       progressCallback: createProgressCallback(onProgress),
       allowOffline: useCache,
       n_ctx: modelConfig.contextSize,
       n_threads: navigator.hardwareConcurrency || 4,
+      n_gpu_layers: typeof navigator !== "undefined" && navigator.gpu ? 999 : 0,
     });
 
     currentModel = modelId;

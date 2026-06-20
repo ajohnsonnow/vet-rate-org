@@ -1,0 +1,296 @@
+# .github/workflows/monthly-deep-audit.yml
+#
+# Vet-Rate.org — Monthly deep audit.
+#
+# Expensive checks that are wasteful per-PR but valuable on a monthly cadence:
+# full Lighthouse crawl, mutation testing, full license inventory, SBOM drift,
+# compliance checklist, and dependency health.
+#
+# Schedule: 1st of each month, 08:00 UTC. Manual: workflow_dispatch.
+#
+# Repository variables used:
+#   PRODUCTION_URL — base URL of the production site (enables Lighthouse)
+#
+# PINNING: run `pinact run` to pin @vN tags to SHAs before production use.
+
+name: Monthly Deep Audit
+
+on:
+  schedule:
+    - cron: '0 8 1 * *' # 1st of each month, 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22' # CUSTOMIZE
+
+jobs:
+  # ------------------------------------------------------ full-lighthouse-crawl --
+  full-lighthouse-crawl:
+    name: Lighthouse crawl
+    if: vars.PRODUCTION_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run Lighthouse CI
+        id: lighthouse
+        uses: treosh/lighthouse-ci-action@v12 # pinact
+        with:
+          # CUSTOMIZE: list every key page; for full-site crawls consider
+          # unlighthouse (npx unlighthouse-ci --site <url>) instead.
+          urls: |
+            ${{ vars.PRODUCTION_URL }}
+            ${{ vars.PRODUCTION_URL }}/about
+          runs: 3
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Post report as issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LINKS: ${{ steps.lighthouse.outputs.links }}
+          MANIFEST: ${{ steps.lighthouse.outputs.manifest }}
+        run: |
+          gh issue create \
+            --title "[audit] Monthly Lighthouse report — $(date -u +%Y-%m)" \
+            --label "performance" \
+            --body "## Lighthouse report — $(date -u +%Y-%m-%d)
+
+          **Report links:**
+          \`\`\`json
+          ${LINKS}
+          \`\`\`
+
+          **Summary (median run):**
+          \`\`\`json
+          ${MANIFEST}
+          \`\`\`
+
+          Full artifacts: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+  # ----------------------------------------------------------- mutation-testing --
+  mutation-testing:
+    name: Mutation testing (StrykerJS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true # informational — score trend matters, not pass/fail
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Run Stryker on core modules
+        run: |
+          if [ ! -f package.json ]; then
+            echo "Not a Node project — skipping mutation testing."
+            exit 0
+          fi
+          if ls stryker.config.* stryker.conf.* > /dev/null 2>&1; then
+            npm ci
+            npx stryker run
+          else
+            echo "No Stryker config found — skipping."
+            echo "CUSTOMIZE: add stryker.config.json scoped to core modules, e.g.:"
+            echo '  { "mutate": ["src/core/**/*.ts"], "thresholds": { "break": 50 } }'
+          fi
+
+      - name: Publish mutation score to summary
+        if: always()
+        run: |
+          if [ -f reports/mutation/mutation.json ]; then
+            SCORE=$(jq -r '.thresholds // empty, .mutationScore // empty' reports/mutation/mutation.json | head -1)
+            echo "## Mutation testing" >> "$GITHUB_STEP_SUMMARY"
+            echo "Mutation score: **${SCORE:-see HTML report artifact}**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4 # pinact
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          if-no-files-found: ignore
+
+  # --------------------------------------------------------------- license-full --
+  license-full:
+    name: Full license inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Trivy license scan (full, report-only)
+        uses: aquasecurity/trivy-action@0.28.0 # pinact
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: license
+          format: json
+          output: license-inventory.json
+          exit-code: '0' # inventory, not a gate — release-gates.yml enforces
+
+      - name: Upload license inventory
+        uses: actions/upload-artifact@v4 # pinact
+        with:
+          name: license-inventory
+          path: license-inventory.json
+          retention-days: 90
+
+  # --------------------------------------------------------------- sbom-refresh --
+  sbom-refresh:
+    name: SBOM refresh + drift check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read # download artifact from previous run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Generate fresh SBOM
+        uses: anchore/sbom-action@v0 # pinact
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          upload-artifact: false
+
+      - name: Compare with previous month's SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV_RUN=$(gh run list \
+            --workflow monthly-deep-audit.yml \
+            --status success --limit 1 \
+            --json databaseId --jq '.[0].databaseId' || true)
+          mkdir -p previous
+          if [ -n "$PREV_RUN" ] && gh run download "$PREV_RUN" -n sbom-monthly -D previous 2>/dev/null; then
+            jq -r '.components[]?.name' previous/sbom.cyclonedx.json | sort -u > prev-deps.txt
+            jq -r '.components[]?.name' sbom.cyclonedx.json | sort -u > curr-deps.txt
+            {
+              echo "## SBOM drift since last monthly audit"
+              echo ""
+              echo "### New dependencies"
+              comm -13 prev-deps.txt curr-deps.txt | sed 's/^/- /' || echo "_none_"
+              echo ""
+              echo "### Removed dependencies"
+              comm -23 prev-deps.txt curr-deps.txt | sed 's/^/- /' || echo "_none_"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No previous SBOM artifact found — baseline established this run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload SBOM as monthly baseline
+        uses: actions/upload-artifact@v4 # pinact
+        with:
+          name: sbom-monthly
+          path: sbom.cyclonedx.json
+          retention-days: 90
+
+  # ------------------------------------------------------- compliance-checklist --
+  compliance-checklist:
+    name: Open compliance checklist issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Create checklist issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MONTH=$(date -u +%Y-%m)
+          TITLE="[compliance] Monthly audit checklist — $MONTH"
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq 'length')
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "Checklist issue for $MONTH already exists."
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "$TITLE" \
+            --label "compliance" \
+            --body "## Vet-Rate.org — monthly compliance checklist ($MONTH)
+
+          ### Access & secrets
+          - [ ] Review repo collaborators and remove stale access
+          - [ ] Rotate any credentials older than 90 days
+          - [ ] Confirm branch protection rules are intact on main
+
+          ### Dependencies & supply chain
+          - [ ] Review SBOM drift report (this month's deep-audit run)
+          - [ ] Triage open Dependabot/Renovate PRs
+          - [ ] Review license inventory for new copyleft entries
+
+          ### Security posture
+          - [ ] Review open security-labeled issues
+          - [ ] Check OpenSSF Scorecard trend (Security tab)
+          - [ ] Review GitHub Security advisories / code scanning alerts
+
+          ### Documentation
+          - [ ] ADRs up to date for decisions made this month
+          - [ ] Incident postmortems filed (if any)
+
+          _Auto-generated by monthly-deep-audit.yml. CUSTOMIZE this checklist
+          for project-specific compliance requirements (SOC 2, HIPAA, etc.)._"
+
+  # --------------------------------------------------------- dependency-health --
+  dependency-health:
+    name: Dependency health report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Generate report and post issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f package.json ]; then
+            echo "Not a Node project — skipping dependency health report."
+            exit 0
+          fi
+          npm ci --ignore-scripts
+          OUTDATED=$(npm outdated 2>&1 || true)
+          AUDIT=$(npm audit 2>&1 || true)
+          MONTH=$(date -u +%Y-%m)
+          gh issue create \
+            --title "[audit] Dependency health report — $MONTH" \
+            --label "dependencies" \
+            --body "## Vet-Rate.org — dependency health ($MONTH)
+
+          ### npm outdated
+          \`\`\`
+          ${OUTDATED:-all dependencies current}
+          \`\`\`
+
+          ### npm audit
+          \`\`\`
+          ${AUDIT:-no vulnerabilities reported}
+          \`\`\`
+
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

@@ -21,9 +21,31 @@
 | `bf05720` | WS-8 | Storage quota guards, packet version unification (1.0→2.0.0 migration seeded), import restore point + confirm, profile save failures surfaced |
 | `89f1bf9` | WS-9 | DKB freshness pipeline: validate-dkb CI gate, eCFR inverse index, weekly dkb-freshness workflow, eval:rag baseline gate, Legislative Watchdog static-first (+ fixed its since-inception HTTP 400), Florence-2 model pinned |
 | `876ea98` | WS-5 fix | Axe-clean simulator dialogs (amber badges, dark-mode yellow-button contrast, focusable scroll regions) |
+| perf commit | perf | C-File analysis hours→realistic: engine-aware chunk budgets (8K swarm context honored, ~11x fewer generations), boilerplate page screen, ETA double-count fix (~100x inflation), OCR worker pool + confidence-gated ensemble |
+| `80dda1d` | UX | Elapsed-time heartbeat during C-File processing (silent phases looked like crashes) |
 | `5b973e4` | test | Atomic Wipe e2e follows the real trigger location (failed on main too) |
 | `0d5330a` | WS-7 | VKB→calculator wiring: "Load into calculator" banner, Evidence Timeline import, sourceDocumentId linkage, normalized dedup; fixed dead Consistency-Engine/WhatIfSandbox store keys; strict packet acceptance e2e (old one passed vacuously); QuickExit/close-button mobile target collision |
 | _(this)_ | WS-1 | 313MB stress harness (env-gated, dev-machine only) |
+
+## Performance investigation (user-reported "712-minute ETA")
+
+Three compounding causes, all fixed:
+
+1. `estimateProcessingTime` multiplied per-chunk time by total text size —
+   double-counting that inflated the display ~100x.
+2. Local chunk budget was a flat 400 tokens against an 8K-context engine —
+   thousands of sequential generations. Now engine-aware (4,500 swarm /
+   1,500 for 4K engines).
+3. Every page reached the LLM. A keep-biased boilerplate screen (fails open)
+   now drops pages with no dates and no claim vocabulary.
+
+Plus: OCR worker pool (was 1 sequential worker × 3 resolution scales per
+page) with confidence-gated escalation for sub-50MB scanned documents.
+
+Verified during stress runs: extraction of the real 313MB C-File completes
+inside the first ~15 minutes; the Warrant Council then runs at ~92% GPU
+utilization (8GB VRAM) for the analysis phase. Full-pipeline wall time
+exceeds 30 minutes; exact number recorded from the 3h-budget run below.
 
 ## Notable bugs found beyond the plan
 

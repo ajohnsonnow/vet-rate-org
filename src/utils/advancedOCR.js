@@ -262,7 +262,7 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
 function analyzeImageQuality(imageData) {
   const data = imageData.data;
   let totalBrightness = 0;
-  let brightnessValues = [];
+  const brightnessValues = [];
   let darkPixels = 0;
   let lightPixels = 0;
 

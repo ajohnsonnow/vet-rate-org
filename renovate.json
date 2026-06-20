@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    "security:openssf-scorecard",
+    ":semanticCommits"
+  ],
+  "schedule": ["every weekend"],
+  "platformAutomerge": true,
+  "automergeType": "pr",
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "breaking-change"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "automerge": true,
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchPackagePatterns": ["^eslint"],
+      "groupName": "ESLint packages"
+    },
+    {
+      "matchPackagePatterns": ["^@typescript-eslint"],
+      "groupName": "TypeScript ESLint"
+    },
+    {
+      "matchPackagePatterns": ["^vitest|^@vitest"],
+      "groupName": "Vitest packages"
+    },
+    {
+      "matchPackagePatterns": ["^playwright|^@playwright"],
+      "groupName": "Playwright packages"
+    }
+  ],
+  "ignorePaths": ["**/node_modules/**", "**/vendor/**"],
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps"
+}

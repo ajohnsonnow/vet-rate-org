@@ -50,11 +50,7 @@ export function hasUnsavedChanges() {
   const currentHash = generateDataHash();
 
   // If no previous backup or data has changed
-  if (!lastBackupHash || lastBackupHash !== currentHash) {
-    return true;
-  }
-
-  return false;
+  return !lastBackupHash || lastBackupHash !== currentHash;
 }
 
 /**

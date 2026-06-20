@@ -10,7 +10,7 @@
  *   tablet       — iPad / Android tablet; WebLLM 1.5B if WebGPU present
  *   laptop       — integrated / low-end discrete GPU; WebLLM 1.5B q4f16
  *   desktop-mid  — mid discrete GPU (~8GB VRAM); WebLLM 3B q4f16
- *   desktop-high — high-end GPU (≥16GB, RTX 3000+); WebLLM 3B q4f16, 28K chunks
+ *   desktop-high — high-end GPU (≥16GB, RTX 3000+); WebLLM 3B q4f16 (extraction primary), 28K chunks
  */
 
 // WebGPU maxBufferSize thresholds correlate with GPU memory tier.
@@ -75,6 +75,11 @@ export async function detectDeviceCapabilities() {
     gpuTier = "low"; // minimal WebGPU (e.g. mobile WebGPU)
   }
 
+  // Apple Silicon M-series GPU description is bare "Apple M1" / "Apple M2 Pro" —
+  // no ANGLE wrapper. Detected here so the profile can expose it and the tier
+  // logic can use it without a second regex pass.
+  const isAppleSilicon = /Apple M\d/i.test(gpuDescription || "");
+
   // --- Device tier ---
   let tier;
   if (isMobileUA && !isTabletUA) {
@@ -82,8 +87,10 @@ export async function detectDeviceCapabilities() {
   } else if (isTabletUA || (isMobileUA && gpuTier !== "none")) {
     tier = "tablet";
   } else if (gpuTier === "high" && systemRAM >= 8) {
-    // Desktop-high: large GPU buffer + plenty of RAM
-    tier = screenW < 1400 ? "desktop-mid" : "desktop-high";
+    // Desktop-high: large GPU buffer + plenty of RAM.
+    // MacBook Air M1/M2 13" reports screenW 1280 CSS px (2× HiDPI) but has full
+    // Metal PSO caching — treat as desktop-high regardless of screen width.
+    tier = screenW < 1400 && !isAppleSilicon ? "desktop-mid" : "desktop-high";
   } else if (gpuTier === "mid" || (hasWebGPU && cpuCores >= 8)) {
     tier = "laptop";
   } else {
@@ -100,6 +107,7 @@ export async function detectDeviceCapabilities() {
     gpuTier,
     gpuMaxBufferSize,
     gpuDescription,
+    isAppleSilicon,
     systemRAM,
     cpuCores,
     isMobile: isMobileUA && !isTabletUA,
@@ -121,11 +129,11 @@ function _configForTier(tier) {
     case "desktop-high":
       return {
         recommendedModels: [
-          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7 GB, shader-f16 fast path
-          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0 GB, f32 fallback
-          "Llama-3.2-3B-Instruct-q4f32_1-MLC",
+          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7 GB — proven ~55 s/chunk on 4080 SUPER (stream:false)
+          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0 GB — f32 fallback
+          "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8 GB — alternative architecture
         ],
-        contextWindowSize: 12288,
+        contextWindowSize: 12288, // 28K-char chunk (~8235 tokens) + system prompt (~600) + 2048 output = ~10883; needs KV cache > 10883
         maxChunkChars: 28000,
         maxOutputTokens: 2048,
         ocrWorkers: Math.min(8, (navigator.hardwareConcurrency || 8) - 2),

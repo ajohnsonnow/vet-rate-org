@@ -588,7 +588,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
   );
 
   const periods = [];
-  let _totalPotentialUnderpayment = 0;
+  const _totalPotentialUnderpayment = 0;
 
   sorted.forEach((period, index) => {
     const startDate = new Date(period.effectiveDate);
@@ -599,7 +599,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
 
     // Calculate months covered. Iterate from the 1st of the starting month —
     // setMonth() on day 29-31 can skip a month (Jan 31 → Mar 3).
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     currentDate.setDate(1);
     while (currentDate < endDate) {
       const year = currentDate.getFullYear();

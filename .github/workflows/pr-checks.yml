@@ -1,0 +1,533 @@
+# .github/workflows/pr-checks.yml
+#
+# Vet-Rate.org — Universal PR quality + security gates.
+#
+# Auto-detects the tech stack (Node.js / Python / .NET / Go) and runs only
+# the relevant jobs. Safe to propagate unchanged to any repo.
+#
+# Blocking gates:  secret-scan, sast-semgrep, sast-codeql, sca-*, supply-chain,
+#                  lint-and-quality, build, test, markdown-lint
+# Informational:   link-check, perf-budget, visual-regression, ux-perf-check
+#
+# PINNING: tags marked "pinact" should be pinned to commit SHAs before
+# production use — run `pinact run` (github.com/suzuki-shunsuke/pinact).
+
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+  pull-requests: write   # PR comments (dependency review, size-limit)
+  security-events: write # SARIF upload (CodeQL via reusable workflow)
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'     # CUSTOMIZE: match the project's .nvmrc / engines field
+
+jobs:
+  # ---------------------------------------------------------------- detect --
+  detect:
+    name: Detect stack & changed files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      has_node: ${{ steps.stack.outputs.has_node }}
+      has_python: ${{ steps.stack.outputs.has_python }}
+      has_dotnet: ${{ steps.stack.outputs.has_dotnet }}
+      has_go: ${{ steps.stack.outputs.has_go }}
+      has_build: ${{ steps.stack.outputs.has_build }}
+      has_typecheck: ${{ steps.stack.outputs.has_typecheck }}
+      has_test: ${{ steps.stack.outputs.has_test }}
+      has_size_limit: ${{ steps.stack.outputs.has_size_limit }}
+      code: ${{ steps.filter.outputs.code }}
+      markdown: ${{ steps.filter.outputs.markdown }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect language manifests & npm scripts
+        id: stack
+        shell: bash
+        run: |
+          out() { echo "$1=$2" >> "$GITHUB_OUTPUT"; }
+
+          if [ -f package.json ]; then out has_node true; else out has_node false; fi
+          if [ -f requirements.txt ] || [ -f pyproject.toml ] || [ -f setup.py ]; then
+            out has_python true
+          else
+            out has_python false
+          fi
+          if [ -n "$(find . -name '*.csproj' -not -path './node_modules/*' -print -quit)" ]; then
+            out has_dotnet true
+          else
+            out has_dotnet false
+          fi
+          if [ -f go.mod ]; then out has_go true; else out has_go false; fi
+
+          if [ -f package.json ]; then
+            out has_build       "$(jq -r '.scripts.build != null' package.json)"
+            out has_typecheck   "$(jq -r '.scripts.typecheck != null' package.json)"
+            out has_test        "$(jq -r '.scripts.test != null' package.json)"
+            out has_size_limit  "$(jq -r 'has("size-limit")' package.json)"
+          else
+            out has_build false
+            out has_typecheck false
+            out has_test false
+            out has_size_limit false
+          fi
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            code:
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.js'
+              - '**/*.jsx'
+              - '**/*.mjs'
+              - '**/*.cjs'
+              - '**/*.py'
+              - '**/*.cs'
+              - '**/*.go'
+            markdown:
+              - '**/*.md'
+            workflows:
+              - '.github/workflows/**'
+
+  # ----------------------------------------------------------- secret-scan --
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout (full history for secret scanning)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2 # pinact: pin to release SHA
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CUSTOMIZE: GITLEAKS_LICENSE is required only for org-owned repos
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # ---------------------------------------------------------- sast-semgrep --
+  sast-semgrep:
+    name: SAST (Semgrep)
+    needs: detect
+    if: needs.detect.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: semgrep/semgrep # pinact: pin to image digest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Semgrep scan (diff-aware on PRs)
+        run: >
+          semgrep ci
+          --config p/typescript
+          --config p/javascript
+          --config p/python
+          --config p/owasp-top-ten
+          --config p/security-audit
+        env:
+          # Optional: connect to Semgrep AppSec Platform for triage/dedup
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  # ----------------------------------------------------------- sast-codeql --
+  sast-codeql:
+    name: SAST (CodeQL)
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  # ------------------------------------------------------ sca-dependencies --
+  sca-dependency-review:
+    name: SCA (dependency review)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4 # pinact
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+          # CUSTOMIZE: deny-licenses: GPL-3.0, AGPL-3.0
+
+  sca-osv-scanner:
+    name: SCA (OSV-Scanner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: OSV-Scanner (fails on known vulnerabilities)
+        uses: google/osv-scanner-action/osv-scanner-action@v2 # pinact
+        with:
+          scan-args: |-
+            --recursive
+            ./
+
+  # ----------------------------------------------------------- supply-chain --
+  supply-chain:
+    name: Supply chain (lockfile, actionlint, zizmor)
+    needs: detect
+    if: needs.detect.outputs.workflows == 'true' || needs.detect.outputs.has_node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: needs.detect.outputs.has_node == 'true'
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Lockfile integrity (npm ci --dry-run)
+        if: needs.detect.outputs.has_node == 'true'
+        run: npm ci --dry-run
+
+      - name: actionlint (workflow syntax + shellcheck)
+        if: needs.detect.outputs.workflows == 'true'
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+      - name: zizmor (workflow security audit)
+        if: needs.detect.outputs.workflows == 'true'
+        run: |
+          pipx install zizmor
+          zizmor --format plain .github/workflows/
+
+  # ------------------------------------------------------- lint-and-quality --
+  lint-and-quality:
+    name: Lint & typecheck
+    needs: detect
+    if: needs.detect.outputs.has_node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        if: needs.detect.outputs.has_typecheck == 'true'
+        run: npm run typecheck
+
+  # -------------------------------------------------------------------- build --
+  build:
+    name: Build
+    needs: detect
+    if: needs.detect.outputs.has_node == 'true' && needs.detect.outputs.has_build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  # --------------------------------------------------------------------- test --
+  test:
+    name: Test & coverage
+    needs: detect
+    if: needs.detect.outputs.has_node == 'true' && needs.detect.outputs.has_test == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4 # pinact
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        # CUSTOMIZE: adjust if the test runner takes a different coverage flag
+        run: npm test -- --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5 # pinact
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # --------------------------------------------------------------- link-check --
+  link-check:
+    name: Link check (informational)
+    needs: detect
+    if: needs.detect.outputs.markdown == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check links with lychee
+        uses: lycheeverse/lychee-action@v2 # pinact
+        with:
+          args: --no-progress --max-retries 2 './**/*.md'
+          fail: true
+
+  # ------------------------------------------------------------ markdown-lint --
+  markdown-lint:
+    name: Markdown lint
+    needs: detect
+    if: needs.detect.outputs.markdown == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: markdownlint-cli2
+        uses: DavidAnson/markdownlint-cli2-action@v16 # pinact
+        with:
+          globs: |
+            **/*.md
+            !node_modules/**
+
+  # -------------------------------------------------------------- perf-budget --
+  perf-budget:
+    name: Performance budget (informational)
+    needs: detect
+    if: needs.detect.outputs.has_size_limit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: size-limit report (comments on PR)
+        # CUSTOMIZE: requires "size-limit" config block in package.json
+        uses: andresz1/size-limit-action@v1 # pinact
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # --------------------------------------------------------- e2e-user-journeys --
+  e2e-user-journeys:
+    name: E2E User Journeys
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: "contains(github.event.pull_request.changed_files, 'src/') || contains(github.event.pull_request.changed_files, 'e2e/')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server
+        run: npm run preview & || npm run start &
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:4173 --timeout 60000
+
+      - name: Run E2E tests
+        run: npx playwright test --reporter=html,json
+
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload JSON results
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: test-results
+          path: test-results/
+
+  # --------------------------------------------------------- visual-regression --
+  visual-regression:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: "contains(github.event.pull_request.changed_files, 'src/') || contains(github.event.pull_request.changed_files, 'e2e/visual/')"
+    continue-on-error: true  # Informational until baseline is stable
+    steps:
+      - name: Checkout (full history for baseline comparison)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server
+        run: npm run preview & || npm run start &
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:4173 --timeout 60000
+
+      - name: Run visual regression tests
+        run: npx playwright test --config playwright-visual.config.ts
+
+      - name: Upload visual diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: visual-snapshots-diff
+          path: .visual-snapshots/
+
+      - name: Comment diff count on PR
+        if: failure()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const snapshotDir = '.visual-snapshots';
+            let diffCount = 0;
+            if (fs.existsSync(snapshotDir)) {
+              diffCount = fs.readdirSync(snapshotDir, { recursive: true })
+                .filter(f => f.endsWith('-diff.png')).length;
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**Visual Regression:** ${diffCount} snapshot(s) differ from baseline. Review the \`visual-snapshots-diff\` artifact.`
+            });
+
+  # ------------------------------------------------------------ ux-perf-check --
+  ux-perf-check:
+    name: UX Performance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: "contains(github.event.pull_request.changed_files, 'src/')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@1d0ff469b16cbe6ac8bb8a4c1b1f5b2b2a6fef5e # v4.2.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@2f8dda6cf4de7d73b29853c3f29e8b21e7539bf5 # v12.1.0
+        with:
+          configPath: ./lighthouserc.mjs
+          uploadArtifacts: true
+
+      - name: Comment Lighthouse score delta on PR
+        if: failure()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '**Lighthouse CI failed.** One or more performance scores regressed below the configured thresholds. Check the uploaded Lighthouse artifacts for the full score delta.'
+            });
+
+  # ---------------------------------------------------------- required-checks --
+  # Single required status check to configure in branch protection:
+  #   Settings → Branches → Require status checks → "PR gate summary"
+  required-checks:
+    name: PR gate summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      - secret-scan
+      - sast-semgrep
+      - sast-codeql
+      - sca-dependency-review
+      - sca-osv-scanner
+      - supply-chain
+      - lint-and-quality
+      - build
+      - test
+      - markdown-lint
+    steps:
+      - name: Verify all blocking gates passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          # "skipped" is OK (stack not detected); "failure"/"cancelled" is not.
+          if echo "$NEEDS" | jq -e '[.[] | select(.result == "failure" or .result == "cancelled")] | length > 0' > /dev/null; then
+            echo "::error::One or more blocking PR gates failed."
+            exit 1
+          fi
+          echo "All blocking gates passed."
