@@ -809,7 +809,9 @@ html.dark :focus-visible {
   position: absolute;
   top: -2.5rem;
   left: 0;
-  background-color: #003f87; /* va-blue */
+  background-color: var(
+    --va-blue
+  ); /* brand green; was federal #003f87 (RT15-1) */
   color: #ffffff;
   padding: 0.5rem 1rem;
   z-index: 100;
@@ -1760,20 +1762,26 @@ button:not(:disabled):hover {
 }
 
 /* Utility Classes */
+/* RT15-1 (D2 fix): the va-blue/va-gold utilities hardcoded federal #003f87 /
+   #fdb913, so the same brand token rendered TWO different colors and ignored
+   dark mode + every colorblind palette. Bind them to the theme CSS variables
+   (defined per :root / html.dark / colorblind modes) so they are one color,
+   theme-aware, and colorblind-aware. Residual: gold-as-text contrast on light
+   (D1) gets a per-theme --va-gold-text in RT15-8. */
 .text-va-blue {
-  @apply text-[#003f87];
+  color: var(--va-blue);
 }
 
 .bg-va-blue {
-  @apply bg-[#003f87];
+  background-color: var(--va-blue);
 }
 
 .text-va-gold {
-  @apply text-[#fdb913];
+  color: var(--va-gold);
 }
 
 .bg-va-gold {
-  @apply bg-[#fdb913];
+  background-color: var(--va-gold);
 }
 
 /* Form Inputs */
