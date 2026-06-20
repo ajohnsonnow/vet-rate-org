@@ -22,6 +22,7 @@ import {
   getLocalKey,
   isEncryptedBackup,
 } from "./cloudEncryption";
+import { generateState } from "./pkce";
 
 // Provider configurations
 const PROVIDERS = {
@@ -150,6 +151,10 @@ export const connectDropbox = async () => {
   const { verifier, challenge } = await generatePKCE();
   sessionStorage.setItem("dropbox_pkce_verifier", verifier);
 
+  // CSRF: bind this flow to a random state and verify it on callback.
+  const oauthState = generateState();
+  sessionStorage.setItem("dropbox_oauth_state", oauthState);
+
   const authUrl = new URL("https://www.dropbox.com/oauth2/authorize");
   authUrl.searchParams.set("client_id", DROPBOX_CONFIG.clientId);
   authUrl.searchParams.set("response_type", "code");
@@ -157,6 +162,7 @@ export const connectDropbox = async () => {
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
   authUrl.searchParams.set("token_access_type", "offline");
+  authUrl.searchParams.set("state", oauthState);
 
   // Open in popup
   const popup = window.open(
@@ -170,6 +176,7 @@ export const connectDropbox = async () => {
       try {
         if (popup.closed) {
           clearInterval(checkPopup);
+          sessionStorage.removeItem("dropbox_oauth_state");
           const token = sessionStorage.getItem("dropbox_token");
           if (token) {
             connectionState.dropbox = { connected: true, token, user: null };
@@ -183,10 +190,24 @@ export const connectDropbox = async () => {
         if (popup.location.href.includes("/auth/dropbox/callback")) {
           const url = new URL(popup.location.href);
           const code = url.searchParams.get("code");
+          const returnedState = url.searchParams.get("state");
 
           if (code) {
             popup.close();
             clearInterval(checkPopup);
+
+            // CSRF: reject the callback unless state matches what we issued.
+            const expectedState =
+              sessionStorage.getItem("dropbox_oauth_state");
+            sessionStorage.removeItem("dropbox_oauth_state");
+            if (!expectedState || returnedState !== expectedState) {
+              reject(
+                new Error(
+                  "Dropbox authentication failed: OAuth state mismatch (possible CSRF). Please try again.",
+                ),
+              );
+              return;
+            }
 
             // Exchange code for token
             exchangeDropboxCode(code).then(resolve).catch(reject);
@@ -425,6 +446,10 @@ export const connectOneDrive = async () => {
   const { verifier, challenge } = await generatePKCE();
   sessionStorage.setItem("onedrive_pkce_verifier", verifier);
 
+  // CSRF: bind this flow to a random state and verify it on callback.
+  const oauthState = generateState();
+  sessionStorage.setItem("onedrive_oauth_state", oauthState);
+
   const authUrl = new URL(`${ONEDRIVE_CONFIG.authority}/oauth2/v2.0/authorize`);
   authUrl.searchParams.set("client_id", ONEDRIVE_CONFIG.clientId);
   authUrl.searchParams.set("response_type", "code");
@@ -433,6 +458,7 @@ export const connectOneDrive = async () => {
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
   authUrl.searchParams.set("response_mode", "query");
+  authUrl.searchParams.set("state", oauthState);
 
   const popup = window.open(
     authUrl.toString(),
@@ -445,6 +471,7 @@ export const connectOneDrive = async () => {
       try {
         if (popup.closed) {
           clearInterval(checkPopup);
+          sessionStorage.removeItem("onedrive_oauth_state");
           const token = sessionStorage.getItem("onedrive_token");
           if (token) {
             connectionState.onedrive = { connected: true, token, user: null };
@@ -457,10 +484,25 @@ export const connectOneDrive = async () => {
         if (popup.location.href.includes("/auth/onedrive/callback")) {
           const url = new URL(popup.location.href);
           const code = url.searchParams.get("code");
+          const returnedState = url.searchParams.get("state");
 
           if (code) {
             popup.close();
             clearInterval(checkPopup);
+
+            // CSRF: reject the callback unless state matches what we issued.
+            const expectedState =
+              sessionStorage.getItem("onedrive_oauth_state");
+            sessionStorage.removeItem("onedrive_oauth_state");
+            if (!expectedState || returnedState !== expectedState) {
+              reject(
+                new Error(
+                  "OneDrive authentication failed: OAuth state mismatch (possible CSRF). Please try again.",
+                ),
+              );
+              return;
+            }
+
             exchangeOneDriveCode(code).then(resolve).catch(reject);
           }
         }
