@@ -493,10 +493,10 @@ const isValidApiKey = (key) => {
  * Check if cloud AI is available (API key configured)
  */
 export const isCloudAIAvailable = () => {
+  // RT1-1: BYOK only — the key comes solely from the user's localStorage entry,
+  // never from the build env. A VITE_-inlined key would ship in the public bundle.
   const storedKey = localStorage.getItem(GEMINI_KEY);
-  if (isValidApiKey(storedKey)) return true;
-  const envKey = import.meta.env?.VITE_GEMINI_API_KEY;
-  return isValidApiKey(envKey);
+  return isValidApiKey(storedKey);
 };
 
 /**
@@ -679,10 +679,9 @@ export const getEffectiveAIMode = () => {
  * Get the Gemini API key (only returns valid keys, not placeholders)
  */
 const getGeminiApiKey = () => {
+  // RT1-1: BYOK only — never fall back to a build-env key (would bake into dist).
   const storedKey = localStorage.getItem(GEMINI_KEY);
   if (isValidApiKey(storedKey)) return storedKey;
-  const envKey = import.meta.env?.VITE_GEMINI_API_KEY;
-  if (isValidApiKey(envKey)) return envKey;
   return "";
 };
 

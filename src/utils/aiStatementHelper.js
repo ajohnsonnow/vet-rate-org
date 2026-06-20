@@ -39,12 +39,11 @@ export const isAIAvailable = () => {
  * @deprecated Use unified AI service instead
  */
 const _getApiKey = () => {
-  // Check localStorage first (BYOK)
+  // RT1-1: BYOK only — key comes from the user's localStorage entry, never the
+  // build env. A VITE_-inlined key would ship in the public bundle.
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
-
-  // Fallback to env variable (legacy)
-  return import.meta.env.VITE_GEMINI_API_KEY || "";
+  return "";
 };
 
 /**
