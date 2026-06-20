@@ -1,8 +1,460 @@
 {
   "version": "1.23.1",
-  "lastUpdated": "2026-06-09",
+  "lastUpdated": "2026-06-20",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.23.1",
+      "date": "2026-06-20",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
+      "changelog": [
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "progress tracker — RT15-2 central de-rainbow done; scope note on long-tail",
+          "description": "progress tracker — RT15-2 central de-rainbow done; scope note on long-tail"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "RT15-2 — de-rainbow central tool-header gradients + hero card",
+          "description": "RT15-2 — de-rainbow central tool-header gradients + hero card"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "increase Atomic Wipe poll timeout for CI lazy-load",
+          "description": "increase Atomic Wipe poll timeout for CI lazy-load"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "add red-team sprint execution progress tracker",
+          "description": "add red-team sprint execution progress tracker"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "RT15 — calm dev banner + unify va-blue/va-gold to theme vars",
+          "description": "RT15 — calm dev banner + unify va-blue/va-gold to theme vars"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "RT13-6 — dedupe lint-staged config + drop uninstalled stylelint hook",
+          "description": "RT13-6 — dedupe lint-staged config + drop uninstalled stylelint hook"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "WIP checkpoint before red-team remediation sprints",
+          "description": "WIP checkpoint before red-team remediation sprints"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "add red-team adversarial audit & remediation sprint plan",
+          "description": "add red-team adversarial audit & remediation sprint plan"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "fix makeCFileText fixture after CHARS_PER_TOKEN 4→3.4",
+          "description": "fix makeCFileText fixture after CHARS_PER_TOKEN 4→3.4"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add unquoted-key JSON repair strategy",
+          "description": "add unquoted-key JSON repair strategy"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "two-gate chunk skip + streaming JSON bracket interrupt",
+          "description": "two-gate chunk skip + streaming JSON bracket interrupt"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "scale chunk timeout with chunk size",
+          "description": "scale chunk timeout with chunk size"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "device-adaptive AI + PDF text-layer detection",
+          "description": "device-adaptive AI + PDF text-layer detection"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "tune sampling params for Qwen2.5-3B-q4 structured extraction",
+          "description": "tune sampling params for Qwen2.5-3B-q4 structured extraction"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "35-50% fewer chunks via larger chunks + low-content skip",
+          "description": "35-50% fewer chunks via larger chunks + low-content skip"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "prevent repetition loops and fix max_tokens for local AI",
+          "description": "prevent repetition loops and fix max_tokens for local AI"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "12K context window + conservative token estimate",
+          "description": "12K context window + conservative token estimate"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "grammar-constrained decoding, q4f16_1 model, trimmed system prompt",
+          "description": "grammar-constrained decoding, q4f16_1 model, trimmed system prompt"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "8h budget — measured pace is ~50s/chunk x 304 on a 5060 Ti",
+          "description": "8h budget — measured pace is ~50s/chunk x 304 on a 5060 Ti"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "1200-token chunk responses + 5h stress budget",
+          "description": "1200-token chunk responses + 5h stress budget"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "live console-error stream to audit/stress-results",
+          "description": "live console-error stream to audit/stress-results"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "detect local AI by effectiveMode, not the raw setting",
+          "description": "detect local AI by effectiveMode, not the raw setting"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "batch loop owns the circuit breaker + 5-min local timeout",
+          "description": "batch loop owns the circuit breaker + 5-min local timeout"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "context_window_size belongs in ChatOptions, not engine config",
+          "description": "context_window_size belongs in ChatOptions, not engine config"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "honor the real 8K context — stale 4096 cap truncated chunks",
+          "description": "honor the real 8K context — stale 4096 cap truncated chunks"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "3h test budget for the full 313MB pipeline",
+          "description": "3h test budget for the full 313MB pipeline"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "elapsed-time heartbeat during C-File processing",
+          "description": "elapsed-time heartbeat during C-File processing"
+        },
+        {
+          "type": "improvement",
+          "category": "Other",
+          "title": "C-File analysis hours -> realistic runtime",
+          "description": "C-File analysis hours -> realistic runtime"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "headed Chromium for WebGPU + audit report draft",
+          "description": "headed Chromium for WebGPU + audit report draft"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "313MB C-File stress harness, dev-machine only (WS-1)",
+          "description": "313MB C-File stress harness, dev-machine only (WS-1)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "wire veteran records into the calculators (WS-7)",
+          "description": "wire veteran records into the calculators (WS-7)"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "Atomic Wipe spec follows the real trigger location",
+          "description": "Atomic Wipe spec follows the real trigger location"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "axe-clean the three simulator dialogs",
+          "description": "axe-clean the three simulator dialogs"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "freshness + ratification pipeline, static-only (WS-9)",
+          "description": "freshness + ratification pipeline, static-only (WS-9)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "quota guards, packet version migration, import safety (WS-8)",
+          "description": "quota guards, packet version migration, import safety (WS-8)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "focus traps + overflow-aware scroll tabIndex (WS-6)",
+          "description": "focus traps + overflow-aware scroll tabIndex (WS-6)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "WCAG 2.2 AA for Tribunal, What-If Sandbox, Body Map (WS-5)",
+          "description": "WCAG 2.2 AA for Tribunal, What-If Sandbox, Body Map (WS-5)"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "TDIU/SMC-S detection banners + DC 8620 criteria (WS-4)",
+          "description": "TDIU/SMC-S detection banners + DC 8620 criteria (WS-4)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "resilience + anti-hallucination hardening (WS-2/WS-3)",
+          "description": "resilience + anti-hallucination hardening (WS-2/WS-3)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "single source of truth for all VA pay tables (WS-0)",
+          "description": "single source of truth for all VA pay tables (WS-0)"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add blob: to connect-src for PDF.js large file streaming",
+          "description": "add blob: to connect-src for PDF.js large file streaming"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge branch 'audit/cfile-fullsweep'",
+          "description": "Merge branch 'audit/cfile-fullsweep'"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CSP hf.co CDN, AI badge state, PDF.js worker version",
+          "description": "CSP hf.co CDN, AI badge state, PDF.js worker version"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep",
+          "description": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "break doc-update feedback loop by skipping if last commit was [pre-push]",
+          "description": "break doc-update feedback loop by skipping if last commit was [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "idempotent update-changelog + remove husky deprecation warning",
+          "description": "idempotent update-changelog + remove husky deprecation warning"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "clean duplicate CHANGELOG entry + fix update-changelog baseline",
+          "description": "clean duplicate CHANGELOG entry + fix update-changelog baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "add 2026-06-08 mega-audit reports and sprint instructions",
+          "description": "add 2026-06-08 mega-audit reports and sprint instructions"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08",
+          "description": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08",
+          "description": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "apply WebGPU adapter patch + fail loudly on all-models-fail",
+          "description": "apply WebGPU adapter patch + fail loudly on all-models-fail"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "hydrate NexusBuilder from localStorage when no event detail",
+          "description": "hydrate NexusBuilder from localStorage when no event detail"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "LLM pipeline audit — routing fix + PDCA test coverage",
+          "description": "LLM pipeline audit — routing fix + PDCA test coverage"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "consolidated C-File audit report (Sprints 0-6)",
+          "description": "consolidated C-File audit report (Sprints 0-6)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder",
+          "description": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks",
+          "description": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe",
+          "description": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "env-configurable bug-report endpoint + PII guard before send",
+          "description": "env-configurable bug-report endpoint + PII guard before send"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs",
+          "description": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth",
+          "description": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test",
+          "description": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "unblock chromium Playwright gate + record audit baseline",
+          "description": "unblock chromium Playwright gate + record audit baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net",
+          "description": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
+          "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
+        }
+      ]
+    },
     {
       "version": "1.23.1",
       "date": "2026-06-09",
@@ -2394,38 +2846,6 @@
           "category": "DX",
           "title": "Diátaxis categorical doc index",
           "description": "docs/DOCS_INDEX.md places every engineering doc in one of four quadrants (Tutorials, How-to, Reference, Explanation) with a one-line hook. Veteran-facing manual at docs/index.md stays separate. Closes audit row #37."
-        }
-      ]
-    },
-    {
-      "version": "1.21.0",
-      "date": "2026-05-15",
-      "isFirstRelease": false,
-      "releaseTitle": "Best-Practices Audit Complete — Legal-RAG + Supply-Chain Hardening",
-      "changelog": [
-        {
-          "type": "feat",
-          "category": "AI / Legal-RAG",
-          "title": "Legal-RAG runtime over 38 CFR Part 4",
-          "description": "New legalRag.js + legalAnswerer.js services with dual-LLM split (extractor → JSON facts → synthesizer) and LegalCitation badges that link to canonical .gov sources with fetched_at currency dates."
-        },
-        {
-          "type": "feat",
-          "category": "Knowledge / Ops",
-          "title": "Weekly legal-index ingestion cron",
-          "description": "GitHub Action refreshes the legal-index every Monday, opens a PR on content diff, and files a stale-source issue on fetcher failure. External-truth registry at knowledge-sources.yaml."
-        },
-        {
-          "type": "chore",
-          "category": "Supply chain",
-          "title": "Zero npm audit vulnerabilities + SBOM on release",
-          "description": "protobufjs and @xmldom/xmldom advisories resolved via npm overrides. Release tag now generates CycloneDX + SPDX SBOMs and attaches them to the GitHub Release."
-        },
-        {
-          "type": "chore",
-          "category": "DevSecOps",
-          "title": "CI security gates flipped to blocking",
-          "description": "npm audit (prod, ≥high) and semgrep SAST (--strict) now block CI. Preflight contract enforcement defaults to STRICT_AUDIT=true."
         }
       ]
     }
