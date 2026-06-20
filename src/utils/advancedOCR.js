@@ -91,6 +91,35 @@ export async function advancedPDFAnalysis(
 ) {
   const config = { ...ADVANCED_OCR_CONFIG, ...options };
 
+  // RT8-4: advancedPDFAnalysis loads the whole file into one ArrayBuffer, then
+  // renders each page to a high-res canvas for Tesseract. A 300MB+ PDF can
+  // easily consume 2–4 GB of JS heap on the render path. Gate before we start.
+  //
+  // Thresholds are deliberately conservative:
+  //   - 200 MB + low-memory device  → abort (recommend C-File Analyzer which streams)
+  //   - 100 MB + mobile tier         → cap OCR pages to avoid OOM
+  //   - >200 MB on any device        → cap pages (OCR beyond ~20 pp is rarely useful anyway)
+  const OCR_HARD_LIMIT_BYTES = 200 * 1024 * 1024; // 200 MB compressed
+  const OCR_WARN_LIMIT_BYTES = 100 * 1024 * 1024; // 100 MB
+  const deviceProfile = getCachedDeviceProfile();
+  const isMobileDevice = deviceProfile?.isMobile || deviceProfile?.tier === "mobile";
+  const isLowMemory = (deviceProfile?.systemRAM ?? 4) <= 2;
+
+  if (file.size > OCR_HARD_LIMIT_BYTES && (isMobileDevice || isLowMemory)) {
+    throw new Error(
+      `This PDF (${Math.round(file.size / (1024 * 1024))} MB) is too large for OCR on your device. ` +
+        "Use the C-File Analyzer tool instead — it streams pages one at a time and handles files of any size.",
+    );
+  }
+  if (file.size > OCR_WARN_LIMIT_BYTES) {
+    // Cap page count to avoid multi-GB canvas accumulation.
+    config.MAX_OCR_PAGES = Math.min(config.MAX_OCR_PAGES, 10);
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[advancedOCR] Large file (${Math.round(file.size / (1024 * 1024))} MB) — capping OCR at ${config.MAX_OCR_PAGES} pages to prevent OOM.`,
+    );
+  }
+
   try {
     // Load PDF
     onProgress({

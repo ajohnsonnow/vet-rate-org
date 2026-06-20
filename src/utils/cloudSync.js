@@ -36,6 +36,50 @@ let gapiInited = false;
 let gisInited = false;
 
 /**
+ * RT8-7: Lazy-load the Google API scripts on first cloud-sync interaction
+ * instead of loading them for every page visitor via index.html <head>.
+ * Both scripts are idempotent — safe to call multiple times.
+ */
+let _gapiScriptLoaded = false;
+let _gisScriptLoaded = false;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      resolve();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureGoogleApis() {
+  const loads = [];
+  if (!_gapiScriptLoaded && typeof window.gapi === "undefined") {
+    loads.push(
+      loadScript("https://apis.google.com/js/api.js").then(
+        () => { _gapiScriptLoaded = true; },
+      ),
+    );
+  }
+  if (!_gisScriptLoaded && (typeof window.google === "undefined" || !window.google?.accounts)) {
+    loads.push(
+      loadScript("https://accounts.google.com/gsi/client").then(
+        () => { _gisScriptLoaded = true; },
+      ),
+    );
+  }
+  if (loads.length) await Promise.all(loads);
+}
+
+/**
  * Initialize Google API client (gapi) - for Drive API calls
  */
 function initializeGapiClient() {
@@ -115,21 +159,9 @@ export async function initializeGoogleDrive() {
     // eslint-disable-next-line no-console
     console.log("🔄 Initializing Google Drive...");
 
-    // Check for required scripts
-    if (typeof window.gapi === "undefined") {
-      throw new Error(
-        'Google API (gapi) not loaded. Add to index.html: <script src="https://apis.google.com/js/api.js"></script>',
-      );
-    }
-
-    if (
-      typeof window.google === "undefined" ||
-      !window.google?.accounts?.oauth2
-    ) {
-      throw new Error(
-        'Google Identity Services not loaded. Add to index.html: <script src="https://accounts.google.com/gsi/client"></script>',
-      );
-    }
+    // RT8-7: Lazy-load Google API scripts on first use instead of eager
+    // index.html loading (saves ~90 KB on every page load for non-sync users).
+    await ensureGoogleApis();
 
     // Initialize both clients
     await initializeGapiClient();

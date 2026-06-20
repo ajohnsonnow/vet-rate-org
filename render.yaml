@@ -25,6 +25,19 @@ services:
       - key: VITE_VA_BENEFITS_REF_API_KEY
         sync: false  # Set in Render Dashboard (sensitive)
     headers:
+      # RT8-1: COOP + COEP enable crossOriginIsolated, required for
+      # SharedArrayBuffer (Tesseract.js multi-thread, wllama). COEP uses
+      # "credentialless" (not "require-corp") so third-party assets (CDN fonts,
+      # Hugging Face model weights, GoatCounter analytics) load without needing
+      # CORP headers. COOP same-origin closes the opener channel.
+      # FLAG: owner should verify CDN/HF fetches load correctly in prod before
+      # enabling on main. Test with: window.crossOriginIsolated === true in console.
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: credentialless
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN
@@ -68,6 +81,12 @@ services:
       - key: VITE_BRAND_MODE
         value: supplylocker
     headers:
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: credentialless
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN

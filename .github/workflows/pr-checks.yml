@@ -270,6 +270,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Bundle budget check (informational)
+        run: npm run check-bundle-budget
+        continue-on-error: true
+
   # --------------------------------------------------------------------- test --
   test:
     name: Test & coverage
