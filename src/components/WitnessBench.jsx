@@ -377,7 +377,7 @@ INSTRUCTIONS:
 5. Include specific examples when provided
 6. Do NOT include names, addresses, or dates (use [Veteran], [Date], etc.)
 7. Format as 3-4 coherent paragraphs
-8. End with an attestation: "I certify that the statements above are true and correct to the best of my knowledge and belief."
+8. Do NOT write any "I certify..." or "true and correct" attestation. End the narrative without a signature or certification line — the witness must add and sign their own attestation only after personally verifying every statement is true.
 
 Write the complete buddy statement now:`;
 
@@ -433,7 +433,13 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
     });
   }
 
-  statement += `I certify that the statements above are true and correct to the best of my knowledge and belief.\n\n`;
+  // AIS-03 / LEGAL-03: do not pre-assert "I certify ... true and correct" above a
+  // blank signature line — that presents AI-drafted testimony as already attested.
+  // Make the attestation contingent on the witness reading, verifying, and signing,
+  // and warn about the federal false-statement statute the witness signs under.
+  statement += `--- WITNESS ATTESTATION (read before you sign) ---\n`;
+  statement += `This statement was drafted with AI assistance. Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) — a knowingly false statement is a federal crime. Edit anything that is not accurate.\n\n`;
+  statement += `By signing below, I attest that I have read the statement above, that it reflects my own personal knowledge, and that it is true and correct to the best of my knowledge and belief:\n\n`;
   statement += `Respectfully submitted,\n\n`;
   statement += `_______________________________\n`;
   statement += `[Witness Signature]\n\n`;
