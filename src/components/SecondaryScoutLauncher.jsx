@@ -6,6 +6,7 @@ import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { useLanguage } from "../contexts/LanguageContext";
+import { combineMultipleRatings, roundToNearest10 } from "../utils/vaCalculator";
 
 /**
  * SecondaryScoutLauncher Component
@@ -1170,16 +1171,12 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     }
   };
 
-  // Calculate combined rating from saved ratings using VA math
+  // Combined rating via the canonical VA-table engine (38 CFR § 4.25), the
+  // single source of truth — see vaCalculator.combineMultipleRatings. (No
+  // bilateral factor here: this view has no side metadata for saved ratings.)
   const calculateCombinedRating = (ratings) => {
     if (!ratings || ratings.length === 0) return 0;
-    const sortedRatings = [...ratings].sort((a, b) => b.rating - a.rating);
-    let efficiency = 100;
-    sortedRatings.forEach((r) => {
-      efficiency = efficiency - (efficiency * r.rating) / 100;
-    });
-    const combined = 100 - efficiency;
-    return Math.round(combined / 10) * 10; // Round to nearest 10
+    return roundToNearest10(combineMultipleRatings(ratings.map((r) => r.rating)));
   };
 
   const loadExampleProfile = (conditions) => {

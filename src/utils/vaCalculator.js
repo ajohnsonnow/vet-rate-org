@@ -242,8 +242,14 @@ export const calculateBilateralFactor = (bilateralRatings) => {
 };
 
 /**
- * Main VA Rating Calculator
- * Implements full 38 CFR § 4.25 logic including Bilateral Factor
+ * Main VA Rating Calculator — the single source of truth for combined ratings.
+ * Implements full 38 CFR § 4.25 logic including the § 4.26 Bilateral Factor.
+ *
+ * The bilateral factor is applied to the actual paired (left/right) set, NOT to
+ * the two highest ratings. UI surfaces (MillionDollarDashboard, WhatIfSandbox,
+ * SecondaryScoutLauncher) combine through this engine / its primitives
+ * (combineMultipleRatings, calculateBilateralFactor) so the math stays
+ * consistent. The flat ratingCalculator.calculateCombinedRating is legacy.
  *
  * @param {Array} conditions - Array of condition objects:
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none', bodyPart: string }

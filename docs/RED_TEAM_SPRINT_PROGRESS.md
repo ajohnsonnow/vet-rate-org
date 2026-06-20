@@ -23,7 +23,7 @@
 | RT-4 injection wiring   | ✅      | **PI-01 (`abcb766`) + PI-02 (`af23975`).**                                                                                                                                                                    |
 | RT-5 XSS/CSP            | ✅      | `63eca37` sanitizeInlineHtml/DbqFinder/RT3-5 · `c8ba9f2` BadgeDisplay SVG scrub + UserManual escape · `9a96f46` CSP drop unsafe-eval (boot smoke test clean). RESIDUAL: manual WASM-model-load check (owner). |
 | RT-6 crypto             | ✅ / 🚩 | **CRYPTO-04 (`0e7faff`) · PARSE-002 (`1555c0a`) · CRYPTO-03 (`50d460a`) · CRYPTO-02 weak-key warning done.** 🚩 owner: RT6-3 at-rest default + random-DEK envelope re-arch (needs-decision).                  |
-| RT-7 parsing/rating     | 🟡      | **RT7-3 (PARSE-003) done** — shared `isPdfFile` guard (accepts octet-stream/empty-MIME .pdf, rejects 0-byte; test 7/7). RT7-2 (bilateral-factor consolidation) is next chunk's headline; RT7-1/4/5 pending.   |
+| RT-7 parsing/rating     | 🟡      | **RT7-2 (PARSE-004) + RT7-3 (PARSE-003) done.** RT7-2: vaCalculator is single source; WhatIfSandbox + SecondaryScoutLauncher now combine via its primitives; parity test [50,30L,30R]→80 (96/96 rating tests green). RT7-1/4/5 pending. 🚩 follow-ups below. |
 | RT-8..RT-12             | ⏳      |                                                                                                                                                                                                               |
 | RT-14 brand enrichment  | ⏳      | After RT-15 review.                                                                                                                                                                                           |
 
@@ -31,6 +31,7 @@
 
 ## Done (newest first)
 
+- RT7-2/PARSE-004 — vaCalculator made the single source of truth for combined ratings. WhatIfSandbox (was Knee/Shoulder-only, round-additions, silently dropped conditions when both pairs present) + SecondaryScoutLauncher (was bespoke continuous non-table math, no bilateral) now combine via combineMultipleRatings/calculateBilateralFactor/roundToNearest10. New combinedRatingParity.test.js pins [50,30L,30R]→80 + legacy parity; 96/96 rating tests green. 🚩 follow-ups: WhatIfSandbox bilateral detection still Knee/Shoulder-name-only (not full side-aware); legacy flat ratingCalculator retained (≈30 pinned tests) — full retirement is needs-decision.
 - RT7-3/PARSE-003 — shared pdf.js-free `isPdfFile` guard (src/utils/fileTypeGuards.js); CFileAnalyzer accepts octet-stream/empty-MIME .pdf, rejects 0-byte with `emptyPdfFile` copy (5 langs); test 7/7.
 - `50d460a` RT-6/CRYPTO-03 — Dropbox + OneDrive OAuth state/CSRF (generateState, reject on mismatch).
 - CRYPTO-02 — passphrase-less cloud write no longer silent: `isWeakWriteKey` + console.warn + `weakKey` in return surfaced in CloudSyncManager status; test 10/10. (Random-DEK envelope deferred 🚩.)
