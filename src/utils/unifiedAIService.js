@@ -13,7 +13,11 @@
  */
 
 import { interceptBeforeAICall } from "./crisisInterceptor";
-import { scrubPII, analyzePII } from "./piiScrubber";
+import {
+  scrubPII,
+  analyzePII,
+  containsSignificantNonLatin,
+} from "./piiScrubber";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
 import { isFeatureEnabled } from "./featureFlags";
 import {
@@ -773,6 +777,18 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 
       // Log what was scrubbed (for transparency)
       console.info(`🛡️ PII Scrubbed:`, details);
+    }
+
+    // RT3-4: the PII patterns are US/English-centric and cannot reliably find PII in
+    // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
+    // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
+    // over-redacting, which would corrupt the analysis. Prefer local AI for these.
+    if (containsSignificantNonLatin(fullPrompt)) {
+      console.warn(
+        "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
+          "non-English text; this cloud request may contain unredacted PII. " +
+          "Consider local AI for sensitive non-English documents.",
+      );
     }
   }
 

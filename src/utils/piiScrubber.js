@@ -112,6 +112,39 @@ const normalizeForScan = (text) =>
   text.replace(INVISIBLE_CHARS, "").normalize("NFKC");
 
 /**
+ * RT3-4: detect text dominated by non-Latin scripts (Cyrillic, Arabic, Devanagari,
+ * Japanese kana, CJK, Hangul). The PII_PATTERNS are US/English-centric
+ * (SSN/phone/email/VA-file), so they cannot reliably redact PII inside non-Latin
+ * narratives. Latin-script locales (Spanish, Tagalog, Vietnamese) are intentionally
+ * NOT flagged — their PII largely matches the existing patterns. Callers use this to
+ * apply conservative handling (warn / prefer local AI) on the cloud egress path
+ * rather than over-redacting, which would corrupt the analysis.
+ * @param {string} text
+ * @returns {boolean}
+ */
+export const containsSignificantNonLatin = (text) => {
+  if (!text || typeof text !== "string") return false;
+  let nonLatin = 0;
+  let meaningful = 0;
+  for (const ch of text) {
+    if (ch.trim()) meaningful += 1;
+    const c = ch.codePointAt(0);
+    if (
+      (c >= 0x0400 && c <= 0x04ff) || // Cyrillic
+      (c >= 0x0600 && c <= 0x06ff) || // Arabic
+      (c >= 0x0900 && c <= 0x097f) || // Devanagari
+      (c >= 0x3040 && c <= 0x30ff) || // Hiragana + Katakana
+      (c >= 0x3400 && c <= 0x9fff) || // CJK (Ext A + Unified)
+      (c >= 0xac00 && c <= 0xd7af) // Hangul syllables
+    ) {
+      nonLatin += 1;
+    }
+  }
+  if (nonLatin === 0) return false;
+  return nonLatin >= 8 || nonLatin / (meaningful || 1) >= 0.15;
+};
+
+/**
  * Scrub PII from text.
  * @param {string} text
  * @param {Object} options
