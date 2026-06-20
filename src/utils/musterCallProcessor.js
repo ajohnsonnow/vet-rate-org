@@ -1104,7 +1104,6 @@ const parseDocumentByType = async (
 
         // eslint-disable-next-line no-console
         console.log(`✅ Vision-parsed DD214:`, {
-          name: visionData.veteranName,
           branch: visionData.branch,
           rank: visionData.rank,
           mos: visionData.mos,
@@ -2338,7 +2337,6 @@ const parseServiceRecord = async (text) => {
 
     // eslint-disable-next-line no-console
     console.log("📋 DD214 parsed fields:", {
-      veteranName: data.veteranName,
       branch: data.branch,
       rank: data.rank,
       mos: data.mos,

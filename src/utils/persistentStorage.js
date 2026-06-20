@@ -885,9 +885,6 @@ export async function initPersistentStorage() {
     console.log("⚠️ Found unsaved changes from previous session");
   }
 
-  // Initialize unsaved changes warning
-  initUnsavedChangesWarning();
-
   // Start milestone saves
   startMilestoneSaves();
 

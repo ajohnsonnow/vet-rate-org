@@ -41,14 +41,8 @@ export function parseDD214Text(rawText) {
   // Normalize text (handle OCR quirks)
   const text = normalizeOcrText(rawText);
 
-  // Debug: Log first 1000 chars of normalized text
   // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser] Input text length:", rawText.length);
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔍 [DD214Parser] Normalized text (first 1000 chars):",
-    text.substring(0, 1000),
-  );
 
   const fields = {};
   const confidence = {};
@@ -268,9 +262,6 @@ function normalizeOcrText(text) {
  * Extract name from DD214 text
  */
 function extractName(text) {
-  // Debug: log what we're searching
-  // eslint-disable-next-line no-console
-  console.log("🔍 [DD214Parser:Name] Searching for name patterns...");
 
   // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
   // Also handle Florence-2 output which may have different formatting

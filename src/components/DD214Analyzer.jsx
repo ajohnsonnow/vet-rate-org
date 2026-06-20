@@ -1181,9 +1181,6 @@ const DD214Analyzer = ({
         return;
       }
 
-      // eslint-disable-next-line no-console
-      console.log("Opening profile import modal with data:", profileData);
-
       // Show confirmation modal automatically
       setExtractedProfileData(profileData);
       setShowProfileImportModal(true);
@@ -2383,9 +2380,7 @@ const DD214Analyzer = ({
       {showFormBuilder && (
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
-          onSave={(dd214) => {
-            // eslint-disable-next-line no-console
-            console.log("DD214 saved:", dd214);
+          onSave={() => {
             // Optionally refresh the list or show success message
           }}
         />
