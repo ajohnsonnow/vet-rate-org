@@ -1966,18 +1966,32 @@ const generateAIInternal = async (prompt, options = {}) => {
       }
     }
 
-    // Validate AI response for hallucinations (unless explicitly skipped)
-    if (!options.skipValidation && options.taskType) {
+    // Validate the AI response for forbidden medical/legal roleplay, ungrounded
+    // CFR citations, missing disclaimers, invented stats, and over-certain claim
+    // language. Runs unless explicitly skipped.
+    //
+    // AIS-01: this was effectively dead in production. The guard required
+    // `options.taskType` (so calls without one skipped validation entirely), and
+    // it passed `options.taskType` — a STRING — as the `context` argument, so the
+    // validator's `context.loadedRegulations` was always undefined. Run it on every
+    // non-skipped response and pass a real context object.
+    if (!options.skipValidation) {
       const { validateAIResponse } = await getAISystemPrompts();
-      const validation = validateAIResponse(text, options.taskType);
+      const validation = validateAIResponse(text, {
+        taskType: options.taskType,
+        loadedRegulations: options.loadedRegulations,
+        hasStatistics: options.hasStatistics,
+      });
       if (!validation.isValid) {
         console.warn(
-          "⚠️ AI response validation warnings:",
+          "⚠️ AI response validation failed:",
+          validation.errors,
           validation.warnings,
         );
         return {
           text,
           mode: usedMode,
+          validationErrors: validation.errors,
           validationWarnings: validation.warnings,
           hallucinationReport,
         };
