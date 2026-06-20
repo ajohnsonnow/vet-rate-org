@@ -38,6 +38,7 @@ import {
 // 💎 New backends: Wllama (browser WASM) and Local Server (llama.cpp)
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
+import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -531,6 +532,22 @@ export const initializeWllama = async (
     // eslint-disable-next-line no-console
     console.log("🌐 Wllama already initializing...");
     return false;
+  }
+
+  // RT8-3: The wllama GGUF models are ~4 GB each. Downloading that on a phone
+  // or a device without adequate GPU/RAM OOMs or crawls. Gate early — same
+  // pattern as diamondSwarm.js which checks canUseWebLLM before any WebLLM
+  // download. Mobile tier always returns canUseWebLLM=false.
+  const deviceProfile = await detectDeviceCapabilities();
+  if (!deviceProfile.canUseWebLLM) {
+    const reason =
+      `Device tier "${deviceProfile.tier}" (${deviceProfile.hasWebGPU ? "WebGPU present but mobile" : "no WebGPU"})`;
+    // eslint-disable-next-line no-console
+    console.warn(`[Wllama] Blocked on ${reason}: 7B models need a desktop/laptop.`);
+    throw new Error(
+      `Local AI (7B model) is not available on this device (${reason}). ` +
+        "Use Cloud AI or open the app on a desktop or laptop.",
+    );
   }
 
   try {
