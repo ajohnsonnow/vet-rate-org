@@ -4,6 +4,7 @@ import {
   sanitizeErrorMessage,
   escapeHtml,
   safeHtml,
+  sanitizeInlineHtml,
   stripUntrustedUrls,
   isLLMOutputUrlAllowed,
 } from "../../utils/sanitize";
@@ -235,5 +236,35 @@ describe("stripUntrustedUrls — LLM output sanitizer", () => {
     expect(safe).not.toContain("attacker.example");
     expect(safe).toContain("[link removed]");
     expect(safe).toContain("38 CFR § 4.71a");
+  });
+});
+
+describe("sanitizeInlineHtml (RT-5)", () => {
+  it("neutralizes <script> and event-handler payloads to inert escaped text", () => {
+    const out = sanitizeInlineHtml(
+      'hi <script>alert(1)</script> <img src=x onerror="alert(2)"> there',
+    );
+    expect(out).not.toContain("<script>");
+    expect(out).not.toMatch(/<img\b/i);
+    expect(out).toContain("&lt;script&gt;");
+    expect(out).toContain("&lt;img");
+  });
+
+  it("preserves the fixed allow-list of attribute-less inline tags", () => {
+    const out = sanitizeInlineHtml("A <strong>DBQ</strong> is <em>useful</em>.");
+    expect(out).toContain("<strong>DBQ</strong>");
+    expect(out).toContain("<em>useful</em>");
+  });
+
+  it("does NOT re-allow an allow-list tag carrying attributes (stays escaped)", () => {
+    const out = sanitizeInlineHtml('<strong onclick="evil()">x</strong>');
+    expect(out).not.toContain("<strong onclick");
+    expect(out).toContain("&lt;strong onclick");
+  });
+
+  it("handles empty / non-string input", () => {
+    expect(sanitizeInlineHtml("")).toBe("");
+    expect(sanitizeInlineHtml(null)).toBe("");
+    expect(sanitizeInlineHtml(undefined)).toBe("");
   });
 });

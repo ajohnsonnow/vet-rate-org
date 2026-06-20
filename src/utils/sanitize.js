@@ -236,6 +236,31 @@ export function safeHtml(markdownLite) {
 }
 
 /**
+ * Sanitize a string that may contain a SMALL set of raw inline HTML tags (e.g.
+ * i18n catalog entries that use `<strong>`/`<em>` for emphasis) for use with
+ * `dangerouslySetInnerHTML`. Escapes EVERYTHING first (the safety floor — any
+ * `<script>`, `<img onerror=…>`, event handler, or unknown tag becomes inert
+ * text), then re-allows ONLY a fixed list of ATTRIBUTE-LESS inline tags. Because
+ * the re-allow step matches the bare tag with no attributes, no event handler or
+ * `javascript:` URL can survive. Safe even for translator-controlled content.
+ *
+ * Not for SVG (attributes are required — use a dedicated SVG scrub) or arbitrary
+ * rich HTML (the allow-list is intentionally tiny).
+ *
+ * @param {string} html
+ * @returns {string} HTML-safe markup
+ */
+const INLINE_TAG_ALLOWLIST = "strong|em|b|i|u|br|small|sup|sub";
+export function sanitizeInlineHtml(html) {
+  if (!html || typeof html !== "string") return "";
+  const escaped = escapeHtml(html);
+  return escaped.replace(
+    new RegExp(`&lt;(/?(?:${INLINE_TAG_ALLOWLIST}))\\s*/?&gt;`, "gi"),
+    "<$1>",
+  );
+}
+
+/**
  * Sanitize a Google Maps directions URL.
  * Validates coordinates are numeric and builds a safe URL.
  *
