@@ -452,6 +452,16 @@ export function selectRestoreKey(password, user) {
   return password || user?.email || LEGACY_DEFAULT_KEY;
 }
 
+// A passphrase-less write binds to the account email — user-specific but NOT
+// secret: it is low entropy and knowable by anyone, so the resulting backup is
+// only weakly protected. Callers must not present such a write as "secure";
+// surface a warning and recommend setting a passphrase. (A random DEK wrapped in
+// the device keystore would be stronger, but that is a new envelope format that
+// must coexist with V1/V2/V3 restore — deferred as a design decision.)
+export function isWeakWriteKey(password) {
+  return !password;
+}
+
 /**
  * Save backup to Google Drive
  */
@@ -462,6 +472,13 @@ export async function saveBackupToGoogleDrive(data, password = null) {
     }
 
     const encryptionKey = selectWriteKey(password, currentUser);
+    const weakKey = isWeakWriteKey(password);
+    if (weakKey) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "⚠️ Cloud backup encrypted with an email-derived key (no passphrase set). The email is not secret — set a passphrase for stronger protection.",
+      );
+    }
 
     const jsonData = JSON.stringify(data);
     const encryptedData = await encryptData(jsonData, encryptionKey);
@@ -500,7 +517,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
     // eslint-disable-next-line no-console
     console.log(`✅ Backup saved to Google Drive: ${fileName}`);
 
-    return { fileId: result.id, fileName };
+    return { fileId: result.id, fileName, weakKey };
   } catch (error) {
     console.error("Error saving backup to Google Drive:", error);
     throw error;

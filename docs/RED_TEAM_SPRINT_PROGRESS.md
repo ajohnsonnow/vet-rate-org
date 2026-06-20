@@ -22,7 +22,7 @@
 | RT-3 crisis/non-English | ✅      | AIS-04/05 + i18n test + RT3-4.                                                                                                                                                                                |
 | RT-4 injection wiring   | ✅      | **PI-01 (`abcb766`) + PI-02 (`af23975`).**                                                                                                                                                                    |
 | RT-5 XSS/CSP            | ✅      | `63eca37` sanitizeInlineHtml/DbqFinder/RT3-5 · `c8ba9f2` BadgeDisplay SVG scrub + UserManual escape · `9a96f46` CSP drop unsafe-eval (boot smoke test clean). RESIDUAL: manual WASM-model-load check (owner). |
-| RT-6 crypto             | 🟡      | **CRYPTO-04 (`0e7faff`) + PARSE-002 (`1555c0a`) done.** CRYPTO-03/CRYPTO-02 next. RT6-3 at-rest default 🚩 owner.                                                                                              |
+| RT-6 crypto             | ✅ / 🚩 | **CRYPTO-04 (`0e7faff`) · PARSE-002 (`1555c0a`) · CRYPTO-03 (`50d460a`) · CRYPTO-02 weak-key warning done.** 🚩 owner: RT6-3 at-rest default + random-DEK envelope re-arch (needs-decision).                  |
 | RT-7..RT-12             | ⏳      |                                                                                                                                                                                                               |
 | RT-14 brand enrichment  | ⏳      | After RT-15 review.                                                                                                                                                                                           |
 
@@ -30,6 +30,10 @@
 
 ## Done (newest first)
 
+- `50d460a` RT-6/CRYPTO-03 — Dropbox + OneDrive OAuth state/CSRF (generateState, reject on mismatch).
+- CRYPTO-02 — passphrase-less cloud write no longer silent: `isWeakWriteKey` + console.warn + `weakKey` in return surfaced in CloudSyncManager status; test 10/10. (Random-DEK envelope deferred 🚩.)
+- `1555c0a` RT-6/PARSE-002 — drop false "encrypted/password-protected" framing on DBQ email zip (createEncryptedZip → createDocumentZip, removed password UI + PII-password tip).
+- `0e7faff` RT-6/CRYPTO-04 — debug dump redacts veteran PII via non-PII allowlist.
 - `9a96f46` RT-5 — CSP drop 'unsafe-eval' + correct wasm-unsafe-eval placement (preview smoke test: app renders, 0 violations).
 - `c8ba9f2` RT-5 — BadgeDisplay SVG scrub (scrubSvg) + UserManual escape-first. sanitize 44/44.
 - `63eca37` RT-5/RT3-5 — sanitizeInlineHtml + DbqFinder i18n sink + dompurify README (false-CSP-comment corrected).
