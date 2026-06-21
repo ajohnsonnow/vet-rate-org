@@ -16,6 +16,7 @@ jobs:
   quality:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +35,7 @@ jobs:
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Blocking gate as of S13 (docs/SPRINT_PLAN_S9-S17.md, row S13;
     # docs/audit/S13_WORKLIST.md). Runs `tsc --noEmit` over the typed surface
     # (tsconfig.json: allowJs + checkJs:false, so .ts/.tsx + config are checked,
@@ -58,6 +60,7 @@ jobs:
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [quality]
     steps:
       - uses: actions/checkout@v4
@@ -77,6 +80,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [quality]
     steps:
       - uses: actions/checkout@v4
@@ -96,6 +100,7 @@ jobs:
   e2e:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     needs: [build]
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +118,10 @@ jobs:
         run: npx playwright install --with-deps chromium firefox
 
       - name: Run E2E tests
-        run: npx playwright test
+        # axe/cwv/mobile/pwa specs each have dedicated CI jobs that run them
+        # on the right browser project with focused reporting. The core script
+        # runs the remaining 97 tests on chromium+firefox only (~50 min serial).
+        run: npm run test:e2e:core
 
       - name: Upload Playwright report
         if: always()
@@ -126,6 +134,7 @@ jobs:
   mobile:
     name: Mobile Layout Gate (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build]
     # Dedicated blocking gate for tests/e2e/mobile.spec.ts on the three
     # owner-specified baselines (360 / 390 / 768px) under the Pixel 5
@@ -163,6 +172,7 @@ jobs:
   axe:
     name: Accessibility Gate (axe-core)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build]
     # Dedicated blocking gate for tests/e2e/axe.spec.ts: axe-core run against
     # the top-20 user-facing surfaces (home + 19 event-mountable modals) plus
@@ -201,6 +211,7 @@ jobs:
   cwv:
     name: Core Web Vitals Gate (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build]
     # Dedicated blocking gate for tests/e2e/cwv.spec.ts under the Pixel 5
     # mobile-chrome project: reads the app's native window.__VITALS__ buffer
@@ -239,6 +250,7 @@ jobs:
   pwa:
     name: PWA + SEO Gate (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build]
     # Dedicated blocking gate for tests/e2e/pwa.spec.ts under the chromium
     # project: asserts the web app manifest is linked, parses, and every icon
@@ -279,6 +291,7 @@ jobs:
   lighthouse:
     name: Lighthouse Mobile Gate (Core Web Vitals)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build]
     # Lighthouse-CI on the built SPA, served via `vite preview`, under
     # Lighthouse's default mobile form factor with simulated throttling — the
@@ -326,6 +339,7 @@ jobs:
   red-team:
     name: Red-Team Suite (LLM defenses)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [quality]
     # Dedicated blocking gate for the prompt-injection / exfiltration /
     # PII-trap / URL-bait payloads under src/__tests__/red-team/. Kept
@@ -353,6 +367,7 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
