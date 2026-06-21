@@ -91,7 +91,7 @@ const SKIP_PATTERNS = [
   /\.min\./
 ];
 
-let violations = [];
+const violations = [];
 let filesScanned = 0;
 
 function scanFile(filePath) {

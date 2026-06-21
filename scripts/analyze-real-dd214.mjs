@@ -6,7 +6,6 @@
 import pkg from 'pdfjs-dist/legacy/build/pdf.mjs';
 const { getDocument } = pkg;
 import fs from 'fs';
-import path from 'path';
 
 // The actual PDF file path
 const PDF_PATH = 'E:/VS_Studio/Williams_C-FIle/Johnson Service Records DD214 ALL.pdf';

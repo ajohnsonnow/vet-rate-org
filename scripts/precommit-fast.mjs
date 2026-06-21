@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // precommit-fast.mjs — fast pre-commit checks, target <5 seconds total
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
