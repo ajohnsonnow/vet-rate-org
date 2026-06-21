@@ -2,12 +2,10 @@
 // Structure: translations.section.key = { en: '...', es: '...', ... }
 //
 // Extracted from LanguageContext.jsx (RT12-4) to reduce that file's size.
-// TODO(RT12-4 full): Restructure to locale-keyed per-file format for true lazy-loading:
+// Full lazy-load requires restructuring to locale-keyed per-file format:
 //   src/i18n/en.js  = { section: { key: value } }
 //   src/i18n/es.js  = { section: { key: value } }
 // Then use dynamic import() in LanguageProvider on language switch.
-// App-wide translations
-// Structure: translations.section.key = { en: '...', es: '...', ... }
 export const APP_TRANSLATIONS = {
   // Navigation & Common UI
   common: {
