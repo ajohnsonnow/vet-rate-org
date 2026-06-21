@@ -215,6 +215,9 @@ export async function migrateFromLocalStorage() {
 
     // DO NOT clear localStorage - app still reads from it
     // Data is now in both places (IndexedDB for backup, localStorage for live access)
+    // SECURITY DEBT: both stores are plaintext — PII (ratings, profile, DD214 data) is
+    // readable by any same-origin JS. At-rest encryption requires wrapping every read/write
+    // path with cloudEncryption.js (encryptForCloud / decryptFromCloud) and a device passphrase.
     // eslint-disable-next-line no-console
     console.log(
       "✅ Data successfully backed up to IndexedDB (localStorage preserved)",
