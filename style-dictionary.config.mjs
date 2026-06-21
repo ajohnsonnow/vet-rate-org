@@ -62,6 +62,7 @@ export default {
         {
           destination: "design-tokens.css",
           format: "css/variables",
+          filter: (token) => token.path[0] !== "palettes",
           options: { outputReferences: false },
         },
       ],
@@ -73,6 +74,7 @@ export default {
         {
           destination: "design-tokens.js",
           format: "javascript/tailwind-colors",
+          filter: (token) => token.path[0] !== "palettes",
         },
       ],
     },
@@ -83,6 +85,7 @@ export default {
         {
           destination: "DESIGN_TOKENS_REFERENCE.md",
           format: "markdown/reference",
+          filter: (token) => token.path[0] !== "palettes",
         },
       ],
     },

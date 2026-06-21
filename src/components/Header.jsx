@@ -193,7 +193,7 @@ function Header({
 
   return (
     <header
-      className="bg-gradient-to-r from-va-blue to-green-900 dark:from-emerald-900 dark:to-emerald-950 text-white shadow-lg"
+      className="bg-va-blue text-white shadow-lg"
       role="banner"
     >
       {/* Skip Link for Screen Readers */}

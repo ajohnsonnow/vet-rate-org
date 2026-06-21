@@ -13,6 +13,65 @@ module.exports = {
         // To edit: update the JSON, run `npm run build:tokens`, commit both files.
         ...generatedTokens.colors,
 
+        // Brand channel — blue/indigo/sky/cyan all point at the SAME --brand-* ramp
+        // so an affiliation palette recolors the entire blue/accent surface at once.
+        // Channels (not hex) so Tailwind can synthesize opacity variants like bg-blue-600/10:
+        // rgb(var(--brand-600) / <alpha-value>). Baseline + per-palette ramps are emitted to
+        // src/generated/palette-themes.css by scripts/build-tokens.mjs. Semantic families
+        // (green/red/amber/gray/etc.) are intentionally left untouched.
+        blue: {
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
+        },
+        indigo: {
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
+        },
+        sky: {
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
+        },
+        cyan: {
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
+        },
+
         // Legacy aliases override the generated literals so runtime theming
         // (`--va-blue` / `--va-gold` set on :root) can recolor them on the fly.
         // Token fallbacks live in tokens/source/aliases.json.

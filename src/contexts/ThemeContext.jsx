@@ -11,6 +11,7 @@ import {
   BUTTON_COLORS,
   BORDER_COLORS,
 } from "../utils/colorSchemas";
+import { PALETTES, VALID_PALETTES } from "../config/affiliations.js";
 
 const ThemeContext = createContext();
 
@@ -55,6 +56,11 @@ export function ThemeProvider({ children }) {
     return localStorage.getItem("vet-rate-font-size") || "normal";
   });
 
+  const [palette, setPaletteState] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-palette");
+    return saved && VALID_PALETTES.has(saved) ? saved : "default";
+  });
+
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
@@ -95,12 +101,22 @@ export function ThemeProvider({ children }) {
     );
     root.classList.add(`font-${fontSize}`);
 
+    // Affiliation palette — remove any previous palette-* class, then apply.
+    // Precedence (docs/AFFILIATION_PALETTES.md §2): accessibility outranks branding.
+    // A palette only applies in plain light/dark with no colorblind mode active; the
+    // colorblind / TBI / AAA modes keep their purpose-built accents untouched.
+    PALETTES.forEach(({ id }) => root.classList.remove(`palette-${id}`));
+    if (palette !== "default" && colorBlindMode === COLOR_BLIND_MODES.NONE) {
+      root.classList.add(`palette-${palette}`);
+    }
+
     // Save to localStorage
     localStorage.setItem("vet-rate-theme", theme);
     localStorage.setItem("vet-rate-color-blind-mode", colorBlindMode);
     localStorage.setItem("vet-rate-reduced-motion", reducedMotion.toString());
     localStorage.setItem("vet-rate-font-size", fontSize);
-  }, [theme, colorBlindMode, reducedMotion, fontSize]);
+    localStorage.setItem("vet-rate-palette", palette);
+  }, [theme, colorBlindMode, reducedMotion, fontSize, palette]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -148,6 +164,12 @@ export function ThemeProvider({ children }) {
     setTheme(modes[nextIndex]);
   };
 
+  const setPalette = (id) => {
+    if (VALID_PALETTES.has(id)) {
+      setPaletteState(id);
+    }
+  };
+
   const isDark =
     theme === THEME_MODES.DARK ||
     theme === THEME_MODES.TBI_COMFORT ||
@@ -169,6 +191,9 @@ export function ThemeProvider({ children }) {
     setReducedMotion,
     fontSize,
     setFontSize,
+    palette,
+    setPalette,
+    PALETTES,
     // Theme mode constants
     THEME_MODES,
     // Color utility functions
