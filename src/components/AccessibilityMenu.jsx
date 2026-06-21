@@ -5,6 +5,8 @@ import {
   THEME_MODES,
   COLOR_BLIND_MODES,
 } from "../contexts/ThemeContext";
+import AffiliationPicker from "./AffiliationPicker";
+import ResponsiveModal from "./common/ResponsiveModal";
 
 // LocalStorage key for Gemini API key (BYOK)
 const GEMINI_KEY_STORAGE = "vetrate_gemini_key";
@@ -13,6 +15,7 @@ export default function AccessibilityMenu() {
   const { t } = useLanguage();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [affiliationOpen, setAffiliationOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -34,6 +37,8 @@ export default function AccessibilityMenu() {
     setReducedMotion,
     fontSize,
     setFontSize,
+    palette,
+    PALETTES,
   } = useTheme();
 
   // Close menu on click outside
@@ -603,6 +608,64 @@ export default function AccessibilityMenu() {
               </div>
             </div>
 
+            <hr className="border-gray-200 dark:border-gray-600" />
+
+            {/* Affiliation & Palette */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-va-blue dark:text-va-gold"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                  />
+                </svg>
+                Affiliation
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Personalize accent colors to reflect your branch or service.
+              </p>
+              {/* Current palette pill */}
+              {(() => {
+                const active = PALETTES.find((p) => p.id === palette);
+                return active ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                    <span aria-hidden="true">{active.icon}</span>
+                    <span className="font-medium">{active.label}</span>
+                  </div>
+                ) : null;
+              })()}
+              <button
+                data-testid="affiliation-picker-open"
+                onClick={() => setAffiliationOpen(true)}
+                className="w-full py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-va-blue text-left flex items-center justify-between"
+                aria-haspopup="dialog"
+              >
+                <span>Choose affiliation palette…</span>
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+
             {/* Reset Button */}
             <button
               onClick={() => {
@@ -625,6 +688,27 @@ export default function AccessibilityMenu() {
           </div>
         </section>
       )}
+
+      {/* Affiliation picker modal — rendered outside the dropdown so it
+          stacks correctly and the dropdown doesn't need to stay open. */}
+      <ResponsiveModal
+        isOpen={affiliationOpen}
+        onClose={() => setAffiliationOpen(false)}
+        title="Choose Your Affiliation"
+        size="md"
+        zIndex={70}
+        footer={
+          <button
+            type="button"
+            onClick={() => setAffiliationOpen(false)}
+            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-blue"
+          >
+            Done
+          </button>
+        }
+      >
+        <AffiliationPicker onClose={() => setAffiliationOpen(false)} />
+      </ResponsiveModal>
     </div>
   );
 }

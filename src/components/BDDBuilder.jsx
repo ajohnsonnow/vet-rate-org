@@ -23,20 +23,7 @@ import {
   loadBDDProgress,
   getChecklistCompletion,
 } from "../utils/bddData.js";
-
-// ─────────────────────────────────────────────────────────────
-// SERVICE BRANCHES
-// ─────────────────────────────────────────────────────────────
-const SERVICE_BRANCHES = [
-  { id: "army", label: "U.S. Army", icon: "⭐" },
-  { id: "navy", label: "U.S. Navy", icon: "⚓" },
-  { id: "air-force", label: "U.S. Air Force", icon: "🛩️" },
-  { id: "marines", label: "U.S. Marine Corps", icon: "🦅" },
-  { id: "coast-guard", label: "U.S. Coast Guard", icon: "⚓" },
-  { id: "space-force", label: "U.S. Space Force", icon: "🚀" },
-  { id: "national-guard", label: "National Guard (Title 10)", icon: "🏛️" },
-  { id: "reserves", label: "Reserves (Title 10)", icon: "🎖️" },
-];
+import { SERVICE_BRANCHES } from "../config/affiliations.js";
 
 // ─────────────────────────────────────────────────────────────
 // TABS

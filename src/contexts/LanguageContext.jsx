@@ -625,9 +625,13 @@ export const SUPPORTED_LANGUAGES = {
 };
 
 
-// App-wide translations extracted to reduce this file's size (RT12-4)
-// Re-exported here so existing importers (tests, tools) don't need path changes.
-export { APP_TRANSLATIONS } from "../i18n/translations";
+// App-wide translations extracted to reduce this file's size (RT12-4).
+// Import for local use (t()/getSection() reference APP_TRANSLATIONS in this module —
+// a bare `export … from` re-export creates no local binding, which throws a
+// ReferenceError under Vite/esbuild dev), then re-export so existing importers
+// (tests, tools) don't need path changes.
+import { APP_TRANSLATIONS } from "../i18n/translations";
+export { APP_TRANSLATIONS };
 
 // Create context
 const LanguageContext = createContext(null);
