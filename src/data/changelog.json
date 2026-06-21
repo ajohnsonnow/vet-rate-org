@@ -12,6 +12,260 @@
         {
           "type": "fix",
           "category": "Other",
+          "title": "bump E2E timeout to 90 min; exclude dedicated-job specs",
+          "description": "bump E2E timeout to 90 min; exclude dedicated-job specs"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "soften calculator condition-data assertion for main",
+          "description": "soften calculator condition-data assertion for main"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "green the pipeline — Node-20 crypto/jsdom, npm audit, job timeouts",
+          "description": "green the pipeline — Node-20 crypto/jsdom, npm audit, job timeouts"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "increase Atomic Wipe poll timeout for CI lazy-load",
+          "description": "increase Atomic Wipe poll timeout for CI lazy-load"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add blob: to connect-src for PDF.js large file streaming",
+          "description": "add blob: to connect-src for PDF.js large file streaming"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge branch 'audit/cfile-fullsweep'",
+          "description": "Merge branch 'audit/cfile-fullsweep'"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CSP hf.co CDN, AI badge state, PDF.js worker version",
+          "description": "CSP hf.co CDN, AI badge state, PDF.js worker version"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep",
+          "description": "Merge pull request #6 from ajohnsonnow/audit/cfile-fullsweep"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "break doc-update feedback loop by skipping if last commit was [pre-push]",
+          "description": "break doc-update feedback loop by skipping if last commit was [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "idempotent update-changelog + remove husky deprecation warning",
+          "description": "idempotent update-changelog + remove husky deprecation warning"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "clean duplicate CHANGELOG entry + fix update-changelog baseline",
+          "description": "clean duplicate CHANGELOG entry + fix update-changelog baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "auto-update stats + changelog [pre-push]",
+          "description": "auto-update stats + changelog [pre-push]"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "add 2026-06-08 mega-audit reports and sprint instructions",
+          "description": "add 2026-06-08 mega-audit reports and sprint instructions"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08",
+          "description": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08",
+          "description": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "apply WebGPU adapter patch + fail loudly on all-models-fail",
+          "description": "apply WebGPU adapter patch + fail loudly on all-models-fail"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "hydrate NexusBuilder from localStorage when no event detail",
+          "description": "hydrate NexusBuilder from localStorage when no event detail"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "LLM pipeline audit — routing fix + PDCA test coverage",
+          "description": "LLM pipeline audit — routing fix + PDCA test coverage"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.23.1",
+          "description": "release v1.23.1"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "consolidated C-File audit report (Sprints 0-6)",
+          "description": "consolidated C-File audit report (Sprints 0-6)"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder",
+          "description": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks",
+          "description": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks"
+        },
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe",
+          "description": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "env-configurable bug-report endpoint + PII guard before send",
+          "description": "env-configurable bug-report endpoint + PII guard before send"
+        },
+        {
+          "type": "test",
+          "category": "Other",
+          "title": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs",
+          "description": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth",
+          "description": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test",
+          "description": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "unblock chromium Playwright gate + record audit baseline",
+          "description": "unblock chromium Playwright gate + record audit baseline"
+        },
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net",
+          "description": "Merge pull request #5 from ajohnsonnow/audit/s9-mobile-safety-net"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
+          "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
+        }
+      ]
+    },
+    {
+      "version": "1.23.1",
+      "date": "2026-06-21",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
+      "changelog": [
+        {
+          "type": "fix",
+          "category": "Other",
           "title": "soften calculator condition-data assertion for main",
           "description": "soften calculator condition-data assertion for main"
         },
@@ -1692,722 +1946,6 @@
           "category": "Other",
           "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
           "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
-        }
-      ]
-    },
-    {
-      "version": "1.23.1",
-      "date": "2026-06-09",
-      "isFirstRelease": false,
-      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
-      "changelog": [
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "add 2026-06-08 mega-audit reports and sprint instructions",
-          "description": "add 2026-06-08 mega-audit reports and sprint instructions"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08",
-          "description": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08",
-          "description": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "apply WebGPU adapter patch + fail loudly on all-models-fail",
-          "description": "apply WebGPU adapter patch + fail loudly on all-models-fail"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "hydrate NexusBuilder from localStorage when no event detail",
-          "description": "hydrate NexusBuilder from localStorage when no event detail"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "LLM pipeline audit — routing fix + PDCA test coverage",
-          "description": "LLM pipeline audit — routing fix + PDCA test coverage"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "consolidated C-File audit report (Sprints 0-6)",
-          "description": "consolidated C-File audit report (Sprints 0-6)"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder",
-          "description": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks",
-          "description": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe",
-          "description": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "env-configurable bug-report endpoint + PII guard before send",
-          "description": "env-configurable bug-report endpoint + PII guard before send"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs",
-          "description": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth",
-          "description": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test",
-          "description": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "unblock chromium Playwright gate + record audit baseline",
-          "description": "unblock chromium Playwright gate + record audit baseline"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
-          "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "resolve 7 Snyk/cSpell problems tab findings",
-          "description": "resolve 7 Snyk/cSpell problems tab findings"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "audit(s9): mobile a11y safety net, semgrep tuning, CI injection hardening",
-          "description": "audit(s9): mobile a11y safety net, semgrep tuning, CI injection hardening"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.0",
-          "description": "release v1.23.0"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "sync build artifacts after commit G (stats, version date, legal HTML)",
-          "description": "sync build artifacts after commit G (stats, version date, legal HTML)"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "unlock/deauth UI + cloudSync default-key retirement (commit G)",
-          "description": "unlock/deauth UI + cloudSync default-key retirement (commit G)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "drain ESLint warning backlog (unused vars, dead imports, entities, no-console)",
-          "description": "drain ESLint warning backlog (unused vars, dead imports, entities, no-console)"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "close keystore adversarial findings (verify-before-commit, KEYSTORE_LOCKED, corruption/crash detection, Web Locks)",
-          "description": "close keystore adversarial findings (verify-before-commit, KEYSTORE_LOCKED, corruption/crash detection, Web Locks)"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "sync AI-rules mirrors to Opus 4.8 model guidance",
-          "description": "sync AI-rules mirrors to Opus 4.8 model guidance"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "at-rest device-passphrase keystore (KEK-wraps-DEK) (commit F)",
-          "description": "at-rest device-passphrase keystore (KEK-wraps-DEK) (commit F)"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "pin cloudSync V1 decrypt + reopen at-rest key-custody scope (commit E)",
-          "description": "pin cloudSync V1 decrypt + reopen at-rest key-custody scope (commit E)"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record piiScrubber + lhci closure; pause rotation/deauth at owner gate",
-          "description": "record piiScrubber + lhci closure; pause rotation/deauth at owner gate"
-        },
-        {
-          "type": "ci",
-          "category": "Other",
-          "title": "promote lhci SEO category warn->error; keep perf budgets informational",
-          "description": "promote lhci SEO category warn->error; keep perf budgets informational"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "harden red-team PII traps (zero-width-in-number, full-width)",
-          "description": "harden red-team PII traps (zero-width-in-number, full-width)"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "NFKC-normalize before PII scan; fix leaky legalAnswerer scrub",
-          "description": "NFKC-normalize before PII scan; fix leaky legalAnswerer scrub"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record PWA/offline + SEO worklist (manifest, meta, robots/sitemap)",
-          "description": "record PWA/offline + SEO worklist (manifest, meta, robots/sitemap)"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "add PWA + SEO Playwright gate, lhci SEO assertion, CI pwa job",
-          "description": "add PWA + SEO Playwright gate, lhci SEO assertion, CI pwa job"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "emit brand-aware robots.txt + sitemap.xml at build",
-          "description": "emit brand-aware robots.txt + sitemap.xml at build"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "add Open Graph / Twitter / canonical + iOS PWA meta",
-          "description": "add Open Graph / Twitter / canonical + iOS PWA meta"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "repair PWA manifest icons (generate 192/512 + maskable)",
-          "description": "repair PWA manifest icons (generate 192/512 + maskable)"
-        },
-        {
-          "type": "ci",
-          "category": "Other",
-          "title": "add Lighthouse + Core Web Vitals mobile gates",
-          "description": "add Lighthouse + Core Web Vitals mobile gates"
-        },
-        {
-          "type": "improvement",
-          "category": "Other",
-          "title": "reserve image dimensions + prioritize the LCP hero on mobile",
-          "description": "reserve image dimensions + prioritize the LCP hero on mobile"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "close no-undef + no-dupe-keys correctness backlog",
-          "description": "close no-undef + no-dupe-keys correctness backlog"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "no-AI path opens AI settings instead of crashing (3 tools)",
-          "description": "no-AI path opens AI settings instead of crashing (3 tools)"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "mark S13 worklist complete (type-check job committed)",
-          "description": "mark S13 worklist complete (type-check job committed)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "add jsx-a11y + react-hooks lint plugins + type-check CI gate",
-          "description": "add jsx-a11y + react-hooks lint plugins + type-check CI gate"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate CFileAnalyzer privacy-consent gate to ResponsiveModal",
-          "description": "migrate CFileAnalyzer privacy-consent gate to ResponsiveModal"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "add Playwright dialog-contract + skip-link e2e gate",
-          "description": "add Playwright dialog-contract + skip-link e2e gate"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "add blocking axe-core accessibility gate + CI job",
-          "description": "add blocking axe-core accessibility gate + CI job"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "a11y(s12): remediate WCAG serious/critical surfaced by the axe gate",
-          "description": "a11y(s12): remediate WCAG serious/critical surfaced by the axe gate"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record hard-redesign chunk (AIAssistant, DocIntel, VeteranTranslator, TheTribunal)",
-          "description": "record hard-redesign chunk (AIAssistant, DocIntel, VeteranTranslator, TheTribunal)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "redesign TheTribunal for mobile + migrate to ResponsiveModal",
-          "description": "redesign TheTribunal for mobile + migrate to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "redesign VeteranTranslator two-pane for mobile + migrate to ResponsiveModal",
-          "description": "redesign VeteranTranslator two-pane for mobile + migrate to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate DocumentIntelligenceBriefing to ResponsiveModal",
-          "description": "migrate DocumentIntelligenceBriefing to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate AIAssistant Expanded view to ResponsiveModal",
-          "description": "migrate AIAssistant Expanded view to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "redesign IntelligenceBriefing for mobile + migrate to ResponsiveModal",
-          "description": "redesign IntelligenceBriefing for mobile + migrate to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "redesign WhatIfSandbox for mobile + migrate to ResponsiveModal",
-          "description": "redesign WhatIfSandbox for mobile + migrate to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate FeatureLookup admin panel to ResponsiveModal",
-          "description": "migrate FeatureLookup admin panel to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate ClaimStressTest war-game to ResponsiveModal",
-          "description": "migrate ClaimStressTest war-game to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "a11y for UserManual (hand-applied) + VaSandboxTest → ResponsiveModal",
-          "description": "a11y for UserManual (hand-applied) + VaSandboxTest → ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate QuickExitButton + UnityLanguageTutor to ResponsiveModal",
-          "description": "migrate QuickExitButton + UnityLanguageTutor to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate ShareButton + DemoDataLoader to ResponsiveModal",
-          "description": "migrate ShareButton + DemoDataLoader to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate MultiCloudManager to ResponsiveModal + theme-normalize",
-          "description": "migrate MultiCloudManager to ResponsiveModal + theme-normalize"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate LocalAIPanel to ResponsiveModal + theme-normalize",
-          "description": "migrate LocalAIPanel to ResponsiveModal + theme-normalize"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate DoctorsPacket to ResponsiveModal + theme-aware",
-          "description": "migrate DoctorsPacket to ResponsiveModal + theme-aware"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate BugLookup (main + Resolve) to ResponsiveModal + theme-normalize",
-          "description": "migrate BugLookup (main + Resolve) to ResponsiveModal + theme-normalize"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate AICommandCenter to ResponsiveModal + theme-normalize",
-          "description": "migrate AICommandCenter to ResponsiveModal + theme-normalize"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "a11y(s12): migrate AdminLogin to ResponsiveModal + normalize theming",
-          "description": "a11y(s12): migrate AdminLogin to ResponsiveModal + normalize theming"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "author NVDA/VoiceOver/TalkBack SR manual checklist",
-          "description": "author NVDA/VoiceOver/TalkBack SR manual checklist"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record Bucket E verification — passive surfaces compliant, no code change",
-          "description": "record Bucket E verification — passive surfaces compliant, no code change"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "a11y(s12): theme + dialog-contract the light-only / dynamic-color overlays",
-          "description": "a11y(s12): theme + dialog-contract the light-only / dynamic-color overlays"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "a11y(s12): live-region + label hygiene on passive surfaces",
-          "description": "a11y(s12): live-region + label hygiene on passive surfaces"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "a11y(s12): complete dialog contract for Bucket A overlays",
-          "description": "a11y(s12): complete dialog contract for Bucket A overlays"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate SharkRadar modal wrapper to ResponsiveModal",
-          "description": "migrate SharkRadar modal wrapper to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate CommandersChecklist modal to ResponsiveModal",
-          "description": "migrate CommandersChecklist modal to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate VoiceInput safety prompt + SecurityBadge to ResponsiveModal",
-          "description": "migrate VoiceInput safety prompt + SecurityBadge to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate ClaimEvidenceUpload + DbqFinder to ResponsiveModal",
-          "description": "migrate ClaimEvidenceUpload + DbqFinder to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate ProfileImportConfirmModal + LanguageSuggestionModal to ResponsiveModal",
-          "description": "migrate ProfileImportConfirmModal + LanguageSuggestionModal to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate VAGovRatingPaster + Helper ExplainerModal to ResponsiveModal",
-          "description": "migrate VAGovRatingPaster + Helper ExplainerModal to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate BugSquasher + FeatureRequest wizards to ResponsiveModal",
-          "description": "migrate BugSquasher + FeatureRequest wizards to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate BVA-data tool modals to ResponsiveModal (Chunk 4)",
-          "description": "migrate BVA-data tool modals to ResponsiveModal (Chunk 4)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate non-dismissible gates to ResponsiveModal (Chunk 3)",
-          "description": "migrate non-dismissible gates to ResponsiveModal (Chunk 3)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate WhatsNewModal to ResponsiveModal (Chunk 2)",
-          "description": "migrate WhatsNewModal to ResponsiveModal (Chunk 2)"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "hand-apply focus-trap + dialog a11y to bespoke overlays (Chunk 1)",
-          "description": "hand-apply focus-trap + dialog a11y to bespoke overlays (Chunk 1)"
-        },
-        {
-          "type": "feature",
-          "category": "Other",
-          "title": "add error boundaries — app-level + per-cluster, one-tap crash report",
-          "description": "add error boundaries — app-level + per-cluster, one-tap crash report"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "restore corrupted glyphs (U+FFFD) in legal + reference text",
-          "description": "restore corrupted glyphs (U+FFFD) in legal + reference text"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record S10 verification gate green + closeout",
-          "description": "record S10 verification gate green + closeout"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "remove SmallScreenWarning (gated deletion satisfied)",
-          "description": "remove SmallScreenWarning (gated deletion satisfied)"
-        },
-        {
-          "type": "ci",
-          "category": "Other",
-          "title": "add blocking mobile layout gate + test:e2e:mobile script",
-          "description": "add blocking mobile layout gate + test:e2e:mobile script"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "centralize viewport px thresholds in one source",
-          "description": "centralize viewport px thresholds in one source"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record grid mobile workstream — detector, apply, deferrals",
-          "description": "record grid mobile workstream — detector, apply, deferrals"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "responsive address row in FOIAGenerator (ambiguous hand-fix)",
-          "description": "responsive address row in FOIAGenerator (ambiguous hand-fix)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "responsive grids for medium-severity mobile crowding",
-          "description": "responsive grids for medium-severity mobile crowding"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "responsive grids for 3 high-severity mobile overflows",
-          "description": "responsive grids for 3 high-severity mobile overflows"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "detect child col-span fixed layouts in grid audit",
-          "description": "detect child col-span fixed layouts in grid audit"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "add reporting-only grid-mobile audit detector + worklist",
-          "description": "add reporting-only grid-mobile audit detector + worklist"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record Cluster H migration + critic-surface deferrals",
-          "description": "record Cluster H migration + critic-surface deferrals"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate RegulationsReference to ResponsiveModal (Cluster H3)",
-          "description": "migrate RegulationsReference to ResponsiveModal (Cluster H3)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate VisionSimulator to ResponsiveModal (Cluster H2)",
-          "description": "migrate VisionSimulator to ResponsiveModal (Cluster H2)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate TermsOfServicePage to ResponsiveModal (Cluster H1)",
-          "description": "migrate TermsOfServicePage to ResponsiveModal (Cluster H1)"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "mark Cluster G complete (G1+G2) with honest UserManual deferral note",
-          "description": "mark Cluster G complete (G1+G2) with honest UserManual deferral note"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster G2 embedded full-page components to ResponsiveModal",
-          "description": "migrate Cluster G2 embedded full-page components to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster G1 standalone visualizers to ResponsiveModal",
-          "description": "migrate Cluster G1 standalone visualizers to ResponsiveModal"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "mark Cluster F complete + record F1-F9 migration",
-          "description": "mark Cluster F complete + record F1-F9 migration"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate DbqBrowser cluster to ResponsiveModal",
-          "description": "migrate DbqBrowser cluster to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate CloudSyncManager to ResponsiveModal (Cluster F8)",
-          "description": "migrate CloudSyncManager to ResponsiveModal (Cluster F8)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate TacticalCalculator modals to ResponsiveModal (Cluster F7)",
-          "description": "migrate TacticalCalculator modals to ResponsiveModal (Cluster F7)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate CAPSimulator modals to ResponsiveModal (Cluster F6)",
-          "description": "migrate CAPSimulator modals to ResponsiveModal (Cluster F6)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate MyPacket modals to ResponsiveModal (Cluster F5)",
-          "description": "migrate MyPacket modals to ResponsiveModal (Cluster F5)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate ClaimNavigator help + Pathfinder pair to ResponsiveModal (Cluster F4)",
-          "description": "migrate ClaimNavigator help + Pathfinder pair to ResponsiveModal (Cluster F4)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate BackupManager + PainPainter to ResponsiveModal (Cluster F3)",
-          "description": "migrate BackupManager + PainPainter to ResponsiveModal (Cluster F3)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate VKB pair to ResponsiveModal (Cluster F2)",
-          "description": "migrate VKB pair to ResponsiveModal (Cluster F2)"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster F1 leaf/nested modals + ref-count scroll lock",
-          "description": "migrate Cluster F1 leaf/nested modals + ref-count scroll lock"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record Cluster E migration in worklist",
-          "description": "record Cluster E migration in worklist"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster E wide/page-scroll modals to ResponsiveModal",
-          "description": "migrate Cluster E wide/page-scroll modals to ResponsiveModal"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "record Cluster C + D migration in progress log",
-          "description": "record Cluster C + D migration in progress log"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster D2 wizard modals to ResponsiveModal",
-          "description": "migrate Cluster D2 wizard modals to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster D1 wizard modals to ResponsiveModal",
-          "description": "migrate Cluster D1 wizard modals to ResponsiveModal"
-        },
-        {
-          "type": "refactor",
-          "category": "Other",
-          "title": "migrate Cluster C2 dark/nested modals to ResponsiveModal",
-          "description": "migrate Cluster C2 dark/nested modals to ResponsiveModal"
         }
       ]
     }
