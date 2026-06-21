@@ -587,7 +587,13 @@ This tool is for **educational purposes only**. It is not affiliated with the VA
 
 ## Your Privacy
 
-All data stays in your browser. We don't collect, store, or transmit any personal information.
+All data stays in your browser — we don't collect, store, or transmit any personal information to servers.
+
+**Storage & encryption status:**
+- Your data is stored in your browser's localStorage and IndexedDB. These are **not encrypted at rest** — anyone with physical or forensic access to your device can read them.
+- **Bunker Backup exports** (.json files you download) are **not encrypted** unless you enable cloud sync.
+- **Cloud Sync** (Google Drive / Dropbox / OneDrive) backups **are encrypted** with your passphrase before leaving your device.
+- To protect sensitive data on shared or untrusted devices, use Cloud Sync with a strong passphrase and clear your browser storage when done.
     `,
   },
 
