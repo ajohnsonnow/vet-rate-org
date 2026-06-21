@@ -119,16 +119,9 @@ jobs:
 
       - name: Run E2E tests
         # axe/cwv/mobile/pwa specs each have dedicated CI jobs that run them
-        # on the right browser project with focused reporting. Exclude them here
-        # to stay well within the 90-minute budget (97 tests × 2 browsers ≈ 50 min).
-        run: >
-          npx playwright test
-          --ignore=tests/e2e/axe.spec.ts
-          --ignore=tests/e2e/cwv.spec.ts
-          --ignore=tests/e2e/mobile.spec.ts
-          --ignore=tests/e2e/pwa.spec.ts
-          --project=chromium
-          --project=firefox
+        # on the right browser project with focused reporting. The core script
+        # runs the remaining 97 tests on chromium+firefox only (~50 min serial).
+        run: npm run test:e2e:core
 
       - name: Upload Playwright report
         if: always()

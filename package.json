@@ -54,6 +54,7 @@
     "test:e2e:axe": "playwright test tests/e2e/axe.spec.ts --project=chromium",
     "test:e2e:cwv": "playwright test tests/e2e/cwv.spec.ts --project=mobile-chrome",
     "test:e2e:pwa": "playwright test tests/e2e/pwa.spec.ts --project=chromium",
+    "test:e2e:core": "playwright test tests/e2e/accessibility.spec.ts tests/e2e/ai-pipeline.spec.ts tests/e2e/cfile-packet.spec.ts tests/e2e/dialog-contract.spec.ts tests/e2e/error-boundary.spec.ts tests/e2e/safety.spec.ts tests/e2e/search.spec.ts tests/e2e/smoke.spec.ts tests/e2e/tactical-calculator.spec.ts tests/e2e/tool-launch-matrix.spec.ts tests/e2e/tool-with-packet.spec.ts --project=chromium --project=firefox",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
     "preflight:fast": "node scripts/preflight.js --fast",
