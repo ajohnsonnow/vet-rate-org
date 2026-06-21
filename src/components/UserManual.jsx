@@ -333,6 +333,16 @@ const navigationStructure = [
     title: "FOIA Keysmith",
     icon: "🔑",
   },
+  {
+    id: "appeals-lane-advisor",
+    title: "Appeals Lane Advisor",
+    icon: "⚖️",
+  },
+  {
+    id: "remand-risk-checker",
+    title: "Remand Risk Checker",
+    icon: "⚠️",
+  },
   // === SHOCK & AWE ===
   {
     id: "category-shock",
@@ -470,7 +480,7 @@ const documentationContent = {
   home: {
     title: "Vet-Rate.org Field Manual",
     content: `
-Welcome to the comprehensive field manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
+Welcome to the comprehensive field manual for **Vet-Rate.org** - your complete VA claims toolkit with **{getTotalToolCount()} powerful tools**.
 
 ## About This Manual
 
@@ -547,6 +557,12 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 | **Consistency Engine** | Detect contradictions across your evidence |
 | **War Game** | Adversarial claim stress testing |
 | **Time Machine** | Intent to File deadline countdown tracker |
+
+### Appeals Strategy
+| Tool | What It Does |
+|------|--------------|
+| **Appeals Lane Advisor** | Choose Supplemental, HLR, or BVA based on your evidence and error type |
+| **Remand Risk Checker** | Find gaps using 18,609 BVA remand decision patterns before filing |
 
 ### Protection & Support
 | Tool | What It Does |
@@ -2270,6 +2286,76 @@ Your completed buddy statement.
 1. Review for accuracy
 2. Witness signs and dates
 3. Submit with claim
+    `,
+  },
+
+  "appeals-lane-advisor": {
+    title: "Appeals Lane Advisor",
+    content: `
+Choose the right AMA decision review lane before you file an appeal.
+
+## Why Lane Selection Matters
+
+Filing in the wrong lane can cost months or years. The three AMA options are:
+
+- **Supplemental Claim** – fastest; requires new and relevant evidence
+- **Higher-Level Review (HLR)** – same evidence, de novo review by a senior adjudicator; no new evidence allowed
+- **Board of Veterans Appeals (BVA)** – longest wait but reaches a Veterans Law Judge; three docket options
+
+## BVA Docket Options
+
+| Docket | Avg. Wait | Notes |
+|--------|-----------|-------|
+| **Direct** | 12–18 months | No new evidence or hearing |
+| **Evidence** | 12–24 months | Submit new evidence without a hearing |
+| **Hearing** | 36–48 months | Testify before a VLJ (in person or by video) |
+
+## How Appeals Lane Advisor Helps
+
+Analyzes your situation based on:
+- What went wrong (rating error, nexus denial, error of fact)
+- Whether you have new and relevant evidence
+- How long you can wait
+- Your specific conditions and percentages
+
+## When to Use
+
+Use before filing any appeal to confirm you're on the fastest path to the outcome you need.
+
+> This tool provides educational guidance only. Consult an accredited VSO or attorney for case-specific advice.
+    `,
+  },
+
+  "remand-risk-checker": {
+    title: "Remand Risk Checker",
+    content: `
+Identify gaps in your claim before the BVA sends it back for more development.
+
+## What Is a Remand?
+
+When the BVA cannot grant or deny your appeal — often because the record is incomplete — it remands (returns) the claim to the Regional Office for further development. Remands add 1–3 years to your wait.
+
+## How This Tool Helps
+
+Analyzes patterns from 18,609 BVA remand decisions to identify the most common failure modes:
+
+| Remand Reason | Description |
+|---------------|-------------|
+| **Missing nexus opinion** | No medical link between condition and service |
+| **Inadequate C&P exam** | Examiner failed to address all elements |
+| **Missing service records** | STRs or treatment records not obtained |
+| **Ignored lay evidence** | Veteran statements not addressed |
+| **Inadequate VA opinion** | Opinion didn't consider all relevant evidence |
+
+## How to Use
+
+1. Describe your condition and the current state of your evidence
+2. Review your personalized remand risk profile
+3. Address flagged gaps before your appeal reaches the Board
+
+## Remand vs. Denial
+
+A remand is not a denial — the BVA believes you may have a viable claim but needs a more complete record. This tool helps you provide that record before your file is reviewed.
     `,
   },
 
