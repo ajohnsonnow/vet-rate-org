@@ -14,7 +14,7 @@ export default {
         'categories:seo': ['warn', { minScore: 0.9 }],
         'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'total-blocking-time': ['warn', { maxNumericValue: 200 }],
+        'total-blocking-time': ['error', { maxNumericValue: 200 }],
       },
     },
     upload: {
