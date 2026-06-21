@@ -3,7 +3,6 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { triggerTourRestart } from "./BootCampTour";
-import { PROJECT_STATS } from "../data/projectStats";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getDisabilityCount } from "../utils/disabilityCount";
 import { sanitizeUrl, escapeHtml } from "../utils/sanitize";

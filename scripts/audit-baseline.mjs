@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // audit-baseline.mjs — capture baseline project metrics to docs/audit-pipeline/
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join } from 'node:path';
 
 const cwd = process.cwd();
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

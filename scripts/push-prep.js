@@ -23,7 +23,7 @@
  * 9. Shows git status and push command
  */
 
-import { execSync, spawn } from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -370,7 +370,7 @@ async function main() {
   ];
   
   const srcDir = path.join(rootDir, 'src');
-  let criticalViolations = [];
+  const criticalViolations = [];
   
   function scanDir(dir) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });

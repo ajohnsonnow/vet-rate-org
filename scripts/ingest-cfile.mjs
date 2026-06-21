@@ -219,7 +219,7 @@ function extractDD214Data(text, filename) {
   const branchMatch = text.match(/(?:component|branch of service)[:\s]+([A-Za-z\s]+?)(?:\n|$)/i);
   if (branchMatch) result.branch = branchMatch[1].trim();
 
-  const rankMatch = text.match(/(?:grade,\s*rate\s*or\s*rank|rank at discharge)[:\s]+([A-Z0-9\-\/]+)/i);
+  const rankMatch = text.match(/(?:grade,\s*rate\s*or\s*rank|rank at discharge)[:\s]+([A-Z0-9/-]+)/i);
   if (rankMatch) result.rank = rankMatch[1].trim();
 
   const mosMatch = text.match(/(?:primary\s*specialty|mos)[:\s]+([A-Z0-9]+\s*[--]?\s*[A-Za-z\s]+?)(?:\n|$)/i);
@@ -228,7 +228,7 @@ function extractDD214Data(text, filename) {
   const charMatch = text.match(/(?:character of service|type of separation)[:\s]+([A-Za-z\s]+?)(?:\n|$)/i);
   if (charMatch) result.characterOfService = charMatch[1].trim();
 
-  const datesMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})\s+(?:to|through|-|-)\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})/i);
+  const datesMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{8})\s+(?:to|through|-)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{8})/i);
   if (datesMatch) { result.serviceStart = datesMatch[1]; result.serviceEnd = datesMatch[2]; }
 
   // Awards line

@@ -10,7 +10,6 @@
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { readFileSync } from 'fs';
 
 // Get directory paths
 const __filename = fileURLToPath(import.meta.url);
@@ -101,7 +100,7 @@ function parseDD214Badges(rawText, branch = 'Army') {
   }
   
   // Clean the text
-  let cleanedText = rawText
+  const cleanedText = rawText
     .replace(/\([^)]*\)/g, ' ')  // Remove parenthetical
     .replace(/[a-z]{3,}/g, ' ')  // Remove lowercase words
     .toUpperCase()
