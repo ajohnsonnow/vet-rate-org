@@ -106,9 +106,29 @@ export function enumerateSections(root, wantParts) {
   return out;
 }
 
+/**
+ * Resolve the most recent date for which eCFR has Title 38 content.
+ * Requesting today's date 404s before eCFR publishes that day's snapshot,
+ * so derive the date from titles.json (up_to_date_as_of) instead.
+ */
+async function resolveLatestDate() {
+  const url = `${ECFR_BASE}/api/versioner/v1/titles.json`;
+  console.log(`[ecfr] GET ${url}`);
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+  });
+  if (!res.ok) throw new Error(`titles ${url} → HTTP ${res.status}`);
+  const data = await res.json();
+  const t = (data.titles || []).find((x) => Number(x.number) === TITLE);
+  if (!t) throw new Error(`eCFR titles.json has no Title ${TITLE}`);
+  // up_to_date_as_of = most recent date the title's content is current through.
+  return t.up_to_date_as_of || t.latest_issue_date || todayIso();
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const date = args.date || todayIso();
+  const date = args.date || (await resolveLatestDate());
+  console.log(`[ecfr] using snapshot date ${date}`);
   const wantParts = args.parts || DEFAULT_PARTS;
 
   mkdirSync(WORK_DIR, { recursive: true });
