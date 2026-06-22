@@ -5591,6 +5591,20 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Nhấn Enter để gửi • 🎤 Nhấn mic để nói (lưu trên thiết bị của bạn)",
       ko: "Enter로 보내기 • 🎤 마이크 탭하여 말하기 (기기에 저장)",
     },
+    sendMessage: {
+      en: "Send message",
+      es: "Enviar mensaje",
+      tl: "Ipadala ang mensahe",
+      vi: "Gửi tin nhắn",
+      ko: "메시지 보내기",
+    },
+    conversationLabel: {
+      en: "AI assistant conversation",
+      es: "Conversación con el asistente de IA",
+      tl: "Pag-uusap sa AI assistant",
+      vi: "Cuộc trò chuyện với trợ lý AI",
+      ko: "AI 어시스턴트 대화",
+    },
     helperModeActive: {
       en: "• 💝 Helper Mode Active",
       es: "• 💝 Modo Ayudante Activo",

@@ -7,9 +7,12 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
   const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  // B-H04: index of the keyboard-active option (-1 = none) for aria-activedescendant.
+  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef(null);
 
   useEffect(() => {
+    setActiveIndex(-1);
     if (searchTerm.trim().length >= 2) {
       const newSuggestions = getSearchSuggestions(
         searchTerm,
@@ -51,6 +54,27 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
     // Use mousedown instead of click to fire before blur
     setSearchTerm(suggestion);
     setShowSuggestions(false);
+    setActiveIndex(-1);
+  };
+
+  // B-H04: keyboard navigation for the combobox. Focus stays on the input; the
+  // active option is tracked via aria-activedescendant so screen readers announce
+  // the highlighted suggestion as the user arrows through them.
+  const handleInputKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[activeIndex]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveIndex(-1);
+    }
   };
 
   return (
@@ -88,6 +112,10 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             aria-expanded={showSuggestions && suggestions.length > 0}
             aria-haspopup="listbox"
             aria-controls="search-suggestions"
+            aria-activedescendant={
+              activeIndex >= 0 ? `search-option-${activeIndex}` : undefined
+            }
+            onKeyDown={handleInputKeyDown}
             style={{ fontSize: "16px" }}
           />
           {searchTerm && (
@@ -121,20 +149,27 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => (
-              <button
+              // role="option" must live on a non-interactive element (not a
+              // <button>); selection is tracked via aria-activedescendant on the
+              // input, so options are not individual tab stops (B-H04).
+              <div
                 key={index}
+                id={`search-option-${index}`}
                 role="option"
-                aria-selected={false}
+                aria-selected={index === activeIndex}
                 onMouseDown={(e) => {
                   e.preventDefault(); // Prevent blur before click completes
                   handleSuggestionClick(suggestion);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition cursor-pointer text-sm min-h-[44px] flex items-center"
+                onMouseEnter={() => setActiveIndex(index)}
+                className={`w-full text-left px-4 py-3 ${
+                  index === activeIndex ? "bg-blue-50 dark:bg-gray-700" : ""
+                } hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition cursor-pointer text-sm min-h-[44px] flex items-center`}
               >
                 <span className="text-gray-900 dark:text-gray-100">
                   {suggestion}
                 </span>
-              </button>
+              </div>
             ))}
             {/* Hint to close dropdown */}
             <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 text-center border-t border-gray-200 dark:border-gray-700">
