@@ -101,7 +101,14 @@ const arrayBufferToBase64 = (buffer) => {
 };
 
 /**
- * Convert Base64 string to ArrayBuffer
+ * Convert Base64 string to ArrayBuffer.
+ *
+ * NOTE: feed the result to Web Crypto wrapped in a Uint8Array view
+ * (`new Uint8Array(base64ToArrayBuffer(x))`), never as the bare ArrayBuffer.
+ * jsdom's Web IDL BufferSource check (Node <=20) rejects a bare ArrayBuffer as
+ * "not instance of ArrayBuffer, Buffer, TypedArray, or DataView" while accepting
+ * a typed-array view; Node 25's runtime is lenient, so a bare buffer passes
+ * locally and only fails in CI. The salt/iv/key/data call sites all wrap.
  */
 const base64ToArrayBuffer = (base64) => {
   const binary = atob(base64);
@@ -196,7 +203,9 @@ export const decryptFromCloud = async (
   // Extract components
   const salt = new Uint8Array(base64ToArrayBuffer(encryptedPackage.salt));
   const iv = new Uint8Array(base64ToArrayBuffer(encryptedPackage.iv));
-  const encryptedData = base64ToArrayBuffer(encryptedPackage.data);
+  const encryptedData = new Uint8Array(
+    base64ToArrayBuffer(encryptedPackage.data),
+  );
 
   let key;
 
@@ -208,7 +217,7 @@ export const decryptFromCloud = async (
     );
   } else {
     // Import the raw key
-    const keyBuffer = base64ToArrayBuffer(passphraseOrKey);
+    const keyBuffer = new Uint8Array(base64ToArrayBuffer(passphraseOrKey));
     key = await window.crypto.subtle.importKey(
       "raw",
       keyBuffer,
@@ -328,7 +337,7 @@ export const deriveKEK = async (
 const importRawDEK = (dekBase64) =>
   window.crypto.subtle.importKey(
     "raw",
-    base64ToArrayBuffer(dekBase64),
+    new Uint8Array(base64ToArrayBuffer(dekBase64)),
     { name: "AES-GCM", length: 256 },
     true, // extractable: AES-KW must read the bytes to wrap; restore re-exports
     ["encrypt", "decrypt"],
@@ -345,7 +354,7 @@ const wrapDEK = async (dekBase64, kek) => {
 const unwrapDEK = async (wrappedBase64, kek) => {
   const dek = await window.crypto.subtle.unwrapKey(
     "raw",
-    base64ToArrayBuffer(wrappedBase64),
+    new Uint8Array(base64ToArrayBuffer(wrappedBase64)),
     kek,
     { name: "AES-KW" },
     { name: "AES-GCM", length: 256 },
