@@ -44,9 +44,16 @@ services:
       - path: /*
         name: X-Content-Type-Options
         value: nosniff
+      # D-M16: X-XSS-Protection removed — deprecated; the legacy auditor can
+      # introduce XSS on some browsers. CSP below is the real defense.
       - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com https://flagcdn.com https://*.flagcdn.com; connect-src 'self' data: blob: https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://*.cdn.hf.co https://*.aws.cdn.hf.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://api.dropboxapi.com https://content.dropboxapi.com https://login.microsoftonline.com https://graph.microsoft.com https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co; frame-src 'self' https://accounts.google.com https://dos.zone https://cdn.dos.zone https://archive.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; worker-src 'self' blob: https://cdn.jsdelivr.net"
+      # D-M15: HSTS — force HTTPS for a year incl. subdomains (no preload: keeps
+      # this reversible without an HSTS-preload-list removal request).
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
@@ -93,9 +100,16 @@ services:
       - path: /*
         name: X-Content-Type-Options
         value: nosniff
+      # D-M16: X-XSS-Protection removed — deprecated; the legacy auditor can
+      # introduce XSS on some browsers. CSP below is the real defense.
       - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com https://flagcdn.com https://*.flagcdn.com; connect-src 'self' data: blob: https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://*.cdn.hf.co https://*.aws.cdn.hf.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://api.dropboxapi.com https://content.dropboxapi.com https://login.microsoftonline.com https://graph.microsoft.com https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co; frame-src 'self' https://accounts.google.com https://dos.zone https://cdn.dos.zone https://archive.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; worker-src 'self' blob: https://cdn.jsdelivr.net"
+      # D-M15: HSTS — force HTTPS for a year incl. subdomains (no preload: keeps
+      # this reversible without an HSTS-preload-list removal request).
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
