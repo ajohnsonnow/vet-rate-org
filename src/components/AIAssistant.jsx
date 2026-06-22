@@ -611,7 +611,13 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
         labelledBy="ai-assistant-expanded-title"
         size="xl"
       >
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+          aria-label={t("aiAssistant", "conversationLabel")}
+        >
           {messages.map((msg, idx) => (
             <div
               key={idx}
@@ -947,7 +953,13 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-label={t("aiAssistant", "conversationLabel")}
+      >
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -1228,6 +1240,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
+            aria-label={t("aiAssistant", "sendMessage")}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors self-end"
           >
             <svg
@@ -1235,6 +1248,7 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
