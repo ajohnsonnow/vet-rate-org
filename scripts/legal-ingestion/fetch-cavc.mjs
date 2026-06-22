@@ -23,9 +23,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORK_DIR = path.join(__dirname, ".work");
 
 const CAVC_BASE = "https://www.uscourts.cavc.gov";
+// CAVC retired /opinions/precedential-opinions.php. The current index of
+// recent decisions + precedential opinions (rolling ~60 days, updated nightly)
+// is /recent_decisions.php. Override with CAVC_INDEX_URL if it moves again.
 const PRECEDENTIAL_INDEX =
   process.env.CAVC_INDEX_URL ||
-  `${CAVC_BASE}/opinions/precedential-opinions.php`;
+  `${CAVC_BASE}/recent_decisions.php`;
 
 const USER_AGENT =
   "vet-rate-org legal-ingestion/0.1 (anthony.johnson.now@gmail.com)";

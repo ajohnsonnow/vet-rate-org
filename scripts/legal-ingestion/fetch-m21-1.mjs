@@ -23,9 +23,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORK_DIR = path.join(__dirname, ".work");
 
 // PLACEHOLDER — replace with the actual VA portal URLs once verified.
+// Current canonical M21-1 Table of Contents on KnowVA (the old
+// selfservice.controller?ARTICLE_ID=KA-09800 form 404s). NOTE: KnowVA renders
+// the article list client-side, so a raw fetch may not contain the chapter
+// links — this source likely needs a headless fetch or KnowVA's JSON endpoint;
+// override with M21_INDEX_URL. Portal 554400000001018 / ToC content 554400000073398.
 const M21_INDEX_URL =
   process.env.M21_INDEX_URL ||
-  "https://www.knowva.ebenefits.va.gov/system/selfservice.controller?CONFIGURATION=1000&PARTITION_ID=1&CMD=VIEW_ARTICLE&ARTICLE_ID=KA-09800";
+  "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/content/554400000073398/M21-1-Adjudication-Procedures-Manual-Table-of-Contents";
 
 const USER_AGENT =
   "vet-rate-org legal-ingestion/0.1 (anthony.johnson.now@gmail.com)";

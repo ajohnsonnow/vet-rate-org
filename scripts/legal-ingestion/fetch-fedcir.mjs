@@ -26,10 +26,14 @@ import { makeRecord } from "./sanitize-html.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORK_DIR = path.join(__dirname, ".work");
 
-const CAFC_BASE = "https://cafc.uscourts.gov";
+// CAFC canonical host is www.cafc.uscourts.gov; the opinions/orders listing
+// lives under /home/case-information/opinions-orders/. Override with
+// FEDCIR_SEARCH_URL if the path changes. Opinion PDFs are linked from here as
+// https://www.cafc.uscourts.gov/opinions-orders/<docket>.OPINION.<date>_<id>.pdf
+const CAFC_BASE = "https://www.cafc.uscourts.gov";
 const SEARCH_URL =
   process.env.FEDCIR_SEARCH_URL ||
-  `${CAFC_BASE}/opinions-orders/search?keyword=veterans+affairs`;
+  `${CAFC_BASE}/home/case-information/opinions-orders/`;
 
 const USER_AGENT =
   "vet-rate-org legal-ingestion/0.1 (anthony.johnson.now@gmail.com)";
