@@ -2470,6 +2470,27 @@ export const APP_TRANSLATIONS = {
       vi: "Đã kích hoạt can thiệp khủng hoảng. Thông tin liên hệ Đường dây Khủng hoảng Cựu chiến binh được hiển thị. Gọi 988 và nhấn 1 để được hỗ trợ ngay.",
       ko: "위기 개입이 활성화되었습니다. 재향군인 위기 상담 전화 연락처가 표시됩니다. 988로 전화하고 1을 누르면 즉각적인 지원을 받을 수 있습니다.",
     },
+    severityCritical: {
+      en: "We detected language that suggests you may be in immediate crisis. Your safety is our priority.",
+      es: "Detectamos un lenguaje que sugiere que podrías estar en una crisis inmediata. Tu seguridad es nuestra prioridad.",
+      tl: "May natukoy kaming pananalita na nagpapahiwatig na maaaring nasa agarang krisis ka. Ang iyong kaligtasan ang aming priyoridad.",
+      vi: "Chúng tôi nhận thấy ngôn ngữ cho thấy bạn có thể đang trong khủng hoảng tức thời. Sự an toàn của bạn là ưu tiên của chúng tôi.",
+      ko: "당신이 즉각적인 위기에 처해 있을 수 있음을 시사하는 표현을 감지했습니다. 당신의 안전이 우리의 최우선입니다.",
+    },
+    severityHigh: {
+      en: "We noticed you may be experiencing thoughts of self-harm. You are not alone.",
+      es: "Notamos que podrías estar teniendo pensamientos de autolesión. No estás solo.",
+      tl: "Napansin naming maaaring nakakaranas ka ng mga iniisip na saktan ang sarili. Hindi ka nag-iisa.",
+      vi: "Chúng tôi nhận thấy bạn có thể đang có những suy nghĩ tự làm hại bản thân. Bạn không đơn độc.",
+      ko: "당신이 자해에 대한 생각을 하고 있을 수 있다는 것을 알게 되었습니다. 당신은 혼자가 아닙니다.",
+    },
+    severityMedium: {
+      en: "We see you are going through a difficult time. Help is available right now.",
+      es: "Vemos que estás pasando por un momento difícil. Hay ayuda disponible ahora mismo.",
+      tl: "Nakikita naming dumadaan ka sa isang mahirap na panahon. May tulong na available ngayon.",
+      vi: "Chúng tôi thấy bạn đang trải qua một giai đoạn khó khăn. Sự trợ giúp có sẵn ngay bây giờ.",
+      ko: "당신이 힘든 시간을 보내고 있다는 것을 압니다. 지금 바로 도움을 받을 수 있습니다.",
+    },
   },
 
   // Tactical Calculator

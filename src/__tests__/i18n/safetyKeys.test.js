@@ -52,6 +52,49 @@ describe("i18n safety-critical strings (RT-3)", () => {
     expect(LEAVES.length).toBeGreaterThan(100);
   });
 
+  // C-C01: the crisis-modal severity body must be localized, not English-only.
+  // (getCrisisMessage() used to return hardcoded English between two translated
+  // fields; it now resolves through t("crisisModal", severityKey).)
+  describe("crisis-modal severity messages are localized (C-C01)", () => {
+    const SEVERITY_KEYS = ["severityCritical", "severityHigh", "severityMedium"];
+
+    it("exist with a non-empty English floor", () => {
+      for (const key of SEVERITY_KEYS) {
+        const leaf = APP_TRANSLATIONS.crisisModal?.[key];
+        expect(leaf, `crisisModal.${key} is missing`).toBeTruthy();
+        expect(leaf.en?.trim(), `crisisModal.${key}.en is blank`).toBeTruthy();
+      }
+    });
+
+    it("resolve to a non-blank string for every shipped locale", () => {
+      for (const key of SEVERITY_KEYS) {
+        const leaf = APP_TRANSLATIONS.crisisModal[key];
+        for (const loc of LOCALES) {
+          expect(
+            (leaf[loc] || leaf.en || "").trim(),
+            `crisisModal.${key} resolves blank for "${loc}"`,
+          ).toBeTruthy();
+        }
+      }
+    });
+
+    it("are actually translated, not English placeholders (es/tl/vi/ko differ from en)", () => {
+      for (const key of SEVERITY_KEYS) {
+        const leaf = APP_TRANSLATIONS.crisisModal[key];
+        for (const loc of ["es", "tl", "vi", "ko"]) {
+          expect(
+            leaf[loc],
+            `crisisModal.${key}.${loc} should be localized`,
+          ).toBeTruthy();
+          expect(
+            leaf[loc],
+            `crisisModal.${key}.${loc} is identical to English`,
+          ).not.toBe(leaf.en);
+        }
+      }
+    });
+  });
+
   for (const marker of SAFETY_MARKERS) {
     describe(marker.name, () => {
       const matches = LEAVES.filter((l) => marker.re.test(l.leaf.en));

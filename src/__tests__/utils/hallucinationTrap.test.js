@@ -4,6 +4,7 @@ import hallucinationTrap, {
   validateDiagnosticCode,
   validateCondition,
   validateConditions,
+  annotateConditionVerification,
   validateAIResponse,
   getDatabaseStats,
   searchConditions,
@@ -119,6 +120,36 @@ describe("validateConditions", () => {
   it("returns 0 successRate for empty input", () => {
     const result = validateConditions([]);
     expect(result.stats.successRate).toBe(0);
+  });
+});
+
+// D-H09: Blue Button report diagnoses are AI-extracted and may be hallucinated.
+// annotateConditionVerification flags each against the official code DB but, unlike
+// validateConditions, keeps every condition so real diagnoses are never hidden.
+describe("annotateConditionVerification (D-H09)", () => {
+  it("returns [] for non-array input", () => {
+    expect(annotateConditionVerification(null)).toEqual([]);
+    expect(annotateConditionVerification("nope")).toEqual([]);
+  });
+
+  it("flags verified vs unverified WITHOUT dropping any condition", () => {
+    const result = annotateConditionVerification([
+      { standardizedName: "Test", diagnosticCode: KNOWN_CODE },
+      { standardizedName: "Totally Fabricated Condition QZX" },
+    ]);
+    expect(result).toHaveLength(2); // nothing dropped (unlike validateConditions)
+    expect(result[0].verified).toBe(true);
+    expect(result[0].officialName).toBeTruthy();
+    expect(result[1].verified).toBe(false);
+    expect(result[1].officialName).toBeNull();
+    expect(result[1].standardizedName).toBe("Totally Fabricated Condition QZX");
+  });
+
+  it("reads the condition name from `name` when present", () => {
+    const [c] = annotateConditionVerification([
+      { name: "Test", diagnosticCode: KNOWN_CODE },
+    ]);
+    expect(c.verified).toBe(true);
   });
 });
 

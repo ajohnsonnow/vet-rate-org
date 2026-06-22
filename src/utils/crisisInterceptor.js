@@ -251,18 +251,3 @@ export function interceptBeforeAICall(userInput) {
     matchedPattern: result.matchedPattern,
   };
 }
-
-/**
- * Get user-friendly message based on severity
- */
-export function getCrisisMessage(severity) {
-  const messages = {
-    critical:
-      "We detected language that suggests you may be in immediate crisis. Your safety is our priority.",
-    high: "We noticed you may be experiencing thoughts of self-harm. You are not alone.",
-    medium:
-      "We see you are going through a difficult time. Help is available right now.",
-  };
-
-  return messages[severity] || messages.medium;
-}

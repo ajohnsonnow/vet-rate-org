@@ -69,6 +69,21 @@ describe("crisisInterceptor", () => {
       ).toBe(true);
     });
 
+    // C-H09: Afghan SIV/interpreter languages. Pashto was entirely uncovered;
+    // Dari only partially (shared Farsi words). Both must now trigger.
+    it("detects Pashto ideation (ps crisis keyword)", () => {
+      const result = detectCrisisLanguage("زه ډیر خفه یم او ځان وژنه غواړم");
+      expect(result.isCrisis).toBe(true);
+      expect(result.severity).toBe("high");
+      expect(result.matchedPattern).toBe("multilingual:ps");
+    });
+
+    it("detects Dari ideation (خودکشی)", () => {
+      expect(detectCrisisLanguage("من به خودکشی فکر می‌کنم").isCrisis).toBe(
+        true,
+      );
+    });
+
     it("ignores broad 'universal' keywords like 'no point' (handled by precise English patterns)", () => {
       expect(
         detectCrisisLanguage("there's no point in appealing this").isCrisis,
@@ -102,6 +117,12 @@ describe("crisisInterceptor", () => {
       const result = interceptBeforeAICall("What is my combined rating?");
       expect(result.shouldBlock).toBe(false);
       expect(result.crisisDetected).toBe(false);
+    });
+
+    it("blocks a Pashto crisis message (C-H09 multilingual coverage)", () => {
+      const result = interceptBeforeAICall("زه ډیر خفه یم او ځان وژنه غواړم");
+      expect(result.shouldBlock).toBe(true);
+      expect(result.crisisDetected).toBe(true);
     });
   });
 

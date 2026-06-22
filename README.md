@@ -9,7 +9,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 **TL;DR: Your data NEVER leaves your device. We can prove it.**
 
 - **100% Client-Side Processing**: Everything runs in your browser - no backend servers
-- **Zero Data Collection**: No accounts, no tracking, no analytics, no PII storage
+- **No PII Collection**: No accounts, no PII storage, no cross-site tracking — only privacy-respecting GoatCounter analytics (cookieless aggregate page-view counts, no personal identifiers)
 - **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/vet-rate-org) or use DevTools to watch network traffic
 - **No "If It's Free, You're the Product"**: Static hosting costs ~$0/month. Built by a veteran for veterans.
 - **AI Options**: Custom local LLMs (100% private) or optional Google Gemini (BYOK) - your choice
@@ -29,7 +29,7 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 | **30% of backpay** for claims help | ✅ Free complete claims toolkit |
 | **$100-300** for buddy statements | ✅ Free Witness Bench with AI interviews |
 | **$50/month** subscriptions | ✅ Free forever - no subscriptions |
-| **Your personal data sold** | ✅ Zero data collection, 100% private |
+| **Your personal data sold** | ✅ Your data never sold — no PII collected, 100% private |
 
 **The Bottom Line**: This platform represents **$2.09M-$2.59M of professional development value** (15,420 hours at industry rates) given to the veteran community for free. What would cost veterans millions in commercial development or $15K-50K per claim in service fees is provided with zero strings attached.
 
@@ -118,7 +118,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 ### Privacy & Security
 
 - **100% Client-Side**: All core processing happens in your browser
-- **Zero Data Collection**: No accounts, no tracking, no PII storage
+- **No PII Collection**: No accounts, no PII storage, no cross-site tracking (cookieless GoatCounter analytics only)
 - **No External Transmission**: Your searches never leave your device
 - **AI Options**: Local Warrant Council models (recommended) or optional Gemini cloud with YOUR API key
 
@@ -597,7 +597,7 @@ EXPOSE 80
 
 - **Client-Side Processing**: All operations happen in your browser
 - **No External Data Transmission**: Search terms never leave your device
-- **No User Tracking**: No analytics or telemetry
+- **No Cross-Site Tracking**: Only privacy-respecting GoatCounter analytics (cookieless aggregate page-view counts) — no advertising trackers, telemetry, or fingerprinting
 - **No Cookies**: No session or tracking cookies
 - **Input Validation**: Sanitized inputs prevent XSS attacks
 
