@@ -9,7 +9,10 @@ export default defineConfig({
   reporter: process.env.CI ? [["html", { open: "never" }], ["github"]] : "html",
 
   use: {
-    baseURL: "http://localhost:5197",
+    // Use 127.0.0.1 (not "localhost"): Playwright's Firefox resolves localhost
+    // to IPv6 ::1, but Vite binds IPv4 only, so every page.goto hangs to timeout
+    // under the firefox project. Forcing IPv4 fixes the 12 firefox E2E timeouts.
+    baseURL: "http://127.0.0.1:5197",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -37,8 +40,8 @@ export default defineConfig({
   // reuseExistingServer is always false: silently reusing a foreign server (e.g.
   // a different project's dev server) produces axe results for the wrong app.
   webServer: {
-    command: "npm run dev -- --port 5197",
-    url: "http://localhost:5197",
+    command: "npm run dev -- --port 5197 --host 127.0.0.1",
+    url: "http://127.0.0.1:5197",
     reuseExistingServer: false,
     timeout: 30_000,
   },
