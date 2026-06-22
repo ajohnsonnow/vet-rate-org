@@ -1,8 +1,28 @@
 {
   "version": "1.23.1",
-  "lastUpdated": "2026-06-21",
+  "lastUpdated": "2026-06-22",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.23.1",
+      "date": "2026-06-22",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
+      "changelog": [
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "refresh index → v0.2.0",
+          "description": "refresh index → v0.2.0"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "green the pipeline — Node-20 crypto/jsdom, npm audit, E2E timeouts (#9)",
+          "description": "green the pipeline — Node-20 crypto/jsdom, npm audit, E2E timeouts (#9)"
+        }
+      ]
+    },
     {
       "version": "1.23.1",
       "date": "2026-06-21",
@@ -1795,152 +1815,6 @@
           "title": "auto-update stats + changelog [pre-push]",
           "description": "auto-update stats + changelog [pre-push]"
         },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "idempotent update-changelog + remove husky deprecation warning",
-          "description": "idempotent update-changelog + remove husky deprecation warning"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "auto-update stats + changelog [pre-push]",
-          "description": "auto-update stats + changelog [pre-push]"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "clean duplicate CHANGELOG entry + fix update-changelog baseline",
-          "description": "clean duplicate CHANGELOG entry + fix update-changelog baseline"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "auto-update stats + changelog [pre-push]",
-          "description": "auto-update stats + changelog [pre-push]"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "add 2026-06-08 mega-audit reports and sprint instructions",
-          "description": "add 2026-06-08 mega-audit reports and sprint instructions"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08",
-          "description": "MEDIUM AI-service + tool-count fixes from mega-audit 2026-06-08"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08",
-          "description": "CRITICAL+HIGH UX/safety fixes from mega-audit 2026-06-08"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "apply WebGPU adapter patch + fail loudly on all-models-fail",
-          "description": "apply WebGPU adapter patch + fail loudly on all-models-fail"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "hydrate NexusBuilder from localStorage when no event detail",
-          "description": "hydrate NexusBuilder from localStorage when no event detail"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "LLM pipeline audit — routing fix + PDCA test coverage",
-          "description": "LLM pipeline audit — routing fix + PDCA test coverage"
-        },
-        {
-          "type": "chore",
-          "category": "Other",
-          "title": "release v1.23.1",
-          "description": "release v1.23.1"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "consolidated C-File audit report (Sprints 0-6)",
-          "description": "consolidated C-File audit report (Sprints 0-6)"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder",
-          "description": "add role=dialog + aria-labelledby to ClaimNavigator and DenialDecoder"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks",
-          "description": "strengthen AI-nexus citation disclaimer; audit: eCFR + citation spot-checks"
-        },
-        {
-          "type": "documentation",
-          "category": "Other",
-          "title": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe",
-          "description": "Sprint 4 complete — semgrep/gitleaks clean, dompurify-noop confirmed safe"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "env-configurable bug-report endpoint + PII guard before send",
-          "description": "env-configurable bug-report endpoint + PII guard before send"
-        },
-        {
-          "type": "test",
-          "category": "Other",
-          "title": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs",
-          "description": "48-tool launch matrix vs imported packet; fix(ui): wire dead-end button stubs"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth",
-          "description": "reconcile dual rating calculators + robust bilateral match; test: Johnson 80% ground truth"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test",
-          "description": "date-stamp OUTPUT_PATH; add redacted fixture + e2e import test"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "unblock chromium Playwright gate + record audit baseline",
-          "description": "unblock chromium Playwright gate + record audit baseline"
-        },
-        {
-          "type": "fix",
-          "category": "Other",
-          "title": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell",
-          "description": "bump aiohttp/requests/urllib3/idna to latest; add urllib+idna to cSpell"
-        }
-      ]
-    },
-    {
-      "version": "1.23.1",
-      "date": "2026-06-09",
-      "isFirstRelease": false,
-      "releaseTitle": "Bug Fixes & Improvements - v1.23.1",
-      "changelog": [
         {
           "type": "fix",
           "category": "Other",
