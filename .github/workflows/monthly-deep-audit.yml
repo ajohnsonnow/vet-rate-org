@@ -17,14 +17,14 @@ name: Monthly Deep Audit
 
 on:
   schedule:
-    - cron: '0 8 1 * *' # 1st of each month, 08:00 UTC
+    - cron: "0 8 1 * *" # 1st of each month, 08:00 UTC
   workflow_dispatch:
 
 permissions:
   contents: read
 
 env:
-  NODE_VERSION: '22' # CUSTOMIZE
+  NODE_VERSION: "22" # CUSTOMIZE
 
 jobs:
   # ------------------------------------------------------ full-lighthouse-crawl --
@@ -42,7 +42,7 @@ jobs:
 
       - name: Run Lighthouse CI
         id: lighthouse
-        uses: treosh/lighthouse-ci-action@v12 # pinact
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           # CUSTOMIZE: list every key page; for full-site crawls consider
           # unlighthouse (npx unlighthouse-ci --site <url>) instead.
@@ -88,7 +88,7 @@ jobs:
 
       - name: Setup Node
         if: hashFiles('package.json') != ''
-        uses: actions/setup-node@v4 # pinact
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -119,7 +119,7 @@ jobs:
 
       - name: Upload mutation report
         if: always()
-        uses: actions/upload-artifact@v4 # pinact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mutation-report
           path: reports/mutation/
@@ -142,10 +142,10 @@ jobs:
           scanners: license
           format: json
           output: license-inventory.json
-          exit-code: '0' # inventory, not a gate — release-gates.yml enforces
+          exit-code: "0" # inventory, not a gate — release-gates.yml enforces
 
       - name: Upload license inventory
-        uses: actions/upload-artifact@v4 # pinact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: license-inventory
           path: license-inventory.json
@@ -164,7 +164,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Generate fresh SBOM
-        uses: anchore/sbom-action@v0 # pinact
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           format: cyclonedx-json
           output-file: sbom.cyclonedx.json
@@ -196,7 +196,7 @@ jobs:
           fi
 
       - name: Upload SBOM as monthly baseline
-        uses: actions/upload-artifact@v4 # pinact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sbom-monthly
           path: sbom.cyclonedx.json
@@ -262,7 +262,7 @@ jobs:
 
       - name: Setup Node
         if: hashFiles('package.json') != ''
-        uses: actions/setup-node@v4 # pinact
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 

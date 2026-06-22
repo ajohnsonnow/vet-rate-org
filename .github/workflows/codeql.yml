@@ -20,7 +20,7 @@ on:
   pull_request:
     branches: [main, master, develop]
   schedule:
-    - cron: '0 6 * * 1' # Mondays 06:00 UTC — catches newly published queries/CVEs
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC — catches newly published queries/CVEs
   workflow_call: # allows pr-checks.yml / release-gates.yml to invoke this
 
 permissions:
@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3 # pinact: pin to release SHA
+        uses: github/codeql-action/init@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3.36.2
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -115,7 +115,7 @@ jobs:
       #     run: dotnet build --configuration Release
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3 # pinact: pin to release SHA
+        uses: github/codeql-action/analyze@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3.36.2
         with:
           category: /language:${{ matrix.language }}
           # Results land in GitHub Security → Code scanning.

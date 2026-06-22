@@ -20,11 +20,11 @@ name: release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Ref (tag or commit) to release'
+        description: "Ref (tag or commit) to release"
         required: true
         type: string
 
@@ -41,15 +41,15 @@ jobs:
     outputs:
       digests: ${{ steps.hash.outputs.digests }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -77,7 +77,7 @@ jobs:
           echo "digests=$(sha256sum sbom.cdx.json sbom.spdx.json dist.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts for downstream jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-artifacts-${{ github.ref_name }}
           path: artifacts/
@@ -89,17 +89,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write   # create/upload release assets
-      id-token: write   # Sigstore OIDC for keyless cosign
+      contents: write # create/upload release assets
+      id-token: write # Sigstore OIDC for keyless cosign
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-artifacts-${{ github.ref_name }}
           path: artifacts/
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
 
       - name: Keyless sign-blob (Sigstore OIDC, no key storage)
         working-directory: artifacts
@@ -135,13 +135,13 @@ jobs:
     name: SLSA-3 Provenance
     needs: [build, publish]
     permissions:
-      actions: read     # read workflow metadata for the attestation
-      id-token: write   # Sigstore OIDC
-      contents: write   # attach .intoto.jsonl to the release
+      actions: read # read workflow metadata for the attestation
+      id-token: write # Sigstore OIDC
+      contents: write # attach .intoto.jsonl to the release
     # Pinned reusable workflow per SLSA generator's hardening guidance.
     # Bump the tag deliberately — verifier checks the source ref of the
     # attestor, so a silent bump breaks downstream `slsa-verifier` runs.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
     with:
       base64-subjects: ${{ needs.build.outputs.digests }}
       upload-assets: true
