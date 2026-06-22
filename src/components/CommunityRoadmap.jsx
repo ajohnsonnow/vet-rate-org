@@ -17,7 +17,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import changelogData from "../data/changelog.json";
 import { SQUASHED_BUGS } from "../data/squashedBugs";
-import { scrubPII } from "../utils/piiScrubber";
+import { scrubText } from "../utils/piiScrubber";
 
 // ============================================
 // CONFIGURATION
@@ -392,12 +392,12 @@ const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
     try {
       // Scrub PII from user free-text before any remote send (RT1-2).
       const formPayload = {
-        _subject: `[ROADMAP] New Feature Request: ${scrubPII(newItem.title)}`,
+        _subject: `[ROADMAP] New Feature Request: ${scrubText(newItem.title)}`,
         _template: "table",
         request_id: newItem.id,
-        title: scrubPII(newItem.title),
+        title: scrubText(newItem.title),
         category: newItem.category,
-        description: scrubPII(newItem.description),
+        description: scrubText(newItem.description),
         submitted_at: new Date().toISOString(),
         source: "Community Roadmap",
       };

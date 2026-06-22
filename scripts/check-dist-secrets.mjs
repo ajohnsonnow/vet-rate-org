@@ -19,6 +19,24 @@ const PATTERNS = [
 
 const TEXT_EXT = /\.(js|mjs|cjs|css|html|json|map|txt|svg|webmanifest)$/i;
 
+// The vendor regexes above only match known key shapes (Google/Stripe/Slack).
+// Opaque tokens — e.g. VA Platform API keys declared as `VITE_VA_*` build-env in
+// render.yaml — match NONE of them, so a populated value would ship undetected
+// (RT-A-H05). Vite inlines every `import.meta.env.VITE_*` literally, so also scan
+// the bundle for the literal VALUE of any credential-named VITE_* env var that is
+// set at build time. Normal builds set none of these (BYOK), so this is a no-op
+// unless a real secret is being inlined — exactly the case we must fail on.
+const CREDENTIAL_NAME = /(KEY|SECRET|TOKEN|PASSWORD)/i;
+const inlinedEnvSecrets = Object.entries(process.env)
+  .filter(
+    ([k, v]) =>
+      k.startsWith("VITE_") &&
+      CREDENTIAL_NAME.test(k) &&
+      typeof v === "string" &&
+      v.trim().length >= 12,
+  )
+  .map(([k, v]) => ({ envVar: k, value: v.trim() }));
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -47,6 +65,16 @@ for (const file of walk(DIST)) {
     const m = content.match(re);
     if (m) {
       findings.push({ file, name, count: m.length, sample: `${m[0].slice(0, 6)}…(redacted)` });
+    }
+  }
+  for (const { envVar, value } of inlinedEnvSecrets) {
+    if (content.includes(value)) {
+      findings.push({
+        file,
+        name: `inlined build-env secret (${envVar})`,
+        count: 1,
+        sample: `${value.slice(0, 4)}…(redacted)`,
+      });
     }
   }
 }

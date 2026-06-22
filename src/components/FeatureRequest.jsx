@@ -18,7 +18,7 @@ import {
   saveFeatureToLocalStorage,
 } from "../utils/featureRequestStorage";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { scrubPII } from "../utils/piiScrubber";
+import { scrubText } from "../utils/piiScrubber";
 
 // Developer support contact, shown to the user only if a remote send fails.
 const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
@@ -252,31 +252,31 @@ ${t("featureRequest", "thankYouMessage")}
 
         // Scrub PII from user-authored free-text before any remote send (RT1-2).
         const formPayload = {
-          _subject: `[${featureId}] ${priorityLabel} - ${scrubPII(formData.title || "")}`,
+          _subject: `[${featureId}] ${priorityLabel} - ${scrubText(formData.title || "")}`,
           _template: "table",
           request_id: featureId,
-          title: scrubPII(formData.title || ""),
+          title: scrubText(formData.title || ""),
           category: formData.category,
           priority: priorityLabel,
           module: formData.module,
-          description: scrubPII(formData.description || ""),
-          problem_solved: scrubPII(
+          description: scrubText(formData.description || ""),
+          problem_solved: scrubText(
             formData.problemSolved || t("featureRequest", "notSpecified"),
           ),
-          proposed_solution: scrubPII(
+          proposed_solution: scrubText(
             formData.proposedSolution || t("featureRequest", "notSpecified"),
           ),
-          alternatives: scrubPII(
+          alternatives: scrubText(
             formData.alternativesConsidered ||
               t("featureRequest", "noneMentioned"),
           ),
-          additional_context: scrubPII(
+          additional_context: scrubText(
             formData.additionalContext || t("common", "none"),
           ),
           veteran_email:
             formData.veteranEmail || t("featureRequest", "anonymousNoReply"),
           submitted_at: new Date().toISOString(),
-          full_report: scrubPII(generatedReport || ""),
+          full_report: scrubText(generatedReport || ""),
         };
 
         // Remote send only when the operator has configured an endpoint; otherwise

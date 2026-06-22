@@ -263,6 +263,20 @@ export const scrubPII = (text, options = {}) => {
 };
 
 /**
+ * Egress-boundary helper: scrub PII and return ONLY the redacted string.
+ * Forces `aggressive` so bare 9-digit SSNs / VA file numbers, DOB, and
+ * addresses are redacted before any third-party send. Use this — never the
+ * raw object-returning `scrubPII` — when building an outbound payload, so a
+ * field can never receive the `{ scrubbedText, originalLength, … }` object
+ * (which would both leak the original length and ship `[object Object]`).
+ * @param {string} text
+ * @param {Object} [options] forwarded to `scrubPII`; `aggressive` is always on.
+ * @returns {string} the scrubbed text
+ */
+export const scrubText = (text, options = {}) =>
+  scrubPII(text, { ...options, aggressive: true }).scrubbedText;
+
+/**
  * Quick boolean check — does this text contain any PII?
  * @param {string} text
  * @returns {boolean}
@@ -342,6 +356,7 @@ export const spotlight = (text) =>
 
 export default {
   scrubPII,
+  scrubText,
   containsPII,
   analyzePII,
   scrubAndSpotlight,
