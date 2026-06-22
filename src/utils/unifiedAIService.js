@@ -2379,22 +2379,21 @@ export const getAIDataDisclosure = () => {
 };
 
 // ============================================================================
-// DUAL-LLM PATTERN (Sprint 3 lethal-trifecta defense)
+// DUAL-LLM PATTERN — NOT wired into the document-analysis paths (A-H01)
 // ============================================================================
 //
-// The implementation lives in ./dualLLM.js so it can be unit-tested by
-// injecting a stub `generateAI`. Production code binds to the local
-// `generateAI` here once and re-exports the three helpers for convenience.
+// The dual-LLM (privileged-controller + sandboxed-worker) split is NOT the
+// production injection defense for untrusted documents. The real C-File,
+// muster-call, and DD214 paths call single-LLM generateAI(); their defense is
+// the LAYERED control set: spotlight / untrustedSection fences (with embedded-
+// delimiter neutralization, A-H02), the PII scrubber at egress, last-mile URL
+// stripping (PI-01), and crisis interception.
 //
-// See src/utils/dualLLM.js for the full design rationale (when to use,
-// when NOT to use, the threat model).
-
-import { createDualLLM } from "./dualLLM";
-
-const _dualLLM = createDualLLM(generateAI);
-export const dualLLMExtract = _dualLLM.extract;
-export const dualLLMSynthesize = _dualLLM.synthesize;
-export const runDualLLM = _dualLLM.run;
+// The createDualLLM() factory in ./dualLLM.js is retained ONLY for the
+// (not-yet-wired) legal-answer RAG path (services/legalAnswerer.js). The
+// previously-exported dualLLMExtract / dualLLMSynthesize / runDualLLM convenience
+// helpers were unused dead code and were removed so nothing implies a
+// document-path dual-LLM defense that does not exist.
 
 // Re-export Diamond Swarm functions for convenience
 export {
@@ -2437,10 +2436,6 @@ export default {
   generateAI,
   generateAIWithImage,
   resetAICircuitBreaker,
-  // Dual-LLM lethal-trifecta defense
-  dualLLMExtract,
-  dualLLMSynthesize,
-  runDualLLM,
   getAIStatus,
   getAIDataDisclosure,
   // Diamond Swarm

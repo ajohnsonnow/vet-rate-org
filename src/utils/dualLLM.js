@@ -17,6 +17,15 @@
  *      untrusted text) plus the trusted context. Produces the user-facing
  *      answer. Cannot be compromised by what the extractor was looking at.
  *
+ * WIRING STATUS (A-H01): as of the 2026-06 audit this pattern is NOT wired into
+ * the production document-analysis paths. cfileAnalyzer, musterCallProcessor, and
+ * DD214Analyzer call single-LLM generateAI(); their injection defense is the
+ * layered control set (spotlight/untrustedSection fences, the PII scrubber at
+ * egress, last-mile URL stripping, crisis interception). createDualLLM() is
+ * currently used only by the not-yet-wired legal-answer RAG path
+ * (services/legalAnswerer.js). The "Use this for" list below is the INTENDED
+ * design target, not the current production reality.
+ *
  * Use this for: OCR-text → claim analysis, retrieved legal chunks → answer,
  * user-pasted decision letter → strategy, DD-214 vision output → field
  * extraction → narrative.
