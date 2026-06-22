@@ -26,7 +26,7 @@ import {
   closeSync,
 } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildSectionMap } from "./legal-ingestion/build-inverse-index.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -40,6 +40,44 @@ const DC_RE = /^\d{4}(-\d{4})?$/;
 const ECFR_URL_RE = /^https:\/\/www\.ecfr\.gov\/current\/title-38\//;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const RATING_TYPES = new Set(["direct", "rated-as", "formula"]);
+
+// Absolute floors and staleness ceiling (C-M02 / C-H03). These are deliberately
+// NOT derived from the count constants in dkbIndexedDB.js: a truncated data file
+// that decremented its matching constant in lockstep would otherwise pass. All
+// three are env-tunable for an intentional override.
+const MIN_DISABILITY_ENTRIES = Number(process.env.DKB_MIN_ENTRIES ?? "700");
+const MIN_WEB_ENTRIES = Number(process.env.DKB_MIN_WEB_ENTRIES ?? "7000");
+const MAX_STALENESS_DAYS = Number(process.env.DKB_MAX_STALENESS_DAYS ?? "365");
+const MS_PER_DAY = 86_400_000;
+
+/**
+ * Absolute row-count floor. Returns a failure message array (empty when the
+ * count clears the floor) so callers can spread it straight into `failures`.
+ */
+export function checkRowCountFloor(label, count, floor) {
+  return count < floor
+    ? [
+        `${label}: ${count} entries is below the floor of ${floor} — possible truncation ` +
+          `(raise/lower the floor deliberately via env if this is expected)`,
+      ]
+    : [];
+}
+
+/**
+ * Staleness ceiling on the oldest verification date. Returns a failure message
+ * array (empty when within the window, or when no date is given).
+ */
+export function checkStaleness(oldestIso, maxDays, now = Date.now()) {
+  if (!oldestIso) return [];
+  const daysOld = Math.floor((now - Date.parse(oldestIso)) / MS_PER_DAY);
+  return daysOld > maxDays
+    ? [
+        `oldest lastVerifiedDate ${oldestIso} is ${daysOld} days old, exceeding the ` +
+          `${maxDays}-day staleness ceiling — re-verify against the current 38 CFR ` +
+          `(set DKB_MAX_STALENESS_DAYS to adjust the window)`,
+      ]
+    : [];
+}
 
 function readHead(file, bytes) {
   const fd = openSync(file, "r");
@@ -198,6 +236,9 @@ async function validateTierCounts() {
       `web tier metadata full_database_count=${web.full_database_count} ≠ FULL_DATABASE_COUNT=${fullConst}`,
     );
   }
+  failures.push(
+    ...checkRowCountFloor("web tier", web.entries.length, MIN_WEB_ENTRIES),
+  );
 
   const fullPath = p("public", "data", "diamond_knowledge_full.json");
   const head = readHead(fullPath, 4096);
@@ -301,6 +342,29 @@ async function main() {
   }
 
   const dcSet = validateDisabilityData(data.disabilities);
+
+  // C-M02 / C-H03: absolute floor + staleness ceiling, computed here so the
+  // already-dense validateDisabilityData stays readable.
+  failures.push(
+    ...checkRowCountFloor(
+      "disabilityData.json",
+      data.disabilities.length,
+      MIN_DISABILITY_ENTRIES,
+    ),
+  );
+  const dkbDates = data.disabilities
+    .map((e) => e.lastVerifiedDate)
+    .filter((d) => typeof d === "string" && ISO_DATE_RE.test(d))
+    .sort();
+  const staleFailures = checkStaleness(dkbDates[0], MAX_STALENESS_DAYS);
+  if (staleFailures.length) {
+    failures.push(`disabilityData.json: ${staleFailures[0]}`);
+  } else if (dkbDates.length) {
+    passes.push(
+      `disabilityData.json staleness: oldest entry ${dkbDates[0]} within ${MAX_STALENESS_DAYS}-day ceiling`,
+    );
+  }
+
   await validateTierCounts();
   validateSecondaryConditions(dcSet);
   validateInverseMap(data.disabilities);
@@ -319,7 +383,9 @@ async function main() {
   process.exit(failures.length ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error(`✗ validate-dkb FATAL: ${err.message}`);
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(`✗ validate-dkb FATAL: ${err.message}`);
+    process.exit(1);
+  });
+}

@@ -402,7 +402,7 @@ export async function renderPDFToImages(
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
 
   const STANDARD_FONT_DATA_URL =
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
   onProgress({
     state: OCR_STATES.LOADING,

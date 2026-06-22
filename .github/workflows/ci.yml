@@ -370,6 +370,32 @@ jobs:
       - name: Run red-team suite (blocking)
         run: npm run test:red-team
 
+  rag-eval:
+    name: RAG Retrieval Baseline Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [quality]
+    # C-H02: legal-RAG retrieval quality was only gated on the weekly index
+    # rebuild (legal-ingestion.yml) — a code change degrading retrieval merged
+    # to main unchecked. This runs run-eval.mjs read-only against the committed
+    # index (public/legal-index/v0.1.0) and fails on a >5% relative regression
+    # vs scripts/legal-ingestion/eval/baseline.json. The embedder
+    # (Xenova/bge-small-en-v1.5) is fetched at runtime, exactly as the app does.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: RAG retrieval eval (blocking on >5% regression)
+        run: node scripts/legal-ingestion/eval/run-eval.mjs --version v0.1.0 --check-baseline
+
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -414,3 +440,42 @@ jobs:
         # sast-check.mjs exits 1 on ERROR/WARNING findings. If a new blocker
         # lands, fix it or add a justified suppression in .semgrep.yml.
         run: node scripts/sast-check.mjs --strict
+
+  ci-gate:
+    name: CI Gate (required check)
+    runs-on: ubuntu-latest
+    if: always()
+    # D-M04: "blocking" jobs (notably red-team) are only truly enforced if the
+    # owner enumerates every one of them in branch protection — drift is silent.
+    # This single aggregation job fails when ANY upstream required job did not
+    # succeed, so branch protection needs exactly one required check —
+    # "CI Gate (required check)" — which transitively requires red-team and the
+    # rest. Configure it in Settings → Branches → require this check.
+    needs:
+      - quality
+      - type-check
+      - validate-dkb
+      - test
+      - build
+      - e2e
+      - mobile
+      - axe
+      - cwv
+      - pwa
+      - lighthouse
+      - red-team
+      - rag-eval
+      - security
+    steps:
+      - name: Verify all required jobs succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Upstream job results: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then
+              echo "::error::One or more required CI jobs did not succeed ($r)."
+              exit 1
+            fi
+          done
+          echo "All required CI jobs succeeded."

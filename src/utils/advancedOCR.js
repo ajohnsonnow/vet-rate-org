@@ -29,7 +29,7 @@ import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Advanced OCR Configuration
