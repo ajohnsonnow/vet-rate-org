@@ -2,7 +2,7 @@
 
 How Vet-Rate.org handles your privacy.
 
-*Last Updated: January 2026*
+*Last Updated: June 2026*
 
 ---
 
@@ -10,7 +10,7 @@ How Vet-Rate.org handles your privacy.
 
 Vet-Rate.org is committed to protecting your privacy. This policy explains how we handle information when you use our Service.
 
-**The short version:** We don't collect your data. Everything stays on your device.
+**The short version:** We don't collect your personal data — everything you enter stays on your device. The only analytics is GoatCounter: cookieless, aggregate page views with no personal identifiers.
 
 ---
 
@@ -21,11 +21,14 @@ We do not collect, store, or transmit:
 - ❌ Personal identification information
 - ❌ Email addresses
 - ❌ Names
-- ❌ IP addresses
-- ❌ Usage analytics
-- ❌ Tracking data
+- ❌ IP addresses (stored)
+- ❌ Personally-identifying usage analytics
+- ❌ Cross-site or cross-session tracking
 - ❌ Cookies for tracking
 - ❌ Any data you enter into the application
+
+We do use **GoatCounter** for minimal, cookieless, aggregate analytics — see
+[Third Parties](#third-parties) below.
 
 ---
 
@@ -72,14 +75,16 @@ You can:
 
 ## Third Parties
 
-### No Third-Party Tracking
+### Analytics (GoatCounter)
 
-We do not use:
+We use **GoatCounter** — a privacy-respecting, open-source, cookieless analytics tool — to understand basic, aggregate site usage (page views, referrer, country-level location). It sets no cookies, stores no personal identifiers, and does not track you across sites or sessions.
+
+We do **not** use:
 
 - Google Analytics
 - Facebook Pixel
-- Any tracking services
-- Any analytics platforms
+- Advertising networks
+- Any analytics tool that profiles or identifies individual users
 
 ### No Third-Party Data Sharing
 
@@ -210,9 +215,9 @@ For privacy questions, contact us through the Contact Us form on the website.
 
 | Question | Answer |
 |----------|--------|
-| Do you collect my data? | No |
-| Do you track me? | No |
-| Do you use analytics? | No |
+| Do you collect my data? | No personal data |
+| Do you track me? | No personal or cross-site tracking |
+| Do you use analytics? | Minimal, cookieless aggregate only (GoatCounter) |
 | Where is my data stored? | Your browser only |
 | Can you see what I enter? | No |
 | Do you share data? | No (we have none to share) |

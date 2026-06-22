@@ -418,12 +418,16 @@ Examples:
         # Load existing analysis files
         analysis_dir = DATA_DIR / "bva_analysis"
         if analysis_dir.exists():
+            failed = 0
             for f in analysis_dir.glob("analysis_*.json"):
                 try:
                     with open(f) as fp:
                         pipeline.results['bva_analyses'].append(json.load(fp))
-                except:
-                    pass
+                except (OSError, json.JSONDecodeError) as e:
+                    failed += 1
+                    print(f"⚠️  Skipped unreadable analysis file {f.name}: {e}")
+            if failed:
+                print(f"⚠️  {failed} analysis file(s) failed to load and were skipped")
         pipeline.generate_frontend_data()
         
     else:

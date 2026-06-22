@@ -63,7 +63,7 @@ This separation ensures that AI training uses only verified official sources whi
 ### Privacy Guarantees
 
 - ✅ **No Server Communication** - All processing happens locally
-- ✅ **No User Tracking** - Zero analytics or telemetry
+- ✅ **No User Tracking** - No personal tracking or telemetry (site-wide analytics is cookieless, aggregate GoatCounter only)
 - ✅ **No Data Storage** - Nothing persisted externally
 - ✅ **No API Keys Required** - Pre-loaded knowledge base
 - ✅ **Works Offline** - Full functionality without internet

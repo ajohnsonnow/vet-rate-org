@@ -22,7 +22,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN for PDF.js text rendering
 const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * PDF conversion configuration
@@ -72,7 +72,7 @@ export async function convertPdfPageToBlob(
   const loadingTask = pdfjsLib.getDocument({
     data: pdfData,
     standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/",
+    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
     cMapPacked: true,
   });
 

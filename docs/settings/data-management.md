@@ -203,10 +203,12 @@ Open Vet-Rate.org in <strong>new browser</strong>
 Vet-Rate.org does NOT collect:
 
 - ❌ Personal information
-- ❌ Usage data
-- ❌ Analytics
-- ❌ Tracking information
+- ❌ Personally-identifying usage data
+- ❌ Cookies, profiling, or cross-site tracking
 - ❌ Your saved content
+
+The only analytics is **GoatCounter** — cookieless, aggregate page views with no
+personal identifiers.
 
 ### Your Control
 
