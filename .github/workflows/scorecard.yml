@@ -17,7 +17,7 @@ name: OpenSSF Scorecard
 
 on:
   schedule:
-    - cron: '17 23 * * 0' # Sundays 23:17 UTC
+    - cron: "17 23 * * 0" # Sundays 23:17 UTC
   push:
     branches: [main, master]
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       security-events: write # upload SARIF to the Security tab
-      id-token: write        # publish results to the OpenSSF REST API / badge
+      id-token: write # publish results to the OpenSSF REST API / badge
       contents: read
       actions: read
 
@@ -56,13 +56,13 @@ jobs:
           # repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
       - name: Upload results artifact
-        uses: actions/upload-artifact@v4 # pinact: pin to release SHA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: scorecard-results
           path: results.sarif
           retention-days: 30
 
       - name: Upload SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3 # pinact: pin to release SHA
+        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3.36.2
         with:
           sarif_file: results.sarif

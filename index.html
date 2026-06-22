@@ -90,7 +90,14 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
+    <!-- D-M08: SRI-pinned so a gc.zgo.at CDN compromise can't inject arbitrary JS
+         over this PII-bearing SPA. crossorigin is required for SRI on a cross-origin
+         script (gc.zgo.at sends Access-Control-Allow-Origin: *). If GoatCounter ever
+         rotates count.js the browser blocks the stale hash — analytics stops, the app
+         is unaffected — so refresh this hash (or self-host count.js) when that happens. -->
     <script data-goatcounter="https://vet-rate-org.goatcounter.com/count"
-        async src="https://gc.zgo.at/count.js"></script>
+        async src="https://gc.zgo.at/count.js"
+        integrity="sha384-2UjvVpptg4JlEVgJI2PdscrjOjPcil/4F1ZvIMJ81CShQnEDSlPI+l4PfogvTLYi"
+        crossorigin="anonymous"></script>
   </body>
 </html>
