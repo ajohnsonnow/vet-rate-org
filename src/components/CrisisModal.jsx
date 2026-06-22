@@ -9,10 +9,19 @@
  */
 
 import { useRef } from "react";
-import { CRISIS_RESOURCES, getCrisisMessage } from "../utils/crisisInterceptor";
+import { CRISIS_RESOURCES } from "../utils/crisisInterceptor";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
 import { useLanguage } from "../contexts/LanguageContext";
+
+// Severity → localized message key. Routed through t() so a non-English veteran
+// sees the crisis body in their language, not English (C-C01). Unknown severities
+// fall back to "medium", preserving the prior getCrisisMessage() default.
+const SEVERITY_MESSAGE_KEYS = {
+  critical: "severityCritical",
+  high: "severityHigh",
+  medium: "severityMedium",
+};
 
 /**
  * CrisisModal Component
@@ -33,7 +42,10 @@ const CrisisModal = ({ severity = "high", _source = "application" }) => {
   // close it. autoFocus lands the keyboard user on the Call button.
   useFocusTrap(containerRef, { active: true });
 
-  const message = getCrisisMessage(severity);
+  const message = t(
+    "crisisModal",
+    SEVERITY_MESSAGE_KEYS[severity] || SEVERITY_MESSAGE_KEYS.medium,
+  );
 
   const handleCallClick = () => {
     // Direct dial link - mobile devices will open phone app

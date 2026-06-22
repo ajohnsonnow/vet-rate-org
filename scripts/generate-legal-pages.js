@@ -293,6 +293,29 @@ Generated: ${new Date().toISOString()}
   console.log(`📝 Generated instructions: ${instructionsPath}\n`);
 }
 
+/**
+ * CI gate (A-H10 / D-H04): generated legal HTML must contain no unresolved
+ * {t(...)} i18n calls. A leaked call means the JSX→HTML generator failed to
+ * resolve a translation and a raw `{t("...")}` would render to the user.
+ */
+function assertNoUnresolvedTranslations() {
+  let ok = true;
+  for (const html of [TOS_HTML, PRIVACY_HTML]) {
+    if (!fs.existsSync(html)) continue;
+    const leaked = fs.readFileSync(html, 'utf-8').match(/\{\s*t\(/g);
+    if (leaked) {
+      ok = false;
+      console.error(
+        `❌ ${path.basename(html)} has ${leaked.length} unresolved {t(...)} call(s). Run "npm run sync-legal-pages".`
+      );
+    }
+  }
+  if (ok) {
+    console.log('✅ No unresolved {t(...)} i18n calls in generated legal pages.\n');
+  }
+  return ok;
+}
+
 // Run the check
 console.log('═══════════════════════════════════════════════════════════════');
 console.log('        Vet-Rate.org Legal Pages Sync Checker');
@@ -300,8 +323,9 @@ console.log('══════════════════════�
 
 const isSync = checkAndGenerate();
 generateInstructions();
+const noLeaks = assertNoUnresolvedTranslations();
 
 console.log('═══════════════════════════════════════════════════════════════');
 
-// Exit with error code if out of sync (useful for CI/CD)
-process.exit(isSync ? 0 : 1);
+// Exit with error code if out of sync or i18n leaked (useful for CI/CD)
+process.exit(isSync && noLeaks ? 0 : 1);

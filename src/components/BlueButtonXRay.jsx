@@ -31,6 +31,7 @@ import {
   saveDocumentToPacket,
   PACKET_DOC_TYPES,
 } from "../utils/myPacketManager";
+import { annotateConditionVerification } from "../utils/hallucinationTrap";
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -1244,7 +1245,7 @@ export default function BlueButtonXRay({
    */
   const formatConditionsResponse = (parsed) => {
     // Transform AI response into our condition format
-    const conditions = parsed.conditions.map((c, index) => ({
+    const mapped = parsed.conditions.map((c, index) => ({
       id: index + 1,
       rawName: c.rawText || c.name,
       standardizedName: c.name,
@@ -1253,6 +1254,11 @@ export default function BlueButtonXRay({
       category: c.category || "Other",
       selected: false,
     }));
+
+    // D-H09: the AI can hallucinate diagnoses. Flag each against the official
+    // 38 CFR code DB — matched → verified (with officialName), everything else →
+    // unverified — so AI output is never shown as VA-confirmed. Nothing is dropped.
+    const conditions = annotateConditionVerification(mapped);
 
     // Sort: claimable conditions first, then alphabetically
     conditions.sort((a, b) => {
@@ -1829,6 +1835,14 @@ export default function BlueButtonXRay({
                             {condition.isClaimable && (
                               <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
                                 ⭐ Commonly Claimed
+                              </span>
+                            )}
+                            {!condition.verified && (
+                              <span
+                                className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full"
+                                title="AI-extracted from your report and not matched to the official VA diagnostic-code list. Confirm against your own records before relying on it."
+                              >
+                                ⚠️ Unverified
                               </span>
                             )}
                           </div>
