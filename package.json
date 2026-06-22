@@ -142,7 +142,8 @@
     "dompurify": "file:packages/dompurify-noop",
     "sharp": "file:packages/sharp-noop",
     "@xmldom/xmldom": "^0.8.13",
-    "protobufjs": "^7.5.6"
+    "protobufjs": "^7.6.4",
+    "tar": "^7.5.16"
   },
   "engines": {
     "node": ">=18.0.0",

@@ -67,6 +67,43 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isoMinusDays(iso, n) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Resolve the most recent date for which eCFR has published a title-38 version.
+ *
+ * eCFR's `structure/{date}` returns the version in effect on that date, but a
+ * request for *today* (or any date past eCFR's latest published data) 404s —
+ * which is why the weekly cron, pinned to `todayIso()`, went red. Walk back
+ * day-by-day to the newest available version instead of failing on an
+ * unpublished future date. A non-404 error is a real fault and is re-thrown.
+ */
+async function resolveStructure(startDate, maxBackDays = 14) {
+  let lastErr;
+  for (let back = 0; back <= maxBackDays; back++) {
+    const date = isoMinusDays(startDate, back);
+    try {
+      const structure = await fetchStructure(date);
+      if (back > 0) {
+        console.log(
+          `[ecfr] ${startDate} not yet published; using latest available version ${date} (${back}d back)`,
+        );
+      }
+      return { date, structure };
+    } catch (e) {
+      if (!/HTTP 404/.test(e.message)) throw e;
+      lastErr = e;
+    }
+  }
+  throw new Error(
+    `eCFR structure unavailable for ${startDate} and the ${maxBackDays} prior days: ${lastErr?.message}`,
+  );
+}
+
 function parseArgs(argv) {
   const out = { parts: null, limit: null, date: null };
   for (const a of argv) {
@@ -135,12 +172,14 @@ export function enumerateSections(root, wantParts) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const date = args.date || todayIso();
+  const startDate = args.date || todayIso();
   const wantParts = args.parts || DEFAULT_PARTS;
 
   mkdirSync(WORK_DIR, { recursive: true });
 
-  const structure = await fetchStructure(date);
+  // Resolve to the latest published version on/before startDate (today often
+  // 404s); reuse the same date for every section render below.
+  const { date, structure } = await resolveStructure(startDate);
   let sections = enumerateSections(structure, wantParts);
 
   console.log(

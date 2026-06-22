@@ -47,6 +47,8 @@ vi.mock("../../utils/localServerClient", () => ({
 // ── Mock crisisInterceptor (not under test) ───────────────────────────────────
 vi.mock("../../utils/crisisInterceptor", () => ({
   interceptBeforeAICall: vi.fn().mockResolvedValue({ shouldBlock: false }),
+  // cfileAnalyzer fires this non-blocking crisis scan per chunk; return unused.
+  scanDocumentForCrisis: vi.fn().mockReturnValue(false),
 }));
 
 // ── Mock featureFlags (all features enabled) ──────────────────────────────────
@@ -60,6 +62,10 @@ vi.mock("../../utils/aiSystemPrompts", () => ({
   buildSystemPrompt: vi.fn().mockReturnValue(""),
   buildDKBContext: vi.fn().mockResolvedValue(null),
   validateAIResponse: vi.fn().mockReturnValue({ isValid: true, warnings: [] }),
+  // cfileAnalyzer wraps each chunk's text with this before sending it to the
+  // engine; the real impl is a pure spotlight-delimiter string wrapper.
+  untrustedSection: (label, text) =>
+    `=== BEGIN ${String(label || "UNTRUSTED").toUpperCase()} ===\n${text}\n=== END ===`,
 }));
 
 // ── Modules under test ────────────────────────────────────────────────────────
@@ -86,16 +92,20 @@ const FAKE_DC = "99999";
 
 /**
  * Fake multi-page C-File text large enough to force exactly 2 chunks in
- * LOCAL mode (5,100-char budget at CHARS_PER_TOKEN=3.4: ~703 chars/page x 12
- * pages ≈ 8.4KB, splits after ~7 pages). Every page carries medical
- * vocabulary ("knee pain") so the medical-content gate keeps them all.
+ * LOCAL mode (5,100-char budget at CHARS_PER_TOKEN=3.4: ~700 chars/page x 12
+ * pages ≈ 8.4KB, splits after ~7 pages). The per-page sentence is built so
+ * each chunk clears the relevance pre-flight (scoreChunkRelevance >=
+ * MIN_CLAIMS_SCORE): "Assessment:" header (+2), "chronic" (+1), "knee" (+1),
+ * "service-connected" (+2). Plain "knee pain" alone only scores 1, so the
+ * whole chunk is skipped before the engine is ever called. Sentence length is
+ * kept ~equal to the old fixture so the 2-chunk split is unchanged.
  */
 function makeCFileText(pageCount = 12) {
   let text = "";
   for (let p = 1; p <= pageCount; p++) {
     text += `--- PAGE ${p} ---\n`;
     text +=
-      `Clinic visit note number ${p}. Veteran reports right knee pain after airborne operations. `.repeat(
+      `Assessment: chronic right knee pain, service-connected (note ${p}). `.repeat(
         8,
       ) + "\n";
   }
