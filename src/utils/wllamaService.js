@@ -138,9 +138,14 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
 
     // v3.4.1: single WASM file handles multi-thread/single-thread automatically.
     // WebGPU acceleration enabled by default when navigator.gpu is available.
-    wllamaInstance = new WllamaClass({
-      default: "/wasm/wllama.wasm",
-    });
+    // allowOffline is a WllamaConfig option (the 2nd constructor arg); passing it
+    // to loadModelFromUrl below silently ignored it (C-M06). Set here it makes an
+    // already-cached model load from IndexedDB with no network round-trip, so the
+    // app works in low-connectivity VA waiting rooms.
+    wllamaInstance = new WllamaClass(
+      { default: "/wasm/wllama.wasm" },
+      { allowOffline: useCache },
+    );
 
     // Try primary URL first, then fallback
     let modelUrl = modelConfig.url;
@@ -159,7 +164,6 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     // enables WebGPU automatically; 0 forces CPU-only for iOS/WASM fallback).
     await wllamaInstance.loadModelFromUrl(modelUrl, {
       progressCallback: createProgressCallback(onProgress),
-      allowOffline: useCache,
       n_ctx: modelConfig.contextSize,
       n_threads: navigator.hardwareConcurrency || 4,
       n_gpu_layers: typeof navigator !== "undefined" && navigator.gpu ? 999 : 0,
