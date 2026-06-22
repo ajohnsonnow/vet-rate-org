@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Shark Radar Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Contract scanner that detects predatory practices
  * targeting veterans from "claim consulting" firms.

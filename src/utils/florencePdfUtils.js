@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - High-Resolution PDF Utilities for Vision OCR
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Convert PDF pages to high-resolution images for Florence-2 VLM
  *

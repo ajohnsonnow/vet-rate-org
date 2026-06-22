@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Document Classification System
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Intelligent document classifier for Muster Call system.
  * Analyzes document content to determine type:

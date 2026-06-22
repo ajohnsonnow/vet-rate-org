@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Shark Radar (Contract Scanner)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * AI-powered contract scanner that detects predatory practices
  * targeting veterans based on 38 U.S.C. § 5901 and 38 CFR § 14.636.

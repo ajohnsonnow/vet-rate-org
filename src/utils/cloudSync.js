@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - The Off-Site Bunker (Cloud Sync Utility)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Bring Your Own Cloud" - Client-side Google Drive backup integration
  *

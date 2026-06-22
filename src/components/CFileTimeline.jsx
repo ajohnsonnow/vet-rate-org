@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File Timeline Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Visual timeline display of events extracted from C-File analysis
  */

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Multi-Provider Cloud Storage
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "THE REDUNDANT BUNKER NETWORK" - Multiple secure cloud storage options
  *

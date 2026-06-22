@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - PACT Act Navigator
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * HARD-CODED presumptive condition logic tree
  * NO AI - Pure rule-based matching for accuracy

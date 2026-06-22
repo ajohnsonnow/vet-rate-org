@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File PDF Text Extraction Utility
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Client-side PDF text extraction using pdf.js
  * Converts large PDF files to searchable text without uploading to servers

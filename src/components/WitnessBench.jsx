@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - The Witness Bench Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Buddy Letter Wizard" - AI-powered interview for spouses, family members, and battle buddies
  * Generates VA Form 21-10210 (Lay/Witness Statement) focusing on observable behaviors

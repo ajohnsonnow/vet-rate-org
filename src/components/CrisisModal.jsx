@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Crisis Resources Modal
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * SAFETY-CRITICAL COMPONENT: Full-screen emergency modal for crisis intervention
  * Displays when self-harm language is detected, blocking all other application functions

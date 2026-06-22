@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File AI Analysis Service
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * AI-powered C-File analysis with AUTOMATIC CHUNKING
  * Handles files of ANY size (including 300MB+ C-Files) by:

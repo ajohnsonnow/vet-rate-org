@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - My Packet Document Manager
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * DIAMOND STANDARD: Persistent document storage for all veteran documents.
  * Think of "My Packet" like a digital filing cabinet. Every document the

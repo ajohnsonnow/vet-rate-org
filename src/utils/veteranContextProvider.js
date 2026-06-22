@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Veteran Context Provider
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * SHARED UTILITY: Every AI-powered tool in the app calls this ONE function
  * to get the veteran's full context (VKB + My Packet) before running AI.

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Knowledge Base Status Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Displays Diamond Knowledge Base (DKB) status with source-level date tracking
  * DKB = Official sources (training approved)

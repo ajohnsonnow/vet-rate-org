@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Pure file-type guards with no pdf.js / OCR dependencies, so they can be
  * imported (and unit-tested) without pulling in the heavy document-analysis

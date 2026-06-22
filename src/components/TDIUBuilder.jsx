@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - TDIU Work Impact Builder
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The 100% Backdoor" - Vocational Impact Generator
  * Translates symptoms into workplace limitations for VA Form 21-8940

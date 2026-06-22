@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * CrashCanary — DEV/E2E-only. Throws during render when a `vetrate:e2e-crash`
  * window event fires, so the Playwright suite can prove ErrorBoundary recovery

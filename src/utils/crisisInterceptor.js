@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Crisis Interceptor
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * SAFETY-CRITICAL SYSTEM: This interceptor detects self-harm language
  * and prevents AI engagement, redirecting to immediate human crisis support.

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Data Persistence Protection Utility
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Tracks unsaved changes and manages the "Bunker Backup" warning system
  * Prevents data loss from cache clearing or accidental tab closure

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Universal Document Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Supports multiple file formats for veteran document uploads:
  * - PDF (text + OCR for scanned)

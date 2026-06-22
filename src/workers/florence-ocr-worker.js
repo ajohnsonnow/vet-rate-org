@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Florence-2 Vision OCR Worker
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * DIAMOND STANDARD Vision OCR - Client-Side VLM for DD214 Analysis
  *

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - DD214 Text Parser
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Parse raw OCR text from DD214/NGB22 into structured data
  *

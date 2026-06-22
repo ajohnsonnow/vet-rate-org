@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Advanced OCR System
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * DIAMOND STANDARD OCR - Best-in-class text extraction for veteran documents
  *

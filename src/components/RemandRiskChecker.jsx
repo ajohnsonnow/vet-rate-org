@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Pre-Submission Remand Risk Checker
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Helps veterans identify gaps BEFORE submitting claims.
  * Based on top remand reasons from 18,609 BVA decisions.

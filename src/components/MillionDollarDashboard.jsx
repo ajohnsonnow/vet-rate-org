@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - The Million Dollar Dashboard
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Whoa Factor" - Lifetime Value Financial Projector
  * Shows veterans the TRUE generational wealth of their VA rating

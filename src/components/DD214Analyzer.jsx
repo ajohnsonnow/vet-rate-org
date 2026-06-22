@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Intelligent DD214 analyzer with:
  * - Local OCR support for scanned PDFs

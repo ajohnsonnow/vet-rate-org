@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Handles large-scale document ingestion for veteran claim files:
  * - Multiple DD214s

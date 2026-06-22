@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Muster Call Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Mass document ingestion system for veteran claim files.
  * Handles 300+ MB of documents, auto-populates entire profile,

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Stale Data Detection Utility
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Detects outdated rating criteria that need verification
  * Helps prevent submitting claims based on old VASRD data

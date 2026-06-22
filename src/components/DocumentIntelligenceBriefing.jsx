@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Document Intelligence Briefing Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "SigInt Intelligence Briefing" - Per-document review and verification
  * User verifies extracted data before saving to VKB
