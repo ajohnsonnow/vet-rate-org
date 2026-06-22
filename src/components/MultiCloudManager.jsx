@@ -207,24 +207,29 @@ const MultiCloudManager = ({ onClose }) => {
       if (encryptionEnabled) {
         setStatus("Encrypting data with AES-256...");
 
-        const { encryptedPackage, keyExport } = await encryptForCloud(
-          data,
-          usePassphrase ? passphrase : null,
-        );
-
-        const filename = generateSecureBackupName();
-
-        // Store key locally if no passphrase
-        if (keyExport) {
-          await storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
-        }
-
-        setStatus("Uploading encrypted backup...");
-
         if (selectedProvider === "google_drive") {
+          // Drive: saveBackupToGoogleDrive uploads the package as-is, so the UI
+          // encrypts here and stores the local key (no-passphrase case).
+          const { encryptedPackage, keyExport } = await encryptForCloud(
+            data,
+            usePassphrase ? passphrase : null,
+          );
+          const filename = generateSecureBackupName();
+          if (keyExport) {
+            await storeLocalKey(`${selectedProvider}_${filename}`, keyExport);
+          }
+          setStatus("Uploading encrypted backup...");
           await saveBackupToGoogleDrive(encryptedPackage, filename);
         } else {
-          await saveBackup(selectedProvider, encryptedPackage, null);
+          // D-H10: Dropbox/OneDrive encrypt once inside saveBackup → saveTo*.
+          // Passing a pre-encrypted package here double-encrypts it into an
+          // unrestorable backup, so hand saveBackup the RAW data + passphrase.
+          setStatus("Encrypting & uploading backup...");
+          await saveBackup(
+            selectedProvider,
+            data,
+            usePassphrase ? passphrase : null,
+          );
         }
       } else {
         // Unencrypted backup (not recommended)

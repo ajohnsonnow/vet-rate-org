@@ -171,6 +171,15 @@ export const connectDropbox = async () => {
     "width=600,height=700",
   );
 
+  // D-H12: window.open returns null when the browser blocks the pop-up (common
+  // on locked-down/shared VA workstations). Guard before the interval reads
+  // popup.closed, which would otherwise throw a TypeError that bricks Connect.
+  if (!popup) {
+    throw new Error(
+      "Pop-up blocked. Please allow pop-ups for this site, then try connecting again.",
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const checkPopup = setInterval(() => {
       try {
@@ -279,6 +288,15 @@ const exchangeDropboxCode = async (code) => {
  * Save backup to Dropbox
  */
 export const saveToDropbox = async (data, filename, passphrase = null) => {
+  // D-H10: callers must pass RAW data — this function encrypts once. Re-encrypting
+  // an already-encrypted package produces an unrestorable double-encrypted backup
+  // (the inner key is stored under a different filename than restore looks up).
+  if (isEncryptedBackup(data)) {
+    throw new Error(
+      "Refusing to double-encrypt an already-encrypted backup (D-H10). Pass raw data to saveBackup.",
+    );
+  }
+
   const state = connectionState.dropbox;
   if (!state.connected || !state.token) {
     throw new Error("Not connected to Dropbox");
@@ -466,6 +484,15 @@ export const connectOneDrive = async () => {
     "width=600,height=700",
   );
 
+  // D-H12: window.open returns null when the browser blocks the pop-up (common
+  // on locked-down/shared VA workstations). Guard before the interval reads
+  // popup.closed, which would otherwise throw a TypeError that bricks Connect.
+  if (!popup) {
+    throw new Error(
+      "Pop-up blocked. Please allow pop-ups for this site, then try connecting again.",
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const checkPopup = setInterval(() => {
       try {
@@ -573,6 +600,15 @@ const exchangeOneDriveCode = async (code) => {
  * Save backup to OneDrive (AppFolder)
  */
 export const saveToOneDrive = async (data, filename, passphrase = null) => {
+  // D-H10: callers must pass RAW data — this function encrypts once. Re-encrypting
+  // an already-encrypted package produces an unrestorable double-encrypted backup
+  // (the inner key is stored under a different filename than restore looks up).
+  if (isEncryptedBackup(data)) {
+    throw new Error(
+      "Refusing to double-encrypt an already-encrypted backup (D-H10). Pass raw data to saveBackup.",
+    );
+  }
+
   const state = connectionState.onedrive;
   if (!state.connected || !state.token) {
     throw new Error("Not connected to OneDrive");
