@@ -30,6 +30,15 @@
 const SPOTLIGHT_OPEN = "<untrusted_content>";
 const SPOTLIGHT_CLOSE = "</untrusted_content>";
 
+// A-H02: a literal spotlight delimiter embedded in untrusted text (e.g. an OCR'd
+// C-File page that contains "</untrusted_content>") would close the fence early
+// and let the remaining bytes land in the instruction context. Neutralize any
+// untrusted_content tag (any case/whitespace) before wrapping so it can no longer
+// be parsed as a delimiter.
+const FENCE_TAG = /<\s*\/?\s*untrusted_content\s*>/gi;
+const neutralizeFence = (text) =>
+  String(text ?? "").replace(FENCE_TAG, "[untrusted_content]");
+
 // Pattern application order matters: longest / most-specific first so the
 // less-specific catchalls don't consume tokens they shouldn't. Listed in the
 // order `scrubPII` applies them.
@@ -342,7 +351,7 @@ export const analyzePII = (text) => {
  */
 export const scrubAndSpotlight = (text, options = {}) => {
   const result = scrubPII(text, options);
-  const spotlit = `${SPOTLIGHT_OPEN}\n${result.scrubbedText ?? ""}\n${SPOTLIGHT_CLOSE}`;
+  const spotlit = `${SPOTLIGHT_OPEN}\n${neutralizeFence(result.scrubbedText)}\n${SPOTLIGHT_CLOSE}`;
   return { ...result, spotlit };
 };
 
@@ -352,7 +361,7 @@ export const scrubAndSpotlight = (text, options = {}) => {
  * @returns {string}
  */
 export const spotlight = (text) =>
-  `${SPOTLIGHT_OPEN}\n${text ?? ""}\n${SPOTLIGHT_CLOSE}`;
+  `${SPOTLIGHT_OPEN}\n${neutralizeFence(text)}\n${SPOTLIGHT_CLOSE}`;
 
 export default {
   scrubPII,

@@ -20,6 +20,8 @@ import {
 } from "./piiScrubber";
 import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
+import { logModelCallWithDigests } from "./aiAuditLog";
+import { interpretGeminiResponse } from "./geminiResponse";
 import { isFeatureEnabled } from "./featureFlags";
 import {
   SWARM_AGENTS,
@@ -950,13 +952,8 @@ const generateWithCloudAI = async (prompt, options = {}) => {
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) {
-    throw new Error("No response generated");
-  }
-
-  return text;
+  // C-H05: surface safety blocks / truncation rather than "No response generated".
+  return interpretGeminiResponse(data);
 };
 
 /**
@@ -1776,6 +1773,7 @@ export const generateAI = async (prompt, options = {}) => {
   // Apply timeout wrapper to prevent indefinite hangs
   const TIMEOUT_MS = options.timeout || 120000; // 2 minutes default
   let timeoutId;
+  const startedAt = Date.now();
 
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -1797,6 +1795,20 @@ export const generateAI = async (prompt, options = {}) => {
     // Clear timeout on success
     clearTimeout(timeoutId);
     resetAICircuitBreaker();
+
+    // C-H06: record every production AI call in the tamper-evident, hash-chained
+    // audit log (SHA-256 digests only — never raw prompt/output PII). Fire-and-
+    // forget so a logging failure can never break the AI response.
+    const auditOutput =
+      typeof result === "string" ? result : (result?.text ?? "");
+    logModelCallWithDigests({
+      tag: options.toolId || options.taskType || "generateAI",
+      model: options.forceMode || "auto",
+      prompt: typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
+      output: auditOutput,
+      durationMs: Date.now() - startedAt,
+      meta: { expectJSON: !!options.expectJSON },
+    }).catch(() => {});
 
     // PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
     // that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
