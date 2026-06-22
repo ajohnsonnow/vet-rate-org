@@ -77,6 +77,16 @@ function citationFromTitle(title) {
 }
 
 async function main() {
+  // C-M05: placeholder selectors, wired into the weekly cron — default OFF so it
+  // doesn't generate weekly false-alarm failures or scrape unintended content
+  // until a human verifies the selectors and opts in.
+  if (process.env.ENABLE_SCAFFOLD_FETCHERS !== "1") {
+    console.log(
+      "[m21-1] SCAFFOLD disabled — set ENABLE_SCAFFOLD_FETCHERS=1 to run (selectors not production-verified). Skipping.",
+    );
+    return;
+  }
+
   mkdirSync(WORK_DIR, { recursive: true });
 
   const indexHtml = await fetchHtml(M21_INDEX_URL);
