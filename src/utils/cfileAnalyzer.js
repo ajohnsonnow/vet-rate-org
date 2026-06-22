@@ -1270,7 +1270,7 @@ export async function analyzeCFile(
       console.log(
         `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
       );
-      chunkResults.push(EMPTY_CHUNK_RESULT);
+      chunkResults.push(createEmptyChunkResult());
       continue;
     }
 
@@ -1283,7 +1283,7 @@ export async function analyzeCFile(
       console.log(
         `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
       );
-      chunkResults.push(EMPTY_CHUNK_RESULT);
+      chunkResults.push(createEmptyChunkResult());
       continue;
     }
 
@@ -1297,16 +1297,16 @@ export async function analyzeCFile(
       console.log(
         `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (relevance score ${chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
       );
-      chunkResults.push(EMPTY_CHUNK_RESULT);
+      chunkResults.push(createEmptyChunkResult());
       continue;
     }
 
     // --- Gate 4: priority-ordered chunk cap ---
     // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
-    // chunks push EMPTY_CHUNK_RESULT (not failedChunks) so no "Partial Analysis"
+    // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
     // banner fires — these are intentional skips, not errors.
     if (isLocalAIMode && scoreThreshold > 0 && chunkScores && chunkScores[i] < scoreThreshold) {
-      chunkResults.push(EMPTY_CHUNK_RESULT);
+      chunkResults.push(createEmptyChunkResult());
       continue;
     }
 
@@ -1384,7 +1384,7 @@ export async function analyzeCFile(
           error.message?.includes("ContextWindowSizeExceededError") ||
           error.message?.includes("too large for Local AI")
         ) {
-          result = EMPTY_CHUNK_RESULT;
+          result = createEmptyChunkResult();
           break;
         }
 
@@ -1479,8 +1479,12 @@ const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File
 // analyzePage(); servicePeriod uses short field names (entry/sep) to save tokens.
 const PAGE_SYSTEM_PROMPT = `VA C-File page analyzer. Output ONLY valid JSON: {"conditions":[{"name":"","dc":0,"evidence":"","likelihood":"high|medium|low","nexus":"yes|no|unclear"}],"timeline":[{"date":"","category":"service|medical|claim","description":""}],"servicePeriod":{"branch":"","entry":"","sep":"","mos":""},"exposures":[],"combatIndicators":[],"mentalHealth":{"diagnoses":[],"indicators":[],"stressors":[]}}. Rules: only extract findings present on this page; keep values under 12 words; no newlines in values.`;
 
-// Reused empty result for skipped chunks (low-content and admin-only pages).
-const EMPTY_CHUNK_RESULT = {
+// Fresh empty result for skipped chunks (low-content and admin-only pages).
+// MUST be a factory, not a shared singleton: the aggregation step mutates result
+// arrays in place, so a reused object would bleed one C-File's findings into the
+// next veteran's analysis in the same session (Ab-H01). A shallow spread is not
+// enough — the nested arrays/objects must be fresh per call.
+export const createEmptyChunkResult = () => ({
   summary: "",
   servicePeriod: {},
   timeline: [],
@@ -1490,7 +1494,7 @@ const EMPTY_CHUNK_RESULT = {
   redFlags: [],
   actionItems: [],
   mentalHealth: { diagnoses: [], indicators: [], stressors: [], pages: [] },
-};
+});
 
 // Patterns indicating the chunk has meaningful medical/claims content.
 // ANY single match → send to LLM. Zero matches → administrative page, skip.
@@ -1800,7 +1804,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
       console.warn(
         `⚠️ Non-JSON model response (no '{' found) — treating as empty chunk: "${cleanContent.substring(0, 80)}"`,
       );
-      return { ...EMPTY_CHUNK_RESULT };
+      return createEmptyChunkResult();
     } else {
       throw new Error(
         `Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`,
@@ -2068,7 +2072,7 @@ async function analyzePageByPage(
     // Gate: near-blank pages (should be rare after classifyPage, but defensive)
     const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
     if (text.trim().length < 100 || alphaCount < 50) {
-      pageResults.push(EMPTY_CHUNK_RESULT);
+      pageResults.push(createEmptyChunkResult());
       continue;
     }
 
@@ -2120,7 +2124,7 @@ async function analyzePageByPage(
           error.message?.includes("context window") ||
           error.message?.includes("too large for Local AI")
         ) {
-          result = EMPTY_CHUNK_RESULT;
+          result = createEmptyChunkResult();
           break;
         }
 

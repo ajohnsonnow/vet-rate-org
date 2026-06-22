@@ -3211,16 +3211,24 @@ export const generateMusterCallReport = async (
     return summary.length > 0 ? summary.join(", ") : "Limited data";
   };
 
-  const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
-
-SERVICE RECORDS (${serviceRecords.length} documents):
+  // A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
+  // whole document-derived block in a spotlighted section so an injected
+  // instruction inside a filename/summary is treated as data, not a command.
+  const documentEvidence = untrustedSection(
+    "UPLOADED DOCUMENT EVIDENCE",
+    `SERVICE RECORDS (${serviceRecords.length} documents):
 ${serviceRecords.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 RATING DECISIONS (${ratingDocs.length} documents):
 ${ratingDocs.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 MEDICAL RECORDS (${medicalDocs.length} documents):
-${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}
+${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}`,
+  );
+
+  const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
+
+${documentEvidence}
 
 Provide:
 1. **Service Connection Opportunities**: What conditions should be claimed based on service records?
