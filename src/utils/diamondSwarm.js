@@ -727,7 +727,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
                 ) {
                   // Root JSON object closed — stop generation immediately.
                   try {
-                    webllmEngine.interruptGenerate();
+                    webllmEngine.interruptGenerate()?.catch(() => {});
                   } catch {
                     // interruptGenerate is best-effort; continue if unavailable
                   }
@@ -744,7 +744,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
           // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
           if (responseText.length > 4500) {
             try {
-              webllmEngine.interruptGenerate();
+              webllmEngine.interruptGenerate()?.catch(() => {});
             } catch { /* interruptGenerate may throw if no generation is in progress */ }
             break;
           }
