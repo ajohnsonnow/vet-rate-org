@@ -261,7 +261,7 @@ Fix: correct README to "privacy-respecting analytics (GoatCounter, no PII)"; rec
 - **[A-L04]** Global coverage thresholds low (lines:38/branches:24); per-file security floors are fine (dualLLM/piiScrubber/smcDetector 95%). Dim Z. Fix: raise floors incrementally.
 - **[A-I01]** gitleaks allowlist permits broad `test[_-]?(key|token)` value-regex repo-wide (not path-scoped). Dim O. Fix: path-scope only. Info.
 - **[A-I02]** semgrep absent locally (CI installs via pip) — local SAST can't run. Dim K. Info.
-- **[A-I03]** "Data never leaves your device" README bullets are PARTIALLY-REFUTED (GoatCounter + opt-in flows egress per EGRESS_INVENTORY's 12+ destinations). Dim J. Fix: add qualifiers. _(rolls up with A-H11)_
+- **[A-I03]** "Data never leaves your device" README bullets are PARTIALLY-REFUTED (GoatCounter + opt-in flows egress per EGRESS*INVENTORY's 12+ destinations). Dim J. Fix: add qualifiers. *(rolls up with A-H11)\_
 
 ### Findings — Wave A-bis (net-new from the duplicate critical re-pass; different adversarial seed)
 
@@ -530,8 +530,8 @@ Evidence: the language picker offers 55 languages; `t()` falls back to `keyData.
 ### [C-H09] Dari (prs) and Pashto (ps) have NO crisis-detection keywords despite being priority Afghan-SIV languages
 
 Lens: Safety · **Severity: High** · Dimension: S · Status: NEW · Verify 3/3 · Standard: AIS-04 · ASVS V14.2.1
-Surface: `src/config/multilingualTone.json:957-1004` (crisis_keywords) vs `:650-698` (crisis_message)
-Evidence: `crisis_keywords['prs']`/`['ps']` are `undefined`; `detectMultilingualCrisis()` only iterates `crisis_keywords`. The Dari/Pashto crisis _messages_ exist (developer intent) but are orphaned — keyword detection never fires. 34 other declared languages also lack keywords.
+Surface: `src/config/multilingualTone.json:957-1004` (crisis*keywords) vs `:650-698` (crisis_message)
+Evidence: `crisis_keywords['prs']`/`['ps']` are `undefined`; `detectMultilingualCrisis()` only iterates `crisis_keywords`. The Dari/Pashto crisis \_messages* exist (developer intent) but are orphaned — keyword detection never fires. 34 other declared languages also lack keywords.
 Impact: a Pashto/Dari-speaking veteran expressing self-harm in their native language does **not** trip the crisis interceptor — the exact population the code calls out as priority. Fix: add Dari/Pashto crisis keyword arrays (derive from the existing crisis_message strings). Effort: S (safety-critical → prioritize).
 
 ### Medium / Low (S)
@@ -748,6 +748,7 @@ Three things this audit changed on its own review:
 **S5 — Supply chain + gates + ETL integrity.**
 
 - `[A-M08]/[A-M09]/[D-M08]` SHA-pin all actions (`pinact`) + GoatCounter SRI. · `[A-M12]/[C-H02]` add osv-scanner + RAG-eval to ci.yml. · `[D-M04]` make `red-team` a required check. · `[C-H01]/[C-H03]/[C-M02]` add coverage-floor/staleness/row-count gates to the ETL. · `[C-H04]` fix pdfjs CDN version. · `[D-M18..D-M20]` Python scraper hardening. Model S (mostly mechanical → some H).
+- `[A-H11-residual]/[D-H03-residual]` (carried over from S1, 2026-06-21) sweep the remaining "no analytics" / "NO TRACKING" / "zero data collection" claims beyond README + faq.html — shipped UI strings in `src/i18n/translations.js` (e.g. the "NO TRACKING" badge ~L6349 and the Luna-mascot "no tracking" line ~L2234) plus `docs/privacy/*.md` and `docs/index.md` — and align them with the GoatCounter disclosure (same fix as A-H11). Extend `src/__tests__/analyticsClaims.test.js` to cover these surfaces so the claim-to-code check guards them too. Model H.
 
 **Human-only sprint (owner / counsel — `needs-decision`).**
 
