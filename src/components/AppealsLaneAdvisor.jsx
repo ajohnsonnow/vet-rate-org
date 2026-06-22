@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Appeals Lane Advisor
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Helps veterans choose the right appeals lane based on their situation.
  * Data from 2025 VA analysis and BVA decision patterns.

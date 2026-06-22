@@ -1,7 +1,7 @@
 ﻿/**
  * Vet-Rate.org - The Needle in the Haystack (PDF Keyword Search)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Evidence Hunter" - Find specific keywords in massive STR/C-File PDFs
  *

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Stale Data Indicator Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Visual indicator for outdated rating criteria
  * Shows warnings and provides reporting mechanism

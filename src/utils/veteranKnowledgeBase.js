@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Veteran Knowledge Base (VKB)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * The VKB is a structured, AI-queryable knowledge graph built from:
  * - DD-214 documents

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Conflict Detection System
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Detects conflicts between newly extracted data and existing VKB data.
  * Provides resolution strategies and context for user decision-making.

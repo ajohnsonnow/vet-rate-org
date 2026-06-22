@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Formation Queue Manager
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Formation & Inspection" - Sequential document processing system
  * Manages the queue of documents waiting for inspection and processing.

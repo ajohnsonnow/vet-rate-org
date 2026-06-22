@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Multi-Cloud Backup Manager
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "THE REDUNDANT BUNKER NETWORK"
  * Secure backup to multiple cloud providers with AES-256 encryption

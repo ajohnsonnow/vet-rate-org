@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Smart Field Collection Rules
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Defines field collection rules for all 16 document types.
  * Controls which fields are required, optional, or ignored.

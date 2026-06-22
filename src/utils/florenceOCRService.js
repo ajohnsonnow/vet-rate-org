@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Florence-2 Vision OCR Service
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: High-level service wrapper for Florence-2 Vision LLM
  *

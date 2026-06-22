@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * useFocusTrap — keep keyboard focus inside an overlay while it is open,
  * close on Escape, and restore focus to the opener on teardown. WCAG 2.2

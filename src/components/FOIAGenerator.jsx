@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - FOIA Request Generator (The Keysmith)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Keysmith" - Your FOIA/C-File Request Generator
  * Generates pre-filled VA Form 20-10206 for requesting records

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Blue Button X-Ray Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Instant Evidence" - AI-powered parser for VA Blue Button Medical Records
  * Extracts diagnoses from Problem List section without requiring 6-month C-File wait

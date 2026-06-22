@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Evidence Gap Finder
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Find "Duty to Assist" errors and evidence gaps
  *

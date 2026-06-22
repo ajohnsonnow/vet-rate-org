@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File Analyzer Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * The "Kill Shot" feature - Client-side C-File analysis that competitors charge $500+ for
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities

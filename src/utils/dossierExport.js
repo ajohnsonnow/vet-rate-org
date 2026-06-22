@@ -1,7 +1,7 @@
 ﻿/**
  * Vet-Rate.org - Dossier Export
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Bus Factor" Export - Full Data Portability
  * Generates a standalone HTML file containing ALL user data

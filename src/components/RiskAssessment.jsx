@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Poke the Bear Calculator (Risk Assessment)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Risk Assessment" - The single most important DEFENSIVE tool
  * Prevents veterans from losing their ratings by filing unnecessary claims

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Profile Import Confirmation Modal
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Shows extracted DD214/PDF data before auto-filling Veteran Profile
  * Prevents accidental overwriting of existing information
