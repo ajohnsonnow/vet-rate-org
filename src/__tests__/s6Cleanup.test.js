@@ -39,3 +39,19 @@ describe("interruptGenerate rejection guard (C-L02)", () => {
     expect(src).toMatch(/interruptGenerate\(\)\?\.catch\(\(\) => \{\}\)/);
   });
 });
+
+/**
+ * C-M06: allowOffline is a WllamaConfig field (2nd constructor arg, read via
+ * this.config.allowOffline) — passing it to loadModelFromUrl silently ignored
+ * it, so the offline-first cached-model load never engaged. Verified against the
+ * wllama source (ngxson/wllama src/wllama.ts).
+ */
+describe("wllama allowOffline placement (C-M06)", () => {
+  it("passes allowOffline to the WllamaClass constructor, not loadModelFromUrl", () => {
+    const src = read("src/utils/wllamaService.js");
+    // The `allowOffline: useCache` binding occurs exactly once, inside the
+    // `new WllamaClass(...)` call (not in the loadModelFromUrl options).
+    expect((src.match(/allowOffline:\s*useCache/g) || []).length).toBe(1);
+    expect(src).toMatch(/new WllamaClass\([\s\S]{0,200}allowOffline:\s*useCache/);
+  });
+});
