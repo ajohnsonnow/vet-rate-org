@@ -12,7 +12,7 @@ import {
   copyToClipboard,
 } from "../utils/bugReportUtils";
 import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
-import { scrubPII } from "../utils/piiScrubber";
+import { scrubText } from "../utils/piiScrubber";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Developer contact email for bug reports
@@ -285,21 +285,21 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
             category: formData.category,
             module: formData.module,
             diagnostic_code: formData.diagnosticCode || "N/A",
-            description: scrubPII(formData.userDescription),
-            steps_to_reproduce: scrubPII(
+            description: scrubText(formData.userDescription),
+            steps_to_reproduce: scrubText(
               formData.stepsToReproduce || "Not provided",
             ),
-            expected_behavior: scrubPII(
+            expected_behavior: scrubText(
               formData.expectedBehavior || "Not provided",
             ),
-            actual_behavior: scrubPII(
+            actual_behavior: scrubText(
               formData.actualBehavior || "Not provided",
             ),
-            additional_context: scrubPII(formData.additionalContext || "None"),
+            additional_context: scrubText(formData.additionalContext || "None"),
             veteran_email:
               formData.veteranEmail || "Anonymous (no reply requested)",
             submitted_at: new Date().toISOString(),
-            full_report: scrubPII(generatedReport),
+            full_report: scrubText(generatedReport),
           };
 
           const response = await fetch(FORMSUBMIT_URL, {

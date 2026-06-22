@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   scrubPII,
+  scrubText,
   containsPII,
   analyzePII,
   scrubAndSpotlight,
@@ -426,5 +427,54 @@ describe("containsSignificantNonLatin (RT3-4)", () => {
     expect(containsSignificantNonLatin("")).toBe(false);
     expect(containsSignificantNonLatin(null)).toBe(false);
     expect(containsSignificantNonLatin(undefined)).toBe(false);
+  });
+});
+
+// Regression: the egress-boundary helper. The prior bug ([A-H04]) was that the
+// three FormSubmit components called scrubPII() (which returns an OBJECT) and
+// assigned the result straight into the outbound JSON payload — shipping
+// `{ scrubbedText, originalLength, … }` (leaking original length) and rendering
+// `[object Object]`. scrubText returns the redacted STRING and forces aggressive
+// mode so a bare 9-digit SSN / VA file number is redacted before any send ([D-M09]).
+describe("scrubText — egress-boundary helper", () => {
+  it("returns a primitive string, never the scrubPII object", () => {
+    const out = scrubText("hello world");
+    expect(typeof out).toBe("string");
+    expect(out).toBe("hello world");
+    // A payload field built from it must not serialize to [object Object].
+    expect(JSON.stringify({ description: out })).not.toContain("[object Object]");
+    expect(JSON.stringify({ description: out })).not.toContain("originalLength");
+  });
+
+  it("redacts a BARE 9-digit identifier (SSN / VA file) — the [D-M09] regression", () => {
+    // A bare 9-digit number is an SSN or a standalone VA file number; both are
+    // only scrubbed in aggressive mode. `vaFileStandalone` runs before `ssnBare`
+    // (documented longest-first ordering), so the label is VAFILE — what matters
+    // for egress is that the raw digits never leave the device.
+    const out = scrubText("My number is 123456789.");
+    expect(out).not.toContain("123456789");
+    expect(out).toMatch(/\[REDACTED_(SSN|VAFILE)\]/);
+  });
+
+  it("still redacts the canonical dashed SSN form", () => {
+    expect(scrubText("SSN 123-45-6789")).toBe("SSN [REDACTED_SSN]");
+  });
+
+  it("redacts a bare 8-digit VA file number", () => {
+    expect(scrubText("file 12345678")).toBe("file [REDACTED_VAFILE]");
+  });
+
+  it("aggressive cannot be disabled via options (egress always redacts)", () => {
+    // Even if a caller passes aggressive:false, the boundary stays aggressive
+    // and the bare identifier is still removed before send.
+    const out = scrubText("bare 123456789", { aggressive: false });
+    expect(out).not.toContain("123456789");
+    expect(out).toMatch(/\[REDACTED_(SSN|VAFILE)\]/);
+  });
+
+  it("returns input unchanged for clean text and is safe on non-strings", () => {
+    expect(scrubText("nothing sensitive here")).toBe("nothing sensitive here");
+    expect(scrubText(null)).toBe(null);
+    expect(scrubText(undefined)).toBe(undefined);
   });
 });
