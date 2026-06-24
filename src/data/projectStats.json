@@ -1,5 +1,5 @@
 {
-  "total_files": "3,640",
+  "total_files": "3,630",
   "loc_count": "256,697",
   "component_count": "169",
   "major_tools": "44",
@@ -11,7 +11,7 @@
   "total_hours": "31,288",
   "coding_hours": "26,274",
   "actual_hours": "150",
-  "coding_sessions": "47",
+  "coding_sessions": "48",
   "years_dev": "15.0",
   "traditional_cost": "4,223,880",
   "actual_cost": "63,000",
@@ -31,20 +31,12 @@
   },
   "days_dev": "159",
   "productivity_multiplier": "209",
-  "total_commits": "611",
+  "total_commits": "612",
   "ai_tools": {
     "planning": "Gemini 3",
-    "coding": [
-      "Claude 4.5 Opus",
-      "Claude 4.5 Sonnet",
-      "Claude 4.5 Haiku"
-    ],
+    "coding": ["Claude 4.5 Opus", "Claude 4.5 Sonnet", "Claude 4.5 Haiku"],
     "ide": "VS Code",
-    "frameworks": [
-      "React 18",
-      "Vite",
-      "Tailwind CSS"
-    ]
+    "frameworks": ["React 18", "Vite", "Tailwind CSS"]
   },
   "first_commit": "January 15, 2026",
   "last_updated": "2026-06-23",
@@ -56,11 +48,11 @@
   "traditional_cost_numeric": 4223880,
   "actual_cost_numeric": 63000,
   "cost_savings_numeric": 4160880,
-  "coding_sessions_numeric": 47,
+  "coding_sessions_numeric": 48,
   "productivity_multiplier_numeric": 209,
   "component_hours_numeric": 11380,
   "live": {
-    "totalFiles": 3640,
+    "totalFiles": 3630,
     "linesOfCode": 256697,
     "componentCount": 169,
     "toolCount": 44,
@@ -72,7 +64,7 @@
     "secondaryCount": 410,
     "vaFormsCount": 94,
     "localAIModels": 6,
-    "appSizeMB": 364.11,
-    "calculatedAt": "2026-06-24T02:32:44.891Z"
+    "appSizeMB": 364.15,
+    "calculatedAt": "2026-06-24T02:46:16.775Z"
   }
 }
