@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - DD214 Form Builder
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Manual DD214 entry form - allows veterans to type/paste DD214 information
  * into structured fields and save multiple DD214s to My Packet

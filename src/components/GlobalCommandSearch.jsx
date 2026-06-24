@@ -270,26 +270,28 @@ export default function GlobalCommandSearch({
     // Search diagnostic codes (if it looks like a code number)
     let matchedConditions = [];
     if (/^\d+/.test(q)) {
-      // Search by diagnostic code
-      matchedConditions = Object.entries(diagnosticCodes)
-        .filter(([code]) => code.startsWith(q))
-        .map(([code, data]) => ({
-          code,
-          name: data.name || data.condition || "Unknown",
-          category: data.category || "General",
+      // Search by diagnostic code value (RT10-2: was Object.entries on array → keyed by index)
+      matchedConditions = diagnosticCodes
+        .filter((d) => d.code != null && String(d.code).startsWith(q))
+        .map((d) => ({
+          code: d.code,
+          name: d.name || "Unknown",
+          category: "Diagnostic Code",
         }))
         .slice(0, 5);
     } else {
       // Search by condition name
-      matchedConditions = Object.entries(diagnosticCodes)
-        .filter(([_code, data]) => {
-          const name = (data.name || data.condition || "").toLowerCase();
-          return name.includes(q);
+      matchedConditions = diagnosticCodes
+        .filter((d) => {
+          const name = (d.name || "").toLowerCase();
+          const aliases = (d.aliases || []).join(" ").toLowerCase();
+          const terms = (d.searchTerms || []).join(" ").toLowerCase();
+          return name.includes(q) || aliases.includes(q) || terms.includes(q);
         })
-        .map(([code, data]) => ({
-          code,
-          name: data.name || data.condition || "Unknown",
-          category: data.category || "General",
+        .map((d) => ({
+          code: d.code,
+          name: d.name || "Unknown",
+          category: "Diagnostic Code",
         }))
         .slice(0, 5);
     }

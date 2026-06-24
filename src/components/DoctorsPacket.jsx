@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Doctor's Packet Generator Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Generates comprehensive research packets to help veterans
  * get nexus letters from their private physicians.

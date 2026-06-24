@@ -21,19 +21,26 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
  * - Provides alerts for conditions that may be affected
  * - Shows public comment periods (so veterans can voice opinions)
  *
- * DATA SOURCES:
- * - Federal Register API (public, free)
- * - Filters for "Department of Veterans Affairs" and "38 CFR Part 4"
- *
- * NOTE: Uses Federal Register's public API. No API key required.
- * Falls back to curated important updates if API is unavailable.
+ * DATA SOURCES (in fallback order):
+ * - Weekly static snapshot public/data/legislative-alerts.json, written by
+ *   scripts/watchdog/fetch-federal-register.mjs via dkb-freshness.yml
+ * - Federal Register API live (public, free, no key) when the snapshot is
+ *   missing or older than 14 days
+ * - Curated important updates when both are unavailable
  */
 
 // Federal Register API endpoint
 const FEDERAL_REGISTER_API =
   "https://www.federalregister.gov/api/v1/documents.json";
 
-// Keywords to watch for in VA-related documents
+// Weekly snapshot written by scripts/watchdog/fetch-federal-register.mjs
+// (.github/workflows/dkb-freshness.yml). Read first; the live API is the
+// fallback when the file is missing or older than 14 days.
+const STATIC_ALERTS_URL = "/data/legislative-alerts.json";
+const STATIC_ALERTS_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+// Keywords to watch for in VA-related documents.
+// Keep in sync with WATCH_KEYWORDS in scripts/watchdog/fetch-federal-register.mjs.
 const WATCH_KEYWORDS = [
   "Schedule for Rating Disabilities",
   "VASRD",
@@ -158,19 +165,23 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
       const params = new URLSearchParams({
         "conditions[agencies][]": "veterans-affairs-department",
         "conditions[cfr][title]": "38",
-        "fields[]": [
-          "title",
-          "abstract",
-          "publication_date",
-          "type",
-          "document_number",
-          "html_url",
-          "public_inspection_document_deadline",
-          "comments_close_on",
-        ],
         per_page: "20",
         order: "newest",
       });
+      // fields[] must be appended one by one — passing an array joins with
+      // commas, which the API rejects. "public_inspection_document_deadline"
+      // is not a valid documents.json field (HTTP 400).
+      for (const field of [
+        "title",
+        "abstract",
+        "publication_date",
+        "type",
+        "document_number",
+        "html_url",
+        "comments_close_on",
+      ]) {
+        params.append("fields[]", field);
+      }
 
       const response = await fetch(`${FEDERAL_REGISTER_API}?${params}`);
 
@@ -212,14 +223,41 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
     }
   }, []);
 
+  // Static snapshot first (no API hit, works offline); live API on miss.
+  const loadStaticAlerts = useCallback(async () => {
+    const response = await fetch(STATIC_ALERTS_URL);
+    if (!response.ok) return null;
+    const data = await response.json();
+    const age = Date.now() - new Date(data.generatedAt).getTime();
+    if (
+      !Array.isArray(data.alerts) ||
+      Number.isNaN(age) ||
+      age > STATIC_ALERTS_MAX_AGE_MS
+    ) {
+      return null;
+    }
+    return data;
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await fetchFederalRegister();
+      let staticData = null;
+      try {
+        staticData = await loadStaticAlerts();
+      } catch {
+        staticData = null;
+      }
+      if (staticData) {
+        setFederalRegisterDocs(staticData.alerts);
+        setLastUpdated(new Date(staticData.generatedAt));
+      } else {
+        await fetchFederalRegister();
+      }
       setLoading(false);
     };
     loadData();
-  }, [fetchFederalRegister]);
+  }, [loadStaticAlerts, fetchFederalRegister]);
 
   // Map Federal Register document types to our categories
   function mapDocumentType(type) {

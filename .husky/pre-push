@@ -21,7 +21,7 @@ CHANGED=$(git status --porcelain -- README.md CHANGELOG.md AGENTIC_VALUE_PROPOSI
 if [ -n "$CHANGED" ]; then
   echo "📄 [pre-push] Staging updated docs..."
   git add README.md CHANGELOG.md AGENTIC_VALUE_PROPOSITION.md src/data/projectStats.json src/data/changelog.json 2>/dev/null
-  git commit -m "chore(docs): auto-update stats + changelog [pre-push]" --no-verify
+  git commit -m "chore(docs): auto-update stats + changelog [pre-push]"
   echo "✅ [pre-push] Doc update committed."
 else
   echo "✅ [pre-push] Docs already up to date."

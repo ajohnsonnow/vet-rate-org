@@ -6,6 +6,7 @@ import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { useLanguage } from "../contexts/LanguageContext";
+import { calculateVARating } from "../utils/vaCalculator";
 
 /**
  * SecondaryScoutLauncher Component
@@ -1170,16 +1171,14 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     }
   };
 
-  // Calculate combined rating from saved ratings using VA math
+  // Combined rating via calculateVARating — the single source of truth (38 CFR
+  // § 4.25 + the § 4.26 bilateral factor). Previously this view combined the bare
+  // rating numbers and dropped the bilateral factor, so the SAME saved profile
+  // showed a lower combined rating here than on MillionDollarDashboard (A-H07).
+  // Passing the full rating objects lets the engine apply bilateral from `side`.
   const calculateCombinedRating = (ratings) => {
     if (!ratings || ratings.length === 0) return 0;
-    const sortedRatings = [...ratings].sort((a, b) => b.rating - a.rating);
-    let efficiency = 100;
-    sortedRatings.forEach((r) => {
-      efficiency = efficiency - (efficiency * r.rating) / 100;
-    });
-    const combined = 100 - efficiency;
-    return Math.round(combined / 10) * 10; // Round to nearest 10
+    return calculateVARating(ratings).combinedRating;
   };
 
   const loadExampleProfile = (conditions) => {

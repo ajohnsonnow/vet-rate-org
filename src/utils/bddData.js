@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * BDD (Benefits Delivery at Discharge) Builder Data & Utilities
  * Implements 38 CFR § 3.326 pre-discharge claim filing logic

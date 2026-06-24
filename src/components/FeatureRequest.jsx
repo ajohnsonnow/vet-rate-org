@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * FeatureRequest Component
  * Modal to capture feature ideas and suggestions from veterans
@@ -18,13 +18,17 @@ import {
   saveFeatureToLocalStorage,
 } from "../utils/featureRequestStorage";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { scrubText } from "../utils/piiScrubber";
 
-// Developer contact email for feature requests
+// Developer support contact, shown to the user only if a remote send fails.
 const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
 
-// FormSubmit.co endpoint - sends directly to developer's email without opening email client
-const FORMSUBMIT_URL =
-  "https://formsubmit.co/ajax/Anth@StructuredForGrowth.com";
+// RT1-2: optional remote feedback endpoint (e.g. a FormSubmit.co URL), configured
+// via VITE_FEATURE_REQUEST_ENDPOINT. Unset/empty = NO remote send — the request
+// saves locally only and no user content leaves the device. This previously
+// hardcoded a third-party broker URL + the developer's email and POSTed user
+// free-text + email on every submit, undisclosed.
+const FORMSUBMIT_URL = import.meta.env.VITE_FEATURE_REQUEST_ENDPOINT ?? "";
 
 // Feature request categories - keys for translation
 const FEATURE_CATEGORY_KEYS = [
@@ -246,43 +250,53 @@ ${t("featureRequest", "thankYouMessage")}
           ? t("featureRequest", `priority${formData.priority}Label`)
           : "Feature";
 
+        // Scrub PII from user-authored free-text before any remote send (RT1-2).
         const formPayload = {
-          _subject: `[${featureId}] ${priorityLabel} - ${formData.title}`,
+          _subject: `[${featureId}] ${priorityLabel} - ${scrubText(formData.title || "")}`,
           _template: "table",
           request_id: featureId,
-          title: formData.title,
+          title: scrubText(formData.title || ""),
           category: formData.category,
           priority: priorityLabel,
           module: formData.module,
-          description: formData.description,
-          problem_solved:
+          description: scrubText(formData.description || ""),
+          problem_solved: scrubText(
             formData.problemSolved || t("featureRequest", "notSpecified"),
-          proposed_solution:
+          ),
+          proposed_solution: scrubText(
             formData.proposedSolution || t("featureRequest", "notSpecified"),
-          alternatives:
+          ),
+          alternatives: scrubText(
             formData.alternativesConsidered ||
-            t("featureRequest", "noneMentioned"),
-          additional_context: formData.additionalContext || t("common", "none"),
+              t("featureRequest", "noneMentioned"),
+          ),
+          additional_context: scrubText(
+            formData.additionalContext || t("common", "none"),
+          ),
           veteran_email:
             formData.veteranEmail || t("featureRequest", "anonymousNoReply"),
           submitted_at: new Date().toISOString(),
-          full_report: generatedReport,
+          full_report: scrubText(generatedReport || ""),
         };
 
-        const response = await fetch(FORMSUBMIT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(formPayload),
-        });
+        // Remote send only when the operator has configured an endpoint; otherwise
+        // the request is already saved locally and nothing leaves the device.
+        const response = FORMSUBMIT_URL
+          ? await fetch(FORMSUBMIT_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(formPayload),
+            })
+          : null;
 
-        if (!response.ok) {
+        if (response && !response.ok) {
           console.warn(
             `⚠️ FormSubmit returned ${response.status} - request saved locally`,
           );
-        } else {
+        } else if (response) {
           const result = await response.json();
 
           if (result.success) {

@@ -1,7 +1,9 @@
 # Legal Pages Generation Instructions
 
 ## Overview
+
 The Terms of Service and Privacy Policy exist in two formats:
+
 1. **React Components** (src/components/) - Used in the app
 2. **Standalone HTML** (public/) - Used for VA API registration and direct access
 
@@ -14,6 +16,7 @@ The Terms of Service and Privacy Policy exist in two formats:
    - Update "Last Updated" date
 
 2. **Check for sync issues**:
+
    ```bash
    npm run check-legal-pages
    ```
@@ -29,6 +32,7 @@ The Terms of Service and Privacy Policy exist in two formats:
    - Ensure styling is consistent
 
 5. **Commit both files**:
+
    ```bash
    git add src/components/TermsOfServicePage.jsx public/terms-of-service.html
    git commit -m "Update Terms of Service - [describe changes]"
@@ -46,12 +50,13 @@ The Terms of Service and Privacy Policy exist in two formats:
   - `public/privacy-policy.html`
 
 - **URLs (after deployment)**:
-  - https://vet-rate.org/terms-of-service.html
-  - https://vet-rate.org/privacy-policy.html
+  - <https://vet-rate.org/terms-of-service.html>
+  - <https://vet-rate.org/privacy-policy.html>
 
 ## Content Checklist
 
 When updating, ensure these match between React and HTML:
+
 - [ ] Effective/Last Updated date
 - [ ] All section headings
 - [ ] All disclaimer text
@@ -63,9 +68,10 @@ When updating, ensure these match between React and HTML:
 ## Future Enhancement
 
 For fully automated generation, consider:
+
 - Using a JSX to HTML parser
 - Creating a shared content JSON/JS file
 - Building a more sophisticated generation script
 - Adding to CI/CD pipeline
 
-Generated: 2026-06-09T04:17:15.079Z
+Generated: 2026-06-24T02:46:17.276Z

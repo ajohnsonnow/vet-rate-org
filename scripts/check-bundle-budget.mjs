@@ -19,7 +19,7 @@
  *   STRICT_BUNDLE=true node scripts/check-bundle-budget.mjs
  */
 
-import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import path from "node:path";
 

@@ -192,10 +192,7 @@ function Header({
   ];
 
   return (
-    <header
-      className="bg-gradient-to-r from-va-blue to-green-900 dark:from-emerald-900 dark:to-emerald-950 text-white shadow-lg"
-      role="banner"
-    >
+    <header className="bg-va-blue text-white shadow-lg" role="banner">
       {/* Skip Link for Screen Readers */}
       <a href="#main-content" className="skip-link sr-only focus:not-sr-only">
         Skip to main content
@@ -324,10 +321,19 @@ function Header({
               </button>
 
               {/* Tools Dropdown - Main feature tools */}
-              <div id="tour-tools-dropdown" className="relative sm:relative">
+              <div
+                id="tour-tools-dropdown"
+                className="relative sm:relative"
+                onBlur={(e) => {
+                  // B-H05: close only when focus actually leaves the menu (button
+                  // or items), not on a blind timer that can race keyboard focus
+                  // landing inside the menu on slow/stressed devices.
+                  if (!e.currentTarget.contains(e.relatedTarget))
+                    setShowToolsMenu(false);
+                }}
+              >
                 <button
                   onClick={() => setShowToolsMenu(!showToolsMenu)}
-                  onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
                   aria-label={t("common", "tools")}
                   aria-expanded={showToolsMenu}
@@ -1084,12 +1090,17 @@ function Header({
               </div>
 
               {/* Veteran Resources Dropdown */}
-              <div className="relative sm:relative">
+              <div
+                className="relative sm:relative"
+                onBlur={(e) => {
+                  // B-H05: close only when focus actually leaves the menu, not on
+                  // a blind timer that can race keyboard focus landing inside.
+                  if (!e.currentTarget.contains(e.relatedTarget))
+                    setShowResourcesMenu(false);
+                }}
+              >
                 <button
                   onClick={() => setShowResourcesMenu(!showResourcesMenu)}
-                  onBlur={() =>
-                    setTimeout(() => setShowResourcesMenu(false), 200)
-                  }
                   className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
                   aria-label={t("header", "veteranResources")}
                   aria-expanded={showResourcesMenu}

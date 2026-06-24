@@ -1,0 +1,146 @@
+name: dkb-freshness
+
+# Weekly Diamond-KB freshness check. Runs Tuesdays 04:30 UTC (legal-ingestion
+# owns Mondays 04:00). Two independent passes, both static-data only:
+#   1. eCFR Part 4 hash drift — fetch-ecfr.mjs --part=4, then
+#      snapshot-ecfr-hashes.mjs diffs section hashes against the committed
+#      .ecfr-part4-hashes.json. Drift (exit 2) opens an issue listing the
+#      affected diagnostic codes (via public/data/ecfr-dc-map.json) for
+#      human re-verification of disabilityData.json — legal content is
+#      never auto-updated.
+#   2. Legislative Watchdog snapshot — fetch-federal-register.mjs rewrites
+#      public/data/legislative-alerts.json only when the alert list changed;
+#      a change opens an auto-PR (same pattern as legal-ingestion.yml).
+
+on:
+  schedule:
+    - cron: "30 4 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: dkb-freshness
+  cancel-in-progress: false
+
+jobs:
+  freshness:
+    name: DKB freshness check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+
+      # No npm ci — every script in this job uses node builtins only.
+
+      - name: Fetch eCFR Part 4
+        id: fetch
+        continue-on-error: true
+        run: node scripts/legal-ingestion/fetch-ecfr.mjs --part=4
+
+      - name: Diff section hashes vs snapshot
+        id: hashdiff
+        if: steps.fetch.outcome == 'success'
+        run: |
+          set +e
+          node scripts/legal-ingestion/snapshot-ecfr-hashes.mjs > hash-diff.md 2> hash-diff.log
+          CODE=$?
+          echo "exitcode=$CODE" >> "$GITHUB_OUTPUT"
+          echo "=== hash-diff.md ==="
+          cat hash-diff.md
+          echo "=== hash-diff.log ==="
+          cat hash-diff.log || true
+          exit 0
+
+      - name: Open freshness issue on drift
+        if: steps.hashdiff.outputs.exitcode == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --label dkb-freshness --state open --json number --jq 'length')
+          if [ "$OPEN" != "0" ]; then
+            echo "An open dkb-freshness issue already exists — skipping duplicate."
+            exit 0
+          fi
+          gh issue create \
+            --title "DKB freshness: eCFR Part 4 changed ($DATE)" \
+            --label "dkb-freshness" \
+            --body-file hash-diff.md
+
+      - name: Refresh legislative alerts snapshot
+        id: watchdog
+        continue-on-error: true
+        run: node scripts/watchdog/fetch-federal-register.mjs
+
+      - name: Open PR on alerts change
+        if: steps.watchdog.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$(git status --porcelain public/data/legislative-alerts.json)" ]; then
+            echo "legislative-alerts.json unchanged — no PR."
+            exit 0
+          fi
+          DATE=$(date -u +%Y%m%d)
+          BRANCH="auto/legislative-alerts-${DATE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add public/data/legislative-alerts.json
+          git commit -m "chore(watchdog): refresh legislative alerts (${DATE})"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "chore(watchdog): refresh legislative alerts (${DATE})" \
+            --body "Weekly Federal Register snapshot for the Legislative Watchdog. Review the alert list before merging." \
+            --label "dkb-freshness"
+
+      - name: File stale issue on failure
+        if: steps.fetch.outcome == 'failure' || steps.hashdiff.outputs.exitcode == '1' || steps.watchdog.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --label dkb-freshness-stale --state open --json number --jq 'length')
+          if [ "$OPEN" != "0" ]; then
+            echo "An open dkb-freshness-stale issue already exists — skipping duplicate."
+            exit 0
+          fi
+          BODY=$(cat <<EOF
+          The weekly dkb-freshness run hit a failure:
+
+          - eCFR fetch: ${{ steps.fetch.outcome }}
+          - hash diff exit code: ${{ steps.hashdiff.outputs.exitcode }}
+          - watchdog fetch: ${{ steps.watchdog.outcome }}
+
+          The eCFR Part 4 hash snapshot and/or the legislative-alerts snapshot
+          may be stale. The app falls back to the live Federal Register API
+          (then the curated list) when legislative-alerts.json ages past 14 days.
+
+          Run ID: ${{ github.run_id }}
+          Triggered: ${DATE}
+          EOF
+          )
+          gh issue create \
+            --title "dkb-freshness stale ($DATE)" \
+            --label "dkb-freshness-stale" \
+            --body "$BODY"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dkb-freshness-${{ github.run_id }}
+          path: |
+            hash-diff.md
+            hash-diff.log
+          retention-days: 30
+          if-no-files-found: ignore

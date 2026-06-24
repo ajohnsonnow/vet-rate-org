@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -297,14 +297,15 @@ export function downloadPdfBlob(blob, filename) {
 }
 
 /**
- * Create a password-protected ZIP containing the PDF
- * Note: Standard zip password protection (not AES - for broader compatibility)
+ * Bundle the PDF + a doctor README into a standard (unencrypted) .zip.
+ * This is a convenience bundle, NOT an encrypted container — JSZip cannot
+ * encrypt, so the contents are plaintext. Callers must not present this as
+ * password-protected or "safe to email"; treat email as an insecure channel.
  * @param {Blob} pdfBlob - The PDF blob
  * @param {string} filename - The PDF filename
- * @param {string} password - The password to use
  * @returns {Promise<Blob|null>}
  */
-export async function createEncryptedZip(pdfBlob, filename, _password) {
+export async function createDocumentZip(pdfBlob, filename) {
   try {
     // Dynamically import JSZip
     const JSZip = (await import("jszip")).default;
@@ -316,18 +317,24 @@ export async function createEncryptedZip(pdfBlob, filename, _password) {
 
     // Add instructions file
     const instructions = `
-SECURE MEDICAL DOCUMENT PACKAGE
+MEDICAL DOCUMENT PACKAGE (DRAFT)
 ================================
 
-This ZIP file contains sensitive medical documents prepared with Vet-Rate.org.
+This ZIP file contains a DRAFT medical document prepared with Vet-Rate.org.
 
 CONTENTS:
 - ${filename}
 
-SECURITY NOTICE:
-This document is a DRAFT for physician review. The veteran has pre-filled
-subjective information to assist the physician in completing the official
-Disability Benefits Questionnaire (DBQ).
+NOT ENCRYPTED:
+This .zip is a plain (unencrypted) bundle. It is NOT password-protected.
+Anyone who obtains the file can open it. For sensitive medical records,
+share it over a secure channel — your VA patient portal / secure messaging,
+or hand it off in person — rather than ordinary email.
+
+ABOUT THIS DOCUMENT:
+This is a DRAFT for physician review. The veteran has pre-filled subjective
+information to assist the physician in completing the official Disability
+Benefits Questionnaire (DBQ).
 
 USAGE:
 1. Extract the PDF file
@@ -340,12 +347,6 @@ Generated: ${new Date().toLocaleString()}
 Source: Vet-Rate.org
 `;
     zip.file("README.txt", instructions);
-
-    // Generate the zip with password
-    // Note: JSZip doesn't support encryption directly, but we can use the
-    // zip content with an external encryption layer if needed
-    // For now, we generate a standard zip - the password protection happens
-    // at the email/sharing level with user instructions
 
     const zipBlob = await zip.generateAsync({
       type: "blob",
@@ -589,7 +590,7 @@ export default {
   fillFormFields,
   generateDraftDbq,
   downloadPdfBlob,
-  createEncryptedZip,
+  createDocumentZip,
   sharePdfNatively,
   copyDbqSummaryToClipboard,
   getSubjectiveQuestions,

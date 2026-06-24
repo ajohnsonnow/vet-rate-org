@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - AI Warning Banner Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Displays prominent warning about AI-generated content hallucinations
  * Specifically warns about fake case law and medical advice

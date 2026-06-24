@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Veteran Context Provider
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * SHARED UTILITY: Every AI-powered tool in the app calls this ONE function
  * to get the veteran's full context (VKB + My Packet) before running AI.
@@ -28,6 +28,93 @@ import {
   PACKET_DOC_TYPES,
   PACKET_DOC_LABELS,
 } from "./myPacketManager";
+import { getSavedClaims } from "./claimsStorage";
+import { getMyRatings } from "./veteranProfile";
+
+// ============================================================
+// CONDITION NORMALIZATION + RECORD AGGREGATION
+// ============================================================
+
+/**
+ * Normalize a condition name for duplicate detection.
+ * "Tinnitus (Service Connected)" / "TINNITUS" / " tinnitus. " all collapse
+ * to "tinnitus" so analyzer output, saved claims, and manual entries merge
+ * instead of stacking duplicates.
+ */
+export const normalizeConditionName = (name) => {
+  if (typeof name !== "string") return "";
+  return name
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+/**
+ * Pure candidate builder (unit-testable): merges rated conditions from the
+ * saved-claims store and VKB analyzer claims, excluding anything already in
+ * My Ratings or duplicated across sources.
+ */
+export const buildConditionCandidates = ({
+  excludeNames = [],
+  claims = [],
+  vkbClaims = [],
+} = {}) => {
+  const seen = new Set(excludeNames.map(normalizeConditionName));
+  const candidates = [];
+
+  const push = (name, rating, source) => {
+    const key = normalizeConditionName(name);
+    if (!key || seen.has(key)) return;
+    const numeric = Number(rating);
+    if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) return;
+    seen.add(key);
+    candidates.push({
+      id: `record_${source}_${candidates.length}_${key.replace(/\s/g, "_")}`,
+      name,
+      rating: numeric,
+      bodyPart: "",
+      side: "none",
+      source,
+    });
+  };
+
+  claims.forEach((c) =>
+    push(c.conditionName, c.selectedRating ?? c.ratingPercent, "claims"),
+  );
+  vkbClaims.forEach((c) =>
+    push(
+      c.condition || c.conditionName,
+      c.selectedRating ?? c.ratingPercent ?? c.rating,
+      "vkb",
+    ),
+  );
+  return candidates;
+};
+
+/**
+ * Gather rated conditions from the veteran's records (saved claims + VKB
+ * analyzer output) that are NOT already in My Ratings, mapped to the shape
+ * the rating calculators consume ({id, name, rating, bodyPart, side}).
+ */
+export const getLoadableConditions = async () => {
+  const excludeNames = getMyRatings().map((r) => r.name);
+  const claims = getSavedClaims();
+  let vkbClaims = [];
+  try {
+    // An IndexedDB open blocked by another connection's pending upgrade
+    // never settles — race it so the claims-store candidates still load.
+    const vkb = await Promise.race([
+      loadVKB(),
+      new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
+    vkbClaims = Array.isArray(vkb?.claims) ? vkb.claims : [];
+  } catch {
+    // VKB unavailable (e.g. private browsing) — claims store still works
+  }
+  return buildConditionCandidates({ excludeNames, claims, vkbClaims });
+};
 
 // ============================================================
 // CONTEXT LOADER  —  "Read the veteran's file"
@@ -114,8 +201,9 @@ export const saveAnalysisResults = async ({
   const timestamp = new Date().toISOString();
 
   // 1) Save to My Packet (document archive)
+  let sourceDocumentId = null;
   try {
-    await saveDocumentToPacket({
+    const packetResult = await saveDocumentToPacket({
       classification,
       fileName: fileName || `${toolName}_${timestamp.slice(0, 10)}.txt`,
       rawText,
@@ -130,6 +218,7 @@ export const saveAnalysisResults = async ({
         analyzedAt: timestamp,
       },
     });
+    sourceDocumentId = packetResult?.documentId || null;
     // eslint-disable-next-line no-console
     console.log(
       `[VeteranContextProvider] ✅ Saved ${toolName} results to My Packet`,
@@ -165,23 +254,47 @@ export const saveAnalysisResults = async ({
           vkb.keyFacts = vkb.keyFacts || [];
           vkb.keyFacts.push(...vkbMergeData.keyFacts);
         }
-        // Merge claims data
+        // Merge claims data (normalized names so "PTSD (chronic)" and
+        // "ptsd" don't stack as duplicates; each claim keeps a pointer to
+        // the My Packet document it came from)
         if (vkbMergeData.claims && Array.isArray(vkbMergeData.claims)) {
           vkb.claims = vkb.claims || [];
-          // Avoid duplicates by checking condition names
           const existingConditions = new Set(
-            vkb.claims.map((c) => c.condition?.toLowerCase()),
+            vkb.claims.map((c) =>
+              normalizeConditionName(c.condition || c.conditionName),
+            ),
           );
           vkbMergeData.claims.forEach((claim) => {
-            if (!existingConditions.has(claim.condition?.toLowerCase())) {
-              vkb.claims.push(claim);
+            const key = normalizeConditionName(
+              claim.condition || claim.conditionName,
+            );
+            if (key && !existingConditions.has(key)) {
+              existingConditions.add(key);
+              vkb.claims.push(
+                sourceDocumentId && !claim.sourceDocumentId
+                  ? { ...claim, sourceDocumentId }
+                  : claim,
+              );
             }
           });
         }
-        // Merge evidence items
+        // Merge evidence items (deduped by date + description; stamped with
+        // the source document like claims above)
         if (vkbMergeData.evidence && Array.isArray(vkbMergeData.evidence)) {
           vkb.evidence = vkb.evidence || [];
-          vkb.evidence.push(...vkbMergeData.evidence);
+          const evidenceKey = (e) =>
+            `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
+          const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
+          vkbMergeData.evidence.forEach((item) => {
+            const key = evidenceKey(item);
+            if (existingEvidence.has(key)) return;
+            existingEvidence.add(key);
+            vkb.evidence.push(
+              sourceDocumentId && !item.sourceDocumentId
+                ? { ...item, sourceDocumentId }
+                : item,
+            );
+          });
         }
         // Merge medical conditions
         if (vkbMergeData.medical) {
@@ -189,10 +302,12 @@ export const saveAnalysisResults = async ({
           if (vkbMergeData.medical.conditions) {
             vkb.medical.conditions = vkb.medical.conditions || [];
             const existing = new Set(
-              vkb.medical.conditions.map((c) => c.name?.toLowerCase()),
+              vkb.medical.conditions.map((c) => normalizeConditionName(c.name)),
             );
             vkbMergeData.medical.conditions.forEach((cond) => {
-              if (!existing.has(cond.name?.toLowerCase())) {
+              const key = normalizeConditionName(cond.name);
+              if (key && !existing.has(key)) {
+                existing.add(key);
                 vkb.medical.conditions.push(cond);
               }
             });

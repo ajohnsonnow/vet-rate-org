@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { migrateUserData } from "../../utils/migrationManager";
 import { needsMigration, migrateFromLocalStorage } from "../../utils/storage";
-import { initPersistentStorage } from "../../utils/persistentStorage";
+import {
+  initPersistentStorage,
+  initUnsavedChangesWarning,
+} from "../../utils/persistentStorage";
 import { initAutoBackup } from "../../utils/autoBackup";
 import { initializeCompassionateVoice } from "../../utils/voiceIndex";
 import { initializeErrorCapture } from "../../utils/bugReportUtils";
@@ -39,7 +42,8 @@ export function useBootSequence() {
   useEffect(() => {
     initializeErrorCapture();
     initializeCompassionateVoice();
-    setupBeforeUnloadWarning();
+    setupBeforeUnloadWarning(); // Bunker Backup unsaved-changes guard (hash compare)
+    initUnsavedChangesWarning(); // OPFS/IDB file-handle unsaved-changes guard
     // eslint-disable-next-line no-console
     console.log("🎙️ Compassionate Voice System initialized");
   }, []);

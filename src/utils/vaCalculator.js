@@ -12,6 +12,8 @@
  * - 38 CFR § 3.400: Payment effective date is first of month following effective date
  */
 
+import { VA_PAY_RATES_HISTORICAL } from "../data/vaPayRatesHistorical";
+
 /**
  * Calculate Payment Effective Date per 38 CFR § 3.400
  * Payment begins the first day of the month following the effective date
@@ -63,36 +65,25 @@ export const calculateBackpayMonths = (
 };
 
 // 2026 VA Disability Compensation Rates (Effective Dec 1, 2025)
+// Base tables come from the single source of truth in vaPayRatesHistorical.js.
 // Source: https://www.va.gov/disability/compensation-rates/veteran-rates/
-// Last updated: December 2, 2025
+const HISTORICAL_2026 = VA_PAY_RATES_HISTORICAL[2026];
+
 export const VA_PAY_RATES_2026 = {
   // Base rates for veteran alone (no dependents)
-  solo: {
-    0: 0,
-    10: 180.42,
-    20: 356.66,
-    30: 552.47,
-    40: 795.84,
-    50: 1132.9,
-    60: 1435.02,
-    70: 1808.45,
-    80: 2102.15,
-    90: 2362.3,
-    100: 3938.58,
-  },
-  // Additional amounts for spouse (added to base for 30%+)
-  // These are the ADDITIONAL amounts, not totals
-  spouse: {
-    30: 65.0,
-    40: 87.0,
-    50: 109.0,
-    60: 131.0,
-    70: 153.0,
-    80: 175.0,
-    90: 197.0,
-    100: 219.59,
-  },
+  solo: HISTORICAL_2026.solo,
+  // Additional amounts for spouse (added to base for 30%+) — ADDITIONS, not totals
+  spouse: HISTORICAL_2026.spouse,
+  // Each additional child under 18
+  childUnder18: HISTORICAL_2026.childUnder18,
+  // Each additional child 18+ in qualifying school program
+  childSchool: HISTORICAL_2026.childSchool,
+  // Additional amount for 1 dependent parent
+  parentOne: HISTORICAL_2026.parentOne,
+  // Additional amount for 2 dependent parents
+  parentTwo: HISTORICAL_2026.parentTwo,
   // Added amount for spouse receiving Aid and Attendance
+  // (not in the historical table; SMC-adjacent addition specific to 2026)
   spouseAidAttendance: {
     30: 61.0,
     40: 81.0,
@@ -102,50 +93,6 @@ export const VA_PAY_RATES_2026 = {
     80: 161.0,
     90: 181.0,
     100: 201.41,
-  },
-  // Each additional child under 18 (first child included in base with child rates)
-  childUnder18: {
-    30: 32.0,
-    40: 43.0,
-    50: 54.0,
-    60: 65.0,
-    70: 76.0,
-    80: 87.0,
-    90: 98.0,
-    100: 109.11,
-  },
-  // Each additional child 18+ in qualifying school program
-  childSchool: {
-    30: 105.0,
-    40: 140.0,
-    50: 176.0,
-    60: 211.0,
-    70: 246.0,
-    80: 281.0,
-    90: 317.0,
-    100: 352.45,
-  },
-  // Additional amount for 1 dependent parent
-  parentOne: {
-    30: 52.0,
-    40: 70.0,
-    50: 88.0,
-    60: 105.0,
-    70: 123.0,
-    80: 140.0,
-    90: 158.0,
-    100: 176.24,
-  },
-  // Additional amount for 2 dependent parents
-  parentTwo: {
-    30: 104.0,
-    40: 140.0,
-    50: 176.0,
-    60: 210.0,
-    70: 246.0,
-    80: 280.0,
-    90: 316.0,
-    100: 352.48,
   },
   // First child addition (added to solo rate when veteran has 1+ child)
   // Calculated from "Veteran with 1 child only" minus "Veteran alone"
@@ -295,8 +242,14 @@ export const calculateBilateralFactor = (bilateralRatings) => {
 };
 
 /**
- * Main VA Rating Calculator
- * Implements full 38 CFR § 4.25 logic including Bilateral Factor
+ * Main VA Rating Calculator — the single source of truth for combined ratings.
+ * Implements full 38 CFR § 4.25 logic including the § 4.26 Bilateral Factor.
+ *
+ * The bilateral factor is applied to the actual paired (left/right) set, NOT to
+ * the two highest ratings. UI surfaces (MillionDollarDashboard, WhatIfSandbox,
+ * SecondaryScoutLauncher) combine through this engine / its primitives
+ * (combineMultipleRatings, calculateBilateralFactor) so the math stays
+ * consistent. The flat ratingCalculator.calculateCombinedRating is legacy.
  *
  * @param {Array} conditions - Array of condition objects:
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none', bodyPart: string }

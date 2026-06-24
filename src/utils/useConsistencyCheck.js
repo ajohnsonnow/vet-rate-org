@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -377,14 +377,30 @@ export default function useConsistencyCheck() {
     setIsChecking(true);
 
     try {
-      // Gather all data from localStorage
+      // Gather all data from the canonical stores. These keys previously
+      // pointed at names nothing in the app writes ("savedClaims",
+      // "statements", ...), so every rule ran against empty data and the
+      // engine could never find a contradiction.
       const data = {
-        profile: JSON.parse(localStorage.getItem("veteranProfile") || "null"),
-        claims: JSON.parse(localStorage.getItem("savedClaims") || "[]"),
-        statements: JSON.parse(localStorage.getItem("statements") || "{}"),
-        forms: JSON.parse(localStorage.getItem("forms") || "{}"),
-        ratings: JSON.parse(localStorage.getItem("ratings") || "{}"),
-        symptomLogs: JSON.parse(localStorage.getItem("symptomLogs") || "[]"),
+        profile: JSON.parse(
+          localStorage.getItem("vet_rate_veteran_profile") || "null",
+        ),
+        claims: JSON.parse(
+          localStorage.getItem("vet_rate_saved_claims") || "[]",
+        ),
+        statements: JSON.parse(
+          localStorage.getItem("vet_rate_statements") || "{}",
+        ),
+        forms: JSON.parse(localStorage.getItem("vet_rate_saved_forms") || "[]"),
+        // Rules expect a {conditionName: percent} map; My Ratings stores an array
+        ratings: Object.fromEntries(
+          JSON.parse(localStorage.getItem("vet_rate_my_ratings") || "[]")
+            .filter((r) => r && r.name)
+            .map((r) => [r.name, r.rating]),
+        ),
+        symptomLogs: JSON.parse(
+          localStorage.getItem("vetrate_symptom_logs") || "[]",
+        ),
       };
 
       // Run all consistency rules

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - System Capability Check
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Tech Check" - Browser Compatibility Guard
  * Ensures the user's browser supports all required modern features

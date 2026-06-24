@@ -289,85 +289,56 @@ export const STATUS_COLORS = {
  * Header Gradient Colors
  * Specific branded gradients for different tool categories
  */
+/*
+ * RT15-2: de-rainbowed. The per-category gradients used 8 unrelated color
+ * families (violet/rose/orange/blue/yellow), which read as a busy consumer app
+ * to an older, in-pain, traditional veteran audience. Restrained to THREE
+ * intentional tones — deep brand green (most categories), a single muted brass
+ * accent (shockAwe / "maximize"), and a neutral slate (resources/system).
+ * Categories are now told apart by icon + label, not by hue. Decorative header
+ * chrome (not meaning-bearing), so one green works across colorblind modes.
+ */
+const GREEN_HEADER = {
+  light: "from-green-800 via-emerald-800 to-green-800",
+  dark: "from-green-800 via-emerald-800 to-green-800",
+  protanopia: "from-green-800 via-emerald-800 to-green-800",
+  deuteranopia: "from-green-800 via-emerald-800 to-green-800",
+  tritanopia: "from-green-800 via-emerald-800 to-green-800",
+  highContrast: "from-green-900 via-emerald-900 to-green-900",
+};
+
 export const HEADER_GRADIENTS = {
   // Calculate
-  tactical: {
-    light: "from-emerald-600 via-teal-600 to-emerald-600",
-    dark: "from-emerald-600 via-teal-600 to-emerald-600",
-    protanopia: "from-blue-600 via-cyan-600 to-blue-600",
-    deuteranopia: "from-blue-600 via-cyan-600 to-blue-600",
-    tritanopia: "from-teal-600 via-cyan-600 to-teal-600",
-    highContrast: "from-emerald-700 via-teal-700 to-emerald-700",
-  },
-
+  tactical: { ...GREEN_HEADER },
   // Discover
-  discover: {
-    light: "from-teal-600 via-emerald-600 to-teal-600",
-    dark: "from-teal-600 via-emerald-600 to-teal-600",
-    protanopia: "from-cyan-600 via-blue-600 to-cyan-600",
-    deuteranopia: "from-cyan-600 via-blue-600 to-cyan-600",
-    tritanopia: "from-cyan-600 via-teal-700 to-cyan-600",
-    highContrast: "from-teal-700 via-emerald-700 to-teal-700",
-  },
-
+  discover: { ...GREEN_HEADER },
   // Evidence
-  evidence: {
-    light: "from-violet-600 to-purple-600",
-    dark: "from-violet-600 to-purple-600",
-    protanopia: "from-indigo-600 to-blue-600",
-    deuteranopia: "from-indigo-600 to-blue-600",
-    tritanopia: "from-purple-600 to-pink-600",
-    highContrast: "from-violet-700 to-purple-700",
-  },
-
+  evidence: { ...GREEN_HEADER },
   // Quality Control
-  quality: {
-    light: "from-rose-600 via-red-600 to-rose-600",
-    dark: "from-rose-600 via-red-600 to-rose-600",
-    protanopia: "from-orange-600 via-amber-600 to-orange-600",
-    deuteranopia: "from-orange-600 via-amber-600 to-orange-600",
-    tritanopia: "from-rose-600 via-pink-600 to-rose-600",
-    highContrast: "from-rose-700 via-red-700 to-rose-700",
-  },
-
+  quality: { ...GREEN_HEADER },
   // Strategy
-  strategy: {
-    light: "from-orange-600 to-red-600",
-    dark: "from-orange-600 to-red-600",
-    protanopia: "from-amber-600 to-orange-700",
-    deuteranopia: "from-amber-600 to-orange-700",
-    tritanopia: "from-pink-600 to-rose-600",
-    highContrast: "from-orange-700 to-red-700",
-  },
+  strategy: { ...GREEN_HEADER },
+  // PACT Act
+  pact: { ...GREEN_HEADER },
 
-  // PACT Act / Amber
-  pact: {
-    light: "from-amber-600 to-orange-600",
-    dark: "from-amber-600 to-orange-600",
-    protanopia: "from-yellow-600 to-amber-700",
-    deuteranopia: "from-yellow-600 to-amber-700",
-    tritanopia: "from-pink-500 to-rose-600",
-    highContrast: "from-amber-700 to-orange-700",
-  },
-
-  // Shock & Awe / Gold
+  // Maximize / "Shock & Awe" — the single muted brass accent
   shockAwe: {
-    light: "from-yellow-500 via-amber-500 to-yellow-500",
-    dark: "from-yellow-500 via-amber-500 to-yellow-500",
-    protanopia: "from-yellow-500 via-amber-500 to-yellow-500",
-    deuteranopia: "from-yellow-500 via-amber-500 to-yellow-500",
-    tritanopia: "from-pink-400 via-rose-400 to-pink-400",
-    highContrast: "from-yellow-600 via-amber-600 to-yellow-600",
+    light: "from-amber-700 via-amber-600 to-amber-700",
+    dark: "from-amber-700 via-amber-600 to-amber-700",
+    protanopia: "from-amber-700 via-amber-600 to-amber-700",
+    deuteranopia: "from-amber-700 via-amber-600 to-amber-700",
+    tritanopia: "from-amber-700 via-amber-600 to-amber-700",
+    highContrast: "from-amber-800 via-amber-700 to-amber-800",
   },
 
-  // Resources / Blue
+  // Resources / System — neutral slate
   resources: {
-    light: "from-blue-800 to-blue-900",
-    dark: "from-blue-800 to-blue-900",
-    protanopia: "from-indigo-800 to-indigo-900",
-    deuteranopia: "from-indigo-800 to-indigo-900",
-    tritanopia: "from-cyan-700 to-cyan-800",
-    highContrast: "from-blue-900 to-blue-950",
+    light: "from-slate-700 via-slate-600 to-slate-700",
+    dark: "from-slate-700 via-slate-600 to-slate-700",
+    protanopia: "from-slate-700 via-slate-600 to-slate-700",
+    deuteranopia: "from-slate-700 via-slate-600 to-slate-700",
+    tritanopia: "from-slate-700 via-slate-600 to-slate-700",
+    highContrast: "from-slate-800 via-slate-700 to-slate-800",
   },
 };
 

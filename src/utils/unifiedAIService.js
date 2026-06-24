@@ -13,8 +13,15 @@
  */
 
 import { interceptBeforeAICall } from "./crisisInterceptor";
-import { scrubPII, analyzePII } from "./piiScrubber";
+import {
+  scrubPII,
+  analyzePII,
+  containsSignificantNonLatin,
+} from "./piiScrubber";
+import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
+import { logModelCallWithDigests } from "./aiAuditLog";
+import { interpretGeminiResponse } from "./geminiResponse";
 import { isFeatureEnabled } from "./featureFlags";
 import {
   SWARM_AGENTS,
@@ -33,6 +40,7 @@ import {
 // 💎 New backends: Wllama (browser WASM) and Local Server (llama.cpp)
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
+import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -359,6 +367,16 @@ export const registerLocalAIEngine = (
           detail: { ready: false, fullDKBAvailable: false },
         }),
       );
+      // Let UI layers surface the failure — without this, the fallback to
+      // cloud/other backends is silent and the veteran never learns why
+      window.dispatchEvent(
+        new CustomEvent("vetrate:ai-engine-failed", {
+          detail: {
+            engine: modelId || "local-ai",
+            error: "Local AI engine failed to load or was unloaded",
+          },
+        }),
+      );
     }
   }
 };
@@ -483,10 +501,10 @@ const isValidApiKey = (key) => {
  * Check if cloud AI is available (API key configured)
  */
 export const isCloudAIAvailable = () => {
+  // RT1-1: BYOK only — the key comes solely from the user's localStorage entry,
+  // never from the build env. A VITE_-inlined key would ship in the public bundle.
   const storedKey = localStorage.getItem(GEMINI_KEY);
-  if (isValidApiKey(storedKey)) return true;
-  const envKey = import.meta.env?.VITE_GEMINI_API_KEY;
-  return isValidApiKey(envKey);
+  return isValidApiKey(storedKey);
 };
 
 /**
@@ -516,6 +534,23 @@ export const initializeWllama = async (
     // eslint-disable-next-line no-console
     console.log("🌐 Wllama already initializing...");
     return false;
+  }
+
+  // RT8-3: The wllama GGUF models are ~4 GB each. Downloading that on a phone
+  // or a device without adequate GPU/RAM OOMs or crawls. Gate early — same
+  // pattern as diamondSwarm.js which checks canUseWebLLM before any WebLLM
+  // download. Mobile tier always returns canUseWebLLM=false.
+  const deviceProfile = await detectDeviceCapabilities();
+  if (!deviceProfile.canUseWebLLM) {
+    const reason = `Device tier "${deviceProfile.tier}" (${deviceProfile.hasWebGPU ? "WebGPU present but mobile" : "no WebGPU"})`;
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[Wllama] Blocked on ${reason}: 7B models need a desktop/laptop.`,
+    );
+    throw new Error(
+      `Local AI (7B model) is not available on this device (${reason}). ` +
+        "Use Cloud AI or open the app on a desktop or laptop.",
+    );
   }
 
   try {
@@ -669,10 +704,9 @@ export const getEffectiveAIMode = () => {
  * Get the Gemini API key (only returns valid keys, not placeholders)
  */
 const getGeminiApiKey = () => {
+  // RT1-1: BYOK only — never fall back to a build-env key (would bake into dist).
   const storedKey = localStorage.getItem(GEMINI_KEY);
   if (isValidApiKey(storedKey)) return storedKey;
-  const envKey = import.meta.env?.VITE_GEMINI_API_KEY;
-  if (isValidApiKey(envKey)) return envKey;
   return "";
 };
 
@@ -765,51 +799,67 @@ const generateWithCloudAI = async (prompt, options = {}) => {
       // Log what was scrubbed (for transparency)
       console.info(`🛡️ PII Scrubbed:`, details);
     }
+
+    // RT3-4: the PII patterns are US/English-centric and cannot reliably find PII in
+    // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
+    // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
+    // over-redacting, which would corrupt the analysis. Prefer local AI for these.
+    if (containsSignificantNonLatin(fullPrompt)) {
+      console.warn(
+        "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
+          "non-English text; this cloud request may contain unredacted PII. " +
+          "Consider local AI for sensitive non-English documents.",
+      );
+    }
   }
 
-  // Create abort controller for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const requestBody = JSON.stringify({
+    contents: [{ parts: [{ text: fullPrompt }] }],
+    generationConfig: {
+      temperature: finalConfig.temperature,
+      maxOutputTokens: finalConfig.maxTokens,
+      topK: finalConfig.topK,
+      topP: finalConfig.topP,
+    },
+    safetySettings: [
+      {
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+      {
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_ONLY_HIGH",
+      },
+    ],
+  });
 
-  let response;
-  try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          temperature: finalConfig.temperature,
-          maxOutputTokens: finalConfig.maxTokens,
-          topK: finalConfig.topK,
-          topP: finalConfig.topP,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_ONLY_HIGH",
-          },
-        ],
-      }),
-    });
-  } catch (fetchError) {
-    clearTimeout(timeoutId);
-    // Handle network errors and timeouts
+  // Each attempt gets its own abort controller + timeout
+  const fetchWithTimeout = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      return await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: requestBody,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  const toFriendlyFetchError = (fetchError) => {
     if (fetchError.name === "AbortError") {
-      throw new Error(
+      return new Error(
         "Request timed out. The AI is taking too long to respond. Please try again with a shorter prompt, or switch to Local AI.",
       );
     }
@@ -817,15 +867,31 @@ const generateWithCloudAI = async (prompt, options = {}) => {
       fetchError.message?.includes("Failed to fetch") ||
       fetchError.message?.includes("NetworkError")
     ) {
-      throw new Error(
+      return new Error(
         "Network error. Please check your internet connection. If you are offline, try Local AI which works without internet.",
       );
     }
-    throw new Error(
+    return new Error(
       `Connection failed: ${fetchError.message}. If this persists, try switching to Local AI.`,
     );
-  } finally {
-    clearTimeout(timeoutId);
+  };
+
+  let response;
+  try {
+    response = await fetchWithTimeout();
+  } catch (fetchError) {
+    if (fetchError.name !== "AbortError") {
+      throw toFriendlyFetchError(fetchError);
+    }
+    // Timeouts are often transient backend slowness — retry once
+    console.warn(
+      `⏱️ Cloud AI request timed out after ${timeout / 1000}s — retrying once...`,
+    );
+    try {
+      response = await fetchWithTimeout();
+    } catch (retryError) {
+      throw toFriendlyFetchError(retryError);
+    }
   }
 
   if (!response.ok) {
@@ -887,13 +953,8 @@ const generateWithCloudAI = async (prompt, options = {}) => {
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) {
-    throw new Error("No response generated");
-  }
-
-  return text;
+  // C-H05: surface safety blocks / truncation rather than "No response generated".
+  return interpretGeminiResponse(data);
 };
 
 /**
@@ -990,6 +1051,13 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
       toolId,
       maxTokens,
       temperature,
+      // Thread caller-supplied system prompt and schema through so analyzeChunk
+      // can replace the AUDITOR default prompt with the compact C-File version
+      // and enable XGrammar constrained decoding for the chunk loop.
+      ...(options.systemPrompt ? { systemPrompt: options.systemPrompt } : {}),
+      ...(options.responseFormat
+        ? { responseFormat: options.responseFormat }
+        : {}),
     });
 
     swarmGenerating = false;
@@ -1678,10 +1746,35 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
  * @param {number} options.timeout - Timeout in milliseconds (default: 120000 = 2 minutes)
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
+
+// Circuit breaker: after 3 consecutive generation failures, stop hammering the
+// backends (each attempt can burn a full 60-120s timeout) and surface a clear
+// error instead. Half-opens after a cooldown so a fixed setup can recover.
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_COOLDOWN_MS = 30000;
+let consecutiveGenerationFailures = 0;
+let circuitBreakerOpenedAt = 0;
+
+export const resetAICircuitBreaker = () => {
+  consecutiveGenerationFailures = 0;
+  circuitBreakerOpenedAt = 0;
+};
+
 export const generateAI = async (prompt, options = {}) => {
+  if (
+    consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD &&
+    Date.now() - circuitBreakerOpenedAt < CIRCUIT_BREAKER_COOLDOWN_MS
+  ) {
+    throw new Error(
+      `AI_CIRCUIT_OPEN: AI generation has failed ${consecutiveGenerationFailures} times in a row, so further attempts are paused. ` +
+        `Please check your AI settings (is the local model loaded? is your API key valid? are you online?) and try again in ${Math.ceil(CIRCUIT_BREAKER_COOLDOWN_MS / 1000)} seconds.`,
+    );
+  }
+
   // Apply timeout wrapper to prevent indefinite hangs
   const TIMEOUT_MS = options.timeout || 120000; // 2 minutes default
   let timeoutId;
+  const startedAt = Date.now();
 
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -1702,10 +1795,48 @@ export const generateAI = async (prompt, options = {}) => {
 
     // Clear timeout on success
     clearTimeout(timeoutId);
+    resetAICircuitBreaker();
+
+    // C-H06: record every production AI call in the tamper-evident, hash-chained
+    // audit log (SHA-256 digests only — never raw prompt/output PII). Fire-and-
+    // forget so a logging failure can never break the AI response.
+    const auditOutput =
+      typeof result === "string" ? result : (result?.text ?? "");
+    logModelCallWithDigests({
+      tag: options.toolId || options.taskType || "generateAI",
+      model: options.forceMode || "auto",
+      prompt:
+        typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
+      output: auditOutput,
+      durationMs: Date.now() - startedAt,
+      meta: { expectJSON: !!options.expectJSON },
+    }).catch(() => {});
+
+    // PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
+    // that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
+    // the model into surfacing an attacker URL). Opt out for JSON-only / internal calls,
+    // whose output is parsed not rendered as free text and would be corrupted. Gov links
+    // survive (see sanitize.LLM_OUTPUT_URL_ALLOWLIST).
+    if (!options.expectJSON && !options.skipUrlStrip) {
+      if (typeof result === "string") {
+        return stripUntrustedUrls(result);
+      }
+      if (result && typeof result.text === "string") {
+        result.text = stripUntrustedUrls(result.text);
+      }
+    }
     return result;
   } catch (err) {
     // Clear timeout on error
     if (timeoutId) clearTimeout(timeoutId);
+
+    // Crisis interception is a safety block, not an engine failure
+    if (err.message !== "CRISIS_DETECTED") {
+      consecutiveGenerationFailures++;
+      if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+        circuitBreakerOpenedAt = Date.now();
+      }
+    }
 
     // Enhance timeout errors with helpful message
     if (err.message && err.message.includes("AI_TIMEOUT")) {
@@ -1897,18 +2028,32 @@ const generateAIInternal = async (prompt, options = {}) => {
       }
     }
 
-    // Validate AI response for hallucinations (unless explicitly skipped)
-    if (!options.skipValidation && options.taskType) {
+    // Validate the AI response for forbidden medical/legal roleplay, ungrounded
+    // CFR citations, missing disclaimers, invented stats, and over-certain claim
+    // language. Runs unless explicitly skipped.
+    //
+    // AIS-01: this was effectively dead in production. The guard required
+    // `options.taskType` (so calls without one skipped validation entirely), and
+    // it passed `options.taskType` — a STRING — as the `context` argument, so the
+    // validator's `context.loadedRegulations` was always undefined. Run it on every
+    // non-skipped response and pass a real context object.
+    if (!options.skipValidation) {
       const { validateAIResponse } = await getAISystemPrompts();
-      const validation = validateAIResponse(text, options.taskType);
+      const validation = validateAIResponse(text, {
+        taskType: options.taskType,
+        loadedRegulations: options.loadedRegulations,
+        hasStatistics: options.hasStatistics,
+      });
       if (!validation.isValid) {
         console.warn(
-          "⚠️ AI response validation warnings:",
+          "⚠️ AI response validation failed:",
+          validation.errors,
           validation.warnings,
         );
         return {
           text,
           mode: usedMode,
+          validationErrors: validation.errors,
           validationWarnings: validation.warnings,
           hallucinationReport,
         };
@@ -2236,22 +2381,21 @@ export const getAIDataDisclosure = () => {
 };
 
 // ============================================================================
-// DUAL-LLM PATTERN (Sprint 3 lethal-trifecta defense)
+// DUAL-LLM PATTERN — NOT wired into the document-analysis paths (A-H01)
 // ============================================================================
 //
-// The implementation lives in ./dualLLM.js so it can be unit-tested by
-// injecting a stub `generateAI`. Production code binds to the local
-// `generateAI` here once and re-exports the three helpers for convenience.
+// The dual-LLM (privileged-controller + sandboxed-worker) split is NOT the
+// production injection defense for untrusted documents. The real C-File,
+// muster-call, and DD214 paths call single-LLM generateAI(); their defense is
+// the LAYERED control set: spotlight / untrustedSection fences (with embedded-
+// delimiter neutralization, A-H02), the PII scrubber at egress, last-mile URL
+// stripping (PI-01), and crisis interception.
 //
-// See src/utils/dualLLM.js for the full design rationale (when to use,
-// when NOT to use, the threat model).
-
-import { createDualLLM } from "./dualLLM";
-
-const _dualLLM = createDualLLM(generateAI);
-export const dualLLMExtract = _dualLLM.extract;
-export const dualLLMSynthesize = _dualLLM.synthesize;
-export const runDualLLM = _dualLLM.run;
+// The createDualLLM() factory in ./dualLLM.js is retained ONLY for the
+// (not-yet-wired) legal-answer RAG path (services/legalAnswerer.js). The
+// previously-exported dualLLMExtract / dualLLMSynthesize / runDualLLM convenience
+// helpers were unused dead code and were removed so nothing implies a
+// document-path dual-LLM defense that does not exist.
 
 // Re-export Diamond Swarm functions for convenience
 export {
@@ -2293,10 +2437,7 @@ export default {
   registerSwarmEngine,
   generateAI,
   generateAIWithImage,
-  // Dual-LLM lethal-trifecta defense
-  dualLLMExtract,
-  dualLLMSynthesize,
-  runDualLLM,
+  resetAICircuitBreaker,
   getAIStatus,
   getAIDataDisclosure,
   // Diamond Swarm

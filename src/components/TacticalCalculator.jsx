@@ -14,6 +14,7 @@ import {
   BODY_PARTS,
   VA_PAY_RATES_2026,
 } from "../utils/vaCalculator";
+import { checkTDIUEligibility } from "../utils/smcDetector";
 import {
   getMyRatings,
   saveMyRatings,
@@ -21,6 +22,10 @@ import {
   removeRating,
   hasMyRatings,
 } from "../utils/veteranProfile";
+import {
+  getLoadableConditions,
+  normalizeConditionName,
+} from "../utils/veteranContextProvider";
 
 /**
  * TacticalCalculator - "The Rate You Deserve"
@@ -105,6 +110,42 @@ const TacticalCalculator = ({
     }
   }, [capSimulatorResults]);
 
+  // Rated conditions found in the veteran's records (saved claims + C-File
+  // analyzer output in the VKB) that aren't in My Ratings yet — offered via
+  // a one-click load banner instead of silent auto-import.
+  const [recordCandidates, setRecordCandidates] = useState([]);
+  const [recordsAnnouncement, setRecordsAnnouncement] = useState("");
+  useEffect(() => {
+    let alive = true;
+    getLoadableConditions()
+      .then((found) => {
+        if (alive) setRecordCandidates(found);
+      })
+      .catch((err) => {
+        console.warn("Could not load conditions from records:", err);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleLoadFromRecords = () => {
+    let added = 0;
+    setConditions((prev) => {
+      const have = new Set(prev.map((c) => normalizeConditionName(c.name)));
+      const fresh = recordCandidates.filter(
+        (c) => !have.has(normalizeConditionName(c.name)),
+      );
+      added = fresh.length;
+      return [...prev, ...fresh];
+    });
+    setRecordCandidates([]);
+    setRecordsAnnouncement(
+      `${added} condition${added === 1 ? "" : "s"} loaded from your records.`,
+    );
+    setActiveTab("calculator");
+  };
+
   // Load my ratings from storage when saved ratings change
   const loadMyRatings = () => {
     setMyRatings(getMyRatings());
@@ -180,6 +221,7 @@ const TacticalCalculator = ({
     dependents,
   );
   const pyramiding = detectPyramiding(conditions);
+  const tdiu = checkTDIUEligibility(conditions);
   const whatIfResults = calculateWhatIf(
     conditions,
     whatIfRating,
@@ -1161,6 +1203,25 @@ const TacticalCalculator = ({
                     </button>
                   </div>
 
+                  <div aria-live="polite" className="sr-only">
+                    {recordsAnnouncement}
+                  </div>
+                  {recordCandidates.length > 0 && (
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+                      <p className="text-sm text-blue-900 dark:text-blue-200">
+                        📂 {recordCandidates.length} rated condition
+                        {recordCandidates.length === 1 ? "" : "s"} found in your
+                        records (saved claims &amp; analyzed documents).
+                      </p>
+                      <button
+                        onClick={handleLoadFromRecords}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      >
+                        Load into calculator
+                      </button>
+                    </div>
+                  )}
+
                   {/* Conditions List - Expands to fill remaining space */}
                   <div className="flex flex-col flex-1 min-h-0">
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
@@ -1371,6 +1432,25 @@ const TacticalCalculator = ({
                       </div>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
                         {t("tacticalCalc", "automatedCheck")}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* TDIU Advisory (38 CFR § 4.16(a)) */}
+                  {tdiu.eligible && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-400 dark:border-indigo-600 rounded-xl p-4">
+                      <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                        <span>💼</span> You may qualify for TDIU
+                      </h4>
+                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        {tdiu.basis === "single60"
+                          ? "One of these conditions is rated 60% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."
+                          : "These ratings combine to 70% or higher with at least one condition rated 40% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."}{" "}
+                        If your service-connected conditions prevent you from
+                        maintaining substantially gainful employment, TDIU pays
+                        at the 100% rate even below a 100% schedular rating. The
+                        TDIU Work Impact Builder tool can help you prepare VA
+                        Form 21-8940 — and speak with a VSO before filing.
                       </p>
                     </div>
                   )}
@@ -2135,7 +2215,7 @@ const TacticalCalculator = ({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        $180.42
+                        ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         10% Rating
@@ -2143,7 +2223,7 @@ const TacticalCalculator = ({
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        $356.66
+                        ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         20% Rating

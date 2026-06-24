@@ -16,6 +16,10 @@ import {
   enforceAgentBoundary,
   resolveAgentForTool,
 } from "./agentBoundaries";
+import {
+  detectDeviceCapabilities,
+  getCachedDeviceProfile,
+} from "./deviceCapabilityDetector";
 
 // Storage keys
 const SWARM_CONFIG_KEY = "vetrate_diamond_swarm_config";
@@ -166,7 +170,7 @@ export const TOOL_AGENT_MAP = {
 let swarmEngine = null;
 let swarmReady = false;
 let swarmInitializing = false;
-let loadedAgents = new Set();
+const loadedAgents = new Set();
 let currentAgent = null;
 let loadedModelId = null; // Tracks which model was actually loaded
 
@@ -270,11 +274,13 @@ export const registerSwarmEngine = (
 // WebLLM engine reference for real inference
 let webllmEngine = null;
 
-// Fallback models for Warrant Council - try smaller models first to avoid cache issues
-const DIAMOND_MODELS = [
-  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2GB - good balance
-  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1GB - faster
-  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative
+// Default model list used before device probe completes. The device profile
+// (detectDeviceCapabilities) overrides this in initializeSwarm at runtime.
+const DIAMOND_MODELS_DEFAULT = [
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16, proven ~55 s/chunk on 4080 SUPER (stream:false)
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0GB - f32 fallback
+  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1.0GB - lower-VRAM fallback
+  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative architecture
 ];
 
 /**
@@ -419,9 +425,27 @@ export const initializeSwarm = async (
     // eslint-disable-next-line no-console
     console.log(`🎖️ Initializing Warrant Council agent: ${agentId}`);
 
-    // Load real WebLLM model for inference - try multiple models
+    // Probe device capabilities once; select the right model list and context
+    // window for the device tier (mobile/tablet/laptop/desktop).
+    const deviceProfile = await detectDeviceCapabilities();
+    const modelList =
+      deviceProfile.recommendedModels?.length > 0
+        ? deviceProfile.recommendedModels
+        : DIAMOND_MODELS_DEFAULT;
+    const contextWindowSize = deviceProfile.contextWindowSize ?? 8192;
+
+    if (!deviceProfile.canUseWebLLM) {
+      swarmInitializing = false;
+      throw new Error(
+        `Warrant Council requires a WebGPU-capable device. ` +
+          `Detected: ${deviceProfile.tier} (no WebGPU). ` +
+          `Please use a laptop or desktop for local AI analysis.`,
+      );
+    }
+
+    // Load real WebLLM model for inference - try models in device-optimal order
     let loadedModel = null;
-    for (const modelId of DIAMOND_MODELS) {
+    for (const modelId of modelList) {
       try {
         const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
 
@@ -431,32 +455,36 @@ export const initializeSwarm = async (
           progress: 10,
         });
 
-        webllmEngine = await CreateMLCEngine(modelId, {
-          initProgressCallback: (report) => {
-            const progress = Math.round(report.progress * 80) + 10; // 10-90%
-            onProgress?.({
-              stage: "loading",
-              message: report.text || `Loading ${agentInfo?.name}...`,
-              progress,
-            });
+        webllmEngine = await CreateMLCEngine(
+          modelId,
+          {
+            initProgressCallback: (report) => {
+              const progress = Math.round(report.progress * 80) + 10; // 10-90%
+              onProgress?.({
+                stage: "loading",
+                message: report.text || `Loading ${agentInfo?.name}...`,
+                progress,
+              });
+            },
+            logLevel: "SILENT",
           },
-          logLevel: "SILENT",
-          context_window_size: 8192, // Increase context window to handle larger prompts
-        });
+          // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
+          // desktop-mid/laptop/mobile fall back to 8192 or 4096.
+          { context_window_size: contextWindowSize },
+        );
 
         loadedModel = modelId;
         loadedModelId = modelId; // Store globally for status reporting
         // eslint-disable-next-line no-console
-        console.log(`🎖️ WebLLM engine loaded for Warrant Council: ${modelId}`);
+        console.log(
+          `🎖️ WebLLM loaded: ${modelId} | context: ${contextWindowSize} | tier: ${deviceProfile.tier}`,
+        );
         break; // Success!
       } catch (modelError) {
         console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
 
         // If cache error, try to clear and retry once
-        if (
-          modelError.message?.includes("Cache") &&
-          modelId === DIAMOND_MODELS[0]
-        ) {
+        if (modelError.message?.includes("Cache") && modelId === modelList[0]) {
           // eslint-disable-next-line no-console
           console.log("💎 Attempting to clear corrupted cache...");
           await clearCorruptedCache();
@@ -533,6 +561,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     temperature = 0.7,
     systemPrompt = null,
     onStream = null,
+    responseFormat = null, // JSON Schema object — enables XGrammar per-token constrained decoding
   } = options;
 
   // Resolve effective agent. When a toolId is supplied, derive the agent
@@ -560,12 +589,18 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   // Use custom system prompt or agent's default
   const finalSystemPrompt = systemPrompt || agent.systemPrompt;
 
-  // Rough token estimation (1 token ≈ 4 characters)
-  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 4);
-  const estimatedPromptTokens = Math.ceil(prompt.length / 4);
+  // OCR'd military/medical text tokenizes at ~3 chars/token (not the generic
+  // 4 chars/token); using / 3 is deliberately conservative so the truncation
+  // guard fires with enough margin that WebLLM never sees a prompt that exceeds
+  // context_window_size even on dense chunks.
+  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 3);
+  const estimatedPromptTokens = Math.ceil(prompt.length / 3);
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
-  const contextLimit = 4096; // Qwen2.5-3B actual context window
-  const reservedForOutput = Math.min(maxTokens, 1024); // Reserve 1024 tokens for complete JSON output
+  // Match the context_window_size the engine was initialized with.
+  // Reading from the cached device profile keeps this in sync with the value
+  // passed to CreateMLCEngine; defaults to 8192 (Qwen2.5-3B model max).
+  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 8192;
+  const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
   // Warn and truncate if prompt is too large
@@ -588,7 +623,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     // Calculate max chars for prompt (keep system prompt, truncate user prompt)
     const maxPromptChars = Math.max(
       1000,
-      (availableForInput - estimatedSystemTokens) * 4,
+      (availableForInput - estimatedSystemTokens) * 3,
     );
     if (prompt.length > maxPromptChars) {
       // eslint-disable-next-line no-console
@@ -621,12 +656,103 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         max_tokens: maxTokens,
         temperature,
         stream: !!onStream,
+        // Penalize repeated tokens to break repetition loops in small quantized
+        // models. XGrammar masks EOS while grammar expects more tokens, which
+        // amplifies loops — frequency_penalty 1.15 breaks them while keeping
+        // factual field values intact (vLLM issue #40080). top_k/top_p narrow
+        // the token distribution for deterministic extraction (Qwen2.5 docs).
+        frequency_penalty: responseFormat ? 1.15 : 0,
+        top_p: responseFormat ? 0.8 : 1,
+        top_k: responseFormat ? 20 : -1,
+        // XGrammar per-token constrained decoding — guarantees valid JSON,
+        // eliminates repair retries. Keep one constant schema per engine
+        // instance (WebLLM issue #560: changing schemas disposes the matcher).
+        ...(responseFormat
+          ? {
+              response_format: {
+                type: "json_object",
+                schema: JSON.stringify(responseFormat),
+              },
+            }
+          : {}),
       };
 
       let responseText = "";
 
-      if (onStream) {
-        // Streaming response
+      if (responseFormat) {
+        // JSON mode: always stream internally so we can interrupt the moment
+        // the root closing "}" is emitted. This saves all remaining tokens
+        // once the JSON object is structurally complete — common on simple/
+        // sparse chunks where the schema fills in well under max_tokens.
+        // Caller's onStream callback still fires on each delta if provided.
+        const jsonStream = await webllmEngine.chat.completions.create({
+          ...generationConfig,
+          stream: true,
+        });
+
+        let bracketDepth = 0;
+        let inString = false;
+        let escape = false;
+
+        for await (const piece of jsonStream) {
+          const delta = piece.choices[0]?.delta?.content || "";
+          if (delta) {
+            responseText += delta;
+            onStream?.(delta, responseText);
+
+            // Track bracket depth to detect JSON root completion.
+            // Handles escaped chars and string literals so inner braces
+            // (e.g. in "description" values) don't trigger a false close.
+            for (const ch of delta) {
+              if (escape) {
+                escape = false;
+                continue;
+              }
+              if (ch === "\\" && inString) {
+                escape = true;
+                continue;
+              }
+              if (ch === '"') {
+                inString = !inString;
+                continue;
+              }
+              if (inString) continue;
+              if (ch === "{") {
+                bracketDepth++;
+              } else if (ch === "}") {
+                bracketDepth--;
+                if (
+                  bracketDepth === 0 &&
+                  responseText.trimStart().startsWith("{")
+                ) {
+                  // Root JSON object closed — stop generation immediately.
+                  try {
+                    webllmEngine.interruptGenerate()?.catch(() => {});
+                  } catch {
+                    // interruptGenerate is best-effort; continue if unavailable
+                  }
+                  break;
+                }
+              }
+            }
+          }
+
+          if (bracketDepth === 0 && responseText.trimStart().startsWith("{"))
+            break;
+          if (piece.choices[0]?.finish_reason) break;
+          // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
+          // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
+          if (responseText.length > 4500) {
+            try {
+              webllmEngine.interruptGenerate()?.catch(() => {});
+            } catch {
+              /* interruptGenerate may throw if no generation is in progress */
+            }
+            break;
+          }
+        }
+      } else if (onStream) {
+        // Non-JSON caller-driven streaming
         const chunks = await webllmEngine.chat.completions.create({
           ...generationConfig,
           stream: true,
@@ -635,13 +761,18 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         for await (const chunk of chunks) {
           const delta = chunk.choices[0]?.delta?.content || "";
           responseText += delta;
-          onStream(delta, responseText); // Pass both delta and full accumulated text
+          onStream(delta, responseText);
         }
       } else {
-        // Non-streaming response
-        const response =
-          await webllmEngine.chat.completions.create(generationConfig);
-        responseText = response.choices[0]?.message?.content || "";
+        // stream:true has ~700 ms/token GPU-CPU sync latency on Ada (SM 8.9),
+        // turning 1024-token decodes into 12-minute timeouts. stream:false issues
+        // one batch readback; the stress harness PROGRESS_STALL_LIMIT_MS (300 s)
+        // is set high enough for the decode to complete before the stall fires.
+        const result = await webllmEngine.chat.completions.create({
+          ...generationConfig,
+          stream: false,
+        });
+        responseText = result.choices[0]?.message?.content || "";
       }
 
       return {
@@ -657,7 +788,11 @@ export const generateWithSwarm = async (prompt, options = {}) => {
       };
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
-      // Fall through to placeholder response
+      // The engine exists and genuinely failed — rethrow so callers see the
+      // real error (e.g. ContextWindowSizeExceededError triggers their
+      // deterministic bailout). Falling through to the "still loading"
+      // placeholder masked failures as a retryable loading state.
+      throw inferenceError;
     }
   }
 

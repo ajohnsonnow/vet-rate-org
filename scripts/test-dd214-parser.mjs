@@ -5,7 +5,6 @@
  * Usage: node --experimental-vm-modules scripts/test-dd214-parser.mjs
  */
 
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -266,7 +265,7 @@ function parseDD214Test(text) {
     for (const award of awardNames) {
       if (awardsText.includes(award)) {
         // Normalize names
-        let normalizedAward = award
+        const normalizedAward = award
           .replace('ACHIEVMENT', 'ACHIEVEMENT')
           .replace('NONCOMMISSIONED OFFICERS PROFESSIONAL', 'NCO PROFESSIONAL')
           .replace('MULTINATIONAL FORCES', 'MULTINATIONAL FORCE');

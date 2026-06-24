@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Formation Queue Hook
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * React hook for managing formation queue state
  */

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File Analyzer Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * The "Kill Shot" feature - Client-side C-File analysis that competitors charge $500+ for
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
@@ -10,7 +10,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { formatFileSize, estimateProcessingTime } from "../utils/pdfExtractor";
+import { formatFileSize } from "../utils/pdfExtractor";
+import { isPdfFile } from "../utils/fileTypeGuards";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   processFormationDocument,
   PROCESSING_STATES,
@@ -28,6 +30,7 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
+import { getStorageStats } from "../utils/storage";
 
 // Sub-components for the dashboard
 import CFileTimeline from "./CFileTimeline";
@@ -52,6 +55,22 @@ export default function CFileAnalyzer({
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
+  // Heartbeat while processing: long phases (opening a 300MB document,
+  // first model generation) are otherwise silent for minutes — a ticking
+  // clock tells the veteran the pipeline is alive, not frozen.
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (!isProcessing) {
+      setElapsedSeconds(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const tick = setInterval(
+      () => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)),
+      1000,
+    );
+    return () => clearInterval(tick);
+  }, [isProcessing]);
   const [extractionProgress, setExtractionProgress] = useState({
     current: 0,
     total: 0,
@@ -64,6 +83,7 @@ export default function CFileAnalyzer({
     endPage: 0,
   });
   const [error, setError] = useState(null);
+  const [storageWarning, setStorageWarning] = useState(null);
   const abortControllerRef = useRef(null);
 
   // Analysis metadata (for showing chunks processed)
@@ -95,7 +115,11 @@ export default function CFileAnalyzer({
 
       const droppedFile = e.dataTransfer?.files?.[0];
       if (droppedFile) {
-        if (droppedFile.type !== "application/pdf") {
+        if (!droppedFile.size) {
+          setError(t("cfileAnalyzer", "emptyPdfFile"));
+          return;
+        }
+        if (!isPdfFile(droppedFile)) {
           setError(t("cfileAnalyzer", "pleaseDropPdf"));
           return;
         }
@@ -121,7 +145,11 @@ export default function CFileAnalyzer({
     (e) => {
       const selectedFile = e.target.files?.[0];
       if (selectedFile) {
-        if (selectedFile.type !== "application/pdf") {
+        if (!selectedFile.size) {
+          setError(t("cfileAnalyzer", "emptyPdfFile"));
+          return;
+        }
+        if (!isPdfFile(selectedFile)) {
           setError(t("cfileAnalyzer", "pleaseDropPdf"));
           return;
         }
@@ -165,6 +193,7 @@ export default function CFileAnalyzer({
     setShowPrivacyConsent(false);
     setIsProcessing(true);
     setError(null);
+    setStorageWarning(null);
     setChunkProgress({
       current: 0,
       total: 0,
@@ -203,6 +232,7 @@ export default function CFileAnalyzer({
           : 0,
         method: musterResult.method || "ocr",
         ocrUsed: musterResult.ocrUsed ?? true,
+        confidence: musterResult.confidence ?? null,
       };
 
       if (!extractionResult.hasText) {
@@ -241,6 +271,28 @@ export default function CFileAnalyzer({
       setAnalysisMetadata(result.metadata);
       setProcessingStage("");
 
+      // Storage-quota pre-flight: warn when the remaining quota looks too
+      // small for the payload, but still attempt the save
+      try {
+        const stats = await getStorageStats();
+        const estimatedPayloadBytes =
+          (extractionResult.text?.length || 0) * 2 +
+          JSON.stringify(result.analysis || {}).length;
+        const remaining = (stats.quotaLimit || 0) - (stats.quotaUsage || 0);
+        if (
+          stats.quotaLimit > 0 &&
+          (remaining < 50 * 1024 * 1024 ||
+            remaining < estimatedPayloadBytes * 2)
+        ) {
+          setStorageWarning(
+            `Browser storage is nearly full (${stats.quotaUsageMB} MB used of ${stats.quotaLimitMB} MB available). ` +
+              `Saving this analysis may fail or may not persist. Consider exporting your packet as a backup or freeing up space.`,
+          );
+        }
+      } catch (quotaErr) {
+        console.warn("Storage quota pre-flight failed:", quotaErr);
+      }
+
       // Save C-File analysis to VKB + My Packet
       try {
         const analysis = result.analysis || {};
@@ -275,6 +327,11 @@ export default function CFileAnalyzer({
               cfileAnalysisSummary: analysis.summary || "",
               cfileExposures: analysis.exposures || [],
               cfileActionItems: analysis.actionItems || [],
+              cfileExtraction: {
+                ocrMethod: extractionResult.method,
+                ocrUsed: extractionResult.ocrUsed,
+                confidence: extractionResult.confidence,
+              },
             },
           },
         });
@@ -311,6 +368,7 @@ export default function CFileAnalyzer({
     setAnalysisResult(null);
     setExtractedText(null);
     setError(null);
+    setStorageWarning(null);
     setProcessingStage("");
     setExtractionProgress({ current: 0, total: 0 });
     setChunkProgress({
@@ -436,8 +494,16 @@ export default function CFileAnalyzer({
         </div>
       )}
 
+      {/* System requirements + timing notice */}
+      <div className="mt-6">
+        <SystemRequirementsNotice
+          fileSizeMB={file ? file.size / 1024 / 1024 : null}
+          toolName="C-File Analyzer"
+        />
+      </div>
+
       {/* Analyze Button */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <button
           onClick={handleStartAnalysis}
           disabled={!file || !isAnyAIAvailable()}
@@ -450,13 +516,6 @@ export default function CFileAnalyzer({
           🔍 {t("cfileAnalyzer", "analyzeMyFile")}
         </button>
       </div>
-
-      {file && (
-        <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          {t("cfileAnalyzer", "estimatedProcessingTime")}{" "}
-          {estimateProcessingTime(Math.ceil(file.size / 5000))}
-        </div>
-      )}
     </div>
   );
 
@@ -521,8 +580,13 @@ export default function CFileAnalyzer({
             : t("cfileAnalyzer", "analyzingYourCFile")}
         </h3>
 
-        <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
           {processingStage}
+        </p>
+
+        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          ⏱️ Elapsed: {Math.floor(elapsedSeconds / 60)}:
+          {String(elapsedSeconds % 60).padStart(2, "0")} — still working
         </p>
 
         {/* PDF Extraction Progress */}
@@ -661,6 +725,50 @@ export default function CFileAnalyzer({
           </button>
         </div>
       </div>
+
+      {/* Partial-analysis warning — a veteran must never mistake a partial
+          analysis for a complete one */}
+      {analysisResult.failedChunks?.length > 0 && (
+        <div
+          role="alert"
+          className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                Partial analysis — {analysisResult.failedChunks.length} of{" "}
+                {analysisMetadata?.totalChunks ||
+                  analysisResult.failedChunks.length}{" "}
+                sections could not be analyzed
+              </h3>
+              <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                Pages not analyzed:{" "}
+                {analysisResult.failedChunks
+                  .map((fc) => `${fc.startPage}–${fc.endPage}`)
+                  .join(", ")}
+                . Findings from those pages are missing, so do not treat these
+                results as complete. Try running the analysis again.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Storage warning */}
+      {storageWarning && (
+        <div
+          role="alert"
+          className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💾</span>
+            <p className="text-amber-700 dark:text-amber-300 text-sm">
+              {storageWarning}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Executive Summary */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">

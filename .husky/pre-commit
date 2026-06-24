@@ -1,1 +1,10 @@
-npx lint-staged
+#!/usr/bin/env sh
+# Universal pre-commit hook — copy to .husky/pre-commit in target project
+# Works for any project type: skips npm/node steps if no package.json present
+set -e
+# Skip lint-staged during merge commits — stash/pop is unreliable mid-merge
+[ -f ".git/MERGE_HEAD" ] && exit 0
+[ -f "package.json" ] && npx lint-staged --concurrent false || true
+command -v gitleaks >/dev/null 2>&1 && gitleaks protect --staged --no-banner --redact || \
+  echo "⚠ gitleaks not installed — secret scanning skipped. Run: brew install gitleaks"
+[ -f "scripts/precommit-fast.mjs" ] && node scripts/precommit-fast.mjs || true

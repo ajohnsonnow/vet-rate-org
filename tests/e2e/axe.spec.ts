@@ -10,14 +10,15 @@ const APP_VERSION: string = JSON.parse(
 ).version;
 
 /**
- * Accessibility gate (audit cycle S9–S17, Sprint S12). Runs axe-core against the
- * top-20 user-facing surfaces — the home page plus 19 event-mountable modals —
+ * Accessibility gate (audit cycle S9–S17, Sprint S12; simulators added in
+ * WS-5). Runs axe-core against the home page plus 22 event-mountable modals
  * and fails on any serious/critical WCAG 2.0/2.1/2.2 A + AA violation.
  *
  * Scope rationale: the S12 Definition of Done is "axe = 0 serious/critical on
- * top-20 (CI-gated)". We gate on serious + critical only; moderate/minor
- * findings are tracked in the SR manual checklist (S12_SR_MANUAL_CHECKLIST.md),
- * not CI-blocking, to keep the gate signal high and avoid a day-one red wall of
+ * top-20 (CI-gated)"; WS-5 extended the list with the three interactive
+ * simulators. We gate on serious + critical only; moderate/minor findings are
+ * tracked in the SR manual checklist (S12_SR_MANUAL_CHECKLIST.md), not
+ * CI-blocking, to keep the gate signal high and avoid a day-one red wall of
  * cosmetic findings.
  *
  * Honest limit: axe is a static-rule engine — it cannot judge whether a label
@@ -29,12 +30,13 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const BLOCKING_IMPACTS = new Set(["serious", "critical"]);
 
 /**
- * Top-20 surfaces. The four hard-redesign modals shipped this sprint
- * (AIAssistant, DocumentIntelligenceBriefing, VeteranTranslator, TheTribunal)
- * are intentionally absent: each is flow/prop-gated, not opened by a bare
- * `open*` event, so they are manual-verify through the proven shell (same
- * status as in mobile.spec.ts). The 19 below all mount on a single dispatched
- * event in a standard build.
+ * Gated surfaces. AIAssistant, DocumentIntelligenceBriefing, and
+ * VeteranTranslator are intentionally absent: each is flow/prop-gated, not
+ * opened by a bare `open*` event, so they are manual-verify through the proven
+ * shell (same status as in mobile.spec.ts). Everything below mounts on a
+ * single dispatched event in a standard build — including the three
+ * interactive simulators added by WS-5 (each has a window-event listener in
+ * its lazy feature cluster).
  */
 const MODAL_SURFACES = [
   // Migrated to ResponsiveModal (full dialog contract from the shell).
@@ -59,6 +61,10 @@ const MODAL_SURFACES = [
   { label: "Tactical Calculator", event: "openTacticalCalculator" },
   // S12 BVA-data tool migrated to the shell.
   { label: "Appeals Lane Advisor", event: "openAppealsLaneAdvisor" },
+  // WS-5: the three interactive simulators.
+  { label: "What-If Sandbox", event: "openWhatIfSandbox" },
+  { label: "The Tribunal", event: "openTheTribunal" },
+  { label: "Body Map Selector", event: "openBodyMapSelector" },
 ];
 
 /** Set the returning-user fixture so the only dialog on screen is the one under test. */

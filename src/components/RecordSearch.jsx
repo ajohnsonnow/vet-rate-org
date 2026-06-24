@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - The Needle Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Find the Evidence" - PDF Keyword Search Interface
  *

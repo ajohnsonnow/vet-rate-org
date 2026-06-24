@@ -511,7 +511,7 @@ async function main() {
     console.log('📥 STEP 1: Fetching form metadata from VA API...');
     console.log('─'.repeat(60));
     
-    let allForms = [];
+    const allForms = [];
     
     for (const query of CONFIG.SEARCH_QUERIES) {
       const forms = await fetchAllPages(apiKey, query);

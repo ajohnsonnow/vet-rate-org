@@ -1,5 +1,10 @@
-import AIAssistant from "../../components/AIAssistant";
+import { lazy, Suspense } from "react";
 import { useAIAssistant } from "../../hooks/useAIAssistant";
+
+// B-H09: AIAssistant (and its ~127 KB AI orchestration chunk) is only needed once
+// the veteran opens the Navigator. Lazy-load it so a search-only visit doesn't pay
+// for it in the entry bundle.
+const AIAssistant = lazy(() => import("../../components/AIAssistant"));
 
 /**
  * AI Assistant (The Navigator) — floating bottom-left bubble + slide-out
@@ -16,13 +21,15 @@ export default function AIAssistantBubble({ currentTool }) {
 
   if (aiAssistant.isOpen) {
     return (
-      <AIAssistant
-        currentTool={currentTool}
-        onClose={aiAssistant.close}
-        onOpenAISettings={() =>
-          window.dispatchEvent(new CustomEvent("openAISettings"))
-        }
-      />
+      <Suspense fallback={null}>
+        <AIAssistant
+          currentTool={currentTool}
+          onClose={aiAssistant.close}
+          onOpenAISettings={() =>
+            window.dispatchEvent(new CustomEvent("openAISettings"))
+          }
+        />
+      </Suspense>
     );
   }
 

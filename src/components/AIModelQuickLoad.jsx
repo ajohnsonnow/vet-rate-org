@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - AI Model Quick Load Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Reusable component that provides quick-load buttons for AI models
  * directly in tool modals. Automatically unloads current AI before loading new one.

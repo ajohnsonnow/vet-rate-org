@@ -1,62 +1,33 @@
-# .gitleaks.toml — Project-local secret scanning config
-#
-# Used by `npm run preflight` and the GitHub Actions security workflow to
-# detect committed secrets (API keys, tokens, private keys, etc.) before they
-# reach the remote. Runs gitleaks v8+.
-#
-# Local run:
-#   gitleaks detect --no-banner --redact --config .gitleaks.toml
-#   gitleaks protect --no-banner --redact --staged --config .gitleaks.toml
-#
-# Tuning rule: an entry in [allowlist] must be paired with an explanation in
-# the trailing comment. If the explanation is not obviously safe, do not add it.
-
-title = "vet-rate-org-official"
-
 [extend]
-# Use gitleaks's built-in default ruleset (covers AWS, GCP, GitHub PATs, Slack,
-# Stripe, generic high-entropy secrets, private keys, etc.).
 useDefault = true
 
-# ── Allowlist ────────────────────────────────────────────────────────────────
-# Paths or regexes that should be exempt from secret scanning. Keep terse and
-# justified — every entry is a hole in defense.
-
 [allowlist]
-description = "Vet-rate.org false-positive allowlist"
+  description = "test fixtures and obviously fake credentials"
+  regexes = [
+    '''(?i)fake[_-]?(api[_-]?key|secret|token|password)''',
+    '''(?i)test[_-]?(key|token|pass)''',
+    '''(?i)example[_-]?(key|token|secret)''',
+    '''CHANGEME''',
+    '''YOUR_API_KEY''',
+  ]
+  paths = [
+    '''src[/\\]__tests__[/\\]''',
+    '''tests[/\\]''',
+    '''src[/\\].+\.test\.(js|jsx|ts|tsx)$''',
+    '''src[/\\].+\.spec\.(js|jsx|ts|tsx)$''',
+    '''node_modules''',
+    '''dist''',
+    '''coverage''',
+  ]
 
-paths = [
-  '''node_modules/''',
-  '''dist/''',
-  '''dist-supplylocker/''',
-  '''build/''',
-  '''coverage/''',
-  '''\.git/''',
-  '''archive/''',                  # Frozen reference dumps; no live secrets.
-  '''llm-compiler/training-data/''',  # Bundled public corpora.
-  '''public/legal-index/''',       # Generated legal-knowledge index (Sprint 6+).
-  '''.*\.lock$''',                 # Lockfiles only declare version specifiers.
-  '''.*\.snap$''',                 # Vitest snapshots.
-  '''.*\.test\.(js|jsx|ts|tsx)$''',# Test fixtures (verify, then move out if a real secret leaked).
-]
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''(?i)sk-ant-[a-zA-Z0-9-_]{20,}'''
+tags = ["anthropic", "api-key"]
 
-regexes = [
-  # localStorage/sessionStorage key NAMES (not values). vaAuth.js documents
-  # these explicitly and tags them with deepcode + nosemgrep comments.
-  '''va_(access|refresh)_token''',
-  '''va_token_expiry''',
-  '''va_oauth_state''',
-  '''va_code_verifier''',
-  '''va_user_info''',
-]
-
-stopwords = [
-  # Common placeholder values in .env.example and docs. Verify before adding.
-  "your_va_client_id_here",
-  "your_va_api_key_here",
-  "your_gemini_api_key_here",
-  "your_google_oauth_client_id_here",
-  "REPLACE_ME",
-  "EXAMPLE",
-  "placeholder",
-]
+[[rules]]
+id = "azure-connection-string"
+description = "Azure storage connection string"
+regex = '''DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[^;]+'''
+tags = ["azure", "connection-string"]

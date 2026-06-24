@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Blue Button X-Ray Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Instant Evidence" - AI-powered parser for VA Blue Button Medical Records
  * Extracts diagnoses from Problem List section without requiring 6-month C-File wait
@@ -13,6 +13,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
+import { scanDocumentForCrisis } from "../utils/crisisInterceptor";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
@@ -30,6 +31,7 @@ import {
   saveDocumentToPacket,
   PACKET_DOC_TYPES,
 } from "../utils/myPacketManager";
+import { annotateConditionVerification } from "../utils/hallucinationTrap";
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -672,6 +674,9 @@ export default function BlueButtonXRay({
       const fullPrompt =
         BLUE_BUTTON_AI_PROMPT_HEADER + text + BLUE_BUTTON_AI_PROMPT_FOOTER;
 
+      // AIS-05: non-blocking crisis scan over the raw health-record text.
+      scanDocumentForCrisis(text);
+
       const aiResponse = await generateAI(fullPrompt, {
         temperature: 0.2,
         maxTokens: 2000,
@@ -722,6 +727,9 @@ export default function BlueButtonXRay({
               BLUE_BUTTON_AI_PROMPT_HEADER +
               chunkText +
               BLUE_BUTTON_AI_PROMPT_FOOTER;
+
+            // AIS-05: non-blocking crisis scan over this raw record chunk.
+            scanDocumentForCrisis(chunkText);
 
             const aiResponse = await generateAI(chunkPrompt, {
               temperature: strategy.temp,
@@ -1237,7 +1245,7 @@ export default function BlueButtonXRay({
    */
   const formatConditionsResponse = (parsed) => {
     // Transform AI response into our condition format
-    const conditions = parsed.conditions.map((c, index) => ({
+    const mapped = parsed.conditions.map((c, index) => ({
       id: index + 1,
       rawName: c.rawText || c.name,
       standardizedName: c.name,
@@ -1246,6 +1254,11 @@ export default function BlueButtonXRay({
       category: c.category || "Other",
       selected: false,
     }));
+
+    // D-H09: the AI can hallucinate diagnoses. Flag each against the official
+    // 38 CFR code DB — matched → verified (with officialName), everything else →
+    // unverified — so AI output is never shown as VA-confirmed. Nothing is dropped.
+    const conditions = annotateConditionVerification(mapped);
 
     // Sort: claimable conditions first, then alphabetically
     conditions.sort((a, b) => {
@@ -1822,6 +1835,14 @@ export default function BlueButtonXRay({
                             {condition.isClaimable && (
                               <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
                                 ⭐ Commonly Claimed
+                              </span>
+                            )}
+                            {!condition.verified && (
+                              <span
+                                className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full"
+                                title="AI-extracted from your report and not matched to the official VA diagnostic-code list. Confirm against your own records before relying on it."
+                              >
+                                ⚠️ Unverified
                               </span>
                             )}
                           </div>

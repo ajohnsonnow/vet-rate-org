@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -8,10 +8,17 @@
  * Drag-and-drop interface for testing combined rating calculations
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { getSavedClaims } from "../utils/claimsStorage";
+import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
+import {
+  combineMultipleRatings,
+  calculateBilateralFactor,
+  roundToNearest10,
+} from "../utils/vaCalculator";
 
 export default function WhatIfSandbox({ onClose }) {
   const { _t } = useLanguage();
@@ -23,6 +30,12 @@ export default function WhatIfSandbox({ onClose }) {
   const [combinedRating, setCombinedRating] = useState(0);
   const [monthlyPay, setMonthlyPay] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  // Screen-reader announcement for each add/remove ("Tinnitus 10 percent
+  // added. Combined rating now 50 percent."). The pending half is stashed in a
+  // ref by the mutating handler, then completed once the new combined rating
+  // is computed in the [currentConditions] effect.
+  const [announcement, setAnnouncement] = useState("");
+  const pendingAnnounceRef = useRef(null);
 
   // Common VA disabilities with typical ratings
   const commonConditions = [
@@ -71,20 +84,9 @@ export default function WhatIfSandbox({ onClose }) {
     },
   ];
 
-  // 2025 VA Compensation Rates (Veterans without dependents)
-  const compensationRates = {
-    0: 0,
-    10: 171.23,
-    20: 338.49,
-    30: 524.31,
-    40: 755.28,
-    50: 1075.16,
-    60: 1361.88,
-    70: 1716.28,
-    80: 1995.01,
-    90: 2241.91,
-    100: 3737.85,
-  };
+  // Current-year solo compensation rates from the single source of truth
+  const { year: ratesYear, rates: currentRates } = getCurrentYearRates();
+  const compensationRates = currentRates.solo;
 
   useEffect(() => {
     // Generate all possible condition combinations
@@ -107,23 +109,33 @@ export default function WhatIfSandbox({ onClose }) {
   }, []);
 
   useEffect(() => {
-    calculateCombinedRating();
+    const finalRating = calculateCombinedRating();
+    if (pendingAnnounceRef.current) {
+      setAnnouncement(
+        `${pendingAnnounceRef.current} Combined rating now ${finalRating} percent.`,
+      );
+      pendingAnnounceRef.current = null;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentConditions]);
 
   const loadCurrentClaims = () => {
     try {
-      const saved = localStorage.getItem("savedClaims");
-      if (saved) {
-        const claims = JSON.parse(saved);
-        const conditions = claims
-          .filter((c) => c.rating && c.rating > 0)
-          .map((c) => ({
-            id: `${c.condition}-${c.rating}-${Date.now()}-${Math.random()}`,
-            name: c.condition,
-            rating: c.rating,
-            category: "saved",
-          }));
+      // Canonical claims store ("savedClaims" was a key nothing writes, so
+      // this loader had been a silent no-op since the store was renamed)
+      const claims = getSavedClaims();
+      const conditions = claims
+        .filter((c) => {
+          const rating = c.selectedRating ?? c.ratingPercent;
+          return typeof rating === "number" && rating > 0;
+        })
+        .map((c) => ({
+          id: `${c.conditionName}-${Date.now()}-${Math.random()}`,
+          name: c.conditionName,
+          rating: c.selectedRating ?? c.ratingPercent,
+          category: "saved",
+        }));
+      if (conditions.length > 0) {
         setCurrentConditions(conditions);
       }
     } catch (e) {
@@ -140,6 +152,7 @@ export default function WhatIfSandbox({ onClose }) {
         rating: r.rating,
         category: "user",
       }));
+      pendingAnnounceRef.current = `${formatted.length} saved conditions loaded.`;
       setCurrentConditions(formatted);
     } else {
       alert(
@@ -152,21 +165,16 @@ export default function WhatIfSandbox({ onClose }) {
     if (currentConditions.length === 0) {
       setCombinedRating(0);
       setMonthlyPay(0);
-      return;
+      return 0;
     }
 
-    // Sort ratings highest to first
-    const ratings = [...currentConditions]
-      .sort((a, b) => b.rating - a.rating)
-      .map((c) => c.rating);
-
-    // Check for bilateral conditions
+    // Single source of truth for the math: 38 CFR § 4.25 combine + § 4.26
+    // bilateral factor, via vaCalculator. Bilateral detection (knees/shoulders
+    // by L/R name) stays here; the arithmetic is the canonical VA-table engine.
     const hasBilateralKnees = hasMatchingBilateral("Knee");
     const hasBilateralShoulders = hasMatchingBilateral("Shoulder");
 
-    let combined = ratings[0];
-
-    // Apply bilateral factor if applicable
+    let groupRatings;
     if (hasBilateralKnees || hasBilateralShoulders) {
       const bilateralRatings = [];
       const otherRatings = [];
@@ -182,38 +190,18 @@ export default function WhatIfSandbox({ onClose }) {
         }
       });
 
-      if (bilateralRatings.length === 2) {
-        // Calculate bilateral combined rating
-        bilateralRatings.sort((a, b) => b - a);
-        let bilateralCombined = bilateralRatings[0];
-        const efficiency = 100 - bilateralCombined;
-        const addition = Math.round((bilateralRatings[1] * efficiency) / 100);
-        bilateralCombined += addition;
-
-        // Apply 10% bilateral factor
-        bilateralCombined = Math.round(bilateralCombined * 1.1);
-
-        // Now combine with other ratings
-        otherRatings.sort((a, b) => b - a);
-        combined = bilateralCombined;
-
-        for (let i = 0; i < otherRatings.length; i++) {
-          const efficiency = 100 - combined;
-          const addition = Math.round((otherRatings[i] * efficiency) / 100);
-          combined += addition;
-        }
-      }
+      // The bilateral group (combined + 10% factor) becomes one rating, then
+      // combines with the rest. Handles >2 paired conditions too — the old
+      // code silently dropped everything unless exactly two were present.
+      groupRatings = [
+        calculateBilateralFactor(bilateralRatings),
+        ...otherRatings,
+      ];
     } else {
-      // Standard VA combined rating formula
-      for (let i = 1; i < ratings.length; i++) {
-        const efficiency = 100 - combined;
-        const addition = Math.round((ratings[i] * efficiency) / 100);
-        combined += addition;
-      }
+      groupRatings = currentConditions.map((c) => c.rating);
     }
 
-    // Round to nearest 10
-    const finalRating = Math.round(combined / 10) * 10;
+    const finalRating = roundToNearest10(combineMultipleRatings(groupRatings));
     setCombinedRating(finalRating);
 
     // Calculate monthly pay
@@ -223,6 +211,8 @@ export default function WhatIfSandbox({ onClose }) {
     // Trigger animation
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 500);
+
+    return finalRating;
   };
 
   const hasMatchingBilateral = (bodyPart) => {
@@ -254,6 +244,7 @@ export default function WhatIfSandbox({ onClose }) {
         id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`,
       };
       newConditions.splice(index, 0, newCondition);
+      pendingAnnounceRef.current = `${draggedItem.name} ${draggedItem.rating} percent added.`;
       setCurrentConditions(newConditions);
       setDraggedItem(null);
       setHoveredIndex(null);
@@ -267,12 +258,14 @@ export default function WhatIfSandbox({ onClose }) {
         ...draggedItem,
         id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`,
       };
+      pendingAnnounceRef.current = `${draggedItem.name} ${draggedItem.rating} percent added.`;
       setCurrentConditions([...currentConditions, newCondition]);
       setDraggedItem(null);
     }
   };
 
   const addCondition = (condition) => {
+    pendingAnnounceRef.current = `${condition.name} ${condition.rating} percent added.`;
     setCurrentConditions((prev) => [
       ...prev,
       {
@@ -283,26 +276,33 @@ export default function WhatIfSandbox({ onClose }) {
   };
 
   const removeCondition = (id) => {
+    const condition = currentConditions.find((c) => c.id === id);
+    if (condition) {
+      pendingAnnounceRef.current = `${condition.name} ${condition.rating} percent removed.`;
+    }
     setCurrentConditions(currentConditions.filter((c) => c.id !== id));
   };
 
   const clearAll = () => {
+    pendingAnnounceRef.current = "All conditions cleared.";
     setCurrentConditions([]);
   };
 
+  // 600/700-grade shades: every category keeps >=4.5:1 contrast against the
+  // white pill text (WCAG 1.4.3 — the 500 grades failed for yellow/cyan/green).
   const getCategoryColor = (category) => {
     const colors = {
-      mental: "bg-purple-500",
-      respiratory: "bg-cyan-500",
-      auditory: "bg-yellow-500",
-      neurological: "bg-red-500",
-      musculoskeletal: "bg-blue-500",
-      cardiovascular: "bg-pink-500",
-      digestive: "bg-green-500",
-      endocrine: "bg-orange-500",
-      saved: "bg-gray-500",
+      mental: "bg-purple-600",
+      respiratory: "bg-cyan-700",
+      auditory: "bg-yellow-700",
+      neurological: "bg-red-600",
+      musculoskeletal: "bg-blue-600",
+      cardiovascular: "bg-pink-600",
+      digestive: "bg-green-700",
+      endocrine: "bg-orange-700",
+      saved: "bg-gray-600",
     };
-    return colors[category] || "bg-gray-500";
+    return colors[category] || "bg-gray-600";
   };
 
   const _getRatingColor = (rating) => {
@@ -321,7 +321,7 @@ export default function WhatIfSandbox({ onClose }) {
             className="mb-1 text-xl font-bold sm:mb-2 sm:text-3xl"
           >
             🎯 The What-If Sandbox{" "}
-            <span className="rounded bg-amber-500 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
+            <span className="rounded bg-amber-700 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
               BETA
             </span>
           </h2>
@@ -331,7 +331,7 @@ export default function WhatIfSandbox({ onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="shrink-0 text-2xl font-bold text-white hover:text-gray-200"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
           aria-label="Close dialog"
         >
           ×
@@ -350,6 +350,7 @@ export default function WhatIfSandbox({ onClose }) {
               Combined VA Rating
             </p>
             <p
+              data-testid="combined-rating"
               className={`text-3xl font-bold transition-all duration-300 sm:text-5xl ${
                 isAnimating ? "scale-110" : "scale-100"
               }`}
@@ -369,7 +370,7 @@ export default function WhatIfSandbox({ onClose }) {
               ${monthlyPay.toFixed(2)}
             </p>
             <p className="mt-1 text-xs text-white/60">
-              2025 rates (no dependents)
+              {ratesYear} rates (no dependents)
             </p>
           </div>
         </div>
@@ -385,15 +386,33 @@ export default function WhatIfSandbox({ onClose }) {
       labelledBy="whatif-sandbox-title"
       size="2xl"
     >
+      {/* SR announcement of every add/remove and the resulting combined rating */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-0">
         {/* Sidebar - Available Conditions */}
-        <div className="md:col-span-1 md:max-h-[55vh] md:overflow-y-auto md:border-r md:border-gray-300 md:pr-3 dark:md:border-gray-700">
+        {/* Scrollable region must be keyboard-focusable (axe
+            scrollable-region-focusable), hence the intentional tabIndex */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Condition library"
+          className="md:col-span-1 md:max-h-[55vh] md:overflow-y-auto md:border-r md:border-gray-300 md:pr-3 dark:md:border-gray-700"
+        >
           <h3 className="mb-3 text-lg font-bold text-gray-800 dark:text-white">
             📦 Condition Library
           </h3>
           <p className="mb-4 text-xs text-gray-600 dark:text-gray-400">
-            Tap a condition to add it (or drag it on desktop).
+            Tap or press Enter on a condition to add it (or drag it on desktop).
           </p>
 
           {/* Group by category */}
@@ -425,7 +444,7 @@ export default function WhatIfSandbox({ onClose }) {
                       draggable
                       onDragStart={(e) => handleDragStart(e, condition)}
                       onClick={() => addCondition(condition)}
-                      className={`${getCategoryColor(condition.category)} flex w-full cursor-move items-center justify-between rounded p-2 text-xs text-white transition-opacity hover:opacity-80`}
+                      className={`${getCategoryColor(condition.category)} flex w-full cursor-move items-center justify-between rounded p-2 text-xs text-white transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
                       aria-label={`Add ${condition.name} at ${condition.rating}%`}
                     >
                       <span>{condition.name}</span>
@@ -439,7 +458,13 @@ export default function WhatIfSandbox({ onClose }) {
         </div>
 
         {/* Canvas - Current Scenario */}
-        <div className="border-t border-gray-200 pt-4 dark:border-gray-700 md:col-span-3 md:max-h-[55vh] md:overflow-y-auto md:border-t-0 md:pl-4 md:pt-0">
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Current scenario"
+          className="border-t border-gray-200 pt-4 dark:border-gray-700 md:col-span-3 md:max-h-[55vh] md:overflow-y-auto md:border-t-0 md:pl-4 md:pt-0"
+        >
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">
               🎨 Current Scenario ({currentConditions.length} conditions)
@@ -500,7 +525,7 @@ export default function WhatIfSandbox({ onClose }) {
                       <span className="text-lg font-bold">
                         {condition.name}
                       </span>
-                      <span className="ml-3 text-sm capitalize opacity-75">
+                      <span className="ml-3 text-sm capitalize">
                         ({condition.category})
                       </span>
                     </div>
@@ -510,8 +535,8 @@ export default function WhatIfSandbox({ onClose }) {
                       </span>
                       <button
                         onClick={() => removeCondition(condition.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
-                        aria-label="Remove condition"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        aria-label={`Remove ${condition.name} ${condition.rating}%`}
                       >
                         ×
                       </button>
@@ -555,7 +580,7 @@ export default function WhatIfSandbox({ onClose }) {
               <li>
                 • Bilateral factor automatically applied when both sides rated
               </li>
-              <li>• Monthly pay reflects 2025 compensation rates</li>
+              <li>• Monthly pay reflects {ratesYear} compensation rates</li>
               <li>• Test &quot;what-if&quot; scenarios before filing claims</li>
             </ul>
           </div>

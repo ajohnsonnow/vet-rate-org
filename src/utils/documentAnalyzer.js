@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Universal Document Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Supports multiple file formats for veteran document uploads:
  * - PDF (text + OCR for scanned)
@@ -18,6 +18,7 @@ import {
   OCR_STATES,
   getProgressStyling as getOCRProgressStyling,
 } from "./ocr";
+import { describePdfPasswordError } from "./fileTypeGuards";
 
 // Re-export for convenience
 export { OCR_STATES };
@@ -77,6 +78,10 @@ export const isFileSupported = (file) => {
 
   return allExtensions.includes(ext);
 };
+
+// Shared PDF guard lives in a pdf.js-free module so it stays unit-testable;
+// re-exported here to keep documentAnalyzer's public API intact.
+export { isPdfFile } from "./fileTypeGuards";
 
 /**
  * Get file type label
@@ -145,7 +150,21 @@ async function analyzePDFDocument(file, onProgress) {
 /**
  * Analyze DOCX file (Word document)
  */
+// RT7-4: a .docx is a zip; mammoth decompresses it into memory on the main
+// thread. A small file can still expand enormously (zip bomb / runaway doc).
+// Reject oversized uploads up front as a cheap first line of defense — a real
+// DBQ / letter .docx is a few MB. (Worker offload is a flagged follow-up.)
+const MAX_DOCX_BYTES = 25 * 1024 * 1024; // 25 MB compressed
+
 async function analyzeDOCXDocument(file, onProgress) {
+  if (file.size > MAX_DOCX_BYTES) {
+    throw new Error(
+      `This Word document is too large to process safely (${Math.round(
+        file.size / (1024 * 1024),
+      )} MB; limit ${MAX_DOCX_BYTES / (1024 * 1024)} MB). Convert it to PDF or split it into smaller files, then try again.`,
+    );
+  }
+
   onProgress({
     state: OCR_STATES.LOADING,
     progress: 10,
@@ -235,7 +254,7 @@ async function analyzeRTFDocument(file, onProgress) {
 
     // Basic RTF to plain text conversion
     // Remove RTF control sequences
-    let plainText = text
+    const plainText = text
       .replace(/\\[a-z]+[-]?\d*[ ]?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars
@@ -382,8 +401,7 @@ export async function renderPDFToImages(
   const pdfjsWorker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
 
-  const STANDARD_FONT_DATA_URL =
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+  const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
   onProgress({
     state: OCR_STATES.LOADING,
@@ -467,6 +485,8 @@ export async function renderPDFToImages(
     };
   } catch (error) {
     console.error("Error rendering PDF to images:", error);
+    const pwError = describePdfPasswordError(error);
+    if (pwError) throw pwError;
     throw new Error(`Failed to render PDF: ${error.message}`);
   }
 }

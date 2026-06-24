@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Handles large-scale document ingestion for veteran claim files:
  * - Multiple DD214s
@@ -26,6 +26,8 @@
 import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
 import { processLargePDF } from "./pdfExtractor";
 import { formatFileSize } from "./ocr";
+import { scanDocumentForCrisis } from "./crisisInterceptor";
+import { untrustedSection } from "./aiSystemPrompts";
 import {
   classifyDocument,
   classifyDocumentBatch,
@@ -41,7 +43,10 @@ import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
 // ============================================================
-import { attemptJSONRepair } from "./cfileAnalyzer";
+import {
+  attemptJSONRepair,
+  enforceValidDiagnosticCodes,
+} from "./cfileAnalyzer";
 // ============================================================
 // FLORENCE-2 VISION AI SERVICE (v1.16.2)
 // Fallback for poor OCR quality on scanned/aged documents
@@ -68,6 +73,48 @@ import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
 let visionInitialized = false;
 let visionInitializing = false;
+
+/**
+ * Adaptive ETA: rolling average of pages/sec over the most recent extraction
+ * batches. Static formulas drift badly on a 313MB C-File where per-page cost
+ * varies between text-layer and scanned sections.
+ */
+const createEtaTracker = (windowSize = 5) => {
+  const samples = [];
+  let lastPages = 0;
+  let lastTime = Date.now();
+
+  const rate = () => {
+    let pages = 0;
+    let ms = 0;
+    for (const s of samples) {
+      pages += s.pages;
+      ms += s.ms;
+    }
+    if (pages === 0 || ms === 0) return null;
+    return (pages / ms) * 1000;
+  };
+
+  return {
+    sample(processedPages) {
+      const now = Date.now();
+      const pages = processedPages - lastPages;
+      const ms = now - lastTime;
+      lastPages = processedPages;
+      lastTime = now;
+      if (pages > 0 && ms > 0) {
+        samples.push({ pages, ms });
+        if (samples.length > windowSize) samples.shift();
+      }
+    },
+    pagesPerSecond: rate,
+    etaSeconds(remainingPages) {
+      const r = rate();
+      if (!r || remainingPages <= 0) return null;
+      return Math.ceil(remainingPages / r);
+    },
+  };
+};
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -107,7 +154,11 @@ OUTPUT FORMAT: Valid JSON only. Structure:
 
 RULES: Only include findings present in text. Be concise.`;
 
-  const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${text.substring(0, 15000)}`;
+  // PI-02: spotlight the untrusted C-file excerpt (treat-as-data delimiters).
+  const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${untrustedSection("C-FILE EXCERPT", text.substring(0, 15000))}`;
+
+  // AIS-05: non-blocking crisis scan over the raw C-File excerpt.
+  scanDocumentForCrisis(text);
 
   try {
     const response = await generateAI(userPrompt, {
@@ -144,6 +195,7 @@ RULES: Only include findings present in text. Be concise.`;
     }
 
     if (result) {
+      const rejectedCodes = enforceValidDiagnosticCodes(result);
       // eslint-disable-next-line no-console
       console.log(
         `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
@@ -152,6 +204,9 @@ RULES: Only include findings present in text. Be concise.`;
         ...result,
         analyzedAt: new Date().toISOString(),
         aiPowered: true,
+        ...(rejectedCodes.length > 0 && {
+          rejectedDiagnosticCodes: rejectedCodes,
+        }),
       };
     }
 
@@ -464,6 +519,7 @@ const processSingleDocument = async (file, onProgress) => {
         console.log(
           `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
         );
+        const etaTracker = createEtaTracker();
         const largeResult = await processLargePDF(file, {
           batchSize: 20,
           onProgress: (cur, total, pct) => {
@@ -475,9 +531,12 @@ const processSingleDocument = async (file, onProgress) => {
               message: `Streaming page ${cur}/${total} (${pct}%)...`,
               currentPage: cur,
               totalPages: total,
+              etaSeconds: etaTracker.etaSeconds(total - cur),
+              pagesPerSecond: etaTracker.pagesPerSecond(),
             });
           },
           onBatch: (batch) => {
+            etaTracker.sample(batch.processedSoFar);
             // Forward per-batch updates for responsive UI on very large files
             onProgress?.({
               filename: file.name,
@@ -487,6 +546,10 @@ const processSingleDocument = async (file, onProgress) => {
               message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
               currentPage: batch.processedSoFar,
               totalPages: batch.totalPages,
+              etaSeconds: etaTracker.etaSeconds(
+                batch.totalPages - batch.processedSoFar,
+              ),
+              pagesPerSecond: etaTracker.pagesPerSecond(),
             });
           },
         });
@@ -1041,7 +1104,6 @@ const parseDocumentByType = async (
 
         // eslint-disable-next-line no-console
         console.log(`✅ Vision-parsed DD214:`, {
-          name: visionData.veteranName,
           branch: visionData.branch,
           rank: visionData.rank,
           mos: visionData.mos,
@@ -1598,9 +1660,9 @@ const parseServiceRecord = async (text) => {
     for (const pattern of namePatterns) {
       const match = box1Text.match(pattern);
       if (match) {
-        let potentialLastName = match[1]?.trim().toUpperCase();
-        let potentialFirstName = match[2]?.trim().toUpperCase();
-        let potentialMiddleName = match[3]?.trim().toUpperCase() || null;
+        const potentialLastName = match[1]?.trim().toUpperCase();
+        const potentialFirstName = match[2]?.trim().toUpperCase();
+        const potentialMiddleName = match[3]?.trim().toUpperCase() || null;
 
         // === VALIDATION ===
         // Reject if ANY part matches a DD214 field label
@@ -2275,7 +2337,6 @@ const parseServiceRecord = async (text) => {
 
     // eslint-disable-next-line no-console
     console.log("📋 DD214 parsed fields:", {
-      veteranName: data.veteranName,
       branch: data.branch,
       rank: data.rank,
       mos: data.mos,
@@ -3150,16 +3211,24 @@ export const generateMusterCallReport = async (
     return summary.length > 0 ? summary.join(", ") : "Limited data";
   };
 
-  const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
-
-SERVICE RECORDS (${serviceRecords.length} documents):
+  // A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
+  // whole document-derived block in a spotlighted section so an injected
+  // instruction inside a filename/summary is treated as data, not a command.
+  const documentEvidence = untrustedSection(
+    "UPLOADED DOCUMENT EVIDENCE",
+    `SERVICE RECORDS (${serviceRecords.length} documents):
 ${serviceRecords.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 RATING DECISIONS (${ratingDocs.length} documents):
 ${ratingDocs.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 MEDICAL RECORDS (${medicalDocs.length} documents):
-${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}
+${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}`,
+  );
+
+  const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
+
+${documentEvidence}
 
 Provide:
 1. **Service Connection Opportunities**: What conditions should be claimed based on service records?

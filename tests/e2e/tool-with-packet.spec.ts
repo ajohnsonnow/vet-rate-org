@@ -109,19 +109,23 @@ test.describe("Calculate cluster — with 9-condition packet", () => {
     await bootWithPacket(page);
     await openTool(page, "openTacticalCalculator");
 
-    // The calculator should list the pre-loaded conditions
+    // WS-7 acceptance: the calculator must surface the packet's 9 rated
+    // conditions via "Load from My Records" and compute the verified 80%
+    // combined rating with zero manual typing. (The previous version of
+    // this test passed vacuously on Chromium — innerText included <option>
+    // values containing "50"/"80" — while the conditions never hydrated.)
     const dialog = page.locator('[role="dialog"]').first();
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
-    const dialogText = await dialog.innerText().catch(() => "");
+    const loadBtn = dialog.getByRole("button", {
+      name: "Load into calculator",
+    });
+    await expect(loadBtn).toBeVisible({ timeout: 7000 });
+    await loadBtn.click();
 
-    // Full condition-name hydration from localStorage into the calculator UI
-    // requires Sprint-6 app changes (audit/fable-master-plan). On main, guard
-    // against a blank or crashed dialog — any rendered text is a pass.
-    expect(
-      dialogText.trim().length,
-      `Calculator dialog was empty (text: "${dialogText.slice(0, 300)}")`,
-    ).toBeGreaterThan(0);
+    await expect(dialog).toContainText("PTSD", { timeout: 7000 });
+    await expect(dialog).toContainText("Tinnitus");
+    await expect(dialog).toContainText("80%", { timeout: 7000 });
     await closeTool(page);
   });
 

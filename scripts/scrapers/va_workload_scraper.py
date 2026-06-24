@@ -74,6 +74,10 @@ HEADERS = {
 MIN_DELAY = 1
 MAX_DELAY = 3
 
+# Per-request timeout (D-M19): fail fast instead of hanging the whole pipeline
+# on an unresponsive VA endpoint. (connect, read) seconds.
+REQUEST_TIMEOUT = (10, 30)
+
 # Allowed URL prefixes for SSRF protection
 _ALLOWED_URL_PREFIXES = (
     'https://www.va.gov',
@@ -115,7 +119,7 @@ class VAWorkloadScraper:
         reports = []
         
         try:
-            response = self.session.get(MMWR_URL)
+            response = self.session.get(MMWR_URL, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -163,7 +167,7 @@ class VAWorkloadScraper:
         try:
             self._delay()
             _safe_report_url = _extract_safe_url(report_url)
-            response = self.session.get(_safe_report_url)
+            response = self.session.get(_safe_report_url, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
             
             with open(filepath, 'wb') as f:
@@ -240,8 +244,8 @@ class VAWorkloadScraper:
                                 'min': float(df[col_name].min()) if pd.notnull(df[col_name].min()) else None,
                                 'max': float(df[col_name].max()) if pd.notnull(df[col_name].max()) else None,
                             }
-                    except:
-                        pass
+                    except (ValueError, TypeError, KeyError) as e:
+                        print(f"⚠️  Could not summarize column {col_name} for {metric}: {e}")
                     break
     
     def get_claims_processing_times(self) -> Dict:
@@ -255,7 +259,7 @@ class VAWorkloadScraper:
         processing_url = "https://www.va.gov/claim-or-appeal-status/"
         
         try:
-            response = self.session.get(processing_url)
+            response = self.session.get(processing_url, timeout=REQUEST_TIMEOUT)
             soup = BeautifulSoup(response.text, 'html.parser')
             
             times = {}
@@ -310,7 +314,7 @@ class VAOpenDataFetcher:
         
         try:
             # Note: This is a public API but may require registration for heavy use
-            response = self.session.get(f"{search_url}?q=compensation&per_page=50")
+            response = self.session.get(f"{search_url}?q=compensation&per_page=50", timeout=REQUEST_TIMEOUT)
             
             if response.status_code == 200:
                 data = response.json()
@@ -334,7 +338,7 @@ class VAOpenDataFetcher:
         url = f"https://www.data.va.gov/resource/{dataset_id}.{format}"
         
         try:
-            response = self.session.get(url, params={'$limit': 10000})
+            response = self.session.get(url, params={'$limit': 10000}, timeout=REQUEST_TIMEOUT)
             
             if response.status_code == 200:
                 return response.json()

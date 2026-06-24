@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - BVA Success Rate Data
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Data derived from analysis of 18,609+ BVA decisions (2023-2025)
  * Sources: BVA Decision Analysis, VA Monday Morning Workload Reports

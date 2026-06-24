@@ -249,6 +249,18 @@ describe("validateAIResponse — CFR citation grounding", () => {
     const result = validateAIResponse("Per 38 CFR § 4.999, ...");
     expect(result.isValid).toBe(true); // permissive without loadedRegulations
   });
+
+  it("a STRING context (the AIS-01 bug) silently disables grounding — call site must pass an OBJECT", () => {
+    // unifiedAIService.generateAI previously called validateAIResponse(text,
+    // options.taskType) — a STRING — so context.loadedRegulations was undefined
+    // and ungrounded CFR citations were never caught. Pin the contract so the
+    // string-arg pattern can't silently return.
+    const ungrounded = "Per 38 CFR § 4.999, you qualify.";
+    expect(validateAIResponse(ungrounded, "claim-analysis").isValid).toBe(true);
+    expect(
+      validateAIResponse(ungrounded, { loadedRegulations: ["4.71"] }).isValid,
+    ).toBe(false);
+  });
 });
 
 describe("validateAIResponse — warnings (non-blocking)", () => {

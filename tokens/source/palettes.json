@@ -1,0 +1,421 @@
+{
+  "_comment": "Affiliation palette tokens — single source of truth for Sprint 1 generator. Sprint 3 (Haiku): copy the `army` block for each remaining palette from docs/AFFILIATION_PALETTES.md §3. Shape is flat: id → light/dark → va-blue + va-gold. No `default` entry — default means no palette class on <html>.",
+  "palettes": {
+    "army": {
+      "brand": {
+        "value": "#9a7a00",
+        "comment": "Army brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#000000",
+          "comment": "Army light anchor — 21.0:1 on white"
+        },
+        "va-gold": {
+          "value": "#b59004",
+          "comment": "Army light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#000000",
+          "comment": "army dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#ffcb05",
+          "comment": "Army dark accent (vivid brand gold) — 10.3:1 on #1a2620"
+        }
+      }
+    },
+    "navy": {
+      "brand": {
+        "value": "#00205b",
+        "comment": "Navy brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#00205b",
+          "comment": "Navy light anchor — 15.5:1 on white"
+        },
+        "va-gold": {
+          "value": "#a0946a",
+          "comment": "Navy light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#00205b",
+          "comment": "navy dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#c5b783",
+          "comment": "Navy dark accent — 7.8:1 on #1a2620"
+        }
+      }
+    },
+    "air-force": {
+      "brand": {
+        "value": "#00308f",
+        "comment": "Air Force brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#00308f",
+          "comment": "Air Force light anchor — 11.5:1 on white"
+        },
+        "va-gold": {
+          "value": "#949596",
+          "comment": "Air Force light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#00308f",
+          "comment": "air-force dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#a7a8aa",
+          "comment": "Air Force dark accent — 6.6:1 on #1a2620"
+        }
+      }
+    },
+    "marines": {
+      "brand": {
+        "value": "#ab0520",
+        "comment": "Marines brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#ab0520",
+          "comment": "Marines light anchor — 7.6:1 on white"
+        },
+        "va-gold": {
+          "value": "#ac9064",
+          "comment": "Marines light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#ab0520",
+          "comment": "marines dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#c5a572",
+          "comment": "Marines dark accent — 6.7:1 on #1a2620"
+        }
+      }
+    },
+    "coast-guard": {
+      "brand": {
+        "value": "#003b71",
+        "comment": "Coast Guard brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#003b71",
+          "comment": "Coast Guard light anchor — 11.3:1 on white"
+        },
+        "va-gold": {
+          "value": "#e6761e",
+          "comment": "Coast Guard light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#003b71",
+          "comment": "coast-guard dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#f57e20",
+          "comment": "Coast Guard dark accent — 5.9:1 on #1a2620"
+        }
+      }
+    },
+    "space-force": {
+      "brand": {
+        "value": "#1b2a4a",
+        "comment": "Space Force brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#1b2a4a",
+          "comment": "Space Force light anchor — 14.2:1 on white"
+        },
+        "va-gold": {
+          "value": "#949596",
+          "comment": "Space Force light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#1b2a4a",
+          "comment": "space-force dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#a7a8aa",
+          "comment": "Space Force dark accent — 6.6:1 on #1a2620"
+        }
+      }
+    },
+    "national-guard": {
+      "brand": {
+        "value": "#00205b",
+        "comment": "National Guard brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#00205b",
+          "comment": "National Guard light anchor — 15.5:1 on white"
+        },
+        "va-gold": {
+          "value": "#b88f20",
+          "comment": "National Guard light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#00205b",
+          "comment": "national-guard dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#ffc72c",
+          "comment": "National Guard dark accent — 10.0:1 on #1a2620"
+        }
+      }
+    },
+    "reserves": {
+      "brand": {
+        "value": "#0a4d2e",
+        "comment": "Reserves brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#0a4d2e",
+          "comment": "Reserves light anchor — 9.9:1 on white"
+        },
+        "va-gold": {
+          "value": "#a0946a",
+          "comment": "Reserves light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#0a4d2e",
+          "comment": "reserves dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#c5b783",
+          "comment": "Reserves dark accent — 7.8:1 on #1a2620"
+        }
+      }
+    },
+    "pride": {
+      "brand": {
+        "value": "#6d2380",
+        "comment": "Pride brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#6d2380",
+          "comment": "Pride light anchor — 9.5:1 on white"
+        },
+        "va-gold": {
+          "value": "#df7b00",
+          "comment": "Pride light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#6d2380",
+          "comment": "pride dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#ff8c00",
+          "comment": "Pride dark accent — 6.7:1 on #1a2620"
+        }
+      }
+    },
+    "flag": {
+      "brand": {
+        "value": "#3c3b6e",
+        "comment": "Flag brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#3c3b6e",
+          "comment": "Flag light anchor — 10.3:1 on white"
+        },
+        "va-gold": {
+          "value": "#cc6b77",
+          "comment": "flag accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#3c3b6e",
+          "comment": "flag dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#cc6b77",
+          "comment": "flag accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      }
+    },
+    "pow-mia": {
+      "brand": {
+        "value": "#1a1a1a",
+        "comment": "POW-MIA brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#1a1a1a",
+          "comment": "POW-MIA light anchor — 17.4:1 on white"
+        },
+        "va-gold": {
+          "value": "#8a8a8a",
+          "comment": "POW-MIA light accent — 3.5:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#1a1a1a",
+          "comment": "pow-mia dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#9a9a9a",
+          "comment": "POW-MIA dark accent — 5.4:1 on #1a2620"
+        }
+      }
+    },
+    "gold-star": {
+      "brand": {
+        "value": "#8a6a00",
+        "comment": "Gold Star brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#3c3b6e",
+          "comment": "Gold Star light anchor — 10.3:1 on white"
+        },
+        "va-gold": {
+          "value": "#c18b15",
+          "comment": "Gold Star light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#3c3b6e",
+          "comment": "gold-star dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#ffb81c",
+          "comment": "Gold Star dark accent — 9.0:1 on #1a2620"
+        }
+      }
+    },
+    "purple-heart": {
+      "brand": {
+        "value": "#5d2a6e",
+        "comment": "Purple Heart brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#5d2a6e",
+          "comment": "Purple Heart light anchor — 10.4:1 on white"
+        },
+        "va-gold": {
+          "value": "#ac9064",
+          "comment": "Purple Heart light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#5d2a6e",
+          "comment": "purple-heart dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#c5a572",
+          "comment": "Purple Heart dark accent — 6.7:1 on #1a2620"
+        }
+      }
+    },
+    "women-veterans": {
+      "brand": {
+        "value": "#6a1b4d",
+        "comment": "Women Veterans brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#6a1b4d",
+          "comment": "Women Veterans light anchor — 11.2:1 on white"
+        },
+        "va-gold": {
+          "value": "#259597",
+          "comment": "women-veterans accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#6a1b4d",
+          "comment": "women-veterans dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#259597",
+          "comment": "women-veterans accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      }
+    },
+    "juneteenth": {
+      "brand": {
+        "value": "#b3122c",
+        "comment": "Juneteenth brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#c8102e",
+          "comment": "Juneteenth light anchor — 5.9:1 on white"
+        },
+        "va-gold": {
+          "value": "#519674",
+          "comment": "juneteenth accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#c8102e",
+          "comment": "juneteenth dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#519674",
+          "comment": "juneteenth accent — brightened so .bg-va-gold dark text (#1a1f16) clears 4.5:1"
+        }
+      }
+    },
+    "native-code-talker": {
+      "brand": {
+        "value": "#9a3324",
+        "comment": "Native Code Talker brand base (600/700 level) — seeds the --brand-* ramp"
+      },
+      "light": {
+        "va-blue": {
+          "value": "#9a3324",
+          "comment": "Native Code Talker light anchor — 7.3:1 on white"
+        },
+        "va-gold": {
+          "value": "#c38933",
+          "comment": "Native Code Talker light accent — 3.0:1 on white"
+        }
+      },
+      "dark": {
+        "va-blue": {
+          "value": "#9a3324",
+          "comment": "native-code-talker dark fill anchor — white-text-safe (matches light; .bg-va-blue needs ≥4.5 vs white)"
+        },
+        "va-gold": {
+          "value": "#e8a33d",
+          "comment": "Native Code Talker dark accent — 7.3:1 on #1a2620"
+        }
+      }
+    }
+  }
+}

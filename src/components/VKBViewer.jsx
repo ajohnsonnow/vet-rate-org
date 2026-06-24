@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Veteran Knowledge Base Viewer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Visual interface for the Veteran Knowledge Base - shows all extracted
  * knowledge in an organized, editable format.

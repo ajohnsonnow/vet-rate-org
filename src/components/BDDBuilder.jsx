@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * BDD Builder - Benefits Delivery at Discharge Planning Tool
  * Helps active duty service members file VA claims 180-90 days
@@ -23,20 +23,7 @@ import {
   loadBDDProgress,
   getChecklistCompletion,
 } from "../utils/bddData.js";
-
-// ─────────────────────────────────────────────────────────────
-// SERVICE BRANCHES
-// ─────────────────────────────────────────────────────────────
-const SERVICE_BRANCHES = [
-  { id: "army", label: "U.S. Army", icon: "⭐" },
-  { id: "navy", label: "U.S. Navy", icon: "⚓" },
-  { id: "air-force", label: "U.S. Air Force", icon: "🛩️" },
-  { id: "marines", label: "U.S. Marine Corps", icon: "🦅" },
-  { id: "coast-guard", label: "U.S. Coast Guard", icon: "⚓" },
-  { id: "space-force", label: "U.S. Space Force", icon: "🚀" },
-  { id: "national-guard", label: "National Guard (Title 10)", icon: "🏛️" },
-  { id: "reserves", label: "Reserves (Title 10)", icon: "🎖️" },
-];
+import { SERVICE_BRANCHES } from "../config/affiliations.js";
 
 // ─────────────────────────────────────────────────────────────
 // TABS

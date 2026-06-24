@@ -11,11 +11,11 @@ name: legal-ingestion
 
 on:
   schedule:
-    - cron: '0 4 * * 1'
+    - cron: "0 4 * * 1"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Explicit target version (e.g. v0.2.0). Omit for auto-increment.'
+        description: "Explicit target version (e.g. v0.2.0). Omit for auto-increment."
         required: false
         type: string
 
@@ -34,13 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -65,6 +65,14 @@ jobs:
           echo "=== ingest.log ==="
           tail -200 ingest.log || true
           exit 0  # Never fail the step itself; downstream branches on exitcode.
+
+      - name: Eval regression gate
+        # Blocks the PR: a rebuilt index whose retrieval metrics regress more
+        # than 5% relative to eval/baseline.json fails the job here.
+        if: steps.ingest.outputs.exitcode == '2'
+        run: |
+          VERSION=$(ls public/legal-index | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort | tail -1)
+          node scripts/legal-ingestion/eval/run-eval.mjs --version "$VERSION" --check-baseline
 
       - name: Open PR on diff
         if: steps.ingest.outputs.exitcode == '2'
@@ -109,7 +117,7 @@ jobs:
 
       - name: Upload diff artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: legal-ingestion-${{ github.run_id }}
           path: |

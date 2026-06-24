@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Nexus Logic Generator
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * AI-powered medical research assistant that generates "Doctor's Packets"
  * to help veterans get nexus letters from their private physicians.
@@ -179,38 +179,48 @@ export function formatDoctorLetter(
     day: "numeric",
   });
 
-  return `MEDICAL NEXUS OPINION
+  // AIS-02: this is a RESEARCH BRIEF for the veteran's physician to evaluate — NOT a
+  // signature-ready medical opinion. The old format ("MEDICAL NEXUS OPINION" + a blank
+  // physician signature / license block) manufactured a document a doctor could simply
+  // sign, putting their name on an AI-drafted clinical opinion they did not author.
+  // Retitled, prefixed with an AI-generated warning, the draft language framed as
+  // discussion points to verify, and the pre-printed signature block removed.
+  return `MEDICAL NEXUS RESEARCH BRIEF — FOR YOUR PHYSICIAN'S INDEPENDENT REVIEW
 Date: ${currentDate}
 
-RE: Medical Opinion Regarding ${secondaryCondition} Secondary to ${primaryCondition}
+⚠️ AI-GENERATED RESEARCH — NOT A MEDICAL OPINION, NOT TO BE SIGNED AS-IS.
+This brief summarizes general medical literature to help a physician consider a
+possible connection between two conditions. It is not a diagnosis and not a medical
+opinion. Your physician must independently review your records, reach their own
+clinical judgment, and author any nexus opinion in their OWN words on their OWN
+letterhead. Presenting AI-drafted text as a physician's signed opinion can be a
+false statement.
 
+RE: Possible link — ${secondaryCondition} secondary to ${primaryCondition}
+
+BACKGROUND FOR THE PHYSICIAN:
 ${doctor_template.opening}
 
-CLINICAL RATIONALE:
-${doctor_template.clinical_rationale}
-
-MEDICAL MECHANISM:
+PROPOSED MEDICAL MECHANISM (for independent evaluation):
 ${mechanism_summary}
 
+SUGGESTED DISCUSSION POINTS (verify against the patient's records before adopting):
+${doctor_template.clinical_rationale}
 ${
   icd10_codes
-    ? `ICD-10 CODES:
+    ? `
+REFERENCE ICD-10 CODES (confirm independently):
 - Primary Condition: ${icd10_codes.primary}
-- Secondary Condition: ${icd10_codes.secondary}
-`
+- Secondary Condition: ${icd10_codes.secondary}`
     : ""
 }
-CONCLUSION:
+
+NOTE FOR THE PHYSICIAN:
 ${doctor_template.conclusion}
 
-_________________________________
-Physician Signature / Date
-
-_________________________________
-Printed Name / Credentials
-
-_________________________________
-Medical License Number`;
+— End of research brief —
+Any medical nexus opinion must be composed independently by the physician, on their
+own letterhead, reflecting their own examination and clinical judgment.`;
 }
 
 /**

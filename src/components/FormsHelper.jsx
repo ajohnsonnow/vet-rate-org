@@ -3892,7 +3892,7 @@ INSTRUCTIONS:
       reopened: "Reopened Claim",
     };
 
-    let statement = `STATEMENT IN SUPPORT OF CLAIM
+    const statement = `STATEMENT IN SUPPORT OF CLAIM
 (To Be Submitted with VA Form 21-4138)
 
 --------------------------------------------------------------------------------
@@ -4066,7 +4066,7 @@ INSTRUCTIONS:
       other: "Other Traumatic Event",
     };
 
-    let statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
+    const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
 (To Be Submitted with VA Form 21-0781)
 
 --------------------------------------------------------------------------------
@@ -4224,7 +4224,7 @@ CRISIS RESOURCES:
       inperson: "In Person at VA Regional Office",
     };
 
-    let statement = `INTENT TO FILE WORKSHEET
+    const statement = `INTENT TO FILE WORKSHEET
 VA Form 21-0966 - Reference Document
 
 ================================================================================
@@ -4560,7 +4560,7 @@ Before submitting, contact each provider to confirm:
       other: "Other VA Benefit Claim",
     };
 
-    let statement = `REQUEST FOR PRIORITY PROCESSING
+    const statement = `REQUEST FOR PRIORITY PROCESSING
 (To Be Submitted with VA Form 20-10207)
 
 ================================================================================
@@ -4743,7 +4743,7 @@ VA Benefits Hotline: 1-800-827-1000
     const vsoName =
       formData.vsoName === "Other" ? formData.vsoOther : formData.vsoName;
 
-    let statement = `APPOINTMENT OF VETERANS SERVICE ORGANIZATION
+    const statement = `APPOINTMENT OF VETERANS SERVICE ORGANIZATION
 VA Form 21-22 Information Sheet
 
 ================================================================================
@@ -4885,7 +4885,7 @@ VA Benefits Hotline: 1-800-827-1000
     const repTypeLabel =
       formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
 
-    let statement = `APPOINTMENT OF INDIVIDUAL AS CLAIMANT'S REPRESENTATIVE
+    const statement = `APPOINTMENT OF INDIVIDUAL AS CLAIMANT'S REPRESENTATIVE
 VA Form 21-22a Information Sheet
 
 ================================================================================

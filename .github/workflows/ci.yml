@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -43,13 +43,13 @@ jobs:
     # Lint job — so a type regression is visible at a glance and bisectable from
     # CI output. Owner-authorized CI scope (the S13 selection).
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -57,19 +57,40 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+  validate-dkb:
+    name: DKB Consistency Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Blocking gate for the Diamond Knowledge Base static data:
+    # disabilityData.json schema (diagnostic codes, eCFR URLs, verification
+    # dates), tier counts vs dkbIndexedDB.js constants, secondary-condition
+    # DC cross-references, and ecfr-dc-map.json sync. Zero-dependency script
+    # (node builtins only), so no npm ci. The 130MB full-tier file is a Git
+    # LFS pointer in CI; the validator detects that and skips its count.
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+
+      - name: Validate Diamond Knowledge Base (blocking)
+        run: node scripts/validate-dkb.mjs
+
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [quality]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -83,13 +104,13 @@ jobs:
     timeout-minutes: 15
     needs: [quality]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -103,13 +124,13 @@ jobs:
     timeout-minutes: 90
     needs: [build]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -125,7 +146,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
           path: playwright-report/
@@ -144,13 +165,13 @@ jobs:
     # so a mobile-layout regression (overflow, off-screen CTA, sub-44px
     # tap target) is visible at a glance and bisectable from CI output.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -163,7 +184,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report-mobile
           path: playwright-report/
@@ -183,13 +204,13 @@ jobs:
     # GitHub Actions sets CI=true, so playwright.config runs serial with 2
     # retries (workers:1) — the config that makes this gate deterministic.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -202,7 +223,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report-axe
           path: playwright-report/
@@ -222,13 +243,13 @@ jobs:
     # LCP/INP/TBT budgets live in the lighthouse job below. Kept separate from
     # the full e2e job so a vitals regression is visible at a glance.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -241,7 +262,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report-cwv
           path: playwright-report/
@@ -263,13 +284,13 @@ jobs:
     # separate from the full e2e job so a PWA/SEO regression is visible at a
     # glance and bisectable from CI output.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -282,7 +303,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report-pwa
           path: playwright-report/
@@ -308,13 +329,13 @@ jobs:
     # devDependency. Chrome ships on the ubuntu-latest runner, which lhci's
     # chrome-launcher discovers automatically.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -330,7 +351,7 @@ jobs:
 
       - name: Upload Lighthouse report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lighthouse-report
           path: lighthouse-report/
@@ -350,13 +371,13 @@ jobs:
     # dual-LLM split, PII scrubber, spotlight wrap, and URL allowlist —
     # all of which are deterministic and testable against vitest mocks).
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -364,21 +385,47 @@ jobs:
       - name: Run red-team suite (blocking)
         run: npm run test:red-team
 
+  rag-eval:
+    name: RAG Retrieval Baseline Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [quality]
+    # C-H02: legal-RAG retrieval quality was only gated on the weekly index
+    # rebuild (legal-ingestion.yml) — a code change degrading retrieval merged
+    # to main unchecked. This runs run-eval.mjs read-only against the committed
+    # index (public/legal-index/v0.1.0) and fails on a >5% relative regression
+    # vs scripts/legal-ingestion/eval/baseline.json. The embedder
+    # (Xenova/bge-small-en-v1.5) is fetched at runtime, exactly as the app does.
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: RAG retrieval eval (blocking on >5% regression)
+        run: node scripts/legal-ingestion/eval/run-eval.mjs --version v0.1.0 --check-baseline
+
   security:
     name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           # gitleaks needs full history to scan past commits
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -391,15 +438,15 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Gitleaks (secret scan)
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
 
       - name: Setup Python (for semgrep)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install semgrep
         run: pip install semgrep
@@ -409,3 +456,42 @@ jobs:
         # sast-check.mjs exits 1 on ERROR/WARNING findings. If a new blocker
         # lands, fix it or add a justified suppression in .semgrep.yml.
         run: node scripts/sast-check.mjs --strict
+
+  ci-gate:
+    name: CI Gate (required check)
+    runs-on: ubuntu-latest
+    if: always()
+    # D-M04: "blocking" jobs (notably red-team) are only truly enforced if the
+    # owner enumerates every one of them in branch protection — drift is silent.
+    # This single aggregation job fails when ANY upstream required job did not
+    # succeed, so branch protection needs exactly one required check —
+    # "CI Gate (required check)" — which transitively requires red-team and the
+    # rest. Configure it in Settings → Branches → require this check.
+    needs:
+      - quality
+      - type-check
+      - validate-dkb
+      - test
+      - build
+      - e2e
+      - mobile
+      - axe
+      - cwv
+      - pwa
+      - lighthouse
+      - red-team
+      - rag-eval
+      - security
+    steps:
+      - name: Verify all required jobs succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Upstream job results: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then
+              echo "::error::One or more required CI jobs did not succeed ($r)."
+              exit 1
+            fi
+          done
+          echo "All required CI jobs succeeded."

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Device Passphrase Keystore Panel
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "THE KEY VAULT" — opt-in device-passphrase custody for the encryption keys
  * this browser stores for passphrase-less cloud backups (S16, commit G).

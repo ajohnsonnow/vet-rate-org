@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - DD214 Text Parser
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Parse raw OCR text from DD214/NGB22 into structured data
  *
@@ -41,14 +41,8 @@ export function parseDD214Text(rawText) {
   // Normalize text (handle OCR quirks)
   const text = normalizeOcrText(rawText);
 
-  // Debug: Log first 1000 chars of normalized text
   // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser] Input text length:", rawText.length);
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔍 [DD214Parser] Normalized text (first 1000 chars):",
-    text.substring(0, 1000),
-  );
 
   const fields = {};
   const confidence = {};
@@ -178,7 +172,7 @@ export function parseDD214Text(rawText) {
       : 0;
 
   return {
-    fields,
+    fields: normalizeParsedFields(fields),
     confidence,
     extractionNotes,
     rawTextLength: text.length,
@@ -187,6 +181,65 @@ export function parseDD214Text(rawText) {
 }
 
 // === HELPER FUNCTIONS ===
+
+// Every field a consumer may read off parsedData.fields — guarantees
+// present-or-null so missing extractions never propagate `undefined`
+const PARSED_FIELD_KEYS = [
+  "name",
+  "lastName",
+  "firstName",
+  "middleName",
+  "ssn",
+  "ssnMasked",
+  "serviceNumber",
+  "branch",
+  "component",
+  "rank",
+  "payGrade",
+  "mos",
+  "mosTitle",
+  "entryDate",
+  "entryDateFormatted",
+  "separationDate",
+  "separationDateFormatted",
+  "yearsService",
+  "monthsService",
+  "daysService",
+  "totalMonthsService",
+  "characterOfService",
+  "separationCode",
+  "separationCodeMeaning",
+  "reentryCode",
+  "reentryCodeMeaning",
+  "narrativeReason",
+  "hasCombatAwards",
+  "foreignService",
+  "documentType",
+];
+
+function normalizeParsedFields(fields) {
+  for (const key of PARSED_FIELD_KEYS) {
+    if (fields[key] === undefined) {
+      fields[key] = null;
+    }
+  }
+  if (!Array.isArray(fields.awards)) {
+    fields.awards = [];
+  }
+  if (!Array.isArray(fields.foreignServiceLocations)) {
+    fields.foreignServiceLocations = [];
+  }
+  if (!fields.combatService || typeof fields.combatService !== "object") {
+    fields.combatService = { hasVerifiedCombat: false, indicators: [] };
+  }
+  if (typeof fields.awardCount !== "number") {
+    fields.awardCount = fields.awards.length;
+  }
+  if (typeof fields.overallConfidence !== "number") {
+    fields.overallConfidence = 0;
+  }
+  return fields;
+}
 
 /**
  * Normalize OCR text - handle common recognition errors
@@ -209,10 +262,6 @@ function normalizeOcrText(text) {
  * Extract name from DD214 text
  */
 function extractName(text) {
-  // Debug: log what we're searching
-  // eslint-disable-next-line no-console
-  console.log("🔍 [DD214Parser:Name] Searching for name patterns...");
-
   // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
   // Also handle Florence-2 output which may have different formatting
   const patterns = [
@@ -551,7 +600,7 @@ function extractDate(text, context) {
 
   if (match) {
     let month = match[3];
-    let day = match[2];
+    const day = match[2];
     let year = match[4];
 
     // Handle 2-digit year

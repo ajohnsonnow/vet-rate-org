@@ -19,18 +19,21 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 
-# 2024 VA Compensation Rates (monthly, veteran alone)
-VA_COMPENSATION_RATES_2024 = {
-    10: 171.23,
-    20: 338.49,
-    30: 524.31,
-    40: 755.28,
-    50: 1075.16,
-    60: 1361.88,
-    70: 1716.28,
-    80: 1995.01,
-    90: 2241.91,
-    100: 3737.85
+# VA Compensation Rates (monthly, veteran alone) — effective Dec 1 of prior year.
+# Keep in sync with src/data/vaPayRatesHistorical.js (the single source of truth);
+# src/__tests__/utils/payRateConsistency.test.js cross-checks these values.
+RATES_YEAR = 2026
+VA_COMPENSATION_RATES = {
+    10: 180.42,
+    20: 356.66,
+    30: 552.47,
+    40: 795.84,
+    50: 1132.90,
+    60: 1435.02,
+    70: 1808.45,
+    80: 2102.15,
+    90: 2362.30,
+    100: 3938.58
 }
 
 # SMC-S (Housebound) additional monthly amount
@@ -195,7 +198,7 @@ def calculate_combined_rating(
     steps.append(f"Rounded to nearest 10: {final_rating}%")
     
     # Get compensation
-    compensation = VA_COMPENSATION_RATES_2024.get(final_rating, 0.0)
+    compensation = VA_COMPENSATION_RATES.get(final_rating, 0.0)
     
     # Check SMC-S eligibility (100% schedular + 60% separate)
     smc_s_eligible = False
@@ -280,7 +283,7 @@ def format_for_llm(result: Dict) -> str:
     
     lines.extend([
         "",
-        f"**Monthly Compensation (2024):** ${result['monthly_compensation']:,.2f}",
+        f"**Monthly Compensation ({RATES_YEAR}):** ${result['monthly_compensation']:,.2f}",
     ])
     
     if result['bilateral_factor'] > 0:

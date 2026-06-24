@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -199,9 +199,11 @@ export default function CommandersChecklist({
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
               )}
             </div>
-            {/* Percentage label inside bar */}
+            {/* Percentage label inside bar — dark pill backing guarantees ≥4.5:1
+               for the white text at any fill level (at low % the bar centre is over
+               the light track; a drop-shadow alone isn't counted by contrast tools). */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-white drop-shadow-md">
+              <span className="text-xs font-bold text-white bg-black/60 px-1.5 py-0.5 rounded leading-none">
                 {progress.percentage}%
               </span>
             </div>

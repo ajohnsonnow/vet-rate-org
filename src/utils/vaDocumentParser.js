@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - VA Document Intelligence Parser
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Intelligent extraction of structured data from VA documents
  *

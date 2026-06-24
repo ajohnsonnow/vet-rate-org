@@ -30,6 +30,15 @@
 const SPOTLIGHT_OPEN = "<untrusted_content>";
 const SPOTLIGHT_CLOSE = "</untrusted_content>";
 
+// A-H02: a literal spotlight delimiter embedded in untrusted text (e.g. an OCR'd
+// C-File page that contains "</untrusted_content>") would close the fence early
+// and let the remaining bytes land in the instruction context. Neutralize any
+// untrusted_content tag (any case/whitespace) before wrapping so it can no longer
+// be parsed as a delimiter.
+const FENCE_TAG = /<\s*\/?\s*untrusted_content\s*>/gi;
+const neutralizeFence = (text) =>
+  String(text ?? "").replace(FENCE_TAG, "[untrusted_content]");
+
 // Pattern application order matters: longest / most-specific first so the
 // less-specific catchalls don't consume tokens they shouldn't. Listed in the
 // order `scrubPII` applies them.
@@ -110,6 +119,39 @@ const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF\u2060\u00AD]/g;
  */
 const normalizeForScan = (text) =>
   text.replace(INVISIBLE_CHARS, "").normalize("NFKC");
+
+/**
+ * RT3-4: detect text dominated by non-Latin scripts (Cyrillic, Arabic, Devanagari,
+ * Japanese kana, CJK, Hangul). The PII_PATTERNS are US/English-centric
+ * (SSN/phone/email/VA-file), so they cannot reliably redact PII inside non-Latin
+ * narratives. Latin-script locales (Spanish, Tagalog, Vietnamese) are intentionally
+ * NOT flagged — their PII largely matches the existing patterns. Callers use this to
+ * apply conservative handling (warn / prefer local AI) on the cloud egress path
+ * rather than over-redacting, which would corrupt the analysis.
+ * @param {string} text
+ * @returns {boolean}
+ */
+export const containsSignificantNonLatin = (text) => {
+  if (!text || typeof text !== "string") return false;
+  let nonLatin = 0;
+  let meaningful = 0;
+  for (const ch of text) {
+    if (ch.trim()) meaningful += 1;
+    const c = ch.codePointAt(0);
+    if (
+      (c >= 0x0400 && c <= 0x04ff) || // Cyrillic
+      (c >= 0x0600 && c <= 0x06ff) || // Arabic
+      (c >= 0x0900 && c <= 0x097f) || // Devanagari
+      (c >= 0x3040 && c <= 0x30ff) || // Hiragana + Katakana
+      (c >= 0x3400 && c <= 0x9fff) || // CJK (Ext A + Unified)
+      (c >= 0xac00 && c <= 0xd7af) // Hangul syllables
+    ) {
+      nonLatin += 1;
+    }
+  }
+  if (nonLatin === 0) return false;
+  return nonLatin >= 8 || nonLatin / (meaningful || 1) >= 0.15;
+};
 
 /**
  * Scrub PII from text.
@@ -230,6 +272,20 @@ export const scrubPII = (text, options = {}) => {
 };
 
 /**
+ * Egress-boundary helper: scrub PII and return ONLY the redacted string.
+ * Forces `aggressive` so bare 9-digit SSNs / VA file numbers, DOB, and
+ * addresses are redacted before any third-party send. Use this — never the
+ * raw object-returning `scrubPII` — when building an outbound payload, so a
+ * field can never receive the `{ scrubbedText, originalLength, … }` object
+ * (which would both leak the original length and ship `[object Object]`).
+ * @param {string} text
+ * @param {Object} [options] forwarded to `scrubPII`; `aggressive` is always on.
+ * @returns {string} the scrubbed text
+ */
+export const scrubText = (text, options = {}) =>
+  scrubPII(text, { ...options, aggressive: true }).scrubbedText;
+
+/**
  * Quick boolean check — does this text contain any PII?
  * @param {string} text
  * @returns {boolean}
@@ -295,7 +351,7 @@ export const analyzePII = (text) => {
  */
 export const scrubAndSpotlight = (text, options = {}) => {
   const result = scrubPII(text, options);
-  const spotlit = `${SPOTLIGHT_OPEN}\n${result.scrubbedText ?? ""}\n${SPOTLIGHT_CLOSE}`;
+  const spotlit = `${SPOTLIGHT_OPEN}\n${neutralizeFence(result.scrubbedText)}\n${SPOTLIGHT_CLOSE}`;
   return { ...result, spotlit };
 };
 
@@ -305,10 +361,11 @@ export const scrubAndSpotlight = (text, options = {}) => {
  * @returns {string}
  */
 export const spotlight = (text) =>
-  `${SPOTLIGHT_OPEN}\n${text ?? ""}\n${SPOTLIGHT_CLOSE}`;
+  `${SPOTLIGHT_OPEN}\n${neutralizeFence(text)}\n${SPOTLIGHT_CLOSE}`;
 
 export default {
   scrubPII,
+  scrubText,
   containsPII,
   analyzePII,
   scrubAndSpotlight,

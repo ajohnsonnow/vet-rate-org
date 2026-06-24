@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Advanced OCR System
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * DIAMOND STANDARD OCR - Best-in-class text extraction for veteran documents
  *
@@ -23,12 +23,12 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import Tesseract from "tesseract.js";
+import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Advanced OCR Configuration
@@ -89,6 +89,36 @@ export async function advancedPDFAnalysis(
   onProgress = () => {},
 ) {
   const config = { ...ADVANCED_OCR_CONFIG, ...options };
+
+  // RT8-4: advancedPDFAnalysis loads the whole file into one ArrayBuffer, then
+  // renders each page to a high-res canvas for Tesseract. A 300MB+ PDF can
+  // easily consume 2–4 GB of JS heap on the render path. Gate before we start.
+  //
+  // Thresholds are deliberately conservative:
+  //   - 200 MB + low-memory device  → abort (recommend C-File Analyzer which streams)
+  //   - 100 MB + mobile tier         → cap OCR pages to avoid OOM
+  //   - >200 MB on any device        → cap pages (OCR beyond ~20 pp is rarely useful anyway)
+  const OCR_HARD_LIMIT_BYTES = 200 * 1024 * 1024; // 200 MB compressed
+  const OCR_WARN_LIMIT_BYTES = 100 * 1024 * 1024; // 100 MB
+  const deviceProfile = getCachedDeviceProfile();
+  const isMobileDevice =
+    deviceProfile?.isMobile || deviceProfile?.tier === "mobile";
+  const isLowMemory = (deviceProfile?.systemRAM ?? 4) <= 2;
+
+  if (file.size > OCR_HARD_LIMIT_BYTES && (isMobileDevice || isLowMemory)) {
+    throw new Error(
+      `This PDF (${Math.round(file.size / (1024 * 1024))} MB) is too large for OCR on your device. ` +
+        "Use the C-File Analyzer tool instead — it streams pages one at a time and handles files of any size.",
+    );
+  }
+  if (file.size > OCR_WARN_LIMIT_BYTES) {
+    // Cap page count to avoid multi-GB canvas accumulation.
+    config.MAX_OCR_PAGES = Math.min(config.MAX_OCR_PAGES, 10);
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[advancedOCR] Large file (${Math.round(file.size / (1024 * 1024))} MB) — capping OCR at ${config.MAX_OCR_PAGES} pages to prevent OOM.`,
+    );
+  }
 
   try {
     // Load PDF
@@ -261,7 +291,7 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
 function analyzeImageQuality(imageData) {
   const data = imageData.data;
   let totalBrightness = 0;
-  let brightnessValues = [];
+  const brightnessValues = [];
   let darkPixels = 0;
   let lightPixels = 0;
 
@@ -325,110 +355,154 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     ? config.CANVAS_SCALES_DEGRADED
     : config.CANVAS_SCALES;
 
+  // Worker pool: a single Tesseract worker processed pages strictly
+  // sequentially while the rest of the CPU sat idle — the dominant cost on
+  // multi-page scans. Pool size adapts to device tier (deviceCapabilityDetector):
+  // desktop-high→8, desktop-mid→6, laptop→4, tablet→2, mobile→1.
+  // Falls back to hardwareConcurrency - 2 when the device profile is not yet cached.
+  const deviceOCRWorkers =
+    (typeof getCachedDeviceProfile !== "undefined" &&
+      getCachedDeviceProfile?.()?.ocrWorkers) ||
+    Math.max(2, (navigator.hardwareConcurrency || 4) - 2);
+  const poolSize = Math.min(deviceOCRWorkers, 8, pagesToProcess);
+
   // eslint-disable-next-line no-console
   console.log(
-    `🔬 Using ${isDegraded ? "HIGH" : "standard"} resolution scales: [${baseScales.join(", ")}] for strategy: ${strategy}`,
+    `🔬 OCR: ${poolSize} workers, ${isDegraded ? "HIGH" : "standard"} scales [${baseScales.join(", ")}], strategy: ${strategy}`,
   );
 
-  // Initialize Tesseract worker with optimized settings for v7
-  const worker = await Tesseract.createWorker(config.LANGUAGES);
+  const scheduler = Tesseract.createScheduler();
+  await Promise.all(
+    Array.from({ length: poolSize }, async () => {
+      const worker = await Tesseract.createWorker(config.LANGUAGES);
+      await worker.setParameters({
+        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+        preserve_interword_spaces: "1",
+      });
+      scheduler.addWorker(worker);
+    }),
+  );
 
-  // Configure Tesseract for maximum accuracy
-  await worker.setParameters({
-    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-    preserve_interword_spaces: "1",
-  });
+  const recognize = async (page, scale, preprocessStrategy) => {
+    const canvas = await renderPageToCanvas(page, scale);
+    const processedCanvas = applyAdvancedPreprocessing(
+      canvas,
+      preprocessStrategy,
+    );
+    const imageData = processedCanvas.toDataURL("image/png");
+    canvas.remove();
+    processedCanvas.remove();
+    const result = await scheduler.addJob("recognize", imageData);
+    return {
+      text: result.data.text,
+      confidence: result.data.confidence,
+      scale,
+    };
+  };
+
+  let completedPages = 0;
+
+  const processPage = async (pageNum) => {
+    const page = await pdf.getPage(pageNum);
+
+    // Text-layer fast path: digitally-generated pages (VA forms, typed medical
+    // records, decision letters) already have a UTF-8 text layer embedded in
+    // the PDF — reusing it is both faster and more accurate than rendering to
+    // a canvas and running Tesseract. We consider the layer "sufficient" when
+    // it has > 20 text items AND > 100 characters (blank/stamp pages have few
+    // items; cover sheets may have 1-5 lines). Scanned pages return items=0.
+    try {
+      const textContent = await page.getTextContent();
+      const layerText = textContent.items
+        .map((item) => item.str)
+        .join(" ")
+        .trim();
+      if (textContent.items.length > 20 && layerText.length > 100) {
+        completedPages++;
+        onProgress({
+          stage: "ocr",
+          progress: 10 + (completedPages / pagesToProcess) * 85,
+          message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
+        });
+        return { text: layerText, confidence: 100, usedTextLayer: true };
+      }
+    } catch {
+      // getTextContent can fail on corrupt pages — fall through to OCR
+    }
+
+    // Image-only page: one pass at the highest base scale. The full multi-scale
+    // ensemble only runs when that pass reads poorly — most pages of a
+    // typical scan are legible and don't need 3x the OCR work.
+    const primary = await recognize(
+      page,
+      baseScales[baseScales.length - 1],
+      strategy,
+    );
+
+    const pageResults = [primary];
+    const needsEnsemble =
+      config.ENABLE_ENSEMBLE &&
+      (primary.confidence < config.MIN_CONFIDENCE ||
+        primary.text.trim().length < config.MIN_USEFUL_TEXT_LENGTH);
+
+    if (needsEnsemble) {
+      for (const scale of baseScales.slice(0, -1)) {
+        pageResults.push(await recognize(page, scale, strategy));
+      }
+    }
+
+    let pageText =
+      pageResults.length > 1 ? ensembleVote(pageResults) : primary.text;
+    const avgConfidence =
+      pageResults.reduce((sum, r) => sum + r.confidence, 0) /
+      pageResults.length;
+
+    // RETRY LOGIC: If OCR extracted very little text, try maximum scale
+    // with the most aggressive preprocessing
+    const textLength = pageText.trim().length;
+    if (
+      textLength < config.MIN_USEFUL_TEXT_LENGTH &&
+      config.ENABLE_RETRY_WITH_HIGHER_SCALE
+    ) {
+      const retry = await recognize(
+        page,
+        8.0,
+        PREPROCESS_STRATEGIES.SEVERELY_AGED,
+      );
+      if (retry.text.trim().length > textLength) {
+        pageText = retry.text;
+      }
+    }
+
+    completedPages++;
+    onProgress({
+      stage: "ocr",
+      progress: 10 + (completedPages / pagesToProcess) * 85,
+      message: `OCR processing page ${completedPages}/${pagesToProcess}...`,
+      currentPage: completedPages,
+      totalPages: pagesToProcess,
+    });
+
+    return { pageNum, text: pageText, confidence: avgConfidence };
+  };
 
   try {
-    // Process pages
-    for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
-      onProgress({
-        stage: "ocr",
-        progress: 10 + (pageNum / pagesToProcess) * 85,
-        message: `OCR processing page ${pageNum}/${pagesToProcess}...`,
-        currentPage: pageNum,
-        totalPages: pagesToProcess,
-      });
-
-      // Get page canvas
-      const page = await pdf.getPage(pageNum);
-
-      // Multi-scale ensemble (if enabled)
-      const pageResults = [];
-      const scales = config.ENABLE_ENSEMBLE
-        ? baseScales
-        : [baseScales[baseScales.length - 1]]; // Use highest scale if single pass
-
-      for (const scale of scales) {
-        const canvas = await renderPageToCanvas(page, scale);
-        const processedCanvas = applyAdvancedPreprocessing(canvas, strategy);
-        const imageData = processedCanvas.toDataURL("image/png");
-
-        // Run OCR
-        const result = await worker.recognize(imageData);
-        pageResults.push({
-          text: result.data.text,
-          confidence: result.data.confidence,
-          scale: scale,
-        });
-
-        canvas.remove();
-        processedCanvas.remove();
+    // Bounded page-level concurrency: poolSize pages in flight at once
+    const pageNumbers = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
+    const inFlight = pageNumbers.splice(0, poolSize).map((n) => processPage(n));
+    const settled = [];
+    while (inFlight.length > 0) {
+      const done = await Promise.race(
+        inFlight.map((p, idx) => p.then((r) => ({ r, idx }))),
+      );
+      settled.push(done.r);
+      inFlight.splice(done.idx, 1);
+      if (pageNumbers.length > 0) {
+        inFlight.push(processPage(pageNumbers.shift()));
       }
-
-      // Combine results using ensemble voting
-      let pageText = config.ENABLE_ENSEMBLE
-        ? ensembleVote(pageResults)
-        : pageResults[0].text;
-
-      const avgConfidence =
-        pageResults.reduce((sum, r) => sum + r.confidence, 0) /
-        pageResults.length;
-
-      // RETRY LOGIC: If OCR extracted very little text, try with even higher scale
-      const textLength = pageText.trim().length;
-      if (
-        textLength < config.MIN_USEFUL_TEXT_LENGTH &&
-        config.ENABLE_RETRY_WITH_HIGHER_SCALE
-      ) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `⚠️ Page ${pageNum}: Only ${textLength} chars extracted. Retrying with maximum scale...`,
-        );
-
-        // Try with maximum scale (8.0) and most aggressive preprocessing
-        const maxScale = 8.0;
-        const retryCanvas = await renderPageToCanvas(page, maxScale);
-        const retryProcessed = applyAdvancedPreprocessing(
-          retryCanvas,
-          PREPROCESS_STRATEGIES.SEVERELY_AGED,
-        );
-        const retryImageData = retryProcessed.toDataURL("image/png");
-
-        const retryResult = await worker.recognize(retryImageData);
-
-        retryCanvas.remove();
-        retryProcessed.remove();
-
-        // Use retry result if it's better
-        if (retryResult.data.text.trim().length > textLength) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Retry successful: ${retryResult.data.text.trim().length} chars (was ${textLength})`,
-          );
-          pageText = retryResult.data.text;
-        } else {
-          // eslint-disable-next-line no-console
-          console.log(`❌ Retry did not improve results`);
-        }
-      }
-
-      results.push({
-        pageNum,
-        text: pageText,
-        confidence: avgConfidence,
-      });
     }
+    settled.sort((a, b) => a.pageNum - b.pageNum);
+    results.push(...settled);
 
     // Combine all pages
     const fullText = results
@@ -465,7 +539,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       totalCharsExtracted: totalChars,
     };
   } finally {
-    await worker.terminate();
+    await scheduler.terminate();
   }
 }
 

@@ -35,6 +35,33 @@ const DEFAULT_PARTS = new Set(["3", "4", "19", "20"]);
 const USER_AGENT =
   "vet-rate-org legal-ingestion/0.1 (anthony.johnson.now@gmail.com)";
 const THROTTLE_MS = 500;
+// Coverage floor (C-H01): a transient eCFR outage that drops a chunk of
+// sections must not silently publish a partial index as the new canonical RAG
+// corpus. Fail the fetch if more than this fraction of discovered sections
+// error out. Env-tunable for a deliberate partial run against a flaky upstream.
+const MAX_SECTION_FAIL_RATE = Number(process.env.ECFR_MAX_FAIL_RATE ?? "0.05");
+
+/**
+ * Enforce the per-run section coverage floor. Returns the observed fail rate;
+ * throws when it exceeds `maxRate` so the pipeline refuses to embed and publish
+ * an index missing a large slice of the rating schedule.
+ */
+export function assertCoverageFloor(
+  failCount,
+  total,
+  maxRate = MAX_SECTION_FAIL_RATE,
+) {
+  const failRate = total > 0 ? failCount / total : 0;
+  if (failRate > maxRate) {
+    throw new Error(
+      `eCFR coverage floor breached: ${failCount}/${total} sections failed ` +
+        `(${(failRate * 100).toFixed(1)}% > ${(maxRate * 100).toFixed(1)}% allowed). ` +
+        `Refusing to publish a partial index — re-run after the upstream recovers, ` +
+        `or set ECFR_MAX_FAIL_RATE for a deliberate partial run.`,
+    );
+  }
+  return failRate;
+}
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -171,6 +198,7 @@ async function main() {
   }
 
   const records = [];
+  let failCount = 0;
   let i = 0;
   for (const sec of sections) {
     i += 1;
@@ -196,6 +224,7 @@ async function main() {
         console.log(`[ecfr] fetched ${i}/${sections.length} sections`);
       }
     } catch (e) {
+      failCount += 1;
       console.error(`[ecfr] section ${sec.section} failed: ${e.message}`);
     }
     if (i < sections.length) await new Promise((r) => setTimeout(r, THROTTLE_MS));
@@ -204,6 +233,8 @@ async function main() {
   if (records.length === 0) {
     throw new Error("eCFR fetcher produced ZERO records after fetching");
   }
+
+  assertCoverageFloor(failCount, sections.length);
 
   const out = records.map((r) => JSON.stringify(r)).join("\n") + "\n";
   const outPath = path.join(WORK_DIR, "ecfr.jsonl");

@@ -86,14 +86,14 @@ export default function GlobalCommandSearchWrapper() {
     <GlobalCommandSearch
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      onSelectTool={(toolId) => {
+      onToolSelect={(toolId) => {
         setIsOpen(false);
         const eventName = TOOL_EVENT_MAP[toolId];
         if (eventName) {
           window.dispatchEvent(new CustomEvent(eventName));
         }
       }}
-      onSelectDiagnosticCode={(code) => {
+      onConditionSelect={(code) => {
         setIsOpen(false);
         window.dispatchEvent(
           new CustomEvent("searchDisability", {

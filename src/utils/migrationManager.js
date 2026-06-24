@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See COPYRIGHT.js for full license terms.
  */
@@ -46,36 +46,70 @@ const compareVersions = (v1, v2) => {
 };
 
 /**
+ * Current packet backup format version.
+ * Single source of truth shared by packetBackup.js and persistentStorage.js.
+ */
+export const CURRENT_PACKET_VERSION = "2.0.0";
+
+/**
  * MIGRATION REGISTRY
  *
  * Each entry is a migration function that transforms data from one schema to another.
  * Add new migrations at the bottom as you make breaking changes.
  *
- * Format:
- * {
- *   fromVersion: '1.0.0',
- *   toVersion: '1.1.0',
- *   description: 'What changed',
- *   migrate: (data) => transformedData
- * }
+ * Two scopes:
+ * - localStorage schema migrations (no `scope` field): run once at app boot
+ *   by migrateUserData(); migrate() takes no args and writes localStorage.
+ * - scope: "packet": pure, idempotent transforms applied in memory to an
+ *   imported packet backup by migratePacket(); migrate(packet) => packet.
  */
 const MIGRATIONS = [
-  // Example migration (template for future use)
-  // {
-  //   fromVersion: '1.0.0',
-  //   toVersion: '1.1.0',
-  //   description: 'Renamed "pain" field to "painLevel" in saved claims',
-  //   migrate: () => {
-  //     const claims = JSON.parse(localStorage.getItem('vet_rate_saved_claims') || '[]');
-  //     const migrated = claims.map(claim => ({
-  //       ...claim,
-  //       painLevel: claim.pain,
-  //       pain: undefined // Remove old field
-  //     }));
-  //     localStorage.setItem('vet_rate_saved_claims', JSON.stringify(migrated));
-  //   }
-  // }
+  {
+    scope: "packet",
+    fromVersion: "1.0.0",
+    toVersion: "2.0.0",
+    description:
+      "Upgrade legacy claims-only packet backups (v1.x) to the complete-packet v2.0.0 format",
+    // Deliberately does NOT fabricate empty profile/serviceHistory/ratings
+    // sections: downstream imports treat the *presence* of a section as
+    // "overwrite current data", so fabricated empties would wipe real data.
+    migrate: (packet) => ({
+      ...packet,
+      version: "2.0.0",
+      data: {
+        ...packet.data,
+        claims: Array.isArray(packet.data?.claims) ? packet.data.claims : [],
+        statements:
+          packet.data?.statements && typeof packet.data.statements === "object"
+            ? packet.data.statements
+            : {},
+      },
+    }),
+  },
 ];
+
+/**
+ * Upgrade an imported packet backup in memory to the current format.
+ * Pure — returns a new object, never mutates the input. Packets already
+ * at (or above) the current version pass through unchanged.
+ * @param {Object} packet - Parsed packet backup JSON
+ * @returns {Object} Packet at CURRENT_PACKET_VERSION
+ */
+export const migratePacket = (packet) => {
+  if (!packet || typeof packet !== "object" || Array.isArray(packet)) {
+    return packet;
+  }
+
+  let migrated = packet;
+  for (const migration of MIGRATIONS) {
+    if (migration.scope !== "packet") continue;
+    const version = String(migrated.version || "1.0.0");
+    if (compareVersions(version, migration.toVersion) < 0) {
+      migrated = migration.migrate(migrated);
+    }
+  }
+  return migrated;
+};
 
 /**
  * Migrate user data from old schema to current schema
@@ -121,8 +155,10 @@ export const migrateUserData = () => {
       `🔄 Migrating user data from v${userSchemaVersion} to v${SCHEMA_VERSION}`,
     );
 
-    // Find all migrations that need to run
+    // Find all migrations that need to run (packet-scope migrations are
+    // applied per-import by migratePacket, never at boot)
     const migrationsToRun = MIGRATIONS.filter((migration) => {
+      if (migration.scope === "packet") return false;
       const fromOK =
         compareVersions(userSchemaVersion, migration.fromVersion) <= 0;
       const toOK = compareVersions(migration.toVersion, SCHEMA_VERSION) <= 0;
