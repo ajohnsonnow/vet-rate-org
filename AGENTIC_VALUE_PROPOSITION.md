@@ -10,13 +10,13 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 ## Executive Summary
 
-| Metric | Traditional Development | Agentic Development | Advantage |
-|--------|------------------------|---------------------|-----------|
-| **Timeline** | 15.0 years (solo) / 18-24 months (team) | 20 days | **190x faster** |
-| **Cost** | $4,223,880 | $63,000 | **98.0% savings** |
-| **Hourly Rate** | $135/hr (blended) | $420/hr | Higher rate, lower total |
-| **LOC/Hour** | 9.77 (team average) | 1,292 | **132x more productive** |
-| **Risk** | High (scope creep, turnover) | Low (single point of expertise) | Reduced complexity |
+| Metric          | Traditional Development                 | Agentic Development             | Advantage                |
+| --------------- | --------------------------------------- | ------------------------------- | ------------------------ |
+| **Timeline**    | 15.0 years (solo) / 18-24 months (team) | 20 days                         | **190x faster**          |
+| **Cost**        | $4,223,880                              | $63,000                         | **98.0% savings**        |
+| **Hourly Rate** | $135/hr (blended)                       | $420/hr                         | Higher rate, lower total |
+| **LOC/Hour**    | 9.77 (team average)                     | 1,292                           | **132x more productive** |
+| **Risk**        | High (scope creep, turnover)            | Low (single point of expertise) | Reduced complexity       |
 
 ---
 
@@ -24,19 +24,19 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 ### VetRate.org - What Was Built
 
-| Category | Count | Description |
-|----------|-------|-------------|
-| **Lines of Code** | 256,697 | Production React/JavaScript |
-| **Total Files** | 3,640 | Organized codebase |
-| **React Components** | 169 | 44 major tools + 125 supporting |
-| **Utility Modules** | 112 | Reusable helper functions |
-| **Disabilities Database** | 748 | Validated against 38 CFR |
-| **Secondary Conditions** | 410 | Cross-referenced relationships |
-| **VA Forms Supported** | 94 | Integrated form library |
-| **Local AI Models** | 6 | On-device inference |
-| **API Integrations** | 7 | VA.gov official APIs |
-| **Git Commits** | 241 | Tracked development history |
-| **App Size** | 353.08 MB | Full production build |
+| Category                  | Count     | Description                     |
+| ------------------------- | --------- | ------------------------------- |
+| **Lines of Code**         | 256,697   | Production React/JavaScript     |
+| **Total Files**           | 3,630     | Organized codebase              |
+| **React Components**      | 169       | 44 major tools + 125 supporting |
+| **Utility Modules**       | 112       | Reusable helper functions       |
+| **Disabilities Database** | 748       | Validated against 38 CFR        |
+| **Secondary Conditions**  | 410       | Cross-referenced relationships  |
+| **VA Forms Supported**    | 94        | Integrated form library         |
+| **Local AI Models**       | 6         | On-device inference             |
+| **API Integrations**      | 7         | VA.gov official APIs            |
+| **Git Commits**           | 241       | Tracked development history     |
+| **App Size**              | 353.08 MB | Full production build           |
 
 ---
 
@@ -44,57 +44,57 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 ### Industry Standard Rates (2025-2026)
 
-| Role | Hourly Rate | Annual Salary Equivalent |
-|------|-------------|-------------------------|
-| Principal/Lead Engineer | $175-$225 | $364,000 - $468,000 |
-| Senior Developer (5-8+ yrs) | $135-$175 | $280,800 - $364,000 |
-| Mid-Level Developer (2-5 yrs) | $95-$135 | $197,600 - $280,800 |
-| Junior Developer (0-2 yrs) | $55-$95 | $114,400 - $197,600 |
-| QA Engineer | $85-$125 | $176,800 - $260,000 |
-| Project Manager | $110-$150 | $228,800 - $312,000 |
-| DevOps Engineer | $125-$175 | $260,000 - $364,000 |
+| Role                          | Hourly Rate | Annual Salary Equivalent |
+| ----------------------------- | ----------- | ------------------------ |
+| Principal/Lead Engineer       | $175-$225   | $364,000 - $468,000      |
+| Senior Developer (5-8+ yrs)   | $135-$175   | $280,800 - $364,000      |
+| Mid-Level Developer (2-5 yrs) | $95-$135    | $197,600 - $280,800      |
+| Junior Developer (0-2 yrs)    | $55-$95     | $114,400 - $197,600      |
+| QA Engineer                   | $85-$125    | $176,800 - $260,000      |
+| Project Manager               | $110-$150   | $228,800 - $312,000      |
+| DevOps Engineer               | $125-$175   | $260,000 - $364,000      |
 
-*Sources: Glassdoor, LinkedIn Salary Insights, Robert Half Technology Salary Guide 2025*
+_Sources: Glassdoor, LinkedIn Salary Insights, Robert Half Technology Salary Guide 2025_
 
 ### Traditional Team Options
 
 #### Option A: Balanced Team (18-24 months)
 
-| Role | FTE | Hours | Rate | Cost |
-|------|-----|-------|------|------|
-| Principal Engineer | 1 | 1,200 | $200 | $240,000 |
-| Senior Developers | 2 | 4,800 | $155 | $744,000 |
-| Mid-Level Developers | 2 | 4,000 | $115 | $460,000 |
-| Junior Developers | 2 | 4,800 | $75 | $360,000 |
-| QA Engineer | 1.5 | 3,000 | $105 | $315,000 |
-| Project Manager | 1 | 2,400 | $130 | $312,000 |
-| DevOps | 0.5 | 1,000 | $150 | $150,000 |
-| **Total** | **10** | **21,200** | | **$2,581,000** |
+| Role                 | FTE    | Hours      | Rate | Cost           |
+| -------------------- | ------ | ---------- | ---- | -------------- |
+| Principal Engineer   | 1      | 1,200      | $200 | $240,000       |
+| Senior Developers    | 2      | 4,800      | $155 | $744,000       |
+| Mid-Level Developers | 2      | 4,000      | $115 | $460,000       |
+| Junior Developers    | 2      | 4,800      | $75  | $360,000       |
+| QA Engineer          | 1.5    | 3,000      | $105 | $315,000       |
+| Project Manager      | 1      | 2,400      | $130 | $312,000       |
+| DevOps               | 0.5    | 1,000      | $150 | $150,000       |
+| **Total**            | **10** | **21,200** |      | **$2,581,000** |
 
-*Plus 25% overhead (benefits, tools, infrastructure): **$3,226,250***
+\*Plus 25% overhead (benefits, tools, infrastructure): **$3,226,250\***
 
 #### Option B: Senior-Heavy Team (12-15 months)
 
-| Role | FTE | Hours | Rate | Cost |
-|------|-----|-------|------|------|
-| Principal Engineer | 1 | 1,800 | $200 | $360,000 |
-| Senior Developers | 4 | 9,600 | $155 | $1,488,000 |
-| QA Lead | 1 | 2,000 | $125 | $250,000 |
-| Project Manager | 0.5 | 1,000 | $130 | $130,000 |
-| **Total** | **6.5** | **14,400** | | **$2,228,000** |
+| Role               | FTE     | Hours      | Rate | Cost           |
+| ------------------ | ------- | ---------- | ---- | -------------- |
+| Principal Engineer | 1       | 1,800      | $200 | $360,000       |
+| Senior Developers  | 4       | 9,600      | $155 | $1,488,000     |
+| QA Lead            | 1       | 2,000      | $125 | $250,000       |
+| Project Manager    | 0.5     | 1,000      | $130 | $130,000       |
+| **Total**          | **6.5** | **14,400** |      | **$2,228,000** |
 
-*Plus 25% overhead: **$2,785,000***
+\*Plus 25% overhead: **$2,785,000\***
 
 #### Option C: Solo Senior Developer
 
-| Metric | Value |
-|--------|-------|
-| Hours Required | 23,894 |
-| Rate | $135/hr |
+| Metric         | Value          |
+| -------------- | -------------- |
+| Hours Required | 23,894         |
+| Rate           | $135/hr        |
 | **Total Cost** | **$3,225,690** |
-| **Timeline** | **11.4 years** |
+| **Timeline**   | **11.4 years** |
 
-*Unrealistic for most projects due to timeline.*
+_Unrealistic for most projects due to timeline._
 
 ---
 
@@ -111,29 +111,29 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 ### Actual Project Metrics
 
-| Metric | Value |
-|--------|-------|
-| **Development Days** | 22 active days |
-| **Billable Hours** | 150 hours |
-| **Hourly Rate** | $420/hr |
-| **Total Cost** | $63,000 |
-| **Lines of Code** | 256,697 |
-| **Effective LOC/Hour** | 1,292 |
-| **Commits** | 241 |
-| **Commits per Day** | 11 average |
+| Metric                 | Value          |
+| ---------------------- | -------------- |
+| **Development Days**   | 22 active days |
+| **Billable Hours**     | 150 hours      |
+| **Hourly Rate**        | $420/hr        |
+| **Total Cost**         | $63,000        |
+| **Lines of Code**      | 256,697        |
+| **Effective LOC/Hour** | 1,292          |
+| **Commits**            | 241            |
+| **Commits per Day**    | 11 average     |
 
 ### Development Breakdown
 
-| Activity | Hours | Traditional Equivalent |
-|----------|-------|----------------------|
-| Coding | 19,836 hrs equiv | Done in ~120 hrs |
-| Testing | 2,975 hrs equiv | Done in ~15 hrs |
-| Validation | 250 hrs equiv | Done in ~5 hrs |
-| UI/UX | 400 hrs equiv | Done in ~5 hrs |
-| Documentation | 200 hrs equiv | Done in ~3 hrs |
-| Research | 150 hrs equiv | Done in ~1 hr |
-| Deployment | 73 hrs equiv | Done in ~1 hr |
-| **Total** | **23,894 hrs** | **150 hrs actual** |
+| Activity      | Hours            | Traditional Equivalent |
+| ------------- | ---------------- | ---------------------- |
+| Coding        | 19,836 hrs equiv | Done in ~120 hrs       |
+| Testing       | 2,975 hrs equiv  | Done in ~15 hrs        |
+| Validation    | 250 hrs equiv    | Done in ~5 hrs         |
+| UI/UX         | 400 hrs equiv    | Done in ~5 hrs         |
+| Documentation | 200 hrs equiv    | Done in ~3 hrs         |
+| Research      | 150 hrs equiv    | Done in ~1 hr          |
+| Deployment    | 73 hrs equiv     | Done in ~1 hr          |
+| **Total**     | **23,894 hrs**   | **150 hrs actual**     |
 
 ---
 
@@ -149,14 +149,14 @@ Productivity Multiplier:        158x
 
 ### Why This Works
 
-| Factor | Traditional | Agentic | Multiplier |
-|--------|-------------|---------|------------|
-| **Code Generation** | 9.77 LOC/hr | 1,292 LOC/hr | 132x |
-| **Context Switching** | High (meetings, reviews) | Near-zero | 5-10x |
-| **Debugging Time** | 40% of dev time | 5% of dev time | 8x |
-| **Documentation** | Manual, separate effort | Auto-generated | 10x |
-| **Testing** | Manual test writing | AI-suggested tests | 5x |
-| **Research** | Hours per feature | Seconds per feature | 100x |
+| Factor                | Traditional              | Agentic             | Multiplier |
+| --------------------- | ------------------------ | ------------------- | ---------- |
+| **Code Generation**   | 9.77 LOC/hr              | 1,292 LOC/hr        | 132x       |
+| **Context Switching** | High (meetings, reviews) | Near-zero           | 5-10x      |
+| **Debugging Time**    | 40% of dev time          | 5% of dev time      | 8x         |
+| **Documentation**     | Manual, separate effort  | Auto-generated      | 10x        |
+| **Testing**           | Manual test writing      | AI-suggested tests  | 5x         |
+| **Research**          | Hours per feature        | Seconds per feature | 100x       |
 
 ---
 
@@ -184,23 +184,23 @@ Savings: $3,162,690 (98.0%)
 
 ### Traditional Development Risks
 
-| Risk | Impact | Probability |
-|------|--------|-------------|
-| Scope creep | +30-50% cost | High |
-| Developer turnover | +20% cost, delays | Medium |
-| Integration issues | +15% cost | Medium |
-| Communication overhead | +10% timeline | High |
-| Technology obsolescence | Refactoring needed | Medium |
+| Risk                    | Impact             | Probability |
+| ----------------------- | ------------------ | ----------- |
+| Scope creep             | +30-50% cost       | High        |
+| Developer turnover      | +20% cost, delays  | Medium      |
+| Integration issues      | +15% cost          | Medium      |
+| Communication overhead  | +10% timeline      | High        |
+| Technology obsolescence | Refactoring needed | Medium      |
 
 **Expected Traditional Cost (risk-adjusted): $3.8M - $4.5M**
 
 ### Agentic Development Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| AI hallucination | Code review catches | Automated testing |
-| Context limits | Chunked development | Modular architecture |
-| API changes | Model updates | Multiple model access |
+| Risk             | Impact              | Mitigation            |
+| ---------------- | ------------------- | --------------------- |
+| AI hallucination | Code review catches | Automated testing     |
+| Context limits   | Chunked development | Modular architecture  |
+| API changes      | Model updates       | Multiple model access |
 
 **Expected Agentic Cost (risk-adjusted): $65,000 - $75,000**
 
@@ -232,11 +232,11 @@ Savings: $3,162,690 (98.0%)
 
 ### For a 200,000 LOC Project
 
-| Approach | Time | Cost | Cost per LOC |
-|----------|------|------|--------------|
-| Traditional Team | 18-24 months | $3.2M | $16.00 |
-| Senior Solo | 11.4 years | $3.2M | $16.00 |
-| **Agentic** | **20 days** | **$63K** | **$0.32** |
+| Approach         | Time         | Cost     | Cost per LOC |
+| ---------------- | ------------ | -------- | ------------ |
+| Traditional Team | 18-24 months | $3.2M    | $16.00       |
+| Senior Solo      | 11.4 years   | $3.2M    | $16.00       |
+| **Agentic**      | **20 days**  | **$63K** | **$0.32**    |
 
 **ROI on Agentic Approach: 5,019%**
 
@@ -274,14 +274,14 @@ Payback Period:     20 days
 
 ### The New Economics of Software Development
 
-| Traditional Model | Agentic Model |
-|-------------------|---------------|
-| Pay for hours worked | Pay for value delivered |
-| 10 LOC/hour average | 1,000+ LOC/hour |
-| 12-24 month timelines | 3-4 week timelines |
-| $2M-$4M budgets | $50K-$100K budgets |
-| High coordination overhead | Single-threaded execution |
-| Risk of obsolescence | Built with latest patterns |
+| Traditional Model          | Agentic Model              |
+| -------------------------- | -------------------------- |
+| Pay for hours worked       | Pay for value delivered    |
+| 10 LOC/hour average        | 1,000+ LOC/hour            |
+| 12-24 month timelines      | 3-4 week timelines         |
+| $2M-$4M budgets            | $50K-$100K budgets         |
+| High coordination overhead | Single-threaded execution  |
+| Risk of obsolescence       | Built with latest patterns |
 
 ### The Bottom Line
 
@@ -323,6 +323,6 @@ find src -name '*.js' -o -name '*.jsx' | xargs wc -l
 
 ---
 
-*Document generated: June 23, 2026*
-*Version: 1.23.1*
-*Project: VetRate.org*
+_Document generated: June 23, 2026_
+_Version: 1.23.1_
+_Project: VetRate.org_
