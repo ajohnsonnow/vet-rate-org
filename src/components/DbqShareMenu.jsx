@@ -313,17 +313,20 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                   for your doctor — handy as an email attachment.
                 </p>
                 <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  <li>✓ One file: the DBQ PDF + instructions for your doctor</li>
+                  <li>
+                    ✓ One file: the DBQ PDF + instructions for your doctor
+                  </li>
                   <li>✓ Opens with any standard zip tool</li>
                 </ul>
               </div>
 
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  ⚠️ This ZIP is <strong>not encrypted or password-protected</strong>.
-                  Ordinary email is not secure. For your medical records, send it
-                  through your VA patient portal / secure messaging, or hand it off
-                  in person.
+                  ⚠️ This ZIP is{" "}
+                  <strong>not encrypted or password-protected</strong>. Ordinary
+                  email is not secure. For your medical records, send it through
+                  your VA patient portal / secure messaging, or hand it off in
+                  person.
                 </p>
               </div>
 

@@ -206,8 +206,7 @@ export const connectDropbox = async () => {
             clearInterval(checkPopup);
 
             // CSRF: reject the callback unless state matches what we issued.
-            const expectedState =
-              sessionStorage.getItem("dropbox_oauth_state");
+            const expectedState = sessionStorage.getItem("dropbox_oauth_state");
             sessionStorage.removeItem("dropbox_oauth_state");
             if (!expectedState || returnedState !== expectedState) {
               reject(
@@ -518,8 +517,9 @@ export const connectOneDrive = async () => {
             clearInterval(checkPopup);
 
             // CSRF: reject the callback unless state matches what we issued.
-            const expectedState =
-              sessionStorage.getItem("onedrive_oauth_state");
+            const expectedState = sessionStorage.getItem(
+              "onedrive_oauth_state",
+            );
             sessionStorage.removeItem("onedrive_oauth_state");
             if (!expectedState || returnedState !== expectedState) {
               reject(

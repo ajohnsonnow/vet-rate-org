@@ -33,7 +33,10 @@ describe("interpretGeminiResponse (C-H05)", () => {
   it("appends a truncation notice on MAX_TOKENS instead of looking complete", () => {
     const out = interpretGeminiResponse({
       candidates: [
-        { finishReason: "MAX_TOKENS", content: { parts: [{ text: "partial" }] } },
+        {
+          finishReason: "MAX_TOKENS",
+          content: { parts: [{ text: "partial" }] },
+        },
       ],
     });
     expect(out).toContain("partial");

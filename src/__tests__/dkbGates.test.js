@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { checkRowCountFloor, checkStaleness } from "../../scripts/validate-dkb.mjs";
+import {
+  checkRowCountFloor,
+  checkStaleness,
+} from "../../scripts/validate-dkb.mjs";
 
 /**
  * C-M02 / C-H03: validate-dkb had no absolute floor (a truncated data file

@@ -401,8 +401,7 @@ export async function renderPDFToImages(
   const pdfjsWorker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
 
-  const STANDARD_FONT_DATA_URL =
-    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
+  const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
   onProgress({
     state: OCR_STATES.LOADING,

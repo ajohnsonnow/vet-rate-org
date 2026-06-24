@@ -624,7 +624,6 @@ export const SUPPORTED_LANGUAGES = {
   },
 };
 
-
 // App-wide translations extracted to reduce this file's size (RT12-4).
 // Import for local use (t()/getSection() reference APP_TRANSLATIONS in this module —
 // a bare `export … from` re-export creates no local binding, which throws a

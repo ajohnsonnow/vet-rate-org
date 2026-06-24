@@ -745,7 +745,9 @@ export const generateWithSwarm = async (prompt, options = {}) => {
           if (responseText.length > 4500) {
             try {
               webllmEngine.interruptGenerate()?.catch(() => {});
-            } catch { /* interruptGenerate may throw if no generation is in progress */ }
+            } catch {
+              /* interruptGenerate may throw if no generation is in progress */
+            }
             break;
           }
         }

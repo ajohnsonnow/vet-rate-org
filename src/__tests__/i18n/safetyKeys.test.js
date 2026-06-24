@@ -56,7 +56,11 @@ describe("i18n safety-critical strings (RT-3)", () => {
   // (getCrisisMessage() used to return hardcoded English between two translated
   // fields; it now resolves through t("crisisModal", severityKey).)
   describe("crisis-modal severity messages are localized (C-C01)", () => {
-    const SEVERITY_KEYS = ["severityCritical", "severityHigh", "severityMedium"];
+    const SEVERITY_KEYS = [
+      "severityCritical",
+      "severityHigh",
+      "severityMedium",
+    ];
 
     it("exist with a non-empty English floor", () => {
       for (const key of SEVERITY_KEYS) {

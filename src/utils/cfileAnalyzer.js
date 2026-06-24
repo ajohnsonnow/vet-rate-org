@@ -350,11 +350,17 @@ function attemptJSONRepair(jsonStr) {
         combatIndicators: [],
         redFlags: [],
         actionItems: [],
-        mentalHealth: { diagnoses: [], indicators: [], stressors: [], pages: [] },
+        mentalHealth: {
+          diagnoses: [],
+          indicators: [],
+          stressors: [],
+          pages: [],
+        },
       };
 
       // Pull condition+likelihood pairs from any fragment of the response
-      const claimRe = /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
+      const claimRe =
+        /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
       let m;
       while ((m = claimRe.exec(content)) !== null) {
         result.potential_claims.push({
@@ -1240,7 +1246,9 @@ export async function analyzeCFile(
 
   // Pre-flight: score every chunk before the loop so the cap selects the
   // highest-value chunks rather than the first N by page order.
-  const chunkScores = isLocalAIMode ? chunks.map((c) => scoreChunkRelevance(c.text)) : null;
+  const chunkScores = isLocalAIMode
+    ? chunks.map((c) => scoreChunkRelevance(c.text))
+    : null;
   let scoreThreshold = 0;
   if (chunkScores && chunkScores.length > MAX_WEBGPU_AI_CHUNKS) {
     const sorted = [...chunkScores].sort((a, b) => b - a);
@@ -1305,7 +1313,12 @@ export async function analyzeCFile(
     // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
     // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
     // banner fires — these are intentional skips, not errors.
-    if (isLocalAIMode && scoreThreshold > 0 && chunkScores && chunkScores[i] < scoreThreshold) {
+    if (
+      isLocalAIMode &&
+      scoreThreshold > 0 &&
+      chunkScores &&
+      chunkScores[i] < scoreThreshold
+    ) {
       chunkResults.push(createEmptyChunkResult());
       continue;
     }
@@ -1428,7 +1441,9 @@ export async function analyzeCFile(
 
   if (skippedLowScore > 0) {
     // eslint-disable-next-line no-console
-    console.log(`📊 Pre-flight skipped ${skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`);
+    console.log(
+      `📊 Pre-flight skipped ${skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`,
+    );
   }
 
   if (chunkResults.length === 0) {
@@ -1526,38 +1541,99 @@ function scoreChunkRelevance(text) {
 
   // Clinical note structure headers (SOAP, radiology, pathology) — present in every
   // encounter note even when the condition name is rare or unlisted below.
-  if (/\b(assessment|impression|findings|diagnosis|plan)\s*:/i.test(text)) score += 2;
+  if (/\b(assessment|impression|findings|diagnosis|plan)\s*:/i.test(text))
+    score += 2;
 
   const HIGH = [
-    "ptsd", "post-traumatic", "tinnitus", "radiculopathy", "pes planus",
-    "plantar fasci", "sleep apnea", "migraine", "nexus", "service connection",
-    "service-connected", "in-service", "dbq", "disability benefits questionnaire",
-    "c&p exam", "rating decision", "service treatment record",
-    "traumatic brain", "tbi", "burn pit", "agent orange", "pact act",
+    "ptsd",
+    "post-traumatic",
+    "tinnitus",
+    "radiculopathy",
+    "pes planus",
+    "plantar fasci",
+    "sleep apnea",
+    "migraine",
+    "nexus",
+    "service connection",
+    "service-connected",
+    "in-service",
+    "dbq",
+    "disability benefits questionnaire",
+    "c&p exam",
+    "rating decision",
+    "service treatment record",
+    "traumatic brain",
+    "tbi",
+    "burn pit",
+    "agent orange",
+    "pact act",
   ];
   for (const s of HIGH) {
     if (t.includes(s)) score += 2;
   }
 
   const MED = [
-    "diagnosis", "diagnosed", "chronic", "bilateral", "aggravated", "secondary to",
-    "hypertension", "diabetes", "depression", "anxiety", "neuropathy",
-    "degenerative", "lumbar", "cervical", "sciatica", "carpal tunnel",
-    "hearing loss", "knee", "shoulder", "hip", "ankle", "back pain",
-    "deployed", "combat", "active duty", "discharge", "dd-214", "dd214",
-    "va medical", "vamc", "progress note", "treatment", "prescribed",
-    "etiology", "prognosis", "pathology", "biopsy", "specimen",
-    "laboratory", "radiology", "consultation", "referred to",
-    "presented with", "complaints of", "history of", "chronic condition",
+    "diagnosis",
+    "diagnosed",
+    "chronic",
+    "bilateral",
+    "aggravated",
+    "secondary to",
+    "hypertension",
+    "diabetes",
+    "depression",
+    "anxiety",
+    "neuropathy",
+    "degenerative",
+    "lumbar",
+    "cervical",
+    "sciatica",
+    "carpal tunnel",
+    "hearing loss",
+    "knee",
+    "shoulder",
+    "hip",
+    "ankle",
+    "back pain",
+    "deployed",
+    "combat",
+    "active duty",
+    "discharge",
+    "dd-214",
+    "dd214",
+    "va medical",
+    "vamc",
+    "progress note",
+    "treatment",
+    "prescribed",
+    "etiology",
+    "prognosis",
+    "pathology",
+    "biopsy",
+    "specimen",
+    "laboratory",
+    "radiology",
+    "consultation",
+    "referred to",
+    "presented with",
+    "complaints of",
+    "history of",
+    "chronic condition",
   ];
   for (const s of MED) {
     if (t.includes(s)) score += 1;
   }
 
   const ADMIN = [
-    "please deliver to", "fax transmittal", "routing slip",
-    "authorization to release", "cover sheet", "sign here",
-    "signature required", "this form is", "table of contents",
+    "please deliver to",
+    "fax transmittal",
+    "routing slip",
+    "authorization to release",
+    "cover sheet",
+    "sign here",
+    "signature required",
+    "this form is",
+    "table of contents",
     "page intentionally left blank",
   ];
   for (const s of ADMIN) {

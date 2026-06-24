@@ -7,8 +7,11 @@ import {
 // RT7-3 / PARSE-003: the VA, some OSes, and cloud downloads ship PDFs with an
 // empty or application/octet-stream MIME type. Exact-MIME matching wrongly
 // rejected them; accept on extension or pdf MIME, reject 0-byte up front.
-const fakeFile = ({ name = "c-file.pdf", type = "application/pdf", size = 1 }) =>
-  ({ name, type, size });
+const fakeFile = ({
+  name = "c-file.pdf",
+  type = "application/pdf",
+  size = 1,
+}) => ({ name, type, size });
 
 describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   it("accepts a normal application/pdf", () => {
@@ -16,9 +19,9 @@ describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   });
 
   it("accepts a .pdf shipped as application/octet-stream (the VA case)", () => {
-    expect(
-      isPdfFile(fakeFile({ type: "application/octet-stream" })),
-    ).toBe(true);
+    expect(isPdfFile(fakeFile({ type: "application/octet-stream" }))).toBe(
+      true,
+    );
   });
 
   it("accepts a .pdf with an empty MIME type", () => {
@@ -26,9 +29,9 @@ describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   });
 
   it("accepts application/pdf even with no extension", () => {
-    expect(
-      isPdfFile(fakeFile({ name: "scan", type: "application/pdf" })),
-    ).toBe(true);
+    expect(isPdfFile(fakeFile({ name: "scan", type: "application/pdf" }))).toBe(
+      true,
+    );
   });
 
   it("rejects a 0-byte file even if named .pdf", () => {
@@ -36,9 +39,9 @@ describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   });
 
   it("rejects a non-PDF (e.g. .png/image)", () => {
-    expect(
-      isPdfFile(fakeFile({ name: "x.png", type: "image/png" })),
-    ).toBe(false);
+    expect(isPdfFile(fakeFile({ name: "x.png", type: "image/png" }))).toBe(
+      false,
+    );
   });
 
   it("rejects null/undefined", () => {

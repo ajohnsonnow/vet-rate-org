@@ -1109,7 +1109,7 @@ export function detectDecisionText(userInput) {
   // eslint-disable-next-line sonarjs/no-identical-expressions
   const hasQuotedText =
     userInput.includes('"') ||
-    userInput.includes('“') ||
+    userInput.includes("“") ||
     userInput.length > 500; // Long input likely contains pasted text
 
   return {

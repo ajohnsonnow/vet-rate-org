@@ -15,9 +15,8 @@ vi.mock("../../utils/unifiedAIService", () => ({
   generateAI: (...args) => mockGenerateAI(...args),
 }));
 
-const { generateMusterCallReport } = await import(
-  "../../utils/musterCallProcessor"
-);
+const { generateMusterCallReport } =
+  await import("../../utils/musterCallProcessor");
 
 describe("muster-call comprehensive report spotlights untrusted evidence (A-H03)", () => {
   it("wraps user-uploaded filenames/summaries in an untrusted_content fence", async () => {

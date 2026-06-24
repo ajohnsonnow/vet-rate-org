@@ -37,7 +37,8 @@ export const PALETTES = [
     label: "Vet-Rate default",
     group: "Default",
     icon: "🎨",
-    description: "The original Vet-Rate green and gold — no branch affiliation.",
+    description:
+      "The original Vet-Rate green and gold — no branch affiliation.",
   },
 
   // ── Branch ───────────────────────────────────────────────
@@ -60,42 +61,48 @@ export const PALETTES = [
     label: "U.S. Air Force",
     group: "Branch",
     icon: "🛩️",
-    description: "Air Force blue and silver — honoring airmen of the U.S. Air Force.",
+    description:
+      "Air Force blue and silver — honoring airmen of the U.S. Air Force.",
   },
   {
     id: "marines",
     label: "U.S. Marine Corps",
     group: "Branch",
     icon: "🦅",
-    description: "Scarlet and gold — honoring Marines of the U.S. Marine Corps.",
+    description:
+      "Scarlet and gold — honoring Marines of the U.S. Marine Corps.",
   },
   {
     id: "coast-guard",
     label: "U.S. Coast Guard",
     group: "Branch",
     icon: "🛟",
-    description: "Coast Guard blue and orange — honoring those who guard our coasts.",
+    description:
+      "Coast Guard blue and orange — honoring those who guard our coasts.",
   },
   {
     id: "space-force",
     label: "U.S. Space Force",
     group: "Branch",
     icon: "🚀",
-    description: "Space Force midnight blue and silver — honoring Guardians of the newest branch.",
+    description:
+      "Space Force midnight blue and silver — honoring Guardians of the newest branch.",
   },
   {
     id: "national-guard",
     label: "National Guard",
     group: "Branch",
     icon: "🏛️",
-    description: "Guard navy and gold — honoring the men and women of the National Guard.",
+    description:
+      "Guard navy and gold — honoring the men and women of the National Guard.",
   },
   {
     id: "reserves",
     label: "Reserves",
     group: "Branch",
     icon: "🎖️",
-    description: "Reserves green and gold — honoring the service of all Reserve component members.",
+    description:
+      "Reserves green and gold — honoring the service of all Reserve component members.",
   },
 
   // ── Inclusive ────────────────────────────────────────────
@@ -112,7 +119,8 @@ export const PALETTES = [
     label: "American Flag",
     group: "Inclusive",
     icon: "🇺🇸",
-    description: "Old Glory red, white, and blue — a universal expression of service and country.",
+    description:
+      "Old Glory red, white, and blue — a universal expression of service and country.",
   },
 
   // ── Remembrance ──────────────────────────────────────────

@@ -60,13 +60,15 @@ describe("crisisInterceptor", () => {
     });
 
     it("does NOT false-positive on 'kms' inside a distance (20kms)", () => {
-      expect(detectCrisisLanguage("I marched 20kms today").isCrisis).toBe(false);
+      expect(detectCrisisLanguage("I marched 20kms today").isCrisis).toBe(
+        false,
+      );
     });
 
     it("detects non-English ideation (Spanish: quiero morir)", () => {
-      expect(
-        detectCrisisLanguage("ya no aguanto, quiero morir").isCrisis,
-      ).toBe(true);
+      expect(detectCrisisLanguage("ya no aguanto, quiero morir").isCrisis).toBe(
+        true,
+      );
     });
 
     // C-H09: Afghan SIV/interpreter languages. Pashto was entirely uncovered;

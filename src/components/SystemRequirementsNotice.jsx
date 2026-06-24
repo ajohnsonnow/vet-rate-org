@@ -20,7 +20,12 @@ function friendlyGpuName(desc) {
     /ANGLE\s*\([^,]+,\s*([^,]+?)(?:\s+Direct3D|\s+Metal|\s+Vulkan|\s+vs_|\s*Direct|\s*,)/i,
   );
   if (angleMatch) return angleMatch[1].trim();
-  return desc.replace(/\s*(Direct3D|Metal|Vulkan|OpenGL)\S*/gi, "").trim().slice(0, 50) || null;
+  return (
+    desc
+      .replace(/\s*(Direct3D|Metal|Vulkan|OpenGL)\S*/gi, "")
+      .trim()
+      .slice(0, 50) || null
+  );
 }
 
 /**
@@ -51,8 +56,12 @@ export default function SystemRequirementsNotice({
   const noWebGpu = !profile.hasWebGPU && !profile.isMobile && !profile.isTablet;
 
   const gpuName = friendlyGpuName(profile.gpuDescription);
-  const tierRate = AI_CHUNK_RATE[profile.isAppleSilicon ? "apple-silicon" : profile.tier] ?? AI_CHUNK_RATE[profile.tier];
-  const warmup = profile.isAppleSilicon ? AI_WARMUP.firstRunAppleSilicon : AI_WARMUP.firstRun;
+  const tierRate =
+    AI_CHUNK_RATE[profile.isAppleSilicon ? "apple-silicon" : profile.tier] ??
+    AI_CHUNK_RATE[profile.tier];
+  const warmup = profile.isAppleSilicon
+    ? AI_WARMUP.firstRunAppleSilicon
+    : AI_WARMUP.firstRun;
   const timeEstimate = fileSizeMB
     ? estimateTotalTime(fileSizeMB, profile.tier)
     : null;
@@ -96,8 +105,7 @@ export default function SystemRequirementsNotice({
         <span aria-hidden="true">✓</span>
         <span>
           {gpuName ? `Compatible — ${gpuName}` : "Compatible GPU detected"}
-          {" · "}First run: {warmup.minMin}–
-          {warmup.maxMin} min browser setup
+          {" · "}First run: {warmup.minMin}–{warmup.maxMin} min browser setup
         </span>
       </div>
     );
@@ -211,10 +219,9 @@ export default function SystemRequirementsNotice({
             On-device AI is supported. No data leaves your device.
           </p>
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
-            <strong>First run:</strong> allow {warmup.minMin}–
-            {warmup.maxMin} minutes for one-time browser setup
-            (compiling GPU programs + downloading the{" "}
-            {AI_REQUIREMENTS.model.sizeGB} GB AI model).{" "}
+            <strong>First run:</strong> allow {warmup.minMin}–{warmup.maxMin}{" "}
+            minutes for one-time browser setup (compiling GPU programs +
+            downloading the {AI_REQUIREMENTS.model.sizeGB} GB AI model).{" "}
             <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}–
             {AI_WARMUP.subsequentRun.maxMin} min to start each session.
           </p>
@@ -291,11 +298,10 @@ function WhyExplanation({ warmup }) {
       </p>
       <p>
         <strong>
-          First-run setup ({warmup.minMin}–
-          {warmup.maxMin} min, one time only):
+          First-run setup ({warmup.minMin}–{warmup.maxMin} min, one time only):
         </strong>{" "}
-        {warmup.reason} After this, subsequent sessions skip
-        compilation entirely.
+        {warmup.reason} After this, subsequent sessions skip compilation
+        entirely.
       </p>
       <p>
         <strong>

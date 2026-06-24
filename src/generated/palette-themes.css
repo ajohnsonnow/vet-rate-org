@@ -6,68 +6,400 @@
 /* Brand channel baseline — Tailwind v3 default blue scale as space-separated RGB channels. */
 /* tailwind.config.js remaps blue/indigo/sky/cyan to rgb(var(--brand-N) / <alpha-value>); the */
 /* default palette (no palette-* class) resolves to these, so it stays visually identical. */
-:root { --brand-50: 239 246 255; --brand-100: 219 234 254; --brand-200: 191 219 254; --brand-300: 147 197 253; --brand-400: 96 165 250; --brand-500: 59 130 246; --brand-600: 37 99 235; --brand-700: 29 78 216; --brand-800: 30 64 175; --brand-900: 30 58 138; --brand-950: 23 37 84; }
+:root {
+  --brand-50: 239 246 255;
+  --brand-100: 219 234 254;
+  --brand-200: 191 219 254;
+  --brand-300: 147 197 253;
+  --brand-400: 96 165 250;
+  --brand-500: 59 130 246;
+  --brand-600: 37 99 235;
+  --brand-700: 29 78 216;
+  --brand-800: 30 64 175;
+  --brand-900: 30 58 138;
+  --brand-950: 23 37 84;
+}
 
-html.light.palette-army { --va-blue:#000000; --va-gold:#b59004; --focus-ring:#b59004; }
-html.dark.palette-army  { --va-blue:#000000; --va-gold:#ffcb05; --focus-ring:#ffcb05; }
-html.palette-army { --brand-50: 255 252 240; --brand-100: 255 248 219; --brand-200: 255 239 179; --brand-300: 255 227 122; --brand-400: 255 217 71; --brand-500: 255 207 26; --brand-600: 138 109 0; --brand-700: 121 96 0; --brand-800: 158 125 0; --brand-900: 122 97 0; --brand-950: 82 65 0; }
+html.light.palette-army {
+  --va-blue: #000000;
+  --va-gold: #b59004;
+  --focus-ring: #b59004;
+}
+html.dark.palette-army {
+  --va-blue: #000000;
+  --va-gold: #ffcb05;
+  --focus-ring: #ffcb05;
+}
+html.palette-army {
+  --brand-50: 255 252 240;
+  --brand-100: 255 248 219;
+  --brand-200: 255 239 179;
+  --brand-300: 255 227 122;
+  --brand-400: 255 217 71;
+  --brand-500: 255 207 26;
+  --brand-600: 138 109 0;
+  --brand-700: 121 96 0;
+  --brand-800: 158 125 0;
+  --brand-900: 122 97 0;
+  --brand-950: 82 65 0;
+}
 
-html.light.palette-navy { --va-blue:#00205b; --va-gold:#a0946a; --focus-ring:#a0946a; }
-html.dark.palette-navy  { --va-blue:#00205b; --va-gold:#c5b783; --focus-ring:#c5b783; }
-html.palette-navy { --brand-50: 240 245 255; --brand-100: 219 232 255; --brand-200: 179 205 255; --brand-300: 122 169 255; --brand-400: 71 136 255; --brand-500: 26 106 255; --brand-600: 0 82 235; --brand-700: 0 68 194; --brand-800: 0 56 158; --brand-900: 0 43 122; --brand-950: 0 29 82; }
+html.light.palette-navy {
+  --va-blue: #00205b;
+  --va-gold: #a0946a;
+  --focus-ring: #a0946a;
+}
+html.dark.palette-navy {
+  --va-blue: #00205b;
+  --va-gold: #c5b783;
+  --focus-ring: #c5b783;
+}
+html.palette-navy {
+  --brand-50: 240 245 255;
+  --brand-100: 219 232 255;
+  --brand-200: 179 205 255;
+  --brand-300: 122 169 255;
+  --brand-400: 71 136 255;
+  --brand-500: 26 106 255;
+  --brand-600: 0 82 235;
+  --brand-700: 0 68 194;
+  --brand-800: 0 56 158;
+  --brand-900: 0 43 122;
+  --brand-950: 0 29 82;
+}
 
-html.light.palette-air-force { --va-blue:#00308f; --va-gold:#949596; --focus-ring:#949596; }
-html.dark.palette-air-force  { --va-blue:#00308f; --va-gold:#a7a8aa; --focus-ring:#a7a8aa; }
-html.palette-air-force { --brand-50: 240 245 255; --brand-100: 219 231 255; --brand-200: 179 204 255; --brand-300: 122 167 255; --brand-400: 71 133 255; --brand-500: 26 103 255; --brand-600: 0 79 235; --brand-700: 0 65 194; --brand-800: 0 53 158; --brand-900: 0 41 122; --brand-950: 0 27 82; }
+html.light.palette-air-force {
+  --va-blue: #00308f;
+  --va-gold: #949596;
+  --focus-ring: #949596;
+}
+html.dark.palette-air-force {
+  --va-blue: #00308f;
+  --va-gold: #a7a8aa;
+  --focus-ring: #a7a8aa;
+}
+html.palette-air-force {
+  --brand-50: 240 245 255;
+  --brand-100: 219 231 255;
+  --brand-200: 179 204 255;
+  --brand-300: 122 167 255;
+  --brand-400: 71 133 255;
+  --brand-500: 26 103 255;
+  --brand-600: 0 79 235;
+  --brand-700: 0 65 194;
+  --brand-800: 0 53 158;
+  --brand-900: 0 41 122;
+  --brand-950: 0 27 82;
+}
 
-html.light.palette-marines { --va-blue:#ab0520; --va-gold:#ac9064; --focus-ring:#ac9064; }
-html.dark.palette-marines  { --va-blue:#ab0520; --va-gold:#c5a572; --focus-ring:#c5a572; }
-html.palette-marines { --brand-50: 255 240 242; --brand-100: 254 220 226; --brand-200: 253 181 192; --brand-300: 251 126 147; --brand-400: 250 77 105; --brand-500: 248 32 67; --brand-600: 228 7 43; --brand-700: 188 6 35; --brand-800: 154 4 29; --brand-900: 119 3 22; --brand-950: 79 2 15; }
+html.light.palette-marines {
+  --va-blue: #ab0520;
+  --va-gold: #ac9064;
+  --focus-ring: #ac9064;
+}
+html.dark.palette-marines {
+  --va-blue: #ab0520;
+  --va-gold: #c5a572;
+  --focus-ring: #c5a572;
+}
+html.palette-marines {
+  --brand-50: 255 240 242;
+  --brand-100: 254 220 226;
+  --brand-200: 253 181 192;
+  --brand-300: 251 126 147;
+  --brand-400: 250 77 105;
+  --brand-500: 248 32 67;
+  --brand-600: 228 7 43;
+  --brand-700: 188 6 35;
+  --brand-800: 154 4 29;
+  --brand-900: 119 3 22;
+  --brand-950: 79 2 15;
+}
 
-html.light.palette-coast-guard { --va-blue:#003b71; --va-gold:#e6761e; --focus-ring:#e6761e; }
-html.dark.palette-coast-guard  { --va-blue:#003b71; --va-gold:#f57e20; --focus-ring:#f57e20; }
-html.palette-coast-guard { --brand-50: 240 248 255; --brand-100: 219 238 255; --brand-200: 179 218 255; --brand-300: 122 192 255; --brand-400: 71 167 255; --brand-500: 26 145 255; --brand-600: 0 113 216; --brand-700: 0 101 194; --brand-800: 0 83 158; --brand-900: 0 64 122; --brand-950: 0 43 82; }
+html.light.palette-coast-guard {
+  --va-blue: #003b71;
+  --va-gold: #e6761e;
+  --focus-ring: #e6761e;
+}
+html.dark.palette-coast-guard {
+  --va-blue: #003b71;
+  --va-gold: #f57e20;
+  --focus-ring: #f57e20;
+}
+html.palette-coast-guard {
+  --brand-50: 240 248 255;
+  --brand-100: 219 238 255;
+  --brand-200: 179 218 255;
+  --brand-300: 122 192 255;
+  --brand-400: 71 167 255;
+  --brand-500: 26 145 255;
+  --brand-600: 0 113 216;
+  --brand-700: 0 101 194;
+  --brand-800: 0 83 158;
+  --brand-900: 0 64 122;
+  --brand-950: 0 43 82;
+}
 
-html.light.palette-space-force { --va-blue:#1b2a4a; --va-gold:#949596; --focus-ring:#949596; }
-html.dark.palette-space-force  { --va-blue:#1b2a4a; --va-gold:#a7a8aa; --focus-ring:#a7a8aa; }
-html.palette-space-force { --brand-50: 244 246 251; --brand-100: 229 234 245; --brand-200: 199 210 235; --brand-300: 158 178 220; --brand-400: 120 148 206; --brand-500: 87 121 194; --brand-600: 63 98 172; --brand-700: 52 81 142; --brand-800: 42 66 116; --brand-900: 33 51 90; --brand-950: 22 34 60; }
+html.light.palette-space-force {
+  --va-blue: #1b2a4a;
+  --va-gold: #949596;
+  --focus-ring: #949596;
+}
+html.dark.palette-space-force {
+  --va-blue: #1b2a4a;
+  --va-gold: #a7a8aa;
+  --focus-ring: #a7a8aa;
+}
+html.palette-space-force {
+  --brand-50: 244 246 251;
+  --brand-100: 229 234 245;
+  --brand-200: 199 210 235;
+  --brand-300: 158 178 220;
+  --brand-400: 120 148 206;
+  --brand-500: 87 121 194;
+  --brand-600: 63 98 172;
+  --brand-700: 52 81 142;
+  --brand-800: 42 66 116;
+  --brand-900: 33 51 90;
+  --brand-950: 22 34 60;
+}
 
-html.light.palette-national-guard { --va-blue:#00205b; --va-gold:#b88f20; --focus-ring:#b88f20; }
-html.dark.palette-national-guard  { --va-blue:#00205b; --va-gold:#ffc72c; --focus-ring:#ffc72c; }
-html.palette-national-guard { --brand-50: 240 245 255; --brand-100: 219 232 255; --brand-200: 179 205 255; --brand-300: 122 169 255; --brand-400: 71 136 255; --brand-500: 26 106 255; --brand-600: 0 82 235; --brand-700: 0 68 194; --brand-800: 0 56 158; --brand-900: 0 43 122; --brand-950: 0 29 82; }
+html.light.palette-national-guard {
+  --va-blue: #00205b;
+  --va-gold: #b88f20;
+  --focus-ring: #b88f20;
+}
+html.dark.palette-national-guard {
+  --va-blue: #00205b;
+  --va-gold: #ffc72c;
+  --focus-ring: #ffc72c;
+}
+html.palette-national-guard {
+  --brand-50: 240 245 255;
+  --brand-100: 219 232 255;
+  --brand-200: 179 205 255;
+  --brand-300: 122 169 255;
+  --brand-400: 71 136 255;
+  --brand-500: 26 106 255;
+  --brand-600: 0 82 235;
+  --brand-700: 0 68 194;
+  --brand-800: 0 56 158;
+  --brand-900: 0 43 122;
+  --brand-950: 0 29 82;
+}
 
-html.light.palette-reserves { --va-blue:#0a4d2e; --va-gold:#a0946a; --focus-ring:#a0946a; }
-html.dark.palette-reserves  { --va-blue:#0a4d2e; --va-gold:#c5b783; --focus-ring:#c5b783; }
-html.palette-reserves { --brand-50: 241 253 248; --brand-100: 223 251 238; --brand-200: 187 246 219; --brand-300: 138 240 193; --brand-400: 93 234 168; --brand-500: 52 229 147; --brand-600: 17 133 79; --brand-700: 17 129 77; --brand-800: 18 140 84; --brand-900: 14 108 65; --brand-950: 9 72 43; }
+html.light.palette-reserves {
+  --va-blue: #0a4d2e;
+  --va-gold: #a0946a;
+  --focus-ring: #a0946a;
+}
+html.dark.palette-reserves {
+  --va-blue: #0a4d2e;
+  --va-gold: #c5b783;
+  --focus-ring: #c5b783;
+}
+html.palette-reserves {
+  --brand-50: 241 253 248;
+  --brand-100: 223 251 238;
+  --brand-200: 187 246 219;
+  --brand-300: 138 240 193;
+  --brand-400: 93 234 168;
+  --brand-500: 52 229 147;
+  --brand-600: 17 133 79;
+  --brand-700: 17 129 77;
+  --brand-800: 18 140 84;
+  --brand-900: 14 108 65;
+  --brand-950: 9 72 43;
+}
 
-html.light.palette-pride { --va-blue:#6d2380; --va-gold:#df7b00; --focus-ring:#df7b00; }
-html.dark.palette-pride  { --va-blue:#6d2380; --va-gold:#ff8c00; --focus-ring:#ff8c00; }
-html.palette-pride { --brand-50: 250 243 252; --brand-100: 243 227 247; --brand-200: 230 195 239; --brand-300: 211 151 227; --brand-400: 194 111 216; --brand-500: 179 75 206; --brand-600: 157 50 184; --brand-700: 130 42 152; --brand-800: 106 34 124; --brand-900: 82 26 96; --brand-950: 55 18 64; }
+html.light.palette-pride {
+  --va-blue: #6d2380;
+  --va-gold: #df7b00;
+  --focus-ring: #df7b00;
+}
+html.dark.palette-pride {
+  --va-blue: #6d2380;
+  --va-gold: #ff8c00;
+  --focus-ring: #ff8c00;
+}
+html.palette-pride {
+  --brand-50: 250 243 252;
+  --brand-100: 243 227 247;
+  --brand-200: 230 195 239;
+  --brand-300: 211 151 227;
+  --brand-400: 194 111 216;
+  --brand-500: 179 75 206;
+  --brand-600: 157 50 184;
+  --brand-700: 130 42 152;
+  --brand-800: 106 34 124;
+  --brand-900: 82 26 96;
+  --brand-950: 55 18 64;
+}
 
-html.light.palette-flag { --va-blue:#3c3b6e; --va-gold:#cc6b77; --focus-ring:#cc6b77; }
-html.dark.palette-flag  { --va-blue:#3c3b6e; --va-gold:#cc6b77; --focus-ring:#cc6b77; }
-html.palette-flag { --brand-50: 245 245 250; --brand-100: 232 232 243; --brand-200: 206 205 228; --brand-300: 169 169 209; --brand-400: 137 135 191; --brand-500: 107 106 175; --brand-600: 83 82 153; --brand-700: 69 68 126; --brand-800: 56 55 103; --brand-900: 43 43 80; --brand-950: 29 28 53; }
+html.light.palette-flag {
+  --va-blue: #3c3b6e;
+  --va-gold: #cc6b77;
+  --focus-ring: #cc6b77;
+}
+html.dark.palette-flag {
+  --va-blue: #3c3b6e;
+  --va-gold: #cc6b77;
+  --focus-ring: #cc6b77;
+}
+html.palette-flag {
+  --brand-50: 245 245 250;
+  --brand-100: 232 232 243;
+  --brand-200: 206 205 228;
+  --brand-300: 169 169 209;
+  --brand-400: 137 135 191;
+  --brand-500: 107 106 175;
+  --brand-600: 83 82 153;
+  --brand-700: 69 68 126;
+  --brand-800: 56 55 103;
+  --brand-900: 43 43 80;
+  --brand-950: 29 28 53;
+}
 
-html.light.palette-pow-mia { --va-blue:#1a1a1a; --va-gold:#8a8a8a; --focus-ring:#8a8a8a; }
-html.dark.palette-pow-mia  { --va-blue:#1a1a1a; --va-gold:#9a9a9a; --focus-ring:#9a9a9a; }
-html.palette-pow-mia { --brand-50: 248 247 247; --brand-100: 238 236 236; --brand-200: 218 215 215; --brand-300: 191 186 186; --brand-400: 167 160 160; --brand-500: 145 136 136; --brand-600: 122 113 113; --brand-700: 101 93 93; --brand-800: 82 76 76; --brand-900: 64 59 59; --brand-950: 42 39 39; }
+html.light.palette-pow-mia {
+  --va-blue: #1a1a1a;
+  --va-gold: #8a8a8a;
+  --focus-ring: #8a8a8a;
+}
+html.dark.palette-pow-mia {
+  --va-blue: #1a1a1a;
+  --va-gold: #9a9a9a;
+  --focus-ring: #9a9a9a;
+}
+html.palette-pow-mia {
+  --brand-50: 248 247 247;
+  --brand-100: 238 236 236;
+  --brand-200: 218 215 215;
+  --brand-300: 191 186 186;
+  --brand-400: 167 160 160;
+  --brand-500: 145 136 136;
+  --brand-600: 122 113 113;
+  --brand-700: 101 93 93;
+  --brand-800: 82 76 76;
+  --brand-900: 64 59 59;
+  --brand-950: 42 39 39;
+}
 
-html.light.palette-gold-star { --va-blue:#3c3b6e; --va-gold:#c18b15; --focus-ring:#c18b15; }
-html.dark.palette-gold-star  { --va-blue:#3c3b6e; --va-gold:#ffb81c; --focus-ring:#ffb81c; }
-html.palette-gold-star { --brand-50: 255 251 240; --brand-100: 255 247 219; --brand-200: 255 237 179; --brand-300: 255 224 122; --brand-400: 255 212 71; --brand-500: 255 202 26; --brand-600: 144 110 0; --brand-700: 127 97 0; --brand-800: 158 121 0; --brand-900: 122 94 0; --brand-950: 82 63 0; }
+html.light.palette-gold-star {
+  --va-blue: #3c3b6e;
+  --va-gold: #c18b15;
+  --focus-ring: #c18b15;
+}
+html.dark.palette-gold-star {
+  --va-blue: #3c3b6e;
+  --va-gold: #ffb81c;
+  --focus-ring: #ffb81c;
+}
+html.palette-gold-star {
+  --brand-50: 255 251 240;
+  --brand-100: 255 247 219;
+  --brand-200: 255 237 179;
+  --brand-300: 255 224 122;
+  --brand-400: 255 212 71;
+  --brand-500: 255 202 26;
+  --brand-600: 144 110 0;
+  --brand-700: 127 97 0;
+  --brand-800: 158 121 0;
+  --brand-900: 122 94 0;
+  --brand-950: 82 63 0;
+}
 
-html.light.palette-purple-heart { --va-blue:#5d2a6e; --va-gold:#ac9064; --focus-ring:#ac9064; }
-html.dark.palette-purple-heart  { --va-blue:#5d2a6e; --va-gold:#c5a572; --focus-ring:#c5a572; }
-html.palette-purple-heart { --brand-50: 249 244 251; --brand-100: 241 229 245; --brand-200: 225 200 234; --brand-300: 204 159 218; --brand-400: 184 122 204; --brand-500: 166 89 192; --brand-600: 144 65 170; --brand-700: 119 54 140; --brand-800: 97 44 114; --brand-900: 75 34 89; --brand-950: 50 23 59; }
+html.light.palette-purple-heart {
+  --va-blue: #5d2a6e;
+  --va-gold: #ac9064;
+  --focus-ring: #ac9064;
+}
+html.dark.palette-purple-heart {
+  --va-blue: #5d2a6e;
+  --va-gold: #c5a572;
+  --focus-ring: #c5a572;
+}
+html.palette-purple-heart {
+  --brand-50: 249 244 251;
+  --brand-100: 241 229 245;
+  --brand-200: 225 200 234;
+  --brand-300: 204 159 218;
+  --brand-400: 184 122 204;
+  --brand-500: 166 89 192;
+  --brand-600: 144 65 170;
+  --brand-700: 119 54 140;
+  --brand-800: 97 44 114;
+  --brand-900: 75 34 89;
+  --brand-950: 50 23 59;
+}
 
-html.light.palette-women-veterans { --va-blue:#6a1b4d; --va-gold:#259597; --focus-ring:#259597; }
-html.dark.palette-women-veterans  { --va-blue:#6a1b4d; --va-gold:#259597; --focus-ring:#259597; }
-html.palette-women-veterans { --brand-50: 252 243 249; --brand-100: 248 227 240; --brand-200: 239 194 223; --brand-300: 228 149 199; --brand-400: 218 109 178; --brand-500: 208 72 158; --brand-600: 187 48 136; --brand-700: 154 39 112; --brand-800: 126 32 92; --brand-900: 98 25 71; --brand-950: 65 17 47; }
+html.light.palette-women-veterans {
+  --va-blue: #6a1b4d;
+  --va-gold: #259597;
+  --focus-ring: #259597;
+}
+html.dark.palette-women-veterans {
+  --va-blue: #6a1b4d;
+  --va-gold: #259597;
+  --focus-ring: #259597;
+}
+html.palette-women-veterans {
+  --brand-50: 252 243 249;
+  --brand-100: 248 227 240;
+  --brand-200: 239 194 223;
+  --brand-300: 228 149 199;
+  --brand-400: 218 109 178;
+  --brand-500: 208 72 158;
+  --brand-600: 187 48 136;
+  --brand-700: 154 39 112;
+  --brand-800: 126 32 92;
+  --brand-900: 98 25 71;
+  --brand-950: 65 17 47;
+}
 
-html.light.palette-juneteenth { --va-blue:#c8102e; --va-gold:#519674; --focus-ring:#519674; }
-html.dark.palette-juneteenth  { --va-blue:#c8102e; --va-gold:#519674; --focus-ring:#519674; }
-html.palette-juneteenth { --brand-50: 254 241 243; --brand-100: 252 223 227; --brand-200: 248 185 196; --brand-300: 243 135 152; --brand-400: 238 88 112; --brand-500: 234 46 77; --brand-600: 213 21 52; --brand-700: 176 18 43; --brand-800: 144 14 35; --brand-900: 111 11 27; --brand-950: 74 7 18; }
+html.light.palette-juneteenth {
+  --va-blue: #c8102e;
+  --va-gold: #519674;
+  --focus-ring: #519674;
+}
+html.dark.palette-juneteenth {
+  --va-blue: #c8102e;
+  --va-gold: #519674;
+  --focus-ring: #519674;
+}
+html.palette-juneteenth {
+  --brand-50: 254 241 243;
+  --brand-100: 252 223 227;
+  --brand-200: 248 185 196;
+  --brand-300: 243 135 152;
+  --brand-400: 238 88 112;
+  --brand-500: 234 46 77;
+  --brand-600: 213 21 52;
+  --brand-700: 176 18 43;
+  --brand-800: 144 14 35;
+  --brand-900: 111 11 27;
+  --brand-950: 74 7 18;
+}
 
-html.light.palette-native-code-talker { --va-blue:#9a3324; --va-gold:#c38933; --focus-ring:#c38933; }
-html.dark.palette-native-code-talker  { --va-blue:#9a3324; --va-gold:#e8a33d; --focus-ring:#e8a33d; }
-html.palette-native-code-talker { --brand-50: 252 244 243; --brand-100: 248 229 226; --brand-200: 241 199 193; --brand-300: 230 158 148; --brand-400: 220 121 106; --brand-500: 212 87 69; --brand-600: 190 63 44; --brand-700: 157 52 37; --brand-800: 128 42 30; --brand-900: 99 33 23; --brand-950: 66 22 15; }
+html.light.palette-native-code-talker {
+  --va-blue: #9a3324;
+  --va-gold: #c38933;
+  --focus-ring: #c38933;
+}
+html.dark.palette-native-code-talker {
+  --va-blue: #9a3324;
+  --va-gold: #e8a33d;
+  --focus-ring: #e8a33d;
+}
+html.palette-native-code-talker {
+  --brand-50: 252 244 243;
+  --brand-100: 248 229 226;
+  --brand-200: 241 199 193;
+  --brand-300: 230 158 148;
+  --brand-400: 220 121 106;
+  --brand-500: 212 87 69;
+  --brand-600: 190 63 44;
+  --brand-700: 157 52 37;
+  --brand-800: 128 42 30;
+  --brand-900: 99 33 23;
+  --brand-950: 66 22 15;
+}

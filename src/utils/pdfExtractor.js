@@ -39,8 +39,7 @@ function attachPdfPasswordPrompt(loadingTask, getPassword) {
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN path (suppresses font warnings)
-const STANDARD_FONT_DATA_URL =
-  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Extract text from a PDF file client-side
@@ -48,7 +47,11 @@ const STANDARD_FONT_DATA_URL =
  * @param {Function} onProgress - Progress callback (currentPage, totalPages)
  * @returns {Promise<{text: string, pageCount: number, hasText: boolean}>}
  */
-export async function ripTextFromPdf(fileData, onProgress = () => {}, options = {}) {
+export async function ripTextFromPdf(
+  fileData,
+  onProgress = () => {},
+  options = {},
+) {
   try {
     const loadingTask = pdfjsLib.getDocument({
       data: fileData,

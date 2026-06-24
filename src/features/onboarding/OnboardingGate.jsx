@@ -21,8 +21,7 @@ export default function OnboardingGate({ whatsNewOpen }) {
     () => localStorage.getItem("vetrate_disclaimer-acknowledged") === "true",
   );
   const [affiliationPromptDone, setAffiliationPromptDone] = useState(
-    () =>
-      localStorage.getItem("vetrate_affiliation-prompt-seen") === "true",
+    () => localStorage.getItem("vetrate_affiliation-prompt-seen") === "true",
   );
 
   const handleAcknowledge = () => setAcknowledged(true);

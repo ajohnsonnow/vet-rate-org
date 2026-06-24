@@ -616,7 +616,11 @@ const Dashboard = ({
 
       {/* Overall Recommendation */}
       {analysis?.overallRecommendation && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4" aria-live="polite" aria-atomic="true">
+        <div
+          className="bg-slate-800/50 border border-slate-700 rounded-lg p-4"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>

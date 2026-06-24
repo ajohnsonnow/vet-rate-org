@@ -2701,7 +2701,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
                 {/* Response - Always show when generating or has content */}
                 {(isTestGenerating || streamedResponse || testResponse) && (
-                  <div className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50" aria-live="polite" aria-atomic="false">
+                  <div
+                    className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50"
+                    aria-live="polite"
+                    aria-atomic="false"
+                  >
                     <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
                       {isTestGenerating && !streamedResponse && !testResponse
                         ? "⏳ Processing..."
@@ -2719,7 +2723,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
             {/* Error State */}
             {error && (
-              <div className="rounded-xl border-2 border-red-500 bg-red-50 p-4 dark:bg-red-900/30" role="alert" aria-live="polite">
+              <div
+                className="rounded-xl border-2 border-red-500 bg-red-50 p-4 dark:bg-red-900/30"
+                role="alert"
+                aria-live="polite"
+              >
                 <p className="whitespace-pre-wrap text-red-700 dark:text-red-400">
                   <strong>Error:</strong> {error}
                 </p>

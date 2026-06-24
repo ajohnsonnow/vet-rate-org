@@ -542,10 +542,11 @@ export const initializeWllama = async (
   // download. Mobile tier always returns canUseWebLLM=false.
   const deviceProfile = await detectDeviceCapabilities();
   if (!deviceProfile.canUseWebLLM) {
-    const reason =
-      `Device tier "${deviceProfile.tier}" (${deviceProfile.hasWebGPU ? "WebGPU present but mobile" : "no WebGPU"})`;
+    const reason = `Device tier "${deviceProfile.tier}" (${deviceProfile.hasWebGPU ? "WebGPU present but mobile" : "no WebGPU"})`;
     // eslint-disable-next-line no-console
-    console.warn(`[Wllama] Blocked on ${reason}: 7B models need a desktop/laptop.`);
+    console.warn(
+      `[Wllama] Blocked on ${reason}: 7B models need a desktop/laptop.`,
+    );
     throw new Error(
       `Local AI (7B model) is not available on this device (${reason}). ` +
         "Use Cloud AI or open the app on a desktop or laptop.",
@@ -1804,7 +1805,8 @@ export const generateAI = async (prompt, options = {}) => {
     logModelCallWithDigests({
       tag: options.toolId || options.taskType || "generateAI",
       model: options.forceMode || "auto",
-      prompt: typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
+      prompt:
+        typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
       output: auditOutput,
       durationMs: Date.now() - startedAt,
       meta: { expectJSON: !!options.expectJSON },
