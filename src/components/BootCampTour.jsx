@@ -22,7 +22,7 @@ const TOUR_SEEN_KEY = "vetrate-tour-completed";
 const tourStyles = `
   .driver-popover {
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
-    border: 2px solid #c8a961 !important;
+    border: 2px solid var(--va-gold, #c8a961) !important;
     border-radius: 12px !important;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(200, 169, 97, 0.2) !important;
     max-width: 400px !important;
@@ -31,7 +31,7 @@ const tourStyles = `
   }
   
   .driver-popover-title {
-    color: #c8a961 !important;
+    color: var(--va-gold, #c8a961) !important;
     font-size: 1.25rem !important;
     font-weight: 700 !important;
     padding-bottom: 8px !important;
@@ -76,7 +76,7 @@ const tourStyles = `
   
   .driver-popover .driver-popover-next-btn,
   .driver-popover-next-btn {
-    background: #c8a961 !important;
+    background: var(--va-gold, #c8a961) !important;
     color: #1a1a1a !important;
     border: none !important;
     padding: 10px 20px !important;
@@ -89,7 +89,7 @@ const tourStyles = `
   
   .driver-popover .driver-popover-next-btn:hover,
   .driver-popover-next-btn:hover {
-    background: #d4b872 !important;
+    background: var(--va-gold-hover, #d4b872) !important;
     transform: scale(1.02) !important;
     box-shadow: 0 4px 12px rgba(200, 169, 97, 0.4) !important;
   }
@@ -125,7 +125,7 @@ const tourStyles = `
   /* Make highlighted element pop with bright glow */
   .driver-active-element {
     background: inherit !important;
-    box-shadow: 0 0 0 4px #c8a961, 0 0 0 8px rgba(200, 169, 97, 0.5), 0 0 50px rgba(200, 169, 97, 0.8) !important;
+    box-shadow: 0 0 0 4px var(--va-gold, #c8a961), 0 0 0 8px rgba(200, 169, 97, 0.5), 0 0 50px rgba(200, 169, 97, 0.8) !important;
     border-radius: 8px !important;
     position: relative !important;
     z-index: 100000 !important;
@@ -140,7 +140,7 @@ const tourStyles = `
   .driver-popover-arrow-side-right,
   .driver-popover-arrow-side-top,
   .driver-popover-arrow-side-bottom {
-    border-color: #c8a961 !important;
+    border-color: var(--va-gold, #c8a961) !important;
   }
   
   /* Welcome modal style */
@@ -346,7 +346,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               <p style="margin-top: 10px;">
                 ${t("bootCampTour", "quickPickerDesc")}
               </p>
-              <p style="color: #c8a961; margin-top: 10px; font-weight: 600;">
+              <p style="color: var(--va-gold, #c8a961); margin-top: 10px; font-weight: 600;">
                 ${t("bootCampTour", "quickPickerHowTo")}
               </p>
             `,
@@ -383,7 +383,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 <li>${t("bootCampTour", "myPacketEvidence")}</li>
                 <li>${t("bootCampTour", "myPacketDocs")}</li>
               </ul>
-              <p style="color: #c8a961; margin-top: 10px;">
+              <p style="color: var(--va-gold, #c8a961); margin-top: 10px;">
                 <strong>${t("bootCampTour", "myPacketHomeBase")}</strong>
               </p>
             `,
@@ -408,7 +408,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 <li>${t("bootCampTour", "workflowIncrease")}</li>
                 <li>${t("bootCampTour", "workflowSpecial")}</li>
               </ul>
-              <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
+              <p style="color: var(--va-gold, #c8a961); font-weight: 600; margin-top: 10px;">
                 ${t("bootCampTour", "workflowLost")} <strong>${t("bootCampTour", "workflowStartHere")}</strong>
               </p>
             `,
@@ -460,7 +460,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                   <li>${t("bootCampTour", "navigatorWalk")}</li>
                   <li>${t("bootCampTour", "navigatorSuggest")}</li>
                 </ul>
-                <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
+                <p style="color: var(--va-gold, #c8a961); font-weight: 600; margin-top: 10px;">
                   ${t("bootCampTour", "navigatorDrag")}
                 </p>
                 <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
@@ -485,7 +485,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 <li>${t("bootCampTour", "helpFAQ")}</li>
                 <li>${t("bootCampTour", "helpRestart")}</li>
               </ul>
-              <p style="color: #c8a961; margin-top: 10px;">
+              <p style="color: var(--va-gold, #c8a961); margin-top: 10px;">
                 <strong>${t("bootCampTour", "helpBackup")}</strong>
               </p>
             `,
@@ -516,7 +516,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                   ${t("bootCampTour", "finalRemember")}
                 </p>
                 
-                <p style="color: #c8a961; font-weight: 700; margin-top: 20px; font-size: 1rem;">
+                <p style="color: var(--va-gold, #c8a961); font-weight: 700; margin-top: 20px; font-size: 1rem;">
                   ${t("bootCampTour", "finalMotto")}
                 </p>
               </div>
