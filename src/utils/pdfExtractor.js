@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - C-File PDF Text Extraction Utility
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Client-side PDF text extraction using pdf.js
  * Converts large PDF files to searchable text without uploading to servers
@@ -9,13 +9,37 @@
 
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { describePdfPasswordError } from "./fileTypeGuards";
+
+/**
+ * Wire pdf.js's onPassword callback to a prompt+retry. The VA ships encrypted
+ * C-files; without this, getDocument() rejects with a PasswordException.
+ * @param {object} loadingTask - pdf.js PDFDocumentLoadingTask
+ * @param {Function} [getPassword] - async (reason) => string|null; defaults to window.prompt
+ */
+function attachPdfPasswordPrompt(loadingTask, getPassword) {
+  loadingTask.onPassword = (updatePassword, reason) => {
+    const ask =
+      getPassword ||
+      ((r) =>
+        window.prompt(
+          // reason 2 = INCORRECT_PASSWORD (pdfjsLib.PasswordResponses)
+          r === 2
+            ? "Incorrect password. Re-enter the password for this PDF:"
+            : "This PDF is password-protected. Enter its password to read it:",
+        ));
+    Promise.resolve(ask(reason)).then((pw) => {
+      if (pw) updatePassword(pw);
+      else loadingTask.destroy();
+    });
+  };
+}
 
 // Configure pdf.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN path (suppresses font warnings)
-const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Extract text from a PDF file client-side
@@ -23,15 +47,22 @@ const STANDARD_FONT_DATA_URL =
  * @param {Function} onProgress - Progress callback (currentPage, totalPages)
  * @returns {Promise<{text: string, pageCount: number, hasText: boolean}>}
  */
-export async function ripTextFromPdf(fileData, onProgress = () => {}) {
+export async function ripTextFromPdf(
+  fileData,
+  onProgress = () => {},
+  options = {},
+) {
   try {
-    const pdf = await pdfjsLib.getDocument({
+    const loadingTask = pdfjsLib.getDocument({
       data: fileData,
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    }).promise;
+    });
+    attachPdfPasswordPrompt(loadingTask, options.getPassword);
+    const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
     let fullText = "";
     let totalCharacters = 0;
+    let failedPages = 0;
 
     // Loop through all pages
     for (let i = 1; i <= numPages; i++) {
@@ -59,6 +90,7 @@ export async function ripTextFromPdf(fileData, onProgress = () => {}) {
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
       } catch (pageError) {
+        failedPages++;
         console.warn(`Error extracting page ${i}:`, pageError);
         fullText += `--- PAGE ${i} ---\n[Page extraction error]\n\n`;
         onProgress(i, numPages);
@@ -75,9 +107,15 @@ export async function ripTextFromPdf(fileData, onProgress = () => {}) {
       hasText,
       avgCharsPerPage: Math.round(avgCharsPerPage),
       totalCharacters,
+      // RT7-5: surface partial-read failures so the UI can warn "N of M pages
+      // could not be read" instead of silently returning placeholder text.
+      failedPages,
+      pagesRead: numPages - failedPages,
     };
   } catch (error) {
     console.error("PDF extraction error:", error);
+    const pwError = describePdfPasswordError(error);
+    if (pwError) throw pwError;
     throw new Error(`Failed to read PDF: ${error.message}`);
   }
 }
@@ -211,13 +249,15 @@ export async function processLargePDF(file, options = {}) {
   const objectUrl = URL.createObjectURL(file);
 
   try {
-    const pdf = await pdfjsLib.getDocument({
+    const loadingTask = pdfjsLib.getDocument({
       url: objectUrl,
       rangeChunkSize: 65536, // 64 KB per HTTP range chunk — enables streaming
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: false,
       disableStream: false,
-    }).promise;
+    });
+    attachPdfPasswordPrompt(loadingTask, options.getPassword);
+    const pdf = await loadingTask.promise;
 
     const numPages = pdf.numPages;
     let processedCount = 0;
@@ -314,6 +354,10 @@ export async function processLargePDF(file, options = {}) {
       scannedPageRanges: scannedRanges,
       method: "streaming_all_pages",
     };
+  } catch (error) {
+    const pwError = describePdfPasswordError(error);
+    if (pwError) throw pwError;
+    throw error;
   } finally {
     URL.revokeObjectURL(objectUrl);
     db.close();

@@ -227,6 +227,30 @@ export const validateConditions = (conditions) => {
 };
 
 /**
+ * Annotate AI-extracted conditions with a verification flag against the official
+ * 38 CFR diagnostic-code DB, WITHOUT dropping any (unlike validateConditions,
+ * which splits safe/rejected). Used for Blue Button report parsing (D-H09): the
+ * AI can hallucinate diagnoses, but a real condition that simply isn't in our
+ * curated name→code map must still surface — flagged "unverified" — so AI output
+ * is never presented to the veteran as VA-confirmed fact. Reads the condition
+ * name from `name` or `standardizedName`.
+ * @param {Array} conditions - [{ name | standardizedName, ... }]
+ * @returns {Array} same objects with { verified: boolean, officialName: string|null }
+ */
+export const annotateConditionVerification = (conditions) => {
+  if (!Array.isArray(conditions)) return [];
+  return conditions.map((condition) => {
+    const name = condition?.name ?? condition?.standardizedName;
+    const validation = validateCondition({ ...condition, name });
+    return {
+      ...condition,
+      verified: validation.isValid === true,
+      officialName: validation.isValid ? validation.officialName : null,
+    };
+  });
+};
+
+/**
  * Parse and validate AI response (handles JSON strings or objects)
  * @param {string|Object} aiResponse - Response from AI
  * @returns {Object} Validation results
@@ -386,6 +410,7 @@ export default {
   validateDiagnosticCode,
   validateCondition,
   validateConditions,
+  annotateConditionVerification,
   validateAIResponse,
   getDatabaseStats,
   searchConditions,

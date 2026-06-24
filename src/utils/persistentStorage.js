@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  *
  * Persistent Storage System - "The Bunker"
@@ -22,6 +22,7 @@
  */
 
 import { storage } from "./storage";
+import { CURRENT_PACKET_VERSION } from "./migrationManager";
 
 // ============================================================================
 // CONFIGURATION
@@ -35,7 +36,7 @@ const CONFIG = {
   FILE_HANDLE_KEY: "vetrate_file_handle_metadata",
   UNSAVED_FLAG_KEY: "vetrate_unsaved_changes",
   LAST_SAVE_KEY: "vetrate_last_save_timestamp",
-  PACKET_VERSION: "2.0.0",
+  PACKET_VERSION: CURRENT_PACKET_VERSION,
 };
 
 // ============================================================================
@@ -883,9 +884,6 @@ export async function initPersistentStorage() {
     // eslint-disable-next-line no-console
     console.log("⚠️ Found unsaved changes from previous session");
   }
-
-  // Initialize unsaved changes warning
-  initUnsavedChangesWarning();
 
   // Start milestone saves
   startMilestoneSaves();

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+# Universal commit-msg hook — validates commit message format
+[ -f "package.json" ] && [ -f "commitlint.config.mjs" ] && \
+  npx --no -- commitlint --edit "$1" || \
+  grep -qE "^(feat|fix|docs|style|refactor|test|chore|ci|perf|revert|build)(\(.+\))?!?: .{1,100}$" "$1" || \
+  (echo "❌ Commit message must follow: type(scope): description" && exit 1)

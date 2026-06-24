@@ -25,7 +25,7 @@ export default function HomeFeatureCards() {
 
       {/* TACTICAL CALCULATOR - THE Core Feature */}
       <div className="mb-6">
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
+        <div className="bg-gradient-to-r from-green-700 via-emerald-700 to-green-800 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-16 -translate-x-16"></div>
@@ -44,7 +44,7 @@ export default function HomeFeatureCards() {
                   CORE FEATURE
                 </span>
               </div>
-              <p className="text-blue-100 max-w-xl">
+              <p className="text-green-100 max-w-xl">
                 <strong>Calculate your REAL rating</strong> using official VA
                 math (38 CFR § 4.25). Includes <strong>Bilateral Factor</strong>
                 , gap analysis to reach 100%, and
@@ -59,7 +59,7 @@ export default function HomeFeatureCards() {
                     new CustomEvent("openTacticalCalculator"),
                   )
                 }
-                className="px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                className="px-8 py-4 bg-white text-green-800 rounded-xl font-bold text-lg hover:bg-green-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
               >
                 <span>🎯</span>
                 <span>Calculate My Rating</span>

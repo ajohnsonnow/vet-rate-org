@@ -11,11 +11,11 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:;
+        script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
         font-src 'self' https://fonts.gstatic.com data:;
         img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com https://flagcdn.com https://*.flagcdn.com;
-        connect-src 'self' data: blob: ws://127.0.0.1:* ws://localhost:* http://127.0.0.1:* http://localhost:* https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://*.cdn.hf.co https://*.aws.cdn.hf.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co wasm-unsafe-eval;
+        connect-src 'self' data: blob: ws://127.0.0.1:* ws://localhost:* http://127.0.0.1:* http://localhost:* https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://*.cdn.hf.co https://*.aws.cdn.hf.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://api.dropboxapi.com https://content.dropboxapi.com https://login.microsoftonline.com https://graph.microsoft.com https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co;
         frame-src 'self' https://accounts.google.com https://dos.zone https://cdn.dos.zone https://archive.org;
         object-src 'none';
         base-uri 'self';
@@ -36,13 +36,18 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Vet-Rate.org" />
     <meta property="og:url" content="https://vet-rate.org/" />
-    <meta property="og:title" content="Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE" />
-    <meta property="og:description" content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans." />
+    <!-- og:title: ≤60 chars renders untruncated in Facebook group feeds on mobile -->
+    <meta property="og:title" content="Free VA Rating Calculator + AI Claims Analysis | Vet-Rate.org" />
+    <!-- og:description: first ~90 chars visible before "See more" on Facebook mobile.
+         Hook leads: PACT Act + cost savings + privacy — top pain points in veteran groups. -->
+    <meta property="og:description" content="What claim consultants charge $1,500+ for — FREE. PACT Act eligibility, VA rating calculator, AI C-File analysis (100% private, never shared), secondary conditions, retro pay. Built by a veteran for veterans." />
     <meta property="og:image" content="https://vet-rate.org/images/Vet-Rate-org-logo-official.png" />
-    <meta property="og:image:alt" content="VA disability claims toolkit logo" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Vet-Rate.org — Free VA claims toolkit: rating calculator, AI document analysis, PACT Act eligibility" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE" />
-    <meta name="twitter:description" content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans." />
+    <meta name="twitter:title" content="Free VA Rating Calculator + AI Claims Analysis | Vet-Rate.org" />
+    <meta name="twitter:description" content="What claim consultants charge $1,500+ for — FREE. PACT Act eligibility, VA rating calculator, AI C-File analysis (100% private), secondary conditions, retro pay. Built by a veteran for veterans." />
     <meta name="twitter:image" content="https://vet-rate.org/images/Vet-Rate-org-logo-official.png" />
 
     <!-- Progressive enhancement: theme-color for Android Chrome/Safari/Edge address bar -->
@@ -85,11 +90,14 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
-    <!-- Google Drive API (for Cloud Sync) -->
-    <script src="https://apis.google.com/js/api.js" async defer></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+    <!-- D-M08: SRI-pinned so a gc.zgo.at CDN compromise can't inject arbitrary JS
+         over this PII-bearing SPA. crossorigin is required for SRI on a cross-origin
+         script (gc.zgo.at sends Access-Control-Allow-Origin: *). If GoatCounter ever
+         rotates count.js the browser blocks the stale hash — analytics stops, the app
+         is unaffected — so refresh this hash (or self-host count.js) when that happens. -->
     <script data-goatcounter="https://vet-rate-org.goatcounter.com/count"
-        async src="https://gc.zgo.at/count.js"></script>
+        async src="https://gc.zgo.at/count.js"
+        integrity="sha384-2UjvVpptg4JlEVgJI2PdscrjOjPcil/4F1ZvIMJ81CShQnEDSlPI+l4PfogvTLYi"
+        crossorigin="anonymous"></script>
   </body>
 </html>

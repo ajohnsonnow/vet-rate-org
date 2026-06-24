@@ -133,6 +133,59 @@ describe("legalAnswerer — happy path", () => {
   });
 });
 
+describe("legalAnswerer — citation attribution (Ab-H03)", () => {
+  it("attributes the applicable fact to its own chunk, not the Nth chunk", async () => {
+    // chunk #0 is NOT applicable, chunk #1 IS — the buggy filtered-index mapping
+    // attributed chunk #0's citation to the first applicable fact.
+    const twoChunks = [
+      {
+        id: "c0",
+        citation: "38 CFR § 3.999 (WRONG)",
+        title: "Non-applicable",
+        text: "Administrative boilerplate, not responsive.",
+        source_url: "https://www.ecfr.gov/wrong",
+        fetched_at: "2026-05-15T00:00:00Z",
+        score: 0.4,
+      },
+      {
+        id: "c1",
+        citation: "38 CFR § 4.71a (RIGHT)",
+        title: "Applicable",
+        text: "Limitation of flexion of the leg to 30 degrees warrants 20 percent.",
+        source_url: "https://www.ecfr.gov/right",
+        fetched_at: "2026-05-15T00:00:00Z",
+        score: 0.9,
+      },
+    ];
+
+    const generateAI = vi
+      .fn()
+      // extractor → one fact per chunk; only the second is applicable
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          { applicable: false, rule_summary: "n/a", supporting_quote: "n/a" },
+          {
+            applicable: true,
+            rule_summary: "Flexion to 30 deg → 20%",
+            supporting_quote:
+              "Limitation of flexion of the leg to 30 degrees warrants 20 percent.",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce("Knee flexion to 30 degrees rates at 20%.");
+
+    const r = await answer("knee flexion rating", {
+      generateAI,
+      retrieve: fakeRetrieve(twoChunks),
+    });
+
+    expect(r.refusal).toBe(false);
+    expect(r.citations).toHaveLength(1);
+    expect(r.citations[0].citation).toBe("38 CFR § 4.71a (RIGHT)");
+    expect(r.citations[0].source_url).toMatch(/right/);
+  });
+});
+
 describe("legalAnswerer — argument validation", () => {
   it("throws when generateAI is not provided", async () => {
     await expect(answer("q", {})).rejects.toThrow(TypeError);

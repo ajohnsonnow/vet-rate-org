@@ -16,6 +16,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { APP_TRANSLATIONS } from '../src/i18n/translations.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -428,6 +429,57 @@ const EMBEDDED_CSS = `
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
+ * Escape text for safe insertion into HTML body content.
+ */
+function escapeHtml(text) {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+/** Look up the English string for a t("section","key") call, or null. */
+function lookupEnglish(section, key) {
+  const leaf = APP_TRANSLATIONS?.[section]?.[key];
+  return leaf && typeof leaf.en === 'string' ? leaf.en : null;
+}
+
+/**
+ * Resolve {t("section","key")} i18n calls to their English string before JSX→HTML
+ * conversion. The standalone legal pages are English-only, but the React source
+ * renders its body through t(); without this, literal {t(...)} expressions leaked
+ * verbatim into the public HTML (A-H10 / D-H04). An unknown key is left intact so
+ * the post-generation guard fails loudly rather than shipping a blank legal page.
+ */
+function resolveTranslationCalls(source) {
+  // First, the split idiom the privacy page uses to interleave links:
+  //   {t("s","k").split("X")[0]}  /  {t("s","k").split(".")[1]?.trim() || "fallback"}
+  // Evaluated deterministically against the resolved English string (no eval).
+  let out = source.replace(
+    /\{\s*t\(\s*(['"])(.*?)\1\s*,\s*(['"])(.*?)\3\s*\)\.split\(\s*(['"])(.*?)\5\s*\)\s*\[\s*(\d+)\s*\]\s*(\?\.trim\(\))?\s*(?:\|\|\s*(['"])([\s\S]*?)\9)?\s*\}/g,
+    (match, _q1, section, _q2, key, _q3, sep, idx, trim, _q4, fallback) => {
+      const en = lookupEnglish(section, key);
+      if (en == null) return match;
+      let part = en.split(sep)[Number(idx)];
+      if (trim && typeof part === 'string') part = part.trim();
+      if (part === undefined || part === '') part = fallback ?? '';
+      return escapeHtml(part);
+    },
+  );
+
+  // Then plain {t("section","key")} calls.
+  out = out.replace(
+    /\{\s*t\(\s*(['"])(.*?)\1\s*,\s*(['"])(.*?)\3\s*\)\s*\}/g,
+    (match, _q1, section, _q2, key) => {
+      const en = lookupEnglish(section, key);
+      return en == null ? match : escapeHtml(en);
+    },
+  );
+
+  return out;
+}
+
+/**
  * Convert Tailwind classes to semantic CSS classes for alerts/sections
  */
 function mapTailwindClasses(classString) {
@@ -606,9 +658,12 @@ function processTermsOfService(componentSource) {
   
   // Build HTML content section by section
   let htmlContent = '';
-  
+
+  // Resolve i18n calls to English before extraction so no {t(...)} leaks (A-H10).
+  const resolvedSource = resolveTranslationCalls(componentSource);
+
   // Extract and convert each section
-  const sections = extractSections(componentSource);
+  const sections = extractSections(resolvedSource);
   
   for (const section of sections) {
     htmlContent += '\n        ' + convertSectionToHTML(section) + '\n';
@@ -726,9 +781,12 @@ ${htmlContent}
  */
 function generatePrivacyHTML(componentSource) {
   const metadata = extractMetadata(componentSource);
-  
+
+  // Resolve i18n calls to English before extraction so no {t(...)} leaks (A-H10).
+  const resolvedSource = resolveTranslationCalls(componentSource);
+
   // Extract sections
-  const sections = extractSections(componentSource);
+  const sections = extractSections(resolvedSource);
   let htmlContent = '';
   
   for (const section of sections) {
@@ -833,10 +891,20 @@ function processPage(config) {
     const html = generator(componentSource);
     console.log(`   ✨ Generated HTML (${html.length} chars)`);
     
+    // Guard (A-H10/D-H04): never ship unresolved {t(...)} JSX in a public legal
+    // page — a missing translation key would render as raw code to the user.
+    const leaked = html.match(/\{\s*t\(/g);
+    if (leaked) {
+      console.log(
+        `   ❌ ${leaked.length} unresolved t() call(s) in generated HTML — a translation key is missing.`,
+      );
+      return false;
+    }
+
     // Write HTML file
     fs.writeFileSync(htmlPath, html, 'utf-8');
     console.log(`   ✅ Written: ${path.basename(htmlPath)}`);
-    
+
     return true;
   } catch (error) {
     console.log(`   ❌ Error: ${error.message}`);

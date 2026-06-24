@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Nexus Disclaimer Footer Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Medical disclaimer for Nexus Letter generator
  * Makes clear this is NOT medical diagnosis

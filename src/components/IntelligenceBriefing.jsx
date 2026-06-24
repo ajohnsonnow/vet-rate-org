@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Intelligence Briefing (Field Review)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Post-document-drop review modal where veterans review ALL extracted
  * information before it's committed to My Packet. Think of it as the

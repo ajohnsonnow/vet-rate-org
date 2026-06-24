@@ -47,7 +47,7 @@ Vet-Rate.org was built with your privacy as the top priority:
 
 - ✅ **No Login Required** - Use all features without creating an account
 - ✅ **No Data Collection** - Your searches never leave your device
-- ✅ **No Tracking** - No analytics, cookies, or telemetry
+- ✅ **Privacy-First Analytics** - Only cookieless, aggregate page views (GoatCounter); no personal tracking, profiling, or telemetry
 - ✅ **No External Transmission** - All processing happens in your browser
 - ✅ **100% Free** - No hidden fees, subscriptions, or upsells
 - ✨ **AI is Optional** - When using AI features, only non-PII descriptions are shared (with explicit consent)

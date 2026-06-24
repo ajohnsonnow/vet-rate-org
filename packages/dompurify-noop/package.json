@@ -2,5 +2,6 @@
   "name": "dompurify-noop",
   "version": "1.0.0",
   "description": "No-op replacement for dompurify to avoid XSS vulnerability (dompurify is unused in this project)",
-  "main": "index.js"
+  "main": "index.js",
+  "license": "MIT"
 }

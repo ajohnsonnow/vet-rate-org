@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - SmolVLM Vision Service
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * High-level wrapper for the SmolVLM-256M vision worker.
  * Replaces the broken MLC WebLLM Phi-3.5-vision path with a fully functional

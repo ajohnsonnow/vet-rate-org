@@ -312,6 +312,11 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
                 <strong>severity and frequency</strong>. Let the Red Team find
                 where you&apos;re hurting your own case.
               </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 border-t border-amber-200 dark:border-amber-700 pt-2">
+                Educational self-help only — not legal representation. For
+                accredited assistance, contact a VSO, claims agent, or
+                VA-accredited attorney (38 C.F.R. § 14.629).
+              </p>
             </div>
           </div>
         </div>

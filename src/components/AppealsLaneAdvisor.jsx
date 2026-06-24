@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Appeals Lane Advisor
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Helps veterans choose the right appeals lane based on their situation.
  * Data from 2025 VA analysis and BVA decision patterns.
@@ -133,10 +133,12 @@ const AppealsLaneAdvisor = ({ onClose }) => {
               Choose the right path for your situation
             </p>
           </div>
+          {/* mr-20 keeps the close button clear of the fixed Quick Exit
+              panic button on phones (WCAG 2.5.8 target collision) */}
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-white hover:text-blue-200 text-2xl"
+            className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white hover:text-blue-200 sm:mr-0"
           >
             ×
           </button>

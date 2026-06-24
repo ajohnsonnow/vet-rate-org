@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Certification Checkbox Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Legal certification checkbox that gates download/print functionality
  * Ensures user acknowledges they have reviewed AI-generated content

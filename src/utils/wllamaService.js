@@ -136,16 +136,16 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     // eslint-disable-next-line no-console
     console.log(`[Wllama] Initializing ${modelConfig.name}...`);
 
-    // Create Wllama instance
-    wllamaInstance = new WllamaClass({
-      // Use multi-threaded WASM for better performance
-      "multi-thread/wllama.js": "/wasm/multi-thread/wllama.js",
-      "multi-thread/wllama.wasm": "/wasm/multi-thread/wllama.wasm",
-      "multi-thread/wllama.worker.mjs": "/wasm/multi-thread/wllama.worker.mjs",
-      // Single-thread fallback
-      "single-thread/wllama.js": "/wasm/single-thread/wllama.js",
-      "single-thread/wllama.wasm": "/wasm/single-thread/wllama.wasm",
-    });
+    // v3.4.1: single WASM file handles multi-thread/single-thread automatically.
+    // WebGPU acceleration enabled by default when navigator.gpu is available.
+    // allowOffline is a WllamaConfig option (the 2nd constructor arg); passing it
+    // to loadModelFromUrl below silently ignored it (C-M06). Set here it makes an
+    // already-cached model load from IndexedDB with no network round-trip, so the
+    // app works in low-connectivity VA waiting rooms.
+    wllamaInstance = new WllamaClass(
+      { default: "/wasm/wllama.wasm" },
+      { allowOffline: useCache },
+    );
 
     // Try primary URL first, then fallback
     let modelUrl = modelConfig.url;
@@ -160,12 +160,13 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
       modelUrl = modelConfig.fallbackUrl;
     }
 
-    // Load the model
+    // Load the model. n_gpu_layers: all layers on WebGPU when available (v3.1+
+    // enables WebGPU automatically; 0 forces CPU-only for iOS/WASM fallback).
     await wllamaInstance.loadModelFromUrl(modelUrl, {
       progressCallback: createProgressCallback(onProgress),
-      allowOffline: useCache,
       n_ctx: modelConfig.contextSize,
       n_threads: navigator.hardwareConcurrency || 4,
+      n_gpu_layers: typeof navigator !== "undefined" && navigator.gpu ? 999 : 0,
     });
 
     currentModel = modelId;

@@ -21,6 +21,7 @@ import ToolCardButton from "./ToolCardButton";
 import ReportBugLink from "./ReportBugLink";
 import GPUSelector from "./GPUSelector";
 import ExperimentalModeWarning from "./ExperimentalModeWarning";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import { gpuManager } from "../utils/WebGPUManager";
 
 // Storage key for GPU preference
@@ -1857,6 +1858,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
         {/* Experimental WebGPU Features Toggle - HIDDEN (feature disabled) */}
         {/* Vision models and experimental features disabled - standard WebGPU works great for all text models */}
+        {/* eslint-disable-next-line no-constant-binary-expression, sonarjs/no-redundant-boolean */}
         {false && webGPUStatus.supported && (
           <div className="p-4 rounded-xl border-2 bg-amber-900/20 border-amber-500/50">
             <div className="flex items-start gap-3">
@@ -2458,6 +2460,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
               </div>
             </div>
 
+            {/* System requirements notice */}
+            <div className="mb-3">
+              <SystemRequirementsNotice compact toolName="Warrant Council AI" />
+            </div>
+
             {/* Initialize/Switch Button */}
             {!isReady ? (
               <ToolCardButton
@@ -2694,7 +2701,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
                 {/* Response - Always show when generating or has content */}
                 {(isTestGenerating || streamedResponse || testResponse) && (
-                  <div className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50">
+                  <div
+                    className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50"
+                    aria-live="polite"
+                    aria-atomic="false"
+                  >
                     <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
                       {isTestGenerating && !streamedResponse && !testResponse
                         ? "⏳ Processing..."
@@ -2712,7 +2723,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
             {/* Error State */}
             {error && (
-              <div className="rounded-xl border-2 border-red-500 bg-red-50 p-4 dark:bg-red-900/30">
+              <div
+                className="rounded-xl border-2 border-red-500 bg-red-50 p-4 dark:bg-red-900/30"
+                role="alert"
+                aria-live="polite"
+              >
                 <p className="whitespace-pre-wrap text-red-700 dark:text-red-400">
                   <strong>Error:</strong> {error}
                 </p>

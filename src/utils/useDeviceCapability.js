@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Device Capability Detection for AI Features
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Device Detective" - Smart AI Option Recommendations
  *
@@ -78,7 +78,7 @@ const checkIsMobile = () => {
  */
 const checkDataSaverMode = () => {
   try {
-    // @ts-ignore - navigator.connection is not in all browsers
+    // @ts-expect-error - navigator.connection is not in all browsers
     const connection =
       navigator.connection ||
       navigator.mozConnection ||
@@ -103,7 +103,7 @@ const checkDataSaverMode = () => {
  */
 const getDeviceMemory = () => {
   try {
-    // @ts-ignore - deviceMemory is not in all browsers
+    // @ts-expect-error - deviceMemory is not in all browsers
     return navigator.deviceMemory || null;
   } catch {
     return null;

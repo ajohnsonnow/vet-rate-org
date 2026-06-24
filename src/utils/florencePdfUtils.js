@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - High-Resolution PDF Utilities for Vision OCR
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * PURPOSE: Convert PDF pages to high-resolution images for Florence-2 VLM
  *
@@ -21,8 +21,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN for PDF.js text rendering
-const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * PDF conversion configuration
@@ -72,7 +71,7 @@ export async function convertPdfPageToBlob(
   const loadingTask = pdfjsLib.getDocument({
     data: pdfData,
     standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/",
+    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
     cMapPacked: true,
   });
 

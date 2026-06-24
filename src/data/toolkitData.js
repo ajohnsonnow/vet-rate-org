@@ -219,6 +219,18 @@ export const TOOLKIT_CATEGORIES = [
         isNew: true,
       },
       {
+        name: "Appeals Lane Advisor",
+        description:
+          "Choose the right AMA lane (Supplemental, HLR, or BVA) based on your evidence, error type, and timing",
+        isNew: true,
+      },
+      {
+        name: "Remand Risk Checker",
+        description:
+          "Identify claim gaps before submission using patterns from 18,609 BVA remand decisions",
+        isNew: true,
+      },
+      {
         name: "Legislative Watchdog",
         description:
           "Track VA rule changes in the Federal Register - never miss a new presumptive",

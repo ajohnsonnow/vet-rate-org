@@ -74,7 +74,7 @@ export const useScreenshot = (options = {}) => {
         letter-spacing: 1px;
         box-shadow: inset 0 0 10px rgba(233, 69, 96, 0.3);
       `;
-      overlay.innerHTML = "🔒 REDACTED";
+      overlay.innerHTML = "🔒 REDACTED"; // nosemgrep: no-inner-html-unsanitized
 
       overlays.push(overlay);
     });

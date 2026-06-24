@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Veteran Knowledge Base (VKB)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * The VKB is a structured, AI-queryable knowledge graph built from:
  * - DD-214 documents
@@ -16,8 +16,27 @@
  * with localStorage as metadata cache only.
  */
 
+import { ensureQuota } from "./storage";
+
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
+
+let metadataCacheWarned = false;
+
+const cacheVKBMetadata = (payload) => {
+  try {
+    localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify(payload));
+  } catch (err) {
+    // Cache is reconstructible from IndexedDB — log once, keep going
+    if (!metadataCacheWarned) {
+      metadataCacheWarned = true;
+      console.warn(
+        "VKB metadata cache write failed (data safe in IndexedDB):",
+        err?.name || err,
+      );
+    }
+  }
+};
 
 // IndexedDB Configuration
 const VKB_DB_NAME = "VetRateVKB";
@@ -199,17 +218,10 @@ export const loadVKB = async () => {
           // eslint-disable-next-line no-console
           console.log("📂 Loaded VKB from IndexedDB");
           // Cache metadata in localStorage for quick access
-          try {
-            localStorage.setItem(
-              VKB_STORAGE_KEY,
-              JSON.stringify({
-                metadata: request.result.metadata,
-                source: "indexeddb",
-              }),
-            );
-          } catch (e) {
-            // Ignore localStorage errors
-          }
+          cacheVKBMetadata({
+            metadata: request.result.metadata,
+            source: "indexeddb",
+          });
           resolve(request.result);
         } else {
           // Try localStorage for legacy data
@@ -286,6 +298,10 @@ export const saveVKB = async (vkb) => {
       `💾 Saving VKB to IndexedDB (${sizeInMB}MB, ${vkb.metadata.documentCount} documents)`,
     );
 
+    // Pre-flight quota check — still attempt the write either way, but
+    // attach a warning the caller can surface to the veteran
+    const quota = await ensureQuota(sizeInBytes);
+
     // Save to IndexedDB (unlimited storage)
     const db = await openVKBDatabase();
     const transaction = db.transaction([VKB_STORE_NAME], "readwrite");
@@ -298,29 +314,29 @@ export const saveVKB = async (vkb) => {
         console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
 
         // Cache metadata in localStorage for quick access
-        try {
-          localStorage.setItem(
-            VKB_STORAGE_KEY,
-            JSON.stringify({
-              metadata: vkb.metadata,
-              source: "indexeddb",
-              size: sizeInMB,
-            }),
-          );
-        } catch (lsErr) {
-          // LocalStorage full, but that's OK - data is in IndexedDB
-          // eslint-disable-next-line no-console
-          console.log(
-            "💡 localStorage full, metadata not cached (data safe in IndexedDB)",
-          );
-        }
+        cacheVKBMetadata({
+          metadata: vkb.metadata,
+          source: "indexeddb",
+          size: sizeInMB,
+        });
 
-        resolve({ success: true, size: sizeInMB });
+        const result = { success: true, size: sizeInMB };
+        if (!quota.ok) result.quotaWarning = quota.message;
+        resolve(result);
       };
 
       request.onerror = () => {
         console.error("❌ Failed to save VKB to IndexedDB:", request.error);
-        resolve({ success: false, error: request.error.message });
+        if (request.error?.name === "QuotaExceededError") {
+          resolve({
+            success: false,
+            quotaExceeded: true,
+            error:
+              "Your device storage is full, so your records could not be saved. Export a backup and free up space, then try again.",
+          });
+        } else {
+          resolve({ success: false, error: request.error.message });
+        }
       };
     });
   } catch (err) {
@@ -423,12 +439,13 @@ export const addDocumentToVKB = async (documentInfo) => {
 
   const saveResult = await saveVKB(vkb);
 
-  // IndexedDB has no storage limits - all documents saved successfully
   return {
     success: saveResult.success,
     documentId: docEntry.id,
     vkb,
     size: saveResult.size,
+    ...(saveResult.quotaWarning && { quotaWarning: saveResult.quotaWarning }),
+    ...(saveResult.error && { error: saveResult.error }),
   };
 };
 

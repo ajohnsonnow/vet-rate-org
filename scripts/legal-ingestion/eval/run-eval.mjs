@@ -15,6 +15,7 @@
  *   node scripts/legal-ingestion/eval/run-eval.mjs
  *   node scripts/legal-ingestion/eval/run-eval.mjs --k 5 --version v0.1.0
  *   node scripts/legal-ingestion/eval/run-eval.mjs --json > eval-report.json
+ *   node scripts/legal-ingestion/eval/run-eval.mjs --check-baseline   # exit 1 on >5% regression vs baseline.json
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -27,13 +28,20 @@ const EMBED_DIM = 384;
 const EMBED_MODEL = "Xenova/bge-small-en-v1.5";
 
 function parseArgs(argv) {
-  const args = { k: 5, version: "v0.1.0", json: false, golden: null };
+  const args = {
+    k: 5,
+    version: "v0.1.0",
+    json: false,
+    golden: null,
+    checkBaseline: false,
+  };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--k") args.k = Number(argv[++i]);
     else if (a === "--version") args.version = argv[++i];
     else if (a === "--golden") args.golden = argv[++i];
     else if (a === "--json") args.json = true;
+    else if (a === "--check-baseline") args.checkBaseline = true;
   }
   if (!Number.isInteger(args.k) || args.k <= 0) {
     throw new Error(`--k must be a positive integer, got ${args.k}`);
@@ -76,9 +84,8 @@ async function loadIndex(version) {
       .filter(Boolean)
       .map((l) => JSON.parse(l));
     const bin = new Int8Array(
-      (
-        await fs.readFile(path.join(base, "vectors", `${sourceName}.bin`))
-      ).buffer,
+      (await fs.readFile(path.join(base, "vectors", `${sourceName}.bin`)))
+        .buffer,
     );
     if (bin.length !== chunks.length * EMBED_DIM) {
       throw new Error(
@@ -168,10 +175,35 @@ function metricsFor(ranked, expectedCitations, k, totalRelevant) {
   };
 }
 
+const BASELINE_TOLERANCE = 0.05;
+
+async function checkBaseline(agg) {
+  const baselinePath = path.join(__dirname, "baseline.json");
+  const baseline = JSON.parse(await fs.readFile(baselinePath, "utf8"));
+  const regressions = [];
+  for (const key of ["recallAtK", "mrr", "ndcgAtK"]) {
+    const drop = (baseline[key] - agg[key]) / baseline[key];
+    if (drop > BASELINE_TOLERANCE) {
+      regressions.push(
+        `${key}: ${agg[key].toFixed(3)} vs baseline ${baseline[key].toFixed(3)} (-${(drop * 100).toFixed(1)}%)`,
+      );
+    }
+  }
+  if (regressions.length) {
+    console.error(
+      `[eval] BASELINE REGRESSION (>${BASELINE_TOLERANCE * 100}% relative drop vs eval/baseline.json):`,
+    );
+    for (const r of regressions) console.error(`  ✗ ${r}`);
+    process.exit(1);
+  }
+  console.error(
+    `[eval] baseline check passed — all metrics within ${BASELINE_TOLERANCE * 100}% of eval/baseline.json`,
+  );
+}
+
 async function main() {
   const args = parseArgs(process.argv);
-  const goldenPath =
-    args.golden ?? path.join(__dirname, "golden-set.jsonl");
+  const goldenPath = args.golden ?? path.join(__dirname, "golden-set.jsonl");
 
   if (!args.json) {
     console.error(`[eval] loading index ${args.version}...`);
@@ -234,6 +266,7 @@ async function main() {
         2,
       ),
     );
+    if (args.checkBaseline) await checkBaseline(agg);
     return;
   }
 
@@ -259,6 +292,8 @@ async function main() {
       );
     }
   }
+
+  if (args.checkBaseline) await checkBaseline(agg);
 }
 
 main().catch((err) => {

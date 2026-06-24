@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - The Witness Bench Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Buddy Letter Wizard" - AI-powered interview for spouses, family members, and battle buddies
  * Generates VA Form 21-10210 (Lay/Witness Statement) focusing on observable behaviors
@@ -377,7 +377,7 @@ INSTRUCTIONS:
 5. Include specific examples when provided
 6. Do NOT include names, addresses, or dates (use [Veteran], [Date], etc.)
 7. Format as 3-4 coherent paragraphs
-8. End with an attestation: "I certify that the statements above are true and correct to the best of my knowledge and belief."
+8. Do NOT write any "I certify..." or "true and correct" attestation. End the narrative without a signature or certification line — the witness must add and sign their own attestation only after personally verifying every statement is true.
 
 Write the complete buddy statement now:`;
 
@@ -433,7 +433,13 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
     });
   }
 
-  statement += `I certify that the statements above are true and correct to the best of my knowledge and belief.\n\n`;
+  // AIS-03 / LEGAL-03: do not pre-assert "I certify ... true and correct" above a
+  // blank signature line — that presents AI-drafted testimony as already attested.
+  // Make the attestation contingent on the witness reading, verifying, and signing,
+  // and warn about the federal false-statement statute the witness signs under.
+  statement += `--- WITNESS ATTESTATION (read before you sign) ---\n`;
+  statement += `This statement was drafted with AI assistance. Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) — a knowingly false statement is a federal crime. Edit anything that is not accurate.\n\n`;
+  statement += `By signing below, I attest that I have read the statement above, that it reflects my own personal knowledge, and that it is true and correct to the best of my knowledge and belief:\n\n`;
   statement += `Respectfully submitted,\n\n`;
   statement += `_______________________________\n`;
   statement += `[Witness Signature]\n\n`;
@@ -659,6 +665,13 @@ export default function WitnessBench({
    */
   const downloadPDF = () => {
     const doc = new jsPDF();
+    // RT2-5: honest provenance metadata — never a misleading "official"/physician author.
+    doc.setProperties({
+      title: "Lay/Witness Statement (VA Form 21-10210)",
+      subject: "AI-assisted draft lay/witness statement",
+      author: "Vet-Rate.org (AI-assisted draft)",
+      creator: "Vet-Rate.org",
+    });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     const maxWidth = pageWidth - margin * 2;
@@ -667,12 +680,27 @@ export default function WitnessBench({
     doc.setFont("helvetica", "bold");
     doc.text("Lay/Witness Statement (VA Form 21-10210)", margin, 20);
 
+    // RT2-5: prominent page-1 banner so the AI-draft + false-statement warning
+    // travels with the exported file, not just the on-screen UI. ASCII-only —
+    // jsPDF's standard helvetica does not render the section sign or em dash.
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    let yPosition = 28;
+    doc
+      .splitTextToSize(
+        "AI-ASSISTED DRAFT - not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of law (18 U.S.C. 1001 - knowingly false statements are a federal crime).",
+        maxWidth,
+      )
+      .forEach((line) => {
+        doc.text(line, margin, yPosition);
+        yPosition += 4;
+      });
+    yPosition += 4;
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
     const lines = doc.splitTextToSize(generatedStatement, maxWidth);
-    let yPosition = 35;
-
     lines.forEach((line) => {
       if (yPosition > 280) {
         doc.addPage();
@@ -690,6 +718,10 @@ export default function WitnessBench({
    */
   const downloadDOCX = async () => {
     const doc = new Document({
+      // RT2-5: honest provenance metadata — never a misleading "official"/physician author.
+      creator: "Vet-Rate.org (AI-assisted draft)",
+      title: "Lay/Witness Statement (VA Form 21-10210)",
+      description: "AI-assisted draft lay/witness statement",
       sections: [
         {
           properties: {},
@@ -704,6 +736,18 @@ export default function WitnessBench({
               ],
               heading: HeadingLevel.HEADING_1,
               alignment: AlignmentType.CENTER,
+            }),
+            // RT2-5: prominent page-1 AI-draft + false-statement banner so the
+            // warning travels with the exported file, not just the on-screen UI.
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "AI-ASSISTED DRAFT — not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of 18 U.S.C. § 1001 (knowingly false statements are a federal crime).",
+                  italics: true,
+                  size: 16,
+                }),
+              ],
+              spacing: { after: 200 },
             }),
             new Paragraph({ text: "" }),
             ...generatedStatement.split("\n").map(

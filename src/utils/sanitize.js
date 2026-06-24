@@ -236,6 +236,55 @@ export function safeHtml(markdownLite) {
 }
 
 /**
+ * Sanitize a string that may contain a SMALL set of raw inline HTML tags (e.g.
+ * i18n catalog entries that use `<strong>`/`<em>` for emphasis) for use with
+ * `dangerouslySetInnerHTML`. Escapes EVERYTHING first (the safety floor — any
+ * `<script>`, `<img onerror=…>`, event handler, or unknown tag becomes inert
+ * text), then re-allows ONLY a fixed list of ATTRIBUTE-LESS inline tags. Because
+ * the re-allow step matches the bare tag with no attributes, no event handler or
+ * `javascript:` URL can survive. Safe even for translator-controlled content.
+ *
+ * Not for SVG (attributes are required — use a dedicated SVG scrub) or arbitrary
+ * rich HTML (the allow-list is intentionally tiny).
+ *
+ * @param {string} html
+ * @returns {string} HTML-safe markup
+ */
+const INLINE_TAG_ALLOWLIST = "strong|em|b|i|u|br|small|sup|sub";
+export function sanitizeInlineHtml(html) {
+  if (!html || typeof html !== "string") return "";
+  const escaped = escapeHtml(html);
+  return escaped.replace(
+    new RegExp(`&lt;(/?(?:${INLINE_TAG_ALLOWLIST}))\\s*/?&gt;`, "gi"),
+    "<$1>",
+  );
+}
+
+/**
+ * Strip the common XSS vectors from an SVG string before rendering it via
+ * `dangerouslySetInnerHTML`. NOT a full SVG sanitizer (use a real one for
+ * untrusted SVG) — a defense-in-depth scrub for DEVELOPER-CURATED SVG (e.g. the
+ * badge templates in badgeData.js) so a future contributor cannot land a
+ * `<script>`, an event handler, or a `javascript:` URL. Removes:
+ * `<script>…</script>`, `<foreignObject>…</foreignObject>` (can embed arbitrary
+ * HTML), `on*=` event-handler attributes, and `javascript:` in href/xlink:href.
+ *
+ * @param {string} svg
+ * @returns {string}
+ */
+export function scrubSvg(svg) {
+  if (!svg || typeof svg !== "string") return "";
+  return svg
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(
+      /(href|xlink:href)\s*=\s*("|'|)\s*javascript:[^"'>\s]*/gi,
+      "$1=$2#",
+    );
+}
+
+/**
  * Sanitize a Google Maps directions URL.
  * Validates coordinates are numeric and builds a safe URL.
  *

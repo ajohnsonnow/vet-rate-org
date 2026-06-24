@@ -1,7 +1,7 @@
 ﻿/**
  * Vet-Rate.org - The Needle in the Haystack (PDF Keyword Search)
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "The Evidence Hunter" - Find specific keywords in massive STR/C-File PDFs
  *
@@ -19,8 +19,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN path (suppresses font warnings)
-const STANDARD_FONT_DATA_URL =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Search result object

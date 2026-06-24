@@ -185,7 +185,7 @@ async function phaseFix() {
 
   // ESLint --fix
   process.stdout.write("  🔧 ESLint --fix... ");
-  const lintFix = tryRun("npx eslint src --ext .js,.jsx --fix");
+  const lintFix = tryRun("npx eslint src --fix");
   console.log(
     lintFix.ok ? c("green", "done") : c("yellow", "done (some issues remain)"),
   );
@@ -207,7 +207,7 @@ async function phasePrep() {
   console.log(`\n${c("bold", c("cyan", "━━━ Phase 2: Prepare Release ━━━"))}`);
 
   const pkg = readJSON("package.json");
-  let currentVersion = pkg.version;
+  const currentVersion = pkg.version;
   let newVersion = currentVersion;
 
   if (!NO_BUMP) {
@@ -355,7 +355,7 @@ async function phaseValidate() {
 
   // 1. Lint
   await check("ESLint", () => {
-    const r = tryRun("npx eslint src --ext .js,.jsx");
+    const r = tryRun("npx eslint src");
     if (!r.ok) throw new Error("Lint errors found");
     return {};
   });
@@ -686,6 +686,7 @@ function printSummary(newVersion, validateResults) {
   const W = 66;
   const line = "═".repeat(W);
   const pad = (s, n) => s + " ".repeat(Math.max(0, n - stripAnsi(s).length));
+  // eslint-disable-next-line no-control-regex -- ANSI escape (\x1b) is intentional: strips terminal color codes
   const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
   console.log(`\n╔${line}╗`);

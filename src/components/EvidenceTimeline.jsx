@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
+import { loadVKB } from "../utils/veteranKnowledgeBase";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -230,6 +231,62 @@ const EvidenceTimeline = ({
     ctx.fillStyle = "#ef4444";
     ctx.textAlign = "right";
     ctx.fillText("NOW", width - padding + 35, lineY - 20);
+  };
+
+  // Pull dated events the C-File analyzer filed into the VKB
+  // (evidenceTimeline entries + dated evidence items) into this timeline.
+  const importFromRecords = async () => {
+    try {
+      const vkb = await loadVKB();
+      const vkbEvents = [
+        ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
+        ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
+      ].filter((e) => e?.date && (e.description || e.text));
+
+      const normalize = (s) =>
+        String(s || "")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+      const existing = new Set(
+        timelineEvents.map((e) => `${e.date}|${normalize(e.description)}`),
+      );
+      const fresh = vkbEvents
+        .filter(
+          (e) =>
+            !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
+        )
+        .map((e, i) => ({
+          id: `vkb_${Date.now()}_${i}`,
+          type: "records",
+          date: e.date,
+          description: e.description || e.text,
+          title: String(e.description || e.text).substring(0, 50),
+          category: "Medical Records",
+          sourceDocumentId: e.sourceDocumentId || null,
+        }));
+
+      if (fresh.length === 0) {
+        alert("No new dated events found in your records.");
+        return;
+      }
+      if (
+        !window.confirm(
+          `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
+        )
+      ) {
+        return;
+      }
+      const updated = [...timelineEvents, ...fresh];
+      setTimelineEvents(updated);
+      saveTimelineEvents(updated);
+      if (onEventsUpdate) {
+        onEventsUpdate(updated);
+      }
+    } catch (e) {
+      console.error("Failed to import events from records:", e);
+      alert("Could not read your records. Please try again.");
+    }
   };
 
   const addEvent = () => {
@@ -474,12 +531,20 @@ const EvidenceTimeline = ({
 
       {/* Add Event Section */}
       {!isAddingEvent ? (
-        <button
-          onClick={() => setIsAddingEvent(true)}
-          className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
-        >
-          ➕ Add Timeline Event
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            onClick={() => setIsAddingEvent(true)}
+            className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
+          >
+            ➕ Add Timeline Event
+          </button>
+          <button
+            onClick={importFromRecords}
+            className="flex-1 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded transition"
+          >
+            📂 Import from My Records
+          </button>
+        </div>
       ) : (
         <div className="bg-gray-800 border border-blue-500/50 rounded-lg p-4">
           <h4 className="text-blue-400 font-bold mb-4">Add New Event</h4>

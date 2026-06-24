@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Web of Conditions
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * "Minority Report-style" Interactive Force-Directed Graph
  *

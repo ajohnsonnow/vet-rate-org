@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  *
  * Storage Utility with IndexedDB
@@ -215,6 +215,9 @@ export async function migrateFromLocalStorage() {
 
     // DO NOT clear localStorage - app still reads from it
     // Data is now in both places (IndexedDB for backup, localStorage for live access)
+    // SECURITY DEBT: both stores are plaintext — PII (ratings, profile, DD214 data) is
+    // readable by any same-origin JS. At-rest encryption requires wrapping every read/write
+    // path with cloudEncryption.js (encryptForCloud / decryptFromCloud) and a device passphrase.
     // eslint-disable-next-line no-console
     console.log(
       "✅ Data successfully backed up to IndexedDB (localStorage preserved)",
@@ -339,6 +342,47 @@ export async function importAllData(exportedData) {
   } catch (error) {
     console.error("Error importing data:", error);
     throw error;
+  }
+}
+
+/**
+ * Pre-flight check that an upcoming write of roughly `estimatedBytes`
+ * fits within the browser's storage quota.
+ * Never throws; resolves ok:true when the quota API is unavailable so
+ * unsupported browsers are never blocked.
+ * @param {number} estimatedBytes - Rough size of the pending write
+ * @returns {Promise<{ok: boolean, remaining: number|null, message: string}>}
+ */
+export async function ensureQuota(estimatedBytes) {
+  try {
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.storage ||
+      typeof navigator.storage.estimate !== "function"
+    ) {
+      return { ok: true, remaining: null, message: "" };
+    }
+
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    if (!quota) {
+      return { ok: true, remaining: null, message: "" };
+    }
+
+    const remaining = quota - usage;
+    if (estimatedBytes > remaining) {
+      const neededMB = (estimatedBytes / (1024 * 1024)).toFixed(1);
+      const remainingMB = (remaining / (1024 * 1024)).toFixed(1);
+      return {
+        ok: false,
+        remaining,
+        message: `This save needs about ${neededMB} MB but your browser only has about ${remainingMB} MB of storage left. Export a backup and free up space to avoid losing data.`,
+      };
+    }
+
+    return { ok: true, remaining, message: "" };
+  } catch (error) {
+    console.warn("Storage quota check failed:", error);
+    return { ok: true, remaining: null, message: "" };
   }
 }
 

@@ -16,10 +16,11 @@
  * - Phase progression visualization
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 import {
   Map,
   Plus,
@@ -47,7 +48,7 @@ import {
   Award,
   ExternalLink,
   ChevronLeft,
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars, sonarjs/unused-import
   Link as LinkIcon,
   Clipboard,
   Loader,
@@ -136,6 +137,11 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
   const [view, setView] = useState("dashboard"); // dashboard, wizard, detail, evidence
   const [triageState, setTriageState] = useState({ step: 0, answers: {} });
   const [isLoading, setIsLoading] = useState(true);
+
+  const dialogRef = useRef(null);
+  // active flips on after the loading screen so the trap binds to the real
+  // dialog container, not the early-return spinner.
+  useFocusTrap(dialogRef, { active: !isLoading, onEscape: onClose });
   const [showHelp, setShowHelp] = useState(false);
   const [dashboardAnalysis, setDashboardAnalysis] = useState(null);
   const [statistics, setStatistics] = useState(null);
@@ -340,8 +346,10 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col"
       role="dialog"
+      aria-modal="true"
       aria-labelledby="claim-navigator-title"
     >
       {/* Header */}
@@ -608,7 +616,11 @@ const Dashboard = ({
 
       {/* Overall Recommendation */}
       {analysis?.overallRecommendation && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+        <div
+          className="bg-slate-800/50 border border-slate-700 rounded-lg p-4"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <div className="flex items-start gap-3">
             <Target className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>

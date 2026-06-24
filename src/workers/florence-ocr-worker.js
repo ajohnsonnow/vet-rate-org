@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Florence-2 Vision OCR Worker
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * DIAMOND STANDARD Vision OCR - Client-Side VLM for DD214 Analysis
  *
@@ -30,6 +30,10 @@ env.useBrowserCache = true; // Cache in browser (Cache API)
 
 // Model selection - fine-tuned version is better for documents
 const MODEL_ID = "onnx-community/Florence-2-base-ft";
+// Pinned HuggingFace commit (static-site substitute for SRI) so a silent
+// upstream model update can never change OCR output. Bump deliberately
+// after re-validating extraction against known documents.
+const MODEL_REVISION = "e88a44eaf3791a35eae0c5a47b3dbcd36e67eb6f";
 
 // Worker state
 let model = null;
@@ -124,8 +128,8 @@ async function loadModel() {
     // Florence-2 requires a separate tokenizer for batch_decode
     // (processor.batch_decode does NOT work — use tokenizer.batch_decode)
     [processor, tokenizer] = await Promise.all([
-      AutoProcessor.from_pretrained(MODEL_ID),
-      AutoTokenizer.from_pretrained(MODEL_ID),
+      AutoProcessor.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
+      AutoTokenizer.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
     ]);
 
     // Load model with mixed precision for optimal memory/quality balance
@@ -139,6 +143,7 @@ async function loadModel() {
     });
 
     model = await Florence2ForConditionalGeneration.from_pretrained(MODEL_ID, {
+      revision: MODEL_REVISION,
       device: "webgpu",
       dtype: {
         // Mixed Precision Strategy:
@@ -172,6 +177,7 @@ async function loadModel() {
       message: "Florence-2 Vision Engine ready!",
       modelInfo: {
         id: MODEL_ID,
+        revision: MODEL_REVISION,
         device: "webgpu",
         quantization: "mixed (fp16+q4)",
       },

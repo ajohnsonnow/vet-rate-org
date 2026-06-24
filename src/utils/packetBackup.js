@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -10,6 +10,7 @@
  */
 
 import { triggerBlobDownload } from "./sanitize.js";
+import { migratePacket, CURRENT_PACKET_VERSION } from "./migrationManager.js";
 
 // Valid field names that can exist in a claim object
 const VALID_CLAIM_FIELDS = [
@@ -183,7 +184,7 @@ const validateStatement = (statement) => {
  */
 export const exportPacketData = (claims, statements) => {
   const exportData = {
-    version: "1.0",
+    version: CURRENT_PACKET_VERSION,
     exportDate: new Date().toISOString(),
     source: "Vet-Rate.org",
     disclaimer:
@@ -272,6 +273,9 @@ export const importPacketData = (jsonString) => {
     return { success: false, error: "Invalid format: missing data section" };
   }
 
+  // Upgrade legacy (1.x) backups in memory before validation
+  parsed = migratePacket(parsed);
+
   // Validate and sanitize claims
   const claims = [];
   if (Array.isArray(parsed.data.claims)) {
@@ -302,7 +306,7 @@ export const importPacketData = (jsonString) => {
       statements,
     },
     meta: {
-      version: parsed.version || "1.0",
+      version: parsed.version || CURRENT_PACKET_VERSION,
       exportDate: parsed.exportDate,
       claimCount: claims.length,
       statementCount: Object.keys(statements).length,
@@ -370,7 +374,7 @@ export const exportCompletePacket = (
   }
 
   const exportData = {
-    version: "2.0",
+    version: CURRENT_PACKET_VERSION,
     exportDate: new Date().toISOString(),
     source: "Vet-Rate.org",
     disclaimer:

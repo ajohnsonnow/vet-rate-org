@@ -4,6 +4,8 @@ import {
   sanitizeErrorMessage,
   escapeHtml,
   safeHtml,
+  sanitizeInlineHtml,
+  scrubSvg,
   stripUntrustedUrls,
   isLLMOutputUrlAllowed,
 } from "../../utils/sanitize";
@@ -235,5 +237,66 @@ describe("stripUntrustedUrls — LLM output sanitizer", () => {
     expect(safe).not.toContain("attacker.example");
     expect(safe).toContain("[link removed]");
     expect(safe).toContain("38 CFR § 4.71a");
+  });
+});
+
+describe("sanitizeInlineHtml (RT-5)", () => {
+  it("neutralizes <script> and event-handler payloads to inert escaped text", () => {
+    const out = sanitizeInlineHtml(
+      'hi <script>alert(1)</script> <img src=x onerror="alert(2)"> there',
+    );
+    expect(out).not.toContain("<script>");
+    expect(out).not.toMatch(/<img\b/i);
+    expect(out).toContain("&lt;script&gt;");
+    expect(out).toContain("&lt;img");
+  });
+
+  it("preserves the fixed allow-list of attribute-less inline tags", () => {
+    const out = sanitizeInlineHtml(
+      "A <strong>DBQ</strong> is <em>useful</em>.",
+    );
+    expect(out).toContain("<strong>DBQ</strong>");
+    expect(out).toContain("<em>useful</em>");
+  });
+
+  it("does NOT re-allow an allow-list tag carrying attributes (stays escaped)", () => {
+    const out = sanitizeInlineHtml('<strong onclick="evil()">x</strong>');
+    expect(out).not.toContain("<strong onclick");
+    expect(out).toContain("&lt;strong onclick");
+  });
+
+  it("handles empty / non-string input", () => {
+    expect(sanitizeInlineHtml("")).toBe("");
+    expect(sanitizeInlineHtml(null)).toBe("");
+    expect(sanitizeInlineHtml(undefined)).toBe("");
+  });
+});
+
+describe("scrubSvg (RT-5)", () => {
+  it("strips <script>, event handlers, and javascript: URLs from SVG", () => {
+    const dirty =
+      '<svg><script>alert(1)</script><rect onload="evil()" /><a href="javascript:bad()">x</a><path d="M0 0"/></svg>';
+    const out = scrubSvg(dirty);
+    expect(out).not.toContain("<script>");
+    expect(out).not.toContain("onload");
+    expect(out).not.toContain("javascript:");
+    expect(out).toContain("<path");
+    expect(out).toContain("<rect");
+  });
+
+  it("strips <foreignObject> (can embed arbitrary HTML)", () => {
+    const out = scrubSvg(
+      "<svg><foreignObject><body onload=x></body></foreignObject><circle/></svg>",
+    );
+    expect(out).not.toContain("foreignObject");
+    expect(out).toContain("<circle");
+  });
+
+  it("leaves clean SVG untouched and handles empty input", () => {
+    const clean =
+      '<svg viewBox="0 0 10 10"><path d="M0 0L10 10" fill="#2d5016"/></svg>';
+    expect(scrubSvg(clean)).toBe(clean);
+    expect(scrubSvg("")).toBe("");
+    expect(scrubSvg(null)).toBe("");
   });
 });

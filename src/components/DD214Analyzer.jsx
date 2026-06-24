@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Intelligent DD214 analyzer with:
  * - Local OCR support for scanned PDFs
@@ -31,6 +31,7 @@ import {
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
 import { smolVLMService, isSmolVLMSupported } from "../utils/smolVLMService";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   saveDD214Data,
   getServiceHistory,
@@ -1180,9 +1181,6 @@ const DD214Analyzer = ({
         return;
       }
 
-      // eslint-disable-next-line no-console
-      console.log("Opening profile import modal with data:", profileData);
-
       // Show confirmation modal automatically
       setExtractedProfileData(profileData);
       setShowProfileImportModal(true);
@@ -1728,6 +1726,8 @@ const DD214Analyzer = ({
           {/* Upload Input */}
           {inputMethod === "upload" && (
             <div className="space-y-4">
+              {/* System requirements notice */}
+              <SystemRequirementsNotice compact toolName="DD214 Analyzer" />
               {/* Drop Zone */}
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div
@@ -2380,9 +2380,7 @@ const DD214Analyzer = ({
       {showFormBuilder && (
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
-          onSave={(dd214) => {
-            // eslint-disable-next-line no-console
-            console.log("DD214 saved:", dd214);
+          onSave={() => {
             // Optionally refresh the list or show success message
           }}
         />

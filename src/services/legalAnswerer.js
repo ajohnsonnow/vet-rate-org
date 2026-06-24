@@ -130,7 +130,13 @@ export async function answer(question, deps, opts = {}) {
   else if (extractedRaw && typeof extractedRaw === "object")
     facts = [extractedRaw];
 
-  const applicable = facts.filter((f) => f && f.applicable);
+  // Pair each fact with its ORIGINAL chunk index before filtering, so an
+  // applicable fact is attributed to the chunk it was extracted from — not the
+  // Nth chunk. Previously a filtered index read the unfiltered chunks array, so a
+  // non-applicable chunk #0 mis-attributed its citation to the first hit (Ab-H03).
+  const applicable = facts
+    .map((f, idx) => (f ? { ...f, _chunkIndex: idx } : f))
+    .filter((f) => f && f.applicable);
 
   if (applicable.length === 0) {
     return {
@@ -146,10 +152,10 @@ export async function answer(question, deps, opts = {}) {
 
   const synthesizerFacts = {
     user_question: cleanQuery,
-    facts: applicable.map((f, i) => ({
+    facts: applicable.map((f) => ({
       rule_summary: f.rule_summary,
       supporting_quote: f.supporting_quote,
-      citation: chunks[i]?.citation || facts[i]?.citation,
+      citation: chunks[f._chunkIndex]?.citation || f.citation,
     })),
   };
 
@@ -159,13 +165,16 @@ export async function answer(question, deps, opts = {}) {
     { temperature: 0.2 },
   );
 
-  const citations = chunks.slice(0, applicable.length).map((c) => ({
-    citation: c.citation,
-    title: c.title,
-    source_url: c.source_url,
-    fetched_at: c.fetched_at,
-    score: c.score,
-  }));
+  const citations = applicable
+    .map((f) => chunks[f._chunkIndex])
+    .filter(Boolean)
+    .map((c) => ({
+      citation: c.citation,
+      title: c.title,
+      source_url: c.source_url,
+      fetched_at: c.fetched_at,
+      score: c.score,
+    }));
 
   return {
     answer: String(answerText).trim(),

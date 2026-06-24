@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Nexus Quality Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Analyzes nexus letter quality based on BVA decision patterns.
  * Data-driven recommendations from 18,609 BVA decisions analysis.

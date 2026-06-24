@@ -1,0 +1,9 @@
+# Security policy for vet-rate.org — RFC 9116
+# Report a vulnerability via the contacts below. We are a small, veteran-built
+# project; please allow reasonable time to respond before public disclosure.
+
+Contact: mailto:Anth@StructuredForGrowth.com
+Contact: https://vet-rate.org/support.html
+Expires: 2027-06-15T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://vet-rate.org/.well-known/security.txt

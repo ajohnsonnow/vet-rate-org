@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Muster Call Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Mass document ingestion system for veteran claim files.
  * Handles 300+ MB of documents, auto-populates entire profile,
@@ -49,6 +49,7 @@ import PlatoonSergeantReview from "./PlatoonSergeantReview";
 import DocumentIntelligenceBriefing from "./DocumentIntelligenceBriefing";
 import ReportBugLink from "./ReportBugLink";
 import ReactMarkdown from "react-markdown";
+import SystemRequirementsNotice from "./SystemRequirementsNotice";
 
 /**
  * Muster Call - Mass Document Processor
@@ -874,21 +875,9 @@ export default function MusterCall({
         </div>
       )}
 
-      {/* Processing Time Warning */}
-      <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border-l-4 border-yellow-500">
-        <div className="flex items-start">
-          <span className="text-xl mr-3 mt-0.5">⏱️</span>
-          <div>
-            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              Processing Time Notice
-            </span>
-            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-              Large files (like 320MB+ C-files) and poor-quality scanned images
-              may take several minutes to process. Please be patient while we
-              extract and analyze your documents with maximum accuracy.
-            </p>
-          </div>
-        </div>
+      {/* System requirements + timing notice */}
+      <div className="mb-4">
+        <SystemRequirementsNotice toolName="Muster Call" />
       </div>
 
       {/* DROP ZONE - Military-style document staging area */}
@@ -1266,7 +1255,11 @@ export default function MusterCall({
 
           {/* LLM Report */}
           {report && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500">
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <span className="text-2xl">🤖</span>

@@ -18,18 +18,20 @@ It is **intentional**, **documented**, and **not a TODO**.
    the package would mean tracking a moving CVE target on a dependency we never
    intended to ship.
 
-3. **We sanitize at the source instead.** Every `dangerouslySetInnerHTML` site
-   in the codebase either renders developer-controlled static content (badge
-   SVGs from [src/data/badgeData.js](../../src/data/badgeData.js), i18n
-   strings, the user-manual markdown) or wraps its inputs in our own
-   [sanitize.js](../../src/utils/sanitize.js) helpers (`escapeHtml`,
-   `sanitizeUrl`, `safeHtml`). Each site carries a `// nosemgrep:` justification
-   comment naming the defense.
+3. **We sanitize at the source instead.** Text `dangerouslySetInnerHTML` sites
+   wrap their inputs in our own [sanitize.js](../../src/utils/sanitize.js) helpers
+   (`escapeHtml`, `safeHtml`, `sanitizeInlineHtml`, `sanitizeUrl`) — e.g. the
+   DbqFinder i18n description (`sanitizeInlineHtml`), the RecordSearch highlighter
+   (`escapeHtml` both inputs), and the user manual. The badge-SVG sink in
+   [BadgeDisplay.jsx](../../src/components/BadgeDisplay.jsx) renders developer-curated
+   SVG from [badgeData.js](../../src/data/badgeData.js); a dedicated SVG scrub
+   (strip `<script>` + `on*=`) is the remaining RT-5 hardening item.
 
-4. **CSP enforces the perimeter.** [index.html](../../index.html) ships a strict
-   Content-Security-Policy that constrains script/connect/style origins, so even
-   if an HTML injection slipped through it could not reach an attacker-controlled
-   endpoint.
+4. **CSP is a secondary, partial control — NOT the backstop.** [index.html](../../index.html)
+   ships a CSP, but `script-src` still includes `'unsafe-inline'`, so an injected
+   inline `<script>` or `on*=` handler WOULD execute. Do not rely on CSP to stop
+   inline injection — the real defense is the sink-level sanitization above.
+   (RT-5: dropping `'unsafe-eval'` and moving toward nonce/hash is tracked separately.)
 
 5. **The trifecta defense lives one layer up.** Untrusted content (OCR text,
    retrieved DKB chunks, user paste) is wrapped in `<untrusted_content>` spotlight
@@ -42,6 +44,7 @@ It is **intentional**, **documented**, and **not a TODO**.
 |---|---|---|
 | Generic XSS escaping | `escapeHtml` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |
 | Markdown-lite → safe HTML with allow-listed tags | `safeHtml` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |
+| Raw inline HTML (e.g. i18n `<strong>`) → escape-first + attribute-less tag allow-list | `sanitizeInlineHtml` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |
 | Link href validation | `sanitizeUrl` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |
 | Phone href validation | `sanitizePhoneHref` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |
 | Blob URL reconstruction (taint break) | `reconstructBlobUrl` / `triggerBlobDownload` | [src/utils/sanitize.js](../../src/utils/sanitize.js) |

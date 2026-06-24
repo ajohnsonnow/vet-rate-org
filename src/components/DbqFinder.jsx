@@ -17,6 +17,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { sanitizeInlineHtml } from "../utils/sanitize";
 import {
   Search,
   Download,
@@ -266,12 +267,14 @@ const DbqFinder = ({ onClose }) => {
               </h3>
               <p
                 className="text-sm text-amber-700 dark:text-amber-300"
-                // Safe: t() resolves an i18n key against developer-
-                // curated translation catalogs only — no user input
-                // flows here. CSP restricts script/connect origins.
+                // RT-5/RT3-5: sanitize the i18n value before raw-HTML render.
+                // The catalog uses <strong> for emphasis, but a malicious or
+                // accidental translation could inject markup — and the CSP is NOT
+                // a backstop here ('unsafe-inline' is set). sanitizeInlineHtml
+                // escapes everything, then re-allows only attribute-less inline tags.
                 // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
                 dangerouslySetInnerHTML={{
-                  __html: t("dbqFinder", "dbqDescription"),
+                  __html: sanitizeInlineHtml(t("dbqFinder", "dbqDescription")),
                 }}
               />
             </div>

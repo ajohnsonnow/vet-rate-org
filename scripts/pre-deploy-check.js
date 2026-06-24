@@ -232,7 +232,7 @@ function checkStats() {
   
   // Check for hardcoded "40+" references
   const srcFiles = globFiles('src/');
-  let hardcodedFound = [];
+  const hardcodedFound = [];
   
   srcFiles.forEach(file => {
     if (file.endsWith('.jsx') || file.endsWith('.js')) {
@@ -506,7 +506,7 @@ function checkFeatureDocumentation() {
   const readme = readFile('README.md');
   
   let documented = 0;
-  let missing = [];
+  const missing = [];
   
   for (const feature of keyFeatures) {
     const componentExists = componentFiles.includes(feature.component);

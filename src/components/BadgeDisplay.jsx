@@ -13,6 +13,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import { scrubSvg } from "../utils/sanitize";
 import {
   BADGE_GROUPS,
   BADGE_PLACEMENT,
@@ -140,16 +141,15 @@ const Badge = ({ badge, size = "md", showTooltip = true }) => {
 
     // Second try: use embedded SVG if provided.
     //
-    // Safe-by-construction: `badge.svg` is sourced exclusively from
-    // src/data/badgeData.js — a developer-curated static file of military
-    // badge/tab/insignia template literals (no user input flows here). CSP
-    // in index.html restricts the page's script/connect origins so even a
-    // contributor-injected <script> in an SVG would fail to call out.
+    // RT-5: `badge.svg` is developer-curated static SVG from src/data/badgeData.js,
+    // but we scrub it (strip <script>/<foreignObject>/on*= handlers/javascript:
+    // URLs) before render so a future contributor can't land XSS. The CSP is NOT a
+    // backstop here — script-src 'unsafe-inline' is set.
     if (badge.svg) {
       return (
         <div
           // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-          dangerouslySetInnerHTML={{ __html: badge.svg }}
+          dangerouslySetInnerHTML={{ __html: scrubSvg(badge.svg) }}
           style={{ width: dimensions.width, height: dimensions.height }}
         />
       );

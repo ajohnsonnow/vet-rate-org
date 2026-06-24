@@ -15,6 +15,6 @@ memory-hygiene rules and `ai-memory-systems-best-practices.md` in the toolkit.
 -->
 
 - 2026-04-24 | tooling | Tool count is 42 across 6 categories — `toolkitData.js` is the single source of truth; `projectStats.js` and `projectStats.json` mirror it and a vitest cross-check guards drift.
-- 2026-04-24 | tests | E2E specs need `preAcceptModals(page)` from `tests/e2e/helpers.ts` before `page.goto()`, otherwise the ToS modal blocks pointer events.
+- 2026-06-10 | tests | E2E boot pattern: seed localStorage via `addInitScript` (tos-accepted, last_seen_version, tour-completed) + `dismissDisclaimer(page)` from `tests/e2e/helpers.ts` — the old `preAcceptModals` helper no longer exists.
 - 2026-04-24 | security | `.snyk` ignores expire on a 90-day rolling window — re-validate before bumping the date, don't rubber-stamp.
 - 2026-04-24 | calculators | Two combined-rating implementations exist (`vaCalculator.js` + `ratingCalculator.js`); `ratingCalculator.crosscheck.test.js` keeps them in lockstep — fix both or fix neither.

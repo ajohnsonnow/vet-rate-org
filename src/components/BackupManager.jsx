@@ -1,6 +1,6 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
  *
@@ -20,6 +20,9 @@ import {
   validateBackup,
   getStorageStats,
   clearAllData,
+  createRestorePoint,
+  getRestorePoint,
+  restoreFromRestorePoint,
 } from "../utils/dataBackup";
 import { markBackupCreated } from "../utils/dataPersistence";
 import { downloadDossier, previewDossier } from "../utils/dossierExport";
@@ -27,6 +30,28 @@ import CloudSyncManager from "./CloudSyncManager";
 import AtomicWipe from "./AtomicWipe";
 import DbqBrowser from "./DbqBrowser";
 import { getCacheStats } from "../utils/dbqOfflineStorage";
+
+const COUNTED_KEYS = [
+  { key: "vet_rate_saved_claims", label: "Claims" },
+  { key: "vet_rate_saved_forms", label: "Forms" },
+  { key: "vet_rate_my_ratings", label: "Ratings" },
+];
+
+const countItems = (getValue) => {
+  const parseLen = (raw) => {
+    if (!raw) return 0;
+    try {
+      const v = JSON.parse(raw);
+      return Array.isArray(v) ? v.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+  return COUNTED_KEYS.map(({ key, label }) => ({
+    label,
+    count: parseLen(getValue(key)),
+  }));
+};
 
 export default function BackupManager({ onClose }) {
   const { _t } = useLanguage();
@@ -37,8 +62,11 @@ export default function BackupManager({ onClose }) {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [showDbqBrowser, setShowDbqBrowser] = useState(false);
   const [dbqCacheStats, setDbqCacheStats] = useState(null);
+  const [pendingImport, setPendingImport] = useState(null); // parsed backup awaiting confirmation
+  const [restorePoint, setRestorePoint] = useState(null);
+  const [showConfirmRestore, setShowConfirmRestore] = useState(false);
 
-  // Load DBQ cache stats on mount
+  // Load DBQ cache stats and any existing restore point on mount
   useEffect(() => {
     const loadDbqStats = async () => {
       try {
@@ -49,6 +77,7 @@ export default function BackupManager({ onClose }) {
       }
     };
     loadDbqStats();
+    getRestorePoint().then(setRestorePoint);
   }, []);
   const [showCloudSync, setShowCloudSync] = useState(false);
   const [importMode, setImportMode] = useState("replace"); // 'replace' or 'merge'
@@ -81,7 +110,7 @@ export default function BackupManager({ onClose }) {
     }
   };
 
-  // Handle file selection
+  // Handle file selection — validate, then ask for confirmation before importing
   const handleFileSelect = async (file) => {
     try {
       setStatus({ type: "info", message: "Reading backup file..." });
@@ -97,8 +126,38 @@ export default function BackupManager({ onClose }) {
         return;
       }
 
-      setStatus({ type: "info", message: "Importing data..." });
+      setStatus(null);
+      setPendingImport(backup);
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: "❌ Import failed: " + error.message,
+      });
+    }
+  };
 
+  // Run the import after the user confirms (restore point first, so the
+  // previous data can always be brought back)
+  const handleConfirmImport = async () => {
+    const backup = pendingImport;
+    setPendingImport(null);
+
+    try {
+      setStatus({
+        type: "info",
+        message: "Saving a restore point of your current data...",
+      });
+      const restorePointSaved = await createRestorePoint();
+      if (!restorePointSaved) {
+        setStatus({
+          type: "error",
+          message:
+            "❌ Could not save a restore point, so the import was canceled. Download a backup of your current data first, then try again.",
+        });
+        return;
+      }
+
+      setStatus({ type: "info", message: "Importing data..." });
       const result = importData(backup, importMode === "merge");
 
       if (result.success) {
@@ -126,6 +185,28 @@ export default function BackupManager({ onClose }) {
       setStatus({
         type: "error",
         message: "❌ Import failed: " + error.message,
+      });
+    }
+  };
+
+  // Roll back to the data saved before the last import
+  const handleRestorePrevious = async () => {
+    setShowConfirmRestore(false);
+    setStatus({ type: "info", message: "Restoring previous data..." });
+
+    const result = await restoreFromRestorePoint();
+    if (result.success) {
+      setStatus({
+        type: "success",
+        message: "✅ Previous data restored. Page will reload.",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      setStatus({
+        type: "error",
+        message: "❌ Restore failed: " + result.message,
       });
     }
   };
@@ -576,6 +657,15 @@ export default function BackupManager({ onClose }) {
                 View Storage Stats
               </button>
 
+              {restorePoint && (
+                <button
+                  onClick={() => setShowConfirmRestore(true)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Restore Previous Data
+                </button>
+              )}
+
               <button
                 onClick={() => setShowConfirmClear(true)}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -585,6 +675,13 @@ export default function BackupManager({ onClose }) {
 
               <AtomicWipe compact />
             </div>
+
+            {restorePoint && (
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                A restore point from before your last import is available (saved{" "}
+                {new Date(restorePoint.savedAt).toLocaleString()}).
+              </p>
+            )}
 
             {/* Storage Stats Display */}
             {showStats && (
@@ -657,6 +754,118 @@ export default function BackupManager({ onClose }) {
           </div>
         </div>
       </ResponsiveModal>
+
+      {/* Confirm Import Dialog */}
+      {pendingImport && (
+        <ResponsiveModal
+          isOpen
+          onClose={() => setPendingImport(null)}
+          size="sm"
+          zIndex={70}
+          labelledBy="backup-import-confirm-title"
+          footer={
+            <div className="flex gap-4">
+              <button
+                onClick={() => setPendingImport(null)}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmImport}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                {importMode === "merge" ? "Merge New Items" : "Replace All"}
+              </button>
+            </div>
+          }
+        >
+          <h3
+            id="backup-import-confirm-title"
+            className="text-xl font-bold text-gray-800 dark:text-white mb-4"
+          >
+            📥 Confirm Import
+          </h3>
+          <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+            <div>
+              <p className="font-semibold text-gray-800 dark:text-white mb-1">
+                Backup file
+              </p>
+              {countItems((k) => pendingImport.data[k]).map(
+                ({ label, count }) => (
+                  <p key={label} className="text-gray-600 dark:text-gray-300">
+                    {label}: {count}
+                  </p>
+                ),
+              )}
+              <p className="text-gray-600 dark:text-gray-300">
+                Total items: {Object.keys(pendingImport.data).length}
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-800 dark:text-white mb-1">
+                On this device
+              </p>
+              {countItems((k) => localStorage.getItem(k)).map(
+                ({ label, count }) => (
+                  <p key={label} className="text-gray-600 dark:text-gray-300">
+                    {label}: {count}
+                  </p>
+                ),
+              )}
+            </div>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300">
+            {importMode === "merge"
+              ? "Merge keeps your current data and only adds items that don't exist yet."
+              : "Replace All overwrites your current data with the backup."}{" "}
+            A restore point of your current data is saved first, so you can undo
+            this from the Utilities section.
+          </p>
+        </ResponsiveModal>
+      )}
+
+      {/* Confirm Restore Previous Data Dialog */}
+      {showConfirmRestore && restorePoint && (
+        <ResponsiveModal
+          isOpen
+          onClose={() => setShowConfirmRestore(false)}
+          size="sm"
+          zIndex={70}
+          labelledBy="backup-restore-confirm-title"
+          footer={
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmRestore(false)}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRestorePrevious}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Restore Previous Data
+              </button>
+            </div>
+          }
+        >
+          <h3
+            id="backup-restore-confirm-title"
+            className="text-xl font-bold text-gray-800 dark:text-white mb-4"
+          >
+            ↩️ Restore Previous Data?
+          </h3>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">
+            This rolls your data back to the restore point saved on{" "}
+            {new Date(restorePoint.savedAt).toLocaleString()} — right before
+            your last import.
+          </p>
+          <p className="text-gray-700 dark:text-gray-300 font-semibold">
+            Anything imported or changed since then will be replaced.
+          </p>
+        </ResponsiveModal>
+      )}
 
       {/* Confirm Clear Dialog */}
       {showConfirmClear && (

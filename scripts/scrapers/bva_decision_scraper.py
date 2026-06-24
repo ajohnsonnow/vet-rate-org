@@ -61,6 +61,10 @@ HEADERS = {
 MIN_DELAY = 2  # seconds between requests
 MAX_DELAY = 5
 
+# Per-request timeout (D-M19): fail fast instead of hanging the whole pipeline
+# on an unresponsive VA endpoint. (connect, read) seconds.
+REQUEST_TIMEOUT = (10, 30)
+
 # Allowed URL prefixes for SSRF protection
 _ALLOWED_URL_PREFIXES = (
     'https://www.va.gov',
@@ -129,7 +133,7 @@ class BVADecisionScraper:
             search_params["start"] = page * 50
             
             try:
-                response = self.session.get(BVA_SEARCH_URL, params=search_params)
+                response = self.session.get(BVA_SEARCH_URL, params=search_params, timeout=REQUEST_TIMEOUT)
                 response.raise_for_status()
                 
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -225,7 +229,7 @@ class BVADecisionScraper:
         try:
             self._delay()
             _safe_decision_url = _extract_safe_url(decision_url)
-            response = self.session.get(_safe_decision_url)
+            response = self.session.get(_safe_decision_url, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')

@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Voice Orchestrator Service
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * 🎭 Unified Voice Service for Warrant Council
  *
@@ -91,6 +91,7 @@ class VoiceOrchestrator {
       },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     instance = this;
   }
 

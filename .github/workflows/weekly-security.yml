@@ -1,0 +1,254 @@
+# .github/workflows/weekly-security.yml
+#
+# Vet-Rate.org — Weekly security sweep.
+#
+# Catches what PR-time gates miss: new CVEs published against existing
+# dependencies, secrets buried in history, supply-chain posture drift,
+# and risky MCP server configurations.
+#
+# Schedule: Mondays 09:00 UTC. Manual: workflow_dispatch.
+#
+# PINNING: run `pinact run` to pin @vN tags to SHAs before production use.
+
+name: Weekly Security Sweep
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22" # CUSTOMIZE
+
+jobs:
+  # ------------------------------------------------------ secrets-full-history --
+  secrets-full-history:
+    name: Full-history secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks across entire history
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # CUSTOMIZE: orgs only
+
+      - name: Open issue on new finding
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="[security] gitleaks found secrets in repository history"
+          EXISTING=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq 'length')
+          if [ "$EXISTING" -eq 0 ]; then
+            gh issue create \
+              --title "$TITLE" \
+              --label "security" \
+              --body "The weekly full-history gitleaks scan found one or more secrets.
+
+          See the failed run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          **Next steps:** rotate the exposed credential first, then purge it from history (\`git filter-repo\`). Rotation is mandatory even after purging — assume it was harvested."
+          else
+            echo "Open issue already exists — not creating a duplicate."
+          fi
+
+  # ------------------------------------------------------------ dependency-cve --
+  dependency-cve:
+    name: Dependency CVE audit (all ecosystems)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: npm audit
+        id: npm_audit
+        if: hashFiles('package-lock.json') != ''
+        continue-on-error: true
+        run: |
+          npm ci --ignore-scripts
+          npm audit --audit-level=high
+
+      - name: pip-audit
+        id: pip_audit
+        if: hashFiles('requirements.txt', 'pyproject.toml') != ''
+        continue-on-error: true
+        run: |
+          pipx install pip-audit
+          if [ -f requirements.txt ]; then
+            pip-audit -r requirements.txt
+          else
+            pip-audit .
+          fi
+
+      - name: Setup .NET
+        if: hashFiles('**/*.csproj') != ''
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "8.0.x" # CUSTOMIZE
+
+      - name: dotnet vulnerable packages
+        id: dotnet_audit
+        if: hashFiles('**/*.csproj') != ''
+        continue-on-error: true
+        run: |
+          dotnet restore
+          OUTPUT=$(dotnet list package --vulnerable --include-transitive)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -qiE 'high|critical'; then exit 1; fi
+
+      - name: OSV-Scanner full scan
+        id: osv
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@v2 # pinact
+        with:
+          scan-args: |-
+            --recursive
+            ./
+
+      - name: Open issue if HIGH/CRITICAL found
+        if: >
+          steps.npm_audit.outcome == 'failure' ||
+          steps.pip_audit.outcome == 'failure' ||
+          steps.dotnet_audit.outcome == 'failure' ||
+          steps.osv.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="[security] Weekly CVE audit found HIGH/CRITICAL vulnerabilities"
+          EXISTING=$(gh issue list --state open --label "security" --search "in:title \"$TITLE\"" --json number --jq 'length')
+          if [ "$EXISTING" -eq 0 ]; then
+            gh issue create \
+              --title "$TITLE" \
+              --label "security" \
+              --label "dependencies" \
+              --body "One or more dependency scanners reported HIGH/CRITICAL findings.
+
+          | Scanner | Outcome |
+          |---------|---------|
+          | npm audit | ${{ steps.npm_audit.outcome }} |
+          | pip-audit | ${{ steps.pip_audit.outcome }} |
+          | dotnet vulnerable | ${{ steps.dotnet_audit.outcome }} |
+          | osv-scanner | ${{ steps.osv.outcome }} |
+
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          else
+            echo "Open issue already exists — not creating a duplicate."
+          fi
+
+  # --------------------------------------------------------- openssf-scorecard --
+  # Note: scorecard.yml is the canonical Scorecard workflow (Sunday schedule,
+  # publishes results). This job is a lightweight SARIF refresh for the
+  # Security tab as part of the Monday sweep.
+  openssf-scorecard:
+    name: OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+          publish_results: false
+
+      - name: Upload SARIF to Security tab
+        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3.36.2
+        with:
+          sarif_file: scorecard.sarif
+
+  # -------------------------------------------------------- dep-updates-triage --
+  dep-updates-triage:
+    name: Outdated deps + CISA KEV triage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: List outdated dependencies
+        if: hashFiles('package.json') != ''
+        run: |
+          npm ci --ignore-scripts
+          {
+            echo "## Outdated npm dependencies"
+            echo '```'
+            npm outdated || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cross-reference CISA KEV catalog
+        run: |
+          curl -sSf -o kev.json \
+            https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+          TOTAL=$(jq '.count' kev.json)
+          CUTOFF=$(date -u -d '7 days ago' +%Y-%m-%d)
+          {
+            echo "## CISA KEV catalog"
+            echo "- Total known exploited vulnerabilities: **$TOTAL**"
+            echo "- Added in the last 7 days:"
+            echo ""
+            jq -r --arg cutoff "$CUTOFF" \
+              '.vulnerabilities[] | select(.dateAdded >= $cutoff) | "- `\(.cveID)` — \(.vendorProject) \(.product): \(.vulnerabilityName)"' \
+              kev.json || true
+            echo ""
+            echo "_Cross-check these CVEs against the dependency-cve job output above._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ------------------------------------------------------------------ mcp-scan --
+  mcp-scan:
+    name: MCP server config scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # informational — MCP tooling is still maturing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Scan MCP configurations
+        run: |
+          if [ -f .claude/settings.json ]; then
+            pipx install mcp-scan
+            # CUSTOMIZE: add other MCP config paths (.mcp.json, .cursor/mcp.json)
+            mcp-scan scan .claude/settings.json
+          else
+            echo "No .claude/settings.json found — skipping MCP scan."
+          fi

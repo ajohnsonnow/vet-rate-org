@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Draft Watermark Component
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Displays prominent "DRAFT" watermark on AI-generated content
  * Reminds users that content must be reviewed before submission

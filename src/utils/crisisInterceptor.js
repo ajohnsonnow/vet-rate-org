@@ -1,13 +1,47 @@
 /**
  * Vet-Rate.org - Crisis Interceptor
  * Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved.
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * SAFETY-CRITICAL SYSTEM: This interceptor detects self-harm language
  * and prevents AI engagement, redirecting to immediate human crisis support.
  *
  * This is not a "nice to have" - this is a lifesaving feature.
  */
+
+import { detectMultilingualCrisis } from "./toneMapper";
+
+// AIS-04: leet/obfuscation normalization so the English regexes below don't miss
+// "w4nt to die", "iwanttodie", "k.m.s", etc. Collapse common leetspeak to letters;
+// the caller then strips non-alphanumerics before matching compact phrases.
+const leetNormalize = (s) =>
+  s
+    .toLowerCase()
+    .replaceAll(/[@4]/g, "a")
+    .replaceAll("0", "o")
+    .replaceAll(/[1!|]/g, "i")
+    .replaceAll("3", "e")
+    .replaceAll(/[5$]/g, "s")
+    .replaceAll("7", "t");
+
+// Unambiguous self-harm phrases, matched after leet-normalize + stripping ALL
+// non-alphanumerics — catches no-space / punctuated obfuscation the spaced regexes
+// miss. (The spaced forms are already caught above, so these add no new false-positive
+// class — only their obfuscated variants.)
+const COMPACT_CRISIS_PHRASES = [
+  "killmyself",
+  "iwanttodie",
+  "wanttodie",
+  "endmylife",
+  "endingmylife",
+  "betteroffdead",
+  "wishiwasdead",
+  "wishiweredead",
+  "noreasontolive",
+  "neckmyself",
+  "deletemyself",
+  "unalivemyself",
+];
 
 /**
  * Crisis keyword patterns - matches both direct and indirect language
@@ -35,6 +69,10 @@ const CRISIS_PATTERNS = {
 
   // HIGH: Suicidal ideation or planning
   high: [
+    // AIS-04: modern self-harm slang, word-bounded to avoid false positives
+    // (e.g. "20 kms" of distance does not match /\bkms\b/ inside "20kms").
+    /\bunalive\b/i,
+    /\bkms\b/i,
     /\bsuicidal\s+(thought|idea)/i,
     /\bthink(ing)?\s+about\s+(death|dying|suicide)\b/i,
     /\b(gun|pills?|rope|bridge|jump|overdose)\b.*\b(plan|method|way out)\b/i,
@@ -133,7 +171,55 @@ export function detectCrisisLanguage(text) {
     }
   }
 
+  // AIS-04: obfuscation pass — leet-normalize + strip non-alphanumerics, then match
+  // compact self-harm phrases the spaced English regexes miss ("iwanttodie",
+  // "w4nt to die", "k.m.s." etc.).
+  const compact = leetNormalize(normalizedText).replaceAll(/[^a-z0-9]/g, "");
+  for (const phrase of COMPACT_CRISIS_PHRASES) {
+    if (compact.includes(phrase)) {
+      return {
+        isCrisis: true,
+        severity: "high",
+        matchedPattern: `compact:${phrase}`,
+      };
+    }
+  }
+
+  // AIS-04: multilingual pass — crisis keywords in non-English languages, so a
+  // non-English veteran is not silently dropped by the English-only regexes. We
+  // ignore the keyword set's broad English "universal" list (e.g. "no point",
+  // "end it") to avoid over-triggering the modal on English text — the precise
+  // CRISIS_PATTERNS above already handle English.
+  const multilingual = detectMultilingualCrisis(text);
+  if (multilingual.detected && multilingual.language !== "universal") {
+    return {
+      isCrisis: true,
+      severity: "high",
+      matchedPattern: `multilingual:${multilingual.language}`,
+    };
+  }
+
   return { isCrisis: false, severity: null, matchedPattern: null };
+}
+
+/**
+ * AIS-05: Non-blocking crisis scan for UPLOADED DOCUMENT text. Unlike
+ * interceptBeforeAICall (used on live user input, which BLOCKS the AI call), this
+ * NEVER blocks document analysis — it only surfaces a passive, dismissible
+ * crisis-resources banner (via the `vetrate:crisis-resources` event) when the
+ * document itself contains crisis language (e.g. ideation history in a C-file or
+ * health record). Document paths previously passed `skipCrisisCheck` and so
+ * silently no-op'd safety on exactly the records most likely to mention crisis.
+ * Browser-guarded; safe to call from utils. Returns whether crisis text was found.
+ * @param {string} text - Extracted document text to scan
+ * @returns {boolean}
+ */
+export function scanDocumentForCrisis(text) {
+  const { isCrisis } = detectCrisisLanguage(text);
+  if (isCrisis && typeof window !== "undefined" && window.dispatchEvent) {
+    window.dispatchEvent(new CustomEvent("vetrate:crisis-resources"));
+  }
+  return isCrisis;
 }
 
 /**
@@ -164,19 +250,4 @@ export function interceptBeforeAICall(userInput) {
     severity: result.severity,
     matchedPattern: result.matchedPattern,
   };
-}
-
-/**
- * Get user-friendly message based on severity
- */
-export function getCrisisMessage(severity) {
-  const messages = {
-    critical:
-      "We detected language that suggests you may be in immediate crisis. Your safety is our priority.",
-    high: "We noticed you may be experiencing thoughts of self-harm. You are not alone.",
-    medium:
-      "We see you are going through a difficult time. Help is available right now.",
-  };
-
-  return messages[severity] || messages.medium;
 }

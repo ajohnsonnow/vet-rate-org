@@ -1001,7 +1001,14 @@
     "it": ["suicidio", "uccidermi", "non voglio vivere"],
     "ht": ["touye tèt", "mouri", "pa vle viv", "fini ak tout bagay"],
     "hi": ["आत्महत्या", "मरना चाहता हूं", "जीना नहीं चाहता"],
-    "hmn": ["tua tus kheej", "xav tuag", "tsis xav ua neej"]
+    "hmn": ["tua tus kheej", "xav tuag", "tsis xav ua neej"],
+    "prs": [
+      "خودکشی",
+      "می‌خواهم بمیرم",
+      "نمی‌خواهم زنده بمانم",
+      "خاتمه دادن به زندگی"
+    ],
+    "ps": ["ځان وژنه", "خپل ځان وژل", "مرګ غواړم", "ژوند نه غواړم"]
   },
 
   "branch_greetings": {
