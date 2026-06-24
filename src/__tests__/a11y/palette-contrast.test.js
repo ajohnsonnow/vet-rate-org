@@ -44,7 +44,9 @@ function hexToRgb(hex) {
   const match = hex.match(/^#?([a-f0-9]{6})$/i);
   if (!match) throw new Error(`Invalid hex color: ${hex}`);
   const num = Number.parseInt(match[1], 16);
-  return [(num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff].map((x) => x / 255);
+  return [(num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff].map(
+    (x) => x / 255,
+  );
 }
 
 /**
@@ -53,7 +55,8 @@ function hexToRgb(hex) {
  */
 function relativeLuminance(hex) {
   const [r, g, b] = hexToRgb(hex);
-  const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const toLinear = (c) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   const rL = toLinear(r);
   const gL = toLinear(g);
   const bL = toLinear(b);
@@ -89,10 +92,38 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
       // hardest case). Brighter than gray-900, so it's the binding constraint.
       const DARK_TEXT = "#1a1f16";
       return [
-        { id, mode: "light", role: "va-blue", color: lightBlue, surface: "#ffffff", threshold: 4.5 },
-        { id, mode: "light", role: "va-gold", color: lightGold, surface: DARK_TEXT, threshold: 4.5 },
-        { id, mode: "dark", role: "va-blue", color: darkBlue, surface: "#ffffff", threshold: 4.5 },
-        { id, mode: "dark", role: "va-gold", color: darkGold, surface: DARK_TEXT, threshold: 4.5 },
+        {
+          id,
+          mode: "light",
+          role: "va-blue",
+          color: lightBlue,
+          surface: "#ffffff",
+          threshold: 4.5,
+        },
+        {
+          id,
+          mode: "light",
+          role: "va-gold",
+          color: lightGold,
+          surface: DARK_TEXT,
+          threshold: 4.5,
+        },
+        {
+          id,
+          mode: "dark",
+          role: "va-blue",
+          color: darkBlue,
+          surface: "#ffffff",
+          threshold: 4.5,
+        },
+        {
+          id,
+          mode: "dark",
+          role: "va-gold",
+          color: darkGold,
+          surface: DARK_TEXT,
+          threshold: 4.5,
+        },
       ];
     });
 
@@ -102,9 +133,9 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
         const ratio = contrastRatio(color, surface);
         expect(ratio).toBeGreaterThanOrEqual(
           threshold,
-          `${id} ${mode} ${role}: ${color} on ${surface} = ${ratio.toFixed(2)}:1 (need ≥${threshold}:1)`
+          `${id} ${mode} ${role}: ${color} on ${surface} = ${ratio.toFixed(2)}:1 (need ≥${threshold}:1)`,
         );
-      }
+      },
     );
   });
 
@@ -116,7 +147,7 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
     const here = path.dirname(fileURLToPath(import.meta.url));
     const generatedCss = readFileSync(
       path.resolve(here, "../../generated/palette-themes.css"),
-      "utf8"
+      "utf8",
     );
 
     // Relative luminance from space-separated RGB channels (0–255).
@@ -158,7 +189,10 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
       const ids = Object.keys(palettes);
       expect(ids.length).toBeGreaterThan(0);
       for (const id of ids) {
-        expect(brandBlocks[id], `missing html.palette-${id} brand block in palette-themes.css`).toBeDefined();
+        expect(
+          brandBlocks[id],
+          `missing html.palette-${id} brand block in palette-themes.css`,
+        ).toBeDefined();
       }
     });
 
@@ -167,15 +201,21 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
       { id, step: 700 },
     ]);
 
-    it.each(brandCases)("$id --brand-$step ≥ 4.5:1 on white", ({ id, step }) => {
-      const channels = brandBlocks[id]?.[`--brand-${step}`];
-      expect(channels, `--brand-${step} not found for palette ${id}`).toBeDefined();
-      const ratio = channelContrastVsWhite(channels);
-      expect(ratio).toBeGreaterThanOrEqual(
-        4.5,
-        `${id} --brand-${step}: rgb(${channels.join(" ")}) on white = ${ratio.toFixed(2)}:1 (need ≥4.5:1)`
-      );
-    });
+    it.each(brandCases)(
+      "$id --brand-$step ≥ 4.5:1 on white",
+      ({ id, step }) => {
+        const channels = brandBlocks[id]?.[`--brand-${step}`];
+        expect(
+          channels,
+          `--brand-${step} not found for palette ${id}`,
+        ).toBeDefined();
+        const ratio = channelContrastVsWhite(channels);
+        expect(ratio).toBeGreaterThanOrEqual(
+          4.5,
+          `${id} --brand-${step}: rgb(${channels.join(" ")}) on white = ${ratio.toFixed(2)}:1 (need ≥4.5:1)`,
+        );
+      },
+    );
   });
 
   describe("Precedence: real ThemeProvider suppresses palette under colorblind", () => {
@@ -195,7 +235,9 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
     }
 
     const drive = (palette, colorBlindMode) =>
-      render(h(ThemeProvider, null, h(Controller, { palette, colorBlindMode })));
+      render(
+        h(ThemeProvider, null, h(Controller, { palette, colorBlindMode })),
+      );
 
     afterEach(() => {
       cleanup();
@@ -205,7 +247,9 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
 
     it("applies palette-army with no colorblind mode", () => {
       drive("army", "none");
-      expect(document.documentElement.classList.contains("palette-army")).toBe(true);
+      expect(document.documentElement.classList.contains("palette-army")).toBe(
+        true,
+      );
     });
 
     it("suppresses palette-army when deuteranopia is active (colorblind class wins)", () => {
@@ -217,7 +261,9 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
 
     it("suppresses any palette under high-contrast colorblind mode", () => {
       drive("navy", "high-contrast");
-      expect(document.documentElement.classList.contains("palette-navy")).toBe(false);
+      expect(document.documentElement.classList.contains("palette-navy")).toBe(
+        false,
+      );
     });
 
     it("never applies a class for the default palette (no-op)", () => {

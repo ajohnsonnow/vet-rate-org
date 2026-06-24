@@ -262,7 +262,6 @@ function normalizeOcrText(text) {
  * Extract name from DD214 text
  */
 function extractName(text) {
-
   // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
   // Also handle Florence-2 output which may have different formatting
   const patterns = [

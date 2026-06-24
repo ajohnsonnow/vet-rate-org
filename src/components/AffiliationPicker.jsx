@@ -28,8 +28,12 @@ function groupPalettes(palettes) {
  * @param {{ onClose?: () => void }} props
  */
 export default function AffiliationPicker({ onClose }) {
-  const { palette: activePalette, setPalette, PALETTES, reducedMotion } =
-    useTheme();
+  const {
+    palette: activePalette,
+    setPalette,
+    PALETTES,
+    reducedMotion,
+  } = useTheme();
 
   const groups = groupPalettes(PALETTES);
 
@@ -38,15 +42,10 @@ export default function AffiliationPicker({ onClose }) {
     onClose?.();
   };
 
-  const transitionClass = reducedMotion
-    ? ""
-    : "transition-colors duration-150";
+  const transitionClass = reducedMotion ? "" : "transition-colors duration-150";
 
   return (
-    <div
-      data-testid="affiliation-picker"
-      className="space-y-6"
-    >
+    <div data-testid="affiliation-picker" className="space-y-6">
       {groups.map(({ group, items }) => (
         <fieldset key={group} className="border-0 p-0 m-0">
           <legend className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2 px-1">

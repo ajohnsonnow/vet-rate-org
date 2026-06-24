@@ -1255,7 +1255,11 @@ export default function MusterCall({
 
           {/* LLM Report */}
           {report && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500" aria-live="polite" aria-atomic="true">
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <span className="text-2xl">🤖</span>

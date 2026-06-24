@@ -59,10 +59,7 @@ export default function AffiliationPickerPrompt({ onDone }) {
         </div>
       }
     >
-      <div
-        data-testid="affiliation-prompt"
-        className="space-y-4"
-      >
+      <div data-testid="affiliation-prompt" className="space-y-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Personalize your accent colors to reflect your branch or service. This
           only changes accent colors — all accessibility settings still apply on

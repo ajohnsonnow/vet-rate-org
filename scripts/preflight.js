@@ -185,7 +185,7 @@ async function phaseFix() {
 
   // ESLint --fix
   process.stdout.write("  🔧 ESLint --fix... ");
-  const lintFix = tryRun("npx eslint src --ext .js,.jsx --fix");
+  const lintFix = tryRun("npx eslint src --fix");
   console.log(
     lintFix.ok ? c("green", "done") : c("yellow", "done (some issues remain)"),
   );
@@ -355,7 +355,7 @@ async function phaseValidate() {
 
   // 1. Lint
   await check("ESLint", () => {
-    const r = tryRun("npx eslint src --ext .js,.jsx");
+    const r = tryRun("npx eslint src");
     if (!r.ok) throw new Error("Lint errors found");
     return {};
   });

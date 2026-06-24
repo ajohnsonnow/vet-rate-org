@@ -278,7 +278,10 @@ export function scrubSvg(svg) {
     .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
     .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, "")
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    .replace(/(href|xlink:href)\s*=\s*("|'|)\s*javascript:[^"'>\s]*/gi, "$1=$2#");
+    .replace(
+      /(href|xlink:href)\s*=\s*("|'|)\s*javascript:[^"'>\s]*/gi,
+      "$1=$2#",
+    );
 }
 
 /**

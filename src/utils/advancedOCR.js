@@ -28,8 +28,7 @@ import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-const STANDARD_FONT_DATA_URL =
-  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
+const STANDARD_FONT_DATA_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`;
 
 /**
  * Advanced OCR Configuration
@@ -102,7 +101,8 @@ export async function advancedPDFAnalysis(
   const OCR_HARD_LIMIT_BYTES = 200 * 1024 * 1024; // 200 MB compressed
   const OCR_WARN_LIMIT_BYTES = 100 * 1024 * 1024; // 100 MB
   const deviceProfile = getCachedDeviceProfile();
-  const isMobileDevice = deviceProfile?.isMobile || deviceProfile?.tier === "mobile";
+  const isMobileDevice =
+    deviceProfile?.isMobile || deviceProfile?.tier === "mobile";
   const isLowMemory = (deviceProfile?.systemRAM ?? 4) <= 2;
 
   if (file.size > OCR_HARD_LIMIT_BYTES && (isMobileDevice || isLowMemory)) {

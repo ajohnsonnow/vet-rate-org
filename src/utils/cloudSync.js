@@ -64,16 +64,19 @@ async function ensureGoogleApis() {
   const loads = [];
   if (!_gapiScriptLoaded && typeof window.gapi === "undefined") {
     loads.push(
-      loadScript("https://apis.google.com/js/api.js").then(
-        () => { _gapiScriptLoaded = true; },
-      ),
+      loadScript("https://apis.google.com/js/api.js").then(() => {
+        _gapiScriptLoaded = true;
+      }),
     );
   }
-  if (!_gisScriptLoaded && (typeof window.google === "undefined" || !window.google?.accounts)) {
+  if (
+    !_gisScriptLoaded &&
+    (typeof window.google === "undefined" || !window.google?.accounts)
+  ) {
     loads.push(
-      loadScript("https://accounts.google.com/gsi/client").then(
-        () => { _gisScriptLoaded = true; },
-      ),
+      loadScript("https://accounts.google.com/gsi/client").then(() => {
+        _gisScriptLoaded = true;
+      }),
     );
   }
   if (loads.length) await Promise.all(loads);

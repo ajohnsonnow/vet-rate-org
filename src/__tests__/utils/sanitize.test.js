@@ -252,7 +252,9 @@ describe("sanitizeInlineHtml (RT-5)", () => {
   });
 
   it("preserves the fixed allow-list of attribute-less inline tags", () => {
-    const out = sanitizeInlineHtml("A <strong>DBQ</strong> is <em>useful</em>.");
+    const out = sanitizeInlineHtml(
+      "A <strong>DBQ</strong> is <em>useful</em>.",
+    );
     expect(out).toContain("<strong>DBQ</strong>");
     expect(out).toContain("<em>useful</em>");
   });

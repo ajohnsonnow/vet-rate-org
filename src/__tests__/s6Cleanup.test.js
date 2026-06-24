@@ -52,6 +52,8 @@ describe("wllama allowOffline placement (C-M06)", () => {
     // The `allowOffline: useCache` binding occurs exactly once, inside the
     // `new WllamaClass(...)` call (not in the loadModelFromUrl options).
     expect((src.match(/allowOffline:\s*useCache/g) || []).length).toBe(1);
-    expect(src).toMatch(/new WllamaClass\([\s\S]{0,200}allowOffline:\s*useCache/);
+    expect(src).toMatch(
+      /new WllamaClass\([\s\S]{0,200}allowOffline:\s*useCache/,
+    );
   });
 });

@@ -50,7 +50,9 @@ describe("CSP connect-src vs. actual fetch origins (D-H11)", () => {
 
   it("the meta CSP includes the cloud backup origins", () => {
     for (const origin of CLOUD_ORIGINS) {
-      expect(connectSrc, `meta connect-src missing ${origin}`).toContain(origin);
+      expect(connectSrc, `meta connect-src missing ${origin}`).toContain(
+        origin,
+      );
     }
   });
 
@@ -58,9 +60,10 @@ describe("CSP connect-src vs. actual fetch origins (D-H11)", () => {
     const src = read("src/utils/multiCloudStorage.js");
     const re = /fetch\(\s*["'`]https:\/\/([a-z0-9.-]+)/gi;
     const hosts = [...new Set([...src.matchAll(re)].map((m) => m[1]))];
-    expect(hosts.length, "fetch-host extraction returned nothing").toBeGreaterThan(
-      0,
-    );
+    expect(
+      hosts.length,
+      "fetch-host extraction returned nothing",
+    ).toBeGreaterThan(0);
     for (const host of hosts) {
       expect(
         connectSrc.includes(`https://${host}`),

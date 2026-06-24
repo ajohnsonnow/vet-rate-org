@@ -192,10 +192,7 @@ function Header({
   ];
 
   return (
-    <header
-      className="bg-va-blue text-white shadow-lg"
-      role="banner"
-    >
+    <header className="bg-va-blue text-white shadow-lg" role="banner">
       {/* Skip Link for Screen Readers */}
       <a href="#main-content" className="skip-link sr-only focus:not-sr-only">
         Skip to main content

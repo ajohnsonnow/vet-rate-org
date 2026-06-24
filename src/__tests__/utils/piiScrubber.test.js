@@ -408,13 +408,17 @@ describe("scrubPII — adversarial inputs (red-team)", () => {
 describe("containsSignificantNonLatin (RT3-4)", () => {
   it("flags predominantly non-Latin text (Korean / Arabic / Japanese)", () => {
     expect(
-      containsSignificantNonLatin("환자는 매우 우울하고 정신건강 문제가 있습니다"),
+      containsSignificantNonLatin(
+        "환자는 매우 우울하고 정신건강 문제가 있습니다",
+      ),
     ).toBe(true);
     expect(
       containsSignificantNonLatin("المريض يعاني من اكتئاب شديد ومشاكل صحية"),
     ).toBe(true);
     expect(
-      containsSignificantNonLatin("患者は重度のうつ病と精神的健康問題を抱えている"),
+      containsSignificantNonLatin(
+        "患者は重度のうつ病と精神的健康問題を抱えている",
+      ),
     ).toBe(true);
   });
 
@@ -461,8 +465,12 @@ describe("scrubText — egress-boundary helper", () => {
     expect(typeof out).toBe("string");
     expect(out).toBe("hello world");
     // A payload field built from it must not serialize to [object Object].
-    expect(JSON.stringify({ description: out })).not.toContain("[object Object]");
-    expect(JSON.stringify({ description: out })).not.toContain("originalLength");
+    expect(JSON.stringify({ description: out })).not.toContain(
+      "[object Object]",
+    );
+    expect(JSON.stringify({ description: out })).not.toContain(
+      "originalLength",
+    );
   });
 
   it("redacts a BARE 9-digit identifier (SSN / VA file) — the [D-M09] regression", () => {
