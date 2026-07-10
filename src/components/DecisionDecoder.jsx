@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -18,6 +17,429 @@ import {
   isPDFFile,
 } from "../utils/ocr";
 
+function getFileRowBorderClass(fileEntry) {
+  if (fileEntry.error) {
+    return "border-red-200 dark:border-red-700";
+  }
+  if (fileEntry.extractedText) {
+    return "border-green-200 dark:border-green-700";
+  }
+  return "border-purple-200 dark:border-purple-700";
+}
+
+function getFileRowIconBgClass(fileEntry) {
+  if (fileEntry.processing) {
+    return "bg-purple-100 dark:bg-purple-800";
+  }
+  if (fileEntry.error) {
+    return "bg-red-100 dark:bg-red-800";
+  }
+  return "bg-green-100 dark:bg-green-800";
+}
+
+function getFileTypeIcon(fileEntry) {
+  if (fileEntry.processing) {
+    return (
+      <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+    );
+  }
+  if (fileEntry.fileType === "pdf") {
+    return <span className="text-sm">📄</span>;
+  }
+  return <span className="text-sm">📷</span>;
+}
+
+function UploadedFileRow({ fileEntry, onRemove }) {
+  return (
+    <div
+      className={`border rounded-lg p-3 bg-white dark:bg-gray-800 ${getFileRowBorderClass(fileEntry)}`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getFileRowIconBgClass(fileEntry)}`}
+          >
+            {getFileTypeIcon(fileEntry)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+              {fileEntry.file.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {formatFileSize(fileEntry.file.size)}
+              {fileEntry.extractedText && !fileEntry.error && (
+                <span className="text-green-600 dark:text-green-400 ml-2">
+                  ✓ {fileEntry.extractedText.length} chars
+                </span>
+              )}
+              {fileEntry.error && (
+                <span className="text-red-600 dark:text-red-400 ml-2">
+                  ✗ {fileEntry.error}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => onRemove(fileEntry.id)}
+          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
+          aria-label="Remove file"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Image Preview (collapsed) */}
+      {fileEntry.fileType === "image" && fileEntry.preview && (
+        <div className="mt-2 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
+          <img
+            src={fileEntry.preview}
+            alt="Preview"
+            className="max-h-24 w-full object-contain bg-gray-50 dark:bg-gray-900"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getOcrProgressMessage(ocrProgress) {
+  if (ocrProgress.state === OCR_STATES.LOADING) {
+    return "Loading file...";
+  }
+  if (ocrProgress.state === OCR_STATES.EXTRACTING_TEXT) {
+    return "Extracting text...";
+  }
+  if (ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS) {
+    return "Running OCR...";
+  }
+  return ocrProgress.message || "Processing...";
+}
+
+// Keyword-based fallback used when no AI model is loaded. Each `test`
+// receives the raw denial text plus its lowercased form.
+const DENIAL_PATTERNS = [
+  {
+    test: (text) =>
+      /no nexus|does not establish a nexus|nexus between.*service|lacks.*nexus|absence of nexus/i.test(
+        text,
+      ),
+    decision_type: "Full Denial",
+    plain_english:
+      "The VA denied your claim because there is no documented medical link (nexus) between your current condition and your military service.",
+    va_reasoning:
+      "VA policy requires a 'nexus' — a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
+    missing_elements: [
+      "A Nexus Letter from a licensed physician stating your condition is 'at least as likely as not' related to service",
+      "Medical records documenting in-service treatment or incident",
+    ],
+    action_plan: [
+      "Obtain a Nexus Letter from a private physician familiar with VA claims",
+      "Request an Independent Medical Opinion (IMO) from a doctor who reviews your service records",
+      "File a Supplemental Claim with the nexus letter as new and relevant evidence",
+      "Contact a Veterans Service Organization (VSO) for free claim assistance",
+    ],
+    appeal_options:
+      "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
+    deadline_warning:
+      "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately — do not wait.",
+  },
+  {
+    test: (text) =>
+      /not service.connected|no service connection|not connected to.*service|failed to establish service/i.test(
+        text,
+      ),
+    decision_type: "Full Denial",
+    plain_english:
+      "The VA decided your condition is not related to your military service.",
+    va_reasoning:
+      "The VA requires proof of three things: (1) a current diagnosis, (2) an in-service event or stressor, and (3) a nexus linking them. One or more of these is missing.",
+    missing_elements: [
+      "Evidence of an in-service event, injury, or stressor that caused the condition",
+      "A medical nexus linking service to the current diagnosis",
+      "Buddy letters or lay statements from fellow service members witnessing the event",
+    ],
+    action_plan: [
+      "Pull your service records (DD214, service treatment records) for documentation",
+      "Get a buddy letter from fellow veterans who witnessed the incident",
+      "Obtain a medical nexus letter from a private physician",
+      "Consider filing a direct service connection, secondary service connection, or aggravation claim",
+    ],
+    appeal_options:
+      "You can file a Supplemental Claim with new evidence, a Higher-Level Review, or a Board Appeal.",
+    deadline_warning:
+      "You have 1 year from this decision to appeal. Contact a VSO immediately if you are unsure how to proceed.",
+  },
+  {
+    test: (text) =>
+      /insufficient evidence|lack of.*evidence|no probative evidence|evidence does not|evidence is not/i.test(
+        text,
+      ),
+    decision_type: "Full Denial",
+    plain_english:
+      "The VA says there is not enough evidence in your claim file to approve your request.",
+    va_reasoning:
+      "VA adjudicators weigh the evidence of record. When the evidence for and against a claim is roughly equal, VA rules require denial.",
+    missing_elements: [
+      "Additional medical evidence supporting your claim",
+      "Private medical opinions or independent medical examinations (IME)",
+      "Buddy letters (lay statements) from people who observed your condition",
+    ],
+    action_plan: [
+      "Gather all private medical records not already in your file and submit them",
+      "Request a copy of your C-File to see exactly what VA has on record",
+      "Submit a personal statement describing your symptoms and their impact on daily life",
+      "Seek an IME from a private physician to counter the C&P exam findings",
+    ],
+    appeal_options:
+      "A Supplemental Claim is the right path if you have new, relevant evidence. A Higher-Level Review is appropriate if you believe the rater made a clear error.",
+    deadline_warning:
+      "Appeal deadlines apply. File within 1 year of this decision to preserve your effective date.",
+  },
+  {
+    test: (text, t) =>
+      /granted|service.connected.*at.*%|assigned.*rating.*%|%.*(combined|combined rating)/i.test(
+        text,
+      ) && !/denied|not.*service.connected/i.test(t),
+    decision_type: "Granted",
+    plain_english:
+      "Congratulations — the VA approved at least part of your claim!",
+    va_reasoning:
+      "The VA found sufficient evidence to establish service connection and assigned a disability rating.",
+    missing_elements: [],
+    action_plan: [
+      "Review your rating decision carefully — ensure each condition is rated correctly",
+      "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
+      "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
+      "File an Intent to File immediately if you plan to claim additional conditions",
+    ],
+    appeal_options:
+      "If the rating percentage seems too low, compare against 38 CFR Part 4 diagnostic codes and file a Higher-Level Review citing a clear error.",
+    deadline_warning: null,
+  },
+  {
+    test: (text) =>
+      /deferred pending|claim deferred|examination.*scheduled/i.test(text),
+    decision_type: "Deferred",
+    plain_english:
+      "The VA has not yet made a final decision on your claim — it is waiting for additional information or a C&P exam.",
+    va_reasoning:
+      "VA defers claims when it needs additional evidence, such as a Compensation & Pension (C&P) exam or more medical records.",
+    missing_elements: [
+      "C&P exam results (if an exam has been scheduled)",
+      "Additional medical records requested by VA",
+    ],
+    action_plan: [
+      "Attend any scheduled C&P exam — missing it can result in denial",
+      "Prepare for your C&P exam using the C&P Simulator in Vet-Rate",
+      "Submit any outstanding evidence as soon as possible",
+      "Contact VA or your VSO to confirm the status of your deferred claim",
+    ],
+    appeal_options:
+      "No appeal action needed yet — wait for the final decision. Once issued, you have 1 year to appeal.",
+    deadline_warning:
+      "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
+  },
+];
+
+function patternMatchDenial(text) {
+  const t = text.toLowerCase();
+
+  for (const pattern of DENIAL_PATTERNS) {
+    if (pattern.test(text, t)) {
+      return pattern;
+    }
+  }
+
+  // Generic fallback when no specific pattern matches
+  const isDenied = /denied|denial|not.*granted|not.*service.connected/i.test(
+    text,
+  );
+  if (isDenied) {
+    return {
+      decision_type: "Full Denial",
+      plain_english:
+        "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
+      va_reasoning:
+        "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
+      missing_elements: [
+        "Specific denial reason not detected — load AI for full analysis",
+      ],
+      action_plan: [
+        "Load the Warrant Council AI (button above) for a full plain-English translation",
+        "Contact a VSO for free claim assistance",
+        "Request a copy of your C-File to understand what evidence VA used",
+        "You have 1 year from this decision to file an appeal",
+      ],
+      appeal_options:
+        "You can file a Supplemental Claim, Higher-Level Review, or Board Appeal within 1 year.",
+      deadline_warning:
+        "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
+    };
+  }
+
+  return null;
+}
+
+function getDecodeErrorMessage(err) {
+  if (err.message && err.message.includes("TIMEOUT")) {
+    return (
+      "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
+      "• The AI model is still loading (wait a few more seconds and try again)\n" +
+      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n' +
+      "• Network connection issues (check your internet connection)\n\n" +
+      "Please try again with a shorter excerpt, or wait for the AI model to fully load."
+    );
+  }
+  if (
+    err.message &&
+    (err.message.includes("warming up") || err.message.includes("loading"))
+  ) {
+    return "🔄 AI model is still loading. Please wait for it to fully initialize (check the badge above) and try again.";
+  }
+  return (
+    "❌ An error occurred during decoding: " +
+    (err.message || "Unknown error. Please try again.")
+  );
+}
+
+function applyPatternMatchFallback(denialText, setResults, setError) {
+  const matched = patternMatchDenial(denialText);
+  if (!matched) {
+    setError(
+      "No AI available and no recognizable denial patterns detected. Load the Warrant Council AI above for a full analysis.",
+    );
+    return;
+  }
+  setResults({
+    ...matched,
+    _usedFallback: true,
+    _fallbackReason: "pattern_match",
+    _fallbackNote:
+      "AI is not loaded. This analysis uses keyword pattern matching — load the Warrant Council AI for a complete, personalized translation.",
+  });
+}
+
+// Robust timeout that WILL reject even if the raced promise hangs.
+function createDecodeTimeout(ms, message) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return { timeoutPromise, clear: () => clearTimeout(timeoutId) };
+}
+
+function applyDecodeResponse(response, setResults, setError) {
+  if (response.success) {
+    setResults({
+      ...response.data,
+      // Pass through fallback info to show helpful notice
+      _usedFallback: response.usedFallback,
+      _fallbackReason: response.fallbackReason,
+      _fallbackNote: response.fallbackNote,
+      // Pass through truncation info to show helpful notice
+      _wasTruncated: response.wasTruncated,
+      _truncationNote: response.truncationNote,
+    });
+    return;
+  }
+  // Check for context overflow error - show helpful message
+  if (response.isContextOverflow) {
+    setError(response.error);
+    return;
+  }
+  setError(response.error || "Failed to decode decision. Please try again.");
+}
+
+function logDecodeError(err) {
+  // Better error logging - serialize the full error properly
+  const errorDetails = {
+    message: err.message,
+    name: err.name,
+    stack: err.stack,
+    ...(err.response && { response: err.response }),
+  };
+  console.error("[DecisionDecoder] Decode error:", errorDetails);
+}
+
+// Owns the decode request lifecycle (pattern-match fallback + AI call with
+// timeout) so the component doesn't carry this async state machine inline.
+function useDecisionDecode() {
+  const [results, setResults] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDecode = async (denialText) => {
+    if (!denialText.trim()) {
+      setError("Please paste your denial letter or decision text first.");
+      return;
+    }
+
+    if (denialText.trim().length < 50) {
+      setError(
+        "The text seems too short. Please paste more of the denial letter.",
+      );
+      return;
+    }
+
+    if (!isAIAvailable()) {
+      applyPatternMatchFallback(denialText, setResults, setError);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setResults(null);
+
+    const { timeoutPromise, clear } = createDecodeTimeout(
+      90000,
+      "TIMEOUT: AI request exceeded 90 second limit",
+    );
+
+    try {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[DecisionDecoder] Starting AI decode with",
+        denialText.length,
+        "characters",
+      );
+
+      // Race between the actual call and timeout
+      const response = await Promise.race([
+        decodeDecision(denialText),
+        timeoutPromise,
+      ]);
+
+      clear();
+
+      // eslint-disable-next-line no-console
+      console.log("[DecisionDecoder] AI response:", response);
+
+      applyDecodeResponse(response, setResults, setError);
+    } catch (err) {
+      clear();
+      logDecodeError(err);
+      setError(getDecodeErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { results, isLoading, error, handleDecode };
+}
+
 /**
  * DecisionDecoder Component - "The Denial Translator"
  *
@@ -33,20 +455,11 @@ import {
  */
 
 const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 
   const [denialText, setDenialText] = useState("");
-  const [results, setResults] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const [showAISettings, setShowAISettings] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const { results, isLoading, error, handleDecode } = useDecisionDecode();
+  const [_aiStatus, setAIStatus] = useState(getAIStatus());
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
@@ -60,8 +473,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const fileInputRef = useRef(null);
 
   // Benefits Reference hook for claim phase explanations
-  // eslint-disable-next-line no-unused-vars
-  const { getClaimPhaseInfo, getAllClaimPhases } = useVaBenefitsRef();
+  const { getAllClaimPhases } = useVaBenefitsRef();
 
   // Monitor AI status changes
   useEffect(() => {
@@ -269,292 +681,6 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     setCurrentProcessingFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
-    }
-  };
-
-  const patternMatchDenial = (text) => {
-    const t = text.toLowerCase();
-    const DENIAL_PATTERNS = [
-      {
-        test: () =>
-          /no nexus|does not establish a nexus|nexus between.*service|lacks.*nexus|absence of nexus/i.test(
-            text,
-          ),
-        decision_type: "Full Denial",
-        plain_english:
-          "The VA denied your claim because there is no documented medical link (nexus) between your current condition and your military service.",
-        va_reasoning:
-          "VA policy requires a 'nexus' — a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
-        missing_elements: [
-          "A Nexus Letter from a licensed physician stating your condition is 'at least as likely as not' related to service",
-          "Medical records documenting in-service treatment or incident",
-        ],
-        action_plan: [
-          "Obtain a Nexus Letter from a private physician familiar with VA claims",
-          "Request an Independent Medical Opinion (IMO) from a doctor who reviews your service records",
-          "File a Supplemental Claim with the nexus letter as new and relevant evidence",
-          "Contact a Veterans Service Organization (VSO) for free claim assistance",
-        ],
-        appeal_options:
-          "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
-        deadline_warning:
-          "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately — do not wait.",
-      },
-      {
-        test: () =>
-          /not service.connected|no service connection|not connected to.*service|failed to establish service/i.test(
-            text,
-          ),
-        decision_type: "Full Denial",
-        plain_english:
-          "The VA decided your condition is not related to your military service.",
-        va_reasoning:
-          "The VA requires proof of three things: (1) a current diagnosis, (2) an in-service event or stressor, and (3) a nexus linking them. One or more of these is missing.",
-        missing_elements: [
-          "Evidence of an in-service event, injury, or stressor that caused the condition",
-          "A medical nexus linking service to the current diagnosis",
-          "Buddy letters or lay statements from fellow service members witnessing the event",
-        ],
-        action_plan: [
-          "Pull your service records (DD214, service treatment records) for documentation",
-          "Get a buddy letter from fellow veterans who witnessed the incident",
-          "Obtain a medical nexus letter from a private physician",
-          "Consider filing a direct service connection, secondary service connection, or aggravation claim",
-        ],
-        appeal_options:
-          "You can file a Supplemental Claim with new evidence, a Higher-Level Review, or a Board Appeal.",
-        deadline_warning:
-          "You have 1 year from this decision to appeal. Contact a VSO immediately if you are unsure how to proceed.",
-      },
-      {
-        test: () =>
-          /insufficient evidence|lack of.*evidence|no probative evidence|evidence does not|evidence is not/i.test(
-            text,
-          ),
-        decision_type: "Full Denial",
-        plain_english:
-          "The VA says there is not enough evidence in your claim file to approve your request.",
-        va_reasoning:
-          "VA adjudicators weigh the evidence of record. When the evidence for and against a claim is roughly equal, VA rules require denial.",
-        missing_elements: [
-          "Additional medical evidence supporting your claim",
-          "Private medical opinions or independent medical examinations (IME)",
-          "Buddy letters (lay statements) from people who observed your condition",
-        ],
-        action_plan: [
-          "Gather all private medical records not already in your file and submit them",
-          "Request a copy of your C-File to see exactly what VA has on record",
-          "Submit a personal statement describing your symptoms and their impact on daily life",
-          "Seek an IME from a private physician to counter the C&P exam findings",
-        ],
-        appeal_options:
-          "A Supplemental Claim is the right path if you have new, relevant evidence. A Higher-Level Review is appropriate if you believe the rater made a clear error.",
-        deadline_warning:
-          "Appeal deadlines apply. File within 1 year of this decision to preserve your effective date.",
-      },
-      {
-        test: () =>
-          /granted|service.connected.*at.*%|assigned.*rating.*%|%.*(combined|combined rating)/i.test(
-            text,
-          ) && !/denied|not.*service.connected/i.test(t),
-        decision_type: "Granted",
-        plain_english:
-          "Congratulations — the VA approved at least part of your claim!",
-        va_reasoning:
-          "The VA found sufficient evidence to establish service connection and assigned a disability rating.",
-        missing_elements: [],
-        action_plan: [
-          "Review your rating decision carefully — ensure each condition is rated correctly",
-          "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
-          "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
-          "File an Intent to File immediately if you plan to claim additional conditions",
-        ],
-        appeal_options:
-          "If the rating percentage seems too low, compare against 38 CFR Part 4 diagnostic codes and file a Higher-Level Review citing a clear error.",
-        deadline_warning: null,
-      },
-      {
-        test: () =>
-          /deferred pending|claim deferred|examination.*scheduled/i.test(text),
-        decision_type: "Deferred",
-        plain_english:
-          "The VA has not yet made a final decision on your claim — it is waiting for additional information or a C&P exam.",
-        va_reasoning:
-          "VA defers claims when it needs additional evidence, such as a Compensation & Pension (C&P) exam or more medical records.",
-        missing_elements: [
-          "C&P exam results (if an exam has been scheduled)",
-          "Additional medical records requested by VA",
-        ],
-        action_plan: [
-          "Attend any scheduled C&P exam — missing it can result in denial",
-          "Prepare for your C&P exam using the C&P Simulator in Vet-Rate",
-          "Submit any outstanding evidence as soon as possible",
-          "Contact VA or your VSO to confirm the status of your deferred claim",
-        ],
-        appeal_options:
-          "No appeal action needed yet — wait for the final decision. Once issued, you have 1 year to appeal.",
-        deadline_warning:
-          "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
-      },
-    ];
-
-    for (const pattern of DENIAL_PATTERNS) {
-      if (pattern.test()) {
-        return pattern;
-      }
-    }
-
-    // Generic fallback when no specific pattern matches
-    const isDenied = /denied|denial|not.*granted|not.*service.connected/i.test(
-      text,
-    );
-    if (isDenied) {
-      return {
-        decision_type: "Full Denial",
-        plain_english:
-          "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
-        va_reasoning:
-          "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
-        missing_elements: [
-          "Specific denial reason not detected — load AI for full analysis",
-        ],
-        action_plan: [
-          "Load the Warrant Council AI (button above) for a full plain-English translation",
-          "Contact a VSO for free claim assistance",
-          "Request a copy of your C-File to understand what evidence VA used",
-          "You have 1 year from this decision to file an appeal",
-        ],
-        appeal_options:
-          "You can file a Supplemental Claim, Higher-Level Review, or Board Appeal within 1 year.",
-        deadline_warning:
-          "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
-      };
-    }
-
-    return null;
-  };
-
-  const handleDecode = async () => {
-    if (!denialText.trim()) {
-      setError("Please paste your denial letter or decision text first.");
-      return;
-    }
-
-    if (denialText.trim().length < 50) {
-      setError(
-        "The text seems too short. Please paste more of the denial letter.",
-      );
-      return;
-    }
-
-    if (!isAIAvailable()) {
-      const matched = patternMatchDenial(denialText);
-      if (matched) {
-        setResults({
-          ...matched,
-          _usedFallback: true,
-          _fallbackReason: "pattern_match",
-          _fallbackNote:
-            "AI is not loaded. This analysis uses keyword pattern matching — load the Warrant Council AI for a complete, personalized translation.",
-        });
-      } else {
-        setError(
-          "No AI available and no recognizable denial patterns detected. Load the Warrant Council AI above for a full analysis.",
-        );
-      }
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setResults(null);
-
-    // Create a robust timeout that WILL reject even if promise hangs
-    const TIMEOUT_MS = 90000; // 90 seconds
-    let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error("TIMEOUT: AI request exceeded 90 second limit"));
-      }, TIMEOUT_MS);
-    });
-
-    try {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[DecisionDecoder] Starting AI decode with",
-        denialText.length,
-        "characters",
-      );
-
-      // Race between the actual call and timeout
-      const response = await Promise.race([
-        decodeDecision(denialText),
-        timeoutPromise,
-      ]);
-
-      // Clear timeout if we got a response
-      clearTimeout(timeoutId);
-
-      // eslint-disable-next-line no-console
-      console.log("[DecisionDecoder] AI response:", response);
-
-      if (response.success) {
-        setResults({
-          ...response.data,
-          // Pass through fallback info to show helpful notice
-          _usedFallback: response.usedFallback,
-          _fallbackReason: response.fallbackReason,
-          _fallbackNote: response.fallbackNote,
-          // Pass through truncation info to show helpful notice
-          _wasTruncated: response.wasTruncated,
-          _truncationNote: response.truncationNote,
-        });
-      } else {
-        // Check for context overflow error - show helpful message
-        if (response.isContextOverflow) {
-          setError(response.error);
-        } else {
-          setError(
-            response.error || "Failed to decode decision. Please try again.",
-          );
-        }
-      }
-    } catch (err) {
-      // Clear timeout on any error
-      if (timeoutId) clearTimeout(timeoutId);
-
-      // Better error logging - serialize the full error properly
-      const errorDetails = {
-        message: err.message,
-        name: err.name,
-        stack: err.stack,
-        ...(err.response && { response: err.response }),
-      };
-      console.error("[DecisionDecoder] Decode error:", errorDetails);
-
-      if (err.message && err.message.includes("TIMEOUT")) {
-        setError(
-          "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
-            "• The AI model is still loading (wait a few more seconds and try again)\n" +
-            '• Your document is too large (try pasting only the "Reasons for Decision" section)\n' +
-            "• Network connection issues (check your internet connection)\n\n" +
-            "Please try again with a shorter excerpt, or wait for the AI model to fully load.",
-        );
-      } else if (
-        err.message &&
-        (err.message.includes("warming up") || err.message.includes("loading"))
-      ) {
-        setError(
-          "🔄 AI model is still loading. Please wait for it to fully initialize (check the badge above) and try again.",
-        );
-      } else {
-        setError(
-          "❌ An error occurred during decoding: " +
-            (err.message || "Unknown error. Please try again."),
-        );
-      }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -834,13 +960,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                     </span>
                   </div>
                   <p className="text-xs text-purple-600 dark:text-purple-400 mb-2">
-                    {ocrProgress.state === OCR_STATES.LOADING
-                      ? "Loading file..."
-                      : ocrProgress.state === OCR_STATES.EXTRACTING_TEXT
-                        ? "Extracting text..."
-                        : ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS
-                          ? "Running OCR..."
-                          : ocrProgress.message || "Processing..."}
+                    {getOcrProgressMessage(ocrProgress)}
                   </p>
                   {ocrProgress.progress > 0 && (
                     <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-1.5">
@@ -869,86 +989,11 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                   </div>
 
                   {uploadedFiles.map((fileEntry) => (
-                    <div
+                    <UploadedFileRow
                       key={fileEntry.id}
-                      className={`border rounded-lg p-3 bg-white dark:bg-gray-800 ${
-                        fileEntry.error
-                          ? "border-red-200 dark:border-red-700"
-                          : fileEntry.extractedText
-                            ? "border-green-200 dark:border-green-700"
-                            : "border-purple-200 dark:border-purple-700"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              fileEntry.processing
-                                ? "bg-purple-100 dark:bg-purple-800"
-                                : fileEntry.error
-                                  ? "bg-red-100 dark:bg-red-800"
-                                  : "bg-green-100 dark:bg-green-800"
-                            }`}
-                          >
-                            {fileEntry.processing ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
-                            ) : fileEntry.fileType === "pdf" ? (
-                              <span className="text-sm">📄</span>
-                            ) : (
-                              <span className="text-sm">📷</span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                              {fileEntry.file.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatFileSize(fileEntry.file.size)}
-                              {fileEntry.extractedText && !fileEntry.error && (
-                                <span className="text-green-600 dark:text-green-400 ml-2">
-                                  ✓ {fileEntry.extractedText.length} chars
-                                </span>
-                              )}
-                              {fileEntry.error && (
-                                <span className="text-red-600 dark:text-red-400 ml-2">
-                                  ✗ {fileEntry.error}
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveFile(fileEntry.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
-                          aria-label="Remove file"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Image Preview (collapsed) */}
-                      {fileEntry.fileType === "image" && fileEntry.preview && (
-                        <div className="mt-2 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
-                          <img
-                            src={fileEntry.preview}
-                            alt="Preview"
-                            className="max-h-24 w-full object-contain bg-gray-50 dark:bg-gray-900"
-                          />
-                        </div>
-                      )}
-                    </div>
+                      fileEntry={fileEntry}
+                      onRemove={handleRemoveFile}
+                    />
                   ))}
 
                   {/* Combined Text Summary */}
@@ -977,7 +1022,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
           )}
 
           <button
-            onClick={handleDecode}
+            onClick={() => handleDecode(denialText)}
             disabled={isLoading || !denialText.trim()}
             className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >

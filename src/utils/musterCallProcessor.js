@@ -32,7 +32,6 @@ import {
   classifyDocument,
   classifyDocumentBatch,
   DOCUMENT_TYPES,
-  getProcessingStrategy,
 } from "./documentClassifier";
 import { parseDD214Text } from "./ribbonRackData";
 import { updateVeteranProfile, getVeteranProfile } from "./veteranProfile";
@@ -186,7 +185,9 @@ RULES: Only include findings present in text. Be concise.`;
     try {
       result = JSON.parse(cleanContent);
     } catch (parseErr) {
-      console.warn("⚠️ JSON parse failed, attempting repair...");
+      console.warn(
+        `⚠️ JSON parse failed (${parseErr.message}), attempting repair...`,
+      );
       result = attemptJSONRepair(cleanContent);
       if (result) {
         // eslint-disable-next-line no-console
@@ -306,6 +307,323 @@ export const validateFilesBatch = (files) => {
  * Process a single document: extract text, classify, parse
  * Enhanced for sequential formation processing with VISION AI PRIMARY for DD214s
  */
+const runVisionFirstDD214Extraction = async (file, onProgress, result) => {
+  // ============================================================
+  // VISION-FIRST PATH: DD214s get Florence-2 treatment
+  // ============================================================
+  // eslint-disable-next-line no-console
+  console.log(
+    `👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`,
+  );
+
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.EXTRACTING,
+    progress: 25,
+    stage: "vision_primary",
+    message: "👁️ DD214 detected - engaging Vision AI...",
+  });
+
+  let extractionResult;
+
+  try {
+    // Initialize Florence if needed (only once)
+    if (!visionInitialized && !visionInitializing) {
+      visionInitializing = true;
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 30,
+        stage: "vision_init",
+        message: "⚡ Loading Florence-2 Vision engine (first time only)...",
+      });
+
+      const initSuccess = await florenceOCRService.initialize();
+      visionInitialized = initSuccess;
+      visionInitializing = false;
+
+      if (!initSuccess) {
+        console.warn(
+          "⚠️ Florence Vision initialization failed, falling back to OCR",
+        );
+      }
+    }
+
+    // Wait for vision to be ready if still initializing
+    if (visionInitializing) {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 35,
+        stage: "vision_wait",
+        message: "⏳ Waiting for Vision engine to load...",
+      });
+      // Wait for initialization to complete
+      while (visionInitializing) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+
+    if (visionInitialized) {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 40,
+        stage: "vision_process",
+        message: "👁️ Florence-2 Vision analyzing DD214...",
+      });
+
+      // Process all pages for multi-page DD214s
+      const visionResult = await florenceOCRService.processMultiplePages(
+        file,
+        {
+          maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
+          onPageComplete: (pageNum, total, _pageResult) => {
+            const progress = 40 + (pageNum / total) * 30; // 40-70%
+            onProgress?.({
+              filename: file.name,
+              state: PROCESSING_STATES.EXTRACTING,
+              progress: Math.round(progress),
+              stage: "vision_page",
+              message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
+              currentPage: pageNum,
+              totalPages: total,
+            });
+          },
+        },
+      );
+
+      if (
+        visionResult.combinedText &&
+        visionResult.combinedText.trim().length > 100
+      ) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
+        );
+
+        // Log the parsed data from vision
+        if (visionResult.parsedData?.fields) {
+          const fields = visionResult.parsedData.fields;
+          // eslint-disable-next-line no-console
+          console.log("🔍 Vision parsed fields:", {
+            name: fields.name,
+            branch: fields.branch,
+            rank: fields.rank,
+            mos: fields.mos,
+            awards: fields.awardCount,
+            confidence: fields.overallConfidence,
+          });
+        }
+
+        extractionResult = {
+          text: visionResult.combinedText,
+          pageCount: visionResult.totalPages,
+          method: "vision_florence",
+          confidence: 90, // Florence vision is highly accurate
+          ocrUsed: false,
+          visionUsed: true,
+          // Pass through the parsed data from vision!
+          visionParsedData: visionResult.parsedData,
+        };
+        result.visionUsed = true;
+        result.confidence = 90;
+      } else {
+        console.warn(
+          "⚠️ Vision extraction returned minimal text, falling back to OCR",
+        );
+        extractionResult = null; // Will trigger OCR fallback
+      }
+    }
+  } catch (visionError) {
+    console.warn("⚠️ Vision primary extraction failed:", visionError.message);
+    extractionResult = null; // Will trigger OCR fallback
+  }
+
+  // Fall back to OCR if vision failed
+  if (!extractionResult) {
+    // eslint-disable-next-line no-console
+    console.log("📷 Falling back to OCR extraction...");
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.EXTRACTING,
+      progress: 45,
+      stage: "ocr_fallback",
+      message: "📷 Vision unavailable - using OCR...",
+    });
+
+    extractionResult = await analyzeDocument(file, (state) => {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 45 + (state.progress || 0) * 0.25, // 45-70%
+        ocrState: state.message || state.state,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        quality: state.quality,
+        confidence: state.confidence,
+        stage: "platoon_sergeant",
+      });
+    });
+  }
+
+  return extractionResult;
+};
+
+const runStandardDocumentExtraction = async (
+  file,
+  onProgress,
+  result,
+  isPDF,
+) => {
+  // ============================================================
+  // STANDARD PATH: OCR extraction for non-DD214 documents
+  // ============================================================
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.EXTRACTING,
+    progress: 25,
+    stage: "platoon_sergeant",
+  });
+
+  const isLargePDF =
+    file.name.toLowerCase().endsWith(".pdf") && file.size > 50 * 1024 * 1024;
+
+  let extractionResult;
+
+  if (isLargePDF) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
+    );
+    const etaTracker = createEtaTracker();
+    const largeResult = await processLargePDF(file, {
+      batchSize: 20,
+      onProgress: (cur, total, pct) => {
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
+          stage: "platoon_sergeant",
+          message: `Streaming page ${cur}/${total} (${pct}%)...`,
+          currentPage: cur,
+          totalPages: total,
+          etaSeconds: etaTracker.etaSeconds(total - cur),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+      onBatch: (batch) => {
+        etaTracker.sample(batch.processedSoFar);
+        // Forward per-batch updates for responsive UI on very large files
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + batch.pct * 0.4,
+          stage: "platoon_sergeant",
+          message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
+          currentPage: batch.processedSoFar,
+          totalPages: batch.totalPages,
+          etaSeconds: etaTracker.etaSeconds(
+            batch.totalPages - batch.processedSoFar,
+          ),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+    });
+    extractionResult = {
+      text: largeResult.text,
+      pageCount: largeResult.pageCount,
+      method: largeResult.method,
+      fileType: "PDF",
+      ocrUsed: false,
+      hasScannedSections: largeResult.hasScannedSections,
+      scannedPageRanges: largeResult.scannedPageRanges || [],
+      pagesWithText: largeResult.pagesWithText,
+      pagesEmpty: largeResult.pagesEmpty,
+    };
+  } else {
+    extractionResult = await analyzeDocument(file, (state) => {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+        ocrState: state.message || state.state,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        quality: state.quality,
+        confidence: state.confidence,
+        stage: "platoon_sergeant",
+      });
+    });
+  }
+
+  // Store OCR confidence for fallback decision
+  const ocrConfidence = extractionResult.confidence || 0;
+  result.confidence = ocrConfidence;
+
+  // Vision fallback for poor OCR quality on any PDF
+  const shouldTryVisionFallback =
+    isPDF &&
+    ocrConfidence < VISION_FALLBACK_THRESHOLD &&
+    isWebGPUSupported() &&
+    extractionResult.ocrUsed;
+
+  if (shouldTryVisionFallback) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`,
+    );
+
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.EXTRACTING,
+      progress: 65,
+      stage: "vision_fallback",
+      message: "🔬 Low OCR quality detected - engaging Vision AI...",
+    });
+
+    try {
+      // Initialize Florence if needed
+      if (!visionInitialized && !visionInitializing) {
+        visionInitializing = true;
+        const initSuccess = await florenceOCRService.initialize();
+        visionInitialized = initSuccess;
+        visionInitializing = false;
+      }
+
+      if (visionInitialized) {
+        const visionResult = await florenceOCRService.processDocument(file, {
+          pageNumber: 1,
+          parseDD214: false,
+        });
+
+        if (
+          visionResult.text &&
+          visionResult.text.trim().length >
+            extractionResult.text.trim().length * 0.5
+        ) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`,
+          );
+          extractionResult = {
+            ...extractionResult,
+            text: visionResult.text,
+            method: "vision_florence",
+            confidence: 85,
+            visionUsed: true,
+          };
+          result.visionUsed = true;
+        }
+      }
+    } catch (visionError) {
+      console.warn("⚠️ Vision fallback failed:", visionError.message);
+    }
+  }
+
+  return extractionResult;
+};
+
 const processSingleDocument = async (file, onProgress) => {
   const result = {
     filename: file.name,
@@ -986,7 +1304,7 @@ const selectBestDD214Segment = (segments, filename) => {
     }
 
     // Bonus for data completeness (look for key fields)
-    const hasRank = /4[aA]?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(
+    const hasRank = /4a?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(
       segment.text,
     );
     const hasBranch = /ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD/i.test(
@@ -1026,6 +1344,238 @@ const selectBestDD214Segment = (segments, filename) => {
   return best;
 };
 
+const buildVisionParsedServiceRecord = (text, visionParsedData) => {
+  // eslint-disable-next-line no-console
+  console.log("👁️ Using pre-parsed Vision data for DD214");
+  const vf = visionParsedData.fields;
+
+  // Convert vision parser format to parseServiceRecord format
+  const visionData = {
+    type: "service_record",
+    // Name
+    veteranName:
+      vf.name ||
+      `${vf.lastName || ""}, ${vf.firstName || ""} ${vf.middleName || ""}`
+        .replace(/,\s*$/, "")
+        .trim() ||
+      null,
+    lastName: vf.lastName || null,
+    firstName: vf.firstName || null,
+    middleName: vf.middleName || null,
+    // Branch
+    branch: vf.branch || null,
+    component: vf.component || null,
+    // Rank/Grade
+    rank: vf.rank || null,
+    payGrade: vf.payGrade || null,
+    // MOS
+    mos: vf.mos || null,
+    mosTitle: vf.mosTitle || null,
+    // Dates
+    serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
+    serviceEndDate: vf.separationDateFormatted || vf.separationDate || null,
+    dateOfBirth: vf.dateOfBirth || null,
+    // Awards
+    awards: vf.awards || [],
+    // Discharge info
+    dischargeType: vf.characterOfService || null,
+    separationCode: vf.separationCode || null,
+    spdCode: vf.separationCode || null,
+    reentryCode: vf.reentryCode || null,
+    narrativeReason: vf.narrativeReason || null,
+    // Combat indicators
+    combatService: vf.combatService || null,
+    foreignService: vf.foreignService || null,
+    foreignServiceLocations: vf.foreignServiceLocations || [],
+    // Metadata
+    method: "vision_florence",
+    visionConfidence: vf.overallConfidence || 0,
+    raw: text.substring(0, 1000),
+  };
+
+  // eslint-disable-next-line no-console
+  console.log(`✅ Vision-parsed DD214:`, {
+    branch: visionData.branch,
+    rank: visionData.rank,
+    mos: visionData.mos,
+    awards: visionData.awards?.length || 0,
+  });
+
+  return visionData;
+};
+
+const parseDD214Document = async (text, filename, visionParsedData) => {
+  // ============================================================
+  // VISION-FIRST PARSING (v1.16.4)
+  // If Florence-2 Vision already parsed this DD214, use that data!
+  // This avoids re-parsing with regex which may fail on vision output.
+  // ============================================================
+  if (visionParsedData?.fields) {
+    return buildVisionParsedServiceRecord(text, visionParsedData);
+  }
+
+  // Standard path: regex-based parsing
+  // Check for multiple DD214s in the document
+  const dd214Segments = splitMultipleDD214s(text);
+
+  if (dd214Segments.length > 1) {
+    // Multiple DD214s found - use intelligent selection based on filename
+    // eslint-disable-next-line no-console
+    console.log(
+      `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
+    );
+
+    // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
+    const bestSegment = selectBestDD214Segment(dd214Segments, filename);
+
+    if (bestSegment) {
+      // Parse just the selected DD214
+      const parsed = await parseServiceRecord(bestSegment.text);
+      parsed.sourcePages = bestSegment.pages;
+      parsed.multiDocument = true;
+      parsed.selectedFromCount = dd214Segments.length;
+      parsed.selectionReason = bestSegment.matchReason || "filename match";
+
+      // Also store info about other DD214s found (but don't parse them in detail)
+      parsed.otherDD214sFound = dd214Segments
+        .filter((seg) => seg !== bestSegment)
+        .map((seg) => ({
+          pages: seg.pages,
+          extractedName: extractQuickName(seg.text),
+        }));
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || "name TBD"})`,
+      );
+      return parsed;
+    }
+
+    // Fallback: if selection fails, parse first one
+    console.warn("⚠️ Selection failed, falling back to first DD214");
+    return await parseServiceRecord(dd214Segments[0].text);
+  }
+
+  // Single DD214
+  return await parseServiceRecord(dd214Segments[0]?.text || text);
+};
+
+const parseRatingDecisionDocument = async (text) => {
+  // Enhanced: Use new VA Document Parser for Decision Letters
+  // eslint-disable-next-line no-console
+  console.log("📋 Using enhanced VA Document Parser for Rating Decision...");
+  const decisionData = parseDecisionLetter(text);
+
+  // If new parser found data, use it; otherwise fall back to legacy parser
+  if (
+    decisionData.success &&
+    (decisionData.conditions.length > 0 || decisionData.combinedRating)
+  ) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || "N/A"}% combined`,
+    );
+
+    // Also extract the "Big Three" for each condition
+    const bigThree = extractBigThree(text);
+
+    return {
+      type: "rating_decision",
+      ...decisionData,
+      bigThree,
+      parserVersion: "v1.16.0-enhanced",
+    };
+  }
+  // eslint-disable-next-line no-console
+  console.log("⚠️ Enhanced parser found limited data, using legacy parser");
+  return await parseRatingDecision(text);
+};
+
+const parseDBQDocument = async (text) => {
+  // Enhanced: Use new VA Document Parser for DBQs
+  // eslint-disable-next-line no-console
+  console.log("🩺 Using enhanced VA Document Parser for DBQ...");
+  const dbqData = parseDBQReport(text);
+
+  if (dbqData.success && dbqData.diagnosis) {
+    // eslint-disable-next-line no-console
+    console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
+    return {
+      type: "dbq",
+      ...dbqData,
+      parserVersion: "v1.16.0-enhanced",
+    };
+  }
+  // eslint-disable-next-line no-console
+  console.log("⚠️ Enhanced parser found limited data, using legacy parser");
+  return await parseDBQ(text);
+};
+
+const buildSegmentedCFileResult = async (text, cFileSummary) => {
+  // Full segmentation for large files
+  const segments = segmentCFile(text, { maxSegments: 100 });
+  // eslint-disable-next-line no-console
+  console.log(
+    `✅ Segmented C-File into ${segments.segments.length} documents`,
+  );
+
+  // Build inventory for the user
+  const inventory = buildDocumentInventory(text);
+
+  // Extract Code Sheet (at END) for current ratings
+  const codeSheet = parseCodeSheet(text);
+
+  // Attempt AI-enhanced analysis for potential claims (if AI available)
+  let aiAnalysis = null;
+  if (isAnyAIAvailable()) {
+    try {
+      aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
+    } catch (aiErr) {
+      console.warn(
+        "⚠️ AI C-File analysis failed, continuing with basic parsing:",
+        aiErr.message,
+      );
+    }
+  }
+
+  return {
+    type: "c_file",
+    summary: cFileSummary,
+    segments: segments.segments.map((s) => ({
+      type: s.type,
+      startPage: s.startPage,
+      endPage: s.endPage,
+      confidence: s.confidence,
+      snippet: s.text.substring(0, 200),
+    })),
+    inventory,
+    codeSheet: codeSheet.success ? codeSheet : null,
+    aiAnalysis, // Include AI-enhanced analysis if available
+    parserVersion: "v1.18.3-enhanced",
+  };
+};
+
+const parseCFileDocument = async (text) => {
+  // Enhanced: Use C-File Segmentation for large claim files
+  // eslint-disable-next-line no-console
+  console.log("📚 Using enhanced C-File Segmentation...");
+
+  // Quick scan to determine file structure
+  const cFileSummary = quickScanCFile(text);
+  // eslint-disable-next-line no-console
+  console.log(
+    `📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(", ")}`,
+  );
+
+  // Check if this is actually a large C-File (multi-document)
+  if (cFileSummary.estimatedDocCount > 5) {
+    return await buildSegmentedCFileResult(text, cFileSummary);
+  }
+
+  // Small file - parse as regular medical record
+  return await parseMedicalRecord(text);
+};
+
 /**
  * Parse document based on its classified type
  * @param {string} text - Raw extracted text
@@ -1039,247 +1589,24 @@ const parseDocumentByType = async (
   filename,
   visionParsedData = null,
 ) => {
-  // eslint-disable-next-line no-unused-vars
-  const strategy = getProcessingStrategy(docType);
-
   switch (docType) {
     case DOCUMENT_TYPES.DD214:
     case DOCUMENT_TYPES.NGB22:
     case DOCUMENT_TYPES.DD256:
     case DOCUMENT_TYPES.DD257:
-      // ============================================================
-      // VISION-FIRST PARSING (v1.16.4)
-      // If Florence-2 Vision already parsed this DD214, use that data!
-      // This avoids re-parsing with regex which may fail on vision output.
-      // ============================================================
-      if (visionParsedData?.fields) {
-        // eslint-disable-next-line no-console
-        console.log("👁️ Using pre-parsed Vision data for DD214");
-        const vf = visionParsedData.fields;
-
-        // Convert vision parser format to parseServiceRecord format
-        const visionData = {
-          type: "service_record",
-          // Name
-          veteranName:
-            vf.name ||
-            `${vf.lastName || ""}, ${vf.firstName || ""} ${vf.middleName || ""}`
-              .replace(/,\s*$/, "")
-              .trim() ||
-            null,
-          lastName: vf.lastName || null,
-          firstName: vf.firstName || null,
-          middleName: vf.middleName || null,
-          // Branch
-          branch: vf.branch || null,
-          component: vf.component || null,
-          // Rank/Grade
-          rank: vf.rank || null,
-          payGrade: vf.payGrade || null,
-          // MOS
-          mos: vf.mos || null,
-          mosTitle: vf.mosTitle || null,
-          // Dates
-          serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
-          serviceEndDate:
-            vf.separationDateFormatted || vf.separationDate || null,
-          dateOfBirth: vf.dateOfBirth || null,
-          // Awards
-          awards: vf.awards || [],
-          // Discharge info
-          dischargeType: vf.characterOfService || null,
-          separationCode: vf.separationCode || null,
-          spdCode: vf.separationCode || null,
-          reentryCode: vf.reentryCode || null,
-          narrativeReason: vf.narrativeReason || null,
-          // Combat indicators
-          combatService: vf.combatService || null,
-          foreignService: vf.foreignService || null,
-          foreignServiceLocations: vf.foreignServiceLocations || [],
-          // Metadata
-          method: "vision_florence",
-          visionConfidence: vf.overallConfidence || 0,
-          raw: text.substring(0, 1000),
-        };
-
-        // eslint-disable-next-line no-console
-        console.log(`✅ Vision-parsed DD214:`, {
-          branch: visionData.branch,
-          rank: visionData.rank,
-          mos: visionData.mos,
-          awards: visionData.awards?.length || 0,
-        });
-
-        return visionData;
-      }
-
-      // Standard path: regex-based parsing
-      // eslint-disable-next-line no-case-declarations
-      // Check for multiple DD214s in the document
-      // eslint-disable-next-line no-case-declarations
-      const dd214Segments = splitMultipleDD214s(text);
-
-      if (dd214Segments.length > 1) {
-        // Multiple DD214s found - use intelligent selection based on filename
-        // eslint-disable-next-line no-console
-        console.log(
-          `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
-        );
-
-        // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
-        const bestSegment = selectBestDD214Segment(dd214Segments, filename);
-
-        if (bestSegment) {
-          // Parse just the selected DD214
-          const parsed = await parseServiceRecord(bestSegment.text);
-          parsed.sourcePages = bestSegment.pages;
-          parsed.multiDocument = true;
-          parsed.selectedFromCount = dd214Segments.length;
-          parsed.selectionReason = bestSegment.matchReason || "filename match";
-
-          // Also store info about other DD214s found (but don't parse them in detail)
-          parsed.otherDD214sFound = dd214Segments
-            .filter((seg) => seg !== bestSegment)
-            .map((seg) => ({
-              pages: seg.pages,
-              extractedName: extractQuickName(seg.text),
-            }));
-
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || "name TBD"})`,
-          );
-          return parsed;
-        }
-
-        // Fallback: if selection fails, parse first one
-        console.warn("⚠️ Selection failed, falling back to first DD214");
-        return await parseServiceRecord(dd214Segments[0].text);
-      }
-
-      // Single DD214
-      return await parseServiceRecord(dd214Segments[0]?.text || text);
+      return await parseDD214Document(text, filename, visionParsedData);
 
     case DOCUMENT_TYPES.RATING_DECISION:
-      // Enhanced: Use new VA Document Parser for Decision Letters
-      // eslint-disable-next-line no-console
-      console.log(
-        "📋 Using enhanced VA Document Parser for Rating Decision...",
-        // eslint-disable-next-line no-case-declarations
-      );
-      // eslint-disable-next-line no-case-declarations
-      const decisionData = parseDecisionLetter(text);
-
-      // If new parser found data, use it; otherwise fall back to legacy parser
-      if (
-        decisionData.success &&
-        (decisionData.conditions.length > 0 || decisionData.combinedRating)
-      ) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || "N/A"}% combined`,
-        );
-
-        // Also extract the "Big Three" for each condition
-        const bigThree = extractBigThree(text);
-
-        return {
-          type: "rating_decision",
-          ...decisionData,
-          bigThree,
-          parserVersion: "v1.16.0-enhanced",
-        };
-      }
-      // eslint-disable-next-line no-console
-      console.log("⚠️ Enhanced parser found limited data, using legacy parser");
-      return await parseRatingDecision(text);
+      return await parseRatingDecisionDocument(text);
 
     case DOCUMENT_TYPES.CLAIM_LETTER:
       return await parseClaimLetter(text);
 
     case DOCUMENT_TYPES.DBQ:
-      // Enhanced: Use new VA Document Parser for DBQs
-      // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-case-declarations
-      // eslint-disable-next-line no-console
-      console.log("🩺 Using enhanced VA Document Parser for DBQ...");
-      // eslint-disable-next-line no-case-declarations
-      const dbqData = parseDBQReport(text);
-
-      if (dbqData.success && dbqData.diagnosis) {
-        // eslint-disable-next-line no-console
-        console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
-        return {
-          type: "dbq",
-          ...dbqData,
-          parserVersion: "v1.16.0-enhanced",
-        };
-      }
-      // eslint-disable-next-line no-console
-      console.log("⚠️ Enhanced parser found limited data, using legacy parser");
-      return await parseDBQ(text);
+      return await parseDBQDocument(text);
 
     case DOCUMENT_TYPES.C_FILE_MEDICAL:
-      // Enhanced: Use C-File Segmentation for large claim files
-      // eslint-disable-next-line no-console
-      console.log("📚 Using enhanced C-File Segmentation...");
-
-      // eslint-disable-next-line no-case-declarations
-      // Quick scan to determine file structure
-      // eslint-disable-next-line no-case-declarations
-      const cFileSummary = quickScanCFile(text);
-      // eslint-disable-next-line no-console
-      console.log(
-        `📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(", ")}`,
-      );
-
-      // Check if this is actually a large C-File (multi-document)
-      if (cFileSummary.estimatedDocCount > 5) {
-        // Full segmentation for large files
-        const segments = segmentCFile(text, { maxSegments: 100 });
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ Segmented C-File into ${segments.segments.length} documents`,
-        );
-
-        // Build inventory for the user
-        const inventory = buildDocumentInventory(text);
-
-        // Extract Code Sheet (at END) for current ratings
-        const codeSheet = parseCodeSheet(text);
-
-        // Attempt AI-enhanced analysis for potential claims (if AI available)
-        let aiAnalysis = null;
-        if (isAnyAIAvailable()) {
-          try {
-            aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
-          } catch (aiErr) {
-            console.warn(
-              "⚠️ AI C-File analysis failed, continuing with basic parsing:",
-              aiErr.message,
-            );
-          }
-        }
-
-        return {
-          type: "c_file",
-          summary: cFileSummary,
-          segments: segments.segments.map((s) => ({
-            type: s.type,
-            startPage: s.startPage,
-            endPage: s.endPage,
-            confidence: s.confidence,
-            snippet: s.text.substring(0, 200),
-          })),
-          inventory,
-          codeSheet: codeSheet.success ? codeSheet : null,
-          aiAnalysis, // Include AI-enhanced analysis if available
-          parserVersion: "v1.18.3-enhanced",
-        };
-      }
-
-      // Small file - parse as regular medical record
-      return await parseMedicalRecord(text);
+      return await parseCFileDocument(text);
 
     case DOCUMENT_TYPES.MEDICAL_RECORD:
       return await parseMedicalRecord(text);
@@ -1382,8 +1709,6 @@ const parseServiceRecord = async (text) => {
 
   try {
     const upperText = text.toUpperCase();
-    // eslint-disable-next-line no-unused-vars
-    const normalizedText = text.replace(/\s+/g, " ").trim();
 
     // ============================================================
     // DD214 FORM STRUCTURE (Critical for parsing):
@@ -1503,7 +1828,7 @@ const parseServiceRecord = async (text) => {
     const INSTRUCTIONAL_PATTERNS = [
       /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi, // Example awards list
       /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi, // "Decorations awarded such as"
-      /EXAMPLE[S]?:/gi,
+      /EXAMPLES?:/gi,
       /\bE\.?G\.?\b/gi,
       /FOR\s+EXAMPLE/gi,
       /INSTRUCTIONS?:/gi,
@@ -1769,7 +2094,7 @@ const parseServiceRecord = async (text) => {
     // === BOX 4a: RANK/GRADE ===
     // Look for rank specifically in Box 4a context
     const rankPatterns = [
-      /4[aA]?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
+      /4a?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
       /GRADE.*?RANK[:\s]+([A-Z]{2,4}\d?)/i,
       // Enlisted ranks
       /\b(SPC|SGT|SSG|SFC|MSG|1SG|SGM|CSM|CPL|PFC|PV2|PVT)\b/i,
@@ -1833,7 +2158,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 4b: Pay Grade - Handle OCR garbling like "Ed" for "E4"
     const payGradePatterns = [
-      /4[bB]?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+      /4b?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
       /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
       /\b([EO]-?\d)\b/,
       // OCR might garble E4 as "Ed" or similar
@@ -1868,7 +2193,7 @@ const parseServiceRecord = async (text) => {
       // DOB abbreviation
       /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
       // Box 5 with compact YYYYMMDD format
-      /5\.\s*[^0-9]*(\d{8})\b/i,
+      /5\.\s*\D*(\d{8})\b/i,
     ];
     for (const pattern of dobPatterns) {
       const match = cleanedText.match(pattern);
@@ -1904,13 +2229,13 @@ const parseServiceRecord = async (text) => {
     // ============================================================
     const entryPatterns = [
       // Explicit Box 12a reference
-      /12[aA]\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /12a\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
       // "DATE ENTERED AD" or "ENTERED ACTIVE DUTY" label
-      /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
       // Box 12a with compact YYYYMMDD
-      /12[aA]\.?[^0-9]*(\d{8})\b/i,
+      /12a\.?\D*(\d{8})\b/i,
       // Table format: "2004 | 06 | 22" or "04 06 22"
-      /12[aA]\.?[^0-9]*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
+      /12a\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
       // Fallback: "DATE ENTERED" followed by date anywhere
       /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     ];
@@ -1952,7 +2277,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 8: Place of Entry
     const placeMatch = cleanedText.match(
-      /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Za-z\s,]+?)(?:\s+9\.|$)/i,
+      /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Z\s,]+?)(?:\s+9\.|$)/i,
     );
     if (placeMatch) {
       data.placeOfEntry = placeMatch[1]?.trim();
@@ -1961,7 +2286,7 @@ const parseServiceRecord = async (text) => {
     // Box 11: Primary MOS/Specialty (mos) - Handle various formats
     // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
     const mosPatterns = [
-      /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Za-z\s-]+?)(?:\s+12\.|$)/i,
+      /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Z\s-]+?)(?:\s+12\.|$)/i,
       // MOS followed by title: "92Y10 UNIT SUPPLY SP" or "92Y UNIT SUPPLY SPECIALIST"
       /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
       // Marine MOS: 0311, 0341, etc.
@@ -1971,7 +2296,7 @@ const parseServiceRecord = async (text) => {
       // Navy Rate: BM2, IT1, etc.
       /\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i,
       // Generic fallback
-      /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Za-z\s-]*)/i,
+      /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Z\s-]*)/i,
       /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
     ];
     for (const pattern of mosPatterns) {
@@ -1998,14 +2323,14 @@ const parseServiceRecord = async (text) => {
     // ============================================================
     const separationPatterns = [
       // Explicit Box 12b reference
-      /12[bB]\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /12b\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
       // "SEPARATION DATE" or "DATE OF SEPARATION" label
-      /SEPARATION\s+DATE[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      /DATE\s+OF\s+(?:SEPARATION|RELEASE)[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /SEPARATION\s+DATE\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /DATE\s+OF\s+(?:SEPARATION|RELEASE)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
       // Box 12b with compact YYYYMMDD
-      /12[bB]\.?[^0-9]*(\d{8})\b/i,
+      /12b\.?\D*(\d{8})\b/i,
       // Table format: "2007 | 06 | 29" or "07 06 29"
-      /12[bB]\.?[^0-9]*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
+      /12b\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
     ];
     for (const pattern of separationPatterns) {
       const match = cleanedText.match(pattern);
@@ -2053,10 +2378,10 @@ const parseServiceRecord = async (text) => {
 
     // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
     const netActivePatterns = [
-      /12[bB]\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
+      /12b\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
       /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
       // Look for pattern: "12b. XX YY ZZ" (years months days)
-      /12[bB]\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
+      /12b\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
     ];
     for (const pattern of netActivePatterns) {
       const match = cleanedText.match(pattern);
@@ -2077,7 +2402,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
     const priorActiveMatch = cleanedText.match(
-      /12[cC]\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+      /12c\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
     );
     if (priorActiveMatch) {
       const years = parseInt(priorActiveMatch[1]) || 0;
@@ -2089,7 +2414,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
     const priorInactiveMatch = cleanedText.match(
-      /12[dD]\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+      /12d\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
     );
     if (priorInactiveMatch) {
       const years = parseInt(priorInactiveMatch[1]) || 0;
@@ -2228,7 +2553,7 @@ const parseServiceRecord = async (text) => {
 
     // Check for deployment info
     const deploymentInfo = text.match(
-      /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s,]+?)(?:\.|\/\/|$)/gi,
+      /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
     );
     if (deploymentInfo) {
       remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
@@ -2249,7 +2574,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 23: Type of Separation
     const sepTypeMatch = text.match(
-      /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Za-z\s]+?)(?:\s+24\.|$)/i,
+      /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Z\s]+?)(?:\s+24\.|$)/i,
     );
     if (sepTypeMatch) {
       data.separationType = sepTypeMatch[1]?.trim();
@@ -2257,8 +2582,8 @@ const parseServiceRecord = async (text) => {
 
     // Box 24: Character of Service - CRITICAL for benefits (dischargeType)
     const characterPatterns = [
-      /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Za-z\s]+?)(?:\s+25\.|$)/i,
-      /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Za-z\s]+)/i,
+      /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+?)(?:\s+25\.|$)/i,
+      /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+)/i,
       /(HONORABLE|GENERAL|OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT)/i,
     ];
     for (const pattern of characterPatterns) {
@@ -2271,7 +2596,7 @@ const parseServiceRecord = async (text) => {
 
     // Box 25: Separation Authority (regulation)
     const authMatch = text.match(
-      /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Za-z0-9\s.-]+?)(?:\s+26\.|$)/i,
+      /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Z0-9\s.-]+?)(?:\s+26\.|$)/i,
     );
     if (authMatch) {
       data.separationAuthority = authMatch[1]?.trim();
@@ -2322,7 +2647,7 @@ const parseServiceRecord = async (text) => {
 
     // Extract deployments from remarks (Box 18) - common locations
     const deploymentPatterns = [
-      /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s]+?)(?:\.|,|$)/gi,
+      /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
       /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
     ];
     for (const pattern of deploymentPatterns) {
@@ -2392,7 +2717,7 @@ const parseRatingDecision = async (text) => {
 
     // Extract conditions with diagnostic codes
     const conditionPattern =
-      /(?:DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4}))?[\s\S]{0,200}?([A-Z][A-Za-z\s,]+?)[\s-]+(\d+)%/gi;
+      /(?:DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4}))?[\s\S]{0,200}?([A-Z][A-Z\s,]+?)[\s-]+(\d+)%/gi;
     let match;
     while ((match = conditionPattern.exec(text)) !== null) {
       const [, diagnosticCode, condition, rating] = match;
@@ -2441,7 +2766,7 @@ const parseClaimLetter = async (text) => {
 
     // Extract contentions (claimed conditions)
     const contentionMatch = text.match(
-      /CONTENTION[S]?\s*[:=]?\s*([\s\S]{0,500}?)(?:\n\n|\r\n\r\n)/i,
+      /CONTENTIONS?\s*[:=]?\s*([\s\S]{0,500}?)(?:\n\n|\r\n\r\n)/i,
     );
     if (contentionMatch) {
       const contentions = contentionMatch[1]
@@ -2484,7 +2809,7 @@ const parseDBQ = async (text) => {
   try {
     // Extract condition name
     const conditionMatch = text.match(
-      /DBQ\s+FOR\s+([A-Z][A-Za-z\s]+?)(?:\n|$)/i,
+      /DBQ\s+FOR\s+([A-Z][A-Z\s]+?)(?:\n|$)/i,
     );
     if (conditionMatch) {
       data.condition = conditionMatch[1].trim();
@@ -2586,7 +2911,7 @@ const parseNexusLetter = async (text) => {
 
     // Extract provider info
     const providerMatch = text.match(
-      /(?:Sincerely|Respectfully),?\s*\n\s*([A-Z][A-Za-z\s.]+,?\s+M\.?D\.?)/i,
+      /(?:Sincerely|Respectfully),?\s*\n\s*([A-Z][A-Z\s.]+,?\s+M\.?D\.?)/i,
     );
     if (providerMatch) {
       data.provider = providerMatch[1].trim();
@@ -2602,32 +2927,12 @@ const parseNexusLetter = async (text) => {
 /**
  * Process multiple documents in batch with parallel processing
  */
-export const processMusterCallBatch = async (files, options = {}) => {
-  const {
-    onProgress,
-    onComplete,
-    signal, // AbortSignal from abort controller
-    maxConcurrent = 3, // Process 3 files at a time to avoid memory issues
-  } = options;
-
-  // Check if already aborted
-  if (signal?.aborted) {
-    throw new DOMException("Processing aborted", "AbortError");
-  }
-
-  // Validation
-  const validation = validateFilesBatch(files);
-  if (validation.errors.length > 0 || validation.valid.length === 0) {
-    return {
-      success: false,
-      validation,
-      results: [],
-    };
-  }
-
-  // Initialize tracking
+const runConcurrentDocumentProcessing = async (
+  validFiles,
+  { signal, onProgress, maxConcurrent },
+) => {
   const results = [];
-  const queue = [...validation.valid];
+  const queue = [...validFiles];
   let completed = 0;
   let processing = 0;
 
@@ -2654,7 +2959,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
       const result = await processSingleDocument(file, (fileProgress) => {
         onProgress?.({
           ...fileProgress,
-          total: validation.valid.length,
+          total: validFiles.length,
           completed,
           processing,
         });
@@ -2666,7 +2971,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 
       onProgress?.({
         state: PROCESSING_STATES.LOADING,
-        total: validation.valid.length,
+        total: validFiles.length,
         completed,
         processing,
       });
@@ -2688,7 +2993,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 
       onProgress?.({
         state: PROCESSING_STATES.ERROR,
-        total: validation.valid.length,
+        total: validFiles.length,
         completed,
         processing,
         filename: file.name,
@@ -2701,8 +3006,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 
   // Start processing with concurrency limit
   const workers = [];
-  for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
-    // eslint-disable-next-line no-constant-condition
+  for (let i = 0; i < Math.min(maxConcurrent, validFiles.length); i++) {
     workers.push(
       (async () => {
         // eslint-disable-next-line no-constant-condition
@@ -2720,6 +3024,59 @@ export const processMusterCallBatch = async (files, options = {}) => {
   }
 
   await Promise.all(workers);
+  return results;
+};
+
+const mergeClassificationIntoResults = (results, classified) => {
+  results.forEach((result, index) => {
+    const classifiedDoc = classified.grouped[
+      Object.keys(classified.grouped).find((key) =>
+        classified.grouped[key].some((d) => d.index === index),
+      )
+    ]?.find((d) => d.index === index);
+
+    if (classifiedDoc) {
+      result.classification = classifiedDoc.classification;
+    }
+  });
+};
+
+const buildBatchSummary = (validation, results) => ({
+  totalFiles: validation.valid.length,
+  totalSize: validation.totalSize,
+  successful: results.filter((r) => r.status === "complete").length,
+  failed: results.filter((r) => r.status === "error").length,
+  processingTime: results.reduce((sum, r) => sum + r.processingTime, 0),
+});
+
+export const processMusterCallBatch = async (files, options = {}) => {
+  const {
+    onProgress,
+    onComplete,
+    signal, // AbortSignal from abort controller
+    maxConcurrent = 3, // Process 3 files at a time to avoid memory issues
+  } = options;
+
+  // Check if already aborted
+  if (signal?.aborted) {
+    throw new DOMException("Processing aborted", "AbortError");
+  }
+
+  // Validation
+  const validation = validateFilesBatch(files);
+  if (validation.errors.length > 0 || validation.valid.length === 0) {
+    return {
+      success: false,
+      validation,
+      results: [],
+    };
+  }
+
+  const results = await runConcurrentDocumentProcessing(validation.valid, {
+    signal,
+    onProgress,
+    maxConcurrent,
+  });
 
   // Classify and group results
   onProgress?.({
@@ -2732,18 +3089,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
     results.map((r) => ({ text: r.text, filename: r.filename })),
   );
 
-  // Merge classified data back into results
-  results.forEach((result, index) => {
-    const classifiedDoc = classified.grouped[
-      Object.keys(classified.grouped).find((key) =>
-        classified.grouped[key].some((d) => d.index === index),
-      )
-    ]?.find((d) => d.index === index);
-
-    if (classifiedDoc) {
-      result.classification = classifiedDoc.classification;
-    }
-  });
+  mergeClassificationIntoResults(results, classified);
 
   onComplete?.({
     results,
@@ -2756,14 +3102,39 @@ export const processMusterCallBatch = async (files, options = {}) => {
     validation,
     results,
     classified,
-    summary: {
-      totalFiles: validation.valid.length,
-      totalSize: validation.totalSize,
-      successful: results.filter((r) => r.status === "complete").length,
-      failed: results.filter((r) => r.status === "error").length,
-      processingTime: results.reduce((sum, r) => sum + r.processingTime, 0),
-    },
+    summary: buildBatchSummary(validation, results),
   };
+};
+
+const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
+  // eslint-disable-next-line no-console
+  console.log("📝 Found service record, extracting data:", extractedData);
+  if (extractedData.branch) updates.branch = extractedData.branch;
+  if (extractedData.entryDate)
+    updates.serviceStartDate = extractedData.entryDate;
+  if (extractedData.separationDate)
+    updates.serviceEndDate = extractedData.separationDate;
+  if (extractedData.mos) updates.mos = extractedData.mos;
+  if (extractedData.mosTitle) updates.mosTitle = extractedData.mosTitle;
+  if (extractedData.characterOfService)
+    updates.characterOfService = extractedData.characterOfService;
+  if (extractedData.separationType)
+    updates.separationType = extractedData.separationType;
+};
+
+const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
+  // eslint-disable-next-line no-console
+  console.log("📊 Found rating decision, extracting data:", extractedData);
+  if (extractedData.combinedRating)
+    updates.currentCombinedRating = extractedData.combinedRating;
+  if (extractedData.effectiveDate)
+    updates.effectiveDate = extractedData.effectiveDate;
+};
+
+const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
+  // eslint-disable-next-line no-console
+  console.log("📬 Found claim letter, extracting data:", extractedData);
+  if (extractedData.claimNumber) updates.claimNumber = extractedData.claimNumber;
 };
 
 /**
@@ -2803,51 +3174,17 @@ export const autoPopulateProfile = async (processedResults) => {
 
     switch (type) {
       case "service_record":
-        // Populate from DD214
-        // eslint-disable-next-line no-console
-        console.log(
-          "📝 Found service record, extracting data:",
-          result.extractedData,
-        );
-        if (result.extractedData.branch)
-          updates.branch = result.extractedData.branch;
-        if (result.extractedData.entryDate)
-          updates.serviceStartDate = result.extractedData.entryDate;
-        if (result.extractedData.separationDate)
-          updates.serviceEndDate = result.extractedData.separationDate;
-        if (result.extractedData.mos) updates.mos = result.extractedData.mos;
-        if (result.extractedData.mosTitle)
-          updates.mosTitle = result.extractedData.mosTitle;
-        if (result.extractedData.characterOfService)
-          updates.characterOfService = result.extractedData.characterOfService;
-        if (result.extractedData.separationType)
-          updates.separationType = result.extractedData.separationType;
+        applyServiceRecordToProfileUpdates(updates, result.extractedData);
         updateCount++;
         break;
 
       case "rating_decision":
-        // Populate from rating decision
-        // eslint-disable-next-line no-console
-        console.log(
-          "📊 Found rating decision, extracting data:",
-          result.extractedData,
-        );
-        if (result.extractedData.combinedRating)
-          updates.currentCombinedRating = result.extractedData.combinedRating;
-        if (result.extractedData.effectiveDate)
-          updates.effectiveDate = result.extractedData.effectiveDate;
+        applyRatingDecisionToProfileUpdates(updates, result.extractedData);
         updateCount++;
         break;
 
       case "claim_letter":
-        // Populate from claim letter
-        // eslint-disable-next-line no-console
-        console.log(
-          "📬 Found claim letter, extracting data:",
-          result.extractedData,
-        );
-        if (result.extractedData.claimNumber)
-          updates.claimNumber = result.extractedData.claimNumber;
+        applyClaimLetterToProfileUpdates(updates, result.extractedData);
         updateCount++;
         break;
 
@@ -2872,6 +3209,76 @@ export const autoPopulateProfile = async (processedResults) => {
   // eslint-disable-next-line no-console
   console.log("⚠️ No profile updates made");
   return { success: false, updates: {}, count: 0 };
+};
+
+const applyServiceRecordToBriefing = (briefingData, serviceData) => {
+  // eslint-disable-next-line no-console
+  console.log("📝 Extracting service record:", serviceData);
+
+  // Handle array-structured data (indexed 0, 1, 2, etc.)
+  if (serviceData[0]) {
+    // Data is in numbered keys
+    Object.keys(serviceData).forEach((key) => {
+      if (!isNaN(key) && serviceData[key]) {
+        const entry = serviceData[key];
+        if (entry.branch) briefingData.branch = entry.branch;
+        if (entry.entryDate) briefingData.serviceStart = entry.entryDate;
+        if (entry.separationDate)
+          briefingData.serviceEnd = entry.separationDate;
+        if (entry.mos) briefingData.mos = entry.mos;
+        if (entry.mosTitle) briefingData.mosTitle = entry.mosTitle;
+        if (entry.characterOfService)
+          briefingData.characterOfService = entry.characterOfService;
+      }
+    });
+  } else {
+    // Direct field structure
+    if (serviceData.branch) briefingData.branch = serviceData.branch;
+    if (serviceData.entryDate)
+      briefingData.serviceStart = serviceData.entryDate;
+    if (serviceData.separationDate)
+      briefingData.serviceEnd = serviceData.separationDate;
+    if (serviceData.mos) briefingData.mos = serviceData.mos;
+    if (serviceData.mosTitle) briefingData.mosTitle = serviceData.mosTitle;
+    if (serviceData.characterOfService)
+      briefingData.characterOfService = serviceData.characterOfService;
+  }
+};
+
+const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
+  // eslint-disable-next-line no-console
+  console.log("📊 Extracting rating decision:", extractedData);
+  if (extractedData.combinedRating) {
+    briefingData.currentCombinedRating = extractedData.combinedRating;
+  }
+  if (extractedData.conditions && Array.isArray(extractedData.conditions)) {
+    extractedData.conditions.forEach((condition) => {
+      // Check if condition already exists
+      const exists = briefingData.conditions.find(
+        (c) => c.name?.toLowerCase() === condition.name?.toLowerCase(),
+      );
+      if (!exists && condition.name) {
+        briefingData.conditions.push({
+          name: condition.name,
+          rating: condition.rating || null,
+          diagnosticCode: condition.diagnosticCode || null,
+          effectiveDate:
+            condition.effectiveDate || extractedData.effectiveDate || null,
+        });
+      }
+    });
+  }
+};
+
+const applyClaimLetterToBriefing = (briefingData, extractedData) => {
+  // eslint-disable-next-line no-console
+  console.log("📬 Extracting claim letter:", extractedData);
+  if (
+    extractedData.claimNumber &&
+    !briefingData.claimNumbers.includes(extractedData.claimNumber)
+  ) {
+    briefingData.claimNumbers.push(extractedData.claimNumber);
+  }
 };
 
 /**
@@ -2924,85 +3331,16 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     briefingData.documentTypes[type]++;
 
     switch (type) {
-      // eslint-disable-next-line no-case-declarations
       case "service_record":
-        // Extract from DD214 - data might be in array format
-        // eslint-disable-next-line no-case-declarations
-        const serviceData = result.extractedData;
-        // eslint-disable-next-line no-console
-        console.log("📝 Extracting service record:", serviceData);
-
-        // Handle array-structured data (indexed 0, 1, 2, etc.)
-        if (serviceData[0]) {
-          // Data is in numbered keys
-          Object.keys(serviceData).forEach((key) => {
-            if (!isNaN(key) && serviceData[key]) {
-              const entry = serviceData[key];
-              if (entry.branch) briefingData.branch = entry.branch;
-              if (entry.entryDate) briefingData.serviceStart = entry.entryDate;
-              if (entry.separationDate)
-                briefingData.serviceEnd = entry.separationDate;
-              if (entry.mos) briefingData.mos = entry.mos;
-              if (entry.mosTitle) briefingData.mosTitle = entry.mosTitle;
-              if (entry.characterOfService)
-                briefingData.characterOfService = entry.characterOfService;
-            }
-          });
-        } else {
-          // Direct field structure
-          if (serviceData.branch) briefingData.branch = serviceData.branch;
-          if (serviceData.entryDate)
-            briefingData.serviceStart = serviceData.entryDate;
-          if (serviceData.separationDate)
-            briefingData.serviceEnd = serviceData.separationDate;
-          if (serviceData.mos) briefingData.mos = serviceData.mos;
-          if (serviceData.mosTitle)
-            briefingData.mosTitle = serviceData.mosTitle;
-          if (serviceData.characterOfService)
-            briefingData.characterOfService = serviceData.characterOfService;
-        }
+        applyServiceRecordToBriefing(briefingData, result.extractedData);
         break;
 
       case "rating_decision":
-        // eslint-disable-next-line no-console
-        console.log("📊 Extracting rating decision:", result.extractedData);
-        if (result.extractedData.combinedRating) {
-          briefingData.currentCombinedRating =
-            result.extractedData.combinedRating;
-        }
-        if (
-          result.extractedData.conditions &&
-          Array.isArray(result.extractedData.conditions)
-        ) {
-          result.extractedData.conditions.forEach((condition) => {
-            // Check if condition already exists
-            const exists = briefingData.conditions.find(
-              (c) => c.name?.toLowerCase() === condition.name?.toLowerCase(),
-            );
-            if (!exists && condition.name) {
-              briefingData.conditions.push({
-                name: condition.name,
-                rating: condition.rating || null,
-                diagnosticCode: condition.diagnosticCode || null,
-                effectiveDate:
-                  condition.effectiveDate ||
-                  result.extractedData.effectiveDate ||
-                  null,
-              });
-            }
-          });
-        }
+        applyRatingDecisionToBriefing(briefingData, result.extractedData);
         break;
 
       case "claim_letter":
-        // eslint-disable-next-line no-console
-        console.log("📬 Extracting claim letter:", result.extractedData);
-        if (
-          result.extractedData.claimNumber &&
-          !briefingData.claimNumbers.includes(result.extractedData.claimNumber)
-        ) {
-          briefingData.claimNumbers.push(result.extractedData.claimNumber);
-        }
+        applyClaimLetterToBriefing(briefingData, result.extractedData);
         break;
     }
   }
@@ -3019,6 +3357,61 @@ export const extractIntelligenceBriefingData = (processedResults) => {
  * This runs automatically if we have both a Decision Letter and medical evidence
  * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
  */
+const analyzeDecisionLetterGaps = (decision, evidenceDocs, allGaps) => {
+  // eslint-disable-next-line no-console
+  console.log(`📋 Analyzing Decision: ${decision.filename}`);
+
+  // Combine all non-decision text as the "C-File equivalent"
+  const combinedEvidence = evidenceDocs
+    .filter((d) => d.filename !== decision.filename)
+    .map((d) => d.text)
+    .join("\n\n--- DOCUMENT BREAK ---\n\n");
+
+  try {
+    // Use quickGapCheck for faster analysis
+    const quickGaps = quickGapCheck(decision.text, {
+      documentTypes: evidenceDocs.map((d) => d.classification?.type),
+      estimatedDocCount: evidenceDocs.length,
+    });
+
+    if (quickGaps.gaps && quickGaps.gaps.length > 0) {
+      allGaps.push({
+        decisionLetter: decision.filename,
+        gaps: quickGaps.gaps,
+        severity: quickGaps.overallSeverity,
+        recommendations: quickGaps.recommendations,
+      });
+    }
+
+    // If we have substantial evidence, do full gap analysis
+    if (combinedEvidence.length > 5000 && combinedEvidence.length < 500000) {
+      const fullAnalysis = findEvidenceGaps(decision.text, combinedEvidence);
+
+      if (fullAnalysis.gapsFound && fullAnalysis.gapsFound.length > 0) {
+        // Merge with quick check results
+        const existingEntry = allGaps.find(
+          (g) => g.decisionLetter === decision.filename,
+        );
+        if (existingEntry) {
+          existingEntry.fullAnalysis = fullAnalysis;
+          existingEntry.dtaViolations = fullAnalysis.dtaViolations;
+        } else {
+          allGaps.push({
+            decisionLetter: decision.filename,
+            fullAnalysis,
+            dtaViolations: fullAnalysis.dtaViolations,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(
+      `⚠️ Gap analysis error for ${decision.filename}:`,
+      err.message,
+    );
+  }
+};
+
 export const analyzeEvidenceGaps = (processedResults) => {
   // eslint-disable-next-line no-console
   console.log("🔍 Analyzing evidence gaps across processed documents...");
@@ -3063,58 +3456,7 @@ export const analyzeEvidenceGaps = (processedResults) => {
 
   // For each decision letter, check against all other evidence
   for (const decision of decisionLetters) {
-    // eslint-disable-next-line no-console
-    console.log(`📋 Analyzing Decision: ${decision.filename}`);
-
-    // Combine all non-decision text as the "C-File equivalent"
-    const combinedEvidence = evidenceDocs
-      .filter((d) => d.filename !== decision.filename)
-      .map((d) => d.text)
-      .join("\n\n--- DOCUMENT BREAK ---\n\n");
-
-    try {
-      // Use quickGapCheck for faster analysis
-      const quickGaps = quickGapCheck(decision.text, {
-        documentTypes: evidenceDocs.map((d) => d.classification?.type),
-        estimatedDocCount: evidenceDocs.length,
-      });
-
-      if (quickGaps.gaps && quickGaps.gaps.length > 0) {
-        allGaps.push({
-          decisionLetter: decision.filename,
-          gaps: quickGaps.gaps,
-          severity: quickGaps.overallSeverity,
-          recommendations: quickGaps.recommendations,
-        });
-      }
-
-      // If we have substantial evidence, do full gap analysis
-      if (combinedEvidence.length > 5000 && combinedEvidence.length < 500000) {
-        const fullAnalysis = findEvidenceGaps(decision.text, combinedEvidence);
-
-        if (fullAnalysis.gapsFound && fullAnalysis.gapsFound.length > 0) {
-          // Merge with quick check results
-          const existingEntry = allGaps.find(
-            (g) => g.decisionLetter === decision.filename,
-          );
-          if (existingEntry) {
-            existingEntry.fullAnalysis = fullAnalysis;
-            existingEntry.dtaViolations = fullAnalysis.dtaViolations;
-          } else {
-            allGaps.push({
-              decisionLetter: decision.filename,
-              fullAnalysis,
-              dtaViolations: fullAnalysis.dtaViolations,
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.warn(
-        `⚠️ Gap analysis error for ${decision.filename}:`,
-        err.message,
-      );
-    }
+    analyzeDecisionLetterGaps(decision, evidenceDocs, allGaps);
   }
 
   const result = {
@@ -3133,6 +3475,84 @@ export const analyzeEvidenceGaps = (processedResults) => {
     `🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`,
   );
   return result;
+};
+
+// Summarize extracted data to avoid token overflow
+const summarizeExtractedData = (data) => {
+  if (!data) return "No data extracted";
+  const summary = [];
+  if (data.name) summary.push(`Name: ${data.name}`);
+  if (data.serviceNumber) summary.push(`Service #: ${data.serviceNumber}`);
+  if (data.branch) summary.push(`Branch: ${data.branch}`);
+  if (data.entryDate) summary.push(`Entry: ${data.entryDate}`);
+  if (data.dischargeDate) summary.push(`Discharge: ${data.dischargeDate}`);
+  if (data.mos) summary.push(`MOS: ${data.mos}`);
+  if (data.rank) summary.push(`Rank: ${data.rank}`);
+  if (data.conditions && Array.isArray(data.conditions)) {
+    summary.push(
+      `Conditions (${data.conditions.length}): ${data.conditions
+        .slice(0, 10)
+        .map((c) => c.name || c)
+        .join(", ")}`,
+    );
+  }
+  if (data.rating) summary.push(`Rating: ${data.rating}%`);
+  if (data.effectiveDate) summary.push(`Effective: ${data.effectiveDate}`);
+  return summary.length > 0 ? summary.join(", ") : "Limited data";
+};
+
+const groupProcessedDocuments = (processedResults) => ({
+  serviceRecords: processedResults.filter(
+    (r) =>
+      r.classification?.category === "service_record" &&
+      r.status === "complete",
+  ),
+  ratingDocs: processedResults.filter(
+    (r) => r.classification?.category === "rating" && r.status === "complete",
+  ),
+  medicalDocs: processedResults.filter(
+    (r) => r.classification?.category === "medical" && r.status === "complete",
+  ),
+});
+
+// A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
+// whole document-derived block in a spotlighted section so an injected
+// instruction inside a filename/summary is treated as data, not a command.
+const buildMusterCallPrompt = (serviceRecords, ratingDocs, medicalDocs) => {
+  const serviceRecordLines = serviceRecords
+    .map((r) => `- ${r.filename}: ${summarizeExtractedData(r.extractedData)}`)
+    .join("\n");
+  const ratingDocLines = ratingDocs
+    .map((r) => `- ${r.filename}: ${summarizeExtractedData(r.extractedData)}`)
+    .join("\n");
+  const medicalDocLines = medicalDocs
+    .map((r) => `- ${r.filename}: ${r.classification.type}`)
+    .join("\n");
+
+  const documentEvidence = untrustedSection(
+    "UPLOADED DOCUMENT EVIDENCE",
+    `SERVICE RECORDS (${serviceRecords.length} documents):
+${serviceRecordLines}
+
+RATING DECISIONS (${ratingDocs.length} documents):
+${ratingDocLines}
+
+MEDICAL RECORDS (${medicalDocs.length} documents):
+${medicalDocLines}`,
+  );
+
+  return `Analyze this veteran's complete file and provide comprehensive recommendations:
+
+${documentEvidence}
+
+Provide:
+1. **Service Connection Opportunities**: What conditions should be claimed based on service records?
+2. **Rating Increase Opportunities**: Current ratings that may qualify for increase
+3. **Secondary Conditions**: Potential secondary conditions based on service-connected disabilities
+4. **Missing Evidence**: What additional evidence would strengthen claims?
+5. **Next Steps**: Prioritized action plan
+
+Format as markdown with clear sections.`;
 };
 
 /**
@@ -3155,19 +3575,8 @@ export const generateMusterCallReport = async (
     };
   }
 
-  const serviceRecords = processedResults.filter(
-    (r) =>
-      r.classification?.category === "service_record" &&
-      r.status === "complete",
-  );
-
-  const ratingDocs = processedResults.filter(
-    (r) => r.classification?.category === "rating" && r.status === "complete",
-  );
-
-  const medicalDocs = processedResults.filter(
-    (r) => r.classification?.category === "medical" && r.status === "complete",
-  );
+  const { serviceRecords, ratingDocs, medicalDocs } =
+    groupProcessedDocuments(processedResults);
 
   // eslint-disable-next-line no-console
   console.log(
@@ -3187,57 +3596,7 @@ export const generateMusterCallReport = async (
     };
   }
 
-  // Summarize extracted data to avoid token overflow
-  const summarizeData = (data) => {
-    if (!data) return "No data extracted";
-    const summary = [];
-    if (data.name) summary.push(`Name: ${data.name}`);
-    if (data.serviceNumber) summary.push(`Service #: ${data.serviceNumber}`);
-    if (data.branch) summary.push(`Branch: ${data.branch}`);
-    if (data.entryDate) summary.push(`Entry: ${data.entryDate}`);
-    if (data.dischargeDate) summary.push(`Discharge: ${data.dischargeDate}`);
-    if (data.mos) summary.push(`MOS: ${data.mos}`);
-    if (data.rank) summary.push(`Rank: ${data.rank}`);
-    if (data.conditions && Array.isArray(data.conditions)) {
-      summary.push(
-        `Conditions (${data.conditions.length}): ${data.conditions
-          .slice(0, 10)
-          .map((c) => c.name || c)
-          .join(", ")}`,
-      );
-    }
-    if (data.rating) summary.push(`Rating: ${data.rating}%`);
-    if (data.effectiveDate) summary.push(`Effective: ${data.effectiveDate}`);
-    return summary.length > 0 ? summary.join(", ") : "Limited data";
-  };
-
-  // A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
-  // whole document-derived block in a spotlighted section so an injected
-  // instruction inside a filename/summary is treated as data, not a command.
-  const documentEvidence = untrustedSection(
-    "UPLOADED DOCUMENT EVIDENCE",
-    `SERVICE RECORDS (${serviceRecords.length} documents):
-${serviceRecords.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
-
-RATING DECISIONS (${ratingDocs.length} documents):
-${ratingDocs.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
-
-MEDICAL RECORDS (${medicalDocs.length} documents):
-${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}`,
-  );
-
-  const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
-
-${documentEvidence}
-
-Provide:
-1. **Service Connection Opportunities**: What conditions should be claimed based on service records?
-2. **Rating Increase Opportunities**: Current ratings that may qualify for increase
-3. **Secondary Conditions**: Potential secondary conditions based on service-connected disabilities
-4. **Missing Evidence**: What additional evidence would strengthen claims?
-5. **Next Steps**: Prioritized action plan
-
-Format as markdown with clear sections.`;
+  const prompt = buildMusterCallPrompt(serviceRecords, ratingDocs, medicalDocs);
 
   // eslint-disable-next-line no-console
   console.log(`📤 Sending prompt to AI (${prompt.length} chars)`);

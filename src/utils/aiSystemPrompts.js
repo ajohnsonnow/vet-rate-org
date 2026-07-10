@@ -652,96 +652,204 @@ Return ONLY valid JSON with this structure:
 RETURN ONLY THE JSON OBJECT. No explanations, no markdown code fences.`;
 
 /**
+ * Load saved claims from localStorage.
+ */
+function loadSavedClaims() {
+  const claimsJson = localStorage.getItem("vet_rate_saved_claims");
+  if (!claimsJson) return { claims: [], hasData: false };
+  try {
+    const claims = JSON.parse(claimsJson) || [];
+    return { claims, hasData: claims.length > 0 };
+  } catch (e) {
+    console.warn("Error parsing saved claims:", e);
+    return { claims: [], hasData: false };
+  }
+}
+
+/**
+ * Load saved conditions/ratings from localStorage (from calculator or other sources).
+ */
+function loadSavedConditions() {
+  const conditionsJson =
+    localStorage.getItem("vet_rate_conditions") ||
+    localStorage.getItem("vet_rate_my_ratings");
+  if (!conditionsJson) return { conditions: [], hasData: false };
+  try {
+    const parsed = JSON.parse(conditionsJson);
+    const conditions = Array.isArray(parsed) ? parsed : [];
+    return { conditions, hasData: conditions.length > 0 };
+  } catch (e) {
+    console.warn("Error parsing saved conditions:", e);
+    return { conditions: [], hasData: false };
+  }
+}
+
+/**
+ * Load the veteran's profile from localStorage.
+ */
+function loadVeteranProfile() {
+  const profileJson = localStorage.getItem("vet_rate_veteran_profile");
+  if (!profileJson) return { veteranProfile: null, hasData: false };
+  try {
+    const veteranProfile = JSON.parse(profileJson);
+    return { veteranProfile, hasData: !!veteranProfile };
+  } catch (e) {
+    console.warn("Error parsing veteran profile:", e);
+    return { veteranProfile: null, hasData: false };
+  }
+}
+
+/**
+ * Load service history from localStorage.
+ */
+function loadServiceHistory() {
+  const historyJson = localStorage.getItem("vet_rate_service_history");
+  if (!historyJson) return { serviceHistory: null, hasData: false };
+  try {
+    const serviceHistory = JSON.parse(historyJson);
+    return { serviceHistory, hasData: !!serviceHistory };
+  } catch (e) {
+    console.warn("Error parsing service history:", e);
+    return { serviceHistory: null, hasData: false };
+  }
+}
+
+/**
+ * Load saved statements from localStorage.
+ */
+function loadSavedStatements() {
+  const statementsJson = localStorage.getItem("vet_rate_statements");
+  if (!statementsJson) return { statements: {}, hasData: false };
+  try {
+    const statements = JSON.parse(statementsJson) || {};
+    return { statements, hasData: Object.keys(statements).length > 0 };
+  } catch (e) {
+    console.warn("Error parsing statements:", e);
+    return { statements: {}, hasData: false };
+  }
+}
+
+/**
+ * Load saved forms from localStorage.
+ */
+function loadSavedForms() {
+  const formsJson = localStorage.getItem("vet_rate_saved_forms");
+  if (!formsJson) return { savedForms: [] };
+  try {
+    return { savedForms: JSON.parse(formsJson) || [] };
+  } catch (e) {
+    console.warn("Error parsing saved forms:", e);
+    return { savedForms: [] };
+  }
+}
+
+/**
  * Gather veteran's data from localStorage (My Packet system)
  * This provides context about the veteran's claims, conditions, and service history
  */
 export function gatherVeteranContext() {
   try {
-    const context = {
-      hasData: false,
-      claims: [],
-      conditions: [],
-      serviceHistory: null,
-      veteranProfile: null,
-      statements: {},
-      savedForms: [],
-      myRatings: [],
+    const claimsResult = loadSavedClaims();
+    const conditionsResult = loadSavedConditions();
+    const profileResult = loadVeteranProfile();
+    const historyResult = loadServiceHistory();
+    const statementsResult = loadSavedStatements();
+    const formsResult = loadSavedForms();
+
+    const hasData =
+      claimsResult.hasData ||
+      conditionsResult.hasData ||
+      profileResult.hasData ||
+      historyResult.hasData ||
+      statementsResult.hasData;
+
+    return {
+      hasData,
+      claims: claimsResult.claims,
+      conditions: conditionsResult.conditions,
+      myRatings: conditionsResult.conditions,
+      serviceHistory: historyResult.serviceHistory,
+      veteranProfile: profileResult.veteranProfile,
+      statements: statementsResult.statements,
+      savedForms: formsResult.savedForms,
     };
-
-    // Load saved claims
-    const claimsJson = localStorage.getItem("vet_rate_saved_claims");
-    if (claimsJson) {
-      try {
-        context.claims = JSON.parse(claimsJson) || [];
-        context.hasData = context.claims.length > 0;
-      } catch (e) {
-        /* ignore parse errors */
-      }
-    }
-
-    // Load saved conditions (from calculator or other sources)
-    const conditionsJson =
-      localStorage.getItem("vet_rate_conditions") ||
-      localStorage.getItem("vet_rate_my_ratings");
-    if (conditionsJson) {
-      try {
-        const parsed = JSON.parse(conditionsJson);
-        context.conditions = Array.isArray(parsed) ? parsed : [];
-        context.myRatings = context.conditions;
-        if (context.conditions.length > 0) context.hasData = true;
-      } catch (e) {
-        /* ignore */
-      }
-    }
-
-    // Load veteran profile
-    const profileJson = localStorage.getItem("vet_rate_veteran_profile");
-    if (profileJson) {
-      try {
-        context.veteranProfile = JSON.parse(profileJson);
-        if (context.veteranProfile) context.hasData = true;
-      } catch (e) {
-        /* ignore */
-      }
-    }
-
-    // Load service history
-    const historyJson = localStorage.getItem("vet_rate_service_history");
-    if (historyJson) {
-      try {
-        context.serviceHistory = JSON.parse(historyJson);
-        if (context.serviceHistory) context.hasData = true;
-      } catch (e) {
-        /* ignore */
-      }
-    }
-
-    // Load statements
-    const statementsJson = localStorage.getItem("vet_rate_statements");
-    if (statementsJson) {
-      try {
-        context.statements = JSON.parse(statementsJson) || {};
-        if (Object.keys(context.statements).length > 0) context.hasData = true;
-      } catch (e) {
-        /* ignore */
-      }
-    }
-
-    // Load saved forms
-    const formsJson = localStorage.getItem("vet_rate_saved_forms");
-    if (formsJson) {
-      try {
-        context.savedForms = JSON.parse(formsJson) || [];
-      } catch (e) {
-        /* ignore */
-      }
-    }
-
-    return context;
   } catch (e) {
     console.warn("Error gathering veteran context:", e);
     return { hasData: false };
   }
+}
+
+/**
+ * Format the SERVICE HISTORY section of the veteran's data prompt.
+ */
+function formatServiceHistorySection(serviceHistory) {
+  if (!serviceHistory) return "";
+  const sh = serviceHistory;
+  let section = `\nSERVICE HISTORY:\n`;
+  if (sh.branch) section += `- Branch: ${sh.branch}\n`;
+  if (sh.mos) section += `- MOS/Rating: ${sh.mos}\n`;
+  if (sh.entryDate) section += `- Entry Date: ${sh.entryDate}\n`;
+  if (sh.separationDate)
+    section += `- Separation Date: ${sh.separationDate}\n`;
+  if (sh.yearsService)
+    section += `- Years of Service: ${sh.yearsService}\n`;
+  if (sh.combatService?.hasVerifiedCombat)
+    section += `- Combat Service: VERIFIED\n`;
+  return section;
+}
+
+/**
+ * Format the VETERAN PROFILE section of the veteran's data prompt.
+ */
+function formatVeteranProfileSection(veteranProfile) {
+  if (!veteranProfile) return "";
+  const vp = veteranProfile;
+  let section = `\nVETERAN PROFILE:\n`;
+  if (vp.currentRating)
+    section += `- Current Combined Rating: ${vp.currentRating}%\n`;
+  if (vp.targetRating) section += `- Target Rating: ${vp.targetRating}%\n`;
+  if (vp.age) section += `- Age: ${vp.age}\n`;
+  if (vp.state) section += `- State: ${vp.state}\n`;
+  return section;
+}
+
+/**
+ * Format the CURRENT SERVICE-CONNECTED CONDITIONS section.
+ */
+function formatConditionsSection(conditions) {
+  if (!conditions || conditions.length === 0) return "";
+  let section = `\nCURRENT SERVICE-CONNECTED CONDITIONS:\n`;
+  conditions.forEach((c, i) => {
+    section += `${i + 1}. ${c.name || c.condition || "Unknown"} - ${c.rating || 0}%`;
+    if (c.diagnosticCode || c.code)
+      section += ` (DC ${c.diagnosticCode || c.code})`;
+    if (c.bilateral) section += ` [BILATERAL]`;
+    section += `\n`;
+  });
+  return section;
+}
+
+/**
+ * Format the PENDING/SAVED CLAIMS section.
+ */
+function formatClaimsSection(claims) {
+  if (!claims || claims.length === 0) return "";
+  let section = `\nPENDING/SAVED CLAIMS:\n`;
+  claims.forEach((claim, i) => {
+    section += `${i + 1}. ${claim.condition || claim.name || "Unknown Condition"}`;
+    if (claim.claimType) section += ` - Type: ${claim.claimType}`;
+    if (claim.status) section += ` - Status: ${claim.status}`;
+    section += `\n`;
+  });
+  return section;
+}
+
+/**
+ * Format the STATEMENTS PREPARED section.
+ */
+function formatStatementsSection(statements) {
+  if (!statements || Object.keys(statements).length === 0) return "";
+  return `\nSTATEMENTS PREPARED: ${Object.keys(statements).length} statement(s) drafted\n`;
 }
 
 /**
@@ -754,63 +862,11 @@ function buildVeteranDataPrompt(veteranContext) {
 
   let prompt = `\n\n=== VETERAN'S LOADED DATA ===\n`;
   prompt += `The following data has been saved by this veteran in their My Packet:\n`;
-
-  // Service History
-  if (veteranContext.serviceHistory) {
-    prompt += `\nSERVICE HISTORY:\n`;
-    const sh = veteranContext.serviceHistory;
-    if (sh.branch) prompt += `- Branch: ${sh.branch}\n`;
-    if (sh.mos) prompt += `- MOS/Rating: ${sh.mos}\n`;
-    if (sh.entryDate) prompt += `- Entry Date: ${sh.entryDate}\n`;
-    if (sh.separationDate)
-      prompt += `- Separation Date: ${sh.separationDate}\n`;
-    if (sh.yearsService) prompt += `- Years of Service: ${sh.yearsService}\n`;
-    if (sh.combatService?.hasVerifiedCombat)
-      prompt += `- Combat Service: VERIFIED\n`;
-  }
-
-  // Veteran Profile
-  if (veteranContext.veteranProfile) {
-    const vp = veteranContext.veteranProfile;
-    prompt += `\nVETERAN PROFILE:\n`;
-    if (vp.currentRating)
-      prompt += `- Current Combined Rating: ${vp.currentRating}%\n`;
-    if (vp.targetRating) prompt += `- Target Rating: ${vp.targetRating}%\n`;
-    if (vp.age) prompt += `- Age: ${vp.age}\n`;
-    if (vp.state) prompt += `- State: ${vp.state}\n`;
-  }
-
-  // Current Conditions/Ratings
-  if (veteranContext.conditions && veteranContext.conditions.length > 0) {
-    prompt += `\nCURRENT SERVICE-CONNECTED CONDITIONS:\n`;
-    veteranContext.conditions.forEach((c, i) => {
-      prompt += `${i + 1}. ${c.name || c.condition || "Unknown"} - ${c.rating || 0}%`;
-      if (c.diagnosticCode || c.code)
-        prompt += ` (DC ${c.diagnosticCode || c.code})`;
-      if (c.bilateral) prompt += ` [BILATERAL]`;
-      prompt += `\n`;
-    });
-  }
-
-  // Pending Claims
-  if (veteranContext.claims && veteranContext.claims.length > 0) {
-    prompt += `\nPENDING/SAVED CLAIMS:\n`;
-    veteranContext.claims.forEach((claim, i) => {
-      prompt += `${i + 1}. ${claim.condition || claim.name || "Unknown Condition"}`;
-      if (claim.claimType) prompt += ` - Type: ${claim.claimType}`;
-      if (claim.status) prompt += ` - Status: ${claim.status}`;
-      prompt += `\n`;
-    });
-  }
-
-  // Statements prepared
-  if (
-    veteranContext.statements &&
-    Object.keys(veteranContext.statements).length > 0
-  ) {
-    prompt += `\nSTATEMENTS PREPARED: ${Object.keys(veteranContext.statements).length} statement(s) drafted\n`;
-  }
-
+  prompt += formatServiceHistorySection(veteranContext.serviceHistory);
+  prompt += formatVeteranProfileSection(veteranContext.veteranProfile);
+  prompt += formatConditionsSection(veteranContext.conditions);
+  prompt += formatClaimsSection(veteranContext.claims);
+  prompt += formatStatementsSection(veteranContext.statements);
   prompt += `\n=== END VETERAN'S DATA ===\n`;
   prompt += `\nIMPORTANT: Use this veteran's specific data when providing guidance. Reference their actual conditions, ratings, and service history.\n`;
 
@@ -1296,6 +1352,79 @@ async function loadDKB() {
 }
 
 /**
+ * Score a single DKB entry's term matches against the query (instruction,
+ * output, diagnostic code, and condition name overlap).
+ */
+function scoreTermMatches(entry, queryTerms, query, isDCQuery) {
+  const instruction = (entry.instruction || "").toLowerCase();
+  const output = (entry.output || "").toLowerCase();
+  let score = 0;
+
+  for (const term of queryTerms) {
+    if (instruction.includes(term)) score += 2;
+    if (output.includes(term)) score += 1;
+
+    // Boost for diagnostic code matches
+    if (
+      isDCQuery &&
+      entry.metadata?.dc &&
+      query.includes(entry.metadata.dc)
+    ) {
+      score += 10;
+    }
+
+    // Boost for condition name matches
+    if (entry.metadata?.condition_name?.toLowerCase().includes(term)) {
+      score += 3;
+    }
+  }
+
+  return score;
+}
+
+/**
+ * Apply source-based score multipliers (official/precedent sources rank higher).
+ */
+function applySourceBoost(score, source) {
+  let boosted = score;
+  if (source === "eCFR_OFFICIAL") boosted *= 1.3;
+  if (source === "OGC_PRECEDENT_OPINION") boosted *= 1.4;
+  if (source === "BVA_DECISIONS" || source === "BVA_REPORTS_OFFICIAL")
+    boosted *= 1.2;
+  return boosted;
+}
+
+/**
+ * Apply query-intent score multipliers (secondary/PACT/rating/BVA queries
+ * boost matching source types).
+ */
+function applyIntentBoost(score, source, type, intent) {
+  let boosted = score;
+  if (intent.isSecondaryQuery && source === "SECONDARY_CONDITIONS_MATRIX")
+    boosted *= 2.5;
+  if (intent.isPACTQuery && source === "PACT_ACT_OFFICIAL") boosted *= 2.5;
+  if (intent.isRatingQuery && type === "rating_criteria") boosted *= 2;
+  if (intent.isBVAQuery && (source.includes("BVA") || source.includes("OGC")))
+    boosted *= 2;
+  return boosted;
+}
+
+/**
+ * Score a DKB entry against the query: term matches, then source boost,
+ * then query-intent boost.
+ */
+function scoreDKBEntry(entry, query, queryTerms, isDCQuery, intent) {
+  const source = entry.metadata?.source || "";
+  const type = entry.metadata?.type || "";
+
+  let score = scoreTermMatches(entry, queryTerms, query, isDCQuery);
+  score = applySourceBoost(score, source);
+  score = applyIntentBoost(score, source, type, intent);
+
+  return { entry, score };
+}
+
+/**
  * Search DKB for relevant entries based on user query
  * Uses TF-IDF style matching with source boosting
  * @param {string} query - User's question or prompt
@@ -1331,49 +1460,10 @@ export async function searchDKB(query, topK = 10) {
     queryLower.includes("board");
   const isDCQuery = /\b\d{4}\b/.test(query); // Looking for diagnostic codes
 
-  const scored = dkb.entries.map((entry) => {
-    const instruction = (entry.instruction || "").toLowerCase();
-    const output = (entry.output || "").toLowerCase();
-    const source = entry.metadata?.source || "";
-    const type = entry.metadata?.type || "";
-    let score = 0;
-
-    // Term matching
-    for (const term of queryTerms) {
-      if (instruction.includes(term)) score += 2;
-      if (output.includes(term)) score += 1;
-
-      // Boost for diagnostic code matches
-      if (
-        isDCQuery &&
-        entry.metadata?.dc &&
-        query.includes(entry.metadata.dc)
-      ) {
-        score += 10;
-      }
-
-      // Boost for condition name matches
-      if (entry.metadata?.condition_name?.toLowerCase().includes(term)) {
-        score += 3;
-      }
-    }
-
-    // Source-based boosting
-    if (source === "eCFR_OFFICIAL") score *= 1.3;
-    if (source === "OGC_PRECEDENT_OPINION") score *= 1.4;
-    if (source === "BVA_DECISIONS" || source === "BVA_REPORTS_OFFICIAL")
-      score *= 1.2;
-
-    // Intent-based boosting
-    if (isSecondaryQuery && source === "SECONDARY_CONDITIONS_MATRIX")
-      score *= 2.5;
-    if (isPACTQuery && source === "PACT_ACT_OFFICIAL") score *= 2.5;
-    if (isRatingQuery && type === "rating_criteria") score *= 2;
-    if (isBVAQuery && (source.includes("BVA") || source.includes("OGC")))
-      score *= 2;
-
-    return { entry, score };
-  });
+  const intent = { isSecondaryQuery, isPACTQuery, isRatingQuery, isBVAQuery };
+  const scored = dkb.entries.map((entry) =>
+    scoreDKBEntry(entry, query, queryTerms, isDCQuery, intent),
+  );
 
   return scored
     .filter((s) => s.score > 0)

@@ -50,16 +50,12 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [generatedContent, setGeneratedContent] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [_showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Veteran Profile State
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
   const formsContentRef = useRef(null);
@@ -211,6 +207,7 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
           setImportStatus({ type: "error", message: result.message });
         }
       } catch (err) {
+        console.error("Error importing backup file:", err);
         setImportStatus({
           type: "error",
           message: "Invalid backup file format",
@@ -3732,6 +3729,49 @@ Include specific dates, amounts, and documentation you can provide.`,
     markAsModified();
   };
 
+  const buildBuddyDailyLifeImpactSection = () => {
+    if (
+      !formData.dailyImpact &&
+      !formData.workImpact &&
+      !formData.specificExamples
+    ) {
+      return "";
+    }
+    let section = `
+D. Impact of Condition on Veteran's Daily Life:
+
+`;
+    if (formData.dailyImpact) {
+      section += `Impact on Daily Activities:
+${formData.dailyImpact}
+
+`;
+    }
+    if (formData.workImpact) {
+      section += `Impact on Employment/Work:
+${formData.workImpact}
+
+`;
+    }
+    if (formData.specificExamples) {
+      section += `Specific Examples/Incidents:
+${formData.specificExamples}
+
+`;
+    }
+    return section;
+  };
+
+  const buildBuddyAdditionalInfoSection = () => {
+    if (!formData.additionalInfo) return "";
+    return `
+E. Additional Information:
+
+${formData.additionalInfo}
+
+`;
+  };
+
   const generateBuddyStatement = () => {
     const currentDate = new Date().toLocaleDateString("en-US", {
       year: "numeric",
@@ -3800,43 +3840,8 @@ Location: ${formData.whereObserved || "________________________________________"
 
 `;
 
-    if (
-      formData.dailyImpact ||
-      formData.workImpact ||
-      formData.specificExamples
-    ) {
-      statement += `
-D. Impact of Condition on Veteran's Daily Life:
-
-`;
-      if (formData.dailyImpact) {
-        statement += `Impact on Daily Activities:
-${formData.dailyImpact}
-
-`;
-      }
-      if (formData.workImpact) {
-        statement += `Impact on Employment/Work:
-${formData.workImpact}
-
-`;
-      }
-      if (formData.specificExamples) {
-        statement += `Specific Examples/Incidents:
-${formData.specificExamples}
-
-`;
-      }
-    }
-
-    if (formData.additionalInfo) {
-      statement += `
-E. Additional Information:
-
-${formData.additionalInfo}
-
-`;
-    }
+    statement += buildBuddyDailyLifeImpactSection();
+    statement += buildBuddyAdditionalInfoSection();
 
     statement += `--------------------------------------------------------------------------------
 
@@ -3878,6 +3883,76 @@ INSTRUCTIONS:
     return statement;
   };
 
+  const buildPersonalStatementTreatmentHistorySection = () => {
+    if (
+      !formData.currentTreatment &&
+      !formData.medications &&
+      !formData.treatmentEffectiveness
+    ) {
+      return "";
+    }
+    const currentTreatmentSection = formData.currentTreatment
+      ? `
+A. Current Treatment:
+
+${formData.currentTreatment}
+`
+      : "";
+    const medicationsSection = formData.medications
+      ? `
+B. Current Medications:
+
+${formData.medications}
+`
+      : "";
+    const treatmentEffectivenessSection = formData.treatmentEffectiveness
+      ? `
+C. Treatment Effectiveness:
+
+${formData.treatmentEffectiveness}
+`
+      : "";
+    return `
+SECTION V - TREATMENT HISTORY
+${currentTreatmentSection}${medicationsSection}${treatmentEffectivenessSection}
+--------------------------------------------------------------------------------
+`;
+  };
+
+  const buildPersonalStatementSecondaryConditionSection = () =>
+    formData.claimType === "secondary" && formData.primaryCondition
+      ? `
+Secondary to (Primary Condition): ${formData.primaryCondition}
+`
+      : "";
+
+  const buildPersonalStatementFirstTreatmentSection = () =>
+    formData.firstTreatment
+      ? `
+C. First Treatment Sought:
+
+${formData.firstTreatment}
+`
+      : "";
+
+  const buildPersonalStatementFlareUpsSection = () =>
+    formData.flareUps
+      ? `
+C. Flare-Ups:
+
+${formData.flareUps}
+`
+      : "";
+
+  const buildPersonalStatementSocialImpactSection = () =>
+    formData.socialImpact
+      ? `
+C. Impact on Relationships and Social Activities:
+
+${formData.socialImpact}
+`
+      : "";
+
   const generatePersonalStatement = () => {
     const currentDate = new Date().toLocaleDateString("en-US", {
       year: "numeric",
@@ -3904,13 +3979,7 @@ Full Name: ${formData.veteranName || "________________________________________"}
 Claim Type: ${claimTypeLabels[formData.claimType] || formData.claimType || "____________________"}
 
 Condition Claimed: ${formData.conditionName || "________________________________________"}
-${
-  formData.claimType === "secondary" && formData.primaryCondition
-    ? `
-Secondary to (Primary Condition): ${formData.primaryCondition}
-`
-    : ""
-}
+${buildPersonalStatementSecondaryConditionSection()}
 --------------------------------------------------------------------------------
 
 SECTION II - IN-SERVICE EVENT/INJURY/ONSET
@@ -3924,15 +3993,7 @@ B. In-Service Event, Injury, or Exposure:
 
 ${formData.inServiceEvent || "[Describe the specific event, injury, training accident, exposure, or circumstances that led to or caused this condition]"}
 
-${
-  formData.firstTreatment
-    ? `
-C. First Treatment Sought:
-
-${formData.firstTreatment}
-`
-    : ""
-}
+${buildPersonalStatementFirstTreatmentSection()}
 --------------------------------------------------------------------------------
 
 SECTION III - CURRENT SYMPTOMS AND SEVERITY
@@ -3946,15 +4007,7 @@ B. Description of Worst Days:
 
 ${formData.worstDays || "[Describe what your worst days look like - this helps the VA understand the full impact of your condition]"}
 
-${
-  formData.flareUps
-    ? `
-C. Flare-Ups:
-
-${formData.flareUps}
-`
-    : ""
-}
+${buildPersonalStatementFlareUpsSection()}
 --------------------------------------------------------------------------------
 
 SECTION IV - FUNCTIONAL IMPACT
@@ -3968,51 +4021,9 @@ B. Impact on Daily Activities:
 
 ${formData.dailyImpact || "[Describe how this condition affects daily life - self-care, household tasks, hobbies, driving, etc.]"}
 
-${
-  formData.socialImpact
-    ? `
-C. Impact on Relationships and Social Activities:
-
-${formData.socialImpact}
-`
-    : ""
-}
+${buildPersonalStatementSocialImpactSection()}
 --------------------------------------------------------------------------------
-${
-  formData.currentTreatment ||
-  formData.medications ||
-  formData.treatmentEffectiveness
-    ? `
-SECTION V - TREATMENT HISTORY
-${
-  formData.currentTreatment
-    ? `
-A. Current Treatment:
-
-${formData.currentTreatment}
-`
-    : ""
-}${
-        formData.medications
-          ? `
-B. Current Medications:
-
-${formData.medications}
-`
-          : ""
-      }${
-        formData.treatmentEffectiveness
-          ? `
-C. Treatment Effectiveness:
-
-${formData.treatmentEffectiveness}
-`
-          : ""
-      }
---------------------------------------------------------------------------------
-`
-    : ""
-}
+${buildPersonalStatementTreatmentHistorySection()}
 CERTIFICATION AND SIGNATURE
 
 I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
@@ -4048,6 +4059,34 @@ INSTRUCTIONS:
 
     return statement;
   };
+
+  const buildPTSDSymptomsChecklist = () =>
+    Array.isArray(formData.symptoms) && formData.symptoms.length > 0
+      ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
+      : `[ ] Nightmares or disturbing dreams
+[ ] Flashbacks (reliving the event)
+[ ] Intrusive thoughts or memories
+[ ] Avoiding reminders of the trauma
+[ ] Difficulty sleeping
+[ ] Hypervigilance (always on alert)
+[ ] Exaggerated startle response
+[ ] Difficulty concentrating
+[ ] Irritability or anger outbursts
+[ ] Emotional numbness
+[ ] Feeling detached from others
+[ ] Negative thoughts about self or world
+[ ] Memory problems
+[ ] Loss of interest in activities
+[ ] Difficulty feeling positive emotions`;
+
+  const buildPTSDSymptomDetailsSection = () =>
+    formData.symptomDetails
+      ? `
+Detailed Description of Symptoms:
+
+${formData.symptomDetails}
+`
+      : "";
 
   const generatePTSDStatement = () => {
     const currentDate = new Date().toLocaleDateString("en-US", {
@@ -4118,35 +4157,9 @@ SECTION V - CURRENT PTSD SYMPTOMS
 
 Check all symptoms you currently experience:
 
-${
-  Array.isArray(formData.symptoms) && formData.symptoms.length > 0
-    ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
-    : `[ ] Nightmares or disturbing dreams
-[ ] Flashbacks (reliving the event)
-[ ] Intrusive thoughts or memories
-[ ] Avoiding reminders of the trauma
-[ ] Difficulty sleeping
-[ ] Hypervigilance (always on alert)
-[ ] Exaggerated startle response
-[ ] Difficulty concentrating
-[ ] Irritability or anger outbursts
-[ ] Emotional numbness
-[ ] Feeling detached from others
-[ ] Negative thoughts about self or world
-[ ] Memory problems
-[ ] Loss of interest in activities
-[ ] Difficulty feeling positive emotions`
-}
+${buildPTSDSymptomsChecklist()}
 
-${
-  formData.symptomDetails
-    ? `
-Detailed Description of Symptoms:
-
-${formData.symptomDetails}
-`
-    : ""
-}
+${buildPTSDSymptomDetailsSection()}
 --------------------------------------------------------------------------------
 
 CERTIFICATION AND SIGNATURE
@@ -4195,6 +4208,71 @@ CRISIS RESOURCES:
 
     return statement;
   };
+
+  const buildIntentToFileDeadlinesSection = (currentDate, oneYearFromNow) => `
+================================================================================
+
+                         *** CRITICAL DEADLINES ***
+
+If you file your Intent to File on: ${currentDate}
+
+Your deadline to submit a complete claim is: ${oneYearFromNow}
+
+You have exactly ONE YEAR from your Intent to File date to submit your
+complete disability claim (VA Form 21-526EZ).
+
+================================================================================
+
+WHY INTENT TO FILE MATTERS:
+
+If approved, your VA benefits can be BACKDATED to your Intent to File date.
+
+Example:
+- You file Intent to File on ${currentDate}
+- You submit your complete claim 6 months later
+- If approved, you receive 6 months of BACK PAY
+
+This could be worth thousands of dollars!
+
+================================================================================
+
+NEXT STEPS CHECKLIST:
+
+[ ] 1. Submit Intent to File TODAY (use one of the methods above)
+
+[ ] 2. Save your confirmation number: _______________________
+
+[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
+
+[ ] 4. Gather evidence:
+    [ ] Service treatment records
+    [ ] VA medical records
+    [ ] Private medical records
+    [ ] Buddy statements
+    [ ] Nexus letters (if applicable)
+
+[ ] 5. File complete claim (VA Form 21-526EZ) before deadline
+
+================================================================================
+
+RESOURCES:
+
+File Intent to File Online:
+https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
+
+File Disability Claim Online:
+https://www.va.gov/disability/file-disability-claim-form-21-526ez/
+
+Find a VA Regional Office:
+https://www.va.gov/find-locations/
+
+Find an Accredited VSO:
+https://www.va.gov/vso/
+
+VA Benefits Hotline: 1-800-827-1000
+
+================================================================================
+`;
 
   const generateIntentToFile = () => {
     const currentDate = new Date().toLocaleDateString("en-US", {
@@ -4282,70 +4360,7 @@ ${formData.conditions}
     : ""
 }
 Preferred Submission Method: ${methodLabels[formData.preferredMethod] || "________________________________________"}
-
-================================================================================
-
-                         *** CRITICAL DEADLINES ***
-
-If you file your Intent to File on: ${currentDate}
-
-Your deadline to submit a complete claim is: ${oneYearFromNow}
-
-You have exactly ONE YEAR from your Intent to File date to submit your 
-complete disability claim (VA Form 21-526EZ).
-
-================================================================================
-
-WHY INTENT TO FILE MATTERS:
-
-If approved, your VA benefits can be BACKDATED to your Intent to File date.
-
-Example: 
-- You file Intent to File on ${currentDate}
-- You submit your complete claim 6 months later
-- If approved, you receive 6 months of BACK PAY
-
-This could be worth thousands of dollars!
-
-================================================================================
-
-NEXT STEPS CHECKLIST:
-
-[ ] 1. Submit Intent to File TODAY (use one of the methods above)
-
-[ ] 2. Save your confirmation number: _______________________
-
-[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
-
-[ ] 4. Gather evidence:
-    [ ] Service treatment records
-    [ ] VA medical records  
-    [ ] Private medical records
-    [ ] Buddy statements
-    [ ] Nexus letters (if applicable)
-
-[ ] 5. File complete claim (VA Form 21-526EZ) before deadline
-
-================================================================================
-
-RESOURCES:
-
-File Intent to File Online:
-https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
-
-File Disability Claim Online:
-https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-
-Find a VA Regional Office:
-https://www.va.gov/find-locations/
-
-Find an Accredited VSO:
-https://www.va.gov/vso/
-
-VA Benefits Hotline: 1-800-827-1000
-
-================================================================================
-`;
+${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
 
     return statement;
   };
@@ -4885,6 +4900,13 @@ VA Benefits Hotline: 1-800-827-1000
     const repTypeLabel =
       formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
 
+    let feeAgreementStatusLabel = "NO FEE (PRO BONO)";
+    if (formData.feeAgreement === "attached") {
+      feeAgreementStatusLabel = "ATTACHED";
+    } else if (formData.feeAgreement === "will-submit") {
+      feeAgreementStatusLabel = "TO BE SUBMITTED SEPARATELY";
+    }
+
     const statement = `APPOINTMENT OF INDIVIDUAL AS CLAIMANT'S REPRESENTATIVE
 VA Form 21-22a Information Sheet
 
@@ -4945,7 +4967,7 @@ Email: ${formData.repEmail || "________________________________________"}
 
 SECTION IV - FEE AGREEMENT
 
-Fee Agreement Status: ${formData.feeAgreement === "attached" ? "ATTACHED" : formData.feeAgreement === "will-submit" ? "TO BE SUBMITTED SEPARATELY" : "NO FEE (PRO BONO)"}
+Fee Agreement Status: ${feeAgreementStatusLabel}
 
 IMPORTANT FEE RULES - I understand and acknowledge:
 ${
@@ -5127,6 +5149,10 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
       "coast-guard": "U.S. Coast Guard",
       "space-force": "U.S. Space Force",
     };
+    const deliveryMethodLabels = {
+      mail: "Mail to my address",
+      email: "Email",
+    };
 
     return `FREEDOM OF INFORMATION ACT / PRIVACY ACT REQUEST
 VA Form 20-10206
@@ -5160,7 +5186,7 @@ Specific Conditions/Claims: ${formData.specificConditions || "All conditions on 
 
 DELIVERY PREFERENCES
 
-Method: ${formData.deliveryMethod === "mail" ? "Mail to my address" : formData.deliveryMethod === "email" ? "Email" : "Pick up at VARO"}
+Method: ${deliveryMethodLabels[formData.deliveryMethod] || "Pick up at VARO"}
 Expedited Processing: ${formData.expediteReason !== "no" ? "YES - " + (formData.expediteDetails || formData.expediteReason) : "No"}
 
 ================================================================================
@@ -5275,6 +5301,16 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
       permanent: "Permanent",
       unknown: "Unknown",
     };
+    const medicaidStatusLabels = {
+      receiving: "Currently Receiving",
+      pending: "Application Pending",
+    };
+    const benefitRequestedLabels = {
+      "aid-attendance": "Aid & Attendance",
+      housebound: "Housebound",
+      pension: "VA Pension",
+      dic: "DIC",
+    };
 
     return `NURSING HOME INFORMATION
 VA Form 21-0779
@@ -5307,13 +5343,13 @@ Expected Stay: ${stayLabels[formData.expectedStay] || "____"}
 Level of Care:
 ${Array.isArray(formData.levelOfCare) ? formData.levelOfCare.map((l) => `[X] ${l}`).join("\n") : "[  ] See form for care details"}
 
-Medicaid Status: ${formData.medicaidStatus === "receiving" ? "Currently Receiving" : formData.medicaidStatus === "pending" ? "Application Pending" : "Not Receiving"}
+Medicaid Status: ${medicaidStatusLabels[formData.medicaidStatus] || "Not Receiving"}
 
 ================================================================================
 
 BENEFIT REQUESTED
 
-Benefit Type: ${formData.benefitRequested === "aid-attendance" ? "Aid & Attendance" : formData.benefitRequested === "housebound" ? "Housebound" : formData.benefitRequested === "pension" ? "VA Pension" : formData.benefitRequested === "dic" ? "DIC" : "____"}
+Benefit Type: ${benefitRequestedLabels[formData.benefitRequested] || "____"}
 Currently Receiving VA Benefits: ${formData.currentlyReceiving !== "no" ? "YES - " + formData.currentlyReceiving : "NO"}
 
 ${formData.additionalInfo ? `Additional Info: ${formData.additionalInfo}` : ""}
@@ -5797,7 +5833,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               if (line.startsWith("═")) {
                 return new Paragraph({ text: "" });
               }
-              if (line.match(/^[A-Z]{2,}.*:$/)) {
+              if (/^[A-Z]{2,}/.test(line) && line.endsWith(":")) {
                 return new Paragraph({
                   children: [new TextRun({ text: line, bold: true })],
                   spacing: { before: 200, after: 100 },

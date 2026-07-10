@@ -302,13 +302,16 @@ Tab.propTypes = {
 // OVERSEAS SERVICE BARS COMPONENT
 // ============================================================================
 
+const getOverseasBarDimensions = (size) => {
+  if (size === "sm") return { height: 4, width: 30 };
+  if (size === "md") return { height: 6, width: 40 };
+  return { height: 8, width: 50 };
+};
+
 const OverseasBars = ({ count, type = "wartime", size = "md" }) => {
   if (count === 0) return null;
 
-  const barHeight = size === "sm" ? 4 : size === "md" ? 6 : 8;
-  const barWidth = size === "sm" ? 30 : size === "md" ? 40 : 50;
-  // eslint-disable-next-line no-unused-vars
-  const gap = 3;
+  const { height: barHeight, width: barWidth } = getOverseasBarDimensions(size);
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -345,20 +348,21 @@ OverseasBars.propTypes = {
 // SERVICE STRIPES COMPONENT
 // ============================================================================
 
+const getServiceStripeDimensions = (size) => {
+  if (size === "sm") return { height: 15, width: 25 };
+  if (size === "md") return { height: 20, width: 35 };
+  return { height: 25, width: 45 };
+};
+
+// Army uses gold; Navy/Marines currently also render gold (12+ years good
+// conduct could be red in the future, but that branch isn't implemented yet).
+const STRIPE_COLOR = "#FFD700";
+
 const ServiceStripes = ({ count, branch = "Army", size = "md" }) => {
   if (count === 0) return null;
 
-  const stripeHeight = size === "sm" ? 15 : size === "md" ? 20 : 25;
-  const stripeWidth = size === "sm" ? 25 : size === "md" ? 35 : 45;
-
-  // Army uses gold, Navy/Marines can vary
-  const getStripeColor = () => {
-    if (branch === "Navy" || branch === "Marines") {
-      // Could be gold (12+ years good conduct) or red
-      return "#FFD700"; // Default to gold
-    }
-    return "#FFD700"; // Army gold
-  };
+  const { height: stripeHeight, width: stripeWidth } =
+    getServiceStripeDimensions(size);
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -375,7 +379,7 @@ const ServiceStripes = ({ count, branch = "Army", size = "md" }) => {
             <path
               d="M0 15 L17.5 5 L35 15"
               fill="none"
-              stroke={getStripeColor()}
+              stroke={STRIPE_COLOR}
               strokeWidth="3"
             />
           </g>
@@ -397,6 +401,112 @@ ServiceStripes.propTypes = {
 // ============================================================================
 // MAIN BADGE DISPLAY COMPONENT
 // ============================================================================
+
+const BadgeDisplayTabsSection = ({ tabs, size, showLabels }) => {
+  if (tabs.length === 0) return null;
+  return (
+    <div className="tabs-section">
+      {showLabels && (
+        <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+          Tabs
+        </h4>
+      )}
+      <div className="flex flex-wrap gap-2 justify-center">
+        {tabs.map((tab) => (
+          <Tab key={tab.id} tab={tab} size={size} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+BadgeDisplayTabsSection.propTypes = {
+  tabs: PropTypes.array.isRequired,
+  size: PropTypes.oneOf(["sm", "md", "lg"]),
+  showLabels: PropTypes.bool,
+};
+
+const AboveRibbonBadgesSection = ({ badges, size, showLabels }) => {
+  if (badges.length === 0) return null;
+  return (
+    <div className="badges-above-section">
+      {showLabels && (
+        <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+          Combat & Skill Badges
+        </h4>
+      )}
+      <div className="flex flex-wrap gap-3 justify-center">
+        {badges.map((badge) => (
+          <Badge key={badge.id} badge={badge} size={size} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+AboveRibbonBadgesSection.propTypes = {
+  badges: PropTypes.array.isRequired,
+  size: PropTypes.oneOf(["sm", "md", "lg"]),
+  showLabels: PropTypes.bool,
+};
+
+const BelowRibbonBadgesSection = ({ badges, size, showLabels }) => {
+  if (badges.length === 0) return null;
+  return (
+    <div className="badges-below-section">
+      {showLabels && (
+        <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+          Marksmanship
+        </h4>
+      )}
+      <div className="flex flex-wrap gap-3 justify-center">
+        {badges.map((badge) => (
+          <Badge key={badge.id} badge={badge} size={size} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+BelowRibbonBadgesSection.propTypes = {
+  badges: PropTypes.array.isRequired,
+  size: PropTypes.oneOf(["sm", "md", "lg"]),
+  showLabels: PropTypes.bool,
+};
+
+const SleeveElementsSection = ({ overseasBars, serviceStripes, branch, size }) => {
+  if (overseasBars.count === 0 && serviceStripes.count === 0) return null;
+  return (
+    <div className="sleeve-elements flex gap-8 justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      {overseasBars.count > 0 && (
+        <OverseasBars
+          count={overseasBars.count}
+          type={overseasBars.type}
+          size={size}
+        />
+      )}
+      {serviceStripes.count > 0 && (
+        <ServiceStripes
+          count={serviceStripes.count}
+          branch={branch}
+          size={size}
+        />
+      )}
+    </div>
+  );
+};
+
+SleeveElementsSection.propTypes = {
+  overseasBars: PropTypes.shape({
+    count: PropTypes.number.isRequired,
+    type: PropTypes.string,
+  }).isRequired,
+  serviceStripes: PropTypes.shape({
+    count: PropTypes.number.isRequired,
+  }).isRequired,
+  branch: PropTypes.string,
+  size: PropTypes.oneOf(["sm", "md", "lg"]),
+};
 
 /**
  * BadgeDisplay - Renders all badges in proper regulation order
@@ -442,74 +552,31 @@ export const BadgeDisplay = ({
   return (
     <div className="badge-display flex flex-col gap-4">
       {/* TABS (Shoulder display) */}
-      {tabs.length > 0 && (
-        <div className="tabs-section">
-          {showLabels && (
-            <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Tabs
-            </h4>
-          )}
-          <div className="flex flex-wrap gap-2 justify-center">
-            {tabs.map((tab) => (
-              <Tab key={tab.id} tab={tab} size={size} />
-            ))}
-          </div>
-        </div>
-      )}
+      <BadgeDisplayTabsSection tabs={tabs} size={size} showLabels={showLabels} />
 
       {/* BADGES ABOVE RIBBONS */}
-      {aboveBadges.length > 0 && (
-        <div className="badges-above-section">
-          {showLabels && (
-            <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Combat & Skill Badges
-            </h4>
-          )}
-          <div className="flex flex-wrap gap-3 justify-center">
-            {aboveBadges.map((badge) => (
-              <Badge key={badge.id} badge={badge} size={size} />
-            ))}
-          </div>
-        </div>
-      )}
+      <AboveRibbonBadgesSection
+        badges={aboveBadges}
+        size={size}
+        showLabels={showLabels}
+      />
 
       {/* [RIBBON RACK GOES HERE - from VisualRibbon component] */}
 
       {/* BADGES BELOW RIBBONS (Marksmanship) */}
-      {belowBadges.length > 0 && (
-        <div className="badges-below-section">
-          {showLabels && (
-            <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Marksmanship
-            </h4>
-          )}
-          <div className="flex flex-wrap gap-3 justify-center">
-            {belowBadges.map((badge) => (
-              <Badge key={badge.id} badge={badge} size={size} />
-            ))}
-          </div>
-        </div>
-      )}
+      <BelowRibbonBadgesSection
+        badges={belowBadges}
+        size={size}
+        showLabels={showLabels}
+      />
 
       {/* SLEEVE ELEMENTS (Overseas Bars & Service Stripes) */}
-      {(overseasBars.count > 0 || serviceStripes.count > 0) && (
-        <div className="sleeve-elements flex gap-8 justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {overseasBars.count > 0 && (
-            <OverseasBars
-              count={overseasBars.count}
-              type={overseasBars.type}
-              size={size}
-            />
-          )}
-          {serviceStripes.count > 0 && (
-            <ServiceStripes
-              count={serviceStripes.count}
-              branch={branch}
-              size={size}
-            />
-          )}
-        </div>
-      )}
+      <SleeveElementsSection
+        overseasBars={overseasBars}
+        serviceStripes={serviceStripes}
+        branch={branch}
+        size={size}
+      />
     </div>
   );
 };

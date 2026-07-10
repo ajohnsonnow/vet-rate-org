@@ -108,8 +108,7 @@ const MyPacket = ({
   const [backupCreated, setBackupCreated] = useState(false);
   const [isCertified, setIsCertified] = useState(false); // Certification for downloads
   const [showBackupGuide, setShowBackupGuide] = useState(false); // Ground Guide - first-time backup guidance
-  // eslint-disable-next-line no-unused-vars
-  const [hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
+  const [_hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
 
@@ -170,16 +169,12 @@ const MyPacket = ({
   // VA Authentication & Import state
   const {
     isAuthenticated: isVaAuthenticated,
-    // eslint-disable-next-line no-unused-vars
-    isLoading: vaAuthLoading,
-    // eslint-disable-next-line no-unused-vars
-    userInfo: vaUserInfo,
-    // eslint-disable-next-line no-unused-vars
-    login: vaLogin,
+    isLoading: _vaAuthLoading,
+    userInfo: _vaUserInfo,
+    login: _vaLogin,
     logout: vaLogout,
     accessToken: vaAccessToken,
-    // eslint-disable-next-line no-unused-vars
-    error: vaAuthError,
+    error: _vaAuthError,
   } = useVaAuth();
   const [vaImportStatus, setVaImportStatus] = useState({
     loading: false,
@@ -187,9 +182,6 @@ const MyPacket = ({
     message: "",
     counts: {},
   });
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const [showVaImportConsent, setShowVaImportConsent] = useState(false);
 
   useEffect(() => {
     loadClaims();
@@ -329,8 +321,7 @@ const MyPacket = ({
     setVaRecords(records);
   };
 
-  // eslint-disable-next-line no-unused-vars
-  const handleClearVARecords = () => {
+  const _handleClearVARecords = () => {
     if (
       window.confirm("Clear all imported VA records? This cannot be undone.")
     ) {
@@ -433,8 +424,7 @@ const MyPacket = ({
     }));
 
     const consent = { saveToPacket: true, saveToVKB: true };
-    // eslint-disable-next-line no-unused-vars
-    const saveResult = await saveVADataWithConsent(fetchedData, consent);
+    await saveVADataWithConsent(fetchedData, consent);
 
     // Reload the VA records display
     loadVARecordsData();
@@ -479,8 +469,7 @@ const MyPacket = ({
   };
 
   // Handle VA Disconnect - clears session but keeps imported data
-  // eslint-disable-next-line no-unused-vars
-  const handleVaDisconnect = () => {
+  const _handleVaDisconnect = () => {
     vaLogout();
     setVaImportStatus({
       loading: false,

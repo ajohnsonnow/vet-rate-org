@@ -10,7 +10,7 @@
 import React, { useState } from "react";
 import DictationButton from "../components/DictationButton";
 
-function MyTextAreaWithDictation() {
+function _MyTextAreaWithDictation() {
   const [text, setText] = useState("");
 
   return (
@@ -51,7 +51,7 @@ function MyTextAreaWithDictation() {
 
 import { Redactable } from "../components/RedactionMode";
 
-function VeteranInfoCard({ veteran }) {
+function _VeteranInfoCard({ veteran }) {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
       <h3 className="font-bold mb-4">Veteran Information</h3>
@@ -180,8 +180,8 @@ function HeaderWithSecurity({ securityContext }) {
 
 import { secureSetItem, secureGetItem } from "../utils/secureStorage";
 
-function ComponentWithEncryptedStorage({ securityContext }) {
-  const [claims, setClaims] = useState([]);
+function _ComponentWithEncryptedStorage({ securityContext }) {
+  const [_claims, setClaims] = useState([]);
 
   // Load encrypted data on mount
   useEffect(() => {
@@ -205,7 +205,7 @@ function ComponentWithEncryptedStorage({ securityContext }) {
   }, [securityContext?.currentPin]);
 
   // Save encrypted data
-  const saveClaims = async (newClaims) => {
+  const _saveClaims = async (newClaims) => {
     if (securityContext?.currentPin) {
       try {
         await secureSetItem(
@@ -265,7 +265,7 @@ export default function WrappedApp() {
 // EXAMPLE 6: Multiple Dictation Buttons
 // ============================================
 
-function FormWithMultipleDictationFields() {
+function _FormWithMultipleDictationFields() {
   const [personalStatement, setPersonalStatement] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [impacts, setImpacts] = useState("");

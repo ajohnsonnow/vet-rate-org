@@ -306,6 +306,32 @@ const LoadingSpinner = ({ text = "Loading..." }) => (
 );
 
 // ============================================================================
+// STATUS ICON (shared between ApiTestCard and the summary section)
+// ============================================================================
+
+function StatusIcon({ status }) {
+  if (status === "pass") return <Icons.Check />;
+  if (status === "fail") return <Icons.X />;
+  if (status === "skipped") {
+    return <span className="text-yellow-500 text-xs font-bold">SKIP</span>;
+  }
+  return <Icons.Clock />;
+}
+
+function getCardBg(status) {
+  if (status === "pass") {
+    return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800";
+  }
+  if (status === "fail") {
+    return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
+  }
+  if (status === "skipped") {
+    return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
+  }
+  return "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700";
+}
+
+// ============================================================================
 // API TEST CARD
 // ============================================================================
 
@@ -324,26 +350,10 @@ const ApiTestCard = ({
   onToggleRaw,
   children,
 }) => {
-  const getStatusIcon = () => {
-    if (status === "pass") return <Icons.Check />;
-    if (status === "fail") return <Icons.X />;
-    if (status === "skipped")
-      return <span className="text-yellow-500 text-xs font-bold">SKIP</span>;
-    return <Icons.Clock />;
-  };
-
-  const getCardBg = () => {
-    if (status === "pass")
-      return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800";
-    if (status === "fail")
-      return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800";
-    if (status === "skipped")
-      return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800";
-    return "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700";
-  };
-
   return (
-    <div className={`rounded-xl border p-4 transition-all ${getCardBg()}`}>
+    <div
+      className={`rounded-xl border p-4 transition-all ${getCardBg(status)}`}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={iconColor}>
@@ -353,7 +363,7 @@ const ApiTestCard = ({
             {title}
           </h4>
         </div>
-        {getStatusIcon()}
+        <StatusIcon status={status} />
       </div>
 
       {onTest && (
@@ -402,25 +412,35 @@ const ApiTestCard = ({
 };
 
 // ============================================================================
-// MAIN COMPONENT
+// SHARED HELPERS
 // ============================================================================
 
-const VaSandboxTest = () => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-  const {
-    isAuthenticated,
-    isLoading: authLoading,
-    error: authError,
-    userInfo,
-    accessToken,
-    login,
-    logout,
-  } = useVaAuth();
+function formatDate(dateString) {
+  if (!dateString) return "N/A";
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}
 
-  // =========================================================================
-  // OPEN DATA STATES
-  // =========================================================================
+function getApiKeyStatus() {
+  return import.meta.env.VITE_VA_API_KEY ? "Configured" : "Missing";
+}
+
+function isApiKeyNotRegisteredError(err) {
+  return err.message.includes("cannot consume") || err.message.includes("403");
+}
+
+// ============================================================================
+// OPEN DATA API HOOKS
+// ============================================================================
+
+function useFacilitiesApi() {
   const [facilities, setFacilities] = useState({
     data: null,
     raw: null,
@@ -428,72 +448,6 @@ const VaSandboxTest = () => {
     loading: false,
     error: null,
   });
-  const [forms, setForms] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-  const [disabilities, setDisabilities] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-
-  // =========================================================================
-  // USER DATA STATES
-  // =========================================================================
-  const [serviceHistory, setServiceHistory] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-  const [claims, setClaims] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-  const [appealableIssues, setAppealableIssues] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-  const [appealsStatus, setAppealsStatus] = useState({
-    data: null,
-    raw: null,
-    status: null,
-    loading: false,
-    error: null,
-  });
-
-  // =========================================================================
-  // RAW JSON TOGGLES
-  // =========================================================================
-  const [showRaw, setShowRaw] = useState({
-    facilities: false,
-    forms: false,
-    disabilities: false,
-    serviceHistory: false,
-    claims: false,
-    appealableIssues: false,
-    appealsStatus: false,
-  });
-
-  const toggleRaw = (key) =>
-    setShowRaw((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  // =========================================================================
-  // OPEN DATA API TESTS
-  // =========================================================================
 
   const testFacilities = async () => {
     setFacilities((prev) => ({ ...prev, loading: true, error: null }));
@@ -512,6 +466,18 @@ const VaSandboxTest = () => {
     }
   };
 
+  return { facilities, testFacilities };
+}
+
+function useFormsApi() {
+  const [forms, setForms] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
   const testForms = async () => {
     setForms((prev) => ({ ...prev, loading: true, error: null }));
     try {
@@ -520,10 +486,7 @@ const VaSandboxTest = () => {
       setForms({ data, raw, status: "pass", loading: false, error: null });
     } catch (err) {
       // Check if API key not registered for this service
-      if (
-        err.message.includes("cannot consume") ||
-        err.message.includes("403")
-      ) {
+      if (isApiKeyNotRegisteredError(err)) {
         setForms({
           data: null,
           raw: null,
@@ -543,6 +506,18 @@ const VaSandboxTest = () => {
     }
   };
 
+  return { forms, testForms };
+}
+
+function useDisabilitiesApi() {
+  const [disabilities, setDisabilities] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
   const testDisabilities = async () => {
     setDisabilities((prev) => ({ ...prev, loading: true, error: null }));
     try {
@@ -557,10 +532,7 @@ const VaSandboxTest = () => {
       });
     } catch (err) {
       // Check if API key not registered for this service
-      if (
-        err.message.includes("cannot consume") ||
-        err.message.includes("403")
-      ) {
+      if (isApiKeyNotRegisteredError(err)) {
         setDisabilities({
           data: null,
           raw: null,
@@ -580,14 +552,40 @@ const VaSandboxTest = () => {
     }
   };
 
-  // =========================================================================
-  // USER DATA API TESTS
-  // =========================================================================
+  return { disabilities, testDisabilities };
+}
 
-  const fetchUserData = useCallback(async () => {
-    if (!accessToken) return;
+function useRawToggle() {
+  const [showRaw, setShowRaw] = useState({
+    facilities: false,
+    forms: false,
+    disabilities: false,
+    serviceHistory: false,
+    claims: false,
+    appealableIssues: false,
+    appealsStatus: false,
+  });
 
-    // Service History
+  const toggleRaw = (key) =>
+    setShowRaw((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  return { showRaw, toggleRaw };
+}
+
+// ============================================================================
+// USER DATA API HOOKS
+// ============================================================================
+
+function useServiceHistoryApi(accessToken) {
+  const [serviceHistory, setServiceHistory] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
+  const fetchServiceHistory = useCallback(async () => {
     setServiceHistory((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const raw = await getServiceHistory(accessToken);
@@ -608,8 +606,21 @@ const VaSandboxTest = () => {
         error: err.message,
       });
     }
+  }, [accessToken]);
 
-    // Claims
+  return { serviceHistory, fetchServiceHistory };
+}
+
+function useClaimsApi(accessToken) {
+  const [claims, setClaims] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
+  const fetchClaims = useCallback(async () => {
     setClaims((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const raw = await getClaims(accessToken);
@@ -624,9 +635,24 @@ const VaSandboxTest = () => {
         error: err.message,
       });
     }
+  }, [accessToken]);
 
-    // Appealable Issues - DISABLED (scope not approved)
-    // Uncomment when appealable_issues.read scope is approved
+  return { claims, fetchClaims };
+}
+
+// Appealable Issues - DISABLED (scope not approved).
+// Re-enable the live fetch once appealable_issues.read is approved; see git
+// history for the original implementation that called getAppealableIssues().
+function useAppealableIssuesApi() {
+  const [appealableIssues, setAppealableIssues] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
+  const markAppealableIssuesSkipped = useCallback(() => {
     setAppealableIssues({
       data: null,
       raw: null,
@@ -634,19 +660,24 @@ const VaSandboxTest = () => {
       loading: false,
       error: "Scope not approved - appealable_issues.read",
     });
-    /*
-    setAppealableIssues(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      const raw = await getAppealableIssues(accessToken);
-      const data = formatAppealableIssues(raw);
-      setAppealableIssues({ data, raw, status: 'pass', loading: false, error: null });
-    } catch (err) {
-      setAppealableIssues({ data: null, raw: null, status: 'fail', loading: false, error: err.message });
-    }
-    */
+  }, []);
 
-    // Appeals Status - DISABLED (scope not approved)
-    // Uncomment when appeals_status.read scope is approved
+  return { appealableIssues, markAppealableIssuesSkipped };
+}
+
+// Appeals Status - DISABLED (scope not approved).
+// Re-enable the live fetch once appeals_status.read is approved; see git
+// history for the original implementation that called getAppealsStatus().
+function useAppealsStatusApi() {
+  const [appealsStatus, setAppealsStatus] = useState({
+    data: null,
+    raw: null,
+    status: null,
+    loading: false,
+    error: null,
+  });
+
+  const markAppealsStatusSkipped = useCallback(() => {
     setAppealsStatus({
       data: null,
       raw: null,
@@ -654,17 +685,32 @@ const VaSandboxTest = () => {
       loading: false,
       error: "Scope not approved - appeals_status.read",
     });
-    /*
-    setAppealsStatus(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      const raw = await getAppealsStatus(accessToken);
-      const data = formatAppealsStatus(raw);
-      setAppealsStatus({ data, raw, status: 'pass', loading: false, error: null });
-    } catch (err) {
-      setAppealsStatus({ data: null, raw: null, status: 'fail', loading: false, error: err.message });
-    }
-    */
-  }, [accessToken]);
+  }, []);
+
+  return { appealsStatus, markAppealsStatusSkipped };
+}
+
+function useVaSandboxUserData(accessToken, isAuthenticated) {
+  const { serviceHistory, fetchServiceHistory } =
+    useServiceHistoryApi(accessToken);
+  const { claims, fetchClaims } = useClaimsApi(accessToken);
+  const { appealableIssues, markAppealableIssuesSkipped } =
+    useAppealableIssuesApi();
+  const { appealsStatus, markAppealsStatusSkipped } = useAppealsStatusApi();
+
+  const fetchUserData = useCallback(async () => {
+    if (!accessToken) return;
+    await fetchServiceHistory();
+    await fetchClaims();
+    markAppealableIssuesSkipped();
+    markAppealsStatusSkipped();
+  }, [
+    accessToken,
+    fetchServiceHistory,
+    fetchClaims,
+    markAppealableIssuesSkipped,
+    markAppealsStatusSkipped,
+  ]);
 
   // Auto-fetch user data when authenticated
   useEffect(() => {
@@ -673,558 +719,830 @@ const VaSandboxTest = () => {
     }
   }, [isAuthenticated, accessToken, fetchUserData]);
 
-  // =========================================================================
-  // HELPERS
-  // =========================================================================
+  return { serviceHistory, claims, appealableIssues, appealsStatus, fetchUserData };
+}
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
-  };
+// ============================================================================
+// HEADER
+// ============================================================================
 
-  const getApiKeyStatus = () => {
-    return import.meta.env.VITE_VA_API_KEY ? "Configured" : "Missing";
-  };
+function SandboxHeader() {
+  const apiKeyStatus = getApiKeyStatus();
 
-  // =========================================================================
-  // RENDER
-  // =========================================================================
+  return (
+    <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6 rounded-t-2xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+            <Icons.Shield />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">VA Sandbox Verification</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              Production Access Demo Dashboard
+            </p>
+          </div>
+        </div>
+        <a
+          href="/"
+          className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </a>
+      </div>
 
+      {/* Configuration Status */}
+      <div className="mt-4 flex flex-wrap gap-4 text-sm">
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+          <span className="text-blue-200">Client ID:</span>
+          <span className="font-mono">
+            {import.meta.env.VITE_VA_AUTH_ID?.slice(0, 12)}...
+          </span>
+        </div>
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+          <span className="text-blue-200">API Key:</span>
+          <span
+            className={
+              apiKeyStatus === "Configured" ? "text-green-300" : "text-red-300"
+            }
+          >
+            {apiKeyStatus}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+          <span className="text-blue-200">Environment:</span>
+          <span className="text-yellow-300">Sandbox</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SECTION 1: OPEN DATA APIs
+// ============================================================================
+
+function FacilitiesCard({ facilities, testFacilities, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Facilities API"
+      icon={Icons.Building}
+      iconColor="text-blue-600"
+      status={facilities.status}
+      loading={facilities.loading}
+      error={facilities.error}
+      onTest={testFacilities}
+      buttonText="Test Facilities (97217)"
+      rawData={facilities.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      {facilities.data && (
+        <div className="text-sm space-y-1">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Found {facilities.data.length} facilities
+          </p>
+          {facilities.data.slice(0, 2).map((f, i) => (
+            <p key={i} className="text-gray-600 dark:text-gray-400 truncate">
+              • {f.name}
+            </p>
+          ))}
+        </div>
+      )}
+    </ApiTestCard>
+  );
+}
+
+function FormsCard({ forms, testForms, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Forms API"
+      icon={Icons.Document}
+      iconColor="text-purple-600"
+      status={forms.status}
+      loading={forms.loading}
+      error={forms.error}
+      onTest={testForms}
+      buttonText='Search "21-526EZ"'
+      rawData={forms.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      {forms.data && forms.data.length > 0 && (
+        <div className="text-sm space-y-1">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Found {forms.data.length} form(s)
+          </p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {forms.data[0]?.title?.slice(0, 50)}...
+          </p>
+          {forms.data[0]?.url && (
+            <a
+              href={forms.data[0].url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+            >
+              <Icons.ExternalLink /> View PDF
+            </a>
+          )}
+        </div>
+      )}
+    </ApiTestCard>
+  );
+}
+
+function DisabilitiesCard({
+  disabilities,
+  testDisabilities,
+  showRaw,
+  onToggleRaw,
+}) {
+  return (
+    <ApiTestCard
+      title="Benefits Reference"
+      icon={Icons.Database}
+      iconColor="text-teal-600"
+      status={disabilities.status}
+      loading={disabilities.loading}
+      error={disabilities.error}
+      onTest={testDisabilities}
+      buttonText="Fetch Disabilities"
+      rawData={disabilities.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      {disabilities.data && (
+        <div className="text-sm space-y-1">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Loaded {disabilities.data.length} disabilities
+          </p>
+          {disabilities.data.slice(0, 3).map((d, i) => (
+            <p key={i} className="text-gray-600 dark:text-gray-400 truncate">
+              • {d.name}
+            </p>
+          ))}
+        </div>
+      )}
+    </ApiTestCard>
+  );
+}
+
+function OpenDataSection({
+  facilities,
+  testFacilities,
+  forms,
+  testForms,
+  disabilities,
+  testDisabilities,
+  showRaw,
+  toggleRaw,
+}) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-4">
+        <Icons.Database />
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          Open Data APIs
+        </h2>
+        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-bold rounded">
+          API KEY
+        </span>
+      </div>
+
+      {/* Info about API registration */}
+      <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          <strong>Note:</strong> Each VA API requires separate registration.
+          If an API shows &quot;skipped&quot;, register your API key at{" "}
+          <a
+            href="https://developer.va.gov/explore"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 dark:text-blue-400 underline"
+          >
+            developer.va.gov/explore
+          </a>
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FacilitiesCard
+          facilities={facilities}
+          testFacilities={testFacilities}
+          showRaw={showRaw.facilities}
+          onToggleRaw={() => toggleRaw("facilities")}
+        />
+        <FormsCard
+          forms={forms}
+          testForms={testForms}
+          showRaw={showRaw.forms}
+          onToggleRaw={() => toggleRaw("forms")}
+        />
+        <DisabilitiesCard
+          disabilities={disabilities}
+          testDisabilities={testDisabilities}
+          showRaw={showRaw.disabilities}
+          onToggleRaw={() => toggleRaw("disabilities")}
+        />
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// SECTION 2: AUTHENTICATION
+// ============================================================================
+
+function AuthActionButtons({
+  authLoading,
+  isAuthenticated,
+  onRefresh,
+  onLogout,
+  onLogin,
+}) {
+  if (authLoading) {
+    return <LoadingSpinner text="Checking..." />;
+  }
+
+  if (isAuthenticated) {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onRefresh}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm"
+        >
+          <Icons.Refresh /> Refresh Data
+        </button>
+        <button
+          onClick={onLogout}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg flex items-center gap-2 text-sm"
+        >
+          <Icons.Logout /> Disconnect
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onLogin}
+      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2"
+    >
+      <Icons.Login /> Connect VA Sandbox Account
+    </button>
+  );
+}
+
+function AuthSection({
+  isAuthenticated,
+  authLoading,
+  authError,
+  userInfo,
+  login,
+  logout,
+  fetchUserData,
+}) {
+  return (
+    <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-3 h-3 rounded-full ${isAuthenticated ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
+          />
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              {isAuthenticated
+                ? "Connected to VA.gov Sandbox"
+                : "Not Connected"}
+            </h2>
+            {isAuthenticated && userInfo && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Logged in as: {userInfo.given_name} {userInfo.family_name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <AuthActionButtons
+          authLoading={authLoading}
+          isAuthenticated={isAuthenticated}
+          onRefresh={fetchUserData}
+          onLogout={logout}
+          onLogin={login}
+        />
+      </div>
+
+      {authError && (
+        <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+          <p className="text-red-700 dark:text-red-300">{authError}</p>
+        </div>
+      )}
+
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          <strong>Scopes:</strong> openid profile offline_access
+          claim.read service_history.read appealable_issues.read
+          appeals_status.read
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// SECTION 3: USER DATA APIs
+// ============================================================================
+
+function UserDataAuthPrompt({ login }) {
+  return (
+    <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <Icons.Shield />
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+        Authentication Required
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        Connect your VA.gov Sandbox account to test protected APIs
+      </p>
+      <button
+        onClick={login}
+        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+      >
+        Connect VA Account
+      </button>
+    </div>
+  );
+}
+
+function ServiceHistoryContent({ serviceHistory, formatDate: formatDateFn }) {
+  if (serviceHistory.data && serviceHistory.data.length > 0) {
+    return (
+      <div className="space-y-2">
+        {serviceHistory.data.map((s, i) => (
+          <div
+            key={i}
+            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
+          >
+            <p className="font-semibold text-gray-900 dark:text-white">
+              {s.branch}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {formatDateFn(s.startDate)} - {formatDateFn(s.endDate)}
+            </p>
+            <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs rounded capitalize">
+              {s.dischargeStatus}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (serviceHistory.status === "pass") {
+    return (
+      <p className="text-sm text-gray-500">No service history records</p>
+    );
+  }
+  return null;
+}
+
+function ServiceHistoryCard({ serviceHistory, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Service History"
+      icon={Icons.Medal}
+      iconColor="text-blue-600"
+      status={serviceHistory.status}
+      loading={serviceHistory.loading}
+      error={serviceHistory.error}
+      rawData={serviceHistory.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      <ServiceHistoryContent
+        serviceHistory={serviceHistory}
+        formatDate={formatDate}
+      />
+    </ApiTestCard>
+  );
+}
+
+function ClaimsContent({ claims, formatDate: formatDateFn }) {
+  if (claims.data && claims.data.length > 0) {
+    return (
+      <div className="space-y-2">
+        {claims.data.slice(0, 3).map((c, i) => (
+          <div
+            key={i}
+            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
+          >
+            <p className="font-semibold text-gray-900 dark:text-white capitalize">
+              {c.type} Claim
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Filed: {formatDateFn(c.dateFiled)}
+            </p>
+            <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs rounded">
+              {c.status || "Processing"}
+            </span>
+          </div>
+        ))}
+        {claims.data.length > 3 && (
+          <p className="text-xs text-gray-500">
+            +{claims.data.length - 3} more claims
+          </p>
+        )}
+      </div>
+    );
+  }
+  if (claims.status === "pass") {
+    return <p className="text-sm text-gray-500">No active claims</p>;
+  }
+  return null;
+}
+
+function ClaimsCard({ claims, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Claims"
+      icon={Icons.FileText}
+      iconColor="text-green-600"
+      status={claims.status}
+      loading={claims.loading}
+      error={claims.error}
+      rawData={claims.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      <ClaimsContent claims={claims} formatDate={formatDate} />
+    </ApiTestCard>
+  );
+}
+
+function AppealableIssuesContent({ appealableIssues, formatDate: formatDateFn }) {
+  if (appealableIssues.data && appealableIssues.data.length > 0) {
+    return (
+      <div className="space-y-2">
+        {appealableIssues.data.slice(0, 3).map((issue, i) => (
+          <div
+            key={i}
+            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
+          >
+            <p className="font-semibold text-gray-900 dark:text-white">
+              {issue.description}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Decision: {formatDateFn(issue.decisionDate)}
+            </p>
+            {issue.ratingPercent !== undefined && (
+              <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200 text-xs rounded">
+                Rated: {issue.ratingPercent}%
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (appealableIssues.status === "pass") {
+    return (
+      <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+        <Icons.Check /> No appealable issues
+      </p>
+    );
+  }
+  return null;
+}
+
+function AppealableIssuesCard({ appealableIssues, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Appealable Issues"
+      icon={Icons.Alert}
+      iconColor="text-orange-600"
+      status={appealableIssues.status}
+      loading={appealableIssues.loading}
+      error={appealableIssues.error}
+      rawData={appealableIssues.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      <AppealableIssuesContent
+        appealableIssues={appealableIssues}
+        formatDate={formatDate}
+      />
+    </ApiTestCard>
+  );
+}
+
+function AppealsStatusContent({ appealsStatus }) {
+  if (appealsStatus.data && appealsStatus.data.length > 0) {
+    return (
+      <div className="space-y-2">
+        {appealsStatus.data.slice(0, 3).map((appeal, i) => (
+          <div
+            key={i}
+            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
+          >
+            <p className="font-semibold text-gray-900 dark:text-white capitalize">
+              {appeal.type} Appeal
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Program: {appeal.programArea}
+            </p>
+            <span
+              className={`inline-block mt-1 px-2 py-0.5 text-xs rounded ${
+                appeal.active
+                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+              }`}
+            >
+              {appeal.active ? "Active" : "Closed"}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (appealsStatus.status === "pass") {
+    return <p className="text-sm text-gray-500">No active appeals</p>;
+  }
+  return null;
+}
+
+function AppealsStatusCard({ appealsStatus, showRaw, onToggleRaw }) {
+  return (
+    <ApiTestCard
+      title="Appeals Status"
+      icon={Icons.Gavel}
+      iconColor="text-purple-600"
+      status={appealsStatus.status}
+      loading={appealsStatus.loading}
+      error={appealsStatus.error}
+      rawData={appealsStatus.raw}
+      showRaw={showRaw}
+      onToggleRaw={onToggleRaw}
+    >
+      <AppealsStatusContent appealsStatus={appealsStatus} />
+    </ApiTestCard>
+  );
+}
+
+function UserDataSection({
+  isAuthenticated,
+  login,
+  serviceHistory,
+  claims,
+  appealableIssues,
+  appealsStatus,
+  showRaw,
+  toggleRaw,
+}) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-4">
+        <Icons.Shield />
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          User Data APIs
+        </h2>
+        <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-bold rounded">
+          OAUTH
+        </span>
+      </div>
+
+      {!isAuthenticated ? (
+        <UserDataAuthPrompt login={login} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ServiceHistoryCard
+            serviceHistory={serviceHistory}
+            showRaw={showRaw.serviceHistory}
+            onToggleRaw={() => toggleRaw("serviceHistory")}
+          />
+          <ClaimsCard
+            claims={claims}
+            showRaw={showRaw.claims}
+            onToggleRaw={() => toggleRaw("claims")}
+          />
+          <AppealableIssuesCard
+            appealableIssues={appealableIssues}
+            showRaw={showRaw.appealableIssues}
+            onToggleRaw={() => toggleRaw("appealableIssues")}
+          />
+          <AppealsStatusCard
+            appealsStatus={appealsStatus}
+            showRaw={showRaw.appealsStatus}
+            onToggleRaw={() => toggleRaw("appealsStatus")}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ============================================================================
+// TEST SUMMARY + FOOTER
+// ============================================================================
+
+function TestSummarySection({
+  facilities,
+  forms,
+  disabilities,
+  serviceHistory,
+  claims,
+  appealableIssues,
+  appealsStatus,
+}) {
+  const items = [
+    { name: "Facilities", status: facilities.status },
+    { name: "Forms", status: forms.status },
+    { name: "Reference Data", status: disabilities.status },
+    { name: "Service History", status: serviceHistory.status },
+    { name: "Claims", status: claims.status },
+    { name: "Appealable Issues", status: appealableIssues.status },
+    { name: "Appeals Status", status: appealsStatus.status },
+  ];
+
+  return (
+    <section className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        API Test Summary
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {items.map(({ name, status }) => (
+          <div
+            key={name}
+            className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+          >
+            <StatusIcon status={status} />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              {name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SandboxFooter() {
+  return (
+    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          VA Sandbox Test Dashboard • All data is synthetic test data
+        </p>
+        <a
+          href="/"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+        >
+          <Icons.Home />
+          <span>Back to Home</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// DASHBOARD LAYOUT
+// ============================================================================
+
+function VaSandboxDashboard({
+  isAuthenticated,
+  authLoading,
+  authError,
+  userInfo,
+  login,
+  logout,
+  facilities,
+  testFacilities,
+  forms,
+  testForms,
+  disabilities,
+  testDisabilities,
+  serviceHistory,
+  claims,
+  appealableIssues,
+  appealsStatus,
+  fetchUserData,
+  showRaw,
+  toggleRaw,
+}) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="min-h-screen px-4 py-8 flex items-start justify-center">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-5xl w-full animate-modalEnter">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Icons.Shield />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold">
-                    VA Sandbox Verification
-                  </h1>
-                  <p className="text-blue-200 text-sm mt-1">
-                    Production Access Demo Dashboard
-                  </p>
-                </div>
-              </div>
-              <a
-                href="/"
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </a>
-            </div>
-
-            {/* Configuration Status */}
-            <div className="mt-4 flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
-                <span className="text-blue-200">Client ID:</span>
-                <span className="font-mono">
-                  {import.meta.env.VITE_VA_AUTH_ID?.slice(0, 12)}...
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
-                <span className="text-blue-200">API Key:</span>
-                <span
-                  className={
-                    getApiKeyStatus() === "Configured"
-                      ? "text-green-300"
-                      : "text-red-300"
-                  }
-                >
-                  {getApiKeyStatus()}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
-                <span className="text-blue-200">Environment:</span>
-                <span className="text-yellow-300">Sandbox</span>
-              </div>
-            </div>
-          </div>
+          <SandboxHeader />
 
           <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-            {/* ================================================================= */}
-            {/* SECTION 1: OPEN DATA APIs */}
-            {/* ================================================================= */}
-            <section>
-              <div className="flex items-center gap-3 mb-4">
-                <Icons.Database />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Open Data APIs
-                </h2>
-                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-bold rounded">
-                  API KEY
-                </span>
-              </div>
+            <OpenDataSection
+              facilities={facilities}
+              testFacilities={testFacilities}
+              forms={forms}
+              testForms={testForms}
+              disabilities={disabilities}
+              testDisabilities={testDisabilities}
+              showRaw={showRaw}
+              toggleRaw={toggleRaw}
+            />
 
-              {/* Info about API registration */}
-              <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  <strong>Note:</strong> Each VA API requires separate
-                  registration. If an API shows &quot;skipped&quot;, register
-                  your API key at{" "}
-                  <a
-                    href="https://developer.va.gov/explore"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 dark:text-blue-400 underline"
-                  >
-                    developer.va.gov/explore
-                  </a>
-                </p>
-              </div>
+            <AuthSection
+              isAuthenticated={isAuthenticated}
+              authLoading={authLoading}
+              authError={authError}
+              userInfo={userInfo}
+              login={login}
+              logout={logout}
+              fetchUserData={fetchUserData}
+            />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Facilities */}
-                <ApiTestCard
-                  title="Facilities API"
-                  icon={Icons.Building}
-                  iconColor="text-blue-600"
-                  status={facilities.status}
-                  loading={facilities.loading}
-                  error={facilities.error}
-                  onTest={testFacilities}
-                  buttonText="Test Facilities (97217)"
-                  rawData={facilities.raw}
-                  showRaw={showRaw.facilities}
-                  onToggleRaw={() => toggleRaw("facilities")}
-                >
-                  {facilities.data && (
-                    <div className="text-sm space-y-1">
-                      <p className="text-green-600 dark:text-green-400 font-medium">
-                        ✓ Found {facilities.data.length} facilities
-                      </p>
-                      {facilities.data.slice(0, 2).map((f, i) => (
-                        <p
-                          key={i}
-                          className="text-gray-600 dark:text-gray-400 truncate"
-                        >
-                          • {f.name}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </ApiTestCard>
+            <UserDataSection
+              isAuthenticated={isAuthenticated}
+              login={login}
+              serviceHistory={serviceHistory}
+              claims={claims}
+              appealableIssues={appealableIssues}
+              appealsStatus={appealsStatus}
+              showRaw={showRaw}
+              toggleRaw={toggleRaw}
+            />
 
-                {/* Forms */}
-                <ApiTestCard
-                  title="Forms API"
-                  icon={Icons.Document}
-                  iconColor="text-purple-600"
-                  status={forms.status}
-                  loading={forms.loading}
-                  error={forms.error}
-                  onTest={testForms}
-                  buttonText='Search "21-526EZ"'
-                  rawData={forms.raw}
-                  showRaw={showRaw.forms}
-                  onToggleRaw={() => toggleRaw("forms")}
-                >
-                  {forms.data && forms.data.length > 0 && (
-                    <div className="text-sm space-y-1">
-                      <p className="text-green-600 dark:text-green-400 font-medium">
-                        ✓ Found {forms.data.length} form(s)
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {forms.data[0]?.title?.slice(0, 50)}...
-                      </p>
-                      {forms.data[0]?.url && (
-                        <a
-                          href={forms.data[0].url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                        >
-                          <Icons.ExternalLink /> View PDF
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </ApiTestCard>
-
-                {/* Reference Data */}
-                <ApiTestCard
-                  title="Benefits Reference"
-                  icon={Icons.Database}
-                  iconColor="text-teal-600"
-                  status={disabilities.status}
-                  loading={disabilities.loading}
-                  error={disabilities.error}
-                  onTest={testDisabilities}
-                  buttonText="Fetch Disabilities"
-                  rawData={disabilities.raw}
-                  showRaw={showRaw.disabilities}
-                  onToggleRaw={() => toggleRaw("disabilities")}
-                >
-                  {disabilities.data && (
-                    <div className="text-sm space-y-1">
-                      <p className="text-green-600 dark:text-green-400 font-medium">
-                        ✓ Loaded {disabilities.data.length} disabilities
-                      </p>
-                      {disabilities.data.slice(0, 3).map((d, i) => (
-                        <p
-                          key={i}
-                          className="text-gray-600 dark:text-gray-400 truncate"
-                        >
-                          • {d.name}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </ApiTestCard>
-              </div>
-            </section>
-
-            {/* ================================================================= */}
-            {/* SECTION 2: AUTHENTICATION */}
-            {/* ================================================================= */}
-            <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full ${isAuthenticated ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
-                  />
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {isAuthenticated
-                        ? "Connected to VA.gov Sandbox"
-                        : "Not Connected"}
-                    </h2>
-                    {isAuthenticated && userInfo && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Logged in as: {userInfo.given_name}{" "}
-                        {userInfo.family_name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {authLoading ? (
-                  <LoadingSpinner text="Checking..." />
-                ) : isAuthenticated ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={fetchUserData}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm"
-                    >
-                      <Icons.Refresh /> Refresh Data
-                    </button>
-                    <button
-                      onClick={logout}
-                      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg flex items-center gap-2 text-sm"
-                    >
-                      <Icons.Logout /> Disconnect
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={login}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2"
-                  >
-                    <Icons.Login /> Connect VA Sandbox Account
-                  </button>
-                )}
-              </div>
-
-              {authError && (
-                <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
-                  <p className="text-red-700 dark:text-red-300">{authError}</p>
-                </div>
-              )}
-
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  <strong>Scopes:</strong> openid profile offline_access
-                  claim.read service_history.read appealable_issues.read
-                  appeals_status.read
-                </p>
-              </div>
-            </section>
-
-            {/* ================================================================= */}
-            {/* SECTION 3: USER DATA APIs */}
-            {/* ================================================================= */}
-            <section>
-              <div className="flex items-center gap-3 mb-4">
-                <Icons.Shield />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  User Data APIs
-                </h2>
-                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-bold rounded">
-                  OAUTH
-                </span>
-              </div>
-
-              {!isAuthenticated ? (
-                <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <Icons.Shield />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
-                    Authentication Required
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Connect your VA.gov Sandbox account to test protected APIs
-                  </p>
-                  <button
-                    onClick={login}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
-                  >
-                    Connect VA Account
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Service History */}
-                  <ApiTestCard
-                    title="Service History"
-                    icon={Icons.Medal}
-                    iconColor="text-blue-600"
-                    status={serviceHistory.status}
-                    loading={serviceHistory.loading}
-                    error={serviceHistory.error}
-                    rawData={serviceHistory.raw}
-                    showRaw={showRaw.serviceHistory}
-                    onToggleRaw={() => toggleRaw("serviceHistory")}
-                  >
-                    {serviceHistory.data && serviceHistory.data.length > 0 ? (
-                      <div className="space-y-2">
-                        {serviceHistory.data.map((s, i) => (
-                          <div
-                            key={i}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {s.branch}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              {formatDate(s.startDate)} -{" "}
-                              {formatDate(s.endDate)}
-                            </p>
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs rounded capitalize">
-                              {s.dischargeStatus}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : serviceHistory.status === "pass" ? (
-                      <p className="text-sm text-gray-500">
-                        No service history records
-                      </p>
-                    ) : null}
-                  </ApiTestCard>
-
-                  {/* Claims */}
-                  <ApiTestCard
-                    title="Claims"
-                    icon={Icons.FileText}
-                    iconColor="text-green-600"
-                    status={claims.status}
-                    loading={claims.loading}
-                    error={claims.error}
-                    rawData={claims.raw}
-                    showRaw={showRaw.claims}
-                    onToggleRaw={() => toggleRaw("claims")}
-                  >
-                    {claims.data && claims.data.length > 0 ? (
-                      <div className="space-y-2">
-                        {claims.data.slice(0, 3).map((c, i) => (
-                          <div
-                            key={i}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-semibold text-gray-900 dark:text-white capitalize">
-                              {c.type} Claim
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Filed: {formatDate(c.dateFiled)}
-                            </p>
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs rounded">
-                              {c.status || "Processing"}
-                            </span>
-                          </div>
-                        ))}
-                        {claims.data.length > 3 && (
-                          <p className="text-xs text-gray-500">
-                            +{claims.data.length - 3} more claims
-                          </p>
-                        )}
-                      </div>
-                    ) : claims.status === "pass" ? (
-                      <p className="text-sm text-gray-500">No active claims</p>
-                    ) : null}
-                  </ApiTestCard>
-
-                  {/* Appealable Issues */}
-                  <ApiTestCard
-                    title="Appealable Issues"
-                    icon={Icons.Alert}
-                    iconColor="text-orange-600"
-                    status={appealableIssues.status}
-                    loading={appealableIssues.loading}
-                    error={appealableIssues.error}
-                    rawData={appealableIssues.raw}
-                    showRaw={showRaw.appealableIssues}
-                    onToggleRaw={() => toggleRaw("appealableIssues")}
-                  >
-                    {appealableIssues.data &&
-                    appealableIssues.data.length > 0 ? (
-                      <div className="space-y-2">
-                        {appealableIssues.data.slice(0, 3).map((issue, i) => (
-                          <div
-                            key={i}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {issue.description}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Decision: {formatDate(issue.decisionDate)}
-                            </p>
-                            {issue.ratingPercent !== undefined && (
-                              <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200 text-xs rounded">
-                                Rated: {issue.ratingPercent}%
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : appealableIssues.status === "pass" ? (
-                      <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                        <Icons.Check /> No appealable issues
-                      </p>
-                    ) : null}
-                  </ApiTestCard>
-
-                  {/* Appeals Status */}
-                  <ApiTestCard
-                    title="Appeals Status"
-                    icon={Icons.Gavel}
-                    iconColor="text-purple-600"
-                    status={appealsStatus.status}
-                    loading={appealsStatus.loading}
-                    error={appealsStatus.error}
-                    rawData={appealsStatus.raw}
-                    showRaw={showRaw.appealsStatus}
-                    onToggleRaw={() => toggleRaw("appealsStatus")}
-                  >
-                    {appealsStatus.data && appealsStatus.data.length > 0 ? (
-                      <div className="space-y-2">
-                        {appealsStatus.data.slice(0, 3).map((appeal, i) => (
-                          <div
-                            key={i}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-semibold text-gray-900 dark:text-white capitalize">
-                              {appeal.type} Appeal
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Program: {appeal.programArea}
-                            </p>
-                            <span
-                              className={`inline-block mt-1 px-2 py-0.5 text-xs rounded ${
-                                appeal.active
-                                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                              }`}
-                            >
-                              {appeal.active ? "Active" : "Closed"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : appealsStatus.status === "pass" ? (
-                      <p className="text-sm text-gray-500">No active appeals</p>
-                    ) : null}
-                  </ApiTestCard>
-                </div>
-              )}
-            </section>
-
-            {/* ================================================================= */}
-            {/* TEST SUMMARY */}
-            {/* ================================================================= */}
-            <section className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                API Test Summary
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { name: "Facilities", status: facilities.status },
-                  { name: "Forms", status: forms.status },
-                  { name: "Reference Data", status: disabilities.status },
-                  { name: "Service History", status: serviceHistory.status },
-                  { name: "Claims", status: claims.status },
-                  {
-                    name: "Appealable Issues",
-                    status: appealableIssues.status,
-                  },
-                  { name: "Appeals Status", status: appealsStatus.status },
-                ].map(({ name, status }) => (
-                  <div
-                    key={name}
-                    className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                  >
-                    {status === "pass" ? (
-                      <Icons.Check />
-                    ) : status === "fail" ? (
-                      <Icons.X />
-                    ) : status === "skipped" ? (
-                      <span className="text-yellow-500 text-xs font-bold">
-                        SKIP
-                      </span>
-                    ) : (
-                      <Icons.Clock />
-                    )}
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <TestSummarySection
+              facilities={facilities}
+              forms={forms}
+              disabilities={disabilities}
+              serviceHistory={serviceHistory}
+              claims={claims}
+              appealableIssues={appealableIssues}
+              appealsStatus={appealsStatus}
+            />
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                VA Sandbox Test Dashboard • All data is synthetic test data
-              </p>
-              <a
-                href="/"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <Icons.Home />
-                <span>Back to Home</span>
-              </a>
-            </div>
-          </div>
+          <SandboxFooter />
         </div>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+const VaSandboxTest = () => {
+  const { _t } = useLanguage();
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    error: authError,
+    userInfo,
+    accessToken,
+    login,
+    logout,
+  } = useVaAuth();
+
+  const { showRaw, toggleRaw } = useRawToggle();
+  const { facilities, testFacilities } = useFacilitiesApi();
+  const { forms, testForms } = useFormsApi();
+  const { disabilities, testDisabilities } = useDisabilitiesApi();
+  const { serviceHistory, claims, appealableIssues, appealsStatus, fetchUserData } =
+    useVaSandboxUserData(accessToken, isAuthenticated);
+
+  return (
+    <VaSandboxDashboard
+      isAuthenticated={isAuthenticated}
+      authLoading={authLoading}
+      authError={authError}
+      userInfo={userInfo}
+      login={login}
+      logout={logout}
+      facilities={facilities}
+      testFacilities={testFacilities}
+      forms={forms}
+      testForms={testForms}
+      disabilities={disabilities}
+      testDisabilities={testDisabilities}
+      serviceHistory={serviceHistory}
+      claims={claims}
+      appealableIssues={appealableIssues}
+      appealsStatus={appealsStatus}
+      fetchUserData={fetchUserData}
+      showRaw={showRaw}
+      toggleRaw={toggleRaw}
+    />
   );
 };
 

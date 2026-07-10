@@ -261,6 +261,7 @@ export const loadVKB = async () => {
           const stored = localStorage.getItem(VKB_STORAGE_KEY);
           resolve(stored ? JSON.parse(stored) : initializeVKB());
         } catch (err) {
+          console.error("Error parsing localStorage VKB fallback:", err);
           resolve(initializeVKB());
         }
       };
@@ -272,6 +273,7 @@ export const loadVKB = async () => {
       const stored = localStorage.getItem(VKB_STORAGE_KEY);
       return stored ? JSON.parse(stored) : initializeVKB();
     } catch (lsErr) {
+      console.error("Error parsing localStorage VKB fallback:", lsErr);
       return initializeVKB();
     }
   }
@@ -346,15 +348,12 @@ export const saveVKB = async (vkb) => {
 };
 
 /**
- * Add a document to VKB with full metadata and version tracking
- * Keeps each document's data separate - NEVER overwrites existing documents
+ * Determine which VKB documentation category a document classification
+ * belongs to.
  */
-export const addDocumentToVKB = async (documentInfo) => {
-  const vkb = await loadVKB();
-
-  // Determine document category
+function categorizeDocument(classification) {
   let category = "otherEvidence";
-  switch (documentInfo.classification) {
+  switch (classification) {
     case "DD214":
     case "service_record":
       category = "dd214s";
@@ -375,6 +374,52 @@ export const addDocumentToVKB = async (documentInfo) => {
       category = "privateRecords";
       break;
   }
+  return category;
+}
+
+/**
+ * Push a fully-built document entry into the correct VKB documentation
+ * bucket based on its classification.
+ */
+function routeDocumentToVKB(vkb, classification, docEntry) {
+  switch (classification) {
+    case "DD214":
+    case "service_record":
+      vkb.documentation.dd214s.push(docEntry);
+      break;
+
+    case "blue_button":
+    case "medical_record":
+      vkb.documentation.blueButtonReports.push(docEntry);
+      break;
+
+    case "c_file":
+    case "rating_decision":
+    case "claim_letter":
+    case "va_decision":
+      vkb.documentation.cFiles.push(docEntry);
+      break;
+
+    case "private_medical":
+    case "provider_letter":
+    case "nexus_letter":
+      vkb.documentation.privateRecords.push(docEntry);
+      break;
+
+    default:
+      vkb.documentation.otherEvidence.push(docEntry);
+  }
+}
+
+/**
+ * Add a document to VKB with full metadata and version tracking
+ * Keeps each document's data separate - NEVER overwrites existing documents
+ */
+export const addDocumentToVKB = async (documentInfo) => {
+  const vkb = await loadVKB();
+
+  // Determine document category
+  const category = categorizeDocument(documentInfo.classification);
 
   // Calculate version number (count existing documents of this type + 1)
   const existingDocs = vkb.documentation[category] || [];
@@ -402,33 +447,7 @@ export const addDocumentToVKB = async (documentInfo) => {
   };
 
   // Route to appropriate documentation category
-  switch (documentInfo.classification) {
-    case "DD214":
-    case "service_record":
-      vkb.documentation.dd214s.push(docEntry);
-      break;
-
-    case "blue_button":
-    case "medical_record":
-      vkb.documentation.blueButtonReports.push(docEntry);
-      break;
-
-    case "c_file":
-    case "rating_decision":
-    case "claim_letter":
-    case "va_decision":
-      vkb.documentation.cFiles.push(docEntry);
-      break;
-
-    case "private_medical":
-    case "provider_letter":
-    case "nexus_letter":
-      vkb.documentation.privateRecords.push(docEntry);
-      break;
-
-    default:
-      vkb.documentation.otherEvidence.push(docEntry);
-  }
+  routeDocumentToVKB(vkb, documentInfo.classification, docEntry);
 
   vkb.metadata.documentCount =
     vkb.documentation.dd214s.length +
@@ -716,9 +735,7 @@ export const calculateCompleteness = (vkb) => {
  * @param {string} options.fileName - Original filename
  * @returns {Object} Updated VKB
  */
-export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
-  if (!dd214Data || typeof dd214Data !== "object") return vkb;
-
+function mergeDD214PersonalInfo(vkb, dd214Data) {
   // ─── PERSONAL INFO (Blocks 1, 3, 5) ───
   if (dd214Data.fullName || dd214Data.name) {
     const name = dd214Data.fullName || dd214Data.name;
@@ -736,16 +753,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   if (dd214Data.dateOfBirth && !vkb.personal.dateOfBirth) {
     vkb.personal.dateOfBirth = dd214Data.dateOfBirth;
   }
+}
 
-  // ─── SERVICE HISTORY (Blocks 2, 4a-4b, 7-11, 24) ───
-  vkb.serviceHistory.branch = dd214Data.branch || vkb.serviceHistory.branch;
-
-  // Component (Active, Reserve, Guard)
-  if (dd214Data.component) {
-    if (!vkb.serviceHistory.component)
-      vkb.serviceHistory.component = dd214Data.component;
-  }
-
+function mergeDD214ServiceDates(vkb, dd214Data) {
   // Dates - use the EARLIEST entry and LATEST separation across all DD214s
   if (dd214Data.entryDate) {
     if (
@@ -782,7 +792,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   if (dd214Data.netActiveServiceTime) {
     vkb.serviceHistory.netActiveServiceTime = dd214Data.netActiveServiceTime;
   }
+}
 
+function mergeDD214RankAndCharacter(vkb, dd214Data) {
   // Rank - use the HIGHEST rank (latest DD214 usually has highest)
   if (dd214Data.rank) {
     vkb.serviceHistory.rank.discharge = dd214Data.rank;
@@ -808,7 +820,23 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     dd214Data.reenlisted || vkb.serviceHistory.reenlisted;
   vkb.serviceHistory.foreignService =
     dd214Data.foreignService || vkb.serviceHistory.foreignService;
+}
 
+function mergeDD214ServiceHistoryCore(vkb, dd214Data) {
+  // ─── SERVICE HISTORY (Blocks 2, 4a-4b, 7-11, 24) ───
+  vkb.serviceHistory.branch = dd214Data.branch || vkb.serviceHistory.branch;
+
+  // Component (Active, Reserve, Guard)
+  if (dd214Data.component) {
+    if (!vkb.serviceHistory.component)
+      vkb.serviceHistory.component = dd214Data.component;
+  }
+
+  mergeDD214ServiceDates(vkb, dd214Data);
+  mergeDD214RankAndCharacter(vkb, dd214Data);
+}
+
+function mergeDD214SeparationDetails(vkb, dd214Data) {
   // ─── SEPARATION DETAILS (Blocks 12, 23, 25-28) ───
   if (
     dd214Data.separationAuthority ||
@@ -837,11 +865,23 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
         dd214Data.spnCode || vkb.serviceHistory.separationDetails?.spnCode,
     };
   }
+}
 
-  // ─── MOS (Block 14) ───
+/**
+ * Derive the MOS code/title reported on a DD-214, using the same
+ * precedence rules used both when merging the MOS list and when
+ * recording a service period.
+ */
+function deriveDD214MOS(dd214Data) {
   const mosCode = dd214Data.mos || dd214Data.primaryMOS;
   const mosTitle =
     dd214Data.mosTitle || dd214Data.primaryMOSTitle || dd214Data.dutyMOS;
+  return { mosCode, mosTitle };
+}
+
+function mergeDD214MOS(vkb, dd214Data) {
+  // ─── MOS (Block 14) ───
+  const { mosCode, mosTitle } = deriveDD214MOS(dd214Data);
   if (mosCode) {
     const existingMOS = vkb.serviceHistory.mos.find((m) => m.code === mosCode);
     if (!existingMOS) {
@@ -870,7 +910,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       }
     });
   }
+}
 
+function mergeDD214Education(vkb, dd214Data) {
   // ─── EDUCATION (Block 15) ───
   if (dd214Data.educationYears || dd214Data.education) {
     if (!vkb.serviceHistory.education) vkb.serviceHistory.education = {};
@@ -880,7 +922,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
         dd214Data.education || vkb.serviceHistory.education?.description,
     };
   }
+}
 
+function mergeDD214Awards(vkb, dd214Data, options) {
   // ─── AWARDS (Block 13 + Block 18 continuation) ───
   if (dd214Data.awards && Array.isArray(dd214Data.awards)) {
     dd214Data.awards.forEach((award) => {
@@ -926,7 +970,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       }
     });
   }
+}
 
+function mergeDD214Deployments(vkb, dd214Data, options) {
   // ─── DEPLOYMENTS (from Block 18 / extracted) ───
   if (dd214Data.deployments && Array.isArray(dd214Data.deployments)) {
     dd214Data.deployments.forEach((dep) => {
@@ -950,7 +996,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       }
     });
   }
+}
 
+function mergeDD214CombatService(vkb, dd214Data) {
   // ─── COMBAT SERVICE ───
   if (dd214Data.combatService) {
     if (!vkb.serviceHistory.combatService) {
@@ -978,7 +1026,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       });
     }
   }
+}
 
+function mergeDD214SpecialQualifications(vkb, dd214Data) {
   // ─── SPECIAL QUALIFICATIONS ───
   if (
     dd214Data.specialQualifications &&
@@ -992,7 +1042,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       }
     });
   }
+}
 
+function mergeDD214Addresses(vkb, dd214Data) {
   // ─── ADDRESSES (Blocks 19-22) ───
   if (dd214Data.mailingAddress || dd214Data.address) {
     const addr = dd214Data.mailingAddress || dd214Data.address;
@@ -1010,7 +1062,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       }
     }
   }
+}
 
+function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
   // ─── EVIDENCE TIMELINE ───
   const timelineEntries = [];
   if (dd214Data.entryDate) {
@@ -1061,8 +1115,11 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     if (!b.date) return -1;
     return new Date(a.date) - new Date(b.date);
   });
+}
 
+function mergeDD214ServicePeriodTracking(vkb, dd214Data, options) {
   // ─── SERVICE PERIOD TRACKING (for multi-DD214 sets) ───
+  const { mosCode, mosTitle } = deriveDD214MOS(dd214Data);
   if (!vkb.serviceHistory.servicePeriods)
     vkb.serviceHistory.servicePeriods = [];
   if (dd214Data.entryDate && dd214Data.separationDate) {
@@ -1086,7 +1143,9 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       });
     }
   }
+}
 
+function mergeDD214Documentation(vkb, dd214Data, options) {
   // ─── DOCUMENTATION ───
   vkb.documentation.dd214s.push({
     id: `dd214-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -1103,6 +1162,25 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   });
 
   vkb.metadata.documentCount++;
+}
+
+export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
+  if (!dd214Data || typeof dd214Data !== "object") return vkb;
+
+  mergeDD214PersonalInfo(vkb, dd214Data);
+  mergeDD214ServiceHistoryCore(vkb, dd214Data);
+  mergeDD214SeparationDetails(vkb, dd214Data);
+  mergeDD214MOS(vkb, dd214Data);
+  mergeDD214Education(vkb, dd214Data);
+  mergeDD214Awards(vkb, dd214Data, options);
+  mergeDD214Deployments(vkb, dd214Data, options);
+  mergeDD214CombatService(vkb, dd214Data);
+  mergeDD214SpecialQualifications(vkb, dd214Data);
+  mergeDD214Addresses(vkb, dd214Data);
+  mergeDD214EvidenceTimeline(vkb, dd214Data, options);
+  mergeDD214ServicePeriodTracking(vkb, dd214Data, options);
+  mergeDD214Documentation(vkb, dd214Data, options);
+
   return vkb;
 };
 
@@ -1116,7 +1194,14 @@ function parsePayGrade(pg) {
   if (!match) return 0;
   const category = match[1].toUpperCase();
   const level = parseInt(match[2], 10);
-  const base = category === "E" ? 0 : category === "W" ? 100 : 200;
+  let base;
+  if (category === "E") {
+    base = 0;
+  } else if (category === "W") {
+    base = 100;
+  } else {
+    base = 200;
+  }
   return base + level;
 }
 
@@ -1205,15 +1290,9 @@ export const mergeMusterCallIntoVKB = (vkb, musterCallData) => {
   return vkb;
 };
 
-/**
- * Generate LLM context string from VKB
- * This is what we inject into AI prompts so every AI tool
- * knows everything about the veteran - Diamond Standard completeness.
- */
-export const generateLLMContext = (vkb) => {
-  let context = "=== VETERAN KNOWLEDGE BASE ===\n\n";
-
+function buildPersonalContext(vkb) {
   // ─── PERSONAL ───
+  let context = "";
   if (vkb.personal.fullName) {
     context += `Veteran: ${vkb.personal.fullName}\n`;
   }
@@ -1233,9 +1312,12 @@ export const generateLLMContext = (vkb) => {
     );
     context += `Address: ${parts.join(", ")}\n`;
   }
+  return context;
+}
 
+function buildServiceHistoryCoreContext(vkb) {
   // ─── SERVICE HISTORY ───
-  context += "\n--- SERVICE HISTORY ---\n";
+  let context = "\n--- SERVICE HISTORY ---\n";
   if (vkb.serviceHistory.branch) {
     context += `Branch: ${vkb.serviceHistory.branch}\n`;
   }
@@ -1256,11 +1338,17 @@ export const generateLLMContext = (vkb) => {
     context += "\n";
   }
   if (vkb.serviceHistory.mos.length > 0) {
-    context += `MOS: ${vkb.serviceHistory.mos.map((m) => `${m.code} (${m.title})`).join(", ")}\n`;
+    const mosList = vkb.serviceHistory.mos.map((m) => `${m.code} (${m.title})`);
+    context += `MOS: ${mosList.join(", ")}\n`;
   }
   if (vkb.serviceHistory.characterOfService) {
     context += `Discharge: ${vkb.serviceHistory.characterOfService}\n`;
   }
+  return context;
+}
+
+function buildServicePeriodsAndSeparationContext(vkb) {
+  let context = "";
 
   // Service periods (multi-DD214)
   if (vkb.serviceHistory.servicePeriods?.length > 1) {
@@ -1278,8 +1366,12 @@ export const generateLLMContext = (vkb) => {
     if (sep.reentryCode) context += `RE Code: ${sep.reentryCode}\n`;
     if (sep.spnCode) context += `SPN Code: ${sep.spnCode}\n`;
   }
+  return context;
+}
 
+function buildDeploymentsContext(vkb) {
   // ─── DEPLOYMENTS ───
+  let context = "";
   if (vkb.serviceHistory.deployments?.length > 0) {
     context += "\n--- DEPLOYMENTS ---\n";
     vkb.serviceHistory.deployments.forEach((dep) => {
@@ -1291,8 +1383,12 @@ export const generateLLMContext = (vkb) => {
       context += "\n";
     });
   }
+  return context;
+}
 
+function buildCombatServiceContext(vkb) {
   // ─── COMBAT SERVICE ───
+  let context = "";
   if (vkb.serviceHistory.combatService?.hasVerifiedCombat) {
     context += "\n--- COMBAT SERVICE: VERIFIED ---\n";
     if (vkb.serviceHistory.combatService.indicators?.length) {
@@ -1302,8 +1398,12 @@ export const generateLLMContext = (vkb) => {
       context += `Campaigns: ${vkb.serviceHistory.combatService.campaigns.join(", ")}\n`;
     }
   }
+  return context;
+}
 
+function buildAwardsContext(vkb) {
   // ─── AWARDS ───
+  let context = "";
   if (vkb.serviceHistory.awards?.length > 0) {
     context += "\n--- AWARDS & DECORATIONS ---\n";
     const combatAwards = vkb.serviceHistory.awards.filter((a) => a.isCombat);
@@ -1323,21 +1423,33 @@ export const generateLLMContext = (vkb) => {
       context += "\n";
     });
   }
+  return context;
+}
 
+function buildSpecialQualificationsContext(vkb) {
   // ─── SPECIAL QUALIFICATIONS ───
+  let context = "";
   if (vkb.serviceHistory.specialQualifications?.length > 0) {
     context += `\nSpecial Qualifications: ${vkb.serviceHistory.specialQualifications.join(", ")}\n`;
   }
+  return context;
+}
 
+function buildEducationContext(vkb) {
   // ─── EDUCATION ───
+  let context = "";
   if (vkb.serviceHistory.education) {
     const edu = vkb.serviceHistory.education;
     if (edu.years) context += `Education: ${edu.years} years`;
     if (edu.description) context += ` - ${edu.description}`;
     context += "\n";
   }
+  return context;
+}
 
+function buildClaimedConditionsContext(vkb) {
   // ─── MEDICAL CONDITIONS ───
+  let context = "";
   if (vkb.medicalConditions.current.length > 0) {
     context += "\n--- CLAIMED CONDITIONS ---\n";
     vkb.medicalConditions.current.forEach((condition) => {
@@ -1350,24 +1462,36 @@ export const generateLLMContext = (vkb) => {
       context += "\n";
     });
   }
+  return context;
+}
 
+function buildSecondaryConditionsContext(vkb) {
   // Secondary conditions
+  let context = "";
   if (vkb.medicalConditions.secondary.length > 0) {
     context += "\n--- SECONDARY CONDITIONS ---\n";
     vkb.medicalConditions.secondary.forEach((sec) => {
       context += `• ${sec.condition} (secondary to ${sec.primaryCondition})\n`;
     });
   }
+  return context;
+}
 
+function buildPresumptiveConditionsContext(vkb) {
   // Presumptive conditions
+  let context = "";
   if (vkb.medicalConditions.presumptive?.length > 0) {
     context += "\n--- PRESUMPTIVE CONDITIONS ---\n";
     vkb.medicalConditions.presumptive.forEach((p) => {
       context += `• ${p.condition} (${p.exposureType}, eligible under ${p.eligibleUnder})\n`;
     });
   }
+  return context;
+}
 
+function buildMedicationsContext(vkb) {
   // Medications
+  let context = "";
   if (vkb.medications.current.length > 0) {
     context += "\n--- CURRENT MEDICATIONS ---\n";
     vkb.medications.current.forEach((med) => {
@@ -1378,8 +1502,12 @@ export const generateLLMContext = (vkb) => {
       context += "\n";
     });
   }
+  return context;
+}
 
+function buildExposuresContext(vkb) {
   // ─── EXPOSURES ───
+  let context = "";
   const hasExposures =
     vkb.exposures.environmental.length +
       vkb.exposures.occupational.length +
@@ -1397,8 +1525,12 @@ export const generateLLMContext = (vkb) => {
       context += `• Combat: ${e.incident} at ${e.location} (${e.date || "date unknown"})\n`;
     });
   }
+  return context;
+}
 
+function buildClaimsHistoryContext(vkb) {
   // ─── CLAIMS HISTORY ───
+  let context = "";
   if (
     vkb.vaClaimsHistory.claims.length > 0 ||
     vkb.vaClaimsHistory.ratings.length > 0
@@ -1418,16 +1550,23 @@ export const generateLLMContext = (vkb) => {
       });
     }
   }
+  return context;
+}
 
+function buildEvidenceSummaryContext(vkb) {
   // ─── EVIDENCE ───
-  context += "\n--- EVIDENCE ON FILE ---\n";
+  let context = "\n--- EVIDENCE ON FILE ---\n";
   context += `DD-214s: ${vkb.documentation.dd214s.length}\n`;
   context += `Blue Button Reports: ${vkb.documentation.blueButtonReports.length}\n`;
   context += `C-Files: ${vkb.documentation.cFiles.length}\n`;
   context += `Private Records: ${vkb.documentation.privateRecords.length}\n`;
   context += `Other Evidence: ${vkb.documentation.otherEvidence.length}\n`;
+  return context;
+}
 
+function buildEvidenceTimelineContext(vkb) {
   // ─── EVIDENCE TIMELINE ───
+  let context = "";
   if (vkb.evidenceTimeline.length > 0) {
     context += "\n--- EVIDENCE TIMELINE ---\n";
     vkb.evidenceTimeline.slice(0, 20).forEach((e) => {
@@ -1437,30 +1576,72 @@ export const generateLLMContext = (vkb) => {
       context += `  ... and ${vkb.evidenceTimeline.length - 20} more events\n`;
     }
   }
+  return context;
+}
 
+function buildKeyFactsContext(vkb) {
   // Key facts
+  let context = "";
   if (vkb.keyFacts.length > 0) {
     context += "\n--- KEY FACTS ---\n";
     vkb.keyFacts.slice(0, 10).forEach((fact) => {
       context += `• ${fact.fact} [Source: ${fact.source}]\n`;
     });
   }
+  return context;
+}
 
+function buildNexusStatementsContext(vkb) {
   // Nexus statements
+  let context = "";
   if (vkb.nexusStatements?.length > 0) {
     context += "\n--- NEXUS STATEMENTS ---\n";
     vkb.nexusStatements.forEach((ns) => {
       context += `• ${ns.condition}: "${ns.relationship}" (by ${ns.statedBy || "unknown"}, ${ns.date || ""})\n`;
     });
   }
+  return context;
+}
 
+function buildAIInsightsContext(vkb) {
   // AI Insights
+  let context = "";
   if (vkb.aiInsights.missingEvidence.length > 0) {
     context += "\n--- MISSING EVIDENCE ---\n";
     vkb.aiInsights.missingEvidence.slice(0, 5).forEach((missing) => {
       context += `• ${missing.condition}: Need ${missing.evidenceType}\n`;
     });
   }
+  return context;
+}
+
+/**
+ * Generate LLM context string from VKB
+ * This is what we inject into AI prompts so every AI tool
+ * knows everything about the veteran - Diamond Standard completeness.
+ */
+export const generateLLMContext = (vkb) => {
+  let context = "=== VETERAN KNOWLEDGE BASE ===\n\n";
+
+  context += buildPersonalContext(vkb);
+  context += buildServiceHistoryCoreContext(vkb);
+  context += buildServicePeriodsAndSeparationContext(vkb);
+  context += buildDeploymentsContext(vkb);
+  context += buildCombatServiceContext(vkb);
+  context += buildAwardsContext(vkb);
+  context += buildSpecialQualificationsContext(vkb);
+  context += buildEducationContext(vkb);
+  context += buildClaimedConditionsContext(vkb);
+  context += buildSecondaryConditionsContext(vkb);
+  context += buildPresumptiveConditionsContext(vkb);
+  context += buildMedicationsContext(vkb);
+  context += buildExposuresContext(vkb);
+  context += buildClaimsHistoryContext(vkb);
+  context += buildEvidenceSummaryContext(vkb);
+  context += buildEvidenceTimelineContext(vkb);
+  context += buildKeyFactsContext(vkb);
+  context += buildNexusStatementsContext(vkb);
+  context += buildAIInsightsContext(vkb);
 
   context += "\n=== END KNOWLEDGE BASE ===\n";
   return context;

@@ -169,7 +169,6 @@ self.addEventListener("fetch", (event) => {
         }
       })(),
     );
-    return;
   }
 
   // 7. Everything else (same-origin JSON/API endpoints, dev endpoints):

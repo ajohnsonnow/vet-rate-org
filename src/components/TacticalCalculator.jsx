@@ -39,6 +39,28 @@ import {
  * - Shows "What If" scenarios
  */
 
+const getInitialActiveTab = (capResults) => {
+  if (capResults.length > 0) return "capresults";
+  if (hasMyRatings()) return "myratings";
+  return "calculator";
+};
+
+const getRatingBadgeColor = (rating) => {
+  if (rating >= 70) return "bg-red-500";
+  if (rating >= 50) return "bg-orange-500";
+  if (rating >= 30) return "bg-yellow-500";
+  return "bg-gray-400";
+};
+
+const getTabButtonClasses = (activeTab, tabId) => {
+  if (activeTab !== tabId) {
+    return "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700";
+  }
+  return tabId === "capresults"
+    ? "bg-teal-600 text-white"
+    : "bg-blue-600 text-white";
+};
+
 const TacticalCalculator = ({
   onClose,
   onReportBug,
@@ -84,11 +106,7 @@ const TacticalCalculator = ({
 
   // View mode
   const [activeTab, setActiveTab] = useState(
-    capSimulatorResults.length > 0
-      ? "capresults"
-      : hasMyRatings()
-        ? "myratings"
-        : "calculator",
+    getInitialActiveTab(capSimulatorResults),
   );
   const [showSteps, setShowSteps] = useState(false);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
@@ -179,6 +197,11 @@ const TacticalCalculator = ({
     }
   };
 
+  // Remove a C&P Simulator result once it's been dealt with
+  const removeCapResult = (index) => {
+    setCapResults((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Remove a rating from My Ratings
   const handleRemoveFromMyRatings = (ratingId) => {
     removeRating(ratingId);
@@ -207,11 +230,6 @@ const TacticalCalculator = ({
 
   // Calculate results from My Ratings
   const myRatingsResults = calculateVARating(myRatings);
-  // eslint-disable-next-line no-unused-vars
-  const myRatingsCompensation = calculateCompensation(
-    myRatingsResults.combinedRating,
-    dependents,
-  );
   const myRatingsPyramiding = detectPyramiding(myRatings);
 
   // Calculate results
@@ -492,13 +510,7 @@ const TacticalCalculator = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${
-                    activeTab === tab.id
-                      ? tab.id === "capresults"
-                        ? "bg-teal-600 text-white"
-                        : "bg-blue-600 text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                  className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
                 >
                   <span className="hidden sm:inline">{tab.label}</span>
                   <span className="inline sm:hidden">{tab.shortLabel}</span>
@@ -603,15 +615,7 @@ const TacticalCalculator = ({
                           >
                             <div className="flex items-center gap-3">
                               <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white ${
-                                  rating.rating >= 70
-                                    ? "bg-red-500"
-                                    : rating.rating >= 50
-                                      ? "bg-orange-500"
-                                      : rating.rating >= 30
-                                        ? "bg-yellow-500"
-                                        : "bg-gray-400"
-                                }`}
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white ${getRatingBadgeColor(rating.rating)}`}
                               >
                                 {rating.rating}%
                               </div>
@@ -866,15 +870,7 @@ const TacticalCalculator = ({
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${
-                              result.rating >= 70
-                                ? "bg-red-500"
-                                : result.rating >= 50
-                                  ? "bg-orange-500"
-                                  : result.rating >= 30
-                                    ? "bg-yellow-500"
-                                    : "bg-gray-400"
-                            }`}
+                            className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${getRatingBadgeColor(result.rating)}`}
                           >
                             {result.rating}%
                           </div>
@@ -909,9 +905,7 @@ const TacticalCalculator = ({
                             };
                             setConditions((prev) => [...prev, condition]);
                             // Remove from C&P results
-                            setCapResults((prev) =>
-                              prev.filter((_, i) => i !== index),
-                            );
+                            removeCapResult(index);
                           }}
                           className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                         >
@@ -930,9 +924,7 @@ const TacticalCalculator = ({
                             };
                             handleAddToMyRatings(rating);
                             // Remove from C&P results
-                            setCapResults((prev) =>
-                              prev.filter((_, i) => i !== index),
-                            );
+                            removeCapResult(index);
                           }}
                           className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                         >
@@ -1688,9 +1680,8 @@ const TacticalCalculator = ({
 
                     {/* Spouse A&A */}
                     {dependents.married && (
-                      <label
-                        className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750" /* eslint-disable-line jsx-a11y/label-has-associated-control */
-                      >
+                      // eslint-disable-next-line jsx-a11y/label-has-associated-control
+                      <label className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
                         <input
                           type="checkbox"
                           checked={dependents.spouseAidAttendance}

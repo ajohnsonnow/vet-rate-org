@@ -480,12 +480,9 @@ function resolveTranslationCalls(source) {
 }
 
 /**
- * Convert Tailwind classes to semantic CSS classes for alerts/sections
+ * Map background + border combinations to alert classes
  */
-function mapTailwindClasses(classString) {
-  if (!classString) return '';
-  
-  // Map background + border combinations to alert classes
+function mapAlertClass(classString) {
   if (classString.includes('bg-yellow-50') || classString.includes('border-yellow')) {
     return 'alert alert-yellow';
   }
@@ -501,40 +498,28 @@ function mapTailwindClasses(classString) {
   if (classString.includes('bg-purple-50') || classString.includes('border-purple')) {
     return 'alert alert-purple';
   }
-  
-  // Section borders
-  if (classString.includes('border-l-4') && classString.includes('border-blue')) {
-    return 'section-border section-border-blue';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-green')) {
-    return 'section-border section-border-green';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-purple')) {
-    return 'section-border section-border-purple';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-orange')) {
-    return 'section-border section-border-orange';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-red')) {
-    return 'section-border section-border-red';
-  }
-  
   return '';
 }
 
 /**
- * Extract the main content JSX from a React component
+ * Map left-border section combinations to section-border classes
  */
-function extractJSXContent(componentSource) {
-  // Find the return statement with JSX
-  const returnMatch = componentSource.match(/return\s*\(\s*([\s\S]*?)\s*\);\s*\};\s*$/m);
-  if (!returnMatch) {
-    // Try alternate pattern
-    const altMatch = componentSource.match(/return\s*\(\s*([\s\S]*)\);\s*\};\s*(?:export|$)/m);
-    if (altMatch) return altMatch[1];
-    throw new Error('Could not find return statement in component');
-  }
-  return returnMatch[1];
+function mapSectionBorderClass(classString) {
+  if (!classString.includes('border-l-4')) return '';
+  if (classString.includes('border-blue')) return 'section-border section-border-blue';
+  if (classString.includes('border-green')) return 'section-border section-border-green';
+  if (classString.includes('border-purple')) return 'section-border section-border-purple';
+  if (classString.includes('border-orange')) return 'section-border section-border-orange';
+  if (classString.includes('border-red')) return 'section-border section-border-red';
+  return '';
+}
+
+/**
+ * Convert Tailwind classes to semantic CSS classes for alerts/sections
+ */
+function mapTailwindClasses(classString) {
+  if (!classString) return '';
+  return mapAlertClass(classString) || mapSectionBorderClass(classString);
 }
 
 /**
@@ -648,14 +633,7 @@ function extractMetadata(componentSource) {
  */
 function processTermsOfService(componentSource) {
   const metadata = extractMetadata(componentSource);
-  
-  // Extract the main content div (between header and footer)
-  const contentMatch = componentSource.match(/{\/\* Content \*\/}([\s\S]*?){\/\* Footer \*\/}/);
-  if (!contentMatch) {
-    // Try to extract everything between header close and footer
-    const altMatch = componentSource.match(/<\/div>\s*<\/div>\s*<\/div>\s*([\s\S]*?)\s*{\/\* Footer/);
-  }
-  
+
   // Build HTML content section by section
   let htmlContent = '';
 

@@ -119,18 +119,16 @@ async function extractPdfText(filePath) {
 // STRUCTURED DATA EXTRACTION (mirrors src/utils/vaDocumentParser.js)
 // ============================================================================
 
-function extractRatingDecisionData(text, filename) {
+// === PRIMARY PATTERN: VA Benefit Information bullet points ===
+// Format: "l Evaluation of <condition>, which is currently XX percent disabling, is increased/continued to YY percent effective DATE."
+// Format: "l Service connection for <condition> is granted with an evaluation of XX percent effective DATE."
+// Format: "l Service connection for <condition> is denied."
+
+// Evaluation changes: "Evaluation of CONDITION ... is increased/continued to XX percent effective DATE"
+function extractEvaluationChanges(text, filename) {
   const conditions = [];
-  const ratingHistory = [];
+  const evalPattern = /(?:^|\bl\s)Evaluation of ([^,]+(?:,[^,]+)*?),?\s+which is currently \d+ percent disabling, is (?:increased|continued|decreased) to (\d+) percent effective ([A-Z]+ \d+, \d+)/gi;
   let m;
-
-  // === PRIMARY PATTERN: VA Benefit Information bullet points ===
-  // Format: "l Evaluation of <condition>, which is currently XX percent disabling, is increased/continued to YY percent effective DATE."
-  // Format: "l Service connection for <condition> is granted with an evaluation of XX percent effective DATE."
-  // Format: "l Service connection for <condition> is denied."
-
-  // Evaluation changes: "Evaluation of CONDITION ... is increased/continued to XX percent effective DATE"
-  const evalPattern = /(?:^|\bl\s)Evaluation of ([^,]+(?:,[^,]+)*?),?\s+which is currently \d+ percent disabling, is (?:increased|continued|decreased) to (\d+) percent effective ([A-Za-z]+ \d+, \d+)/gi;
   while ((m = evalPattern.exec(text)) !== null) {
     const name = cleanConditionName(m[1]);
     const pct = parseInt(m[2]);
@@ -139,9 +137,14 @@ function extractRatingDecisionData(text, filename) {
       conditions.push({ conditionName: name, ratingPercent: pct, effectiveDate: eff, changeType: 'evaluation_change', source: filename });
     }
   }
+  return conditions;
+}
 
-  // Eval continued at same rate
+// Eval continued at same rate
+function extractContinuedEvaluations(text, filename) {
+  const conditions = [];
   const contPattern = /(?:^|\bl\s)Evaluation of ([^,]+(?:,[^,]+)*?),?\s+which is currently (\d+) percent disabling, is continued/gi;
+  let m;
   while ((m = contPattern.exec(text)) !== null) {
     const name = cleanConditionName(m[1]);
     const pct = parseInt(m[2]);
@@ -149,9 +152,14 @@ function extractRatingDecisionData(text, filename) {
       conditions.push({ conditionName: name, ratingPercent: pct, effectiveDate: null, changeType: 'continued', source: filename });
     }
   }
+  return conditions;
+}
 
-  // Service connection granted: "Service connection for CONDITION is granted with an evaluation of XX percent effective DATE"
+// Service connection granted: "Service connection for CONDITION is granted with an evaluation of XX percent effective DATE"
+function extractGrantedConditions(text, filename) {
+  const conditions = [];
   const grantPattern = /(?:^|\bl\s+)(?:[Ss]ervice connection for )([^.]+?) is granted with an evaluation of (\d+) percent(?:\s+effective\s+([A-Za-z]+ \d+, \d+))?/g;
+  let m;
   while ((m = grantPattern.exec(text)) !== null) {
     const name = cleanConditionName(m[1]);
     const pct = parseInt(m[2]);
@@ -160,19 +168,29 @@ function extractRatingDecisionData(text, filename) {
       conditions.push({ conditionName: capitalizeFirst(name), ratingPercent: pct, effectiveDate: eff, changeType: 'new_grant', source: filename });
     }
   }
+  return conditions;
+}
 
-  // Service connection denied
+// Service connection denied
+function extractDeniedConditions(text, filename) {
+  const conditions = [];
   const denialPattern = /(?:^|\bl\s+)(?:[Ss]ervice connection for )([^.]+?) is denied/g;
+  let m;
   while ((m = denialPattern.exec(text)) !== null) {
     const name = cleanConditionName(m[1]);
     if (name.length > 3 && name.length < 200) {
       conditions.push({ conditionName: capitalizeFirst(name), ratingPercent: 0, effectiveDate: null, changeType: 'denied', source: filename });
     }
   }
+  return conditions;
+}
 
-  // === COMBINED RATING HISTORY TABLE ===
-  // Format: "30% Jun 30, 2007\n40% Jun 30, 2008" etc.
+// === COMBINED RATING HISTORY TABLE ===
+// Format: "30% Jun 30, 2007\n40% Jun 30, 2008" etc.
+function extractRatingHistoryTable(text, filename) {
+  const ratingHistory = [];
   const ratingTablePattern = /(\d{1,3})%\s+([A-Za-z]+ \d+,\s+\d{4})/g;
+  let m;
   while ((m = ratingTablePattern.exec(text)) !== null) {
     const pct = parseInt(m[1]);
     const date = m[2].replace(/\s+/g, ' ').trim();
@@ -180,6 +198,17 @@ function extractRatingDecisionData(text, filename) {
       ratingHistory.push({ combinedRating: pct, effectiveDate: date, source: filename });
     }
   }
+  return ratingHistory;
+}
+
+function extractRatingDecisionData(text, filename) {
+  const conditions = [
+    ...extractEvaluationChanges(text, filename),
+    ...extractContinuedEvaluations(text, filename),
+    ...extractGrantedConditions(text, filename),
+    ...extractDeniedConditions(text, filename),
+  ];
+  const ratingHistory = extractRatingHistoryTable(text, filename);
 
   // Extract most recent combined rating from table
   let combinedRating = null;
@@ -198,7 +227,7 @@ function extractRatingDecisionData(text, filename) {
 function cleanConditionName(raw) {
   return raw
     .replace(/[^\x20-\x7E\u2013\u2014]/g, '') // remove non-printable except em/en-dash
-    .replace(/\u2013|\u2014/g, '-')           // normalize dashes
+    .replace(/[\u2013\u2014]/g, '-')          // normalize dashes
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -208,7 +237,7 @@ function capitalizeFirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function extractDD214Data(text, filename) {
+function extractDD214Data(text, _filename) {
   const result = {
     branch: null, rank: null, mos: null,
     serviceStart: null, serviceEnd: null,
@@ -216,23 +245,23 @@ function extractDD214Data(text, filename) {
     deployments: [],
   };
 
-  const branchMatch = text.match(/(?:component|branch of service)[:\s]+([A-Za-z\s]+?)(?:\n|$)/i);
+  const branchMatch = text.match(/(?:component|branch of service)[:\s]+([A-Z\s]+?)(?:\n|$)/i);
   if (branchMatch) result.branch = branchMatch[1].trim();
 
   const rankMatch = text.match(/(?:grade,\s*rate\s*or\s*rank|rank at discharge)[:\s]+([A-Z0-9/-]+)/i);
   if (rankMatch) result.rank = rankMatch[1].trim();
 
-  const mosMatch = text.match(/(?:primary\s*specialty|mos)[:\s]+([A-Z0-9]+\s*[--]?\s*[A-Za-z\s]+?)(?:\n|$)/i);
+  const mosMatch = text.match(/(?:primary\s*specialty|mos)[:\s]+([A-Z0-9]+\s*-?\s*[A-Z\s]+?)(?:\n|$)/i);
   if (mosMatch) result.mos = mosMatch[1].trim();
 
-  const charMatch = text.match(/(?:character of service|type of separation)[:\s]+([A-Za-z\s]+?)(?:\n|$)/i);
+  const charMatch = text.match(/(?:character of service|type of separation)[:\s]+([A-Z\s]+?)(?:\n|$)/i);
   if (charMatch) result.characterOfService = charMatch[1].trim();
 
   const datesMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{8})\s+(?:to|through|-)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{8})/i);
   if (datesMatch) { result.serviceStart = datesMatch[1]; result.serviceEnd = datesMatch[2]; }
 
   // Awards line
-  const awardsMatch = text.match(/(?:decorations.*medals.*badges|awards)[:\s\n]+([^\n]{10,500})/i);
+  const awardsMatch = text.match(/(?:decorations.*medals.*badges|awards)[:\s]+([^\n]{10,500})/i);
   if (awardsMatch) {
     result.awards = awardsMatch[1].split(/[,;]/).map(a => a.trim()).filter(a => a.length > 2);
   }
@@ -244,7 +273,7 @@ function extractDD214Data(text, filename) {
 // VETERAN PROFILE BUILDER - from all extracted data
 // ============================================================================
 
-function buildVeteranProfile(allExtractions) {
+function buildVeteranProfile(_allExtractions) {
   // Known ground truth from C-file
   return {
     firstName: 'Anthony',
@@ -375,7 +404,7 @@ function buildClaims(allRatingData, importedFiles) {
 // SERVICE HISTORY BUILDER
 // ============================================================================
 
-function buildServiceHistory(dd214Extractions) {
+function buildServiceHistory(_dd214Extractions) {
   return {
     deployments: [
       { id: 'dep1', location: 'Sinai Peninsula, Egypt', country: 'Egypt', operation: 'Multinational Force and Observers (MFO)', startDate: '2002-05-06', endDate: '2003-04-30', branch: 'Army ARNG', rank: 'SPC/E-4', notes: 'TF Sinai' },
@@ -431,168 +460,174 @@ function buildMyRatings() {
 }
 
 // ============================================================================
-// MAIN INGESTION PIPELINE
+// LARGE PDF STREAMING EXTRACTION
 // ============================================================================
 
-async function main() {
-  console.log('=== VET-RATE.ORG C-FILE INGESTION PIPELINE ===');
-  console.log(`Source: ${CFILE_DIR}`);
-  console.log(`Output: ${OUTPUT_PATH}`);
-  console.log('');
+// For the large C-file: use the same pdfjs extractor but process ALL pages
+// in streaming batches to avoid Node.js OOM on 313MB / 5000+ page documents.
+// We accumulate text page-by-page instead of holding the whole file in RAM.
+async function extractHugePdfText(filePath, sizeMB) {
+  const MAX_CHARS_PER_DOC_NODE = 500 * 1024; // 500KB text cap per doc in the JSON output
+  console.log(`LARGE PDF (${sizeMB} MB) — streaming all pages...`);
 
-  const files = readdirSync(CFILE_DIR).filter(f => {
-    const ext = extname(f).toLowerCase();
-    // Skip CSV - use only PDF sources per project decision
-    if (ext === '.csv') return false;
-    return ['.pdf', '.txt'].includes(ext);
-  }).sort();
+  let extractedText = '';
+  let pageCount = 0;
+  let hasText = false;
+  let extractError = null;
+  const extractionMethod = 'pdfjs-streaming-all-pages';
 
-  console.log(`Found ${files.length} documents to process:\n`);
-
-  const importedFiles = [];
-  const allRatingData = [];
-  const allDD214Data = [];
-  const allRawText = {};
-
-  for (const filename of files) {
-    const filePath = join(CFILE_DIR, filename);
-    const stats = statSync(filePath);
-    const ext = extname(filename).toLowerCase();
-    const sizeMB = (stats.size / 1024 / 1024).toFixed(1);
-
-    process.stdout.write(`  Processing: ${filename} (${sizeMB} MB)... `);
-
-    let extractedText = '';
-    let pageCount = 0;
-    let hasText = false;
-    let extractError = null;
-    let extractionMethod = 'pdfjs';
-
-    if (ext === '.pdf') {
-      // For the large C-file: use the same pdfjs extractor but process ALL pages
-      // in streaming batches to avoid Node.js OOM on 313MB / 5000+ page documents.
-      // We accumulate text page-by-page instead of holding the whole file in RAM.
-      const MAX_CHARS_PER_DOC_NODE = 500 * 1024; // 500KB text cap per doc in the JSON output
-      const isHuge = stats.size > 50 * 1024 * 1024;
-
-      if (isHuge) {
-        console.log(`LARGE PDF (${sizeMB} MB) — streaming all pages...`);
-        try {
-          const fileData = readFileSync(filePath);
-          const uint8Array = new Uint8Array(fileData.buffer, fileData.byteOffset, fileData.byteLength);
-          const loadingTask = getDocument({
-            data: uint8Array,
-            useWorkerFetch: false,
-            isEvalSupported: false,
-            useSystemFonts: true,
-            disableFontFace: true,
-          });
-          const pdf = await loadingTask.promise;
-          pageCount = pdf.numPages;
-          let totalChars = 0;
-          let pagesWithTextCount = 0;
-          let accumulated = '';
-
-          for (let i = 1; i <= pageCount; i++) {
-            try {
-              const page = await pdf.getPage(i);
-              const content = await page.getTextContent();
-              const pageText = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
-              totalChars += pageText.length;
-              if (pageText.length >= 50) pagesWithTextCount++;
-              // Only accumulate up to cap; still count all pages
-              if (accumulated.length < MAX_CHARS_PER_DOC_NODE) {
-                accumulated += `--- PAGE ${i} ---\n${pageText}\n\n`;
-              }
-            } catch (pageErr) {
-              accumulated += `--- PAGE ${i} ---\n[extraction error: ${pageErr.message}]\n\n`;
-            }
-            // Yield every 100 pages to keep Node event loop breathing
-            if (i % 100 === 0) {
-              await new Promise(r => setTimeout(r, 0));
-              process.stdout.write(`\r  → page ${i}/${pageCount} (${Math.round(accumulated.length/1024)}KB text)...`);
-            }
-          }
-          process.stdout.write('\n');
-
-          if (accumulated.length >= MAX_CHARS_PER_DOC_NODE) {
-            accumulated += `\n\n[...TEXT TRUNCATED at ${MAX_CHARS_PER_DOC_NODE/1024}KB for JSON output — full ${pageCount} pages extracted in browser via Muster Call]`;
-          }
-
-          extractedText = accumulated;
-          hasText = pagesWithTextCount > 0;
-          extractionMethod = 'pdfjs-streaming-all-pages';
-          console.log(`  DONE: ${pageCount} pages, ${Math.round(totalChars/1024)}KB text, ${pagesWithTextCount} pages with content`);
-        } catch (err) {
-          extractedText = `[Large PDF extraction failed: ${err.message}]`;
-          extractError = err.message;
-          console.log(`  ERROR: ${err.message}`);
-        }
-      } else {
-        const result = await extractPdfText(filePath);
-        extractedText = result.text;
-        pageCount = result.pageCount;
-        hasText = result.hasText;
-        extractError = result.error || null;
-        if (extractError) {
-          console.log(`ERROR: ${extractError}`);
-        } else if (!hasText && pageCount > 0) {
-          console.log(`SCANNED IMAGE PDF — requires browser OCR via Muster Call (${pageCount} pages, 0 text chars)`);
-          extractionMethod = 'scanned-needs-browser-ocr';
-        } else {
-          console.log(`OK (${pageCount} pages, ${result.totalCharacters} chars, hasText=${hasText})`);
-        }
-      }
-    } else if (ext === '.txt') {
-      extractedText = readFileSync(filePath, 'utf8');
-      pageCount = 1;
-      hasText = extractedText.length > 100;
-      extractionMethod = 'plaintext';
-      console.log(`OK (${extractedText.length} chars)`);
-    }
-
-    // Classify document
-    const docType = classifyDocument(filename, extractedText);
-
-    // Extract structured data based on type
-    let structuredData = null;
-    if (docType === 'RATING_DECISION' || docType === 'CLAIM_LETTER') {
-      structuredData = extractRatingDecisionData(extractedText, filename);
-      if (structuredData.conditions.length > 0 || structuredData.combinedRating) {
-        allRatingData.push({ filename, ...structuredData });
-      }
-    } else if (docType === 'DD214') {
-      structuredData = extractDD214Data(extractedText, filename);
-      allDD214Data.push({ filename, ...structuredData });
-    }
-
-    // Store raw text (truncate to 200KB per doc to keep JSON manageable)
-    const MAX_TEXT_PER_DOC = 200 * 1024;
-    allRawText[filename] = extractedText.length > MAX_TEXT_PER_DOC
-      ? extractedText.substring(0, MAX_TEXT_PER_DOC) + '\n\n[...TRUNCATED - see full file for remaining text]'
-      : extractedText;
-
-    importedFiles.push({
-      filename,
-      originalPath: filePath,
-      fileSizeBytes: stats.size,
-      fileSizeMB: parseFloat(sizeMB),
-      ext: ext.replace('.', ''),
-      documentType: docType,
-      pageCount,
-      hasText,
-      totalCharacters: extractedText.length,
-      extractionMethod,
-      extractError,
-      needsBrowserOCR: extractionMethod === 'scanned-needs-browser-ocr',
-      browserOCRNote: extractionMethod === 'scanned-needs-browser-ocr'
-        ? 'Scanned image-only PDF - upload via Muster Call in browser for Tesseract OCR'
-        : null,
-      structuredDataExtracted: !!structuredData,
-      importedAt: new Date().toISOString(),
+  try {
+    const fileData = readFileSync(filePath);
+    const uint8Array = new Uint8Array(fileData.buffer, fileData.byteOffset, fileData.byteLength);
+    const loadingTask = getDocument({
+      data: uint8Array,
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      useSystemFonts: true,
+      disableFontFace: true,
     });
+    const pdf = await loadingTask.promise;
+    pageCount = pdf.numPages;
+    let totalChars = 0;
+    let pagesWithTextCount = 0;
+    let accumulated = '';
+
+    for (let i = 1; i <= pageCount; i++) {
+      try {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
+        totalChars += pageText.length;
+        if (pageText.length >= 50) pagesWithTextCount++;
+        // Only accumulate up to cap; still count all pages
+        if (accumulated.length < MAX_CHARS_PER_DOC_NODE) {
+          accumulated += `--- PAGE ${i} ---\n${pageText}\n\n`;
+        }
+      } catch (pageErr) {
+        accumulated += `--- PAGE ${i} ---\n[extraction error: ${pageErr.message}]\n\n`;
+      }
+      // Yield every 100 pages to keep Node event loop breathing
+      if (i % 100 === 0) {
+        await new Promise(r => setTimeout(r, 0));
+        process.stdout.write(`\r  → page ${i}/${pageCount} (${Math.round(accumulated.length/1024)}KB text)...`);
+      }
+    }
+    process.stdout.write('\n');
+
+    if (accumulated.length >= MAX_CHARS_PER_DOC_NODE) {
+      accumulated += `\n\n[...TEXT TRUNCATED at ${MAX_CHARS_PER_DOC_NODE/1024}KB for JSON output — full ${pageCount} pages extracted in browser via Muster Call]`;
+    }
+
+    extractedText = accumulated;
+    hasText = pagesWithTextCount > 0;
+    console.log(`  DONE: ${pageCount} pages, ${Math.round(totalChars/1024)}KB text, ${pagesWithTextCount} pages with content`);
+  } catch (err) {
+    extractedText = `[Large PDF extraction failed: ${err.message}]`;
+    extractError = err.message;
+    console.log(`  ERROR: ${err.message}`);
   }
 
+  return { extractedText, pageCount, hasText, extractionMethod, extractError };
+}
+
+// ============================================================================
+// PER-DOCUMENT PROCESSING (extract, classify, store)
+// ============================================================================
+
+async function processDocument(filename, allRatingData, allDD214Data, allRawText, importedFiles) {
+  const filePath = join(CFILE_DIR, filename);
+  const stats = statSync(filePath);
+  const ext = extname(filename).toLowerCase();
+  const sizeMB = (stats.size / 1024 / 1024).toFixed(1);
+
+  process.stdout.write(`  Processing: ${filename} (${sizeMB} MB)... `);
+
+  let extractedText = '';
+  let pageCount = 0;
+  let hasText = false;
+  let extractError = null;
+  let extractionMethod = 'pdfjs';
+
+  if (ext === '.pdf') {
+    const isHuge = stats.size > 50 * 1024 * 1024;
+
+    if (isHuge) {
+      const hugeResult = await extractHugePdfText(filePath, sizeMB);
+      extractedText = hugeResult.extractedText;
+      pageCount = hugeResult.pageCount;
+      hasText = hugeResult.hasText;
+      extractionMethod = hugeResult.extractionMethod;
+      extractError = hugeResult.extractError;
+    } else {
+      const result = await extractPdfText(filePath);
+      extractedText = result.text;
+      pageCount = result.pageCount;
+      hasText = result.hasText;
+      extractError = result.error || null;
+      if (extractError) {
+        console.log(`ERROR: ${extractError}`);
+      } else if (!hasText && pageCount > 0) {
+        console.log(`SCANNED IMAGE PDF — requires browser OCR via Muster Call (${pageCount} pages, 0 text chars)`);
+        extractionMethod = 'scanned-needs-browser-ocr';
+      } else {
+        console.log(`OK (${pageCount} pages, ${result.totalCharacters} chars, hasText=${hasText})`);
+      }
+    }
+  } else if (ext === '.txt') {
+    extractedText = readFileSync(filePath, 'utf8');
+    pageCount = 1;
+    hasText = extractedText.length > 100;
+    extractionMethod = 'plaintext';
+    console.log(`OK (${extractedText.length} chars)`);
+  }
+
+  // Classify document
+  const docType = classifyDocument(filename, extractedText);
+
+  // Extract structured data based on type
+  let structuredData = null;
+  if (docType === 'RATING_DECISION' || docType === 'CLAIM_LETTER') {
+    structuredData = extractRatingDecisionData(extractedText, filename);
+    if (structuredData.conditions.length > 0 || structuredData.combinedRating) {
+      allRatingData.push({ filename, ...structuredData });
+    }
+  } else if (docType === 'DD214') {
+    structuredData = extractDD214Data(extractedText, filename);
+    allDD214Data.push({ filename, ...structuredData });
+  }
+
+  // Store raw text (truncate to 200KB per doc to keep JSON manageable)
+  const MAX_TEXT_PER_DOC = 200 * 1024;
+  allRawText[filename] = extractedText.length > MAX_TEXT_PER_DOC
+    ? extractedText.substring(0, MAX_TEXT_PER_DOC) + '\n\n[...TRUNCATED - see full file for remaining text]'
+    : extractedText;
+
+  importedFiles.push({
+    filename,
+    originalPath: filePath,
+    fileSizeBytes: stats.size,
+    fileSizeMB: parseFloat(sizeMB),
+    ext: ext.replace('.', ''),
+    documentType: docType,
+    pageCount,
+    hasText,
+    totalCharacters: extractedText.length,
+    extractionMethod,
+    extractError,
+    needsBrowserOCR: extractionMethod === 'scanned-needs-browser-ocr',
+    browserOCRNote: extractionMethod === 'scanned-needs-browser-ocr'
+      ? 'Scanned image-only PDF - upload via Muster Call in browser for Tesseract OCR'
+      : null,
+    structuredDataExtracted: !!structuredData,
+    importedAt: new Date().toISOString(),
+  });
+}
+
+// ============================================================================
+// PACKET ASSEMBLY
+// ============================================================================
+
+function buildPacket(allRatingData, importedFiles, allDD214Data, allRawText) {
   console.log('\n=== BUILDING PACKET ===\n');
 
   // Aggregate all extracted rating conditions
@@ -643,7 +678,7 @@ async function main() {
   }
 
   // Build the complete v2.0 packet
-  const packet = {
+  return {
     version: '2.0',
     exportDate: new Date().toISOString(),
     source: 'Vet-Rate.org',
@@ -678,28 +713,13 @@ async function main() {
       savedForms: [],
     },
   };
+}
 
-  // Write output
-  const outputJson = JSON.stringify(packet, null, 2);
-  const outputSizeMB = (outputJson.length / 1024 / 1024).toFixed(2);
-  writeFileSync(OUTPUT_PATH, outputJson, 'utf8');
+// ============================================================================
+// PACKET VALIDATION
+// ============================================================================
 
-  console.log('\n=== RESULTS ===\n');
-  console.log(`✅ Packet written to: ${OUTPUT_PATH}`);
-  console.log(`   File size: ${outputSizeMB} MB`);
-  console.log(`   Documents processed: ${importedFiles.length}`);
-  console.log(`   Documents with text: ${importedFiles.filter(f => f.hasText).length}`);
-  console.log(`   Claims: ${claims.length}`);
-  console.log(`   Ratings: ${myRatings.length}`);
-  console.log(`   Deployments: ${serviceHistory.deployments.length}`);
-  console.log(`   Awards: ${serviceHistory.awards.length}`);
-  console.log(`\nIMPORTED FILES LIST:`);
-  for (const f of importedFiles) {
-    const status = f.hasText ? '✅' : f.extractionMethod === 'scanned-needs-browser-ocr' ? '⏭️' : '⚠️';
-    console.log(`  ${status} ${f.filename} (${f.documentType}, ${f.fileSizeMB}MB, ${f.pageCount} pages)`);
-  }
-
-  // Validate the packet would pass importPacketData checks
+function validatePacket(packet, outputJson, outputSizeMB) {
   console.log('\n=== VALIDATION ===');
   const checks = [
     ['source === Vet-Rate.org', packet.source === 'Vet-Rate.org'],
@@ -731,6 +751,66 @@ async function main() {
     console.log('   This is expected when including raw document text.');
     console.log('   The app import limit needs to be raised, OR raw text should be stored in VKB/IndexedDB separately.');
   }
+}
+
+// ============================================================================
+// MAIN INGESTION PIPELINE
+// ============================================================================
+
+async function main() {
+  console.log('=== VET-RATE.ORG C-FILE INGESTION PIPELINE ===');
+  console.log(`Source: ${CFILE_DIR}`);
+  console.log(`Output: ${OUTPUT_PATH}`);
+  console.log('');
+
+  const files = readdirSync(CFILE_DIR).filter(f => {
+    const ext = extname(f).toLowerCase();
+    // Skip CSV - use only PDF sources per project decision
+    if (ext === '.csv') return false;
+    return ['.pdf', '.txt'].includes(ext);
+  }).sort();
+
+  console.log(`Found ${files.length} documents to process:\n`);
+
+  const importedFiles = [];
+  const allRatingData = [];
+  const allDD214Data = [];
+  const allRawText = {};
+
+  for (const filename of files) {
+    await processDocument(filename, allRatingData, allDD214Data, allRawText, importedFiles);
+  }
+
+  const packet = buildPacket(allRatingData, importedFiles, allDD214Data, allRawText);
+
+  // Write output
+  const outputJson = JSON.stringify(packet, null, 2);
+  const outputSizeMB = (outputJson.length / 1024 / 1024).toFixed(2);
+  writeFileSync(OUTPUT_PATH, outputJson, 'utf8');
+
+  console.log('\n=== RESULTS ===\n');
+  console.log(`✅ Packet written to: ${OUTPUT_PATH}`);
+  console.log(`   File size: ${outputSizeMB} MB`);
+  console.log(`   Documents processed: ${importedFiles.length}`);
+  console.log(`   Documents with text: ${importedFiles.filter(f => f.hasText).length}`);
+  console.log(`   Claims: ${packet.data.claims.length}`);
+  console.log(`   Ratings: ${packet.data.myRatings.length}`);
+  console.log(`   Deployments: ${packet.data.serviceHistory.deployments.length}`);
+  console.log(`   Awards: ${packet.data.serviceHistory.awards.length}`);
+  console.log(`\nIMPORTED FILES LIST:`);
+  for (const f of importedFiles) {
+    let status;
+    if (f.hasText) {
+      status = '✅';
+    } else if (f.extractionMethod === 'scanned-needs-browser-ocr') {
+      status = '⏭️';
+    } else {
+      status = '⚠️';
+    }
+    console.log(`  ${status} ${f.filename} (${f.documentType}, ${f.fileSizeMB}MB, ${f.pageCount} pages)`);
+  }
+
+  validatePacket(packet, outputJson, outputSizeMB);
 }
 
 main().catch(err => {

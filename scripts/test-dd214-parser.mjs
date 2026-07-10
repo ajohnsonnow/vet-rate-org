@@ -5,12 +5,6 @@
  * Usage: node --experimental-vm-modules scripts/test-dd214-parser.mjs
  */
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.join(__dirname, '..');
-
 // Expected data from Johnson's DD214s
 const EXPECTED_DATA = {
   name: "WILLIAMS, ROBERT LEE",
@@ -149,141 +143,140 @@ RELIEF FROM ACTIVE DUTY
 HONORABLE
 `;
 
+function extractName(text) {
+  const nameMatch = text.match(/1\.\s*NAME[^\n]*\n\s*([A-Z]{2,}),?\s+([A-Z]+)(?:\s+([A-Z]+))?/i);
+  if (!nameMatch) {
+    return { lastName: null, firstName: null, middleName: null, veteranName: null };
+  }
+  const lastName = nameMatch[1]?.trim().toUpperCase();
+  const firstName = nameMatch[2]?.trim().toUpperCase();
+  const middleName = nameMatch[3]?.trim().toUpperCase() || null;
+  const veteranName = `${lastName}, ${firstName}${middleName ? ' ' + middleName : ''}`;
+  return { lastName, firstName, middleName, veteranName };
+}
+
+function extractBranchAndComponent(upperText) {
+  const branch = (upperText.includes('ARMY') || upperText.includes('ARNG')) ? 'Army' : null;
+  const component = (upperText.includes('ARNG') || upperText.includes('GUARD')) ? 'National Guard' : null;
+  return { branch, component };
+}
+
+function extractRank(text) {
+  const rankMatch = text.match(/4a?\.\s*GRADE.*?RANK\s*\n?\s*([A-Z]{2,4})/i);
+  if (!rankMatch) return null;
+  const validRanks = ['PVT','PV2','PFC','SPC','CPL','SGT','SSG','SFC','MSG','1SG','SGM','CSM'];
+  return validRanks.includes(rankMatch[1]) ? rankMatch[1] : null;
+}
+
+function extractPayGrade(text) {
+  const payMatch = text.match(/4b?\.\s*PAY\s+GRADE\s*\n?\s*([EO]-?\d)/i);
+  if (!payMatch) return null;
+  return payMatch[1].replace(/([EO])(\d)/, '$1-$2');
+}
+
+function extractMOS(text) {
+  const mosMatch = text.match(/PRIMARY\s+SPECIALTY\s*\n?\s*(\d{2}[A-Z]\d{2})\s+([A-Z\s]+?)(?:--|\/\/|\d)/i);
+  if (!mosMatch) return { mos: null, mosTitle: null };
+  return { mos: mosMatch[1], mosTitle: mosMatch[2]?.trim() };
+}
+
+function extractServiceDates(text) {
+  const entryMatch = text.match(/12a\..*?DATE.*?ENTERED.*?(\d{4})\s*\|\s*(\d{2})\s*\|\s*(\d{2})/i);
+  const serviceStartDate = entryMatch ? `${entryMatch[1]}-${entryMatch[2]}-${entryMatch[3]}` : null;
+
+  const sepMatch = text.match(/12b\..*?SEPARATION.*?DATE.*?(\d{4})\s*\|\s*(\d{2})\s*\|\s*(\d{2})/i);
+  const serviceEndDate = sepMatch ? `${sepMatch[1]}-${sepMatch[2]}-${sepMatch[3]}` : null;
+
+  return { serviceStartDate, serviceEndDate };
+}
+
+function extractAwards(text) {
+  const awards = [];
+  const awardsMatch = text.match(/13\.\s*DECORATIONS.*?\n([\s\S]*?)(?:14\.|$)/i);
+  if (!awardsMatch) return awards;
+
+  const awardsText = awardsMatch[1]
+    .replace(/\([^)]*\)/g, ' ')  // Remove parentheses
+    .replace(/NOTHING\s+FOLLOWS/gi, '')
+    .replace(/W\/\s*'?M'?\s*DEVICE/gi, '')  // Remove device notations for base award matching
+    .replace(/-\d+/g, '')  // Remove quantity markers like -2
+    .replace(/\/\//g, ', ')
+    .toUpperCase();
+
+  const awardNames = [
+    'ARMY SERVICE RIBBON',
+    'ARMY ACHIEVEMENT MEDAL',
+    'ARMY RESERVE COMPONENTS ACHIEVEMENT MEDAL',
+    'ARMY RESERVE COMPONENTS ACHIEVMENT MEDAL', // Typo variant
+    'NATIONAL DEFENSE SERVICE RIBBON',
+    'NATIONAL DEFENSE SERVICE MEDAL',
+    'OVERSEAS SERVICE RIBBON',
+    'NCO PROFESSIONAL DEVELOPMENT RIBBON',
+    'NONCOMMISSIONED OFFICERS PROFESSIONAL DEVELOPMENT RIBBON',
+    'AFGHANISTAN CAMPAIGN MEDAL',
+    'GLOBAL WAR ON TERRORISM EXPEDITIONARY MEDAL',
+    'GLOBAL WAR ON TERRORISM SERVICE MEDAL',
+    'GWOT EXPEDITIONARY MEDAL',
+    'GWOT SERVICE MEDAL',
+    'ARMED FORCES RESERVE MEDAL',
+    'MULTINATIONAL FORCES AND OBSERVERS MEDAL',
+    'MULTINATIONAL FORCE AND OBSERVERS MEDAL',
+    'MFO MEDAL',
+    'COMBAT ACTION BADGE',
+    'COMBAT INFANTRYMAN BADGE',
+    'EXPERT INFANTRYMAN BADGE'
+  ];
+
+  for (const award of awardNames) {
+    if (!awardsText.includes(award)) continue;
+    // Normalize names
+    const normalizedAward = award
+      .replace('ACHIEVMENT', 'ACHIEVEMENT')
+      .replace('NONCOMMISSIONED OFFICERS PROFESSIONAL', 'NCO PROFESSIONAL')
+      .replace('MULTINATIONAL FORCES', 'MULTINATIONAL FORCE');
+
+    if (!awards.includes(normalizedAward)) {
+      awards.push(normalizedAward);
+    }
+  }
+
+  return awards;
+}
+
+function extractDischargeType(text) {
+  const dischargeMatch = text.match(/24\.\s*CHARACTER.*?SERVICE\s*\n?\s*([A-Z]+)/i);
+  return dischargeMatch ? dischargeMatch[1] : null;
+}
+
 // Simplified parser for testing (mimics the real one)
 function parseDD214Test(text) {
-  const data = {
-    veteranName: null,
-    lastName: null,
-    firstName: null,
-    middleName: null,
-    branch: null,
-    component: null,
-    rank: null,
-    payGrade: null,
-    mos: null,
-    mosTitle: null,
-    serviceStartDate: null,
-    serviceEndDate: null,
-    awards: [],
-    dischargeType: null
-  };
-  
-  // Clean the text - remove parenthetical content
-  let cleanedText = text.replace(/\([^)]*\)/g, ' ');
-  
-  // Remove lowercase words (instructions)
-  cleanedText = cleanedText.replace(/[a-z]{3,}/g, ' ');
-  cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
-  
   const upperText = text.toUpperCase();
-  
-  // === NAME ===
-  const nameMatch = text.match(/1\.\s*NAME[^\n]*\n\s*([A-Z]{2,}),?\s+([A-Z]+)(?:\s+([A-Z]+))?/i);
-  if (nameMatch) {
-    data.lastName = nameMatch[1]?.trim().toUpperCase();
-    data.firstName = nameMatch[2]?.trim().toUpperCase();
-    data.middleName = nameMatch[3]?.trim().toUpperCase() || null;
-    data.veteranName = `${data.lastName}, ${data.firstName}${data.middleName ? ' ' + data.middleName : ''}`;
-  }
-  
-  // === BRANCH ===
-  if (upperText.includes('ARMY') || upperText.includes('ARNG')) {
-    data.branch = 'Army';
-  }
-  if (upperText.includes('ARNG') || upperText.includes('GUARD')) {
-    data.component = 'National Guard';
-  }
-  
-  // === RANK ===
-  const rankMatch = text.match(/4[aA]?\.\s*GRADE.*?RANK\s*\n?\s*([A-Z]{2,4})/i);
-  if (rankMatch) {
-    const validRanks = ['PVT','PV2','PFC','SPC','CPL','SGT','SSG','SFC','MSG','1SG','SGM','CSM'];
-    if (validRanks.includes(rankMatch[1])) {
-      data.rank = rankMatch[1];
-    }
-  }
-  
-  // === PAY GRADE ===
-  const payMatch = text.match(/4[bB]?\.\s*PAY\s+GRADE\s*\n?\s*([EO]-?\d)/i);
-  if (payMatch) {
-    data.payGrade = payMatch[1].replace(/([EO])(\d)/, '$1-$2');
-  }
-  
-  // === MOS ===
-  const mosMatch = text.match(/PRIMARY\s+SPECIALTY\s*\n?\s*(\d{2}[A-Z]\d{2})\s+([A-Z\s]+?)(?:--|\/\/|\d)/i);
-  if (mosMatch) {
-    data.mos = mosMatch[1];
-    data.mosTitle = mosMatch[2]?.trim();
-  }
-  
-  // === SERVICE DATES ===
-  const entryMatch = text.match(/12[aA]\..*?DATE.*?ENTERED.*?(\d{4})\s*\|\s*(\d{2})\s*\|\s*(\d{2})/i);
-  if (entryMatch) {
-    data.serviceStartDate = `${entryMatch[1]}-${entryMatch[2]}-${entryMatch[3]}`;
-  }
-  
-  const sepMatch = text.match(/12[bB]\..*?SEPARATION.*?DATE.*?(\d{4})\s*\|\s*(\d{2})\s*\|\s*(\d{2})/i);
-  if (sepMatch) {
-    data.serviceEndDate = `${sepMatch[1]}-${sepMatch[2]}-${sepMatch[3]}`;
-  }
-  
-  // === AWARDS ===
-  const awardsMatch = text.match(/13\.\s*DECORATIONS.*?\n([\s\S]*?)(?:14\.|$)/i);
-  if (awardsMatch) {
-    const awardsText = awardsMatch[1]
-      .replace(/\([^)]*\)/g, ' ')  // Remove parentheses
-      .replace(/NOTHING\s+FOLLOWS/gi, '')
-      .replace(/W\/\s*'?M'?\s*DEVICE/gi, '')  // Remove device notations for base award matching
-      .replace(/-\d+/g, '')  // Remove quantity markers like -2
-      .replace(/\/\//g, ', ')
-      .toUpperCase();
-    
-    const awardNames = [
-      'ARMY SERVICE RIBBON',
-      'ARMY ACHIEVEMENT MEDAL',
-      'ARMY RESERVE COMPONENTS ACHIEVEMENT MEDAL',
-      'ARMY RESERVE COMPONENTS ACHIEVMENT MEDAL', // Typo variant
-      'NATIONAL DEFENSE SERVICE RIBBON',
-      'NATIONAL DEFENSE SERVICE MEDAL',
-      'OVERSEAS SERVICE RIBBON',
-      'NCO PROFESSIONAL DEVELOPMENT RIBBON',
-      'NONCOMMISSIONED OFFICERS PROFESSIONAL DEVELOPMENT RIBBON',
-      'AFGHANISTAN CAMPAIGN MEDAL',
-      'GLOBAL WAR ON TERRORISM EXPEDITIONARY MEDAL',
-      'GLOBAL WAR ON TERRORISM SERVICE MEDAL',
-      'GWOT EXPEDITIONARY MEDAL',
-      'GWOT SERVICE MEDAL',
-      'ARMED FORCES RESERVE MEDAL',
-      'MULTINATIONAL FORCES AND OBSERVERS MEDAL',
-      'MULTINATIONAL FORCE AND OBSERVERS MEDAL',
-      'MFO MEDAL',
-      'COMBAT ACTION BADGE',
-      'COMBAT INFANTRYMAN BADGE',
-      'EXPERT INFANTRYMAN BADGE'
-    ];
-    
-    for (const award of awardNames) {
-      if (awardsText.includes(award)) {
-        // Normalize names
-        const normalizedAward = award
-          .replace('ACHIEVMENT', 'ACHIEVEMENT')
-          .replace('NONCOMMISSIONED OFFICERS PROFESSIONAL', 'NCO PROFESSIONAL')
-          .replace('MULTINATIONAL FORCES', 'MULTINATIONAL FORCE');
-        
-        if (!data.awards.includes(normalizedAward)) {
-          data.awards.push(normalizedAward);
-        }
-      }
-    }
-  }
-  
-  // === DISCHARGE TYPE ===
-  const dischargeMatch = text.match(/24\.\s*CHARACTER.*?SERVICE\s*\n?\s*([A-Z]+)/i);
-  if (dischargeMatch) {
-    data.dischargeType = dischargeMatch[1];
-  }
-  
-  return data;
+
+  const { lastName, firstName, middleName, veteranName } = extractName(text);
+  const { branch, component } = extractBranchAndComponent(upperText);
+  const rank = extractRank(text);
+  const payGrade = extractPayGrade(text);
+  const { mos, mosTitle } = extractMOS(text);
+  const { serviceStartDate, serviceEndDate } = extractServiceDates(text);
+  const awards = extractAwards(text);
+  const dischargeType = extractDischargeType(text);
+
+  return {
+    veteranName,
+    lastName,
+    firstName,
+    middleName,
+    branch,
+    component,
+    rank,
+    payGrade,
+    mos,
+    mosTitle,
+    serviceStartDate,
+    serviceEndDate,
+    awards,
+    dischargeType
+  };
 }
 
 // Run the test
