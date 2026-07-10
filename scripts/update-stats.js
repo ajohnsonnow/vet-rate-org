@@ -61,37 +61,37 @@ let readmeUpdates = 0;
 const readmeReplacements = [
   // Lines of Code
   {
-    pattern: /Lines of Code.*?[\d,]+\s*lines/gi,
+    pattern: /Lines of Code.{0,40}?[\d,]{1,15}\s{0,5}lines/gi,
     replacement: `Lines of Code**: ${formatNumber(liveStats.linesOfCode)} lines`
   },
   // Total Files
   {
-    pattern: /Total Files.*?[\d,]+\s*project files/gi,
+    pattern: /Total Files.{0,40}?[\d,]{1,15}\s{0,5}project files/gi,
     replacement: `Total Files**: ${formatNumber(liveStats.totalFiles)} project files`
   },
   // App Size - NOW DYNAMIC
   {
-    pattern: /App Size.*?[\d,.]+\s*MB/gi,
+    pattern: /App Size.{0,40}?[\d,.]{1,15}\s{0,5}MB/gi,
     replacement: `App Size**: ${liveStats.appSizeMB} MB`
   },
   // Components count
   {
-    pattern: /Components.*?[\d,]+\s*React components\s*\(\d+\s*major tools\s*\+\s*\d+\s*supporting\)/gi,
+    pattern: /Components.{0,40}?[\d,]{1,15}\s{0,5}React components\s{0,5}\(\d{1,7}\s{0,5}major tools\s{0,5}\+\s{0,5}\d{1,7}\s{0,5}supporting\)/gi,
     replacement: `Components**: ${liveStats.componentCount} React components (${liveStats.toolCount} major tools + ${liveStats.supportingComponents} supporting)`
   },
   // Utilities
   {
-    pattern: /Utilities.*?[\d,]+\s*helper modules/gi,
+    pattern: /Utilities.{0,40}?[\d,]{1,15}\s{0,5}helper modules/gi,
     replacement: `Utilities**: ${liveStats.utilityCount} helper modules`
   },
   // Data validation disability count
   {
-    pattern: /Data Validation.*?[\d,]+\s*disabilities verified/gi,
+    pattern: /Data Validation.{0,40}?[\d,]{1,15}\s{0,5}disabilities verified/gi,
     replacement: `Data Validation**: ${liveStats.disabilityCount} disabilities verified`
   },
   // Professional tools count
   {
-    pattern: /(\d+)\s*professional tools/gi,
+    pattern: /(\d{1,7})\s{0,5}professional tools/gi,
     replacement: `${liveStats.toolCount} professional tools`
   },
   // Specialized tools count  
@@ -139,7 +139,7 @@ try {
     .trim().split('\n').filter((v, i, a) => a.indexOf(v) === i).length;
   console.log(`   📊 Git stats: ${actualCommits} commits over ${actualCodingDays} active days`);
 } catch (e) {
-  console.log('   ⚠️ Could not read git stats, using defaults');
+  console.error('   ⚠️ Could not read git stats, using defaults:', e.message);
 }
 
 // Estimate actual hours: ~8-12 hours per active day (conservative estimate)
@@ -154,12 +154,7 @@ const actualHours = CONFIRMED_ACTUAL_HOURS || actualHoursEstimate;
 const codingHours = Math.round(liveStats.linesOfCode / BLENDED_LOC_PER_HOUR);
 const testingHours = Math.round(codingHours * TESTING_PERCENT);
 
-// Extract other hours from README (these are estimates)
-const extractHours = (pattern, defaultVal) => {
-  const match = readmeContent.match(pattern);
-  return match ? parseInt(match[1].replace(/,/g, ''), 10) : defaultVal;
-};
-
+// Other hours are fixed estimates (not extracted from README)
 const validationHours = 250;      // Data validation
 const uiuxHours = 400;            // UI/UX design
 const documentationHours = 200;   // Documentation
@@ -193,17 +188,17 @@ console.log('\n📝 APPLYING DYNAMIC STAT UPDATES TO README.md...');
 const dynamicPatterns = [
   // Traditional Solo Development line
   {
-    pattern: /Traditional Solo Development.*?[\d,]+\s*hours\s*\([\d.]+\s*years full-time\)\s*@\s*\$[\d,]+\/hr\s*=\s*\$[\d,]+/gi,
+    pattern: /Traditional Solo Development.{0,40}?[\d,]{1,15}\s{0,5}hours\s{0,5}\([\d.]{1,10}\s{0,5}years full-time\)\s{0,5}@\s{0,5}\$[\d,]{1,15}\/hr\s{0,5}=\s{0,5}\$[\d,]{1,15}/gi,
     replacement: `Traditional Solo Development**: ${formatNumber(totalTraditionalHours)} hours (${yearsEquivalent} years full-time) @ $${TRADITIONAL_SENIOR_RATE}/hr = $${formatNumber(traditionalCost)}`
   },
   // Actual AI-Assisted Development line (flexible patterns)
   {
-    pattern: /Actual AI-Assisted Development.*?[\d,]+\s*hours.*?=\s*\$[\d,]+/gi,
+    pattern: /Actual AI-Assisted Development.{0,40}?[\d,]{1,15}\s{0,5}hours.{0,60}?=\s{0,5}\$[\d,]{1,15}/gi,
     replacement: `Actual AI-Assisted Development**: ${actualHours} hours over ${actualCodingDays} days = $${formatNumber(actualCost)}`
   },
   // Productivity Multiplier
   {
-    pattern: /Productivity Multiplier.*?[\d,]+x/gi,
+    pattern: /Productivity Multiplier.{0,40}?[\d,]{1,15}x/gi,
     replacement: `Productivity Multiplier**: ${productivityMultiplier}x`
   },
   // Option C: Solo Senior Developer cost
@@ -257,7 +252,7 @@ if (fs.existsSync(AGENTIC_PATH)) {
   
   const agenticPatterns = [
     // Executive summary timeline
-    { pattern: /Timeline.*?[\d.]+\s*years\s*\(solo\)/gi, replacement: `Timeline** | ${yearsEquivalent} years (solo)` },
+    { pattern: /Timeline.{0,40}?[\d.]{1,10}\s{0,5}years\s{0,5}\(solo\)/gi, replacement: `Timeline** | ${yearsEquivalent} years (solo)` },
     // Executive summary cost
     { pattern: /\*\*Cost\*\*\s*\|\s*\$[\d,]+/gi, replacement: `**Cost** | $${formatNumber(traditionalCost)}` },
     // Agentic cost
@@ -279,9 +274,9 @@ if (fs.existsSync(AGENTIC_PATH)) {
     // Utility Modules
     { pattern: /\*\*Utility Modules\*\*\s*\|\s*[\d,]+/gi, replacement: `**Utility Modules** | ${liveStats.utilityCount}` },
     // Tool count
-    { pattern: /\d+\s*major tools/gi, replacement: `${liveStats.toolCount} major tools` },
+    { pattern: /\d{1,7}\s{0,5}major tools/gi, replacement: `${liveStats.toolCount} major tools` },
     // Supporting components
-    { pattern: /\d+\s*supporting/gi, replacement: `${liveStats.supportingComponents} supporting` },
+    { pattern: /\d{1,7}\s{0,5}supporting/gi, replacement: `${liveStats.supportingComponents} supporting` },
     // Local AI models inline
     { pattern: /\*\*\d+\s*local AI models\*\*/gi, replacement: `**${liveStats.localAIModels} local AI models**` },
     // Production tools bullet
@@ -336,7 +331,7 @@ if (fs.existsSync(AGENTIC_PATH)) {
 console.log('\n💾 GENERATING projectStats.json...');
 
 // Get component table hours from README
-const componentTableRegex = /\|\s*([^|]+)\s*\|\s*(\d+)\s*hrs\s*\|/g;
+const componentTableRegex = /\|\s{0,5}([^|]{1,300})\s{0,5}\|\s{0,5}(\d{1,7})\s{0,5}hrs\s{0,5}\|/g;
 let componentHoursTotal = 0;
 let componentCountFromTable = 0;
 let match;

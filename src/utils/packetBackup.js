@@ -72,6 +72,44 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
 };
 
 /**
+ * Sanitize a single claim field value based on its expected type/format.
+ * @param {string} field - The claim field name
+ * @param {*} value - The raw value for that field
+ * @returns {*} - The sanitized value, or undefined if the field should be skipped
+ */
+const sanitizeClaimField = (field, value) => {
+  if (field === "id") {
+    return sanitizeString(String(value), MAX_ID_LENGTH);
+  }
+  if (field === "conditionName" || field === "parentCondition") {
+    return value ? sanitizeString(String(value), MAX_CONDITION_NAME) : null;
+  }
+  if (field === "status") {
+    // Validate status is a valid value
+    return VALID_STATUSES.includes(value) ? value : "Drafting";
+  }
+  if (field === "dateSaved" || field === "dateUpdated") {
+    // Validate date format
+    const date = new Date(value);
+    return isNaN(date.getTime())
+      ? new Date().toISOString()
+      : date.toISOString();
+  }
+  if (field === "diagnosticCode" || field === "selectedRating") {
+    // Numbers only
+    const num = parseInt(value, 10);
+    return !isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+  }
+  if (field === "notes") {
+    return sanitizeString(String(value || ""), MAX_STRING_LENGTH);
+  }
+  if (typeof value === "string") {
+    return sanitizeString(value);
+  }
+  return undefined;
+};
+
+/**
  * Validate and sanitize a claim object
  * @param {Object} claim - The claim object to validate
  * @returns {Object|null} - Sanitized claim or null if invalid
@@ -91,38 +129,9 @@ const validateClaim = (claim) => {
   // Only copy valid fields
   for (const field of VALID_CLAIM_FIELDS) {
     if (Object.prototype.hasOwnProperty.call(claim, field)) {
-      const value = claim[field];
-
-      if (field === "id") {
-        sanitizedClaim[field] = sanitizeString(String(value), MAX_ID_LENGTH);
-      } else if (field === "conditionName" || field === "parentCondition") {
-        sanitizedClaim[field] = value
-          ? sanitizeString(String(value), MAX_CONDITION_NAME)
-          : null;
-      } else if (field === "status") {
-        // Validate status is a valid value
-        sanitizedClaim[field] = VALID_STATUSES.includes(value)
-          ? value
-          : "Drafting";
-      } else if (field === "dateSaved" || field === "dateUpdated") {
-        // Validate date format
-        const date = new Date(value);
-        sanitizedClaim[field] = isNaN(date.getTime())
-          ? new Date().toISOString()
-          : date.toISOString();
-      } else if (field === "diagnosticCode" || field === "selectedRating") {
-        // Numbers only
-        const num = parseInt(value, 10);
-        if (!isNaN(num) && num >= 0 && num <= 99999) {
-          sanitizedClaim[field] = num;
-        }
-      } else if (field === "notes") {
-        sanitizedClaim[field] = sanitizeString(
-          String(value || ""),
-          MAX_STRING_LENGTH,
-        );
-      } else if (typeof value === "string") {
-        sanitizedClaim[field] = sanitizeString(value);
+      const sanitizedValue = sanitizeClaimField(field, claim[field]);
+      if (sanitizedValue !== undefined) {
+        sanitizedClaim[field] = sanitizedValue;
       }
     }
   }
@@ -208,18 +217,17 @@ export const exportPacketData = (claims, statements) => {
 };
 
 /**
- * Parse and validate imported packet data
- * @param {string} jsonString - The JSON string to parse
- * @returns {Object} - Result object with success flag, data or error
+ * Reject oversized or suspicious input before it is ever parsed as JSON.
+ * @param {string} jsonString - The raw import payload
+ * @returns {string|null} - An error message, or null if the input passes
  */
-export const importPacketData = (jsonString) => {
-  // Security check: limit input size (5MB max)
+const checkImportSecurity = (jsonString) => {
   if (!jsonString || typeof jsonString !== "string") {
-    return { success: false, error: "Invalid input: expected string data" };
+    return "Invalid input: expected string data";
   }
 
   if (jsonString.length > 5 * 1024 * 1024) {
-    return { success: false, error: "File too large: maximum size is 5MB" };
+    return "File too large: maximum size is 5MB";
   }
 
   // Check for suspicious patterns before parsing
@@ -236,61 +244,69 @@ export const importPacketData = (jsonString) => {
 
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(jsonString)) {
-      return {
-        success: false,
-        error: "Security violation: potentially malicious content detected",
-      };
+      return "Security violation: potentially malicious content detected";
     }
   }
 
+  return null;
+};
+
+/**
+ * Parse the packet JSON and confirm it has the expected Vet-Rate.org shape.
+ * @param {string} jsonString - The raw import payload
+ * @returns {{parsed: Object}|{error: string}} - The parsed packet, or an error message
+ */
+const parseAndValidatePacketShape = (jsonString) => {
   let parsed;
   try {
     parsed = JSON.parse(jsonString);
   } catch (e) {
-    return {
-      success: false,
-      error: "Invalid JSON format: unable to parse file",
-    };
+    console.warn("Could not parse packet backup JSON", e);
+    return { error: "Invalid JSON format: unable to parse file" };
   }
 
-  // Validate structure
   if (!parsed || typeof parsed !== "object") {
-    return {
-      success: false,
-      error: "Invalid format: expected object structure",
-    };
+    return { error: "Invalid format: expected object structure" };
   }
 
-  // Check for Vet-Rate format
   if (parsed.source !== "Vet-Rate.org") {
-    return {
-      success: false,
-      error: "Invalid backup file: not a Vet-Rate.org backup",
-    };
+    return { error: "Invalid backup file: not a Vet-Rate.org backup" };
   }
 
   if (!parsed.data || typeof parsed.data !== "object") {
-    return { success: false, error: "Invalid format: missing data section" };
+    return { error: "Invalid format: missing data section" };
   }
 
-  // Upgrade legacy (1.x) backups in memory before validation
-  parsed = migratePacket(parsed);
+  return { parsed };
+};
 
-  // Validate and sanitize claims
+/**
+ * Validate and sanitize a raw claims array from an imported packet.
+ * @param {*} claimsArray - The raw `data.claims` value
+ * @returns {Array} - Sanitized claims
+ */
+const sanitizeClaimsList = (claimsArray) => {
   const claims = [];
-  if (Array.isArray(parsed.data.claims)) {
-    for (const claim of parsed.data.claims) {
+  if (Array.isArray(claimsArray)) {
+    for (const claim of claimsArray) {
       const validated = validateClaim(claim);
       if (validated) {
         claims.push(validated);
       }
     }
   }
+  return claims;
+};
 
-  // Validate and sanitize statements
+/**
+ * Validate and sanitize a raw statements map from an imported packet.
+ * @param {*} statementsObj - The raw `data.statements` value
+ * @returns {Object} - Sanitized statements keyed by sanitized claim id
+ */
+const sanitizeStatementsMap = (statementsObj) => {
   const statements = {};
-  if (parsed.data.statements && typeof parsed.data.statements === "object") {
-    for (const [claimId, statement] of Object.entries(parsed.data.statements)) {
+  if (statementsObj && typeof statementsObj === "object") {
+    for (const [claimId, statement] of Object.entries(statementsObj)) {
       const sanitizedId = sanitizeString(String(claimId), MAX_ID_LENGTH);
       const validated = validateStatement(statement);
       if (validated) {
@@ -298,6 +314,31 @@ export const importPacketData = (jsonString) => {
       }
     }
   }
+  return statements;
+};
+
+/**
+ * Parse and validate imported packet data
+ * @param {string} jsonString - The JSON string to parse
+ * @returns {Object} - Result object with success flag, data or error
+ */
+export const importPacketData = (jsonString) => {
+  const securityError = checkImportSecurity(jsonString);
+  if (securityError) {
+    return { success: false, error: securityError };
+  }
+
+  const { parsed: rawParsed, error: shapeError } =
+    parseAndValidatePacketShape(jsonString);
+  if (shapeError) {
+    return { success: false, error: shapeError };
+  }
+
+  // Upgrade legacy (1.x) backups in memory before validation
+  const parsed = migratePacket(rawParsed);
+
+  const claims = sanitizeClaimsList(parsed.data.claims);
+  const statements = sanitizeStatementsMap(parsed.data.statements);
 
   return {
     success: true,
@@ -352,25 +393,29 @@ export const exportCompletePacket = (
     const sh = localStorage.getItem("vet_rate_service_history");
     if (sh) serviceHistory = JSON.parse(sh);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the default service history if the stored copy is corrupt.
+    console.warn("Could not parse service history from localStorage", e);
   }
   try {
     const mr = localStorage.getItem("vet_rate_my_ratings");
     if (mr) myRatings = JSON.parse(mr);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the default ratings if the stored copy is corrupt.
+    console.warn("Could not parse saved ratings from localStorage", e);
   }
   try {
     const te = localStorage.getItem("vet_rate_timeline_events");
     if (te) timelineEvents = JSON.parse(te);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the default timeline events if the stored copy is corrupt.
+    console.warn("Could not parse timeline events from localStorage", e);
   }
   try {
     const pm = localStorage.getItem("vet_rate_pain_maps");
     if (pm) painMaps = JSON.parse(pm);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the default pain maps if the stored copy is corrupt.
+    console.warn("Could not parse pain maps from localStorage", e);
   }
 
   const exportData = {
@@ -425,6 +470,10 @@ export const importCompletePacket = (jsonString) => {
   try {
     parsed = JSON.parse(jsonString);
   } catch (e) {
+    console.warn(
+      "Could not re-parse packet backup JSON for extended fields",
+      e,
+    );
     return baseResult; // Return basic result if can't parse again
   }
 

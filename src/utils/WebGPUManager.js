@@ -30,7 +30,9 @@ function getWebGLGPUInfo() {
     let cleanName = renderer;
 
     // Pattern 1: "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002705) Direct3D11..."
-    const angleMatch = renderer.match(/ANGLE \(.*?,\s*(.*?)\s*\(/);
+    // Uses [^,]* / [^(]* instead of lazy .*? + \s* to avoid overlapping-quantifier
+    // backtracking; result is .trim()'d below so trailing whitespace differences are moot.
+    const angleMatch = renderer.match(/ANGLE \([^,]*,(.*?)\(/);
     if (angleMatch) {
       cleanName = angleMatch[1].trim();
     }
@@ -41,7 +43,7 @@ function getWebGLGPUInfo() {
     // Pattern 3: Extract vendor + model from parentheses
     else {
       const modelMatch = renderer.match(
-        /(NVIDIA|AMD|Intel)\s+(GeForce|Radeon|Arc|Iris).*?(?=\s*\(|$)/i,
+        /(NVIDIA|AMD|Intel)\s+(GeForce|Radeon|Arc|Iris)[^(]*/i,
       );
       if (modelMatch) {
         cleanName = modelMatch[0].trim();
@@ -79,14 +81,8 @@ class GPUDiscoveryEngine {
     this.webglInfo = null; // Cache WebGL info
   }
 
-  // 1. The "Probe" - Try to force the browser to reveal different GPUs
-  async scanForAdapters() {
-    if (!navigator.gpu) {
-      console.warn("🎮 WebGPU not supported in this browser");
-      return [];
-    }
-
-    // Get WebGL info for fallback GPU detection
+  // Get WebGL info for fallback GPU detection (cached after first call)
+  _getOrCacheWebGLInfo() {
     if (!this.webglInfo) {
       this.webglInfo = getWebGLGPUInfo();
       if (this.webglInfo) {
@@ -100,16 +96,11 @@ class GPUDiscoveryEngine {
         }
       }
     }
+    return this.webglInfo;
+  }
 
-    const hints = [
-      "low-power",
-      "high-performance",
-      undefined, // Default fallback
-    ];
-
-    const _foundAdapters = [];
-
-    // Run requests in parallel
+  // Run adapter requests for each power-preference hint in parallel
+  async _requestAdaptersForHints(hints) {
     const promises = hints.map(async (powerPreference) => {
       try {
         const adapter = await navigator.gpu.requestAdapter({
@@ -125,95 +116,136 @@ class GPUDiscoveryEngine {
       }
     });
 
-    const results = await Promise.all(promises);
+    return Promise.all(promises);
+  }
+
+  _hintLabelPlain(hint) {
+    if (hint === "low-power") return "Low Power";
+    if (hint === "high-performance") return "High Performance";
+    return "Default";
+  }
+
+  _hintLabelParenthesized(hint) {
+    if (hint === "low-power") return " (Low Power)";
+    if (hint === "high-performance") return " (High Performance)";
+    return "";
+  }
+
+  _formatVendorArch(vendor, arch) {
+    const vendorName = vendor.toUpperCase();
+    const archName = arch
+      ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}`
+      : "";
+    return `${vendorName}${archName}`;
+  }
+
+  // For additional GPUs, construct a unique name based on hint
+  _buildAdditionalGpuName(vendor, arch, hint) {
+    const hintLabel = this._hintLabelPlain(hint);
+    return `${this._formatVendorArch(vendor, arch)} GPU (${hintLabel})`;
+  }
+
+  // Final fallback: construct from vendor + architecture
+  _buildFallbackGpuName(vendor, arch, hint) {
+    const hintLabel = this._hintLabelParenthesized(hint);
+    return `${this._formatVendorArch(vendor, arch)} GPU${hintLabel}`;
+  }
+
+  // Build GPU name - prioritize WebGPU info, fall back to WebGL/constructed names
+  _resolveGpuName({ description, device, vendor, arch, hint }) {
+    let gpuName = description || device;
+
+    // If WebGPU info is empty AND this is the first adapter, try WebGL fallback
+    // Don't use WebGL name for multiple adapters since WebGL only sees one GPU
+    if ((!gpuName || gpuName.trim() === "") && this.webglInfo) {
+      // Only use WebGL fallback if we haven't found any GPU yet
+      // This prevents misidentifying multiple GPUs with the same name
+      if (this.adapters.size === 0) {
+        gpuName = this.webglInfo.renderer;
+        // eslint-disable-next-line no-console
+        console.log(`🎮 Using WebGL name (first GPU): ${gpuName}`);
+      } else {
+        gpuName = this._buildAdditionalGpuName(vendor, arch, hint);
+        // eslint-disable-next-line no-console
+        console.log(`🎮 Using constructed name (additional GPU): ${gpuName}`);
+      }
+    }
+
+    if (!gpuName || gpuName.trim() === "") {
+      gpuName = this._buildFallbackGpuName(vendor, arch, hint);
+    }
+
+    return gpuName;
+  }
+
+  // Register a single scanForAdapters() result, deduplicating by vendor/architecture signature
+  _registerAdapterResult(result) {
+    const { adapter, hint } = result;
+    const info = adapter.info;
+
+    // Use vendor + architecture since device/description may be empty
+    const vendor = info.vendor || "unknown";
+    const arch = info.architecture || "unknown";
+    const device = info.device || "";
+    const description = info.description || "";
+
+    const gpuName = this._resolveGpuName({
+      description,
+      device,
+      vendor,
+      arch,
+      hint,
+    });
+
+    // Signature for deduplication
+    const id = `${vendor}-${arch}-${device}-${description}`;
+
+    if (this.adapters.has(id)) return;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `🎮 Found GPU: ${gpuName} (${vendor}, ${arch}) via ${hint || "default"}`,
+    );
+
+    this.adapters.set(id, {
+      id,
+      adapter,
+      info: {
+        ...info,
+        displayName: gpuName,
+        vendor,
+        architecture: arch,
+        device: device || "N/A",
+        description: description || "N/A",
+      },
+      tier: this.estimateTier(gpuName, vendor, arch),
+      hint,
+      webglInfo: this.webglInfo, // Include WebGL info for VRAM
+    });
+  }
+
+  // 1. The "Probe" - Try to force the browser to reveal different GPUs
+  async scanForAdapters() {
+    if (!navigator.gpu) {
+      console.warn("🎮 WebGPU not supported in this browser");
+      return [];
+    }
+
+    this._getOrCacheWebGLInfo();
+
+    const hints = [
+      "low-power",
+      "high-performance",
+      undefined, // Default fallback
+    ];
+
+    // Run requests in parallel
+    const results = await this._requestAdaptersForHints(hints);
 
     // 2. The "Filter" - Deduplicate adapters based on vendor/architecture signature
     for (const result of results) {
       if (!result || !result.adapter) continue;
-
-      const { adapter, hint } = result;
-      const info = adapter.info;
-
-      // Create a unique signature for this GPU
-      // Use vendor + architecture since device/description may be empty
-      const vendor = info.vendor || "unknown";
-      const arch = info.architecture || "unknown";
-      const device = info.device || "";
-      const description = info.description || "";
-
-      // Build GPU name - prioritize WebGPU info
-      let gpuName = description || device;
-      let usedWebGLFallback = false;
-
-      // If WebGPU info is empty AND this is the first adapter, try WebGL fallback
-      // Don't use WebGL name for multiple adapters since WebGL only sees one GPU
-      if ((!gpuName || gpuName.trim() === "") && this.webglInfo) {
-        // Only use WebGL fallback if we haven't found any GPU yet
-        // This prevents misidentifying multiple GPUs with the same name
-        if (this.adapters.size === 0) {
-          gpuName = this.webglInfo.renderer;
-          // eslint-disable-next-line no-unused-vars
-          usedWebGLFallback = true;
-          // eslint-disable-next-line no-console
-          console.log(`🎮 Using WebGL name (first GPU): ${gpuName}`);
-        } else {
-          // For additional GPUs, construct a unique name based on hint
-          const hintLabel =
-            hint === "low-power"
-              ? "Low Power"
-              : hint === "high-performance"
-                ? "High Performance"
-                : "Default";
-          const vendorName = vendor.toUpperCase();
-          const archName = arch
-            ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}`
-            : "";
-          gpuName = `${vendorName}${archName} GPU (${hintLabel})`;
-          // eslint-disable-next-line no-console
-          console.log(`🎮 Using constructed name (additional GPU): ${gpuName}`);
-        }
-      }
-
-      // Final fallback: construct from vendor + architecture
-      if (!gpuName || gpuName.trim() === "") {
-        const vendorName = vendor.toUpperCase();
-        const archName = arch
-          ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}`
-          : "";
-        const hintLabel =
-          hint === "low-power"
-            ? " (Low Power)"
-            : hint === "high-performance"
-              ? " (High Performance)"
-              : "";
-        gpuName = `${vendorName}${archName} GPU${hintLabel}`;
-      }
-
-      // Signature for deduplication
-      const id = `${vendor}-${arch}-${device}-${description}`;
-
-      if (!this.adapters.has(id)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🎮 Found GPU: ${gpuName} (${vendor}, ${arch}) via ${hint || "default"}`,
-        );
-
-        this.adapters.set(id, {
-          id,
-          adapter,
-          info: {
-            ...info,
-            displayName: gpuName,
-            vendor,
-            architecture: arch,
-            device: device || "N/A",
-            description: description || "N/A",
-          },
-          tier: this.estimateTier(gpuName, vendor, arch),
-          hint,
-          webglInfo: this.webglInfo, // Include WebGL info for VRAM
-        });
-      }
+      this._registerAdapterResult(result);
     }
 
     const adapterList = Array.from(this.adapters.values());
@@ -266,42 +298,218 @@ class GPUDiscoveryEngine {
     return "Standard";
   }
 
+  // Destroy the current device and rescan to get a completely fresh adapter
+  async _forceReinitAdapter(adapterId) {
+    // eslint-disable-next-line no-console
+    console.log("🎮 Force reinitializing WebGPU device...");
+
+    // Destroy the old device properly
+    if (this.device) {
+      try {
+        this.device.destroy?.();
+      } catch (destroyErr) {
+        // Ignore destroy errors - device may already be gone
+        console.warn(
+          "🎮 Ignoring error while destroying stale device:",
+          destroyErr,
+        );
+      }
+      this.device = null;
+    }
+
+    // Clear state
+    this.selectedAdapter = null;
+    this.isInitializing = false;
+    this.initPromise = null;
+
+    // Clear all cached adapters and rescan to get fresh ones
+    this.adapters.clear();
+    await this.scanForAdapters();
+
+    // Get the target again after rescan
+    const newTarget = this.adapters.get(adapterId);
+    if (!newTarget) {
+      throw new Error("Failed to find adapter after rescan");
+    }
+
+    // Now proceed with the fresh adapter
+    this.selectedAdapter = newTarget.adapter;
+  }
+
+  // Determine which optional device features to request, based on adapter support
+  _addExperimentalFeatures(requiredFeatures, availableFeatures) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "⚡ Experimental WebGPU mode enabled - attempting to use experimental features",
+    );
+    // eslint-disable-next-line no-console
+    console.log(
+      "⚡ Available adapter features:",
+      Array.from(availableFeatures).join(", "),
+    );
+
+    // Check if required experimental features for MLC-AI are available
+    const hasSubgroupMatrix =
+      availableFeatures.has("chromium-experimental-subgroup-matrix") ||
+      availableFeatures.has("chromium_experimental_subgroup_matrix");
+
+    if (
+      !hasSubgroupMatrix &&
+      (availableFeatures.has("subgroups") ||
+        availableFeatures.has("chromium-experimental-subgroups"))
+    ) {
+      console.warn(
+        "⚠️ Subgroup features available but chromium-experimental-subgroup-matrix is not supported",
+      );
+      console.warn(
+        "⚠️ This GPU/driver/browser combination cannot use experimental mode with current MLC-AI models",
+      );
+      console.warn(
+        "⚠️ Falling back to standard WebGPU mode to prevent shader compilation errors",
+      );
+      return;
+    }
+
+    // Try to enable experimental subgroup features if available
+    if (availableFeatures.has("chromium-experimental-subgroups")) {
+      requiredFeatures.push("chromium-experimental-subgroups");
+    }
+    if (availableFeatures.has("subgroups")) {
+      requiredFeatures.push("subgroups");
+    }
+    if (
+      availableFeatures.has(
+        "chromium-experimental-subgroup-uniform-control-flow",
+      )
+    ) {
+      requiredFeatures.push(
+        "chromium-experimental-subgroup-uniform-control-flow",
+      );
+    }
+    // Required for u8 type in WGSL shaders (WebLLM) - try both naming conventions
+    if (availableFeatures.has("chromium-experimental-subgroup-matrix")) {
+      requiredFeatures.push("chromium-experimental-subgroup-matrix");
+    }
+    if (availableFeatures.has("chromium_experimental_subgroup_matrix")) {
+      requiredFeatures.push("chromium_experimental_subgroup_matrix");
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `⚡ Requesting experimental features: ${requiredFeatures.filter((f) => f.includes("experimental") || f.includes("subgroup")).join(", ") || "none available"}`,
+    );
+  }
+
+  // Request higher device limits if the adapter supports them (needed for large models)
+  _buildRequiredLimits(adapterLimits) {
+    const requiredLimits = {};
+
+    // Request higher maxComputeInvocationsPerWorkgroup if adapter supports it
+    // This is required for MLC-LLM models that use 1024 workgroup invocations
+    if (adapterLimits.maxComputeInvocationsPerWorkgroup >= 1024) {
+      requiredLimits.maxComputeInvocationsPerWorkgroup =
+        adapterLimits.maxComputeInvocationsPerWorkgroup;
+      // eslint-disable-next-line no-console
+      console.log(
+        `🎮 Requesting maxComputeInvocationsPerWorkgroup: ${requiredLimits.maxComputeInvocationsPerWorkgroup}`,
+      );
+    }
+
+    // Request higher buffer size limits for large models
+    if (adapterLimits.maxStorageBufferBindingSize) {
+      requiredLimits.maxStorageBufferBindingSize =
+        adapterLimits.maxStorageBufferBindingSize;
+    }
+    if (adapterLimits.maxBufferSize) {
+      requiredLimits.maxBufferSize = adapterLimits.maxBufferSize;
+    }
+
+    // Request higher compute workgroup sizes if available
+    if (adapterLimits.maxComputeWorkgroupSizeX) {
+      requiredLimits.maxComputeWorkgroupSizeX =
+        adapterLimits.maxComputeWorkgroupSizeX;
+    }
+    if (adapterLimits.maxComputeWorkgroupSizeY) {
+      requiredLimits.maxComputeWorkgroupSizeY =
+        adapterLimits.maxComputeWorkgroupSizeY;
+    }
+    if (adapterLimits.maxComputeWorkgroupSizeZ) {
+      requiredLimits.maxComputeWorkgroupSizeZ =
+        adapterLimits.maxComputeWorkgroupSizeZ;
+    }
+
+    return requiredLimits;
+  }
+
+  // Request device with required features for MLC-LLM
+  _buildDeviceRequestConfig() {
+    const requiredFeatures = [];
+
+    // Check which features are available and add them if needed
+    const availableFeatures = this.selectedAdapter.features;
+
+    // Required for MLC-LLM shader compilation
+    if (availableFeatures.has("shader-f16")) {
+      requiredFeatures.push("shader-f16");
+    }
+
+    // Experimental features - DISABLED by default for stability
+    const experimentalMode = false; // Disabled until custom model compilation complete
+    if (experimentalMode) {
+      this._addExperimentalFeatures(requiredFeatures, availableFeatures);
+    }
+
+    // Get adapter limits to request higher limits if available
+    const adapterLimits = this.selectedAdapter.limits;
+    const requiredLimits = this._buildRequiredLimits(adapterLimits);
+
+    return { requiredFeatures, requiredLimits };
+  }
+
+  // Request the device, falling back to a fresh adapter if the stale one fails
+  // (can happen during hot module reload)
+  async _requestDeviceWithFallback(requiredFeatures, requiredLimits, target) {
+    try {
+      this.device = await this.selectedAdapter.requestDevice({
+        requiredFeatures:
+          requiredFeatures.length > 0 ? requiredFeatures : undefined,
+        requiredLimits:
+          Object.keys(requiredLimits).length > 0 ? requiredLimits : undefined,
+      });
+    } catch (deviceErr) {
+      console.warn(
+        "🎮 Device creation failed, attempting fresh adapter...",
+        deviceErr.message,
+      );
+
+      // Get a fresh adapter
+      const freshAdapter = await navigator.gpu.requestAdapter({
+        powerPreference: target.info.powerPreference || "high-performance",
+      });
+
+      if (freshAdapter) {
+        this.selectedAdapter = freshAdapter;
+        this.device = await freshAdapter.requestDevice({
+          requiredFeatures:
+            requiredFeatures.length > 0 ? requiredFeatures : undefined,
+          requiredLimits:
+            Object.keys(requiredLimits).length > 0
+              ? requiredLimits
+              : undefined,
+        });
+      } else {
+        throw deviceErr; // Re-throw if we couldn't get a fresh adapter
+      }
+    }
+  }
+
   async selectAdapter(adapterId, options = {}) {
     const target = this.adapters.get(adapterId);
     if (!target) throw new Error("Adapter not found");
 
     // If force reinit is requested, we need to get a completely fresh adapter
     if (options.forceReinit) {
-      // eslint-disable-next-line no-console
-      console.log("🎮 Force reinitializing WebGPU device...");
-
-      // Destroy the old device properly
-      if (this.device) {
-        try {
-          this.device.destroy?.();
-        } catch (e) {
-          // Ignore destroy errors
-        }
-        this.device = null;
-      }
-
-      // Clear state
-      this.selectedAdapter = null;
-      this.isInitializing = false;
-      this.initPromise = null;
-
-      // Clear all cached adapters and rescan to get fresh ones
-      this.adapters.clear();
-      await this.scanForAdapters();
-
-      // Get the target again after rescan
-      const newTarget = this.adapters.get(adapterId);
-      if (!newTarget) {
-        throw new Error("Failed to find adapter after rescan");
-      }
-
-      // Now proceed with the fresh adapter
-      this.selectedAdapter = newTarget.adapter;
+      await this._forceReinitAdapter(adapterId);
     }
 
     // If we already have a device for this exact adapter, return it immediately
@@ -350,159 +558,17 @@ class GPUDiscoveryEngine {
     // Initialize the device (this is where we lock it in)
     this.initPromise = (async () => {
       try {
-        // Request device with required features for MLC-LLM
-        const requiredFeatures = [];
+        const { requiredFeatures, requiredLimits } =
+          this._buildDeviceRequestConfig();
 
-        // Check which features are available and add them if needed
-        const availableFeatures = this.selectedAdapter.features;
-
-        // Required for MLC-LLM shader compilation
-        if (availableFeatures.has("shader-f16")) {
-          requiredFeatures.push("shader-f16");
-        }
-
-        // Experimental features - DISABLED by default for stability
-        const experimentalMode = false; // Disabled until custom model compilation complete
-        if (experimentalMode) {
-          // eslint-disable-next-line no-console
-          console.log(
-            "⚡ Experimental WebGPU mode enabled - attempting to use experimental features",
-          );
-          // eslint-disable-next-line no-console
-          console.log(
-            "⚡ Available adapter features:",
-            Array.from(availableFeatures).join(", "),
-          );
-
-          // Check if required experimental features for MLC-AI are available
-          const hasSubgroupMatrix =
-            availableFeatures.has("chromium-experimental-subgroup-matrix") ||
-            availableFeatures.has("chromium_experimental_subgroup_matrix");
-
-          if (
-            !hasSubgroupMatrix &&
-            (availableFeatures.has("subgroups") ||
-              availableFeatures.has("chromium-experimental-subgroups"))
-          ) {
-            console.warn(
-              "⚠️ Subgroup features available but chromium-experimental-subgroup-matrix is not supported",
-            );
-            console.warn(
-              "⚠️ This GPU/driver/browser combination cannot use experimental mode with current MLC-AI models",
-            );
-            console.warn(
-              "⚠️ Falling back to standard WebGPU mode to prevent shader compilation errors",
-            );
-          } else {
-            // Try to enable experimental subgroup features if available
-            if (availableFeatures.has("chromium-experimental-subgroups")) {
-              requiredFeatures.push("chromium-experimental-subgroups");
-            }
-            if (availableFeatures.has("subgroups")) {
-              requiredFeatures.push("subgroups");
-            }
-            if (
-              availableFeatures.has(
-                "chromium-experimental-subgroup-uniform-control-flow",
-              )
-            ) {
-              requiredFeatures.push(
-                "chromium-experimental-subgroup-uniform-control-flow",
-              );
-            }
-            // Required for u8 type in WGSL shaders (WebLLM) - try both naming conventions
-            if (
-              availableFeatures.has("chromium-experimental-subgroup-matrix")
-            ) {
-              requiredFeatures.push("chromium-experimental-subgroup-matrix");
-            }
-            if (
-              availableFeatures.has("chromium_experimental_subgroup_matrix")
-            ) {
-              requiredFeatures.push("chromium_experimental_subgroup_matrix");
-            }
-
-            // eslint-disable-next-line no-console
-            console.log(
-              `⚡ Requesting experimental features: ${requiredFeatures.filter((f) => f.includes("experimental") || f.includes("subgroup")).join(", ") || "none available"}`,
-            );
-          }
-        }
-
-        // Get adapter limits to request higher limits if available
-        const adapterLimits = this.selectedAdapter.limits;
-        const requiredLimits = {};
-
-        // Request higher maxComputeInvocationsPerWorkgroup if adapter supports it
-        // This is required for MLC-LLM models that use 1024 workgroup invocations
-        if (adapterLimits.maxComputeInvocationsPerWorkgroup >= 1024) {
-          requiredLimits.maxComputeInvocationsPerWorkgroup =
-            adapterLimits.maxComputeInvocationsPerWorkgroup;
-          // eslint-disable-next-line no-console
-          console.log(
-            `🎮 Requesting maxComputeInvocationsPerWorkgroup: ${requiredLimits.maxComputeInvocationsPerWorkgroup}`,
-          );
-        }
-
-        // Request higher buffer size limits for large models
-        if (adapterLimits.maxStorageBufferBindingSize) {
-          requiredLimits.maxStorageBufferBindingSize =
-            adapterLimits.maxStorageBufferBindingSize;
-        }
-        if (adapterLimits.maxBufferSize) {
-          requiredLimits.maxBufferSize = adapterLimits.maxBufferSize;
-        }
-
-        // Request higher compute workgroup sizes if available
-        if (adapterLimits.maxComputeWorkgroupSizeX) {
-          requiredLimits.maxComputeWorkgroupSizeX =
-            adapterLimits.maxComputeWorkgroupSizeX;
-        }
-        if (adapterLimits.maxComputeWorkgroupSizeY) {
-          requiredLimits.maxComputeWorkgroupSizeY =
-            adapterLimits.maxComputeWorkgroupSizeY;
-        }
-        if (adapterLimits.maxComputeWorkgroupSizeZ) {
-          requiredLimits.maxComputeWorkgroupSizeZ =
-            adapterLimits.maxComputeWorkgroupSizeZ;
-        }
-
-        try {
-          this.device = await this.selectedAdapter.requestDevice({
-            requiredFeatures:
-              requiredFeatures.length > 0 ? requiredFeatures : undefined,
-            requiredLimits:
-              Object.keys(requiredLimits).length > 0
-                ? requiredLimits
-                : undefined,
-          });
-        } catch (deviceErr) {
-          // Device creation failed - this can happen during hot module reload
-          // when the adapter becomes stale. Try getting a fresh adapter.
-          console.warn(
-            "🎮 Device creation failed, attempting fresh adapter...",
-            deviceErr.message,
-          );
-
-          // Get a fresh adapter
-          const freshAdapter = await navigator.gpu.requestAdapter({
-            powerPreference: target.info.powerPreference || "high-performance",
-          });
-
-          if (freshAdapter) {
-            this.selectedAdapter = freshAdapter;
-            this.device = await freshAdapter.requestDevice({
-              requiredFeatures:
-                requiredFeatures.length > 0 ? requiredFeatures : undefined,
-              requiredLimits:
-                Object.keys(requiredLimits).length > 0
-                  ? requiredLimits
-                  : undefined,
-            });
-          } else {
-            throw deviceErr; // Re-throw if we couldn't get a fresh adapter
-          }
-        }
+        // Device creation failed - this can happen during hot module reload
+        // when the adapter becomes stale. _requestDeviceWithFallback retries
+        // with a fresh adapter in that case.
+        await this._requestDeviceWithFallback(
+          requiredFeatures,
+          requiredLimits,
+          target,
+        );
 
         // eslint-disable-next-line no-console
         console.log(`🎮 [Vet-Rate GPU] Locked to: ${target.info.displayName}`);

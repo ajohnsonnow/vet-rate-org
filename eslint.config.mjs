@@ -9,10 +9,30 @@ export default tseslint.config(
   {
     ignores: [
       "dist/",
+      "dist-supplylocker/",
       "node_modules/",
       "coverage/",
       ".vitepress/cache",
       "**/*.d.ts",
+      // Local-only / gitignored scratch storage — never part of the tracked source tree.
+      "archive/",
+      ".claude/",
+      // Separate, unmaintained legacy subsystem with its own conventions (Python
+      // driver, ancient JS prototypes) — not part of the live app build.
+      "llm-compiler/",
+      // Self-contained nested tool with its own package.json/node_modules — a
+      // separate project boundary, not covered by this config.
+      "audit/",
+      // Generated test/report output.
+      "test-results/",
+      "playwright-report/",
+      "lighthouse-report/",
+      // Python virtualenv (vendored packages ship their own bundled JS/WASM
+      // glue, e.g. urllib3's emscripten fetch worker) and minified vendor
+      // assets copied into public/ as static files — not hand-authored source.
+      ".venv/",
+      "**/*.min.js",
+      "**/*.min.mjs",
     ],
   },
   pluginJs.configs.recommended,
@@ -127,12 +147,18 @@ export default tseslint.config(
 
     },
   },
-  // Test / e2e specs (Playwright .ts, Vitest .js): these live outside tsconfig's
-  // project, so the type-aware parser can't resolve them ("not found by the project
-  // service"). Lint them for syntax/style only — disable type-checked rules and the
-  // project service. Strict type rules add little value to test scaffolding.
+  // Test / e2e specs (Playwright .ts, Vitest .js) and root-level *.config.ts
+  // files (playwright.config.ts, vitest.coverage.config.ts, ...): these live
+  // outside tsconfig's project (tsconfig.json's `include` only lists src/scripts
+  // .js/.jsx), so the type-aware parser can't resolve them ("not found by the
+  // project service"). Lint them for syntax/style only — disable type-checked
+  // rules and the project service. Strict type rules add little value here.
   {
-    files: ["tests/**/*.{ts,tsx,mts,cts}", "**/*.{test,spec}.{ts,tsx,mts,cts}"],
+    files: [
+      "tests/**/*.{ts,tsx,mts,cts}",
+      "**/*.{test,spec}.{ts,tsx,mts,cts}",
+      "*.config.{ts,mts,cts}",
+    ],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       parserOptions: { projectService: false, project: null },
@@ -151,6 +177,10 @@ export default tseslint.config(
       "sonarjs/os-command": "off",
       "sonarjs/no-os-command-from-path": "off",
       "@typescript-eslint/no-require-imports": "off",
+      // CLI tooling's entire job is to print progress/status to the terminal —
+      // the production-console rule (aimed at browser app code stripped by
+      // terser) doesn't apply here.
+      "no-console": "off",
     },
   },
 );

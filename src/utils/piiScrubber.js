@@ -35,7 +35,7 @@ const SPOTLIGHT_CLOSE = "</untrusted_content>";
 // and let the remaining bytes land in the instruction context. Neutralize any
 // untrusted_content tag (any case/whitespace) before wrapping so it can no longer
 // be parsed as a delimiter.
-const FENCE_TAG = /<\s*\/?\s*untrusted_content\s*>/gi;
+const FENCE_TAG = /<(?:\s*\/)?\s*untrusted_content\s*>/gi;
 const neutralizeFence = (text) =>
   String(text ?? "").replace(FENCE_TAG, "[untrusted_content]");
 
@@ -70,7 +70,8 @@ const PII_PATTERNS = {
 
   // MRN — medical record number, labeled or numeric.
   mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
-  mrnLabeled: /\bmedical\s+record\s+(?:#|no\.?|number)?\s*:?\s*\d{6,12}\b/gi,
+  mrnLabeled:
+    /\bmedical\s+record\s+(?:(?:#|no\.?|number)\s*)?(?::\s*)?\d{6,12}\b/gi,
 
   // Email — RFC-5322-lite. Runs late because /-chars don't overlap with the
   // numeric patterns above.
@@ -327,12 +328,22 @@ export const analyzePII = (text) => {
   const types = [...new Set(details.map((d) => d.type))];
   const score = types.reduce((sum, t) => sum + (SCORES[t] || 1), 0);
 
+  let riskLevel;
+  if (score === 0) {
+    riskLevel = "none";
+  } else if (score < 5) {
+    riskLevel = "low";
+  } else if (score < 10) {
+    riskLevel = "medium";
+  } else {
+    riskLevel = "high";
+  }
+
   return {
     hasPII: piiFound,
     types,
     score,
-    riskLevel:
-      score === 0 ? "none" : score < 5 ? "low" : score < 10 ? "medium" : "high",
+    riskLevel,
   };
 };
 

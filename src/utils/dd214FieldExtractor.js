@@ -75,7 +75,7 @@ const DD214_FIELD_PATTERNS = {
     block: "4a",
     label: "Grade/Rate/Rank",
     patterns: [
-      /(?:BLOCK\s*4\s*A|BOX\s*4\s*A|4\s*[Aa]\.?\s*(?:GRADE|RANK))[:\s.]*\n?\s*([A-Z0-9]{2,10})/i,
+      /(?:BLOCK\s*4\s*A|BOX\s*4\s*A|4\s*A\.?\s*(?:GRADE|RANK))[:\s.]*\n?\s*([A-Z0-9]{2,10})/i,
       /(?:GRADE[,\s]*RATE[,\s]*(?:OR\s*)?RANK)[:\s.]*\n?\s*([A-Z]{2,4}\d?)/i,
     ],
     normalize: (val) => val.trim().toUpperCase(),
@@ -86,7 +86,7 @@ const DD214_FIELD_PATTERNS = {
     block: "4b",
     label: "Pay Grade",
     patterns: [
-      /(?:BLOCK\s*4\s*B|BOX\s*4\s*B|4\s*[Bb]\.?\s*PAY\s*GRADE)[:\s.]*\n?\s*([EWO]-?\d{1,2})/i,
+      /(?:BLOCK\s*4\s*B|BOX\s*4\s*B|4\s*B\.?\s*PAY\s*GRADE)[:\s.]*\n?\s*([EWO]-?\d{1,2})/i,
       /PAY\s*GRADE[:\s.]*\n?\s*([EWO]-?\d{1,2})/i,
       /\b([EWO][- ]?\d{1,2})\b/,
     ],
@@ -124,7 +124,7 @@ const DD214_FIELD_PATTERNS = {
     block: "7a",
     label: "Place of Entry into Active Duty",
     patterns: [
-      /(?:BLOCK\s*7\s*A|BOX\s*7\s*A|7\s*[Aa]\.?\s*PLACE\s*OF\s*ENTRY)[:\s.]*\n?\s*([A-Z][A-Z,.\s]+(?:,\s*[A-Z]{2}))/i,
+      /(?:BLOCK\s*7\s*A|BOX\s*7\s*A|7\s*A\.?\s*PLACE\s*OF\s*ENTRY)[:\s.]*\n?\s*([A-Z][A-Z,.\s]+(?:,\s*[A-Z]{2}))/i,
       /PLACE\s*OF\s*ENTRY\s*(?:INTO\s*(?:ACTIVE\s*)?DUTY)?[:\s.]*\n?\s*([A-Z][A-Z,.\s]+(?:,\s*[A-Z]{2,}))/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
@@ -135,7 +135,7 @@ const DD214_FIELD_PATTERNS = {
     block: "7b",
     label: "Home of Record at Time of Entry",
     patterns: [
-      /(?:BLOCK\s*7\s*B|BOX\s*7\s*B|7\s*[Bb]\.?\s*HOME\s*OF\s*RECORD)[:\s.]*\n?\s*([\s\S]{10,100}?)(?=\n\s*(?:BLOCK|BOX|8\s*[Aa]|\d+\.))/i,
+      /(?:BLOCK\s*7\s*B|BOX\s*7\s*B|7\s*B\.?\s*HOME\s*OF\s*RECORD)[:\s.]*\n?\s*([\s\S]{10,100}?)(?=\n\s*(?:BLOCK|BOX|8\s*A|\d+\.))/i,
       /HOME\s*OF\s*RECORD[:\s.]*\n?\s*([\s\S]{10,100}?)(?=\n\s*(?:BLOCK|BOX|8|\d+\.))/i,
     ],
     normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
@@ -146,7 +146,7 @@ const DD214_FIELD_PATTERNS = {
     block: "8a",
     label: "Last Duty Assignment and Major Command",
     patterns: [
-      /(?:BLOCK\s*8\s*A|BOX\s*8\s*A|8\s*[Aa]\.?\s*LAST\s*DUT[YE])[:\s.]*\n?\s*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
+      /(?:BLOCK\s*8\s*A|BOX\s*8\s*A|8\s*A\.?\s*LAST\s*DUT[YE])[:\s.]*\n?\s*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
       /LAST\s*DUT[YE]\s*ASSIGNMENT[:\s.]*\n?\s*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
@@ -157,7 +157,7 @@ const DD214_FIELD_PATTERNS = {
     block: "8b",
     label: "Station Where Separated",
     patterns: [
-      /(?:BLOCK\s*8\s*B|BOX\s*8\s*B|8\s*[Bb]\.?\s*STATION)[:\s.]*\n?\s*([A-Z][A-Z,.\s0-9-]+(?:,\s*[A-Z]{2}))/i,
+      /(?:BLOCK\s*8\s*B|BOX\s*8\s*B|8\s*B\.?\s*STATION)[:\s.]*\n?\s*([A-Z][A-Z,.\s0-9-]+(?:,\s*[A-Z]{2}))/i,
       /STATION\s*(?:WHERE\s*)?SEPARATED[:\s.]*\n?\s*([A-Z][A-Z,.\s0-9-]+)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
@@ -179,8 +179,8 @@ const DD214_FIELD_PATTERNS = {
     block: 10,
     label: "SGLI Coverage Amount",
     patterns: [
-      /(?:BLOCK\s*10|BOX\s*10|10\.\s*SGL[I]?\s*COVERAGE)[:\s.]*\n?\s*\$?\s*([\d,]+(?:\.\d{2})?)/i,
-      /SGL[I]?\s*(?:COVERAGE)?[:\s.]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+      /(?:BLOCK\s*10|BOX\s*10|10\.\s*SGLI?\s*COVERAGE)[:\s.]*\n?\s*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+      /SGLI?\s*(?:COVERAGE)?[:\s.]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
     ],
     normalize: (val) => val.replace(/\s/g, ""),
   },
@@ -218,7 +218,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12a",
     label: "Date Entered Active Duty This Period",
     patterns: [
-      /(?:BLOCK\s*12\s*A|BOX\s*12\s*A|12\s*[Aa]\.?\s*DATE\s*ENTERED)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*A|BOX\s*12\s*A|12\s*A\.?\s*DATE\s*ENTERED)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /DATE\s*ENTERED\s*(?:AD|ACTIVE\s*DUTY)\s*(?:THIS\s*PERIOD)?[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
@@ -229,7 +229,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12b",
     label: "Separation Date This Period",
     patterns: [
-      /(?:BLOCK\s*12\s*B|BOX\s*12\s*B|12\s*[Bb]\.?\s*SEPARATION\s*DATE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*B|BOX\s*12\s*B|12\s*B\.?\s*SEPARATION\s*DATE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /SEPARATION\s*DATE\s*(?:THIS\s*PERIOD)?[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
@@ -240,7 +240,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12c",
     label: "Net Active Service This Period",
     patterns: [
-      /(?:BLOCK\s*12\s*C|BOX\s*12\s*C|12\s*[Cc]\.?\s*NET\s*ACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*C|BOX\s*12\s*C|12\s*C\.?\s*NET\s*ACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /NET\s*ACTIVE\s*SERVICE\s*(?:THIS\s*PERIOD)?[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
@@ -251,7 +251,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12d",
     label: "Total Prior Active Service",
     patterns: [
-      /(?:BLOCK\s*12\s*D|BOX\s*12\s*D|12\s*[Dd]\.?\s*TOTAL\s*PRIOR\s*ACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*D|BOX\s*12\s*D|12\s*D\.?\s*TOTAL\s*PRIOR\s*ACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /TOTAL\s*PRIOR\s*ACTIVE\s*SERVICE[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
@@ -262,7 +262,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12e",
     label: "Total Prior Inactive Service",
     patterns: [
-      /(?:BLOCK\s*12\s*E|BOX\s*12\s*E|12\s*[Ee]\.?\s*TOTAL\s*PRIOR\s*INACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*E|BOX\s*12\s*E|12\s*E\.?\s*TOTAL\s*PRIOR\s*INACTIVE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /TOTAL\s*PRIOR\s*INACTIVE\s*SERVICE[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
@@ -273,7 +273,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12f",
     label: "Foreign Service",
     patterns: [
-      /(?:BLOCK\s*12\s*F|BOX\s*12\s*F|12\s*[Ff]\.?\s*FOREIGN\s*SERVICE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*F|BOX\s*12\s*F|12\s*F\.?\s*FOREIGN\s*SERVICE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /FOREIGN\s*SERVICE[,\s]*(?:SEA)?[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
@@ -284,7 +284,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12g",
     label: "Sea Service",
     patterns: [
-      /(?:BLOCK\s*12\s*G|BOX\s*12\s*G|12\s*[Gg]\.?\s*SEA\s*SERVICE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*G|BOX\s*12\s*G|12\s*G\.?\s*SEA\s*SERVICE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /SEA\s*SERVICE[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
@@ -295,7 +295,7 @@ const DD214_FIELD_PATTERNS = {
     block: "12h",
     label: "Effective Date of Pay Grade",
     patterns: [
-      /(?:BLOCK\s*12\s*H|BOX\s*12\s*H|12\s*[Hh]\.?\s*EFFECTIVE\s*DATE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      /(?:BLOCK\s*12\s*H|BOX\s*12\s*H|12\s*H\.?\s*EFFECTIVE\s*DATE)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
       /EFFECTIVE\s*DATE\s*(?:OF\s*)?PAY\s*GRADE[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
@@ -339,8 +339,8 @@ const DD214_FIELD_PATTERNS = {
     block: 19,
     label: "Mailing Address After Separation",
     patterns: [
-      /(?:BLOCK\s*19|BOX\s*19|19\.?\s*MAILING\s*ADDRESS)[:\s.]*\n?\s*([\s\S]{10,150}?)(?=\n\s*(?:19\s*[Bb]|BLOCK\s*20|BOX\s*20|20\.))/i,
-      /MAILING\s*ADDRESS\s*(?:AFTER\s*SEPARATION)?[:\s.]*\n?\s*([\s\S]{10,150}?)(?=\n\s*(?:19\s*[Bb]|BLOCK\s*20|BOX\s*20|20\.))/i,
+      /(?:BLOCK\s*19|BOX\s*19|19\.?\s*MAILING\s*ADDRESS)[:\s.]*\n?\s*([\s\S]{10,150}?)(?=\n\s*(?:19\s*B|BLOCK\s*20|BOX\s*20|20\.))/i,
+      /MAILING\s*ADDRESS\s*(?:AFTER\s*SEPARATION)?[:\s.]*\n?\s*([\s\S]{10,150}?)(?=\n\s*(?:19\s*B|BLOCK\s*20|BOX\s*20|20\.))/i,
     ],
     normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
   },
@@ -478,12 +478,10 @@ function normalizeServiceTime(val) {
 }
 
 /**
- * Parse awards string into structured array
- * Handles // delimiters, "CONT IN BLOCK 18", device counts, etc.
+ * Resolve the full awards text, appending any "CONT IN BLOCK 18"-style
+ * continuation found in the remarks text.
  */
-function parseAwardsString(awardsRaw, remarksText) {
-  if (!awardsRaw) return [];
-
+function resolveAwardsContinuationText(awardsRaw, remarksText) {
   let fullAwardsText = awardsRaw;
 
   // Check for continuation in Block 18
@@ -517,6 +515,91 @@ function parseAwardsString(awardsRaw, remarksText) {
     }
   }
 
+  return fullAwardsText;
+}
+
+/**
+ * Parse a single raw award entry into a structured award object,
+ * extracting device information (devices/counts) and combat relevance.
+ */
+function parseSingleAward(raw) {
+  const award = {
+    raw: raw,
+    name: raw,
+    abbreviation: "",
+    devices: [],
+    deviceCount: 0,
+    isCombat: false,
+  };
+
+  // Extract device information (e.g., "2ND AWARD", "W/ M DEVICE", "W/ 1 OLC")
+  const devicePatterns = [
+    { pattern: /\((\d+)(?:ST|ND|RD|TH)\s*AWARD\)/i, type: "award_count" },
+    { pattern: /(\d+)(?:ST|ND|RD|TH)\s*AWARD/i, type: "award_count" },
+    { pattern: /-(\d+)/i, type: "award_count_dash" },
+    { pattern: /W\/?\s*'?M'?\s*DEVICE/i, type: "M Device" },
+    { pattern: /W\/?\s*'?V'?\s*DEVICE/i, type: "V Device" },
+    {
+      pattern: /W\/?\s*(\d+)\s*(?:OLC|OAK\s*LEAF)/i,
+      type: "Oak Leaf Cluster",
+    },
+    {
+      pattern: /W\/?\s*(\d+)\s*(?:BRONZE\s*)?(?:SERVICE\s*)?STAR/i,
+      type: "Bronze Service Star",
+    },
+  ];
+
+  for (const dp of devicePatterns) {
+    const match = raw.match(dp.pattern);
+    if (match) {
+      if (dp.type === "award_count" || dp.type === "award_count_dash") {
+        award.deviceCount = parseInt(match[1]);
+        award.name = raw.replace(match[0], "").trim();
+      } else if (dp.type === "M Device" || dp.type === "V Device") {
+        award.devices.push(dp.type);
+        award.name = raw.replace(match[0], "").trim();
+      } else {
+        const count = parseInt(match[1]) || 1;
+        for (let i = 0; i < count; i++) {
+          award.devices.push(dp.type);
+        }
+        award.name = raw.replace(match[0], "").trim();
+      }
+    }
+  }
+
+  // Clean up name
+  award.name = award.name
+    .replace(/[-–—]+\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Check if combat-related
+  const combatIndicators = [
+    /COMBAT\s*(?:ACTION|INFANTRY)/i,
+    /PURPLE\s*HEART/i,
+    /BRONZE\s*STAR/i,
+    /SILVER\s*STAR/i,
+    /V\s*DEVICE/i,
+    /VALOR/i,
+    /CAMPAIGN\s*MEDAL/i,
+    /EXPEDITIONARY\s*MEDAL/i,
+    /IMMINENT\s*DANGER/i,
+  ];
+  award.isCombat = combatIndicators.some((p) => p.test(raw));
+
+  return award;
+}
+
+/**
+ * Parse awards string into structured array
+ * Handles // delimiters, "CONT IN BLOCK 18", device counts, etc.
+ */
+function parseAwardsString(awardsRaw, remarksText) {
+  if (!awardsRaw) return [];
+
+  const fullAwardsText = resolveAwardsContinuationText(awardsRaw, remarksText);
+
   // Split by // delimiter
   const rawAwards = fullAwardsText
     .split(/\s*\/\/\s*/)
@@ -530,74 +613,7 @@ function parseAwardsString(awardsRaw, remarksText) {
     );
 
   // Parse each award
-  const awards = rawAwards.map((raw) => {
-    const award = {
-      raw: raw,
-      name: raw,
-      abbreviation: "",
-      devices: [],
-      deviceCount: 0,
-      isCombat: false,
-    };
-
-    // Extract device information (e.g., "2ND AWARD", "W/ M DEVICE", "W/ 1 OLC")
-    const devicePatterns = [
-      { pattern: /\((\d+)(?:ST|ND|RD|TH)\s*AWARD\)/i, type: "award_count" },
-      { pattern: /(\d+)(?:ST|ND|RD|TH)\s*AWARD/i, type: "award_count" },
-      { pattern: /-(\d+)/i, type: "award_count_dash" },
-      { pattern: /W\/?\s*'?M'?\s*DEVICE/i, type: "M Device" },
-      { pattern: /W\/?\s*'?V'?\s*DEVICE/i, type: "V Device" },
-      {
-        pattern: /W\/?\s*(\d+)\s*(?:OLC|OAK\s*LEAF)/i,
-        type: "Oak Leaf Cluster",
-      },
-      {
-        pattern: /W\/?\s*(\d+)\s*(?:BRONZE\s*)?(?:SERVICE\s*)?STAR/i,
-        type: "Bronze Service Star",
-      },
-    ];
-
-    for (const dp of devicePatterns) {
-      const match = raw.match(dp.pattern);
-      if (match) {
-        if (dp.type === "award_count" || dp.type === "award_count_dash") {
-          award.deviceCount = parseInt(match[1]);
-          award.name = raw.replace(match[0], "").trim();
-        } else if (dp.type === "M Device" || dp.type === "V Device") {
-          award.devices.push(dp.type);
-          award.name = raw.replace(match[0], "").trim();
-        } else {
-          const count = parseInt(match[1]) || 1;
-          for (let i = 0; i < count; i++) {
-            award.devices.push(dp.type);
-          }
-          award.name = raw.replace(match[0], "").trim();
-        }
-      }
-    }
-
-    // Clean up name
-    award.name = award.name
-      .replace(/[-–—]+\s*$/, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    // Check if combat-related
-    const combatIndicators = [
-      /COMBAT\s*(?:ACTION|INFANTRY)/i,
-      /PURPLE\s*HEART/i,
-      /BRONZE\s*STAR/i,
-      /SILVER\s*STAR/i,
-      /V\s*DEVICE/i,
-      /VALOR/i,
-      /CAMPAIGN\s*MEDAL/i,
-      /EXPEDITIONARY\s*MEDAL/i,
-      /IMMINENT\s*DANGER/i,
-    ];
-    award.isCombat = combatIndicators.some((p) => p.test(raw));
-
-    return award;
-  });
+  const awards = rawAwards.map(parseSingleAward);
 
   return awards;
 }
@@ -786,27 +802,13 @@ function parseName(fullName) {
 // ============================================================
 
 /**
- * Extract ALL DD214 fields from raw OCR text using regex patterns.
- * This is a deterministic, AI-free extraction that serves as:
- * 1. Primary extraction when AI is unavailable
- * 2. Validation layer to cross-check AI results
- * 3. Fallback for fields AI misses
- *
- * @param {string} rawText - The raw OCR/extracted text from a DD214
- * @param {Object} options - Configuration options
- * @returns {Object} Structured DD214 data matching the AI output schema
+ * Run every DD214_FIELD_PATTERNS entry against the given text, returning
+ * the extracted field values and a per-field confidence map.
  */
-export function extractDD214Fields(rawText, options = {}) {
-  if (!rawText || typeof rawText !== "string") {
-    return { success: false, error: "No text provided", fields: {} };
-  }
-
-  const text = rawText.toUpperCase();
+function runFieldPatterns(text) {
   const extractedFields = {};
   const fieldConfidence = {};
-  const extractionNotes = [];
 
-  // Run each field pattern
   for (const [fieldName, fieldDef] of Object.entries(DD214_FIELD_PATTERNS)) {
     for (const pattern of fieldDef.patterns) {
       const match = text.match(pattern);
@@ -830,8 +832,14 @@ export function extractDD214Fields(rawText, options = {}) {
     }
   }
 
-  // ===== POST-PROCESSING =====
+  return { extractedFields, fieldConfidence };
+}
 
+/**
+ * Derive name/branch/component/SSN-last4/MOS fields from the raw
+ * regex-extracted values. Mutates `extractedFields` in place.
+ */
+function derivePersonAndSpecialtyFields(extractedFields, options) {
   // Parse name components
   if (extractedFields.fullName) {
     const nameParts = parseName(extractedFields.fullName);
@@ -875,7 +883,14 @@ export function extractDD214Fields(rawText, options = {}) {
     if (mosCode) extractedFields.mos = mosCode;
     if (mosTitle) extractedFields.mosTitle = mosTitle;
   }
+}
 
+/**
+ * Derive awards/deployments/combat/qualifications and service-time
+ * rollup fields, then strip internal-only fields. Mutates
+ * `extractedFields` and `extractionNotes` in place.
+ */
+function deriveAwardsAndServiceFields(extractedFields, extractionNotes) {
   // Parse awards
   const awardsRaw = extractedFields.awardsRaw || "";
   const remarksText = extractedFields.remarks || "";
@@ -944,6 +959,41 @@ export function extractDD214Fields(rawText, options = {}) {
   // Clean up internal-only fields
   delete extractedFields.awardsRaw;
   delete extractedFields.departmentComponentBranch;
+}
+
+/**
+ * Post-process raw regex-extracted fields: derive name/branch/MOS
+ * components, parse awards/deployments/combat/qualifications, compute
+ * service-time rollups, and strip internal-only fields.
+ * Mutates `extractedFields` and `extractionNotes` in place.
+ */
+function postProcessExtractedFields(extractedFields, extractionNotes, options) {
+  derivePersonAndSpecialtyFields(extractedFields, options);
+  deriveAwardsAndServiceFields(extractedFields, extractionNotes);
+}
+
+/**
+ * Extract ALL DD214 fields from raw OCR text using regex patterns.
+ * This is a deterministic, AI-free extraction that serves as:
+ * 1. Primary extraction when AI is unavailable
+ * 2. Validation layer to cross-check AI results
+ * 3. Fallback for fields AI misses
+ *
+ * @param {string} rawText - The raw OCR/extracted text from a DD214
+ * @param {Object} options - Configuration options
+ * @returns {Object} Structured DD214 data matching the AI output schema
+ */
+export function extractDD214Fields(rawText, options = {}) {
+  if (!rawText || typeof rawText !== "string") {
+    return { success: false, error: "No text provided", fields: {} };
+  }
+
+  const text = rawText.toUpperCase();
+  const extractionNotes = [];
+
+  const { extractedFields, fieldConfidence } = runFieldPatterns(text);
+
+  postProcessExtractedFields(extractedFields, extractionNotes, options);
 
   return {
     success: true,
@@ -953,6 +1003,62 @@ export function extractDD214Fields(rawText, options = {}) {
     fieldsExtracted: Object.keys(extractedFields).length,
     method: "regex",
   };
+}
+
+/**
+ * Fill any AI fields missing from `merged` using the regex-extracted
+ * values, and correct regex-preferred structured fields when the AI
+ * value doesn't look like a valid date. Mutates `merged` and `mergeNotes`.
+ */
+function fillMissingFieldsFromRegex(merged, regexFields, regexPreferred, mergeNotes) {
+  for (const [key, value] of Object.entries(regexFields)) {
+    if (value === null || value === undefined) continue;
+    if (typeof value === "string" && value.trim() === "") continue;
+
+    const aiValue = merged[key];
+    const aiMissing =
+      aiValue === null ||
+      aiValue === undefined ||
+      (typeof aiValue === "string" && aiValue.trim() === "");
+
+    if (aiMissing) {
+      merged[key] = value;
+      mergeNotes.push(`Filled '${key}' from regex (AI missed it)`);
+    } else if (regexPreferred.includes(key)) {
+      // For structured fields, prefer regex if AI value looks wrong
+      if (
+        key.includes("Date") &&
+        typeof aiValue === "string" &&
+        !/^\d{4}-\d{2}-\d{2}$/.test(aiValue)
+      ) {
+        merged[key] = value;
+        mergeNotes.push(
+          `Corrected '${key}' with regex value (AI format was wrong)`,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Ensure `merged.combatService` reflects every combat indicator found by
+ * the regex extractor, unioning indicators and OR-ing hasVerifiedCombat.
+ * Mutates `merged` and `mergeNotes`.
+ */
+function mergeCombatServiceIndicators(merged, regexFields, mergeNotes) {
+  if (!merged.combatService) merged.combatService = regexFields.combatService;
+  else {
+    const existingIndicators = new Set(merged.combatService.indicators || []);
+    for (const ind of regexFields.combatService.indicators) {
+      if (!existingIndicators.has(ind)) {
+        merged.combatService.indicators.push(ind);
+        mergeNotes.push(`Added combat indicator '${ind}' from regex`);
+      }
+    }
+    if (regexFields.combatService.hasVerifiedCombat) {
+      merged.combatService.hasVerifiedCombat = true;
+    }
+  }
 }
 
 /**
@@ -1001,34 +1107,7 @@ export function mergeAIAndRegexResults(aiResult, regexResult) {
     "militaryEducation",
   ];
 
-  // Fill missing AI fields from regex
-  for (const [key, value] of Object.entries(regexFields)) {
-    if (value === null || value === undefined) continue;
-    if (typeof value === "string" && value.trim() === "") continue;
-
-    const aiValue = merged[key];
-    const aiMissing =
-      aiValue === null ||
-      aiValue === undefined ||
-      (typeof aiValue === "string" && aiValue.trim() === "");
-
-    if (aiMissing) {
-      merged[key] = value;
-      mergeNotes.push(`Filled '${key}' from regex (AI missed it)`);
-    } else if (regexPreferred.includes(key)) {
-      // For structured fields, prefer regex if AI value looks wrong
-      if (
-        key.includes("Date") &&
-        typeof aiValue === "string" &&
-        !/^\d{4}-\d{2}-\d{2}$/.test(aiValue)
-      ) {
-        merged[key] = value;
-        mergeNotes.push(
-          `Corrected '${key}' with regex value (AI format was wrong)`,
-        );
-      }
-    }
-  }
+  fillMissingFieldsFromRegex(merged, regexFields, regexPreferred, mergeNotes);
 
   // Merge deployment arrays (union)
   if (regexFields.deployments?.length > 0 && !merged.deployments?.length) {
@@ -1040,19 +1119,7 @@ export function mergeAIAndRegexResults(aiResult, regexResult) {
 
   // Ensure combat indicators are complete
   if (regexFields.combatService?.indicators?.length > 0) {
-    if (!merged.combatService) merged.combatService = regexFields.combatService;
-    else {
-      const existingIndicators = new Set(merged.combatService.indicators || []);
-      for (const ind of regexFields.combatService.indicators) {
-        if (!existingIndicators.has(ind)) {
-          merged.combatService.indicators.push(ind);
-          mergeNotes.push(`Added combat indicator '${ind}' from regex`);
-        }
-      }
-      if (regexFields.combatService.hasVerifiedCombat) {
-        merged.combatService.hasVerifiedCombat = true;
-      }
-    }
+    mergeCombatServiceIndicators(merged, regexFields, mergeNotes);
   }
 
   merged._mergeNotes = mergeNotes;
@@ -1081,7 +1148,7 @@ export function detectDD214Documents(text) {
 
   // Look for separation dates to identify distinct documents
   const sepDatePattern =
-    /(?:SEPARATION\s*DATE|12\s*[Bb])[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/gi;
+    /(?:SEPARATION\s*DATE|12\s*B)[:\s.]*\n?\s*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/gi;
   let match;
   while ((match = sepDatePattern.exec(text)) !== null) {
     const date = normalizeDate(match[1]);

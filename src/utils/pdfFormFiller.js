@@ -653,100 +653,320 @@ export async function getFormFieldNames(formNumber) {
 }
 
 /**
- * Create a filled PDF with text overlays (for forms without fillable fields)
- * This creates the form content programmatically
+ * Parse a raw phone string into area/prefix/line digit groups
  */
-// eslint-disable-next-line no-unused-vars
-async function createFilledPdfFromTemplate(formNumber, data, templateConfig) {
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-  // Use the template config to create pages
-  for (const pageConfig of templateConfig.pages) {
-    const page = pdfDoc.addPage([612, 792]); // Letter size
-    const { _width, height } = page.getSize();
-
-    // Draw header
-    if (pageConfig.header) {
-      page.drawText(pageConfig.header, {
-        x: 50,
-        y: height - 50,
-        size: 14,
-        font: fontBold,
-        color: rgb(0, 0, 0),
-      });
-    }
-
-    // Draw form fields
-    let yPosition = height - 100;
-    for (const field of pageConfig.fields) {
-      const value = data[field.dataKey] || "";
-
-      // Draw label
-      page.drawText(`${field.label}:`, {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-        color: rgb(0, 0, 0),
-      });
-
-      // Draw value
-      if (field.multiline) {
-        const lines = wrapText(value, 80);
-        yPosition -= 15;
-        for (const line of lines) {
-          page.drawText(line, {
-            x: 50,
-            y: yPosition,
-            size: 10,
-            font: font,
-            color: rgb(0, 0, 0),
-          });
-          yPosition -= 12;
-        }
-      } else {
-        page.drawText(value, {
-          x: 200,
-          y: yPosition,
-          size: 10,
-          font: font,
-          color: rgb(0, 0, 0),
-        });
-        yPosition -= 20;
-      }
-    }
-  }
-
-  return pdfDoc.save();
+function parsePhoneParts(phone) {
+  const digits = (phone || "").replace(/\D/g, "");
+  return {
+    area: digits.substring(0, 3),
+    prefix: digits.substring(3, 6),
+    line: digits.substring(6, 10),
+  };
 }
 
 /**
- * Wrap text to fit within a character limit
+ * Parse a raw SSN string into first/middle/last digit groups
  */
-function wrapText(text, maxChars) {
-  if (!text) return [""];
-  const words = text.split(" ");
-  const lines = [];
-  let currentLine = "";
+function parseSSNParts(ssn) {
+  const digits = (ssn || "").replace(/\D/g, "");
+  return {
+    first: digits.substring(0, 3),
+    middle: digits.substring(3, 5),
+    last: digits.substring(5, 9),
+  };
+}
 
+/**
+ * Parse a date of birth string (MM/DD/YYYY or YYYY-MM-DD) into parts
+ */
+function parseDOBParts(dob) {
+  if (!dob) return { month: "", day: "", year: "" };
+  const parts = dob.split(/[-/]/);
+  if (parts.length === 3) {
+    // Assume MM/DD/YYYY or YYYY-MM-DD format
+    if (parts[0].length === 4) {
+      return { year: parts[0], month: parts[1], day: parts[2] };
+    }
+    return { month: parts[0], day: parts[1], year: parts[2] };
+  }
+  return { month: "", day: "", year: "" };
+}
+
+/**
+ * Parse a raw ZIP code string into 5-digit/4-digit groups
+ */
+function parseZipParts(zip) {
+  const digits = (zip || "").replace(/\D/g, "");
+  return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
+}
+
+/**
+ * Get today's date split into padded month/day/year parts
+ */
+function getTodayParts() {
+  const today = new Date();
+  return {
+    month: String(today.getMonth() + 1).padStart(2, "0"),
+    day: String(today.getDate()).padStart(2, "0"),
+    year: String(today.getFullYear()),
+  };
+}
+
+/**
+ * Safely set a PDF text field's value, ignoring fields that don't exist
+ */
+function setPdfTextField(form, fieldName, value) {
+  if (!value) return;
+  try {
+    const field = form.getTextField(fieldName);
+    if (field) field.setText(String(value));
+  } catch {
+    // eslint-disable-next-line no-console
+    console.log(`Field not found: ${fieldName}`);
+  }
+}
+
+/**
+ * Safely check a PDF checkbox, ignoring fields that don't exist
+ */
+function setPdfCheckbox(form, fieldName, checked) {
+  try {
+    const field = form.getCheckBox(fieldName);
+    if (field && checked) field.check();
+  } catch {
+    // eslint-disable-next-line no-console
+    console.log(`Checkbox not found: ${fieldName}`);
+  }
+}
+
+/**
+ * Wrap text into lines that fit within maxWidth for the given font/size
+ */
+function wrapTextToLines(font, text, fontSize, maxWidth = 500) {
+  const words = (text || "").split(" ");
+  const lines = [];
+  let line = "";
   for (const word of words) {
-    if ((currentLine + " " + word).trim().length <= maxChars) {
-      currentLine = (currentLine + " " + word).trim();
+    const testLine = line + (line ? " " : "") + word;
+    const textWidth = font.widthOfTextAtSize(testLine, fontSize);
+    if (textWidth > maxWidth && line) {
+      lines.push(line);
+      line = word;
     } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
+      line = testLine;
     }
   }
-  if (currentLine) lines.push(currentLine);
-
+  if (line) lines.push(line);
   return lines;
+}
+
+/**
+ * Create a drawText function that paginates onto a new letter-size page
+ * once the current page runs out of vertical space
+ */
+function makePaginatedDrawText(
+  pdfDoc,
+  font,
+  fontBold,
+  height,
+  getPage,
+  setPage,
+  getY,
+  setY,
+) {
+  return (text, options = {}) => {
+    if (getY() < 80) {
+      setPage(pdfDoc.addPage([612, 792]));
+      setY(height - 50);
+    }
+    getPage().drawText(text || "", {
+      x: 50,
+      y: getY(),
+      size: options.size || 11,
+      font: options.bold ? fontBold : font,
+      color: rgb(0, 0, 0),
+    });
+    setY(getY() - 14);
+  };
+}
+
+/**
+ * Create a drawText function for a single fixed page (no pagination)
+ */
+function makeFlatDrawText(font, fontBold, page, getY, setY) {
+  return (text, options = {}) => {
+    page.drawText(text || "", {
+      x: 50,
+      y: getY(),
+      size: options.size || 11,
+      font: options.bold ? fontBold : font,
+      color: rgb(0, 0, 0),
+    });
+    setY(getY() - 14);
+  };
 }
 
 /**
  * Fill VA Form 21-10210 (Lay/Witness Statement) with actual field mappings
  */
+function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
+  const vetNameParts = (data.veteranName || "").split(" ");
+  const vetPhone = parsePhoneParts(data.veteranPhone);
+  const vetSSN = parseSSNParts(data.veteranSSN);
+  const vetDOB = parseDOBParts(data.veteranDOB);
+  const vetZip = parseZipParts(data.veteranZip);
+
+  setTextField(fieldMap.veteranFirstName, vetNameParts[0]);
+  setTextField(
+    fieldMap.veteranMiddleInitial,
+    vetNameParts.length > 2 ? vetNameParts[1]?.[0] : "",
+  );
+  setTextField(
+    fieldMap.veteranLastName,
+    vetNameParts[vetNameParts.length - 1],
+  );
+  setTextField(fieldMap.veteranSSN1, vetSSN.first);
+  setTextField(fieldMap.veteranSSN2, vetSSN.middle);
+  setTextField(fieldMap.veteranSSN3, vetSSN.last);
+  setTextField(fieldMap.veteranDOBMonth, vetDOB.month);
+  setTextField(fieldMap.veteranDOBDay, vetDOB.day);
+  setTextField(fieldMap.veteranDOBYear, vetDOB.year);
+  setTextField(fieldMap.veteranFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.veteranStreet, data.veteranStreet || "");
+  setTextField(fieldMap.veteranApt, data.veteranApt || "");
+  setTextField(fieldMap.veteranCity, data.veteranCity || "");
+  setTextField(fieldMap.veteranState, data.veteranState || "");
+  setTextField(fieldMap.veteranZip5, vetZip.five);
+  setTextField(fieldMap.veteranZip4, vetZip.four);
+  setTextField(fieldMap.veteranCountry, data.veteranCountry || "USA");
+  setTextField(fieldMap.veteranPhone1, vetPhone.area);
+  setTextField(fieldMap.veteranPhone2, vetPhone.prefix);
+  setTextField(fieldMap.veteranPhone3, vetPhone.line);
+  setTextField(fieldMap.veteranEmail, data.veteranEmail || "");
+}
+
+function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
+  const claimantNameParts = (
+    data.claimantName ||
+    data.witnessName ||
+    ""
+  ).split(" ");
+  const claimantPhone = parsePhoneParts(
+    data.claimantPhone || data.witnessPhone,
+  );
+  const claimantZip = parseZipParts(data.claimantZip || data.witnessZip);
+
+  setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
+  setTextField(
+    fieldMap.claimantMiddleInitial,
+    claimantNameParts.length > 2 ? claimantNameParts[1]?.[0] : "",
+  );
+  setTextField(
+    fieldMap.claimantLastName,
+    claimantNameParts[claimantNameParts.length - 1],
+  );
+  setTextField(
+    fieldMap.claimantStreet,
+    data.claimantStreet || data.witnessStreet || "",
+  );
+  setTextField(
+    fieldMap.claimantCity,
+    data.claimantCity || data.witnessCity || "",
+  );
+  setTextField(
+    fieldMap.claimantState,
+    data.claimantState || data.witnessState || "",
+  );
+  setTextField(fieldMap.claimantZip5, claimantZip.five);
+  setTextField(fieldMap.claimantPhone1, claimantPhone.area);
+  setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
+  setTextField(fieldMap.claimantPhone3, claimantPhone.line);
+  setTextField(
+    fieldMap.claimantEmail,
+    data.claimantEmail || data.witnessEmail || "",
+  );
+}
+
+function build21_10210_Statement(data) {
+  let fullStatement = "";
+  if (data.howKnown)
+    fullStatement += `HOW I KNOW THE VETERAN:\n${data.howKnown}\n\n`;
+  if (data.whatObserved)
+    fullStatement += `WHAT I PERSONALLY OBSERVED:\n${data.whatObserved}\n\n`;
+  if (data.whenObserved) fullStatement += `WHEN: ${data.whenObserved}\n`;
+  if (data.whereObserved)
+    fullStatement += `WHERE: ${data.whereObserved}\n\n`;
+  if (data.dailyImpact)
+    fullStatement += `IMPACT ON DAILY LIFE:\n${data.dailyImpact}\n\n`;
+  if (data.workImpact)
+    fullStatement += `IMPACT ON WORK:\n${data.workImpact}\n\n`;
+  if (data.additionalInfo)
+    fullStatement += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
+  return fullStatement.trim();
+}
+
+function fill21_10210_RelationshipCheckbox(
+  setTextField,
+  setCheckbox,
+  fieldMap,
+  data,
+) {
+  const relation = (data.witnessRelation || "").toLowerCase();
+  if (
+    relation.includes("served") ||
+    relation.includes("military") ||
+    relation.includes("unit")
+  ) {
+    setCheckbox(fieldMap.relationServedWith, true);
+  } else if (
+    relation.includes("family") ||
+    relation.includes("friend") ||
+    relation.includes("spouse") ||
+    relation.includes("parent")
+  ) {
+    setCheckbox(fieldMap.relationFamilyFriend, true);
+  } else if (
+    relation.includes("coworker") ||
+    relation.includes("supervisor") ||
+    relation.includes("work")
+  ) {
+    setCheckbox(fieldMap.relationCoworker, true);
+  } else if (relation) {
+    setCheckbox(fieldMap.relationOther, true);
+    setTextField(fieldMap.relationOtherText, data.witnessRelation);
+  }
+}
+
+function fill21_10210_WitnessSection(
+  setTextField,
+  setCheckbox,
+  fieldMap,
+  data,
+) {
+  const witnessNameParts = (data.witnessName || "").split(" ");
+  const witnessPhone = parsePhoneParts(data.witnessPhone);
+  const todayParts = getTodayParts();
+
+  setTextField(fieldMap.witnessFirstName, witnessNameParts[0]);
+  setTextField(
+    fieldMap.witnessMiddleInitial,
+    witnessNameParts.length > 2 ? witnessNameParts[1]?.[0] : "",
+  );
+  setTextField(
+    fieldMap.witnessLastName,
+    witnessNameParts[witnessNameParts.length - 1],
+  );
+  setTextField(fieldMap.witnessPhone1, witnessPhone.area);
+  setTextField(fieldMap.witnessPhone2, witnessPhone.prefix);
+  setTextField(fieldMap.witnessPhone3, witnessPhone.line);
+  setTextField(fieldMap.witnessEmail, data.witnessEmail || "");
+  setTextField(fieldMap.witnessDateMonth, todayParts.month);
+  setTextField(fieldMap.witnessDateDay, todayParts.day);
+  setTextField(fieldMap.witnessDateYear, todayParts.year);
+
+  fill21_10210_RelationshipCheckbox(setTextField, setCheckbox, fieldMap, data);
+}
+
 export async function fillForm21_10210(data) {
   const pdfBytes = await fetchPdfForm("21-10210");
   const fieldMap = VA_FORM_FIELDS["21-10210"];
@@ -757,222 +977,17 @@ export async function fillForm21_10210(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found or error: ${fieldName}`);
-        }
-      };
+      fill21_10210_VeteranSection(setTextField, fieldMap, data);
+      fill21_10210_ClaimantSection(setTextField, fieldMap, data);
+      setTextField(fieldMap.statementContent, build21_10210_Statement(data));
+      fill21_10210_WitnessSection(setTextField, setCheckbox, fieldMap, data);
 
-      // Helper to safely set checkbox
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
-        }
-      };
-
-      // Parse names
-      const vetNameParts = (data.veteranName || "").split(" ");
-      const witnessNameParts = (data.witnessName || "").split(" ");
-      const claimantNameParts = (
-        data.claimantName ||
-        data.witnessName ||
-        ""
-      ).split(" ");
-
-      // Parse phone numbers (remove non-digits, split into parts)
-      const parsePhone = (phone) => {
-        const digits = (phone || "").replace(/\D/g, "");
-        return {
-          area: digits.substring(0, 3),
-          prefix: digits.substring(3, 6),
-          line: digits.substring(6, 10),
-        };
-      };
-      const vetPhone = parsePhone(data.veteranPhone);
-      const witnessPhone = parsePhone(data.witnessPhone);
-      const claimantPhone = parsePhone(data.claimantPhone || data.witnessPhone);
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const vetSSN = parseSSN(data.veteranSSN);
-      const _witnessSSN = parseSSN(data.witnessSSN);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          // Assume MM/DD/YYYY or YYYY-MM-DD format
-          if (parts[0].length === 4) {
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          }
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const vetDOB = parseDOB(data.veteranDOB);
-      const _witnessDOB = parseDOB(data.witnessDOB);
-
-      // Parse address
-      const parseZip = (zip) => {
-        const digits = (zip || "").replace(/\D/g, "");
-        return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
-      };
-
-      // Today's date
-      const today = new Date();
-      const todayParts = {
-        month: String(today.getMonth() + 1).padStart(2, "0"),
-        day: String(today.getDate()).padStart(2, "0"),
-        year: String(today.getFullYear()),
-      };
-
-      // Section 1: Veteran Information
-      setTextField(fieldMap.veteranFirstName, vetNameParts[0]);
-      setTextField(
-        fieldMap.veteranMiddleInitial,
-        vetNameParts.length > 2 ? vetNameParts[1]?.[0] : "",
-      );
-      setTextField(
-        fieldMap.veteranLastName,
-        vetNameParts[vetNameParts.length - 1],
-      );
-      setTextField(fieldMap.veteranSSN1, vetSSN.first);
-      setTextField(fieldMap.veteranSSN2, vetSSN.middle);
-      setTextField(fieldMap.veteranSSN3, vetSSN.last);
-      setTextField(fieldMap.veteranDOBMonth, vetDOB.month);
-      setTextField(fieldMap.veteranDOBDay, vetDOB.day);
-      setTextField(fieldMap.veteranDOBYear, vetDOB.year);
-      setTextField(fieldMap.veteranFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.veteranStreet, data.veteranStreet || "");
-      setTextField(fieldMap.veteranApt, data.veteranApt || "");
-      setTextField(fieldMap.veteranCity, data.veteranCity || "");
-      setTextField(fieldMap.veteranState, data.veteranState || "");
-      const vetZip = parseZip(data.veteranZip);
-      setTextField(fieldMap.veteranZip5, vetZip.five);
-      setTextField(fieldMap.veteranZip4, vetZip.four);
-      setTextField(fieldMap.veteranCountry, data.veteranCountry || "USA");
-      setTextField(fieldMap.veteranPhone1, vetPhone.area);
-      setTextField(fieldMap.veteranPhone2, vetPhone.prefix);
-      setTextField(fieldMap.veteranPhone3, vetPhone.line);
-      setTextField(fieldMap.veteranEmail, data.veteranEmail || "");
-
-      // Section 2: Claimant/Witness Information
-      setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
-      setTextField(
-        fieldMap.claimantMiddleInitial,
-        claimantNameParts.length > 2 ? claimantNameParts[1]?.[0] : "",
-      );
-      setTextField(
-        fieldMap.claimantLastName,
-        claimantNameParts[claimantNameParts.length - 1],
-      );
-      setTextField(
-        fieldMap.claimantStreet,
-        data.claimantStreet || data.witnessStreet || "",
-      );
-      setTextField(
-        fieldMap.claimantCity,
-        data.claimantCity || data.witnessCity || "",
-      );
-      setTextField(
-        fieldMap.claimantState,
-        data.claimantState || data.witnessState || "",
-      );
-      const claimantZip = parseZip(data.claimantZip || data.witnessZip);
-      setTextField(fieldMap.claimantZip5, claimantZip.five);
-      setTextField(fieldMap.claimantPhone1, claimantPhone.area);
-      setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
-      setTextField(fieldMap.claimantPhone3, claimantPhone.line);
-      setTextField(
-        fieldMap.claimantEmail,
-        data.claimantEmail || data.witnessEmail || "",
-      );
-
-      // Section 3: Statement Content
-      // Build the full statement from the wizard data
-      let fullStatement = "";
-      if (data.howKnown)
-        fullStatement += `HOW I KNOW THE VETERAN:\n${data.howKnown}\n\n`;
-      if (data.whatObserved)
-        fullStatement += `WHAT I PERSONALLY OBSERVED:\n${data.whatObserved}\n\n`;
-      if (data.whenObserved) fullStatement += `WHEN: ${data.whenObserved}\n`;
-      if (data.whereObserved)
-        fullStatement += `WHERE: ${data.whereObserved}\n\n`;
-      if (data.dailyImpact)
-        fullStatement += `IMPACT ON DAILY LIFE:\n${data.dailyImpact}\n\n`;
-      if (data.workImpact)
-        fullStatement += `IMPACT ON WORK:\n${data.workImpact}\n\n`;
-      if (data.additionalInfo)
-        fullStatement += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-
-      setTextField(fieldMap.statementContent, fullStatement.trim());
-
-      // Section 4: Witness Signature Info
-      setTextField(fieldMap.witnessFirstName, witnessNameParts[0]);
-      setTextField(
-        fieldMap.witnessMiddleInitial,
-        witnessNameParts.length > 2 ? witnessNameParts[1]?.[0] : "",
-      );
-      setTextField(
-        fieldMap.witnessLastName,
-        witnessNameParts[witnessNameParts.length - 1],
-      );
-      setTextField(fieldMap.witnessPhone1, witnessPhone.area);
-      setTextField(fieldMap.witnessPhone2, witnessPhone.prefix);
-      setTextField(fieldMap.witnessPhone3, witnessPhone.line);
-      setTextField(fieldMap.witnessEmail, data.witnessEmail || "");
-      setTextField(fieldMap.witnessDateMonth, todayParts.month);
-      setTextField(fieldMap.witnessDateDay, todayParts.day);
-      setTextField(fieldMap.witnessDateYear, todayParts.year);
-
-      // Relationship checkboxes
-      const relation = (data.witnessRelation || "").toLowerCase();
-      if (
-        relation.includes("served") ||
-        relation.includes("military") ||
-        relation.includes("unit")
-      ) {
-        setCheckbox(fieldMap.relationServedWith, true);
-      } else if (
-        relation.includes("family") ||
-        relation.includes("friend") ||
-        relation.includes("spouse") ||
-        relation.includes("parent")
-      ) {
-        setCheckbox(fieldMap.relationFamilyFriend, true);
-      } else if (
-        relation.includes("coworker") ||
-        relation.includes("supervisor") ||
-        relation.includes("work")
-      ) {
-        setCheckbox(fieldMap.relationCoworker, true);
-      } else if (relation) {
-        setCheckbox(fieldMap.relationOther, true);
-        setTextField(fieldMap.relationOtherText, data.witnessRelation);
-      }
-
-      // Save the filled PDF
-      const filledPdfBytes = await pdfDoc.save();
-      return filledPdfBytes;
+      return await pdfDoc.save();
     } catch (error) {
       console.error("Error filling VA Form 21-10210:", error);
     }
@@ -980,6 +995,96 @@ export async function fillForm21_10210(data) {
 
   // Fallback: Create a clean formatted PDF document
   return createBuddyStatementPdf(data);
+}
+
+function drawBuddyStatementHeader(drawText, drawLine, adjustY) {
+  drawText("STATEMENT IN SUPPORT OF CLAIM", { bold: true, size: 14 });
+  drawText("(Attachment for VA Form 21-10210)", { size: 10 });
+  adjustY(-10);
+  drawLine();
+  adjustY(-10);
+}
+
+function drawBuddyStatementWitnessInfo(drawText, adjustY, data) {
+  drawText("SECTION I - PERSON PROVIDING STATEMENT", { bold: true });
+  adjustY(-5);
+  drawText(`Full Name: ${data.witnessName || "_______________________"}`);
+  drawText(
+    `Relationship to Veteran: ${data.witnessRelation || "_______________________"}`,
+  );
+  drawText(`Phone: ${data.witnessPhone || "_______________________"}`);
+  drawText(`Email: ${data.witnessEmail || "_______________________"}`);
+  adjustY(-10);
+}
+
+function drawBuddyStatementVeteranInfo(drawText, adjustY, data) {
+  drawText("SECTION II - VETERAN INFORMATION", { bold: true });
+  adjustY(-5);
+  drawText(`Veteran Name: ${data.veteranName || "_______________________"}`);
+  drawText(
+    `Branch of Service: ${data.veteranBranch || "_______________________"}`,
+  );
+  drawText(`Condition: ${data.conditionName || "_______________________"}`);
+  adjustY(-10);
+}
+
+function drawBuddyStatementBody(drawText, drawWrappedText, adjustY, data) {
+  drawText("SECTION III - STATEMENT", { bold: true });
+  adjustY(-5);
+
+  if (data.howKnown) {
+    drawText("How I Know the Veteran:", { bold: true, size: 10 });
+    drawWrappedText(data.howKnown);
+    adjustY(-5);
+  }
+
+  if (data.whatObserved) {
+    drawText("What I Personally Observed:", { bold: true, size: 10 });
+    drawWrappedText(data.whatObserved);
+    adjustY(-5);
+  }
+
+  if (data.whenObserved) {
+    drawText(`When: ${data.whenObserved}`);
+  }
+  if (data.whereObserved) {
+    drawText(`Where: ${data.whereObserved}`);
+  }
+
+  if (data.dailyImpact) {
+    adjustY(-5);
+    drawText("Impact on Daily Life:", { bold: true, size: 10 });
+    drawWrappedText(data.dailyImpact);
+  }
+
+  if (data.workImpact) {
+    adjustY(-5);
+    drawText("Impact on Work:", { bold: true, size: 10 });
+    drawWrappedText(data.workImpact);
+  }
+}
+
+function drawBuddyStatementCertification(
+  drawText,
+  drawWrappedText,
+  drawLine,
+  adjustY,
+  data,
+) {
+  adjustY(-20);
+  drawLine();
+
+  drawText("CERTIFICATION", { bold: true });
+  adjustY(-5);
+  drawWrappedText(
+    "I certify under penalty of perjury that the statements made herein are true and correct to the best of my knowledge and belief.",
+  );
+  adjustY(-20);
+
+  drawText("Signature: _______________________________________");
+  adjustY(-5);
+  drawText(`Printed Name: ${data.witnessName || "_______________________"}`);
+  drawText(`Date: ${new Date().toLocaleDateString()}`);
 }
 
 /**
@@ -995,6 +1100,9 @@ async function createBuddyStatementPdf(data) {
   const page = pdfDoc.addPage([612, 792]);
   const { _width, height } = page.getSize();
   let y = height - 50;
+  const adjustY = (delta) => {
+    y += delta;
+  };
 
   const drawText = (text, options = {}) => {
     const { bold = false, size = fontSize, indent = 50 } = options;
@@ -1009,19 +1117,9 @@ async function createBuddyStatementPdf(data) {
   };
 
   const drawWrappedText = (text, maxWidth = 500) => {
-    const words = (text || "").split(" ");
-    let line = "";
-    for (const word of words) {
-      const testLine = line + (line ? " " : "") + word;
-      const textWidth = font.widthOfTextAtSize(testLine, fontSize);
-      if (textWidth > maxWidth && line) {
-        drawText(line);
-        line = word;
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) drawText(line);
+    wrapTextToLines(font, text, fontSize, maxWidth).forEach((line) =>
+      drawText(line),
+    );
   };
 
   const drawLine = () => {
@@ -1034,68 +1132,10 @@ async function createBuddyStatementPdf(data) {
     y -= 10;
   };
 
-  // Header
-  drawText("STATEMENT IN SUPPORT OF CLAIM", { bold: true, size: 14 });
-  drawText("(Attachment for VA Form 21-10210)", { size: 10 });
-  y -= 10;
-  drawLine();
-  y -= 10;
-
-  // Section 1: Witness Info
-  drawText("SECTION I - PERSON PROVIDING STATEMENT", { bold: true });
-  y -= 5;
-  drawText(`Full Name: ${data.witnessName || "_______________________"}`);
-  drawText(
-    `Relationship to Veteran: ${data.witnessRelation || "_______________________"}`,
-  );
-  drawText(`Phone: ${data.witnessPhone || "_______________________"}`);
-  drawText(`Email: ${data.witnessEmail || "_______________________"}`);
-  y -= 10;
-
-  // Section 2: Veteran Info
-  drawText("SECTION II - VETERAN INFORMATION", { bold: true });
-  y -= 5;
-  drawText(`Veteran Name: ${data.veteranName || "_______________________"}`);
-  drawText(
-    `Branch of Service: ${data.veteranBranch || "_______________________"}`,
-  );
-  drawText(`Condition: ${data.conditionName || "_______________________"}`);
-  y -= 10;
-
-  // Section 3: Statement
-  drawText("SECTION III - STATEMENT", { bold: true });
-  y -= 5;
-
-  if (data.howKnown) {
-    drawText("How I Know the Veteran:", { bold: true, size: 10 });
-    drawWrappedText(data.howKnown);
-    y -= 5;
-  }
-
-  if (data.whatObserved) {
-    drawText("What I Personally Observed:", { bold: true, size: 10 });
-    drawWrappedText(data.whatObserved);
-    y -= 5;
-  }
-
-  if (data.whenObserved) {
-    drawText(`When: ${data.whenObserved}`);
-  }
-  if (data.whereObserved) {
-    drawText(`Where: ${data.whereObserved}`);
-  }
-
-  if (data.dailyImpact) {
-    y -= 5;
-    drawText("Impact on Daily Life:", { bold: true, size: 10 });
-    drawWrappedText(data.dailyImpact);
-  }
-
-  if (data.workImpact) {
-    y -= 5;
-    drawText("Impact on Work:", { bold: true, size: 10 });
-    drawWrappedText(data.workImpact);
-  }
+  drawBuddyStatementHeader(drawText, drawLine, adjustY);
+  drawBuddyStatementWitnessInfo(drawText, adjustY, data);
+  drawBuddyStatementVeteranInfo(drawText, adjustY, data);
+  drawBuddyStatementBody(drawText, drawWrappedText, adjustY, data);
 
   // Check if we need a second page
   if (y < 200) {
@@ -1103,21 +1143,13 @@ async function createBuddyStatementPdf(data) {
     y = height - 50;
   }
 
-  y -= 20;
-  drawLine();
-
-  // Certification
-  drawText("CERTIFICATION", { bold: true });
-  y -= 5;
-  drawWrappedText(
-    "I certify under penalty of perjury that the statements made herein are true and correct to the best of my knowledge and belief.",
+  drawBuddyStatementCertification(
+    drawText,
+    drawWrappedText,
+    drawLine,
+    adjustY,
+    data,
   );
-  y -= 20;
-
-  drawText("Signature: _______________________________________");
-  y -= 5;
-  drawText(`Printed Name: ${data.witnessName || "_______________________"}`);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
 
   return pdfDoc.save();
 }
@@ -1125,6 +1157,61 @@ async function createBuddyStatementPdf(data) {
 /**
  * Fill VA Form 21-4138 (Statement in Support of Claim) with actual field mappings
  */
+function fill21_4138_IdentityInfo(setTextField, fieldMap, data) {
+  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
+
+  setTextField(fieldMap.firstName, nameParts[0]);
+  setTextField(
+    fieldMap.middleInitial,
+    nameParts.length > 2 ? nameParts[1]?.[0] : "",
+  );
+  setTextField(fieldMap.lastName, nameParts[nameParts.length - 1]);
+  setTextField(fieldMap.ssn1, ssn.first);
+  setTextField(fieldMap.ssn2, ssn.middle);
+  setTextField(fieldMap.ssn3, ssn.last);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.dobMonth, dob.month);
+  setTextField(fieldMap.dobDay, dob.day);
+  setTextField(fieldMap.dobYear, dob.year);
+  setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+}
+
+function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
+  const phone = parsePhoneParts(data.phone || data.veteranPhone);
+  const zipParts = parseZipParts(data.zip || data.veteranZip);
+
+  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
+  setTextField(fieldMap.city, data.city || data.veteranCity || "");
+  setTextField(fieldMap.state, data.state || data.veteranState || "");
+  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.zip5, zipParts.five);
+  setTextField(fieldMap.zip4, zipParts.four);
+  setTextField(fieldMap.phone1, phone.area);
+  setTextField(fieldMap.phone2, phone.prefix);
+  setTextField(fieldMap.phone3, phone.line);
+  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+}
+
+function build21_4138_Remarks(data) {
+  let remarks = "";
+  if (data.conditionName) remarks += `CONDITION: ${data.conditionName}\n\n`;
+  if (data.serviceConnection)
+    remarks += `SERVICE CONNECTION:\n${data.serviceConnection}\n\n`;
+  if (data.currentSymptoms)
+    remarks += `CURRENT SYMPTOMS:\n${data.currentSymptoms}\n\n`;
+  if (data.dailyImpact) remarks += `DAILY IMPACT:\n${data.dailyImpact}\n\n`;
+  if (data.workImpact) remarks += `WORK IMPACT:\n${data.workImpact}\n\n`;
+  if (data.treatmentHistory)
+    remarks += `TREATMENT HISTORY:\n${data.treatmentHistory}\n\n`;
+  if (data.additionalInfo)
+    remarks += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
+  if (data.remarks) remarks = data.remarks;
+  return remarks.trim();
+}
+
 export async function fillForm21_4138(data) {
   const pdfBytes = await fetchPdfForm("21-4138");
   const fieldMap = VA_FORM_FIELDS["21-4138"];
@@ -1135,118 +1222,17 @@ export async function fillForm21_4138(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
+      fill21_4138_IdentityInfo(setTextField, fieldMap, data);
+      fill21_4138_ContactInfo(setTextField, fieldMap, data);
 
-      // Parse name
-      const nameParts = (data.veteranName || data.name || "").split(" ");
-
-      // Parse phone
-      const parsePhone = (phone) => {
-        const digits = (phone || "").replace(/\D/g, "");
-        return {
-          area: digits.substring(0, 3),
-          prefix: digits.substring(3, 6),
-          line: digits.substring(6, 10),
-        };
-      };
-      const phone = parsePhone(data.phone || data.veteranPhone);
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const ssn = parseSSN(data.ssn || data.veteranSSN);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4)
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const dob = parseDOB(data.dob || data.veteranDOB);
-
-      // Parse zip
-      const parseZip = (zip) => {
-        const digits = (zip || "").replace(/\D/g, "");
-        return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
-      };
-      const zipParts = parseZip(data.zip || data.veteranZip);
-
-      // Today's date
-      const today = new Date();
-      const todayParts = {
-        month: String(today.getMonth() + 1).padStart(2, "0"),
-        day: String(today.getDate()).padStart(2, "0"),
-        year: String(today.getFullYear()),
-      };
-
-      // Fill veteran info
-      setTextField(fieldMap.firstName, nameParts[0]);
-      setTextField(
-        fieldMap.middleInitial,
-        nameParts.length > 2 ? nameParts[1]?.[0] : "",
-      );
-      setTextField(fieldMap.lastName, nameParts[nameParts.length - 1]);
-      setTextField(fieldMap.ssn1, ssn.first);
-      setTextField(fieldMap.ssn2, ssn.middle);
-      setTextField(fieldMap.ssn3, ssn.last);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.dobMonth, dob.month);
-      setTextField(fieldMap.dobDay, dob.day);
-      setTextField(fieldMap.dobYear, dob.year);
-      setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-      setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-      setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
-      setTextField(fieldMap.city, data.city || data.veteranCity || "");
-      setTextField(fieldMap.state, data.state || data.veteranState || "");
-      setTextField(fieldMap.country, data.country || "USA");
-      setTextField(fieldMap.zip5, zipParts.five);
-      setTextField(fieldMap.zip4, zipParts.four);
-      setTextField(fieldMap.phone1, phone.area);
-      setTextField(fieldMap.phone2, phone.prefix);
-      setTextField(fieldMap.phone3, phone.line);
-      setTextField(fieldMap.email, data.email || data.veteranEmail || "");
-
-      // Build remarks content from all statement sections
-      let remarks = "";
-      if (data.conditionName) remarks += `CONDITION: ${data.conditionName}\n\n`;
-      if (data.serviceConnection)
-        remarks += `SERVICE CONNECTION:\n${data.serviceConnection}\n\n`;
-      if (data.currentSymptoms)
-        remarks += `CURRENT SYMPTOMS:\n${data.currentSymptoms}\n\n`;
-      if (data.dailyImpact) remarks += `DAILY IMPACT:\n${data.dailyImpact}\n\n`;
-      if (data.workImpact) remarks += `WORK IMPACT:\n${data.workImpact}\n\n`;
-      if (data.treatmentHistory)
-        remarks += `TREATMENT HISTORY:\n${data.treatmentHistory}\n\n`;
-      if (data.additionalInfo)
-        remarks += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-      if (data.remarks) remarks = data.remarks;
-
-      setTextField(fieldMap.remarks, remarks.trim());
+      setTextField(fieldMap.remarks, build21_4138_Remarks(data));
       setTextField(fieldMap.remarksPage2, ""); // Page 2 continuation if needed
 
       // Signature date
+      const todayParts = getTodayParts();
       setTextField(fieldMap.dateMonth, todayParts.month);
       setTextField(fieldMap.dateDay, todayParts.day);
       setTextField(fieldMap.dateYear, todayParts.year);
@@ -1261,70 +1247,19 @@ export async function fillForm21_4138(data) {
   return createPersonalStatementPdf(data);
 }
 
-/**
- * Create personal statement PDF (fallback)
- */
-async function createPersonalStatementPdf(data) {
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontSize = 11;
-  const lineHeight = 14;
-
-  let currentPage = pdfDoc.addPage([612, 792]);
-  const { _width, height } = currentPage.getSize();
-  let y = height - 50;
-
-  const getPage = () => {
-    if (y < 80) {
-      currentPage = pdfDoc.addPage([612, 792]);
-      y = height - 50;
-    }
-    return currentPage;
-  };
-
-  const drawText = (text, options = {}) => {
-    const { bold = false, size = fontSize } = options;
-    const page = getPage();
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size,
-      font: bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= lineHeight;
-  };
-
-  const drawWrappedText = (text, maxWidth = 500) => {
-    const words = (text || "").split(" ");
-    let line = "";
-    for (const word of words) {
-      const testLine = line + (line ? " " : "") + word;
-      const textWidth = font.widthOfTextAtSize(testLine, fontSize);
-      if (textWidth > maxWidth && line) {
-        drawText(line);
-        line = word;
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) drawText(line);
-  };
-
-  // Header
+function drawPersonalStatementHeader(drawText, adjustY, data) {
   drawText("STATEMENT IN SUPPORT OF CLAIM", { bold: true, size: 14 });
   drawText("(For use with VA Form 21-4138)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
-  // Veteran Info
   drawText("CLAIMANT INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
   drawText(`Condition: ${data.conditionName || ""}`);
   drawText(`Claim Type: ${data.claimType || ""}`);
-  y -= 10;
+  adjustY(-10);
+}
 
-  // Statement sections
+function drawPersonalStatementBody(drawText, drawWrappedText, adjustY, data) {
   if (data.onsetDate || data.inServiceEvent) {
     drawText("IN-SERVICE EVENT/INJURY", { bold: true });
     if (data.onsetDate) {
@@ -1333,37 +1268,83 @@ async function createPersonalStatementPdf(data) {
     if (data.inServiceEvent) {
       drawWrappedText(data.inServiceEvent);
     }
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.symptoms) {
     drawText("CURRENT SYMPTOMS", { bold: true });
     drawWrappedText(data.symptoms);
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.workImpact) {
     drawText("IMPACT ON EMPLOYMENT", { bold: true });
     drawWrappedText(data.workImpact);
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.dailyImpact) {
     drawText("IMPACT ON DAILY ACTIVITIES", { bold: true });
     drawWrappedText(data.dailyImpact);
-    y -= 10;
+    adjustY(-10);
   }
+}
 
-  // Signature
-  y -= 20;
+function drawPersonalStatementSignature(
+  drawText,
+  drawWrappedText,
+  adjustY,
+  data,
+) {
+  adjustY(-20);
   drawText("CERTIFICATION", { bold: true });
   drawWrappedText(
     "I certify that the statements herein are true and correct to the best of my knowledge.",
   );
-  y -= 20;
+  adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Printed Name: ${data.veteranName || ""}`);
   drawText(`Date: ${new Date().toLocaleDateString()}`);
+}
+
+/**
+ * Create personal statement PDF (fallback)
+ */
+async function createPersonalStatementPdf(data) {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  let currentPage = pdfDoc.addPage([612, 792]);
+  const { _width, height } = currentPage.getSize();
+  let y = height - 50;
+  const adjustY = (delta) => {
+    y += delta;
+  };
+
+  const drawText = makePaginatedDrawText(
+    pdfDoc,
+    font,
+    fontBold,
+    height,
+    () => currentPage,
+    (p) => {
+      currentPage = p;
+    },
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
+  const drawWrappedText = (text, maxWidth = 500) => {
+    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
+      drawText(line),
+    );
+  };
+
+  drawPersonalStatementHeader(drawText, adjustY, data);
+  drawPersonalStatementBody(drawText, drawWrappedText, adjustY, data);
+  drawPersonalStatementSignature(drawText, drawWrappedText, adjustY, data);
 
   return pdfDoc.save();
 }
@@ -1371,6 +1352,183 @@ async function createPersonalStatementPdf(data) {
 /**
  * Fill VA Form 21-0781 (PTSD Stressor Statement) with actual field mappings
  */
+function parse21_0781_Name(data) {
+  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const firstName = nameParts[0] || "";
+  const middleInitial = nameParts.length > 2 ? nameParts[1].charAt(0) : "";
+  const lastName =
+    nameParts.length > 2
+      ? nameParts.slice(2).join(" ")
+      : nameParts[1] || "";
+  return { firstName, middleInitial, lastName };
+}
+
+function fill21_0781_VeteranInfo(setTextField, fieldMap, data) {
+  const { firstName, middleInitial, lastName } = parse21_0781_Name(data);
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const phone = parsePhoneParts(data.phone || data.veteranPhone);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
+
+  setTextField(fieldMap.veteranFirstName, firstName);
+  setTextField(fieldMap.veteranMiddleInitial, middleInitial);
+  setTextField(fieldMap.veteranLastName, lastName);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber);
+  setTextField(fieldMap.serviceNumber, data.serviceNumber);
+  setTextField(fieldMap.ssn1, ssn.first);
+  setTextField(fieldMap.ssn2, ssn.middle);
+  setTextField(fieldMap.ssn3, ssn.last);
+  setTextField(fieldMap.dobMonth, dob.month);
+  setTextField(fieldMap.dobDay, dob.day);
+  setTextField(fieldMap.dobYear, dob.year);
+  setTextField(fieldMap.phoneArea, phone.area);
+  setTextField(fieldMap.phonePrefix, phone.prefix);
+  setTextField(fieldMap.phoneLine, phone.line);
+  setTextField(fieldMap.intlPhone, data.intlPhone);
+  setTextField(fieldMap.email, data.email || data.veteranEmail);
+}
+
+function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
+  setCheckbox(
+    fieldMap.combatTraumatic,
+    data.stressorType === "combat" || data.combatTraumatic,
+  );
+  setCheckbox(
+    fieldMap.personalTraumaticNonMST,
+    data.stressorType === "personal_non_mst" ||
+      data.personalTraumaticNonMST,
+  );
+  setCheckbox(
+    fieldMap.personalTraumaticMST,
+    data.stressorType === "personal_mst" || data.personalTraumaticMST,
+  );
+  setCheckbox(
+    fieldMap.otherTraumatic,
+    data.stressorType === "other" || data.otherTraumatic,
+  );
+}
+
+function fill21_0781_StressorEvents(setTextField, fieldMap, data) {
+  // Stressor events - support both single incident and multiple incidents
+  // For single incident data format
+  if (
+    data.incidentDescription ||
+    data.incidentLocation ||
+    data.incidentDate
+  ) {
+    setTextField(fieldMap.stressor1Description, data.incidentDescription);
+    setTextField(fieldMap.stressor1Location, data.incidentLocation);
+    setTextField(fieldMap.stressor1Dates, data.incidentDate);
+  }
+
+  // For multiple stressor format (stressors array)
+  if (data.stressors && Array.isArray(data.stressors)) {
+    if (data.stressors[0]) {
+      setTextField(
+        fieldMap.stressor1Description,
+        data.stressors[0].description,
+      );
+      setTextField(fieldMap.stressor1Location, data.stressors[0].location);
+      setTextField(fieldMap.stressor1Dates, data.stressors[0].dates);
+    }
+    if (data.stressors[1]) {
+      setTextField(
+        fieldMap.stressor2Description,
+        data.stressors[1].description,
+      );
+      setTextField(fieldMap.stressor2Location, data.stressors[1].location);
+      setTextField(fieldMap.stressor2Dates, data.stressors[1].dates);
+    }
+    if (data.stressors[2]) {
+      setTextField(
+        fieldMap.stressor3Description,
+        data.stressors[2].description,
+      );
+      setTextField(fieldMap.stressor3Location, data.stressors[2].location);
+      setTextField(fieldMap.stressor3Dates, data.stressors[2].dates);
+    }
+  }
+}
+
+function fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data) {
+  setCheckbox(
+    fieldMap.increasedHealthcareVisits,
+    data.increasedHealthcareVisits,
+  );
+  setCheckbox(fieldMap.requestedDutyChange, data.requestedDutyChange);
+  setCheckbox(fieldMap.changesInLeave, data.changesInLeave);
+  setCheckbox(fieldMap.performanceChanges, data.performanceChanges);
+  setCheckbox(
+    fieldMap.depressionPanicAnxiety,
+    data.depressionPanicAnxiety ||
+      data.behavioralChanges?.includes("depression"),
+  );
+  setCheckbox(
+    fieldMap.prescriptionMedsChanges,
+    data.prescriptionMedsChanges,
+  );
+  setCheckbox(fieldMap.otcMedsChanges, data.otcMedsChanges);
+  setCheckbox(fieldMap.substanceUseChanges, data.substanceUseChanges);
+  setCheckbox(fieldMap.disciplinaryLegal, data.disciplinaryLegal);
+  setCheckbox(fieldMap.eatingHabitChanges, data.eatingHabitChanges);
+  setCheckbox(fieldMap.pregnancyTests, data.pregnancyTests);
+  setCheckbox(fieldMap.stiTests, data.stiTests);
+  setCheckbox(fieldMap.economicSocialChanges, data.economicSocialChanges);
+  setCheckbox(fieldMap.relationshipChanges, data.relationshipChanges);
+
+  setTextField(
+    fieldMap.additionalBehaviorInfo0,
+    data.ptsdSymptoms || data.behavioralChangesDetail,
+  );
+  setTextField(
+    fieldMap.listAdditionalBehavioralChanges,
+    data.additionalBehavioralChanges,
+  );
+}
+
+function fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data) {
+  setCheckbox(fieldMap.rapeCrisisCenter, data.rapeCrisisCenter);
+  setCheckbox(fieldMap.counselingFacility, data.counselingFacility);
+  setCheckbox(
+    fieldMap.familyOrRoomates,
+    data.familyOrRoomates || data.toldFamily,
+  );
+  setCheckbox(fieldMap.facultyMember, data.facultyMember);
+  setCheckbox(fieldMap.civilianPolice, data.civilianPolice);
+  setCheckbox(fieldMap.medicalReports, data.medicalReports);
+  setCheckbox(fieldMap.chaplainClergy, data.chaplainClergy);
+  setCheckbox(
+    fieldMap.fellowServiceMembers,
+    data.fellowServiceMembers || data.toldServiceMembers,
+  );
+  setCheckbox(fieldMap.personalDiaries, data.personalDiaries);
+  setTextField(fieldMap.policeReportLocation, data.policeReportLocation);
+  setTextField(fieldMap.otherReportText, data.otherReportText);
+}
+
+function fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data) {
+  setCheckbox(fieldMap.privateProvider, data.privateProvider);
+  setCheckbox(fieldMap.vaVetCenter, data.vaVetCenter);
+  setCheckbox(fieldMap.communityCarePaidByVA, data.communityCarePaidByVA);
+  setCheckbox(fieldMap.vaMedicalCenter, data.vaMedicalCenter);
+  setCheckbox(fieldMap.dodTreatmentFacilities, data.dodTreatmentFacilities);
+
+  setTextField(
+    fieldMap.treatmentFacility1,
+    data.treatmentFacility1 || data.treatmentLocation,
+  );
+  setTextField(fieldMap.treatmentFacility2, data.treatmentFacility2);
+  setTextField(fieldMap.treatmentFacility3, data.treatmentFacility3);
+}
+
+function fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data) {
+  setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
+
+  setCheckbox(fieldMap.consentVBA, data.consentVBA !== false); // Default to consent
+  setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
+  setCheckbox(fieldMap.revokeConsent, data.revokeConsent);
+  setCheckbox(fieldMap.notEnrolledVHA, data.notEnrolledVHA);
+}
+
 export async function fillForm21_0781(data) {
   const pdfBytes = await fetchPdfForm("21-0781");
   const fieldMap = VA_FORM_FIELDS["21-0781"];
@@ -1381,241 +1539,24 @@ export async function fillForm21_0781(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
-
-      // Helper to safely set checkbox
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
-        }
-      };
-
-      // Parse name
-      const nameParts = (data.veteranName || data.name || "").split(" ");
-      const firstName = nameParts[0] || "";
-      const middleInitial = nameParts.length > 2 ? nameParts[1].charAt(0) : "";
-      const lastName =
-        nameParts.length > 2
-          ? nameParts.slice(2).join(" ")
-          : nameParts[1] || "";
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const ssn = parseSSN(data.ssn || data.veteranSSN);
-
-      // Parse phone
-      const parsePhone = (phone) => {
-        const digits = (phone || "").replace(/\D/g, "");
-        return {
-          area: digits.substring(0, 3),
-          prefix: digits.substring(3, 6),
-          line: digits.substring(6, 10),
-        };
-      };
-      const phone = parsePhone(data.phone || data.veteranPhone);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4)
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const dob = parseDOB(data.dob || data.veteranDOB);
-
-      // Fill veteran information
-      setTextField(fieldMap.veteranFirstName, firstName);
-      setTextField(fieldMap.veteranMiddleInitial, middleInitial);
-      setTextField(fieldMap.veteranLastName, lastName);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber);
-      setTextField(fieldMap.serviceNumber, data.serviceNumber);
-      setTextField(fieldMap.ssn1, ssn.first);
-      setTextField(fieldMap.ssn2, ssn.middle);
-      setTextField(fieldMap.ssn3, ssn.last);
-      setTextField(fieldMap.dobMonth, dob.month);
-      setTextField(fieldMap.dobDay, dob.day);
-      setTextField(fieldMap.dobYear, dob.year);
-      setTextField(fieldMap.phoneArea, phone.area);
-      setTextField(fieldMap.phonePrefix, phone.prefix);
-      setTextField(fieldMap.phoneLine, phone.line);
-      setTextField(fieldMap.intlPhone, data.intlPhone);
-      setTextField(fieldMap.email, data.email || data.veteranEmail);
-
-      // Stressor type checkboxes
-      setCheckbox(
-        fieldMap.combatTraumatic,
-        data.stressorType === "combat" || data.combatTraumatic,
-      );
-      setCheckbox(
-        fieldMap.personalTraumaticNonMST,
-        data.stressorType === "personal_non_mst" ||
-          data.personalTraumaticNonMST,
-      );
-      setCheckbox(
-        fieldMap.personalTraumaticMST,
-        data.stressorType === "personal_mst" || data.personalTraumaticMST,
-      );
-      setCheckbox(
-        fieldMap.otherTraumatic,
-        data.stressorType === "other" || data.otherTraumatic,
-      );
-
-      // Stressor events - support both single incident and multiple incidents
-      // For single incident data format
-      if (
-        data.incidentDescription ||
-        data.incidentLocation ||
-        data.incidentDate
-      ) {
-        setTextField(fieldMap.stressor1Description, data.incidentDescription);
-        setTextField(fieldMap.stressor1Location, data.incidentLocation);
-        setTextField(fieldMap.stressor1Dates, data.incidentDate);
-      }
-
-      // For multiple stressor format (stressors array)
-      if (data.stressors && Array.isArray(data.stressors)) {
-        if (data.stressors[0]) {
-          setTextField(
-            fieldMap.stressor1Description,
-            data.stressors[0].description,
-          );
-          setTextField(fieldMap.stressor1Location, data.stressors[0].location);
-          setTextField(fieldMap.stressor1Dates, data.stressors[0].dates);
-        }
-        if (data.stressors[1]) {
-          setTextField(
-            fieldMap.stressor2Description,
-            data.stressors[1].description,
-          );
-          setTextField(fieldMap.stressor2Location, data.stressors[1].location);
-          setTextField(fieldMap.stressor2Dates, data.stressors[1].dates);
-        }
-        if (data.stressors[2]) {
-          setTextField(
-            fieldMap.stressor3Description,
-            data.stressors[2].description,
-          );
-          setTextField(fieldMap.stressor3Location, data.stressors[2].location);
-          setTextField(fieldMap.stressor3Dates, data.stressors[2].dates);
-        }
-      }
-
-      // Behavioral changes checkboxes
-      setCheckbox(
-        fieldMap.increasedHealthcareVisits,
-        data.increasedHealthcareVisits,
-      );
-      setCheckbox(fieldMap.requestedDutyChange, data.requestedDutyChange);
-      setCheckbox(fieldMap.changesInLeave, data.changesInLeave);
-      setCheckbox(fieldMap.performanceChanges, data.performanceChanges);
-      setCheckbox(
-        fieldMap.depressionPanicAnxiety,
-        data.depressionPanicAnxiety ||
-          data.behavioralChanges?.includes("depression"),
-      );
-      setCheckbox(
-        fieldMap.prescriptionMedsChanges,
-        data.prescriptionMedsChanges,
-      );
-      setCheckbox(fieldMap.otcMedsChanges, data.otcMedsChanges);
-      setCheckbox(fieldMap.substanceUseChanges, data.substanceUseChanges);
-      setCheckbox(fieldMap.disciplinaryLegal, data.disciplinaryLegal);
-      setCheckbox(fieldMap.eatingHabitChanges, data.eatingHabitChanges);
-      setCheckbox(fieldMap.pregnancyTests, data.pregnancyTests);
-      setCheckbox(fieldMap.stiTests, data.stiTests);
-      setCheckbox(fieldMap.economicSocialChanges, data.economicSocialChanges);
-      setCheckbox(fieldMap.relationshipChanges, data.relationshipChanges);
-
-      // Additional behavioral info
-      setTextField(
-        fieldMap.additionalBehaviorInfo0,
-        data.ptsdSymptoms || data.behavioralChangesDetail,
-      );
-      setTextField(
-        fieldMap.listAdditionalBehavioralChanges,
-        data.additionalBehavioralChanges,
-      );
-
-      // Reports - who was told
-      setCheckbox(fieldMap.rapeCrisisCenter, data.rapeCrisisCenter);
-      setCheckbox(fieldMap.counselingFacility, data.counselingFacility);
-      setCheckbox(
-        fieldMap.familyOrRoomates,
-        data.familyOrRoomates || data.toldFamily,
-      );
-      setCheckbox(fieldMap.facultyMember, data.facultyMember);
-      setCheckbox(fieldMap.civilianPolice, data.civilianPolice);
-      setCheckbox(fieldMap.medicalReports, data.medicalReports);
-      setCheckbox(fieldMap.chaplainClergy, data.chaplainClergy);
-      setCheckbox(
-        fieldMap.fellowServiceMembers,
-        data.fellowServiceMembers || data.toldServiceMembers,
-      );
-      setCheckbox(fieldMap.personalDiaries, data.personalDiaries);
-      setTextField(fieldMap.policeReportLocation, data.policeReportLocation);
-      setTextField(fieldMap.otherReportText, data.otherReportText);
-
-      // Treatment facilities
-      setCheckbox(fieldMap.privateProvider, data.privateProvider);
-      setCheckbox(fieldMap.vaVetCenter, data.vaVetCenter);
-      setCheckbox(fieldMap.communityCarePaidByVA, data.communityCarePaidByVA);
-      setCheckbox(fieldMap.vaMedicalCenter, data.vaMedicalCenter);
-      setCheckbox(fieldMap.dodTreatmentFacilities, data.dodTreatmentFacilities);
-
-      // Treatment details
-      setTextField(
-        fieldMap.treatmentFacility1,
-        data.treatmentFacility1 || data.treatmentLocation,
-      );
-      setTextField(fieldMap.treatmentFacility2, data.treatmentFacility2);
-      setTextField(fieldMap.treatmentFacility3, data.treatmentFacility3);
-
-      // Remarks
-      setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
-
-      // VHA notification consent
-      setCheckbox(fieldMap.consentVBA, data.consentVBA !== false); // Default to consent
-      setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
-      setCheckbox(fieldMap.revokeConsent, data.revokeConsent);
-      setCheckbox(fieldMap.notEnrolledVHA, data.notEnrolledVHA);
+      fill21_0781_VeteranInfo(setTextField, fieldMap, data);
+      fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data);
+      fill21_0781_StressorEvents(setTextField, fieldMap, data);
+      fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data);
+      fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data);
+      fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data);
+      fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data);
 
       // Today's date for signature
-      const today = new Date();
-      setTextField(
-        fieldMap.signDateMonth,
-        String(today.getMonth() + 1).padStart(2, "0"),
-      );
-      setTextField(
-        fieldMap.signDateDay,
-        String(today.getDate()).padStart(2, "0"),
-      );
-      setTextField(fieldMap.signDateYear, String(today.getFullYear()));
+      const todayParts = getTodayParts();
+      setTextField(fieldMap.signDateMonth, todayParts.month);
+      setTextField(fieldMap.signDateDay, todayParts.day);
+      setTextField(fieldMap.signDateYear, todayParts.year);
 
       // Flatten to make form read-only if desired
       // form.flatten();
@@ -1639,84 +1580,68 @@ async function createPTSDStatementPdfFallback(data) {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontSize = 11;
-  const lineHeight = 14;
 
   let currentPage = pdfDoc.addPage([612, 792]);
   const { height } = currentPage.getSize();
   let y = height - 50;
-
-  const getPage = () => {
-    if (y < 80) {
-      currentPage = pdfDoc.addPage([612, 792]);
-      y = height - 50;
-    }
-    return currentPage;
+  const adjustY = (delta) => {
+    y += delta;
   };
 
-  const drawText = (text, options = {}) => {
-    const { bold = false, size = fontSize } = options;
-    const page = getPage();
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size,
-      font: bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= lineHeight;
-  };
-
+  const drawText = makePaginatedDrawText(
+    pdfDoc,
+    font,
+    fontBold,
+    height,
+    () => currentPage,
+    (p) => {
+      currentPage = p;
+    },
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
   const drawWrappedText = (text, maxWidth = 500) => {
-    const words = (text || "").split(" ");
-    let line = "";
-    for (const word of words) {
-      const testLine = line + (line ? " " : "") + word;
-      const textWidth = font.widthOfTextAtSize(testLine, fontSize);
-      if (textWidth > maxWidth && line) {
-        drawText(line);
-        line = word;
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) drawText(line);
+    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
+      drawText(line),
+    );
   };
 
   drawText("STATEMENT IN SUPPORT OF CLAIM FOR PTSD", { bold: true, size: 14 });
   drawText("(Reference for VA Form 21-0781)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText("VETERAN INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
   drawText(`SSN Last 4: ${data.ssnLast4 || "XXX-XX-____"}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("STRESSOR INCIDENT DETAILS", { bold: true });
   if (data.incidentDate) drawText(`Date: ${data.incidentDate}`);
   if (data.incidentLocation) drawText(`Location: ${data.incidentLocation}`);
   if (data.unitAssignment) drawText(`Unit: ${data.unitAssignment}`);
-  y -= 5;
+  adjustY(-5);
 
   if (data.incidentDescription) {
     drawText("Description:", { bold: true, size: 10 });
     drawWrappedText(data.incidentDescription);
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.witnesses) {
     drawText("WITNESSES", { bold: true });
     drawWrappedText(data.witnesses);
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.ptsdSymptoms) {
     drawText("CURRENT SYMPTOMS", { bold: true });
     drawWrappedText(data.ptsdSymptoms);
-    y -= 10;
+    adjustY(-10);
   }
 
-  y -= 20;
+  adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Date: ${new Date().toLocaleDateString()}`);
 
@@ -1726,6 +1651,53 @@ async function createPTSDStatementPdfFallback(data) {
 /**
  * Fill VA Form 21-0966 (Intent to File) with actual field mappings
  */
+function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
+  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const phone = parsePhoneParts(data.phone || data.veteranPhone);
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
+  const zipParts = parseZipParts(data.zip || data.veteranZip);
+
+  setTextField(fieldMap.veteranFirstName, nameParts[0]);
+  setTextField(
+    fieldMap.veteranMiddleInitial,
+    nameParts.length > 2 ? nameParts[1]?.[0] : "",
+  );
+  setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
+  setTextField(fieldMap.veteranSSN1, ssn.first);
+  setTextField(fieldMap.veteranSSN2, ssn.middle);
+  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.veteranDOBMonth, dob.month);
+  setTextField(fieldMap.veteranDOBDay, dob.day);
+  setTextField(fieldMap.veteranDOBYear, dob.year);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.apt, data.apt || "");
+  setTextField(fieldMap.city, data.city || data.veteranCity || "");
+  setTextField(fieldMap.state, data.state || data.veteranState || "");
+  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.zip5, zipParts.five);
+  setTextField(fieldMap.zip4, zipParts.four);
+  setTextField(fieldMap.phone1, phone.area);
+  setTextField(fieldMap.phone2, phone.prefix);
+  setTextField(fieldMap.phone3, phone.line);
+  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+}
+
+function fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data) {
+  const benefits = data.benefitTypes || [data.benefitType] || [
+      "compensation",
+    ];
+  const benefitStr = benefits.join(",").toLowerCase();
+  if (benefitStr.includes("compensation"))
+    setCheckbox(fieldMap.compensationCheckbox, true);
+  if (benefitStr.includes("pension"))
+    setCheckbox(fieldMap.pensionCheckbox, true);
+  if (benefitStr.includes("dic") || benefitStr.includes("survivor"))
+    setCheckbox(fieldMap.dicCheckbox, true);
+}
+
 export async function fillForm21_0966(data) {
   const pdfBytes = await fetchPdfForm("21-0966");
   const fieldMap = VA_FORM_FIELDS["21-0966"];
@@ -1736,123 +1708,16 @@ export async function fillForm21_0966(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
-
-      // Helper to safely set checkbox
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
-        }
-      };
-
-      // Parse name
-      const nameParts = (data.veteranName || data.name || "").split(" ");
-
-      // Parse phone
-      const parsePhone = (phone) => {
-        const digits = (phone || "").replace(/\D/g, "");
-        return {
-          area: digits.substring(0, 3),
-          prefix: digits.substring(3, 6),
-          line: digits.substring(6, 10),
-        };
-      };
-      const phone = parsePhone(data.phone || data.veteranPhone);
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const ssn = parseSSN(data.ssn || data.veteranSSN);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4)
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const dob = parseDOB(data.dob || data.veteranDOB);
-
-      // Parse zip
-      const parseZip = (zip) => {
-        const digits = (zip || "").replace(/\D/g, "");
-        return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
-      };
-      const zipParts = parseZip(data.zip || data.veteranZip);
-
-      // Today's date
-      const today = new Date();
-      const todayParts = {
-        month: String(today.getMonth() + 1).padStart(2, "0"),
-        day: String(today.getDate()).padStart(2, "0"),
-        year: String(today.getFullYear()),
-      };
-
-      // Fill veteran info
-      setTextField(fieldMap.veteranFirstName, nameParts[0]);
-      setTextField(
-        fieldMap.veteranMiddleInitial,
-        nameParts.length > 2 ? nameParts[1]?.[0] : "",
-      );
-      setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
-      setTextField(fieldMap.veteranSSN1, ssn.first);
-      setTextField(fieldMap.veteranSSN2, ssn.middle);
-      setTextField(fieldMap.veteranSSN3, ssn.last);
-      setTextField(fieldMap.veteranDOBMonth, dob.month);
-      setTextField(fieldMap.veteranDOBDay, dob.day);
-      setTextField(fieldMap.veteranDOBYear, dob.year);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-      setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-      setTextField(fieldMap.apt, data.apt || "");
-      setTextField(fieldMap.city, data.city || data.veteranCity || "");
-      setTextField(fieldMap.state, data.state || data.veteranState || "");
-      setTextField(fieldMap.country, data.country || "USA");
-      setTextField(fieldMap.zip5, zipParts.five);
-      setTextField(fieldMap.zip4, zipParts.four);
-      setTextField(fieldMap.phone1, phone.area);
-      setTextField(fieldMap.phone2, phone.prefix);
-      setTextField(fieldMap.phone3, phone.line);
-      setTextField(fieldMap.email, data.email || data.veteranEmail || "");
-
-      // Benefit type checkboxes
-      const benefits = data.benefitTypes || [data.benefitType] || [
-          "compensation",
-        ];
-      const benefitStr = benefits.join(",").toLowerCase();
-      if (benefitStr.includes("compensation"))
-        setCheckbox(fieldMap.compensationCheckbox, true);
-      if (benefitStr.includes("pension"))
-        setCheckbox(fieldMap.pensionCheckbox, true);
-      if (benefitStr.includes("dic") || benefitStr.includes("survivor"))
-        setCheckbox(fieldMap.dicCheckbox, true);
+      fill21_0966_VeteranInfo(setTextField, fieldMap, data);
+      fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data);
 
       // Signature date
+      const todayParts = getTodayParts();
       setTextField(fieldMap.dateMonth, todayParts.month);
       setTextField(fieldMap.dateDay, todayParts.day);
       setTextField(fieldMap.dateYear, todayParts.year);
@@ -1875,28 +1740,30 @@ async function createIntentToFilePdf(data) {
   const page = pdfDoc.addPage([612, 792]);
   const { height } = page.getSize();
   let y = height - 50;
-
-  const drawText = (text, options = {}) => {
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size: options.size || 11,
-      font: options.bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= 14;
+  const adjustY = (delta) => {
+    y += delta;
   };
+
+  const drawText = makeFlatDrawText(
+    font,
+    fontBold,
+    page,
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
 
   drawText("INTENT TO FILE WORKSHEET", { bold: true, size: 14 });
   drawText("(Reference for VA Form 21-0966)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText(
     "This worksheet contains the information needed to file your Intent to File.",
     { size: 10 },
   );
   drawText("Submit online at: va.gov/intent-to-file", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText("CLAIMANT INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
@@ -1904,21 +1771,21 @@ async function createIntentToFilePdf(data) {
   drawText(`SSN: ${data.ssn || "XXX-XX-____"}`);
   drawText(`Phone: ${data.phone || ""}`);
   drawText(`Email: ${data.email || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("BENEFIT TYPE", { bold: true });
   const benefits = Array.isArray(data.benefitTypes)
     ? data.benefitTypes.join(", ")
     : data.benefitType || "";
   drawText(benefits || "Compensation");
-  y -= 10;
+  adjustY(-10);
 
   drawText(
     "IMPORTANT: Submit your full claim within 1 year to preserve this effective date.",
     { bold: true, size: 10 },
   );
 
-  y -= 30;
+  adjustY(-30);
   drawText(`Date: ${new Date().toLocaleDateString()}`);
 
   return pdfDoc.save();
@@ -1927,6 +1794,28 @@ async function createIntentToFilePdf(data) {
 /**
  * Fill VA Forms 21-4142/4142a (Medical Release) with actual field mappings
  */
+function fill21_4142_VeteranInfo(setTextField, fieldMap, data) {
+  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
+
+  setTextField(fieldMap.veteranFirstName, nameParts[0]);
+  setTextField(
+    fieldMap.veteranMiddleInitial,
+    nameParts.length > 2 ? nameParts[1]?.[0] : "",
+  );
+  setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
+  setTextField(fieldMap.veteranSSN1, ssn.first);
+  setTextField(fieldMap.veteranSSN2, ssn.middle);
+  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.dobMonth, dob.month);
+  setTextField(fieldMap.dobDay, dob.day);
+  setTextField(fieldMap.dobYear, dob.year);
+  setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+}
+
 export async function fillForm21_4142(data) {
   const pdfBytes = await fetchPdfForm("21-4142");
   const fieldMap = VA_FORM_FIELDS["21-4142"];
@@ -1937,62 +1826,10 @@ export async function fillForm21_4142(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
-
-      // Parse name
-      const nameParts = (data.veteranName || data.name || "").split(" ");
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const ssn = parseSSN(data.ssn || data.veteranSSN);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4)
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const dob = parseDOB(data.dob || data.veteranDOB);
-
-      // Fill veteran info
-      setTextField(fieldMap.veteranFirstName, nameParts[0]);
-      setTextField(
-        fieldMap.veteranMiddleInitial,
-        nameParts.length > 2 ? nameParts[1]?.[0] : "",
-      );
-      setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
-      setTextField(fieldMap.veteranSSN1, ssn.first);
-      setTextField(fieldMap.veteranSSN2, ssn.middle);
-      setTextField(fieldMap.veteranSSN3, ssn.last);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.dobMonth, dob.month);
-      setTextField(fieldMap.dobDay, dob.day);
-      setTextField(fieldMap.dobYear, dob.year);
-      setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-      setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+      fill21_4142_VeteranInfo(setTextField, fieldMap, data);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2012,28 +1849,30 @@ async function createMedicalReleasePdf(data) {
   const page = pdfDoc.addPage([612, 792]);
   const { height } = page.getSize();
   let y = height - 50;
-
-  const drawText = (text, options = {}) => {
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size: options.size || 11,
-      font: options.bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= 14;
+  const adjustY = (delta) => {
+    y += delta;
   };
+
+  const drawText = makeFlatDrawText(
+    font,
+    fontBold,
+    page,
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
 
   drawText("AUTHORIZATION TO DISCLOSE INFORMATION", { bold: true, size: 14 });
   drawText("(Reference for VA Forms 21-4142 & 21-4142a)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText("VETERAN INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
   drawText(`DOB: ${data.dob || ""}`);
   drawText(`VA File #: ${data.vaFileNumber || ""}`);
   drawText(`Phone: ${data.phone || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("HEALTHCARE PROVIDER", { bold: true });
   drawText(`Provider: ${data.provider1Name || ""}`);
@@ -2041,7 +1880,7 @@ async function createMedicalReleasePdf(data) {
   drawText(`Phone: ${data.provider1Phone || ""}`);
   drawText(`Dates: ${data.provider1Dates || ""}`);
   drawText(`Conditions: ${data.provider1Conditions || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   if (data.provider2Name) {
     drawText("ADDITIONAL PROVIDER", { bold: true });
@@ -2050,12 +1889,12 @@ async function createMedicalReleasePdf(data) {
     drawText(`Dates: ${data.provider2Dates || ""}`);
   }
 
-  y -= 20;
+  adjustY(-20);
   const expDate = new Date(
     Date.now() + 180 * 24 * 60 * 60 * 1000,
   ).toLocaleDateString();
   drawText(`This authorization expires: ${expDate}`, { bold: true });
-  y -= 20;
+  adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Date: ${new Date().toLocaleDateString()}`);
 
@@ -2065,6 +1904,56 @@ async function createMedicalReleasePdf(data) {
 /**
  * Fill VA Form 20-10207 (Priority Processing) with actual field mappings
  */
+function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
+  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const phone = parsePhoneParts(data.phone || data.veteranPhone);
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
+  const zipParts = parseZipParts(data.zip || data.veteranZip);
+
+  setTextField(fieldMap.veteranFirstName, nameParts[0]);
+  setTextField(
+    fieldMap.veteranMiddleInitial,
+    nameParts.length > 2 ? nameParts[1]?.[0] : "",
+  );
+  setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
+  setTextField(fieldMap.veteranSSN1, ssn.first);
+  setTextField(fieldMap.veteranSSN2, ssn.middle);
+  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.dobMonth, dob.month);
+  setTextField(fieldMap.dobDay, dob.day);
+  setTextField(fieldMap.dobYear, dob.year);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.apt, data.apt || "");
+  setTextField(fieldMap.city, data.city || data.veteranCity || "");
+  setTextField(fieldMap.state, data.state || data.veteranState || "");
+  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.zip5, zipParts.five);
+  setTextField(fieldMap.zip4, zipParts.four);
+  setTextField(fieldMap.phone1, phone.area);
+  setTextField(fieldMap.phone2, phone.prefix);
+  setTextField(fieldMap.phone3, phone.line);
+  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+}
+
+function fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data) {
+  const reasons = data.priorityReasons || [];
+  const reasonStr = reasons.join(",").toLowerCase();
+  if (reasonStr.includes("illness") || reasonStr.includes("terminal"))
+    setCheckbox(fieldMap.advancedIllness, true);
+  if (reasonStr.includes("financial") && !reasonStr.includes("extreme"))
+    setCheckbox(fieldMap.financialHardship, true);
+  if (reasonStr.includes("als") || reasonStr.includes("amyotrophic"))
+    setCheckbox(fieldMap.alsDisease, true);
+  if (reasonStr.includes("85") || reasonStr.includes("age"))
+    setCheckbox(fieldMap.over85, true);
+  if (reasonStr.includes("homeless"))
+    setCheckbox(fieldMap.homelessAtRisk, true);
+  if (reasonStr.includes("extreme"))
+    setCheckbox(fieldMap.extremeFinancial, true);
+}
+
 export async function fillForm20_10207(data) {
   const pdfBytes = await fetchPdfForm("20-10207");
   const fieldMap = VA_FORM_FIELDS["20-10207"];
@@ -2075,126 +1964,16 @@ export async function fillForm20_10207(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
-      // Helper to safely set text field
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
-
-      // Helper to safely set checkbox
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
-        }
-      };
-
-      // Parse name
-      const nameParts = (data.veteranName || data.name || "").split(" ");
-
-      // Parse phone
-      const parsePhone = (phone) => {
-        const digits = (phone || "").replace(/\D/g, "");
-        return {
-          area: digits.substring(0, 3),
-          prefix: digits.substring(3, 6),
-          line: digits.substring(6, 10),
-        };
-      };
-      const phone = parsePhone(data.phone || data.veteranPhone);
-
-      // Parse SSN
-      const parseSSN = (ssn) => {
-        const digits = (ssn || "").replace(/\D/g, "");
-        return {
-          first: digits.substring(0, 3),
-          middle: digits.substring(3, 5),
-          last: digits.substring(5, 9),
-        };
-      };
-      const ssn = parseSSN(data.ssn || data.veteranSSN);
-
-      // Parse DOB
-      const parseDOB = (dob) => {
-        if (!dob) return { month: "", day: "", year: "" };
-        const parts = dob.split(/[-/]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4)
-            return { year: parts[0], month: parts[1], day: parts[2] };
-          return { month: parts[0], day: parts[1], year: parts[2] };
-        }
-        return { month: "", day: "", year: "" };
-      };
-      const dob = parseDOB(data.dob || data.veteranDOB);
-
-      // Parse zip
-      const parseZip = (zip) => {
-        const digits = (zip || "").replace(/\D/g, "");
-        return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
-      };
-      const zipParts = parseZip(data.zip || data.veteranZip);
-
-      // Today's date
-      const today = new Date();
-      const todayParts = {
-        month: String(today.getMonth() + 1).padStart(2, "0"),
-        day: String(today.getDate()).padStart(2, "0"),
-        year: String(today.getFullYear()),
-      };
-
-      // Fill veteran info
-      setTextField(fieldMap.veteranFirstName, nameParts[0]);
-      setTextField(
-        fieldMap.veteranMiddleInitial,
-        nameParts.length > 2 ? nameParts[1]?.[0] : "",
-      );
-      setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
-      setTextField(fieldMap.veteranSSN1, ssn.first);
-      setTextField(fieldMap.veteranSSN2, ssn.middle);
-      setTextField(fieldMap.veteranSSN3, ssn.last);
-      setTextField(fieldMap.dobMonth, dob.month);
-      setTextField(fieldMap.dobDay, dob.day);
-      setTextField(fieldMap.dobYear, dob.year);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-      setTextField(fieldMap.apt, data.apt || "");
-      setTextField(fieldMap.city, data.city || data.veteranCity || "");
-      setTextField(fieldMap.state, data.state || data.veteranState || "");
-      setTextField(fieldMap.country, data.country || "USA");
-      setTextField(fieldMap.zip5, zipParts.five);
-      setTextField(fieldMap.zip4, zipParts.four);
-      setTextField(fieldMap.phone1, phone.area);
-      setTextField(fieldMap.phone2, phone.prefix);
-      setTextField(fieldMap.phone3, phone.line);
-      setTextField(fieldMap.email, data.email || data.veteranEmail || "");
-
-      // Priority reason checkboxes
-      const reasons = data.priorityReasons || [];
-      const reasonStr = reasons.join(",").toLowerCase();
-      if (reasonStr.includes("illness") || reasonStr.includes("terminal"))
-        setCheckbox(fieldMap.advancedIllness, true);
-      if (reasonStr.includes("financial") && !reasonStr.includes("extreme"))
-        setCheckbox(fieldMap.financialHardship, true);
-      if (reasonStr.includes("als") || reasonStr.includes("amyotrophic"))
-        setCheckbox(fieldMap.alsDisease, true);
-      if (reasonStr.includes("85") || reasonStr.includes("age"))
-        setCheckbox(fieldMap.over85, true);
-      if (reasonStr.includes("homeless"))
-        setCheckbox(fieldMap.homelessAtRisk, true);
-      if (reasonStr.includes("extreme"))
-        setCheckbox(fieldMap.extremeFinancial, true);
+      fill20_10207_VeteranInfo(setTextField, fieldMap, data);
+      fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data);
 
       // Signature date
+      const todayParts = getTodayParts();
       setTextField(fieldMap.dateMonth, todayParts.month);
       setTextField(fieldMap.dateDay, todayParts.day);
       setTextField(fieldMap.dateYear, todayParts.year);
@@ -2217,69 +1996,61 @@ async function createPriorityProcessingPdf(data) {
   let page = pdfDoc.addPage([612, 792]);
   const { height } = page.getSize();
   let y = height - 50;
-
-  const drawText = (text, options = {}) => {
-    if (y < 80) {
-      page = pdfDoc.addPage([612, 792]);
-      y = height - 50;
-    }
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size: options.size || 11,
-      font: options.bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= 14;
+  const adjustY = (delta) => {
+    y += delta;
   };
 
+  const drawText = makePaginatedDrawText(
+    pdfDoc,
+    font,
+    fontBold,
+    height,
+    () => page,
+    (p) => {
+      page = p;
+    },
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
   const drawWrappedText = (text, maxWidth = 500) => {
-    const words = (text || "").split(" ");
-    let line = "";
-    for (const word of words) {
-      const testLine = line + (line ? " " : "") + word;
-      const textWidth = font.widthOfTextAtSize(testLine, 11);
-      if (textWidth > maxWidth && line) {
-        drawText(line);
-        line = word;
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) drawText(line);
+    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
+      drawText(line),
+    );
   };
 
   drawText("REQUEST FOR PRIORITY PROCESSING", { bold: true, size: 14 });
   drawText("(Reference for VA Form 20-10207)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText("CLAIMANT INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
   drawText(`DOB: ${data.dob || ""}`);
   drawText(`VA File #: ${data.vaFileNumber || ""}`);
   drawText(`Phone: ${data.phone || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("PENDING CLAIM", { bold: true });
   drawText(`Claim Type: ${data.claimType || ""}`);
   drawText(`Date Filed: ${data.claimDate || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   if (data.priorityReasons && data.priorityReasons.length > 0) {
     drawText("QUALIFYING CIRCUMSTANCES", { bold: true });
     for (const reason of data.priorityReasons) {
       drawText(`• ${reason}`);
     }
-    y -= 10;
+    adjustY(-10);
   }
 
   if (data.hardshipExplanation) {
     drawText("HARDSHIP EXPLANATION", { bold: true });
     drawWrappedText(data.hardshipExplanation);
-    y -= 10;
+    adjustY(-10);
   }
 
-  y -= 20;
+  adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Date: ${new Date().toLocaleDateString()}`);
 
@@ -2289,6 +2060,136 @@ async function createPriorityProcessingPdf(data) {
 /**
  * Fill VA Form 21-22 (VSO Appointment) with actual field mappings
  */
+function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
+  const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts[nameParts.length - 1] || "";
+  const middleInitial = nameParts.length > 2 ? nameParts[1]?.[0] : "";
+
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+
+  const dobRaw = data.dob || data.veteranDOB || "";
+  const dobParts = dobRaw.split(/[/-]/);
+  const dob = {
+    month: dobParts[0] || "",
+    day: dobParts[1] || "",
+    year: dobParts[2] || "",
+  };
+
+  setTextField(fieldMap.veteranFirstName, firstName);
+  setTextField(fieldMap.veteranMiddleInitial, middleInitial);
+  setTextField(fieldMap.veteranLastName, lastName);
+  setTextField(fieldMap.veteranSSN1, ssn.first);
+  setTextField(fieldMap.veteranSSN2, ssn.middle);
+  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.veteranDOBMonth, dob.month);
+  setTextField(fieldMap.veteranDOBDay, dob.day);
+  setTextField(fieldMap.veteranDOBYear, dob.year);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+  setTextField(fieldMap.insuranceNumber, data.insuranceNumber || "");
+  setTextField(fieldMap.veteranPhone, data.veteranPhone || data.phone || "");
+  setTextField(
+    fieldMap.veteranEmail,
+    data.veteranEmail || data.email || "",
+  );
+}
+
+function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
+  if (!(data.claimantName || data.claimantFirstName)) return;
+
+  const claimantParts = (data.claimantName || "").split(" ").filter(Boolean);
+  setTextField(
+    fieldMap.claimantFirstName,
+    data.claimantFirstName || claimantParts[0] || "",
+  );
+  setTextField(
+    fieldMap.claimantMiddleInitial,
+    data.claimantMiddleInitial ||
+      (claimantParts.length > 2 ? claimantParts[1]?.[0] : ""),
+  );
+  setTextField(
+    fieldMap.claimantLastName,
+    data.claimantLastName || claimantParts[claimantParts.length - 1] || "",
+  );
+  setTextField(
+    fieldMap.claimantRelationship,
+    data.claimantRelationship || "",
+  );
+  setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
+  setTextField(fieldMap.claimantApt, data.claimantApt || "");
+  setTextField(fieldMap.claimantCity, data.claimantCity || "");
+  setTextField(fieldMap.claimantState, data.claimantState || "");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
+  setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
+  setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
+  setTextField(fieldMap.claimantPhone, data.claimantPhone || "");
+  setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
+}
+
+function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
+  setTextField(
+    fieldMap.organizationName,
+    data.vsoName || data.organizationName || "",
+  );
+  setTextField(fieldMap.representativeName, data.representativeName || "");
+  setTextField(
+    fieldMap.representativeTitle,
+    data.representativeTitle || "",
+  );
+  setTextField(
+    fieldMap.representativeEmail,
+    data.representativeEmail || "",
+  );
+
+  setTextField(
+    fieldMap.organizationStreet,
+    data.organizationStreet || data.vsoStreet || "",
+  );
+  setTextField(fieldMap.organizationApt, data.organizationApt || "");
+  setTextField(
+    fieldMap.organizationCity,
+    data.organizationCity || data.vsoCity || "",
+  );
+  setTextField(
+    fieldMap.organizationState,
+    data.organizationState || data.vsoState || "",
+  );
+  setTextField(
+    fieldMap.organizationCountry,
+    data.organizationCountry || "USA",
+  );
+  const orgZip = (data.organizationZip || data.vsoZip || "").replace(
+    /\D/g,
+    "",
+  );
+  setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
+  setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
+
+  setTextField(fieldMap.appointmentDate, data.appointmentDate || today);
+}
+
+function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
+  setCheckbox(fieldMap.vrAndEFile, data.vrAndEFile || data.authVRE);
+  setCheckbox(fieldMap.eduFile, data.eduFile || data.authEducation);
+  setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
+  setCheckbox(
+    fieldMap.insuranceFile,
+    data.insuranceFile || data.authInsurance,
+  );
+
+  setCheckbox(
+    fieldMap.authorizeDisclosure,
+    data.authorizeDisclosure !== false,
+  );
+  setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
+  setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
+  setCheckbox(fieldMap.hivInfection, data.discloseHIV);
+  setCheckbox(fieldMap.sickleCellAnemia, data.discloseSickleCell);
+  setCheckbox(fieldMap.authorizeChange, data.authorizeChange);
+}
+
 export async function fillForm21_22(data) {
   const pdfBytes = await fetchPdfForm("21-22");
   const fieldMap = VA_FORM_FIELDS["21-22"];
@@ -2299,177 +2200,23 @@ export async function fillForm21_22(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
+      const setTextField = (fieldName, value) =>
+        setPdfTextField(form, fieldName, value);
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
-        }
-      };
-
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
-        }
-      };
-
-      // Parse name parts
-      const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts[nameParts.length - 1] || "";
-      const middleInitial = nameParts.length > 2 ? nameParts[1]?.[0] : "";
-
-      // Parse SSN
-      const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
-      const ssn = {
-        first: ssnRaw.substring(0, 3),
-        middle: ssnRaw.substring(3, 5),
-        last: ssnRaw.substring(5, 9),
-      };
-
-      // Parse DOB
-      const dobRaw = data.dob || data.veteranDOB || "";
-      const dobParts = dobRaw.split(/[/-]/);
-      const dob = {
-        month: dobParts[0] || "",
-        day: dobParts[1] || "",
-        year: dobParts[2] || "",
-      };
-
-      // Fill veteran information
-      setTextField(fieldMap.veteranFirstName, firstName);
-      setTextField(fieldMap.veteranMiddleInitial, middleInitial);
-      setTextField(fieldMap.veteranLastName, lastName);
-      setTextField(fieldMap.veteranSSN1, ssn.first);
-      setTextField(fieldMap.veteranSSN2, ssn.middle);
-      setTextField(fieldMap.veteranSSN3, ssn.last);
-      setTextField(fieldMap.veteranDOBMonth, dob.month);
-      setTextField(fieldMap.veteranDOBDay, dob.day);
-      setTextField(fieldMap.veteranDOBYear, dob.year);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-      setTextField(fieldMap.insuranceNumber, data.insuranceNumber || "");
-      setTextField(
-        fieldMap.veteranPhone,
-        data.veteranPhone || data.phone || "",
-      );
-      setTextField(
-        fieldMap.veteranEmail,
-        data.veteranEmail || data.email || "",
-      );
-
-      // Fill claimant information (if different from veteran)
-      if (data.claimantName || data.claimantFirstName) {
-        const claimantParts = (data.claimantName || "")
-          .split(" ")
-          .filter(Boolean);
-        setTextField(
-          fieldMap.claimantFirstName,
-          data.claimantFirstName || claimantParts[0] || "",
-        );
-        setTextField(
-          fieldMap.claimantMiddleInitial,
-          data.claimantMiddleInitial ||
-            (claimantParts.length > 2 ? claimantParts[1]?.[0] : ""),
-        );
-        setTextField(
-          fieldMap.claimantLastName,
-          data.claimantLastName ||
-            claimantParts[claimantParts.length - 1] ||
-            "",
-        );
-        setTextField(
-          fieldMap.claimantRelationship,
-          data.claimantRelationship || "",
-        );
-        setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
-        setTextField(fieldMap.claimantApt, data.claimantApt || "");
-        setTextField(fieldMap.claimantCity, data.claimantCity || "");
-        setTextField(fieldMap.claimantState, data.claimantState || "");
-        setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
-        const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
-        setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
-        setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
-        setTextField(fieldMap.claimantPhone, data.claimantPhone || "");
-        setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
-      }
-
-      // Fill VSO information
-      setTextField(
-        fieldMap.organizationName,
-        data.vsoName || data.organizationName || "",
-      );
-      setTextField(fieldMap.representativeName, data.representativeName || "");
-      setTextField(
-        fieldMap.representativeTitle,
-        data.representativeTitle || "",
-      );
-      setTextField(
-        fieldMap.representativeEmail,
-        data.representativeEmail || "",
-      );
-
-      // VSO Address
-      setTextField(
-        fieldMap.organizationStreet,
-        data.organizationStreet || data.vsoStreet || "",
-      );
-      setTextField(fieldMap.organizationApt, data.organizationApt || "");
-      setTextField(
-        fieldMap.organizationCity,
-        data.organizationCity || data.vsoCity || "",
-      );
-      setTextField(
-        fieldMap.organizationState,
-        data.organizationState || data.vsoState || "",
-      );
-      setTextField(
-        fieldMap.organizationCountry,
-        data.organizationCountry || "USA",
-      );
-      const orgZip = (data.organizationZip || data.vsoZip || "").replace(
-        /\D/g,
-        "",
-      );
-      setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
-      setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
-
-      // Set appointment date
       const today = new Date().toLocaleDateString("en-US");
-      setTextField(fieldMap.appointmentDate, data.appointmentDate || today);
 
-      // Authorization checkboxes
-      setCheckbox(fieldMap.vrAndEFile, data.vrAndEFile || data.authVRE);
-      setCheckbox(fieldMap.eduFile, data.eduFile || data.authEducation);
-      setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
-      setCheckbox(
-        fieldMap.insuranceFile,
-        data.insuranceFile || data.authInsurance,
-      );
-
-      // Disclosure authorization
-      setCheckbox(
-        fieldMap.authorizeDisclosure,
-        data.authorizeDisclosure !== false,
-      );
-      setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
-      setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
-      setCheckbox(fieldMap.hivInfection, data.discloseHIV);
-      setCheckbox(fieldMap.sickleCellAnemia, data.discloseSickleCell);
-      setCheckbox(fieldMap.authorizeChange, data.authorizeChange);
+      fill21_22_VeteranInfo(setTextField, fieldMap, data);
+      fill21_22_ClaimantInfo(setTextField, fieldMap, data);
+      fill21_22_OrganizationInfo(setTextField, fieldMap, data, today);
+      fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data);
 
       // Signature dates
       setTextField(fieldMap.claimantSignDate, data.signDate || today);
 
       // Page 2 SSN
+      const ssn = parseSSNParts(data.ssn || data.veteranSSN);
       setTextField(fieldMap.page2SSN1, ssn.first);
       setTextField(fieldMap.page2SSN2, ssn.middle);
       setTextField(fieldMap.page2SSN3, ssn.last);
@@ -2495,21 +2242,24 @@ async function createVSOAppointmentPdf(data) {
   let page = pdfDoc.addPage([612, 792]);
   const { height } = page.getSize();
   let y = height - 50;
-
-  const drawText = (text, options = {}) => {
-    if (y < 80) {
-      page = pdfDoc.addPage([612, 792]);
-      y = height - 50;
-    }
-    page.drawText(text || "", {
-      x: 50,
-      y,
-      size: options.size || 11,
-      font: options.bold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= 14;
+  const adjustY = (delta) => {
+    y += delta;
   };
+
+  const drawText = makePaginatedDrawText(
+    pdfDoc,
+    font,
+    fontBold,
+    height,
+    () => page,
+    (p) => {
+      page = p;
+    },
+    () => y,
+    (v) => {
+      y = v;
+    },
+  );
 
   drawText("APPOINTMENT OF VETERANS SERVICE ORGANIZATION", {
     bold: true,
@@ -2517,7 +2267,7 @@ async function createVSOAppointmentPdf(data) {
   });
   drawText("AS CLAIMANT'S REPRESENTATIVE", { bold: true, size: 12 });
   drawText("(Reference for VA Form 21-22)", { size: 10 });
-  y -= 15;
+  adjustY(-15);
 
   drawText("VETERAN INFORMATION", { bold: true });
   drawText(`Name: ${data.veteranName || ""}`);
@@ -2527,20 +2277,20 @@ async function createVSOAppointmentPdf(data) {
   drawText(`DOB: ${data.dob || data.veteranDOB || ""}`);
   drawText(`Phone: ${data.phone || data.veteranPhone || ""}`);
   drawText(`Email: ${data.email || data.veteranEmail || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("SERVICE ORGANIZATION", { bold: true });
   drawText(`Organization: ${data.vsoName || data.organizationName || ""}`);
   drawText(`Representative: ${data.representativeName || ""}`);
   drawText(`Title: ${data.representativeTitle || ""}`);
-  y -= 10;
+  adjustY(-10);
 
   drawText("AUTHORIZATION SCOPE", { bold: true });
   if (data.authVRE) drawText("☑ Vocational Rehabilitation & Employment");
   if (data.authEducation) drawText("☑ Education");
   if (data.authLoanGuaranty) drawText("☑ Loan Guaranty");
   if (data.authInsurance) drawText("☑ Insurance");
-  y -= 20;
+  adjustY(-20);
 
   drawText("Signature: _______________________________________");
   drawText(`Date: ${new Date().toLocaleDateString()}`);

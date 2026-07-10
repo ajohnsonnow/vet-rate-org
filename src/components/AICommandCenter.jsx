@@ -121,6 +121,142 @@ const MODELS = [
   },
 ];
 
+const getAIStatusIndicatorClass = (aiStatus) => {
+  if (aiStatus.isPrivate) return "bg-green-500/30 text-green-200";
+  if (aiStatus.effectiveMode) return "bg-blue-500/30 text-blue-200";
+  return "bg-yellow-500/30 text-yellow-200";
+};
+
+const getAIStatusIcon = (effectiveMode) => {
+  if (effectiveMode === "local") return "🔒";
+  if (effectiveMode === "cloud") return "☁️";
+  return "⚠️";
+};
+
+const getLocalAICardBorderClass = (aiStatus, webGPUStatus) => {
+  if (aiStatus.effectiveMode === "local") {
+    return "border-green-500 bg-green-50 dark:bg-green-900/30";
+  }
+  if (webGPUStatus.supported) {
+    return "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50";
+  }
+  return "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30";
+};
+
+const getDeviceTierLabel = (tier) => {
+  if (tier === DEVICE_TIERS.HIGH_END) return "🚀 High-End";
+  if (tier === DEVICE_TIERS.MID_RANGE) return "⚡ Mid-Range";
+  if (tier === DEVICE_TIERS.LEGACY) return "📱 Legacy";
+  return "❓ Unknown";
+};
+
+const AICommandCenterBrandBanner = ({
+  aiStatus,
+  onClose,
+  onReportBug,
+}) => (
+  <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
+    <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
+
+    <div className="relative flex items-start justify-between">
+      <div className="flex items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+          <span className="text-3xl">🛡️</span>
+        </div>
+        <div>
+          <h2 id="ai-command-center-title" className="text-2xl font-bold">
+            AI Command Center
+          </h2>
+          <p className="mt-1 text-sm text-cyan-200">
+            Faraday Cage Protocol • All AI Settings in One Place
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="AI Command Center"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+          aria-label="Close dialog"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    {/* Status Indicator */}
+    <div
+      className={`mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 ${getAIStatusIndicatorClass(aiStatus)}`}
+    >
+      <span className="text-lg">{getAIStatusIcon(aiStatus.effectiveMode)}</span>
+      <span className="font-semibold">{aiStatus.statusText}</span>
+    </div>
+  </div>
+);
+
+const AICommandCenterTabNav = ({ activeTab, setActiveTab }) => (
+  <div className="flex border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+    <button
+      onClick={() => setActiveTab("setup")}
+      className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+        activeTab === "setup"
+          ? "border-b-2 border-cyan-500 bg-white text-cyan-600 dark:border-cyan-400 dark:bg-gray-900/50 dark:text-cyan-400"
+          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+      }`}
+    >
+      ⚡ Quick Setup
+    </button>
+    <button
+      onClick={() => setActiveTab("advanced")}
+      className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+        activeTab === "advanced"
+          ? "border-b-2 border-purple-500 bg-white text-purple-600 dark:border-purple-400 dark:bg-gray-900/50 dark:text-purple-400"
+          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+      }`}
+    >
+      🔧 Advanced
+    </button>
+  </div>
+);
+
+const AICommandCenterHeader = ({
+  aiStatus,
+  activeTab,
+  setActiveTab,
+  onClose,
+  onReportBug,
+}) => (
+  <>
+    {/* Gradient brand header */}
+    <AICommandCenterBrandBanner
+      aiStatus={aiStatus}
+      onClose={onClose}
+      onReportBug={onReportBug}
+    />
+
+    {/* Tab Navigation */}
+    <AICommandCenterTabNav activeTab={activeTab} setActiveTab={setActiveTab} />
+  </>
+);
+
 const AICommandCenter = ({ onClose, onReportBug }) => {
   // Tab state
   const [activeTab, setActiveTab] = useState("setup"); // 'setup' | 'advanced'
@@ -192,7 +328,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
           }
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.log("Could not get adapter info");
+          console.log("Could not get adapter info", e);
         }
 
         setWebGPUStatus({
@@ -363,100 +499,13 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   };
 
   const header = (
-    <>
-      {/* Gradient brand header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
-        <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
-
-        <div className="relative flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-              <span className="text-3xl">🛡️</span>
-            </div>
-            <div>
-              <h2 id="ai-command-center-title" className="text-2xl font-bold">
-                AI Command Center
-              </h2>
-              <p className="mt-1 text-sm text-cyan-200">
-                Faraday Cage Protocol • All AI Settings in One Place
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="AI Command Center"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-              aria-label="Close dialog"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Status Indicator */}
-        <div
-          className={`mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 ${
-            aiStatus.isPrivate
-              ? "bg-green-500/30 text-green-200"
-              : aiStatus.effectiveMode
-                ? "bg-blue-500/30 text-blue-200"
-                : "bg-yellow-500/30 text-yellow-200"
-          }`}
-        >
-          <span className="text-lg">
-            {aiStatus.effectiveMode === "local"
-              ? "🔒"
-              : aiStatus.effectiveMode === "cloud"
-                ? "☁️"
-                : "⚠️"}
-          </span>
-          <span className="font-semibold">{aiStatus.statusText}</span>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
-        <button
-          onClick={() => setActiveTab("setup")}
-          className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-            activeTab === "setup"
-              ? "border-b-2 border-cyan-500 bg-white text-cyan-600 dark:border-cyan-400 dark:bg-gray-900/50 dark:text-cyan-400"
-              : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          }`}
-        >
-          ⚡ Quick Setup
-        </button>
-        <button
-          onClick={() => setActiveTab("advanced")}
-          className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-            activeTab === "advanced"
-              ? "border-b-2 border-purple-500 bg-white text-purple-600 dark:border-purple-400 dark:bg-gray-900/50 dark:text-purple-400"
-              : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          }`}
-        >
-          🔧 Advanced
-        </button>
-      </div>
-    </>
+    <AICommandCenterHeader
+      aiStatus={aiStatus}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      onClose={onClose}
+      onReportBug={onReportBug}
+    />
   );
 
   const footer = (
@@ -497,13 +546,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
 
               {/* Option A: Local AI (Privacy First) */}
               <div
-                className={`rounded-xl border-2 p-4 transition-all ${
-                  aiStatus.effectiveMode === "local"
-                    ? "border-green-500 bg-green-50 dark:bg-green-900/30"
-                    : webGPUStatus.supported
-                      ? "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50"
-                      : "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30"
-                }`}
+                className={`rounded-xl border-2 p-4 transition-all ${getLocalAICardBorderClass(aiStatus, webGPUStatus)}`}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-green-500/20">
@@ -951,13 +994,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                 <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
                   <p className="text-xs text-gray-500">Device Tier</p>
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {deviceCapability.tier === DEVICE_TIERS.HIGH_END
-                      ? "🚀 High-End"
-                      : deviceCapability.tier === DEVICE_TIERS.MID_RANGE
-                        ? "⚡ Mid-Range"
-                        : deviceCapability.tier === DEVICE_TIERS.LEGACY
-                          ? "📱 Legacy"
-                          : "❓ Unknown"}
+                    {getDeviceTierLabel(deviceCapability.tier)}
                   </p>
                 </div>
                 <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">

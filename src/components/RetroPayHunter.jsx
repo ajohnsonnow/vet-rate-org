@@ -38,9 +38,39 @@ import {
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
 
+const findCuePattern = (patternId) =>
+  CUE_PATTERNS.find((p) => p.id === patternId);
+
+const formatRatingHistoryLine = (p) => {
+  const spouseNote = p.dependents?.married ? "with spouse" : "";
+  const childrenNote = p.dependents?.childrenUnder18
+    ? `${p.dependents.childrenUnder18} children`
+    : "";
+  return `• ${new Date(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
+};
+
+const formatCueIssuesBlock = (alerts) => {
+  if (alerts.length === 0) return "";
+  const lines = alerts.map((a) => `• ${a.message}`).join("\n");
+  return `\n**Potential CUE Issues:**\n${lines}`;
+};
+
+const getRatingDotClasses = (rating) => {
+  if (rating >= 70) return "bg-green-500 border-green-400";
+  if (rating >= 50) return "bg-yellow-500 border-yellow-400";
+  if (rating >= 30) return "bg-orange-500 border-orange-400";
+  return "bg-gray-500 border-gray-400";
+};
+
+const getRatingTextClasses = (rating) => {
+  if (rating >= 70) return "text-green-400";
+  if (rating >= 50) return "text-yellow-400";
+  if (rating >= 30) return "text-orange-400";
+  return "text-gray-400";
+};
+
 const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // Rating history state
   const [ratingHistory, setRatingHistory] = useState([]);
@@ -138,11 +168,11 @@ ${contextBlock}
 - Number of Rating Periods: ${ratingHistory.length}
 
 **Rating History:**
-${ratingHistory.map((p) => `• ${new Date(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${p.dependents?.married ? "with spouse" : ""} ${p.dependents?.childrenUnder18 ? `${p.dependents.childrenUnder18} children` : ""}`).join("\n")}
+${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
 ${bilateralCheck?.applicable ? `\n**Bilateral Factor Issue Detected:**\nPaired body parts: ${bilateralCheck.pairedParts.join(", ")}\nThe 10% bilateral factor may not have been applied correctly.` : ""}
 
-${cueAlerts.length > 0 ? `\n**Potential CUE Issues:**\n${cueAlerts.map((a) => `• ${a.message}`).join("\n")}` : ""}
+${formatCueIssuesBlock(cueAlerts)}
 
 Provide a veteran-focused analysis covering:
 
@@ -274,7 +304,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
       // Check for bilateral factor issues
       if (bilateralCheck?.applicable) {
         alerts.push({
-          pattern: CUE_PATTERNS.find((p) => p.id === "bilateral_not_applied"),
+          pattern: findCuePattern("bilateral_not_applied"),
           severity: "high",
           message: `You have bilateral conditions (${bilateralCheck.pairedParts.join(", ")}). Verify the 10% bilateral factor was applied.`,
         });
@@ -290,7 +320,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         // Payment starts first of FOLLOWING month per 38 CFR § 3.400
         if (dayOfMonth !== 1) {
           alerts.push({
-            pattern: CUE_PATTERNS.find((p) => p.id === "effective_date_wrong"),
+            pattern: findCuePattern("effective_date_wrong"),
             severity: "medium",
             message: `Effective date (decision date) ${period.effectiveDate} is not the 1st of the month. Note: Payments begin first of FOLLOWING month per 38 CFR § 3.400. Consider if an earlier effective date was warranted.`,
           });
@@ -342,15 +372,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               >
                 {/* Timeline dot */}
                 <div
-                  className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
-                    period.rating >= 70
-                      ? "bg-green-500 border-green-400"
-                      : period.rating >= 50
-                        ? "bg-yellow-500 border-yellow-400"
-                        : period.rating >= 30
-                          ? "bg-orange-500 border-orange-400"
-                          : "bg-gray-500 border-gray-400"
-                  }`}
+                  className={`absolute left-4 w-5 h-5 rounded-full border-2 ${getRatingDotClasses(period.rating)}`}
                 />
 
                 {/* Content */}
@@ -388,15 +410,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
 
                   <div className="flex items-center gap-4">
                     <div
-                      className={`text-3xl font-bold ${
-                        period.rating >= 70
-                          ? "text-green-400"
-                          : period.rating >= 50
-                            ? "text-yellow-400"
-                            : period.rating >= 30
-                              ? "text-orange-400"
-                              : "text-gray-400"
-                      }`}
+                      className={`text-3xl font-bold ${getRatingTextClasses(period.rating)}`}
                     >
                       {period.rating}%
                     </div>

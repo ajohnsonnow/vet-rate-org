@@ -122,100 +122,124 @@ export const determineNextStep = (claim) => {
 // ============================================
 
 /**
- * Check all critical deadlines and generate warnings
+ * Generate Intent-to-File expiration warnings
  */
-const checkDeadlines = (claim) => {
+const checkItfDeadlineWarnings = (criticalDates) => {
   const warnings = [];
-  // eslint-disable-next-line no-unused-vars
-  const { criticalDates, currentPhase, decisionInfo } = claim;
+  if (!criticalDates?.itfExpirationDate) return warnings;
 
-  // 1. Intent to File Expiration (1 year to submit claim)
-  if (criticalDates?.itfExpirationDate) {
-    const daysLeft = daysUntilDeadline(criticalDates.itfExpirationDate);
+  const daysLeft = daysUntilDeadline(criticalDates.itfExpirationDate);
 
-    if (daysLeft !== null && daysLeft <= 0) {
-      warnings.push({
-        type: "ITF_EXPIRED",
-        urgency: URGENCY_LEVELS.CRITICAL.code,
-        title: "Intent to File EXPIRED",
-        message: `Your Intent to File expired ${Math.abs(daysLeft)} days ago. You may lose backpay. File a new ITF immediately and submit your claim ASAP.`,
-        daysRemaining: daysLeft,
-      });
-    } else if (daysLeft !== null && daysLeft <= 30) {
-      warnings.push({
-        type: "ITF_EXPIRING",
-        urgency: URGENCY_LEVELS.CRITICAL.code,
-        title: "Intent to File Expiring SOON",
-        message: `Your Intent to File expires in ${daysLeft} days! Submit your claim before ${new Date(criticalDates.itfExpirationDate).toLocaleDateString()} to protect your backpay date.`,
-        daysRemaining: daysLeft,
-      });
-    } else if (daysLeft !== null && daysLeft <= 60) {
-      warnings.push({
-        type: "ITF_EXPIRING_SOON",
-        urgency: URGENCY_LEVELS.HIGH.code,
-        title: "Intent to File Expiring",
-        message: `Your Intent to File expires in ${daysLeft} days. Start gathering your evidence and preparing to submit.`,
-        daysRemaining: daysLeft,
-      });
-    }
-  }
-
-  // 2. CRITICAL: Appeal Deadline (1 year from decision)
-  if (criticalDates?.appealDeadline && decisionInfo?.outcome === "DENIED") {
-    const daysLeft = daysUntilDeadline(criticalDates.appealDeadline);
-
-    if (daysLeft !== null && daysLeft <= 0) {
-      warnings.push({
-        type: "APPEAL_EXPIRED",
-        urgency: URGENCY_LEVELS.CRITICAL.code,
-        title: "⚠️ APPEAL DEADLINE PASSED",
-        message: `Your appeal window closed ${Math.abs(daysLeft)} days ago. You may need to reopen with new evidence. Consult a VSO immediately.`,
-        daysRemaining: daysLeft,
-      });
-    } else if (daysLeft !== null && daysLeft <= 30) {
-      warnings.push({
-        type: "APPEAL_CRITICAL",
-        urgency: URGENCY_LEVELS.CRITICAL.code,
-        title: "🚨 APPEAL DEADLINE IN " + daysLeft + " DAYS",
-        message: `URGENT: You have only ${daysLeft} days to appeal! If you can't decide, file VA Form 20-0996 (HLR) to preserve your rights. You can still gather evidence.`,
-        daysRemaining: daysLeft,
-        preservationForm: "20-0996",
-      });
-    } else if (daysLeft !== null && daysLeft <= 60) {
-      warnings.push({
-        type: "APPEAL_APPROACHING",
-        urgency: URGENCY_LEVELS.HIGH.code,
-        title: "Appeal Deadline Approaching",
-        message: `You have ${daysLeft} days to file an appeal. Start gathering new evidence or preparing your HLR argument.`,
-        daysRemaining: daysLeft,
-      });
-    } else if (daysLeft !== null && daysLeft <= 330) {
-      warnings.push({
-        type: "APPEAL_REMINDER",
-        urgency: URGENCY_LEVELS.MEDIUM.code,
-        title: "Appeal Window Open",
-        message: `You have ${daysLeft} days remaining to appeal your denial. Don't wait too long to decide your next move.`,
-        daysRemaining: daysLeft,
-      });
-    }
-  }
-
-  // 3. C&P Exam Date
-  if (criticalDates?.cpExamDate) {
-    const daysUntil = daysUntilDeadline(criticalDates.cpExamDate);
-
-    if (daysUntil !== null && daysUntil > 0 && daysUntil <= 7) {
-      warnings.push({
-        type: "CP_EXAM_SOON",
-        urgency: URGENCY_LEVELS.HIGH.code,
-        title: "C&P Exam in " + daysUntil + " Days",
-        message: `Your C&P exam is on ${new Date(criticalDates.cpExamDate).toLocaleDateString()}. Prepare: review your symptoms, bring documentation, and do NOT downplay anything.`,
-        daysRemaining: daysUntil,
-      });
-    }
+  if (daysLeft !== null && daysLeft <= 0) {
+    warnings.push({
+      type: "ITF_EXPIRED",
+      urgency: URGENCY_LEVELS.CRITICAL.code,
+      title: "Intent to File EXPIRED",
+      message: `Your Intent to File expired ${Math.abs(daysLeft)} days ago. You may lose backpay. File a new ITF immediately and submit your claim ASAP.`,
+      daysRemaining: daysLeft,
+    });
+  } else if (daysLeft !== null && daysLeft <= 30) {
+    warnings.push({
+      type: "ITF_EXPIRING",
+      urgency: URGENCY_LEVELS.CRITICAL.code,
+      title: "Intent to File Expiring SOON",
+      message: `Your Intent to File expires in ${daysLeft} days! Submit your claim before ${new Date(criticalDates.itfExpirationDate).toLocaleDateString()} to protect your backpay date.`,
+      daysRemaining: daysLeft,
+    });
+  } else if (daysLeft !== null && daysLeft <= 60) {
+    warnings.push({
+      type: "ITF_EXPIRING_SOON",
+      urgency: URGENCY_LEVELS.HIGH.code,
+      title: "Intent to File Expiring",
+      message: `Your Intent to File expires in ${daysLeft} days. Start gathering your evidence and preparing to submit.`,
+      daysRemaining: daysLeft,
+    });
   }
 
   return warnings;
+};
+
+/**
+ * Generate appeal-deadline warnings for denied claims
+ */
+const checkAppealDeadlineWarnings = (criticalDates, decisionInfo) => {
+  const warnings = [];
+  if (!criticalDates?.appealDeadline || decisionInfo?.outcome !== "DENIED") {
+    return warnings;
+  }
+
+  const daysLeft = daysUntilDeadline(criticalDates.appealDeadline);
+
+  if (daysLeft !== null && daysLeft <= 0) {
+    warnings.push({
+      type: "APPEAL_EXPIRED",
+      urgency: URGENCY_LEVELS.CRITICAL.code,
+      title: "⚠️ APPEAL DEADLINE PASSED",
+      message: `Your appeal window closed ${Math.abs(daysLeft)} days ago. You may need to reopen with new evidence. Consult a VSO immediately.`,
+      daysRemaining: daysLeft,
+    });
+  } else if (daysLeft !== null && daysLeft <= 30) {
+    warnings.push({
+      type: "APPEAL_CRITICAL",
+      urgency: URGENCY_LEVELS.CRITICAL.code,
+      title: "🚨 APPEAL DEADLINE IN " + daysLeft + " DAYS",
+      message: `URGENT: You have only ${daysLeft} days to appeal! If you can't decide, file VA Form 20-0996 (HLR) to preserve your rights. You can still gather evidence.`,
+      daysRemaining: daysLeft,
+      preservationForm: "20-0996",
+    });
+  } else if (daysLeft !== null && daysLeft <= 60) {
+    warnings.push({
+      type: "APPEAL_APPROACHING",
+      urgency: URGENCY_LEVELS.HIGH.code,
+      title: "Appeal Deadline Approaching",
+      message: `You have ${daysLeft} days to file an appeal. Start gathering new evidence or preparing your HLR argument.`,
+      daysRemaining: daysLeft,
+    });
+  } else if (daysLeft !== null && daysLeft <= 330) {
+    warnings.push({
+      type: "APPEAL_REMINDER",
+      urgency: URGENCY_LEVELS.MEDIUM.code,
+      title: "Appeal Window Open",
+      message: `You have ${daysLeft} days remaining to appeal your denial. Don't wait too long to decide your next move.`,
+      daysRemaining: daysLeft,
+    });
+  }
+
+  return warnings;
+};
+
+/**
+ * Generate C&P exam reminder warnings
+ */
+const checkExamDateWarnings = (criticalDates) => {
+  const warnings = [];
+  if (!criticalDates?.cpExamDate) return warnings;
+
+  const daysUntil = daysUntilDeadline(criticalDates.cpExamDate);
+
+  if (daysUntil !== null && daysUntil > 0 && daysUntil <= 7) {
+    warnings.push({
+      type: "CP_EXAM_SOON",
+      urgency: URGENCY_LEVELS.HIGH.code,
+      title: "C&P Exam in " + daysUntil + " Days",
+      message: `Your C&P exam is on ${new Date(criticalDates.cpExamDate).toLocaleDateString()}. Prepare: review your symptoms, bring documentation, and do NOT downplay anything.`,
+      daysRemaining: daysUntil,
+    });
+  }
+
+  return warnings;
+};
+
+/**
+ * Check all critical deadlines and generate warnings
+ */
+const checkDeadlines = (claim) => {
+  const { criticalDates, decisionInfo } = claim;
+  return [
+    ...checkItfDeadlineWarnings(criticalDates),
+    ...checkAppealDeadlineWarnings(criticalDates, decisionInfo),
+    ...checkExamDateWarnings(criticalDates),
+  ];
 };
 
 /**
@@ -260,118 +284,125 @@ const generateDeadlineActions = (claim, warnings) => {
 // ============================================
 
 /**
+ * Static action shown to prompt the triage assessment
+ */
+const getTriageAction = () => ({
+  type: ACTION_TYPES.FILE_ITF,
+  title: "Complete Triage Assessment",
+  description:
+    "Answer the intake questions to determine the correct claim lane (Original, Increase, Secondary, or Appeal).",
+  urgency: URGENCY_LEVELS.HIGH.code,
+  blocksProgress: true,
+});
+
+/**
+ * Action for the Intent-to-File phase: file the ITF, or start gathering
+ * evidence once it's already on file
+ */
+const getIntentToFileAction = (criticalDates) => {
+  if (!criticalDates?.itfDate) {
+    return {
+      type: ACTION_TYPES.FILE_ITF,
+      title: "File Intent to File (VA Form 21-0966)",
+      description:
+        "STOP. Before gathering evidence, file an Intent to File. This protects your backpay date. You have 1 year after this to submit your full claim.",
+      urgency: URGENCY_LEVELS.CRITICAL.code,
+      form: "21-0966",
+      link: "https://www.va.gov/resources/your-intent-to-file-a-va-claim/",
+      blocksProgress: true,
+    };
+  }
+  return {
+    type: ACTION_TYPES.GATHER_EVIDENCE,
+    title: "Begin Gathering Evidence",
+    description:
+      'Your backpay clock is now running. Start collecting the "Big 3": Current Diagnosis, Nexus Letter, and In-Service Event documentation.',
+    urgency: URGENCY_LEVELS.HIGH.code,
+  };
+};
+
+/**
+ * Static action shown while VA is processing a submitted claim
+ */
+const getMonitorStatusAction = () => ({
+  type: ACTION_TYPES.CHECK_STATUS,
+  title: "Monitor Your Claim Status",
+  description:
+    "Check VA.gov weekly for status updates. Respond immediately to any requests for additional evidence (you typically have 30 days).",
+  urgency: URGENCY_LEVELS.MEDIUM.code,
+  link: "https://www.va.gov/claim-or-appeal-status/",
+});
+
+/**
+ * Static action shown when a C&P exam is scheduled
+ */
+const getCpExamPrepAction = () => ({
+  type: ACTION_TYPES.ATTEND_EXAM,
+  title: "Prepare for C&P Exam",
+  description:
+    "Your C&P exam is crucial. DO NOT downplay symptoms. Describe your WORST days. Bring documentation. Arrive early.",
+  urgency: URGENCY_LEVELS.CRITICAL.code,
+  blocksProgress: true,
+});
+
+/**
+ * Static action shown while VA prepares the decision
+ */
+const getPreparationForDecisionAction = () => ({
+  type: ACTION_TYPES.WAIT,
+  title: "Wait for Decision",
+  description:
+    'Your claim is in "Preparation for Decision" - a rater is reviewing your file. This is the "black box" phase. Decision typically comes within 2-4 weeks.',
+  urgency: URGENCY_LEVELS.LOW.code,
+});
+
+/**
+ * Fallback action for claims with no recognized phase
+ */
+const getDefaultStartAction = () => ({
+  type: ACTION_TYPES.FILE_ITF,
+  title: "Start Your Claim Journey",
+  description:
+    "Let's figure out your next step. Complete the triage questions to get personalized guidance.",
+  urgency: URGENCY_LEVELS.HIGH.code,
+});
+
+/**
  * Determine actions based on current claim phase
  */
 const determinePhaseActions = (claim) => {
-  // eslint-disable-next-line no-unused-vars
-  const { currentPhase, evidenceChecklist, claimType, decisionInfo } = claim;
-  const actions = [];
+  const { currentPhase, evidenceChecklist, claimType } = claim;
 
   switch (currentPhase) {
     case CLAIM_PHASES.TRIAGE.code:
-      actions.push({
-        type: ACTION_TYPES.FILE_ITF,
-        title: "Complete Triage Assessment",
-        description:
-          "Answer the intake questions to determine the correct claim lane (Original, Increase, Secondary, or Appeal).",
-        urgency: URGENCY_LEVELS.HIGH.code,
-        blocksProgress: true,
-      });
-      break;
+      return [getTriageAction()];
 
     case CLAIM_PHASES.INTENT_TO_FILE.code:
-      if (!claim.criticalDates?.itfDate) {
-        actions.push({
-          type: ACTION_TYPES.FILE_ITF,
-          title: "File Intent to File (VA Form 21-0966)",
-          description:
-            "STOP. Before gathering evidence, file an Intent to File. This protects your backpay date. You have 1 year after this to submit your full claim.",
-          urgency: URGENCY_LEVELS.CRITICAL.code,
-          form: "21-0966",
-          link: "https://www.va.gov/resources/your-intent-to-file-a-va-claim/",
-          blocksProgress: true,
-        });
-      } else {
-        actions.push({
-          type: ACTION_TYPES.GATHER_EVIDENCE,
-          title: "Begin Gathering Evidence",
-          description:
-            'Your backpay clock is now running. Start collecting the "Big 3": Current Diagnosis, Nexus Letter, and In-Service Event documentation.',
-          urgency: URGENCY_LEVELS.HIGH.code,
-        });
-      }
-      break;
+      return [getIntentToFileAction(claim.criticalDates)];
 
-    // eslint-disable-next-line no-case-declarations
     case CLAIM_PHASES.GATHERING_EVIDENCE.code:
-      // Check each piece of the "Big 3"
-      // eslint-disable-next-line no-case-declarations
-      const evidenceActions = determineEvidenceActions(
-        evidenceChecklist,
-        claimType,
-      );
-      actions.push(...evidenceActions);
-      break;
+      return determineEvidenceActions(evidenceChecklist, claimType);
 
     case CLAIM_PHASES.CLAIM_SUBMITTED.code:
     case CLAIM_PHASES.INITIAL_REVIEW.code:
     case CLAIM_PHASES.EVIDENCE_GATHERING.code:
-      actions.push({
-        type: ACTION_TYPES.CHECK_STATUS,
-        title: "Monitor Your Claim Status",
-        description:
-          "Check VA.gov weekly for status updates. Respond immediately to any requests for additional evidence (you typically have 30 days).",
-        urgency: URGENCY_LEVELS.MEDIUM.code,
-        link: "https://www.va.gov/claim-or-appeal-status/",
-      });
-      break;
+      return [getMonitorStatusAction()];
 
     case CLAIM_PHASES.CP_EXAM_SCHEDULED.code:
-      actions.push({
-        type: ACTION_TYPES.ATTEND_EXAM,
-        title: "Prepare for C&P Exam",
-        description:
-          "Your C&P exam is crucial. DO NOT downplay symptoms. Describe your WORST days. Bring documentation. Arrive early.",
-        urgency: URGENCY_LEVELS.CRITICAL.code,
-        blocksProgress: true,
-      });
-      break;
+      return [getCpExamPrepAction()];
 
     case CLAIM_PHASES.PREPARATION_FOR_DECISION.code:
-      actions.push({
-        type: ACTION_TYPES.WAIT,
-        title: "Wait for Decision",
-        description:
-          'Your claim is in "Preparation for Decision" - a rater is reviewing your file. This is the "black box" phase. Decision typically comes within 2-4 weeks.',
-        urgency: URGENCY_LEVELS.LOW.code,
-      });
-      break;
-    // eslint-disable-next-line no-case-declarations
+      return [getPreparationForDecisionAction()];
 
     case CLAIM_PHASES.DECISION.code:
-      // eslint-disable-next-line no-case-declarations
-      const decisionActions = determineDecisionActions(claim);
-      actions.push(...decisionActions);
-      break;
-    // eslint-disable-next-line no-case-declarations
+      return determineDecisionActions(claim);
 
     case CLAIM_PHASES.APPEAL.code:
-      // eslint-disable-next-line no-case-declarations
-      const appealActions = determineAppealActions(claim);
-      actions.push(...appealActions);
-      break;
+      return determineAppealActions(claim);
 
     default:
-      actions.push({
-        type: ACTION_TYPES.FILE_ITF,
-        title: "Start Your Claim Journey",
-        description:
-          "Let's figure out your next step. Complete the triage questions to get personalized guidance.",
-        urgency: URGENCY_LEVELS.HIGH.code,
-      });
+      return [getDefaultStartAction()];
   }
-
-  return actions;
 };
 
 // ============================================
@@ -381,11 +412,13 @@ const determinePhaseActions = (claim) => {
 /**
  * Determine which evidence the veteran is missing and generate actions
  */
-const determineEvidenceActions = (evidenceChecklist, claimType) => {
+/**
+ * Check the "Big 3" evidence requirements: diagnosis, nexus, and (for
+ * non-secondary claims) an in-service event
+ */
+const getBig3Actions = (checklist, claimType) => {
   const actions = [];
-  const checklist = evidenceChecklist || {};
 
-  // CRITICAL: Check "Big 3" first
   if (!checklist.diagnosis) {
     actions.push({
       type: ACTION_TYPES.GET_DIAGNOSIS,
@@ -426,59 +459,81 @@ const determineEvidenceActions = (evidenceChecklist, claimType) => {
     });
   }
 
+  return actions;
+};
+
+/**
+ * Suggest supporting evidence once the "Big 3" is complete
+ */
+const getSupportingEvidenceActions = (checklist) => {
+  const actions = [];
+
+  if (!checklist.dbq) {
+    actions.push({
+      type: ACTION_TYPES.GET_DBQ,
+      title: "Consider Getting a DBQ",
+      description:
+        "A Disability Benefits Questionnaire (DBQ) filled by your doctor documents your severity using VA criteria. This can support a higher rating.",
+      urgency: URGENCY_LEVELS.MEDIUM.code,
+      tip: "DBQs are especially helpful for conditions with specific measurement criteria (range of motion, frequency of symptoms, etc.).",
+    });
+  }
+
+  if (!checklist.personalStatement) {
+    actions.push({
+      type: ACTION_TYPES.WRITE_STATEMENT,
+      title: "Write Your Personal Statement",
+      description:
+        "Document how your condition affects your daily life. Be specific about symptoms, frequency, and impact. Use VA Form 21-4138.",
+      urgency: URGENCY_LEVELS.MEDIUM.code,
+      form: "21-4138",
+      tip: "The VA must consider your lay testimony. Don't undersell your symptoms.",
+    });
+  }
+
+  if (!checklist.buddyLetters) {
+    actions.push({
+      type: ACTION_TYPES.GET_BUDDY_LETTERS,
+      title: "Get Buddy/Lay Statements",
+      description:
+        "Ask family members, coworkers, or fellow veterans to describe how they've observed your condition. Use VA Form 21-10210.",
+      urgency: URGENCY_LEVELS.LOW.code,
+      form: "21-10210",
+      tip: "Third-party observations strengthen your credibility, especially for symptoms others can see.",
+    });
+  }
+
+  // Ready to submit!
+  if (checklist.diagnosis && checklist.nexus) {
+    actions.unshift({
+      type: ACTION_TYPES.SUBMIT_CLAIM,
+      title: "✅ READY TO SUBMIT",
+      description:
+        "You have the critical evidence. Consider submitting as a Fully Developed Claim (FDC) for faster processing. Use VA Form 21-526EZ.",
+      urgency: URGENCY_LEVELS.HIGH.code,
+      form: "21-526EZ",
+      link: "https://www.va.gov/disability/file-disability-claim-form-21-526ez/",
+    });
+  }
+
+  return actions;
+};
+
+/**
+ * Determine which evidence the veteran is missing and generate actions
+ */
+const determineEvidenceActions = (evidenceChecklist, claimType) => {
+  const checklist = evidenceChecklist || {};
+  const actions = getBig3Actions(checklist, claimType);
+
   // If Big 3 complete, suggest supporting evidence
-  if (
+  const big3Complete =
     checklist.diagnosis &&
     checklist.nexus &&
-    (checklist.inServiceEvent || claimType === "SECONDARY")
-  ) {
-    if (!checklist.dbq) {
-      actions.push({
-        type: ACTION_TYPES.GET_DBQ,
-        title: "Consider Getting a DBQ",
-        description:
-          "A Disability Benefits Questionnaire (DBQ) filled by your doctor documents your severity using VA criteria. This can support a higher rating.",
-        urgency: URGENCY_LEVELS.MEDIUM.code,
-        tip: "DBQs are especially helpful for conditions with specific measurement criteria (range of motion, frequency of symptoms, etc.).",
-      });
-    }
+    (checklist.inServiceEvent || claimType === "SECONDARY");
 
-    if (!checklist.personalStatement) {
-      actions.push({
-        type: ACTION_TYPES.WRITE_STATEMENT,
-        title: "Write Your Personal Statement",
-        description:
-          "Document how your condition affects your daily life. Be specific about symptoms, frequency, and impact. Use VA Form 21-4138.",
-        urgency: URGENCY_LEVELS.MEDIUM.code,
-        form: "21-4138",
-        tip: "The VA must consider your lay testimony. Don't undersell your symptoms.",
-      });
-    }
-
-    if (!checklist.buddyLetters) {
-      actions.push({
-        type: ACTION_TYPES.GET_BUDDY_LETTERS,
-        title: "Get Buddy/Lay Statements",
-        description:
-          "Ask family members, coworkers, or fellow veterans to describe how they've observed your condition. Use VA Form 21-10210.",
-        urgency: URGENCY_LEVELS.LOW.code,
-        form: "21-10210",
-        tip: "Third-party observations strengthen your credibility, especially for symptoms others can see.",
-      });
-    }
-
-    // Ready to submit!
-    if (checklist.diagnosis && checklist.nexus) {
-      actions.unshift({
-        type: ACTION_TYPES.SUBMIT_CLAIM,
-        title: "✅ READY TO SUBMIT",
-        description:
-          "You have the critical evidence. Consider submitting as a Fully Developed Claim (FDC) for faster processing. Use VA Form 21-526EZ.",
-        urgency: URGENCY_LEVELS.HIGH.code,
-        form: "21-526EZ",
-        link: "https://www.va.gov/disability/file-disability-claim-form-21-526ez/",
-      });
-    }
+  if (big3Complete) {
+    actions.push(...getSupportingEvidenceActions(checklist));
   }
 
   return actions;
@@ -641,8 +696,7 @@ const determineDenialActions = (decisionInfo) => {
  * Determine actions for claims in appeal phase
  */
 const determineAppealActions = (claim) => {
-  // eslint-disable-next-line no-unused-vars
-  const { appealInfo, criticalDates } = claim;
+  const { appealInfo } = claim;
   const actions = [];
 
   if (!appealInfo?.appealLane) {
@@ -699,8 +753,7 @@ const determineAppealActions = (claim) => {
  * Generate overall status message
  */
 const getOverallStatus = (claim, result) => {
-  // eslint-disable-next-line no-unused-vars
-  const { currentPhase, decisionInfo, claimType } = claim;
+  const { currentPhase, decisionInfo } = claim;
   const { completeness, warnings } = result;
 
   // Check for critical warnings first
