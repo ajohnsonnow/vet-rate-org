@@ -35,6 +35,7 @@ import { getStorageStats } from "../utils/storage";
 // Sub-components for the dashboard
 import CFileTimeline from "./CFileTimeline";
 import CFileClaimsCards from "./CFileClaimsCards";
+import CFileSemanticSearch from "./CFileSemanticSearch";
 
 export default function CFileAnalyzer({
   onClose,
@@ -98,6 +99,8 @@ export default function CFileAnalyzer({
   const [analysisResult, setAnalysisResult] = useState(null);
   const [extractedText, setExtractedText] = useState(null);
   const [activeTab, setActiveTab] = useState("summary");
+  // S24: semantic search panel over the just-analyzed document
+  const [showSemanticSearch, setShowSemanticSearch] = useState(false);
 
   // Monitor AI status
   useEffect(() => {
@@ -380,6 +383,7 @@ export default function CFileAnalyzer({
     });
     setAnalysisMetadata(null);
     setHasConsented(false);
+    setShowSemanticSearch(false);
   }, []);
 
   // Render the drop zone form
@@ -767,6 +771,65 @@ export default function CFileAnalyzer({
               {storageWarning}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* S24: pages excluded from the AI pass by the time-budget cap. These
+          pages were NOT read by the AI, but ARE in the semantic search index —
+          so the veteran can still find evidence on them. Making this visible
+          fixes the previous silent drop (console-only). */}
+      {analysisMetadata?.pagesExcludedFromAI > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🔎</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-blue-800 dark:text-blue-200">
+                {analysisMetadata.pagesExcludedFromAI} page
+                {analysisMetadata.pagesExcludedFromAI === 1 ? "" : "s"} were not
+                read by the AI analysis
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                To finish in a reasonable time on your device, the AI reads the
+                highest-relevance pages first. The pages above are still fully
+                indexed — search your entire document by meaning to make sure
+                nothing was missed.
+              </p>
+              {analysisMetadata?.semanticIndex?.indexed !== false && (
+                <button
+                  onClick={() => setShowSemanticSearch(true)}
+                  className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                >
+                  Search the full document →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* S24: semantic search over the whole document. Available whether or not
+          any page was excluded; the excluded-count banner is one entry point. */}
+      {analysisMetadata?.semanticIndex?.indexed !== false && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+              🔎 Search your full document
+            </h3>
+            <button
+              onClick={() => setShowSemanticSearch((v) => !v)}
+              className="text-sm text-violet-600 dark:text-violet-400 hover:underline"
+            >
+              {showSemanticSearch ? "Hide" : "Open search"}
+            </button>
+          </div>
+          {showSemanticSearch && (
+            <div className="mt-4">
+              <CFileSemanticSearch
+                sessionKey={analysisMetadata?.semanticIndex?.sessionKey}
+                excludedPageCount={analysisMetadata?.pagesExcludedFromAI || 0}
+              />
+            </div>
+          )}
         </div>
       )}
 

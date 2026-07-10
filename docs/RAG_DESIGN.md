@@ -1,6 +1,6 @@
 # Legal-Knowledge RAG Pipeline — Design
 
-> Status: **stub**. Fleshed out during Sprint 6 ([SPRINT_PLAN.md §5](./SPRINT_PLAN.md#sprint-6--rag-pipeline-foundation-legal-source-ingestion--2-weeks)). Wired into the app during Sprint 7.
+> Status: **shipped** (S18–S25). Fleshed out during Sprint 6, deployed across Sprints 18–25 with structure-aware chunking, hybrid BM25+dense retrieval, and production evaluation gates. See [docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md) for sprint-by-sprint detail and [docs/RAG_EVAL.md](./RAG_EVAL.md) for current baseline metrics.
 
 ---
 
@@ -12,14 +12,14 @@ Replace the manually-curated legal JSON in [src/data/](../src/data/) ([disabilit
 
 ## 2. Sources of truth
 
-| Source | What we ingest | Update cadence | Fetcher |
-|---|---|---|---|
-| eCFR (Title 38, Parts 3, 4, 19, 20) | Adjudication, rating schedules, appeals | Weekly | `scripts/legal-ingestion/fetch-ecfr.mjs` |
-| VA M21-1 manual | Adjudication procedure | Weekly | `scripts/legal-ingestion/fetch-m21-1.mjs` |
-| CAVC precedential decisions (rolling 5 years) | Veterans-court precedent | Weekly | `scripts/legal-ingestion/fetch-cavc.mjs` |
-| Federal Circuit veteran-law opinions | Higher-court precedent | Weekly | `scripts/legal-ingestion/fetch-fedcir.mjs` |
+| Source | Status | What we ingest | Update cadence | Fetcher |
+|---|---|---|---|---|
+| eCFR (Title 38, Parts 3, 4, 19, 20) | **Live** — 1,060 chunks, 2.6 MB | Adjudication, rating schedules, appeals | Weekly | `scripts/legal-ingestion/fetch-ecfr.mjs` |
+| VA M21-1 manual | Scaffold (not yet ingested) | Adjudication procedure | TBD | `scripts/legal-ingestion/fetch-m21-1.mjs` |
+| CAVC precedential decisions | Scaffold (not yet ingested) | Veterans-court precedent | TBD | `scripts/legal-ingestion/fetch-cavc.mjs` |
+| Federal Circuit veteran-law opinions | Scaffold (not yet ingested) | Higher-court precedent | TBD | `scripts/legal-ingestion/fetch-fedcir.mjs` |
 
-> _To be confirmed in Sprint 6: exact API endpoints, rate limits, ToS, robots.txt._
+See [knowledge-sources.yaml](../knowledge-sources.yaml) for detailed API endpoints, last-verified dates, and status of each source.
 
 ---
 
@@ -42,10 +42,9 @@ Replace the manually-curated legal JSON in [src/data/](../src/data/) ([disabilit
 
 ## 4. Chunking + embeddings
 
-- Chunk size: ≤512 tokens, 50-token overlap.
-- Embedding model: small, browser-loadable (candidates: `bge-small-en-v1.5`, `all-MiniLM-L6-v2`). Final pick in Sprint 6 spike.
-- Vectors quantized to Q8 to keep bundle size under target.
-- Every chunk preserves its parent citation in metadata.
+- **Chunking** (scripts/legal-ingestion/chunk.mjs): structure-aware, not naive fixed-size. CFR rating tables (HTML `<table>`) are preserved as atomic Markdown chunks, never split. Prose is packed on paragraph boundaries; only oversized paragraphs use a ~15%-overlap word-window fallback. All chunks preserve their parent citation in metadata.
+- **Embedding model**: `bge-small-en-v1.5` (384-dim), via `@huggingface/transformers`. Vectors quantized to Int8 (384 bytes per vector) to keep the lazy-loaded bundle under the 25 MB target.
+- **Contextual retrieval** (optional, OFF by default): when `CONTEXTUALIZE_CHUNKS=1`, chunks are re-embedded with their section-title prefix prepended (via `contextualize.mjs`). Evaluated in S20 with mixed results; currently disabled pending future investigation on other corpora. Enable via environment variable for testing.
 
 ---
 
@@ -64,21 +63,28 @@ public/legal-index/
 
 ---
 
-## 6. Retrieval flow (Sprint 7)
+## 6. Retrieval flow
 
 ```
 user question
    └─► PII scrub (piiScrubber)
-         └─► embed query
-               └─► top-K cosine search over public/legal-index/v*/vectors
-                     └─► return { chunks, citations, fetched_at }
-                           └─► dual-LLM split:
-                                 retriever-pass (sees chunks) → structured fields
-                                 synthesizer-pass (sees only structured fields) → answer
-                                       └─► UI: LegalCitation.jsx renders citation + fetched_at + source_url
+         └─► hybrid retrieval (src/services/legalRag.js):
+               ├─ BM25 lexical search over all chunks
+               └─ dense cosine search over public/legal-index/v*/vectors
+                     └─► Reciprocal Rank Fusion (RRF) combines BM25 + dense top-K
+                           └─► MMR diversity reranking (eliminate redundant chunks)
+                                 └─► return { chunks, citations, fetched_at }
+                                       └─► parent-child expansion (expandChunksWithSiblings):
+                                             retrieved chunk + sibling chunks from same citation
+                                                   └─► dual-LLM split:
+                                                         retriever-pass (sees expanded chunks) → structured fields
+                                                         synthesizer-pass (sees only structured fields) → answer
+                                                               └─► UI: LegalCitation.jsx + AskTheRegsModal.jsx render citation + fetched_at + source_url
 ```
 
-Hard constraint: the synthesizer **never** sees raw retrieved text directly — only structured fields produced by the retriever. This implements the dual-LLM defense from Sprint 3.
+**Hard constraint:** the synthesizer **never** sees raw retrieved text directly — only structured fields produced by the retriever. This implements the dual-LLM defense from Sprint 3.
+
+**Parent-child expansion** (additive to dual-LLM security): when a chunk is retrieved, `legalAnswerer.js` automatically includes all sibling chunks from the same legal citation before the retriever LLM sees them. This ensures the retriever has full section context without requiring the user's query to explicitly name it.
 
 ---
 
@@ -99,7 +105,13 @@ Mitigations (implemented in Sprint 3 and applied here in Sprint 7):
 
 ---
 
-## 8. Refresh automation (Sprint 7)
+## 8. User document semantic layer (parallel system)
+
+The legal-index RAG pipeline described here covers **authoritative sources only** (eCFR, court precedent, VA manuals). A separate, parallel system in [src/utils/userDocSemanticIndex.js](../src/utils/userDocSemanticIndex.js) provides semantic search over veterans' own uploaded C-Files and supporting documents (using the same embedding model, same dual-LLM architecture). The two systems do not share state; users can search legal precedent and their own documents independently via separate UI surfaces. See the userDocSemanticIndex module's documentation for details on the C-File indexing flow.
+
+---
+
+## 9. Refresh automation
 
 - **Workflow:** `.github/workflows/legal-ingestion.yml`
 - **Schedule:** weekly cron `0 4 * * 1` UTC.
@@ -109,21 +121,16 @@ Mitigations (implemented in Sprint 3 and applied here in Sprint 7):
 
 ---
 
-## 9. Migration plan for existing static data
+## 10. Migration plan for existing static data
 
 Sprint 7 cross-validates [disabilityData.json](../src/data/disabilityData.json), [cfr3Regulations.json](../src/data/cfr3Regulations.json), [secondary_conditions_db.json](../src/data/secondary_conditions_db.json) against the live index. Discrepancies become issues; the static files remain as a UI-friendly index of conditions, but legal *content* is sourced from the RAG layer with `fetched_at` dates surfaced to the user.
 
 ---
 
-## 10. Open questions (to resolve in Sprint 6 spike)
+## 11. Future improvements (beyond S25)
 
-- [ ] Final embedding-model pick: latency × accuracy × bundle-size tradeoff.
-- [ ] CAVC opinion scraping legality + cadence: scrape or partner with a feed?
-- [ ] M21-1 access surface: public download bundle vs portal scraping.
-- [ ] Index sharding strategy for the 25 MB bundle target.
-- [ ] How the in-browser vector search performs on low-end mobile (perf budget from Sprint 5).
-- [ ] Should the audit log be exportable by the veteran (transparency feature)?
-
----
-
-*Sprint 6 fills the remaining sections. Sprint 7 implements §6 and §8.*
+- **Conditional-GET support:** Fetchers currently diff all records post-hoc; sending ETag/If-Modified-Since headers would skip unchanged resources. Requires persistent state across weekly runs.
+- **M21-1 + CAVC + Federal Circuit:** Scaffold fetchers exist but are deferred pending API/scraping solutions (KnowVA's M21-1 is client-side rendered; CAVC/Fed-Cir are PDF-only). See [knowledge-sources.yaml](../knowledge-sources.yaml) notes and [docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md § S26](./SPRINT_PLAN_S18-S26_KB_INGESTION.md) for status.
+- **Semantic disambiguation:** Contextual retrieval (section-title prefixes) showed mixed results in S20; further exploration across different corpora is deferred.
+- **Audit log export:** Currently append-only IndexedDB; a veteran transparency feature to export their query history + retrieved chunks is not yet implemented.
+- **Performance on low-end mobile:** Vector search performance on resource-constrained devices was not yet profiled in S18-S25; prioritized higher-value improvements first.

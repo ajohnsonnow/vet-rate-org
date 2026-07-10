@@ -32,29 +32,49 @@ sources:
     refresh_cadence: weekly
     fetcher: scripts/legal-ingestion/fetch-ecfr.mjs
     verified_status: verified
-    last_verified: 2026-05-15
+    last_verified: 2026-07-09
     parts_in_scope: ["3", "4", "19", "20"]
-    parts_currently_indexed: ["4"]
+    parts_currently_indexed: ["3", "4", "19", "20"]
     notes: |
-      Part 4 (the rating schedule) is verified end-to-end. Parts 3/19/20
-      are in scope but not yet fetched — the structure walker handles
-      them; just run `node scripts/legal-ingestion/fetch-ecfr.mjs --part=3,19,20`
-      to add them.
+      S25 (2026-07-09): all four in-scope parts are now fetched and
+      indexed (fetch-ecfr.mjs's DEFAULT_PARTS already covered all four;
+      prior runs had just been explicitly scoped to --part=4). 564 records
+      -> 1,060 chunks, 2.6 MB total (well under the 25 MB budget). CAVC and
+      Federal Circuit remain explicitly out of scope (see the sprint plan's
+      Out-of-Scope section — PDF-shaped sources needing a different
+      ingestion path).
 
   - id: m21-1
     name: VA M21-1 Adjudication Procedures Manual
     jurisdiction: va
-    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000004003
+    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000004049/M21-1-Adjudication-Procedures-Manual
     api_endpoint: null
     refresh_cadence: monthly
     fetcher: scripts/legal-ingestion/fetch-m21-1.mjs
     verified_status: scaffold
     last_verified: null
     notes: |
-      No public API. Scraper walks the chapter index then fetches each
-      article page. URL surface has changed in the past — verify selectors
-      against the live portal before promoting to cron. Listed in
-      AUDIT_FINDINGS as an S7 carryover.
+      S25 (2026-07-09) verified live against the portal: the scaffold's
+      placeholder ARTICLE_ID URL 404s. The real, current M21-1 Table of
+      Contents (found via search, updated to canonical_url above) returns
+      HTTP 200 but the raw HTML has ZERO <a> hrefs beyond an Angular
+      `{{::faviconUrl}}` binding — KnowVA now serves M21-1 as a
+      client-side-rendered SPA; chapter links and article text load via a
+      JS API call after page load, not present in the fetched HTML at all.
+      A plain fetch()+regex scraper (this scaffold's whole design) cannot
+      work against this architecture — no amount of selector-tuning fixes
+      it. Confirmed no simpler static fallback exists either: the legacy
+      WARMS M21-1 URL (benefits.va.gov/WARMS/M21_1.asp) now redirects into
+      the same SPA shell. Real enablement needs either (a) a headless-
+      browser fetcher (Puppeteer/Playwright — a new dependency this
+      ingestion pipeline doesn't otherwise need) driving the real portal
+      and waiting for client-side render, or (b) reverse-engineering the
+      Angular app's underlying content API (undocumented, could change
+      without notice). Both are open-ended, uncertain-ROI investigations
+      disproportionate to this sprint — deferred to a future cycle, not
+      "hardened." Do not flip ENABLE_SCAFFOLD_FETCHERS=1 until one of those
+      is built; it will only 404/produce zero records with the current
+      fetch()-based approach.
 
   - id: cavc
     name: U.S. Court of Appeals for Veterans Claims — published opinions

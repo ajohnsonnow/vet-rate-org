@@ -23,7 +23,21 @@
 
 import { scrubPII } from "../utils/piiScrubber.js";
 import { createDualLLM } from "../utils/dualLLM.js";
-import { query as ragQuery } from "./legalRag.js";
+import { query as ragQuery, getChunksByCitation } from "./legalRag.js";
+
+// Parent-child expansion budget (S21). A retrieved chunk is one paragraph/table
+// fragment of a §-section; the extractor grounds better when it also sees the
+// rest of that section. ~3.4 chars/token matches the cfileAnalyzer budgeting
+// precedent. This is a fixed conservative per-block cap — no device-tier
+// detection is wired to this code path yet (S24 owns device-tiering), so we
+// keep the packed context small enough for a low-end local LLM regardless of
+// device. The originally-retrieved chunk is ALWAYS kept whole (it is what
+// scored); siblings from the same citation fill the remaining budget.
+const CHARS_PER_TOKEN = 3.4;
+const PARENT_EXPANSION_TOKEN_BUDGET = 600;
+const PARENT_EXPANSION_CHAR_BUDGET = Math.round(
+  PARENT_EXPANSION_TOKEN_BUDGET * CHARS_PER_TOKEN,
+); // ~2040 chars per retrieved chunk's expanded block
 
 const EXTRACTOR_SCHEMA = {
   applicable: "boolean — does this chunk address the user's question?",
@@ -57,6 +71,60 @@ function packChunksForExtractor(chunks) {
 }
 
 /**
+ * Parent-child expansion (S21). Each retrieved chunk is expanded IN PLACE with
+ * sibling chunks from the same § section (same `citation`) so the extractor
+ * sees fuller section context. Returns a NEW array 1:1 with `chunks` (same
+ * length, same order) — only each block's `text` grows. Keeping the 1:1
+ * mapping is load-bearing: `answer()` still attributes extractor facts via
+ * `chunks[f._chunkIndex]`, and every sibling shares the retrieved chunk's
+ * citation/title/source_url by definition, so citation attribution stays
+ * correct (guards Ab-H03) and the expanded text is confined to the extractor's
+ * input — it never reaches the synthesizer.
+ *
+ * Budget: the retrieved chunk's own text is always kept whole; siblings are
+ * added nearest-first (by position in the section) until `budgetChars` is
+ * reached. A sibling too large for the remaining budget is skipped, not a hard
+ * stop, so the block fills with the most-adjacent siblings that fit.
+ *
+ * @param {Array<Object>} chunks — retrieved chunks (each has id, citation, text)
+ * @param {(citation: string) => Array<Object>} getSiblings
+ * @param {number} budgetChars
+ * @returns {Array<Object>}
+ */
+function expandChunksWithSiblings(chunks, getSiblings, budgetChars) {
+  if (!Number.isFinite(budgetChars) || budgetChars <= 0) return chunks;
+  const retrievedIds = new Set(chunks.map((c) => c.id));
+  const SEP = "\n\n";
+  return chunks.map((chunk) => {
+    const family = getSiblings(chunk.citation) || [];
+    const selfPos = family.findIndex((s) => s.id === chunk.id);
+    if (selfPos === -1) return chunk; // chunk not found in its own family — skip
+    const candidates = family
+      .map((s, pos) => ({ s, pos }))
+      .filter(({ s }) => s.id !== chunk.id && !retrievedIds.has(s.id))
+      // nearest-first; when equidistant, the following chunk (higher pos) first
+      // so expanded text reads forward from the retrieved fragment.
+      .sort((a, b) => {
+        const da = Math.abs(a.pos - selfPos);
+        const db = Math.abs(b.pos - selfPos);
+        return da - db || b.pos - a.pos;
+      });
+
+    let text = chunk.text;
+    let used = text.length;
+    let expanded = false;
+    for (const { s } of candidates) {
+      const addLen = SEP.length + s.text.length;
+      if (used + addLen > budgetChars) continue;
+      text += SEP + s.text;
+      used += addLen;
+      expanded = true;
+    }
+    return expanded ? { ...chunk, text } : chunk;
+  });
+}
+
+/**
  * Answer a user legal question, grounded in the retrieved index.
  *
  * @param {string} question
@@ -66,6 +134,9 @@ function packChunksForExtractor(chunks) {
  * @param {Object} [opts]
  * @param {number} [opts.topK=4]
  * @param {number} [opts.threshold=0.35]
+ * @param {boolean} [opts.expandContext=true] — expand each retrieved chunk with
+ *   sibling chunks from the same § section for the extractor (never the synthesizer)
+ * @param {number} [opts.expansionCharBudget=PARENT_EXPANSION_CHAR_BUDGET]
  * @returns {Promise<{
  *   answer: string,
  *   citations: Array<{citation: string, title: string, source_url: string, fetched_at: string, score: number}>,
@@ -78,8 +149,14 @@ export async function answer(question, deps, opts = {}) {
   if (!deps || typeof deps.generateAI !== "function") {
     throw new TypeError("legalAnswerer.answer: deps.generateAI required");
   }
-  const { topK = 4, threshold = 0.35 } = opts;
+  const {
+    topK = 4,
+    threshold = 0.35,
+    expandContext = true,
+    expansionCharBudget = PARENT_EXPANSION_CHAR_BUDGET,
+  } = opts;
   const retrieve = deps.retrieve || ragQuery;
+  const getSiblings = deps.getSiblings || getChunksByCitation;
 
   const cleanQuery = scrubPII(question || "", {
     aggressive: true,
@@ -98,7 +175,13 @@ export async function answer(question, deps, opts = {}) {
   }
 
   const dual = createDualLLM(deps.generateAI);
-  const packed = packChunksForExtractor(chunks);
+  // Parent-child expansion feeds ONLY the extractor's untrusted-content blob.
+  // `chunks` (the originals) stays the attribution source below, so expanded
+  // sibling text never reaches the synthesizer and _chunkIndex stays 1:1.
+  const forExtractor = expandContext
+    ? expandChunksWithSiblings(chunks, getSiblings, expansionCharBudget)
+    : chunks;
+  const packed = packChunksForExtractor(forExtractor);
 
   const { fields: extractedRaw, raw: extractRaw } = await dual.extract(
     packed,
@@ -189,4 +272,6 @@ export const _internals = {
   EXTRACTOR_SCHEMA,
   SYNTHESIZER_INSTRUCTIONS,
   packChunksForExtractor,
+  expandChunksWithSiblings,
+  PARENT_EXPANSION_CHAR_BUDGET,
 };

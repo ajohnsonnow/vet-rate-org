@@ -246,6 +246,9 @@ const MIGRATED_MODALS = [
   // footer-CTA-in-viewport contract.
   { label: "Bug Squasher", event: "openBugSquasher" },
   { label: "Feature Request", event: "openFeatureRequest" },
+  // S23: Ask the Regs — built on the shell from day one (size="lg", sticky
+  // footer "Ask" CTA), never a legacy modal to migrate.
+  { label: "Ask the Regs", event: "openAskTheRegs" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
