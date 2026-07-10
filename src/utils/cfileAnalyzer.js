@@ -28,6 +28,7 @@ import { untrustedSection } from "./aiSystemPrompts";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
+import { indexDocumentPages } from "./userDocSemanticIndex";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -60,6 +61,103 @@ const CHARS_PER_TOKEN = 3.4;
 // skipped even within the cap, eliminating admin pages that slipped past Gate 2.
 const MAX_WEBGPU_AI_CHUNKS = 150;
 const MIN_CLAIMS_SCORE = 2;
+
+/**
+ * Pure computation of which local-AI chunks get excluded, and why. This is the
+ * single source of truth the analysis loop consults for its cap/floor skip
+ * decisions, so unit-testing this function tests the real exclusion behaviour
+ * (no drift between a helper and the loop).
+ *
+ * Two independent exclusion gates, mirroring the loop:
+ *   - floor (Gate 3): score < `minClaimsScore` — admin-heavy chunks that cleared
+ *     the coarser medical pre-filter on a single generic term.
+ *   - cap   (Gate 4): only the top `maxAiChunks` chunks by score run the slow
+ *     pass; the rest are excluded (soft on ties — matches `scoreThreshold`).
+ * A chunk excluded by the floor is not also counted under the cap.
+ *
+ * These caps protect a real per-chunk time budget on low-end devices and are
+ * NOT removed — S24 makes their effect visible (and decouples the semantic
+ * index from them) rather than eliminating them.
+ *
+ * @param {number[]} chunkScores
+ * @param {{maxAiChunks:number, minClaimsScore:number}} params
+ * @returns {{floorIndices:Set<number>, capIndices:Set<number>}}
+ */
+export function computeAiExclusion(
+  chunkScores,
+  { maxAiChunks = MAX_WEBGPU_AI_CHUNKS, minClaimsScore = MIN_CLAIMS_SCORE } = {},
+) {
+  const floorIndices = new Set();
+  const capIndices = new Set();
+  if (!Array.isArray(chunkScores) || chunkScores.length === 0) {
+    return { floorIndices, capIndices };
+  }
+  chunkScores.forEach((s, i) => {
+    if (s < minClaimsScore) floorIndices.add(i);
+  });
+  if (chunkScores.length > maxAiChunks) {
+    const threshold = [...chunkScores].sort((a, b) => b - a)[maxAiChunks - 1];
+    if (threshold > 0) {
+      chunkScores.forEach((s, i) => {
+        if (!floorIndices.has(i) && s < threshold) capIndices.add(i);
+      });
+    }
+  }
+  return { floorIndices, capIndices };
+}
+
+/**
+ * Stream-embed every content page of the document into the user-doc semantic
+ * index. Best-effort by contract: any failure (embedder can't load, IndexedDB
+ * unavailable) is swallowed so it can NEVER break the analysis result the
+ * veteran depends on, or regress the 313 MB streaming stress guarantee. Memory
+ * stays flat because `indexDocumentPages` flushes vectors to IndexedDB per
+ * bounded batch and never holds the whole corpus's vectors at once.
+ *
+ * @param {string} fullText
+ * @param {Object} opts
+ * @returns {Promise<Object>} metadata describing the built index
+ */
+async function buildDocSemanticIndex(fullText, opts) {
+  const {
+    sessionKey,
+    onProgress = () => {},
+    signal,
+    embed,
+    store,
+    enabled = true,
+  } = opts || {};
+  if (!enabled) return { indexed: false, reason: "disabled", sessionKey };
+  try {
+    const res = await indexDocumentPages({
+      fullText,
+      sessionKey,
+      embed,
+      store,
+      signal,
+      onProgress: (done, total) =>
+        onProgress(`Building semantic search index (${done}/${total} pages)…`, {
+          phase: "semantic-index",
+          current: done,
+          total,
+        }),
+    });
+    return {
+      indexed: true,
+      sessionKey: res.sessionKey,
+      pageCount: res.pageCount,
+      indexedPages: res.indexedPages,
+      emptyPages: res.emptyPages,
+      vectorCount: res.vectorCount,
+    };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Semantic index build skipped (search unavailable): ${err?.message || err}`,
+    );
+    return { indexed: false, error: String(err?.message || err), sessionKey };
+  }
+}
 
 // Maximum characters per chunk based on AI mode.
 // For SWARM (WebLLM), use the device profile's adaptive chunk size if available
@@ -1137,7 +1235,29 @@ export async function analyzeCFile(
   fullText,
   onProgress = () => {},
   abortController = null,
+  options = {},
 ) {
+  // S24 semantic-index options. `buildSemanticIndex` defaults ON in the app;
+  // tests disable it (or inject `semanticEmbed`/`semanticStore`) to avoid the
+  // real embedder + IndexedDB. `semanticSessionKey` namespaces this document's
+  // vectors so the results UI can search them afterward.
+  const {
+    buildSemanticIndex = true,
+    semanticSessionKey = `cfile_sem_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2, 8)}`,
+    semanticEmbed,
+    semanticStore,
+  } = options;
+  const semanticOpts = {
+    sessionKey: semanticSessionKey,
+    onProgress,
+    signal: abortController?.signal,
+    embed: semanticEmbed,
+    store: semanticStore,
+    enabled: buildSemanticIndex,
+  };
+
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
     throw new Error(
@@ -1213,6 +1333,10 @@ export async function analyzeCFile(
     const rejectedCodes = enforceValidDiagnosticCodes(result);
     result.failedChunks = [];
 
+    // Semantic index over the whole document (a single chunk excludes nothing
+    // from the AI pass, but the searchable index is still built).
+    const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
+
     onProgress("Analysis complete!", { phase: "complete" });
 
     return {
@@ -1224,6 +1348,9 @@ export async function analyzeCFile(
         aiMode: aiMode,
         chunksProcessed: 1,
         boilerplatePagesSkipped: skippedPages,
+        pagesExcludedFromAI: 0,
+        chunksExcludedFromAI: 0,
+        semanticIndex,
         rejectedDiagnosticCodes: rejectedCodes,
       },
     };
@@ -1249,16 +1376,34 @@ export async function analyzeCFile(
   const chunkScores = isLocalAIMode
     ? chunks.map((c) => scoreChunkRelevance(c.text))
     : null;
-  let scoreThreshold = 0;
-  if (chunkScores && chunkScores.length > MAX_WEBGPU_AI_CHUNKS) {
-    const sorted = [...chunkScores].sort((a, b) => b - a);
-    scoreThreshold = sorted[MAX_WEBGPU_AI_CHUNKS - 1];
+  // S24: compute cap (Gate 4) + floor (Gate 3) exclusions up front. This is the
+  // single source of truth both for the loop's skip decisions and for the
+  // user-visible "N pages excluded from AI analysis" count — the two can't drift.
+  const { floorIndices, capIndices } =
+    isLocalAIMode && chunkScores
+      ? computeAiExclusion(chunkScores, {
+          maxAiChunks: MAX_WEBGPU_AI_CHUNKS,
+          minClaimsScore: MIN_CLAIMS_SCORE,
+        })
+      : { floorIndices: new Set(), capIndices: new Set() };
+  if (capIndices.size > 0) {
     // eslint-disable-next-line no-console
     console.log(
-      `📊 Chunk cap: top ${MAX_WEBGPU_AI_CHUNKS}/${chunkScores.length} by score (threshold ≥${scoreThreshold})`,
+      `📊 Chunk cap: top ${MAX_WEBGPU_AI_CHUNKS}/${chunkScores.length} chunks by score run the AI pass; ${capIndices.size} excluded (still indexed for semantic search)`,
     );
   }
   let skippedLowScore = 0;
+  // S24: which real pages the AI actually read vs. were excluded by the score
+  // cap/floor, so the results UI can surface how much of the document the slow
+  // AI pass skipped — while the semantic index (below) still covers all of it.
+  const aiAnalyzedPages = new Set();
+  const aiExcludedPages = new Set();
+  let chunksExcludedFromAI = 0;
+  const recordPages = (set, chunk) => {
+    const from = chunk.startPage || 0;
+    const to = chunk.endPage || from;
+    for (let p = from; p <= to; p++) set.add(p);
+  };
 
   for (let i = 0; i < chunks.length; i++) {
     // Check if aborted
@@ -1299,8 +1444,10 @@ export async function analyzeCFile(
     // Coarser than Gate 2 (which fires on any medical term); this gate requires
     // at least MIN_CLAIMS_SCORE condition/claims keywords. Catches admin-heavy
     // chunks that passed Gate 2 on a single generic medical term (e.g. "clinic").
-    if (isLocalAIMode && chunkScores && chunkScores[i] < MIN_CLAIMS_SCORE) {
+    if (isLocalAIMode && floorIndices.has(i)) {
       skippedLowScore++;
+      chunksExcludedFromAI++;
+      recordPages(aiExcludedPages, chunk);
       // eslint-disable-next-line no-console
       console.log(
         `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (relevance score ${chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
@@ -1312,16 +1459,17 @@ export async function analyzeCFile(
     // --- Gate 4: priority-ordered chunk cap ---
     // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
     // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
-    // banner fires — these are intentional skips, not errors.
-    if (
-      isLocalAIMode &&
-      scoreThreshold > 0 &&
-      chunkScores &&
-      chunkScores[i] < scoreThreshold
-    ) {
+    // banner fires — these are intentional skips, not errors. The excluded pages
+    // are still fully covered by the semantic index built below.
+    if (isLocalAIMode && capIndices.has(i)) {
+      chunksExcludedFromAI++;
+      recordPages(aiExcludedPages, chunk);
       chunkResults.push(createEmptyChunkResult());
       continue;
     }
+
+    // This chunk clears every gate — the AI actually reads these pages.
+    recordPages(aiAnalyzedPages, chunk);
 
     onProgress(
       `Analyzing chunk ${chunkNum} of ${totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
@@ -1461,6 +1609,16 @@ export async function analyzeCFile(
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
   mergedResult.failedChunks = failedChunks;
 
+  // S24: distinct real pages the AI never read because of the score cap/floor
+  // (pages that appear in an analyzed chunk via overlap don't count as excluded).
+  const pagesExcludedFromAI = [...aiExcludedPages].filter(
+    (p) => !aiAnalyzedPages.has(p),
+  ).length;
+
+  // Semantic index over the WHOLE document — built regardless of the AI cap so
+  // the excluded pages remain searchable ("search the full document").
+  const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
+
   onProgress("Analysis complete!", { phase: "complete" });
 
   return {
@@ -1474,6 +1632,9 @@ export async function analyzeCFile(
       totalChunks: totalChunks,
       failedChunkCount: failedChunks.length,
       boilerplatePagesSkipped: skippedPages,
+      pagesExcludedFromAI,
+      chunksExcludedFromAI,
+      semanticIndex,
       rejectedDiagnosticCodes: rejectedCodes,
     },
   };

@@ -108,6 +108,13 @@ const TOOLS = [
     category: "Support",
   },
   {
+    id: "ask-the-regs",
+    name: "Ask the Regs",
+    keywords: ["legal", "regulation", "cfr", "question", "ask", "citation"],
+    icon: "⚖️",
+    category: "Support",
+  },
+  {
     id: "million-dollar",
     name: "Million Dollar Dashboard",
     keywords: ["lifetime", "benefits", "value", "money"],

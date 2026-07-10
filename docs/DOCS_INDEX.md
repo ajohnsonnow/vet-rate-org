@@ -59,6 +59,8 @@ matrices. Read by skimming, not by following start-to-end.
 |---|---|
 | [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) | The 41-row best-practices scoreboard, evidence, severity, target sprint |
 | [SPRINT_PLAN.md](./SPRINT_PLAN.md) | Sprint-by-sprint plan + close dates |
+| [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md) | Mobile + quality-audit remediation cycle (S9–S17, closed) |
+| [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md) | Ingestion/chunking/KB cycle: 9 sprints with executing-model assignments |
 | [DESIGN_TOKENS_REFERENCE.md](./DESIGN_TOKENS_REFERENCE.md) | Generated token table — colors / sizing / aliases |
 | [RAG_EVAL.md](./RAG_EVAL.md) | Recall@k / MRR / NDCG@k baseline + known misses |
 | [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md) | Web Crypto call-site inventory (PBKDF2 / AES-GCM / SHA-256) |
@@ -87,6 +89,7 @@ about to challenge a constraint.
 | [CONTEXT_VAULT.md](./CONTEXT_VAULT.md) | The four durable memory layers + one ephemeral |
 | [COMPLIANCE_STRATEGY.md](./COMPLIANCE_STRATEGY.md) | NIST SSDF / OWASP ASVS scoping + re-eval triggers |
 | [API_SECURITY.md](./API_SECURITY.md) | Per-user rate limiting, CORS, token handling |
+| [EGRESS_INVENTORY.md](./EGRESS_INVENTORY.md) | Every network destination the app can reach, mapped to the CSP allowlist |
 | [AI_SAFETY_GUARDRAILS.md](./AI_SAFETY_GUARDRAILS.md) | Output safety rails for the LLM pipeline |
 | [SAFETY_ARCHITECTURE.md](./SAFETY_ARCHITECTURE.md) | End-to-end safety architecture across surfaces |
 
@@ -116,6 +119,7 @@ about to challenge a constraint.
 | Doc | What it explains |
 |---|---|
 | [DESIGN_TOKENS.md](./DESIGN_TOKENS.md) | The token pipeline rationale (Style Dictionary) |
+| [AFFILIATION_PALETTES.md](./AFFILIATION_PALETTES.md) | Affiliation color palettes + accessible-accent derivation |
 
 ### Ops + admin + lifecycle
 

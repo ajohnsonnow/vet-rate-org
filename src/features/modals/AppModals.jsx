@@ -27,6 +27,7 @@ import ResourcesCluster from "../resources/ResourcesCluster";
 import DataManagementCluster from "../data-management/DataManagementCluster";
 import VisionSimulator from "../vision/VisionSimulator";
 import WorkflowGuidesCluster from "../workflow-guides/WorkflowGuidesCluster";
+import AskTheRegsModal from "../legal-answers/AskTheRegsModal";
 import AdminLogin from "../../components/AdminLogin";
 import AdminPanel from "../../components/AdminPanel";
 import PWAInstallButton from "../../components/PWAInstallButton";
@@ -122,6 +123,10 @@ export default function AppModals({
 
       <Cluster name="Claim Navigator">
         <ClaimNavigatorModal />
+      </Cluster>
+
+      <Cluster name="Ask the Regs">
+        <AskTheRegsModal />
       </Cluster>
 
       <Cluster name="System Tools">
