@@ -56,154 +56,591 @@ const BLUE_BUTTON_AI_PROMPT_FOOTER = `
 RESPOND IN JSON ONLY:
 {"conditions":[{"name":"ConditionName","dateFound":"Date","isClaimable":true,"category":"Category"}],"summary":"Brief summary"}`;
 
-// Legacy constant for backward compatibility
-const _BLUE_BUTTON_AI_PROMPT =
-  BLUE_BUTTON_AI_PROMPT_HEADER +
-  `[DOCUMENT TEXT HERE]` +
-  BLUE_BUTTON_AI_PROMPT_FOOTER;
-
-/**
- * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
- * These vary based on the export format (text vs PDF)
- */
-const _PROBLEM_LIST_PATTERNS = [
-  // VA Blue Button common headers
-  /(?:VA\s*)?Problem\s*List[:\s]*\n/gi,
-  /Active\s*Problems?[:\s]*\n/gi,
-  /(?:VA\s*)?Health\s*Issues?[:\s]*\n/gi,
-  /(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*\n/gi,
-  /(?:Medical\s*)?Conditions?[:\s]*\n/gi,
-  /ICD[-\s]*(?:10|9)[:\s]*(?:Codes?)?[:\s]*\n/gi,
-  // Section end markers
-  /(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|Health\s*Care\s*Team)[:\s]*\n)/gi,
+// Common VA-claimable conditions to look for in extractConditionsFromText's
+// plain-text fallback pass (used when the AI doesn't return valid JSON)
+const KNOWN_TEXT_FALLBACK_CONDITIONS = [
+  {
+    pattern: /PTSD|post[- ]?traumatic stress/gi,
+    name: "PTSD",
+    category: "Mental Health",
+    claimable: true,
+  },
+  {
+    pattern: /depress(?:ion|ive)/gi,
+    name: "Depression",
+    category: "Mental Health",
+    claimable: true,
+  },
+  {
+    pattern: /anxiety/gi,
+    name: "Anxiety",
+    category: "Mental Health",
+    claimable: true,
+  },
+  {
+    pattern: /tinnitus/gi,
+    name: "Tinnitus",
+    category: "Musculoskeletal",
+    claimable: true,
+  },
+  {
+    pattern: /hearing loss/gi,
+    name: "Hearing Loss",
+    category: "Musculoskeletal",
+    claimable: true,
+  },
+  {
+    pattern: /sleep apnea/gi,
+    name: "Sleep Apnea",
+    category: "Respiratory",
+    claimable: true,
+  },
+  {
+    pattern: /hypertension|high blood pressure/gi,
+    name: "Hypertension",
+    category: "Cardiovascular",
+    claimable: true,
+  },
+  {
+    pattern: /diabetes|diabetic/gi,
+    name: "Diabetes",
+    category: "Endocrine",
+    claimable: true,
+  },
+  {
+    pattern: /GERD|gastroesophageal reflux/gi,
+    name: "GERD",
+    category: "GI",
+    claimable: true,
+  },
+  {
+    pattern: /migraine/gi,
+    name: "Migraines",
+    category: "Neurological",
+    claimable: true,
+  },
+  {
+    pattern: /lumbar|lower back|lumbosacral/gi,
+    name: "Lumbar Spine Condition",
+    category: "Musculoskeletal",
+    claimable: true,
+  },
+  {
+    pattern: /cervical|neck pain|cervicalgia/gi,
+    name: "Cervical Spine Condition",
+    category: "Musculoskeletal",
+    claimable: true,
+  },
+  {
+    pattern: /radiculopathy/gi,
+    name: "Radiculopathy",
+    category: "Neurological",
+    claimable: true,
+  },
+  {
+    pattern: /neuropathy/gi,
+    name: "Peripheral Neuropathy",
+    category: "Neurological",
+    claimable: true,
+  },
+  {
+    pattern: /insomnia|sleep disorder/gi,
+    name: "Insomnia",
+    category: "Mental Health",
+    claimable: true,
+  },
+  {
+    pattern: /TBI|traumatic brain injury/gi,
+    name: "TBI",
+    category: "Neurological",
+    claimable: true,
+  },
+  {
+    pattern: /erectile dysfunction|ED\b/gi,
+    name: "Erectile Dysfunction",
+    category: "Other",
+    claimable: true,
+  },
+  {
+    pattern: /arthritis/gi,
+    name: "Arthritis",
+    category: "Musculoskeletal",
+    claimable: true,
+  },
 ];
 
 /**
- * Patterns to extract individual diagnoses from the problem list
- * Handles various Blue Button formats
+ * Fallback: Extract conditions from plain text when AI doesn't return JSON
+ * Looks for common medical condition patterns in the response
+ * Pure function of `text` - no component state involved.
  */
-const _DIAGNOSIS_PATTERNS = [
-  // Format: "Condition Name - Date" or "Condition Name (Date)"
-  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})/gm,
-  // Format: "ICD-10: Code - Description"
-  /(?:ICD[-\s]*10[:\s]*)?([A-Z]\d{2}(?:\.\d{1,4})?)\s*[-–—:]\s*(.+?)(?:\n|$)/gi,
-  // Format: Simple "Condition Name" on its own line
-  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}))?$/gm,
-  // Format: "Date: Condition" or "Date - Condition"
-  /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm,
-];
+function extractConditionsFromText(text) {
+  const conditions = [];
+  const seen = new Set();
+
+  for (const {
+    pattern,
+    name,
+    category,
+    claimable,
+  } of KNOWN_TEXT_FALLBACK_CONDITIONS) {
+    if (pattern.test(text) && !seen.has(name.toLowerCase())) {
+      seen.add(name.toLowerCase());
+      conditions.push({
+        name,
+        rawText: name,
+        dateFound: null,
+        isClaimable: claimable,
+        category,
+      });
+    }
+  }
+
+  return conditions;
+}
 
 /**
- * Common VA diagnoses we want to flag (conditions often claimed)
- * Maps common variations to standardized names
+ * Format conditions response into our standard format
+ * Pure function of `parsed` - no component state involved.
  */
-const CLAIMABLE_CONDITIONS = {
-  // Mental Health
-  ptsd: "PTSD (Post-Traumatic Stress Disorder)",
-  "post traumatic stress": "PTSD (Post-Traumatic Stress Disorder)",
-  depression: "Major Depressive Disorder",
-  "major depressive": "Major Depressive Disorder",
-  anxiety: "Generalized Anxiety Disorder",
-  "generalized anxiety": "Generalized Anxiety Disorder",
-  bipolar: "Bipolar Disorder",
-  insomnia: "Insomnia / Sleep Disorder",
-  "sleep apnea": "Sleep Apnea",
-  "obstructive sleep": "Sleep Apnea",
+function formatConditionsResponse(parsed) {
+  // Transform AI response into our condition format
+  const mapped = parsed.conditions.map((c, index) => ({
+    id: index + 1,
+    rawName: c.rawText || c.name,
+    standardizedName: c.name,
+    dateFound: c.dateFound || null,
+    isClaimable: c.isClaimable === true,
+    category: c.category || "Other",
+    selected: false,
+  }));
 
-  // Musculoskeletal
-  tinnitus: "Tinnitus",
-  "hearing loss": "Hearing Loss",
-  "degenerative disc": "Degenerative Disc Disease",
-  lumbar: "Lumbar Spine Condition",
-  cervical: "Cervical Spine Condition",
-  thoracolumbar: "Thoracolumbar Spine Condition",
-  arthritis: "Arthritis",
-  osteoarthritis: "Osteoarthritis",
-  rheumatoid: "Rheumatoid Arthritis",
-  fibromyalgia: "Fibromyalgia",
-  gout: "Gout",
-  "plantar fasciitis": "Plantar Fasciitis",
-  "pes planus": "Pes Planus (Flat Feet)",
-  "flat feet": "Pes Planus (Flat Feet)",
-  "hallux valgus": "Hallux Valgus (Bunions)",
-  bunion: "Hallux Valgus (Bunions)",
-  "carpal tunnel": "Carpal Tunnel Syndrome",
-  radiculopathy: "Radiculopathy",
-  sciatica: "Sciatica / Lumbar Radiculopathy",
+  // D-H09: the AI can hallucinate diagnoses. Flag each against the official
+  // 38 CFR code DB — matched → verified (with officialName), everything else →
+  // unverified — so AI output is never shown as VA-confirmed. Nothing is dropped.
+  const conditions = annotateConditionVerification(mapped);
 
-  // Cardiovascular
-  hypertension: "Hypertension (High Blood Pressure)",
-  "high blood pressure": "Hypertension (High Blood Pressure)",
-  "coronary artery": "Coronary Artery Disease",
-  "heart disease": "Heart Disease",
-  "atrial fibrillation": "Atrial Fibrillation",
-  "peripheral artery": "Peripheral Artery Disease",
-  varicose: "Varicose Veins",
+  // Sort: claimable conditions first, then alphabetically
+  conditions.sort((a, b) => {
+    if (a.isClaimable && !b.isClaimable) return -1;
+    if (!a.isClaimable && b.isClaimable) return 1;
+    return a.standardizedName.localeCompare(b.standardizedName);
+  });
 
-  // Respiratory
-  asthma: "Asthma",
-  copd: "COPD",
-  "chronic obstructive": "COPD",
-  sinusitis: "Sinusitis",
-  rhinitis: "Allergic Rhinitis",
-
-  // Gastrointestinal
-  gerd: "GERD (Acid Reflux)",
-  "acid reflux": "GERD (Acid Reflux)",
-  gastroesophageal: "GERD (Acid Reflux)",
-  ibs: "Irritable Bowel Syndrome",
-  "irritable bowel": "Irritable Bowel Syndrome",
-  "hiatal hernia": "Hiatal Hernia",
-
-  // Endocrine
-  diabetes: "Diabetes Mellitus",
-  "type 2 diabetes": "Diabetes Mellitus Type II",
-  hypothyroid: "Hypothyroidism",
-  hyperthyroid: "Hyperthyroidism",
-
-  // Skin
-  eczema: "Eczema",
-  psoriasis: "Psoriasis",
-  acne: "Acne / Chloracne",
-
-  // Neurological
-  migraine: "Migraine Headaches",
-  "tension headache": "Tension Headaches",
-  headache: "Chronic Headaches",
-  "peripheral neuropathy": "Peripheral Neuropathy",
-  neuropathy: "Peripheral Neuropathy",
-  tremor: "Tremors",
-  parkinson: "Parkinson's Disease",
-
-  // Other common
-  "erectile dysfunction": "Erectile Dysfunction",
-  ed: "Erectile Dysfunction",
-  "chronic fatigue": "Chronic Fatigue Syndrome",
-  "gulf war": "Gulf War Syndrome",
-};
+  return {
+    conditions,
+    summary: parsed.summary || null,
+  };
+}
 
 /**
- * Conditions to filter out (not claimable or too vague)
+ * JSON repair Strategy 1: remove trailing garbage after the last complete
+ * JSON structure. Pure function of `text`.
  */
-const EXCLUDED_CONDITIONS = [
-  "blood pressure check",
-  "routine exam",
-  "annual physical",
-  "well visit",
-  "follow up",
-  "followup",
-  "referral",
-  "lab work",
-  "imaging",
-  "screening",
-  "preventive",
-  "immunization",
-  "vaccine",
-  "counseling",
-  "education",
-  "unknown",
-  "unspecified",
-];
+function stripTrailingJsonGarbage(text) {
+  let repaired = text;
+  const lastCloseBrace = repaired.lastIndexOf("}");
+  const lastCloseBracket = repaired.lastIndexOf("]");
+
+  if (lastCloseBrace > 0 || lastCloseBracket > 0) {
+    // Find the outermost closing position
+    const lastValidPos = Math.max(lastCloseBrace, lastCloseBracket);
+
+    // Check if there's garbage after this position
+    const afterLast = repaired.substring(lastValidPos + 1).trim();
+    if (afterLast.length > 0 && !afterLast.match(/^[}\]]*$/)) {
+      // Truncate to last valid JSON structure
+      repaired = repaired.substring(0, lastValidPos + 1);
+      // eslint-disable-next-line no-console
+      console.log("🔧 Removed trailing garbage");
+    }
+  }
+
+  return repaired;
+}
+
+/**
+ * JSON repair Strategy 2: handle truncated strings (very common with token
+ * limits) by cutting back to the last complete object. Pure function of
+ * `text`.
+ */
+function trimUnmatchedQuoteTail(text) {
+  let repaired = text;
+  const quoteCount = (repaired.match(/"/g) || []).length;
+  if (quoteCount % 2 !== 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🔧 Detected unmatched quotes - finding last complete object",
+    );
+
+    // Find last complete object (ends with },)
+    const patterns = [
+      /},\s*{[^}]*$/, // Last incomplete object after comma
+      /"[^"]*$/, // Incomplete string at end
+      /:\s*"[^"]*$/, // Incomplete property value
+    ];
+
+    for (const pattern of patterns) {
+      const match = repaired.match(pattern);
+      if (match) {
+        const cutPosition = match.index;
+        repaired = repaired.substring(0, cutPosition);
+        // eslint-disable-next-line no-console
+        console.log(
+          `🔧 Cut at position ${cutPosition} to remove incomplete content`,
+        );
+        break;
+      }
+    }
+  }
+
+  return repaired;
+}
+
+/**
+ * JSON repair Strategy 3: balance brackets and braces by appending whatever
+ * closing characters are missing. Pure function of `text`.
+ */
+function balanceJsonBracketsAndBraces(text) {
+  let repaired = text;
+  const openBraces = (repaired.match(/{/g) || []).length;
+  const closeBraces = (repaired.match(/}/g) || []).length;
+  const openBrackets = (repaired.match(/\[/g) || []).length;
+  const closeBrackets = (repaired.match(/\]/g) || []).length;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `🔧 Brackets: ${openBrackets} open, ${closeBrackets} close | Braces: ${openBraces} open, ${closeBraces} close`,
+  );
+
+  // Close arrays first (conditions array)
+  if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
+    const missing = openBrackets - closeBrackets;
+    // eslint-disable-next-line no-console
+    console.log(`🔧 Adding ${missing} closing brackets`);
+    for (let i = 0; i < missing; i++) {
+      repaired += "]";
+    }
+  }
+
+  // Close objects
+  const currentCloseBraces = (repaired.match(/}/g) || []).length;
+  const neededBraces = openBraces - currentCloseBraces;
+  if (neededBraces > 0) {
+    // eslint-disable-next-line no-console
+    console.log(`🔧 Adding ${neededBraces} closing braces`);
+    for (let i = 0; i < neededBraces; i++) {
+      repaired += "}";
+    }
+  }
+
+  return repaired;
+}
+
+/**
+ * JSON repair Strategy 4 (last resort): try to find and extract just the
+ * conditions array out of the (still-broken) repaired text. Returns the
+ * parsed object on success, rethrows `jsonErr` (the original parse error)
+ * if this last-resort extraction also fails.
+ */
+function extractConditionsArrayJson(repaired, jsonErr) {
+  const conditionsMatch = repaired.match(
+    /"conditions"\s*:\s*\[([\s\S]*?)(?:\]|$)/,
+  );
+  if (conditionsMatch) {
+    let conditionsContent = conditionsMatch[1];
+
+    // Try to complete the last object if it's incomplete
+    const lastOpenBrace = conditionsContent.lastIndexOf("{");
+    const lastCloseBrace = conditionsContent.lastIndexOf("}");
+
+    if (lastOpenBrace > lastCloseBrace) {
+      // Incomplete object - remove it
+      conditionsContent = conditionsContent.substring(0, lastOpenBrace);
+    }
+
+    // Remove trailing comma
+    conditionsContent = conditionsContent.trim().replace(/,\s*$/, "");
+
+    const reconstructed = `{"conditions":[${conditionsContent}]}`;
+
+    try {
+      const parsed = JSON.parse(reconstructed);
+      // eslint-disable-next-line no-console
+      console.log("✅ Extracted conditions array successfully");
+      return parsed;
+    } catch {
+      throw jsonErr; // Give up, rethrow original
+    }
+  } else {
+    throw jsonErr; // No conditions array found
+  }
+}
+
+/**
+ * Attempt to repair a truncated/malformed JSON response from the AI
+ * (the AI ran out of output tokens mid-response). Returns the repaired,
+ * parsed object on success. Rethrows the original `jsonErr` on failure.
+ * Pure function - no component state involved.
+ */
+function repairTruncatedJson(cleanResponse, jsonErr) {
+  // AGGRESSIVE JSON REPAIR - we need this to work!
+  // eslint-disable-next-line no-console
+  console.log("💡 Attempting advanced JSON repair...");
+  let repaired = cleanResponse;
+  repaired = stripTrailingJsonGarbage(repaired);
+  repaired = trimUnmatchedQuoteTail(repaired);
+  repaired = balanceJsonBracketsAndBraces(repaired);
+
+  // Strategy 4: If still failing, try to extract just the conditions array
+  try {
+    const parsed = JSON.parse(repaired);
+    // eslint-disable-next-line no-console
+    console.log("✅ Repaired JSON successfully");
+    return parsed;
+  } catch (stillFailing) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🔧 Standard repair failed, trying to extract conditions array directly...",
+      stillFailing.message,
+    );
+    return extractConditionsArrayJson(repaired, jsonErr);
+  }
+}
+
+/**
+ * Classify why AI response parsing failed and either throw a user-facing
+ * error, or return a plain-text-fallback result. Always throws or returns -
+ * never both. Pure function - no component state involved.
+ */
+function classifyAndReportParseFailure(aiResponse, parseError) {
+  console.error(
+    "Failed to parse AI response:",
+    parseError.message || parseError,
+  );
+  // Safely log raw response (limit to 500 chars for readability)
+  try {
+    let rawForLog;
+    if (typeof aiResponse === "string") {
+      rawForLog = aiResponse.substring(0, 500);
+    } else if (aiResponse && typeof aiResponse === "object") {
+      rawForLog = JSON.stringify({
+        text: aiResponse.text?.substring(0, 400),
+        mode: aiResponse.mode,
+      });
+    } else {
+      rawForLog = String(aiResponse).substring(0, 500);
+    }
+    console.error("Raw response:", rawForLog);
+  } catch (logError) {
+    console.error("Could not log raw response:", logError.message);
+  }
+
+  // Check for specific error messages that indicate recoverable situations
+  const rawText =
+    typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
+  if (
+    rawText.includes("model is still loading") ||
+    rawText.includes("still loading")
+  ) {
+    throw new Error(
+      "AI model is still loading. Please wait a moment and try again.",
+    );
+  }
+  if (
+    rawText.includes("context window") ||
+    rawText.includes("ContextWindowSizeExceeded")
+  ) {
+    throw new Error(
+      "Document is too large for local AI. Try using Cloud AI or upload a smaller file.",
+    );
+  }
+  if (
+    rawText.includes("[Warrant Council") ||
+    rawText.includes("CW5 Auditor")
+  ) {
+    // AI returned a helpful message but not JSON - extract and return as error
+    const msgMatch = rawText.match(
+      /will help with[:\s]*(.+?)(?:Your question|$)/s,
+    );
+    if (msgMatch) {
+      throw new Error(
+        "AI is initializing. " + msgMatch[1].trim().split("\n")[0],
+      );
+    }
+  }
+
+  // FALLBACK: Try to extract conditions from plain text response
+  // The AI may have returned useful info in a non-JSON format
+  if (
+    rawText.length > 50 &&
+    !rawText.includes("error") &&
+    !rawText.includes("Error")
+  ) {
+    // eslint-disable-next-line no-console
+    console.log("💡 Attempting text fallback extraction...");
+    const extractedConditions = extractConditionsFromText(rawText);
+    if (extractedConditions.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
+      );
+      return {
+        conditions: extractedConditions,
+        summary: "Extracted from AI text response (non-JSON fallback)",
+        wasFallback: true,
+      };
+    }
+  }
+
+  throw new Error("AI returned invalid format. Please try again.");
+}
+
+/**
+ * Parse AI response JSON
+ * FIX for BUG-MKUA99RE: generateAI returns {text, mode} object, not a string
+ * Pure function - no component state involved.
+ */
+function parseAIResponse(aiResponse) {
+  try {
+    // Handle both string responses and {text, mode} objects from generateAI
+    let responseText;
+    if (typeof aiResponse === "string") {
+      responseText = aiResponse;
+    } else if (aiResponse && typeof aiResponse === "object") {
+      // generateAI returns {text: string, mode: string, ...}
+      responseText = aiResponse.text;
+      if (typeof responseText !== "string") {
+        throw new Error("AI response object missing text property");
+      }
+    } else {
+      throw new Error(`Invalid AI response type: ${typeof aiResponse}`);
+    }
+
+    // Clean up potential markdown formatting
+    let cleanResponse = responseText.trim();
+    if (cleanResponse.startsWith("```json")) {
+      cleanResponse = cleanResponse.slice(7);
+    }
+    if (cleanResponse.startsWith("```")) {
+      cleanResponse = cleanResponse.slice(3);
+    }
+    if (cleanResponse.endsWith("```")) {
+      cleanResponse = cleanResponse.slice(0, -3);
+    }
+    cleanResponse = cleanResponse.trim();
+
+    // Try to repair truncated JSON (AI ran out of output tokens mid-response)
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanResponse);
+    } catch (jsonErr) {
+      parsed = repairTruncatedJson(cleanResponse, jsonErr);
+    }
+
+    if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
+      throw new Error("AI response missing conditions array.");
+    }
+
+    return parsed;
+  } catch (parseError) {
+    return classifyAndReportParseFailure(aiResponse, parseError);
+  }
+}
+
+function ConditionSelectedCheckbox({ selected }) {
+  return (
+    <div
+      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+        selected
+          ? "bg-cyan-600 border-cyan-600 text-white"
+          : "border-gray-300 dark:border-gray-600"
+      }`}
+    >
+      {selected && (
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function ConditionListItem({ condition, onToggle, onCheckRatingCriteria }) {
+  return (
+    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+      className={`p-4 cursor-pointer transition-colors ${
+        condition.selected
+          ? "bg-cyan-50 dark:bg-cyan-900/30"
+          : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      }`}
+      onClick={() => onToggle(condition.id)}
+    >
+      <div className="flex items-start gap-3">
+        {/* Checkbox */}
+        <ConditionSelectedCheckbox selected={condition.selected} />
+
+        {/* Condition Info */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-gray-800 dark:text-gray-100">
+              {condition.standardizedName}
+            </span>
+            {condition.isClaimable && (
+              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
+                ⭐ Commonly Claimed
+              </span>
+            )}
+            {!condition.verified && (
+              <span
+                className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full"
+                title="AI-extracted from your report and not matched to the official VA diagnostic-code list. Confirm against your own records before relying on it."
+              >
+                ⚠️ Unverified
+              </span>
+            )}
+          </div>
+          {condition.rawName !== condition.standardizedName && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              From record: &quot;{condition.rawName}&quot;
+            </p>
+          )}
+          {condition.dateFound && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              📅 Date in record: {condition.dateFound}
+            </p>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex gap-2 flex-shrink-0">
+          {onCheckRatingCriteria && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCheckRatingCriteria(condition.standardizedName);
+              }}
+              className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
+              aria-label="Search rating criteria for this condition"
+            >
+              🔍 Check Criteria
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function BlueButtonXRay({
   onClose,
@@ -406,131 +843,6 @@ export default function BlueButtonXRay({
   };
 
   /**
-   * Parse the text to find Problem List section and extract diagnoses
-   */
-  const _parseBlueButtonText = (text) => {
-    // Validate input
-    if (!text || typeof text !== "string") {
-      console.error("parseBlueButtonText received invalid input:", typeof text);
-      return [];
-    }
-
-    const conditions = [];
-    const seenConditions = new Set();
-
-    // Normalize text
-    const normalizedText = text
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
-      .replace(/\t/g, " ")
-      .replace(/\s{2,}/g, " ");
-
-    // Try to find the Problem List section
-    let problemListSection = "";
-
-    // Look for various section headers
-    const sectionPatterns = [
-      /(?:VA\s*)?Problem\s*List[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|Health\s*Care\s*Team|Active\s*Outpatient|Procedures|$)[\s:]*\n)/i,
-      /Active\s*Problems?[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|$)[\s:]*\n)/i,
-      /(?:My\s*)?VA\s*(?:Health\s*)?Issues?[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|$)[\s:]*\n)/i,
-      /Diagnos[ie]s[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|$)[\s:]*\n)/i,
-    ];
-
-    for (const pattern of sectionPatterns) {
-      const match = normalizedText.match(pattern);
-      if (match && match[1]) {
-        problemListSection = match[1];
-        break;
-      }
-    }
-
-    // If no section found, try to extract from the whole document
-    if (!problemListSection) {
-      problemListSection = normalizedText;
-    }
-
-    // Extract conditions line by line
-    const lines = problemListSection.split("\n");
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (!trimmedLine || trimmedLine.length < 3) continue;
-
-      // Skip excluded patterns
-      const lowerLine = trimmedLine.toLowerCase();
-      if (EXCLUDED_CONDITIONS.some((exc) => lowerLine.includes(exc))) continue;
-
-      // Try to extract condition and date
-      let conditionName = trimmedLine;
-      let dateFound = null;
-
-      // Check for date patterns
-      const dateMatch = trimmedLine.match(
-        /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i,
-      );
-      if (dateMatch) {
-        dateFound = dateMatch[1];
-        // Remove date from condition name
-        conditionName = trimmedLine.replace(dateMatch[0], "").trim();
-      }
-
-      // Clean up condition name
-      conditionName = conditionName
-        .replace(/^[-•*\d.)\]]+\s*/, "") // Remove list markers
-        .replace(/\s*[-–—:]+\s*$/, "") // Remove trailing separators
-        .replace(/^\s*ICD[-\s]*10[:\s]*/i, "") // Remove ICD-10 prefix
-        .replace(/\s*\([^)]*\)\s*$/, "") // Remove trailing parenthetical
-        .trim();
-
-      // Skip if too short or looks like a header
-      if (conditionName.length < 4 || conditionName.length > 100) continue;
-      if (
-        /^(Problem|Active|Health|Issue|Date|Status|Provider|Note)s?$/i.test(
-          conditionName,
-        )
-      )
-        continue;
-
-      // Check if this is a claimable condition
-      const normalizedCondition = conditionName.toLowerCase();
-      const normalizedKey = seenConditions.has(normalizedCondition)
-        ? null
-        : normalizedCondition;
-
-      if (normalizedKey) {
-        seenConditions.add(normalizedCondition);
-
-        // Check if it matches a known claimable condition
-        let matchedClaimable = null;
-        for (const [key, value] of Object.entries(CLAIMABLE_CONDITIONS)) {
-          if (normalizedCondition.includes(key)) {
-            matchedClaimable = value;
-            break;
-          }
-        }
-
-        conditions.push({
-          id: conditions.length + 1,
-          rawName: conditionName,
-          standardizedName: matchedClaimable || conditionName,
-          dateFound: dateFound,
-          isClaimable: Boolean(matchedClaimable),
-          selected: false,
-        });
-      }
-    }
-
-    // Sort: claimable conditions first, then alphabetically
-    conditions.sort((a, b) => {
-      if (a.isClaimable && !b.isClaimable) return -1;
-      if (!a.isClaimable && b.isClaimable) return 1;
-      return a.standardizedName.localeCompare(b.standardizedName);
-    });
-
-    return conditions;
-  };
-
-  /**
    * Estimate token count from text (rough approximation: 1 token ≈ 4 characters)
    */
   const estimateTokens = (text) => {
@@ -551,10 +863,18 @@ export default function BlueButtonXRay({
       return "";
     }
 
-    // Try to find problem list section
-    const problemListStart = text.search(
-      /(?:VA\s*)?Problem\s*List[:\s]*|Active\s*Problems?[:\s]*|(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*/gi,
-    );
+    // Try to find problem list section (checked as separate patterns, taking
+    // the earliest match, to keep each regex simple rather than one large
+    // alternation)
+    const problemListMatchIndexes = [
+      text.search(/(?:VA\s*)?Problem\s*List[:\s]*/gi),
+      text.search(/Active\s*Problems?[:\s]*/gi),
+      text.search(/(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*/gi),
+    ].filter((index) => index !== -1);
+    const problemListStart =
+      problemListMatchIndexes.length > 0
+        ? Math.min(...problemListMatchIndexes)
+        : -1;
 
     if (problemListStart !== -1) {
       // Find where this section ends (next major section or 5000 chars, whichever comes first)
@@ -635,6 +955,167 @@ export default function BlueButtonXRay({
   };
 
   /**
+   * Process a single chunk with retry logic and multiple fallback strategies
+   * NO FAILED SECTIONS ALLOWED - we try everything possible
+   */
+  const processChunkWithRetry = async (chunkText, chunkIndex, totalChunks) => {
+    const MAX_RETRIES = 3;
+    const strategies = [
+      { maxTokens: 2000, temp: 0.2, name: "Standard" },
+      { maxTokens: 3000, temp: 0.1, name: "Extended+Precise" },
+      { maxTokens: 4000, temp: 0.0, name: "Maximum+Deterministic" },
+    ];
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const strategy = strategies[attempt];
+        setProcessingStage(
+          `Processing section ${chunkIndex + 1} of ${totalChunks}... (${strategy.name})`,
+        );
+
+        const chunkPrompt =
+          BLUE_BUTTON_AI_PROMPT_HEADER +
+          chunkText +
+          BLUE_BUTTON_AI_PROMPT_FOOTER;
+
+        // AIS-05: non-blocking crisis scan over this raw record chunk.
+        scanDocumentForCrisis(chunkText);
+
+        const aiResponse = await generateAI(chunkPrompt, {
+          temperature: strategy.temp,
+          maxTokens: strategy.maxTokens,
+          expectJSON: true,
+          skipHallucinationCheck: true,
+          skipCrisisCheck: true,
+          useDKB: false,
+          systemPrompt: "",
+        });
+
+        const parsed = parseAIResponse(aiResponse);
+
+        // Success! Return results
+        if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
+          );
+          return parsed;
+        }
+      } catch (error) {
+        console.warn(
+          `⚠️ Section ${chunkIndex + 1} attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
+          error.message,
+        );
+
+        // If this was the last attempt, try regex fallback
+        if (attempt === MAX_RETRIES - 1) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
+          );
+          const fallbackConditions = extractConditionsFromText(chunkText);
+
+          if (fallbackConditions.length > 0) {
+            // eslint-disable-next-line no-console
+            console.log(
+              `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
+            );
+            return {
+              conditions: fallbackConditions,
+              summary: `Extracted via fallback (section ${chunkIndex + 1})`,
+              wasFallback: true,
+            };
+          }
+        }
+
+        // Wait before retry (exponential backoff)
+        if (attempt < MAX_RETRIES - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (attempt + 1)),
+          );
+        }
+      }
+    }
+
+    // ABSOLUTE LAST RESORT: Return empty but don't crash
+    console.error(
+      `❌ Section ${chunkIndex + 1} FAILED after all strategies - returning empty results`,
+    );
+    return {
+      conditions: [],
+      summary: `Section ${chunkIndex + 1}: Could not extract conditions after ${MAX_RETRIES} attempts + fallback`,
+      failed: true,
+    };
+  };
+
+  /**
+   * Process a large document by splitting it into token-sized chunks,
+   * running AI extraction (with retry/fallback) over each chunk, then
+   * deduplicating and merging the results.
+   */
+  const processChunkedDocument = async (text, maxTextTokens, textTokens) => {
+    // Text is too large - process in chunks
+    // eslint-disable-next-line no-console
+    console.log(
+      `📄 Large document detected (${textTokens} tokens). Chunking for processing...`,
+    );
+    setProcessingStage(`Large document - processing in multiple parts...`);
+
+    const chunks = chunkText(text, maxTextTokens);
+    // eslint-disable-next-line no-console
+    console.log(`Split into ${chunks.length} chunks`);
+
+    const allConditions = [];
+    const summaries = [];
+
+    // Process each chunk with bulletproof retry logic
+    for (let i = 0; i < chunks.length; i++) {
+      const result = await processChunkWithRetry(chunks[i], i, chunks.length);
+
+      if (result.conditions && result.conditions.length > 0) {
+        allConditions.push(...result.conditions);
+      }
+
+      if (result.summary) {
+        summaries.push(result.summary);
+      }
+
+      if (result.failed) {
+        console.warn(
+          `⚠️ Section ${i + 1} marked as failed but processing continues`,
+        );
+      }
+
+      // Small delay between chunks to avoid rate limiting
+      if (i < chunks.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+
+    // Deduplicate conditions (same name = same condition)
+    const uniqueConditions = [];
+    const seenNames = new Set();
+
+    for (const condition of allConditions) {
+      const normalizedName = condition.name.toLowerCase().trim();
+      if (!seenNames.has(normalizedName)) {
+        seenNames.add(normalizedName);
+        uniqueConditions.push(condition);
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `Found ${allConditions.length} total conditions, ${uniqueConditions.length} unique`,
+    );
+
+    return formatConditionsResponse({
+      conditions: uniqueConditions,
+      summary: summaries.length > 0 ? summaries.join(" ") : null,
+    });
+  };
+
+  /**
    * AI-powered extraction of diagnoses from Blue Button text
    * Handles large documents by chunking them for models with smaller context windows
    */
@@ -689,588 +1170,9 @@ export default function BlueButtonXRay({
 
       const parsed = parseAIResponse(aiResponse);
       return formatConditionsResponse(parsed);
-    } else {
-      // Text is too large - process in chunks
-      // eslint-disable-next-line no-console
-      console.log(
-        `📄 Large document detected (${textTokens} tokens). Chunking for processing...`,
-      );
-      setProcessingStage(`Large document - processing in multiple parts...`);
-
-      const chunks = chunkText(text, maxTextTokens);
-      // eslint-disable-next-line no-console
-      console.log(`Split into ${chunks.length} chunks`);
-
-      const allConditions = [];
-      const summaries = [];
-
-      /**
-       * Process a single chunk with retry logic and multiple fallback strategies
-       * NO FAILED SECTIONS ALLOWED - we try everything possible
-       */
-      const processChunkWithRetry = async (chunkText, chunkIndex) => {
-        const MAX_RETRIES = 3;
-        const strategies = [
-          { maxTokens: 2000, temp: 0.2, name: "Standard" },
-          { maxTokens: 3000, temp: 0.1, name: "Extended+Precise" },
-          { maxTokens: 4000, temp: 0.0, name: "Maximum+Deterministic" },
-        ];
-
-        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-          try {
-            const strategy = strategies[attempt];
-            setProcessingStage(
-              `Processing section ${chunkIndex + 1} of ${chunks.length}... (${strategy.name})`,
-            );
-
-            const chunkPrompt =
-              BLUE_BUTTON_AI_PROMPT_HEADER +
-              chunkText +
-              BLUE_BUTTON_AI_PROMPT_FOOTER;
-
-            // AIS-05: non-blocking crisis scan over this raw record chunk.
-            scanDocumentForCrisis(chunkText);
-
-            const aiResponse = await generateAI(chunkPrompt, {
-              temperature: strategy.temp,
-              maxTokens: strategy.maxTokens,
-              expectJSON: true,
-              skipHallucinationCheck: true,
-              skipCrisisCheck: true,
-              useDKB: false,
-              systemPrompt: "",
-            });
-
-            const parsed = parseAIResponse(aiResponse);
-
-            // Success! Return results
-            if (
-              parsed &&
-              parsed.conditions &&
-              Array.isArray(parsed.conditions)
-            ) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
-              );
-              return parsed;
-            }
-          } catch (error) {
-            console.warn(
-              `⚠️ Section ${chunkIndex + 1} attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
-              error.message,
-            );
-
-            // If this was the last attempt, try regex fallback
-            if (attempt === MAX_RETRIES - 1) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
-              );
-              const fallbackConditions = extractConditionsFromText(chunkText);
-
-              if (fallbackConditions.length > 0) {
-                // eslint-disable-next-line no-console
-                console.log(
-                  `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
-                );
-                return {
-                  conditions: fallbackConditions,
-                  summary: `Extracted via fallback (section ${chunkIndex + 1})`,
-                  wasFallback: true,
-                };
-              }
-            }
-
-            // Wait before retry (exponential backoff)
-            if (attempt < MAX_RETRIES - 1) {
-              await new Promise((resolve) =>
-                setTimeout(resolve, 1000 * (attempt + 1)),
-              );
-            }
-          }
-        }
-
-        // ABSOLUTE LAST RESORT: Return empty but don't crash
-        console.error(
-          `❌ Section ${chunkIndex + 1} FAILED after all strategies - returning empty results`,
-        );
-        return {
-          conditions: [],
-          summary: `Section ${chunkIndex + 1}: Could not extract conditions after ${MAX_RETRIES} attempts + fallback`,
-          failed: true,
-        };
-      };
-
-      // Process each chunk with bulletproof retry logic
-      for (let i = 0; i < chunks.length; i++) {
-        const result = await processChunkWithRetry(chunks[i], i);
-
-        if (result.conditions && result.conditions.length > 0) {
-          allConditions.push(...result.conditions);
-        }
-
-        if (result.summary) {
-          summaries.push(result.summary);
-        }
-
-        if (result.failed) {
-          console.warn(
-            `⚠️ Section ${i + 1} marked as failed but processing continues`,
-          );
-        }
-
-        // Small delay between chunks to avoid rate limiting
-        if (i < chunks.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-
-      // Deduplicate conditions (same name = same condition)
-      const uniqueConditions = [];
-      const seenNames = new Set();
-
-      for (const condition of allConditions) {
-        const normalizedName = condition.name.toLowerCase().trim();
-        if (!seenNames.has(normalizedName)) {
-          seenNames.add(normalizedName);
-          uniqueConditions.push(condition);
-        }
-      }
-
-      // eslint-disable-next-line no-console
-      console.log(
-        `Found ${allConditions.length} total conditions, ${uniqueConditions.length} unique`,
-      );
-
-      return formatConditionsResponse({
-        conditions: uniqueConditions,
-        summary: summaries.length > 0 ? summaries.join(" ") : null,
-      });
-    }
-  };
-
-  /**
-   * Parse AI response JSON
-   * FIX for BUG-MKUA99RE: generateAI returns {text, mode} object, not a string
-   */
-  const parseAIResponse = (aiResponse) => {
-    try {
-      // Handle both string responses and {text, mode} objects from generateAI
-      let responseText;
-      if (typeof aiResponse === "string") {
-        responseText = aiResponse;
-      } else if (aiResponse && typeof aiResponse === "object") {
-        // generateAI returns {text: string, mode: string, ...}
-        responseText = aiResponse.text;
-        if (typeof responseText !== "string") {
-          throw new Error("AI response object missing text property");
-        }
-      } else {
-        throw new Error(`Invalid AI response type: ${typeof aiResponse}`);
-      }
-
-      // Clean up potential markdown formatting
-      let cleanResponse = responseText.trim();
-      if (cleanResponse.startsWith("```json")) {
-        cleanResponse = cleanResponse.slice(7);
-      }
-      if (cleanResponse.startsWith("```")) {
-        cleanResponse = cleanResponse.slice(3);
-      }
-      if (cleanResponse.endsWith("```")) {
-        cleanResponse = cleanResponse.slice(0, -3);
-      }
-      cleanResponse = cleanResponse.trim();
-
-      // Try to repair truncated JSON (AI ran out of output tokens mid-response)
-      let parsed;
-      try {
-        parsed = JSON.parse(cleanResponse);
-      } catch (jsonErr) {
-        // AGGRESSIVE JSON REPAIR - we need this to work!
-        // eslint-disable-next-line no-console
-        console.log("💡 Attempting advanced JSON repair...");
-        let repaired = cleanResponse;
-
-        // Strategy 1: Remove trailing garbage after last complete structure
-        const lastCloseBrace = repaired.lastIndexOf("}");
-        const lastCloseBracket = repaired.lastIndexOf("]");
-
-        if (lastCloseBrace > 0 || lastCloseBracket > 0) {
-          // Find the outermost closing position
-          const lastValidPos = Math.max(lastCloseBrace, lastCloseBracket);
-
-          // Check if there's garbage after this position
-          const afterLast = repaired.substring(lastValidPos + 1).trim();
-          if (afterLast.length > 0 && !afterLast.match(/^[}\]]*$/)) {
-            // Truncate to last valid JSON structure
-            repaired = repaired.substring(0, lastValidPos + 1);
-            // eslint-disable-next-line no-console
-            console.log("🔧 Removed trailing garbage");
-          }
-        }
-
-        // Strategy 2: Handle truncated strings (very common with token limits)
-        const quoteCount = (repaired.match(/"/g) || []).length;
-        if (quoteCount % 2 !== 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            "🔧 Detected unmatched quotes - finding last complete object",
-          );
-
-          // Find last complete object (ends with },)
-          const patterns = [
-            /},\s*{[^}]*$/, // Last incomplete object after comma
-            /"[^"]*$/, // Incomplete string at end
-            /:\s*"[^"]*$/, // Incomplete property value
-          ];
-
-          for (const pattern of patterns) {
-            const match = repaired.match(pattern);
-            if (match) {
-              const cutPosition = match.index;
-              repaired = repaired.substring(0, cutPosition);
-              // eslint-disable-next-line no-console
-              console.log(
-                `🔧 Cut at position ${cutPosition} to remove incomplete content`,
-              );
-              break;
-            }
-          }
-        }
-
-        // Strategy 3: Balance brackets and braces
-        const openBraces = (repaired.match(/{/g) || []).length;
-        const closeBraces = (repaired.match(/}/g) || []).length;
-        const openBrackets = (repaired.match(/\[/g) || []).length;
-        const closeBrackets = (repaired.match(/\]/g) || []).length;
-
-        // eslint-disable-next-line no-console
-        console.log(
-          `🔧 Brackets: ${openBrackets} open, ${closeBrackets} close | Braces: ${openBraces} open, ${closeBraces} close`,
-        );
-
-        // Close arrays first (conditions array)
-        if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
-          const missing = openBrackets - closeBrackets;
-          // eslint-disable-next-line no-console
-          console.log(`🔧 Adding ${missing} closing brackets`);
-          for (let i = 0; i < missing; i++) {
-            repaired += "]";
-          }
-        }
-
-        // Close objects
-        const currentCloseBraces = (repaired.match(/}/g) || []).length;
-        const neededBraces = openBraces - currentCloseBraces;
-        if (neededBraces > 0) {
-          // eslint-disable-next-line no-console
-          console.log(`🔧 Adding ${neededBraces} closing braces`);
-          for (let i = 0; i < neededBraces; i++) {
-            repaired += "}";
-          }
-        }
-
-        // Strategy 4: If still failing, try to extract just the conditions array
-        try {
-          parsed = JSON.parse(repaired);
-          // eslint-disable-next-line no-console
-          console.log("✅ Repaired JSON successfully");
-        } catch (stillFailing) {
-          // eslint-disable-next-line no-console
-          console.log(
-            "🔧 Standard repair failed, trying to extract conditions array directly...",
-          );
-
-          // Try to find and extract just the conditions array
-          const conditionsMatch = repaired.match(
-            /"conditions"\s*:\s*\[([\s\S]*?)(?:\]|$)/,
-          );
-          if (conditionsMatch) {
-            let conditionsContent = conditionsMatch[1];
-
-            // Try to complete the last object if it's incomplete
-            const lastOpenBrace = conditionsContent.lastIndexOf("{");
-            const lastCloseBrace = conditionsContent.lastIndexOf("}");
-
-            if (lastOpenBrace > lastCloseBrace) {
-              // Incomplete object - remove it
-              conditionsContent = conditionsContent.substring(0, lastOpenBrace);
-            }
-
-            // Remove trailing comma
-            conditionsContent = conditionsContent.trim().replace(/,\s*$/, "");
-
-            const reconstructed = `{"conditions":[${conditionsContent}]}`;
-
-            try {
-              parsed = JSON.parse(reconstructed);
-              // eslint-disable-next-line no-console
-              console.log("✅ Extracted conditions array successfully");
-            } catch {
-              throw jsonErr; // Give up, rethrow original
-            }
-          } else {
-            throw jsonErr; // No conditions array found
-          }
-        }
-      }
-
-      if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
-        throw new Error("AI response missing conditions array.");
-      }
-
-      return parsed;
-    } catch (parseError) {
-      console.error(
-        "Failed to parse AI response:",
-        parseError.message || parseError,
-      );
-      // Safely log raw response (limit to 500 chars for readability)
-      try {
-        const rawForLog =
-          typeof aiResponse === "string"
-            ? aiResponse.substring(0, 500)
-            : aiResponse && typeof aiResponse === "object"
-              ? JSON.stringify({
-                  text: aiResponse.text?.substring(0, 400),
-                  mode: aiResponse.mode,
-                })
-              : String(aiResponse).substring(0, 500);
-        console.error("Raw response:", rawForLog);
-      } catch (logError) {
-        console.error("Could not log raw response:", logError.message);
-      }
-
-      // Check for specific error messages that indicate recoverable situations
-      const rawText =
-        typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
-      if (
-        rawText.includes("model is still loading") ||
-        rawText.includes("still loading")
-      ) {
-        throw new Error(
-          "AI model is still loading. Please wait a moment and try again.",
-        );
-      }
-      if (
-        rawText.includes("context window") ||
-        rawText.includes("ContextWindowSizeExceeded")
-      ) {
-        throw new Error(
-          "Document is too large for local AI. Try using Cloud AI or upload a smaller file.",
-        );
-      }
-      if (
-        rawText.includes("[Warrant Council") ||
-        rawText.includes("CW5 Auditor")
-      ) {
-        // AI returned a helpful message but not JSON - extract and return as error
-        const msgMatch = rawText.match(
-          /will help with[:\s]*(.+?)(?:Your question|$)/s,
-        );
-        if (msgMatch) {
-          throw new Error(
-            "AI is initializing. " + msgMatch[1].trim().split("\n")[0],
-          );
-        }
-      }
-
-      // FALLBACK: Try to extract conditions from plain text response
-      // The AI may have returned useful info in a non-JSON format
-      if (
-        rawText.length > 50 &&
-        !rawText.includes("error") &&
-        !rawText.includes("Error")
-      ) {
-        // eslint-disable-next-line no-console
-        console.log("💡 Attempting text fallback extraction...");
-        const extractedConditions = extractConditionsFromText(rawText);
-        if (extractedConditions.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
-          );
-          return {
-            conditions: extractedConditions,
-            summary: "Extracted from AI text response (non-JSON fallback)",
-            wasFallback: true,
-          };
-        }
-      }
-
-      throw new Error("AI returned invalid format. Please try again.");
-    }
-  };
-
-  /**
-   * Fallback: Extract conditions from plain text when AI doesn't return JSON
-   * Looks for common medical condition patterns in the response
-   */
-  const extractConditionsFromText = (text) => {
-    const conditions = [];
-    const seen = new Set();
-
-    // Common VA-claimable conditions to look for
-    const knownConditions = [
-      {
-        pattern: /PTSD|post[- ]?traumatic stress/gi,
-        name: "PTSD",
-        category: "Mental Health",
-        claimable: true,
-      },
-      {
-        pattern: /depress(?:ion|ive)/gi,
-        name: "Depression",
-        category: "Mental Health",
-        claimable: true,
-      },
-      {
-        pattern: /anxiety/gi,
-        name: "Anxiety",
-        category: "Mental Health",
-        claimable: true,
-      },
-      {
-        pattern: /tinnitus/gi,
-        name: "Tinnitus",
-        category: "Musculoskeletal",
-        claimable: true,
-      },
-      {
-        pattern: /hearing loss/gi,
-        name: "Hearing Loss",
-        category: "Musculoskeletal",
-        claimable: true,
-      },
-      {
-        pattern: /sleep apnea/gi,
-        name: "Sleep Apnea",
-        category: "Respiratory",
-        claimable: true,
-      },
-      {
-        pattern: /hypertension|high blood pressure/gi,
-        name: "Hypertension",
-        category: "Cardiovascular",
-        claimable: true,
-      },
-      {
-        pattern: /diabetes|diabetic/gi,
-        name: "Diabetes",
-        category: "Endocrine",
-        claimable: true,
-      },
-      {
-        pattern: /GERD|gastroesophageal reflux/gi,
-        name: "GERD",
-        category: "GI",
-        claimable: true,
-      },
-      {
-        pattern: /migraine/gi,
-        name: "Migraines",
-        category: "Neurological",
-        claimable: true,
-      },
-      {
-        pattern: /lumbar|lower back|lumbosacral/gi,
-        name: "Lumbar Spine Condition",
-        category: "Musculoskeletal",
-        claimable: true,
-      },
-      {
-        pattern: /cervical|neck pain|cervicalgia/gi,
-        name: "Cervical Spine Condition",
-        category: "Musculoskeletal",
-        claimable: true,
-      },
-      {
-        pattern: /radiculopathy/gi,
-        name: "Radiculopathy",
-        category: "Neurological",
-        claimable: true,
-      },
-      {
-        pattern: /neuropathy/gi,
-        name: "Peripheral Neuropathy",
-        category: "Neurological",
-        claimable: true,
-      },
-      {
-        pattern: /insomnia|sleep disorder/gi,
-        name: "Insomnia",
-        category: "Mental Health",
-        claimable: true,
-      },
-      {
-        pattern: /TBI|traumatic brain injury/gi,
-        name: "TBI",
-        category: "Neurological",
-        claimable: true,
-      },
-      {
-        pattern: /erectile dysfunction|ED\b/gi,
-        name: "Erectile Dysfunction",
-        category: "Other",
-        claimable: true,
-      },
-      {
-        pattern: /arthritis/gi,
-        name: "Arthritis",
-        category: "Musculoskeletal",
-        claimable: true,
-      },
-    ];
-
-    for (const { pattern, name, category, claimable } of knownConditions) {
-      if (pattern.test(text) && !seen.has(name.toLowerCase())) {
-        seen.add(name.toLowerCase());
-        conditions.push({
-          name,
-          rawText: name,
-          dateFound: null,
-          isClaimable: claimable,
-          category,
-        });
-      }
     }
 
-    return conditions;
-  };
-
-  /**
-   * Format conditions response into our standard format
-   */
-  const formatConditionsResponse = (parsed) => {
-    // Transform AI response into our condition format
-    const mapped = parsed.conditions.map((c, index) => ({
-      id: index + 1,
-      rawName: c.rawText || c.name,
-      standardizedName: c.name,
-      dateFound: c.dateFound || null,
-      isClaimable: c.isClaimable === true,
-      category: c.category || "Other",
-      selected: false,
-    }));
-
-    // D-H09: the AI can hallucinate diagnoses. Flag each against the official
-    // 38 CFR code DB — matched → verified (with officialName), everything else →
-    // unverified — so AI output is never shown as VA-confirmed. Nothing is dropped.
-    const conditions = annotateConditionVerification(mapped);
-
-    // Sort: claimable conditions first, then alphabetically
-    conditions.sort((a, b) => {
-      if (a.isClaimable && !b.isClaimable) return -1;
-      if (!a.isClaimable && b.isClaimable) return 1;
-      return a.standardizedName.localeCompare(b.standardizedName);
-    });
-
-    return {
-      conditions,
-      summary: parsed.summary || null,
-    };
+    return processChunkedDocument(text, maxTextTokens, textTokens);
   };
 
   /**
@@ -1400,6 +1302,94 @@ export default function BlueButtonXRay({
   const getUnclaimedCount = () => {
     return extractedConditions.filter((c) => c.isClaimable).length;
   };
+
+  let dropZoneClass;
+  if (isDragging) {
+    dropZoneClass = "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30";
+  } else if (file) {
+    dropZoneClass = "border-green-500 bg-green-50 dark:bg-green-900/30";
+  } else {
+    dropZoneClass =
+      "border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500";
+  }
+
+  let vkbButtonClassStep1;
+  if (savedToVKB) {
+    vkbButtonClassStep1 = "bg-green-600 text-white cursor-default";
+  } else if (savingToVKB) {
+    vkbButtonClassStep1 = "bg-gray-400 text-white cursor-wait";
+  } else {
+    vkbButtonClassStep1 = "bg-purple-600 hover:bg-purple-700 text-white";
+  }
+
+  let vkbButtonIconStep1;
+  if (savedToVKB) {
+    vkbButtonIconStep1 = "✓";
+  } else if (savingToVKB) {
+    vkbButtonIconStep1 = "⏳";
+  } else {
+    vkbButtonIconStep1 = "📦";
+  }
+
+  let vkbButtonLabelStep1;
+  if (savedToVKB) {
+    vkbButtonLabelStep1 = "Saved to My Packet!";
+  } else if (savingToVKB) {
+    vkbButtonLabelStep1 = "Saving...";
+  } else {
+    vkbButtonLabelStep1 = "Save to My Packet";
+  }
+
+  let aiScanButtonContent;
+  if (isProcessing) {
+    aiScanButtonContent = (
+      <>
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+        <span>{processingStage}</span>
+      </>
+    );
+  } else if (!isAnyAIAvailable()) {
+    aiScanButtonContent = (
+      <>
+        <span>⚠️</span>
+        <span>Configure AI First</span>
+      </>
+    );
+  } else {
+    aiScanButtonContent = (
+      <>
+        <span>🤖</span>
+        <span>AI Scan for Diagnoses</span>
+      </>
+    );
+  }
+
+  let vkbButtonClassResults;
+  if (savedToVKB) {
+    vkbButtonClassResults = "bg-green-600 text-white cursor-default";
+  } else if (savingToVKB) {
+    vkbButtonClassResults = "bg-gray-400 text-white cursor-wait";
+  } else {
+    vkbButtonClassResults = "bg-purple-600 text-white hover:bg-purple-700";
+  }
+
+  let vkbButtonIconResults;
+  if (savedToVKB) {
+    vkbButtonIconResults = "✓";
+  } else if (savingToVKB) {
+    vkbButtonIconResults = "⏳";
+  } else {
+    vkbButtonIconResults = "📦";
+  }
+
+  let vkbButtonLabelResults;
+  if (savedToVKB) {
+    vkbButtonLabelResults = "Saved to My Packet!";
+  } else if (savingToVKB) {
+    vkbButtonLabelResults = "Saving...";
+  } else {
+    vkbButtonLabelResults = "Save to My Packet";
+  }
 
   return (
     <>
@@ -1552,13 +1542,7 @@ export default function BlueButtonXRay({
               {/* Drop Zone */}
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div
-                className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
-                  isDragging
-                    ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
-                    : file
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/30"
-                      : "border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500"
-                }`}
+                className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${dropZoneClass}`}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -1602,22 +1586,10 @@ export default function BlueButtonXRay({
                   <button
                     onClick={handleSaveToVKB}
                     disabled={savingToVKB || savedToVKB}
-                    className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
-                      savedToVKB
-                        ? "bg-green-600 text-white cursor-default"
-                        : savingToVKB
-                          ? "bg-gray-400 text-white cursor-wait"
-                          : "bg-purple-600 hover:bg-purple-700 text-white"
-                    }`}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${vkbButtonClassStep1}`}
                   >
-                    <span>{savedToVKB ? "✓" : savingToVKB ? "⏳" : "📦"}</span>
-                    <span>
-                      {savedToVKB
-                        ? "Saved to My Packet!"
-                        : savingToVKB
-                          ? "Saving..."
-                          : "Save to My Packet"}
-                    </span>
+                    <span>{vkbButtonIconStep1}</span>
+                    <span>{vkbButtonLabelStep1}</span>
                   </button>
 
                   {/* AI Scan Button */}
@@ -1630,22 +1602,7 @@ export default function BlueButtonXRay({
                         : "bg-blue-500 hover:bg-blue-600 text-white"
                     }`}
                   >
-                    {isProcessing ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                        <span>{processingStage}</span>
-                      </>
-                    ) : !isAnyAIAvailable() ? (
-                      <>
-                        <span>⚠️</span>
-                        <span>Configure AI First</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>🤖</span>
-                        <span>AI Scan for Diagnoses</span>
-                      </>
-                    )}
+                    {aiScanButtonContent}
                   </button>
                 </div>
               )}
@@ -1748,20 +1705,10 @@ export default function BlueButtonXRay({
                 <button
                   onClick={handleSaveToVKB}
                   disabled={savingToVKB || savedToVKB}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                    savedToVKB
-                      ? "bg-green-600 text-white cursor-default"
-                      : savingToVKB
-                        ? "bg-gray-400 text-white cursor-wait"
-                        : "bg-purple-600 text-white hover:bg-purple-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${vkbButtonClassResults}`}
                 >
-                  <span>{savedToVKB ? "✓" : savingToVKB ? "⏳" : "📦"}</span>
-                  {savedToVKB
-                    ? "Saved to My Packet!"
-                    : savingToVKB
-                      ? "Saving..."
-                      : "Save to My Packet"}
+                  <span>{vkbButtonIconResults}</span>
+                  {vkbButtonLabelResults}
                 </button>
                 <button
                   onClick={handleReset}
@@ -1791,92 +1738,12 @@ export default function BlueButtonXRay({
 
                 <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
                   {extractedConditions.map((condition) => (
-                    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+                    <ConditionListItem
                       key={condition.id}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        condition.selected
-                          ? "bg-cyan-50 dark:bg-cyan-900/30"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                      }`}
-                      onClick={() => toggleConditionSelection(condition.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Checkbox */}
-                        <div
-                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                            condition.selected
-                              ? "bg-cyan-600 border-cyan-600 text-white"
-                              : "border-gray-300 dark:border-gray-600"
-                          }`}
-                        >
-                          {condition.selected && (
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
-
-                        {/* Condition Info */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-gray-800 dark:text-gray-100">
-                              {condition.standardizedName}
-                            </span>
-                            {condition.isClaimable && (
-                              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
-                                ⭐ Commonly Claimed
-                              </span>
-                            )}
-                            {!condition.verified && (
-                              <span
-                                className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full"
-                                title="AI-extracted from your report and not matched to the official VA diagnostic-code list. Confirm against your own records before relying on it."
-                              >
-                                ⚠️ Unverified
-                              </span>
-                            )}
-                          </div>
-                          {condition.rawName !== condition.standardizedName && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                              From record: &quot;{condition.rawName}&quot;
-                            </p>
-                          )}
-                          {condition.dateFound && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                              📅 Date in record: {condition.dateFound}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex gap-2 flex-shrink-0">
-                          {onCheckRatingCriteria && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onCheckRatingCriteria(
-                                  condition.standardizedName,
-                                );
-                              }}
-                              className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
-                              aria-label="Search rating criteria for this condition"
-                            >
-                              🔍 Check Criteria
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      condition={condition}
+                      onToggle={toggleConditionSelection}
+                      onCheckRatingCriteria={onCheckRatingCriteria}
+                    />
                   ))}
                 </div>
               </div>

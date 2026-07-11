@@ -303,13 +303,14 @@ RESPOND IN THIS EXACT JSON FORMAT:
   const text = response?.text || response;
   const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
-  // Extract JSON from response
-  const jsonMatch = textStr.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
+  // Extract JSON from response (first "{" through last "}")
+  const firstBrace = textStr.indexOf("{");
+  const lastBrace = textStr.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
     throw new Error("Invalid response format");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  return JSON.parse(textStr.slice(firstBrace, lastBrace + 1));
 };
 
 /**
@@ -400,17 +401,13 @@ export default function TDIUBuilder({
   onReportBug,
   onOpenAISettings,
 }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   // Ref for screenshot/share functionality
   const tdiuContentRef = useRef(null);
 
   // Wizard state
   const [step, setStep] = useState(1);
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const [showBuyMeCoffee, setShowBuyMeCoffee] = useState(false);
   const [disabilities, setDisabilities] = useState([]);
   const [currentDisability, setCurrentDisability] = useState({
     condition: "",
@@ -430,11 +427,7 @@ export default function TDIUBuilder({
   // AI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const [showAISettings, setShowAISettings] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [_aiStatus, setAIStatus] = useState(getAIStatus());
 
   // Monitor AI status changes
   useEffect(() => {
@@ -701,10 +694,246 @@ export default function TDIUBuilder({
     }
   };
 
-  /**
-   * Render Step 1: Disability Entry
-   */
-  const renderDisabilityStep = () => (
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="tdiu-builder-title"
+        header={
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">💼</span>
+                <div>
+                  <h2
+                    id="tdiu-builder-title"
+                    className="text-xl font-bold text-white flex items-center gap-2"
+                  >
+                    TDIU Work Impact Builder
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                      AI
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                      BETA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-amber-100">
+                    The 100% Backdoor - Vocational Statement Generator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <LLMRecommendationBadge toolId="tdiu-builder" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+                <ShareButton
+                  targetRef={tdiuContentRef}
+                  filename="tdiu-vocational-analysis"
+                  variant="icon"
+                />
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="TDIU Work Impact Builder"
+                  />
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <div ref={tdiuContentRef}>
+          {/* Progress Steps */}
+          <div className="max-w-4xl mx-auto pt-2">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex items-center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                      step >= s
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {step > s ? "✓" : s}
+                  </div>
+                  {s < 3 && (
+                    <div
+                      className={`w-16 h-1 ${step > s ? "bg-green-600" : "bg-gray-200 dark:bg-gray-700"}`}
+                    ></div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <span className={step === 1 ? "font-bold text-green-600" : ""}>
+                Disabilities
+              </span>
+              <span className={step === 2 ? "font-bold text-green-600" : ""}>
+                Work History
+              </span>
+              <span className={step === 3 ? "font-bold text-green-600" : ""}>
+                Results
+              </span>
+            </div>
+
+            {/* Smart AI Load Button */}
+            {!isAnyAIAvailable() && (
+              <div className="mb-6">
+                <SmartAILoadButton
+                  toolId="tdiu-builder"
+                  onLoadComplete={(model) => {
+                    // eslint-disable-next-line no-console
+                    console.log(
+                      "Smart AI loaded for TDIU Builder:",
+                      model?.name,
+                    );
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Main Content */}
+          <div className="max-w-4xl mx-auto p-6 pt-0">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                <p className="text-red-700 dark:text-red-300">{error}</p>
+              </div>
+            )}
+
+            {step === 1 && (
+              <DisabilityStep
+                savedRatingsTdiu={savedRatingsTdiu}
+                disabilities={disabilities}
+                removeDisability={removeDisability}
+                currentDisability={currentDisability}
+                setCurrentDisability={setCurrentDisability}
+                getCommonSymptoms={getCommonSymptoms}
+                toggleSymptom={toggleSymptom}
+                customSymptom={customSymptom}
+                setCustomSymptom={setCustomSymptom}
+                addCustomSymptom={addCustomSymptom}
+                addDisability={addDisability}
+                onContinue={() => setStep(2)}
+              />
+            )}
+            {step === 2 && (
+              <WorkHistoryStep
+                workHistory={workHistory}
+                setWorkHistory={setWorkHistory}
+                disabilities={disabilities}
+                step={step}
+                handleGenerate={handleGenerate}
+                isGenerating={isGenerating}
+                onBack={() => setStep(1)}
+              />
+            )}
+            {step === 3 && (
+              <ResultsStep
+                vocationalAnalysis={vocationalAnalysis}
+                copyToClipboard={copyToClipboard}
+                showDownloadMenu={showDownloadMenu}
+                setShowDownloadMenu={setShowDownloadMenu}
+                downloadPDF={downloadPDF}
+                downloadDOCX={downloadDOCX}
+                onStartOver={() => {
+                  setStep(1);
+                  setDisabilities([]);
+                  setVocationalAnalysis(null);
+                  setWorkHistory({
+                    lastWorked: "",
+                    lastOccupation: "",
+                    reasonLeft: "",
+                    education: "",
+                    triedToWork: "",
+                  });
+                }}
+              />
+            )}
+
+            {/* Support CTA on results page */}
+            {step === 3 && vocationalAnalysis && (
+              <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
+                \n{" "}
+                <div className="flex items-center gap-4">
+                  <img
+                    src="/images/Anth.jpg"
+                    alt="Anthony - Vet-Rate Developer"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-green-500 shadow-lg flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <p className="text-green-200 font-semibold mb-1">
+                      💰 That statement would cost $500+ from a vocational
+                      expert
+                    </p>
+                    <p className="text-green-300/70 text-sm">
+                      TDIU claims are complex. Most veterans hire expensive
+                      consultants just to translate their symptoms into
+                      &quot;occupational limitations.&quot; You just did it for
+                      free. Help keep this tool available for every veteran
+                      fighting for 100%.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </ResponsiveModal>
+
+      {/* BuyMeCoffee - shows after generating statement */}
+      <div className="relative z-[70]">
+        <BuyMeCoffee
+          show={step === 3 && vocationalAnalysis !== null}
+          trigger="tdiu"
+          context={{ impact: disabilities.length > 0 }}
+          componentKey="tdiu-builder"
+        />
+      </div>
+    </>
+  );
+}
+
+/**
+ * Step 1: Disability Entry
+ */
+function DisabilityStep({
+  savedRatingsTdiu,
+  disabilities,
+  removeDisability,
+  currentDisability,
+  setCurrentDisability,
+  getCommonSymptoms,
+  toggleSymptom,
+  customSymptom,
+  setCustomSymptom,
+  addCustomSymptom,
+  addDisability,
+  onContinue,
+}) {
+  return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* TDIU Explanation */}
       <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
@@ -896,7 +1125,7 @@ export default function TDIUBuilder({
       {/* Continue Button */}
       {disabilities.length > 0 && (
         <button
-          onClick={() => setStep(2)}
+          onClick={onContinue}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-bold transition-colors"
         >
           Continue to Work History →
@@ -904,11 +1133,21 @@ export default function TDIUBuilder({
       )}
     </div>
   );
+}
 
-  /**
-   * Render Step 2: Work History
-   */
-  const renderWorkHistoryStep = () => (
+/**
+ * Step 2: Work History
+ */
+function WorkHistoryStep({
+  workHistory,
+  setWorkHistory,
+  disabilities,
+  step,
+  handleGenerate,
+  isGenerating,
+  onBack,
+}) {
+  return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
@@ -1077,7 +1316,7 @@ export default function TDIUBuilder({
       {/* Navigation */}
       <div className="flex gap-4">
         <button
-          onClick={() => setStep(1)}
+          onClick={onBack}
           className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           ← Back
@@ -1102,11 +1341,21 @@ export default function TDIUBuilder({
       </div>
     </div>
   );
+}
 
-  /**
-   * Render Step 3: Results
-   */
-  const renderResultsStep = () => (
+/**
+ * Step 3: Results
+ */
+function ResultsStep({
+  vocationalAnalysis,
+  copyToClipboard,
+  showDownloadMenu,
+  setShowDownloadMenu,
+  downloadPDF,
+  downloadDOCX,
+  onStartOver,
+}) {
+  return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Success Banner */}
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
@@ -1290,197 +1539,11 @@ export default function TDIUBuilder({
 
       {/* Start Over */}
       <button
-        onClick={() => {
-          setStep(1);
-          setDisabilities([]);
-          setVocationalAnalysis(null);
-          setWorkHistory({
-            lastWorked: "",
-            lastOccupation: "",
-            reasonLeft: "",
-            education: "",
-            triedToWork: "",
-          });
-        }}
+        onClick={onStartOver}
         className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
       >
         🔄 Start Over
       </button>
     </div>
-  );
-
-  return (
-    <>
-      <ResponsiveModal
-        isOpen
-        onClose={onClose}
-        size="2xl"
-        labelledBy="tdiu-builder-title"
-        header={
-          <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">💼</span>
-                <div>
-                  <h2
-                    id="tdiu-builder-title"
-                    className="text-xl font-bold text-white flex items-center gap-2"
-                  >
-                    TDIU Work Impact Builder
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                      AI
-                    </span>
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-sm text-amber-100">
-                    The 100% Backdoor - Vocational Statement Generator
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <LLMRecommendationBadge toolId="tdiu-builder" />
-                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-                <ShareButton
-                  targetRef={tdiuContentRef}
-                  filename="tdiu-vocational-analysis"
-                  variant="icon"
-                />
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="TDIU Work Impact Builder"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-      >
-        <div ref={tdiuContentRef}>
-          {/* Progress Steps */}
-          <div className="max-w-4xl mx-auto pt-2">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              {[1, 2, 3].map((s) => (
-                <div key={s} className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      step >= s
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    {step > s ? "✓" : s}
-                  </div>
-                  {s < 3 && (
-                    <div
-                      className={`w-16 h-1 ${step > s ? "bg-green-600" : "bg-gray-200 dark:bg-gray-700"}`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
-              <span className={step === 1 ? "font-bold text-green-600" : ""}>
-                Disabilities
-              </span>
-              <span className={step === 2 ? "font-bold text-green-600" : ""}>
-                Work History
-              </span>
-              <span className={step === 3 ? "font-bold text-green-600" : ""}>
-                Results
-              </span>
-            </div>
-
-            {/* Smart AI Load Button */}
-            {!isAnyAIAvailable() && (
-              <div className="mb-6">
-                <SmartAILoadButton
-                  toolId="tdiu-builder"
-                  onLoadComplete={(model) => {
-                    // eslint-disable-next-line no-console
-                    console.log(
-                      "Smart AI loaded for TDIU Builder:",
-                      model?.name,
-                    );
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Main Content */}
-          <div className="max-w-4xl mx-auto p-6 pt-0">
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
-                <p className="text-red-700 dark:text-red-300">{error}</p>
-              </div>
-            )}
-
-            {step === 1 && renderDisabilityStep()}
-            {step === 2 && renderWorkHistoryStep()}
-            {step === 3 && renderResultsStep()}
-
-            {/* Support CTA on results page */}
-            {step === 3 && vocationalAnalysis && (
-              <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
-                \n{" "}
-                <div className="flex items-center gap-4">
-                  <img
-                    src="/images/Anth.jpg"
-                    alt="Anthony - Vet-Rate Developer"
-                    className="w-14 h-14 rounded-full object-cover border-2 border-green-500 shadow-lg flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-green-200 font-semibold mb-1">
-                      💰 That statement would cost $500+ from a vocational
-                      expert
-                    </p>
-                    <p className="text-green-300/70 text-sm">
-                      TDIU claims are complex. Most veterans hire expensive
-                      consultants just to translate their symptoms into
-                      &quot;occupational limitations.&quot; You just did it for
-                      free. Help keep this tool available for every veteran
-                      fighting for 100%.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </ResponsiveModal>
-
-      {/* BuyMeCoffee - shows after generating statement */}
-      <div className="relative z-[70]">
-        <BuyMeCoffee
-          show={step === 3 && vocationalAnalysis !== null}
-          trigger="tdiu"
-          context={{ impact: disabilities.length > 0 }}
-          componentKey="tdiu-builder"
-        />
-      </div>
-    </>
   );
 }

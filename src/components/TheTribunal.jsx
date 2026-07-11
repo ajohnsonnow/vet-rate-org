@@ -111,19 +111,31 @@ const TRIBUNAL_QUESTIONS = [
   },
 ];
 
+// Chat bubble color for a conversation message, based on speaker and correctness
+function getMessageBubbleClass(message) {
+  if (message.speaker !== "judge") {
+    return "bg-blue-600 text-white shadow-md";
+  }
+  if (message.isCorrect === true) {
+    return "bg-green-100 dark:bg-green-900/30 border-l-4 border-green-600";
+  }
+  if (message.isCorrect === false) {
+    return "bg-red-100 dark:bg-red-900/30 border-l-4 border-red-600";
+  }
+  return "bg-white dark:bg-gray-800 shadow-md";
+}
+
 export default function TheTribunal({
   onClose,
   onReportBug,
   onOpenAISettings,
 }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { _t } = useLanguage();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [transcript, setTranscript] = useState("");
+  const [_transcript, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedPersona, setSelectedPersona] = useState("skeptical");
@@ -141,8 +153,7 @@ export default function TheTribunal({
   const [pendingSpeech, setPendingSpeech] = useState(null); // Queued speech to play
   const [captionText, setCaptionText] = useState(""); // Live caption of the current judge utterance
   const [micSupported, setMicSupported] = useState(true);
-  // eslint-disable-next-line no-unused-vars
-  const [hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
+  const [_hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   const recognitionRef = useRef(null);
@@ -421,51 +432,55 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     // Safely stop any current speech first
     stopSpeaking();
 
+    const handleUtteranceStart = () => {
+      isSpeakingRef.current = true;
+      setIsSpeaking(true);
+      setCaptionText(text);
+    };
+
+    const handleUtteranceEnd = () => {
+      isSpeakingRef.current = false;
+      setIsSpeaking(false);
+      if (callback) callback();
+    };
+
+    const handleUtteranceError = (event) => {
+      // Only log actual errors, not 'interrupted' which is expected
+      if (event.error !== "interrupted") {
+        console.error("Speech synthesis error:", event.error);
+      }
+      isSpeakingRef.current = false;
+      setIsSpeaking(false);
+      if (callback) callback();
+    };
+
+    const attemptSpeak = () => {
+      // Double-check we're not already speaking
+      if (isSpeakingRef.current) {
+        stopSpeaking();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 0.9; // Slightly lower for authoritative judge voice
+      utterance.volume = 1.0;
+
+      // Try to get a good voice
+      const voice = getJudgeVoice();
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      utterance.onstart = handleUtteranceStart;
+      utterance.onend = handleUtteranceEnd;
+      utterance.onerror = handleUtteranceError;
+
+      synthesisRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    };
+
     // Small delay to ensure previous speech is fully cancelled
     setTimeout(() => {
-      const attemptSpeak = () => {
-        // Double-check we're not already speaking
-        if (isSpeakingRef.current) {
-          stopSpeaking();
-        }
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 0.9; // Slightly lower for authoritative judge voice
-        utterance.volume = 1.0;
-
-        // Try to get a good voice
-        const voice = getJudgeVoice();
-        if (voice) {
-          utterance.voice = voice;
-        }
-
-        utterance.onstart = () => {
-          isSpeakingRef.current = true;
-          setIsSpeaking(true);
-          setCaptionText(text);
-        };
-
-        utterance.onend = () => {
-          isSpeakingRef.current = false;
-          setIsSpeaking(false);
-          if (callback) callback();
-        };
-
-        utterance.onerror = (event) => {
-          // Only log actual errors, not 'interrupted' which is expected
-          if (event.error !== "interrupted") {
-            console.error("Speech synthesis error:", event.error);
-          }
-          isSpeakingRef.current = false;
-          setIsSpeaking(false);
-          if (callback) callback();
-        };
-
-        synthesisRef.current = utterance;
-        window.speechSynthesis.speak(utterance);
-      };
-
       // Chrome needs voices to load first
       if (window.speechSynthesis.getVoices().length === 0) {
         window.speechSynthesis.onvoiceschanged = () => {
@@ -477,15 +492,6 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         attemptSpeak();
       }
     }, 50); // Small delay to prevent 'interrupted' errors
-  };
-
-  // Play pending speech manually
-  // eslint-disable-next-line no-unused-vars
-  const playPendingSpeech = () => {
-    if (pendingSpeech) {
-      speak(pendingSpeech.text, pendingSpeech.callback, true);
-      setPendingSpeech(null);
-    }
   };
 
   // Play the last judge message
@@ -577,87 +583,81 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     });
   };
 
-  // Handle user response
-  const handleUserResponse = async (text) => {
+  // Determine if an AI judge response reads as approval, for scoring
+  const isAIResponsePositive = (aiResponse) => {
+    const lowerResponse = aiResponse.toLowerCase();
+    return (
+      lowerResponse.includes("good") ||
+      lowerResponse.includes("correct") ||
+      lowerResponse.includes("excellent") ||
+      lowerResponse.includes("exactly") ||
+      lowerResponse.includes("well done")
+    );
+  };
+
+  // Generate the next AI follow-up question after an AI judge reply, or fall
+  // back to a preset question if AI generation fails
+  const runAIFollowUpQuestion = async () => {
+    const aiQuestion = await generateAIQuestion();
+    if (aiQuestion) {
+      setCurrentQuestion({
+        category: "AI Generated",
+        question: aiQuestion,
+        goodAnswers: [
+          "lay evidence",
+          "nexus",
+          "service treatment records",
+          "aggravation",
+          "diagnostic code",
+        ],
+      });
+      setConversation((prev) => [
+        ...prev,
+        {
+          speaker: "judge",
+          text: aiQuestion,
+          category: "AI Generated",
+          timestamp: new Date(),
+        },
+      ]);
+      speak(aiQuestion, () => {
+        setTimeout(startListening, 1000);
+      });
+    } else {
+      askQuestion();
+    }
+  };
+
+  // Record and speak the AI judge's reply to the veteran's response
+  const handleAIJudgeReply = (aiResponse) => {
+    const isCorrect = isAIResponsePositive(aiResponse);
+
+    if (currentQuestion) {
+      setSessionScore((prev) => ({
+        correct: prev.correct + (isCorrect ? 1 : 0),
+        total: prev.total + 1,
+      }));
+    }
+
     setConversation((prev) => [
       ...prev,
       {
-        speaker: "user",
-        text: text,
+        speaker: "judge",
+        text: aiResponse,
+        isCorrect: isCorrect,
+        isAI: true,
         timestamp: new Date(),
       },
     ]);
 
-    // Try AI response first
-    if (useAI && aiAvailable) {
-      const aiResponse = await generateAIJudgeResponse(text, currentQuestion);
+    speak(aiResponse, () => {
+      // Generate AI follow-up question or use preset
+      setTimeout(runAIFollowUpQuestion, 2000);
+    });
+  };
 
-      if (aiResponse) {
-        // Determine if it was a good answer based on AI response tone
-        const lowerResponse = aiResponse.toLowerCase();
-        const isCorrect =
-          lowerResponse.includes("good") ||
-          lowerResponse.includes("correct") ||
-          lowerResponse.includes("excellent") ||
-          lowerResponse.includes("exactly") ||
-          lowerResponse.includes("well done");
-
-        if (currentQuestion) {
-          setSessionScore((prev) => ({
-            correct: prev.correct + (isCorrect ? 1 : 0),
-            total: prev.total + 1,
-          }));
-        }
-
-        setConversation((prev) => [
-          ...prev,
-          {
-            speaker: "judge",
-            text: aiResponse,
-            isCorrect: isCorrect,
-            isAI: true,
-            timestamp: new Date(),
-          },
-        ]);
-
-        speak(aiResponse, () => {
-          // Generate AI follow-up question or use preset
-          setTimeout(async () => {
-            const aiQuestion = await generateAIQuestion();
-            if (aiQuestion) {
-              setCurrentQuestion({
-                category: "AI Generated",
-                question: aiQuestion,
-                goodAnswers: [
-                  "lay evidence",
-                  "nexus",
-                  "service treatment records",
-                  "aggravation",
-                  "diagnostic code",
-                ],
-              });
-              setConversation((prev) => [
-                ...prev,
-                {
-                  speaker: "judge",
-                  text: aiQuestion,
-                  category: "AI Generated",
-                  timestamp: new Date(),
-                },
-              ]);
-              speak(aiQuestion, () => {
-                setTimeout(startListening, 1000);
-              });
-            } else {
-              askQuestion();
-            }
-          }, 2000);
-        });
-        return;
-      }
-    }
-
-    // Fallback to preset responses
+  // Score and speak a preset judge response when AI is unavailable/disabled
+  const handlePresetResponse = (text) => {
     if (currentQuestion) {
       const lowerText = text.toLowerCase();
       const hasGoodAnswer = currentQuestion.goodAnswers.some((answer) =>
@@ -712,6 +712,31 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     }
   };
 
+  // Handle user response
+  const handleUserResponse = async (text) => {
+    setConversation((prev) => [
+      ...prev,
+      {
+        speaker: "user",
+        text: text,
+        timestamp: new Date(),
+      },
+    ]);
+
+    // Try AI response first
+    if (useAI && aiAvailable) {
+      const aiResponse = await generateAIJudgeResponse(text, currentQuestion);
+
+      if (aiResponse) {
+        handleAIJudgeReply(aiResponse);
+        return;
+      }
+    }
+
+    // Fallback to preset responses
+    handlePresetResponse(text);
+  };
+
   // End hearing
   const endHearing = () => {
     const percentage =
@@ -762,7 +787,92 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
     );
   }
 
+  const exitCourtroom = () => {
+    stopSpeaking();
+    stopListening();
+    setShowInstructions(true);
+    setHearingStarted(false);
+    setConversation([]);
+    setSessionScore({ correct: 0, total: 0 });
+    setCurrentQuestion(null);
+    setPendingSpeech(null);
+  };
+
   const header = (
+    <TribunalHeader
+      sessionScore={sessionScore}
+      onClose={onClose}
+      onReportBug={onReportBug}
+      onOpenAISettings={onOpenAISettings}
+    />
+  );
+
+  const instructionsFooter = (
+    <InstructionsFooter
+      startHearing={startHearing}
+      acknowledgedWarning={acknowledgedWarning}
+    />
+  );
+
+  const hearingFooter = (
+    <HearingFooter
+      isSpeaking={isSpeaking}
+      captionText={captionText}
+      isListening={isListening}
+      speechEnabled={speechEnabled}
+      setSpeechEnabled={setSpeechEnabled}
+      speakLastJudgeMessage={speakLastJudgeMessage}
+      conversation={conversation}
+      pendingSpeech={pendingSpeech}
+      stopSpeaking={stopSpeaking}
+      micSupported={micSupported}
+      isAIProcessing={isAIProcessing}
+      startListening={startListening}
+      stopListening={stopListening}
+      handleManualInput={handleManualInput}
+      onExitCourtroom={exitCourtroom}
+    />
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      header={header}
+      footer={showInstructions ? instructionsFooter : hearingFooter}
+      labelledBy="the-tribunal-title"
+      size="2xl"
+    >
+      {/* Instructions */}
+      {showInstructions && (
+        <PreHearingInstructions
+          aiAvailable={aiAvailable}
+          useAI={useAI}
+          setUseAI={setUseAI}
+          selectedPersona={selectedPersona}
+          setSelectedPersona={setSelectedPersona}
+          acknowledgedWarning={acknowledgedWarning}
+          setAcknowledgedWarning={setAcknowledgedWarning}
+        />
+      )}
+
+      {/* Conversation Area */}
+      {!showInstructions && (
+        <ConversationLog
+          conversation={conversation}
+          selectedPersona={selectedPersona}
+          isAIProcessing={isAIProcessing}
+        />
+      )}
+    </ResponsiveModal>
+  );
+}
+
+/**
+ * Modal header: title, score display, and top-right action buttons
+ */
+function TribunalHeader({ sessionScore, onClose, onReportBug, onOpenAISettings }) {
+  return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -817,8 +927,13 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
       )}
     </div>
   );
+}
 
-  const instructionsFooter = (
+/**
+ * Footer shown on the pre-hearing instructions screen
+ */
+function InstructionsFooter({ startHearing, acknowledgedWarning }) {
+  return (
     <button
       onClick={startHearing}
       disabled={!acknowledgedWarning}
@@ -829,8 +944,30 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
         : "Please acknowledge the notice above"}
     </button>
   );
+}
 
-  const hearingFooter = (
+/**
+ * Footer shown during an active hearing: captions, voice controls, and
+ * manual text input
+ */
+function HearingFooter({
+  isSpeaking,
+  captionText,
+  isListening,
+  speechEnabled,
+  setSpeechEnabled,
+  speakLastJudgeMessage,
+  conversation,
+  pendingSpeech,
+  stopSpeaking,
+  micSupported,
+  isAIProcessing,
+  startListening,
+  stopListening,
+  handleManualInput,
+  onExitCourtroom,
+}) {
+  return (
     <div>
       {/* Live Captions — real-time text of the judge's voice (WCAG 1.2.x) */}
       <div className="mb-3 rounded-lg border border-gray-700 bg-gray-900 px-4 py-3">
@@ -1003,16 +1140,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
           &quot;medical nexus...&quot;
         </span>
         <button
-          onClick={() => {
-            stopSpeaking();
-            stopListening();
-            setShowInstructions(true);
-            setHearingStarted(false);
-            setConversation([]);
-            setSessionScore({ correct: 0, total: 0 });
-            setCurrentQuestion(null);
-            setPendingSpeech(null);
-          }}
+          onClick={onExitCourtroom}
           className="text-red-500 hover:text-red-600 font-medium"
         >
           ← Exit Courtroom
@@ -1020,278 +1148,286 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
       </div>
     </div>
   );
+}
 
+/**
+ * Pre-hearing instructions: AI mode toggle, judge persona picker, and the
+ * required speech-technology disclosure/acknowledgement
+ */
+function PreHearingInstructions({
+  aiAvailable,
+  useAI,
+  setUseAI,
+  selectedPersona,
+  setSelectedPersona,
+  acknowledgedWarning,
+  setAcknowledgedWarning,
+}) {
   return (
-    <ResponsiveModal
-      isOpen
-      onClose={onClose}
-      header={header}
-      footer={showInstructions ? instructionsFooter : hearingFooter}
-      labelledBy="the-tribunal-title"
-      size="2xl"
-    >
-      {/* Instructions */}
-      {showInstructions && (
-        <div className="-m-4 bg-blue-50 p-4 dark:bg-blue-900/20 sm:p-6">
-          <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
-            📋 Before You Begin:
-          </h3>
+    <div className="-m-4 bg-blue-50 p-4 dark:bg-blue-900/20 sm:p-6">
+      <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
+        📋 Before You Begin:
+      </h3>
 
-          {/* AI Required Warning */}
-          {!aiAvailable && (
-            <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-400 dark:border-amber-600/50">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💡</span>
-                <div>
-                  <h3 className="font-bold text-amber-900 dark:text-amber-300">
-                    AI Required for Analysis
-                  </h3>
-                  <p className="text-amber-800 dark:text-amber-200 text-sm mt-1">
-                    Click the <strong>AI Status button</strong> in the header
-                    above to load your secure Local AI (100% private) or enter
-                    your Gemini API key.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* AI Mode Toggle */}
-          <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🤖</span>
-                <div>
-                  <div className="font-semibold text-purple-900 dark:text-purple-200">
-                    AI-Powered Judge
-                  </div>
-                  <p className="text-xs text-purple-700 dark:text-purple-300">
-                    {aiAvailable
-                      ? "Intelligent responses based on VA law and your claims"
-                      : "AI unavailable - using preset questions"}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setUseAI(!useAI)}
-                disabled={!aiAvailable}
-                aria-label={useAI ? "Disable AI judges" : "Enable AI judges"}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useAI && aiAvailable
-                    ? "bg-purple-600"
-                    : "bg-gray-300 dark:bg-gray-600"
-                } ${!aiAvailable ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useAI && aiAvailable ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-            {useAI && aiAvailable && (
-              <p className="mt-2 text-xs text-purple-700 dark:text-purple-300 bg-purple-200/50 dark:bg-purple-900/50 rounded p-2">
-                ✨ AI judges will evaluate your arguments using real veterans
-                law principles, cite relevant case law, and provide personalized
-                coaching.
+      {/* AI Required Warning */}
+      {!aiAvailable && (
+        <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-400 dark:border-amber-600/50">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💡</span>
+            <div>
+              <h3 className="font-bold text-amber-900 dark:text-amber-300">
+                AI Required for Analysis
+              </h3>
+              <p className="text-amber-800 dark:text-amber-200 text-sm mt-1">
+                Click the <strong>AI Status button</strong> in the header
+                above to load your secure Local AI (100% private) or enter
+                your Gemini API key.
               </p>
-            )}
-          </div>
-
-          {/* Persona Selection */}
-          <div className="mb-4">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Select Your Judge:
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
-                <button
-                  key={key}
-                  onClick={() => setSelectedPersona(key)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    selectedPersona === key
-                      ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
-                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
-                  }`}
-                >
-                  <div className="text-3xl mb-1">{persona.avatar}</div>
-                  <div className="font-semibold text-sm">{persona.name}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                    {persona.style}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300 mb-4">
-            <li>• This is practice - your responses are not recorded</li>
-            <li>• Speak clearly and use legal terms when possible</li>
-            <li>• The judge will challenge you - that&apos;s their job</li>
-            <li>• Cite regulations (38 CFR) and case law when you can</li>
-            <li>
-              • If you don&apos;t know the answer, say &quot;I would consult my
-              representative&quot;
-            </li>
-          </ul>
-
-          {/* RT9-2: UPL / 38 C.F.R. 14.629 self-help disclaimer */}
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              <strong>Educational self-help only.</strong> The Tribunal is a
-              practice tool, not legal representation. Vet-Rate.org does not
-              prepare or present claims to the VA on your behalf and is not an
-              accredited claims agent or attorney (38 C.F.R. § 14.629). For
-              complex claims or appeals, consult an accredited VSO, claims
-              agent, or attorney.
-            </p>
-          </div>
-
-          {/* Speech/Hearing Technology Warning */}
-          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">⚠️</span>
-              <div>
-                <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
-                  Audio Technology Notice
-                </h4>
-                <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
-                  This feature can use <strong>speech synthesis</strong>{" "}
-                  (text-to-speech) and <strong>speech recognition</strong>{" "}
-                  (microphone input). Both are optional — every word the judge
-                  says is also shown as text.
-                </p>
-                <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
-                  <li>
-                    💬 <strong>Live captions:</strong> Everything the judge says
-                    appears in the on-screen caption panel and transcript — no
-                    audio needed.
-                  </li>
-                  <li>
-                    🔊 <strong>Speakers/Headphones (optional):</strong> The AI
-                    judge can speak aloud. Voice can be turned off at any time.
-                  </li>
-                  <li>
-                    🎤 <strong>Microphone (optional):</strong> Grant microphone
-                    permission only if you want to answer by voice.
-                  </li>
-                  <li>
-                    ⌨️ <strong>Typing always works:</strong> The text box stays
-                    active at all times — even while the judge is speaking.
-                  </li>
-                  <li>
-                    🔒 <strong>Privacy:</strong> Voice data is processed locally
-                    by your browser and is NOT recorded or stored.
-                  </li>
-                </ul>
-                <label className="flex items-center gap-2 mt-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={acknowledgedWarning}
-                    onChange={(e) => setAcknowledgedWarning(e.target.checked)}
-                    className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
-                  />
-                  <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
-                    I understand this uses speech technology
-                  </span>
-                </label>
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Conversation Area */}
-      {!showInstructions && (
-        <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
-          {conversation.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-4 ${
-                  message.speaker === "judge"
-                    ? message.isCorrect === true
-                      ? "bg-green-100 dark:bg-green-900/30 border-l-4 border-green-600"
-                      : message.isCorrect === false
-                        ? "bg-red-100 dark:bg-red-900/30 border-l-4 border-red-600"
-                        : "bg-white dark:bg-gray-800 shadow-md"
-                    : "bg-blue-600 text-white shadow-md"
-                }`}
-              >
-                {message.speaker === "judge" && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">
-                      {JUDGE_PERSONAS[selectedPersona].avatar}
-                    </span>
-                    <span className="font-bold text-sm">
-                      {JUDGE_PERSONAS[selectedPersona].name}
-                    </span>
-                    {message.category && (
-                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
-                        {message.category}
-                      </span>
-                    )}
-                    {message.isAI && (
-                      <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
-                        🤖 AI
-                      </span>
-                    )}
-                  </div>
-                )}
-                <p
-                  className={`${message.speaker === "user" ? "text-white" : "text-gray-800 dark:text-gray-200"}`}
-                >
-                  {message.text}
-                </p>
-                <p className="text-xs opacity-75 mt-2">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
+      {/* AI Mode Toggle */}
+      <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🤖</span>
+            <div>
+              <div className="font-semibold text-purple-900 dark:text-purple-200">
+                AI-Powered Judge
               </div>
+              <p className="text-xs text-purple-700 dark:text-purple-300">
+                {aiAvailable
+                  ? "Intelligent responses based on VA law and your claims"
+                  : "AI unavailable - using preset questions"}
+              </p>
             </div>
-          ))}
+          </div>
+          <button
+            onClick={() => setUseAI(!useAI)}
+            disabled={!aiAvailable}
+            aria-label={useAI ? "Disable AI judges" : "Enable AI judges"}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              useAI && aiAvailable
+                ? "bg-purple-600"
+                : "bg-gray-300 dark:bg-gray-600"
+            } ${!aiAvailable ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                useAI && aiAvailable ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+        {useAI && aiAvailable && (
+          <p className="mt-2 text-xs text-purple-700 dark:text-purple-300 bg-purple-200/50 dark:bg-purple-900/50 rounded p-2">
+            ✨ AI judges will evaluate your arguments using real veterans law
+            principles, cite relevant case law, and provide personalized
+            coaching.
+          </p>
+        )}
+      </div>
 
-          {/* AI Processing Indicator */}
-          {isAIProcessing && (
-            <div className="flex justify-start">
-              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 max-w-[85%] sm:max-w-[80%]">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">
-                    {JUDGE_PERSONAS[selectedPersona].avatar}
+      {/* Persona Selection */}
+      <div className="mb-4">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Select Your Judge:
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedPersona(key)}
+              className={`p-3 rounded-lg border-2 transition-all ${
+                selectedPersona === key
+                  ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
+                  : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+              }`}
+            >
+              <div className="text-3xl mb-1">{persona.avatar}</div>
+              <div className="font-semibold text-sm">{persona.name}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                {persona.style}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300 mb-4">
+        <li>• This is practice - your responses are not recorded</li>
+        <li>• Speak clearly and use legal terms when possible</li>
+        <li>• The judge will challenge you - that&apos;s their job</li>
+        <li>• Cite regulations (38 CFR) and case law when you can</li>
+        <li>
+          • If you don&apos;t know the answer, say &quot;I would consult my
+          representative&quot;
+        </li>
+      </ul>
+
+      {/* RT9-2: UPL / 38 C.F.R. 14.629 self-help disclaimer */}
+      <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          <strong>Educational self-help only.</strong> The Tribunal is a
+          practice tool, not legal representation. Vet-Rate.org does not
+          prepare or present claims to the VA on your behalf and is not an
+          accredited claims agent or attorney (38 C.F.R. § 14.629). For
+          complex claims or appeals, consult an accredited VSO, claims agent,
+          or attorney.
+        </p>
+      </div>
+
+      {/* Speech/Hearing Technology Warning */}
+      <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
+              Audio Technology Notice
+            </h4>
+            <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
+              This feature can use <strong>speech synthesis</strong>{" "}
+              (text-to-speech) and <strong>speech recognition</strong>{" "}
+              (microphone input). Both are optional — every word the judge
+              says is also shown as text.
+            </p>
+            <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+              <li>
+                💬 <strong>Live captions:</strong> Everything the judge says
+                appears in the on-screen caption panel and transcript — no
+                audio needed.
+              </li>
+              <li>
+                🔊 <strong>Speakers/Headphones (optional):</strong> The AI
+                judge can speak aloud. Voice can be turned off at any time.
+              </li>
+              <li>
+                🎤 <strong>Microphone (optional):</strong> Grant microphone
+                permission only if you want to answer by voice.
+              </li>
+              <li>
+                ⌨️ <strong>Typing always works:</strong> The text box stays
+                active at all times — even while the judge is speaking.
+              </li>
+              <li>
+                🔒 <strong>Privacy:</strong> Voice data is processed locally
+                by your browser and is NOT recorded or stored.
+              </li>
+            </ul>
+            <label className="flex items-center gap-2 mt-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acknowledgedWarning}
+                onChange={(e) => setAcknowledgedWarning(e.target.checked)}
+                className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+              />
+              <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                I understand this uses speech technology
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Conversation transcript: judge/veteran message bubbles plus the AI
+ * "thinking" indicator
+ */
+function ConversationLog({ conversation, selectedPersona, isAIProcessing }) {
+  return (
+    <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
+      {conversation.map((message, index) => (
+        <div
+          key={index}
+          className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
+        >
+          <div
+            className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-4 ${getMessageBubbleClass(message)}`}
+          >
+            {message.speaker === "judge" && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">
+                  {JUDGE_PERSONAS[selectedPersona].avatar}
+                </span>
+                <span className="font-bold text-sm">
+                  {JUDGE_PERSONAS[selectedPersona].name}
+                </span>
+                {message.category && (
+                  <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                    {message.category}
                   </span>
-                  <span className="font-bold text-sm">
-                    {JUDGE_PERSONAS[selectedPersona].name}
-                  </span>
+                )}
+                {message.isAI && (
                   <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
                     🤖 AI
                   </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                  <div className="flex space-x-1">
-                    <div
-                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    ></div>
-                  </div>
-                  <span className="text-sm">
-                    Judge is considering your response...
-                  </span>
-                </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+            <p
+              className={`${message.speaker === "user" ? "text-white" : "text-gray-800 dark:text-gray-200"}`}
+            >
+              {message.text}
+            </p>
+            <p className="text-xs opacity-75 mt-2">
+              {message.timestamp.toLocaleTimeString()}
+            </p>
+          </div>
         </div>
+      ))}
+
+      {/* AI Processing Indicator */}
+      {isAIProcessing && (
+        <AIProcessingIndicator selectedPersona={selectedPersona} />
       )}
-    </ResponsiveModal>
+    </div>
+  );
+}
+
+/**
+ * "Judge is thinking" indicator shown while an AI response is generating
+ */
+function AIProcessingIndicator({ selectedPersona }) {
+  return (
+    <div className="flex justify-start">
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 max-w-[85%] sm:max-w-[80%]">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">
+            {JUDGE_PERSONAS[selectedPersona].avatar}
+          </span>
+          <span className="font-bold text-sm">
+            {JUDGE_PERSONAS[selectedPersona].name}
+          </span>
+          <span className="text-xs bg-purple-200 dark:bg-purple-700 text-purple-800 dark:text-purple-200 px-2 py-1 rounded flex items-center gap-1">
+            🤖 AI
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <div className="flex space-x-1">
+            <div
+              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            ></div>
+          </div>
+          <span className="text-sm">
+            Judge is considering your response...
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
