@@ -18,7 +18,6 @@
  */
 
 import { useState, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
@@ -1179,14 +1178,588 @@ const getPrevalenceColor = (prevalence) => {
   return "text-gray-400";
 };
 
+/**
+ * Get branch color
+ */
+const getBranchColor = (branch) => {
+  switch (branch) {
+    case "Army":
+      return "from-green-700 to-green-900";
+    case "Air Force":
+      return "from-blue-600 to-blue-900";
+    case "Navy":
+      return "from-blue-800 to-indigo-900";
+    case "Marines":
+      return "from-red-700 to-red-900";
+    case "Coast Guard":
+      return "from-orange-600 to-orange-800";
+    case "Space Force":
+      return "from-slate-700 to-slate-900";
+    default:
+      return "from-gray-600 to-gray-800";
+  }
+};
+
+/**
+ * MOSHazardMatcherHeader - Modal header with title and close button
+ */
+function MOSHazardMatcherHeader({ onClose }) {
+  return (
+    <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <span className="text-3xl">🎖️</span>
+          </div>
+          <div>
+            <h2
+              id="mos-hazard-matcher-title"
+              className="text-2xl sm:text-3xl font-bold text-black"
+            >
+              MOS Hazard Matcher{" "}
+              <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-yellow-800 text-sm sm:text-base mt-1">
+              Your Job → Your Injuries
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * MOSSearchResultsDropdown - Search matches shown while typing
+ */
+function MOSSearchResultsDropdown({ results, setSelectedMOS, setSearchQuery }) {
+  return (
+    <div className="bg-gray-800 rounded-xl border border-slate-600 overflow-hidden">
+      {results.map((result) => (
+        <button
+          key={result.code}
+          onClick={() => {
+            setSelectedMOS(result);
+            setSearchQuery(result.code);
+          }}
+          className="w-full p-4 text-left hover:bg-slate-700/50 transition-colors border-b border-slate-700 last:border-b-0"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-bold text-amber-400">
+                {result.code}
+              </span>
+              <span className="text-white ml-2">{result.title}</span>
+              {result.matchType === "alias" && result.matchedAlias && (
+                <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">
+                  🕐 Was: {result.matchedAlias}
+                </span>
+              )}
+              {result.timePeriod && result.timePeriod !== "Active" && (
+                <span className="ml-2 text-xs text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">
+                  Historical
+                </span>
+              )}
+            </div>
+            <span
+              className={`px-2 py-1 rounded text-xs font-bold bg-gradient-to-r ${getBranchColor(result.branch)}`}
+            >
+              {result.branch}
+            </span>
+          </div>
+          {result.note && (
+            <p className="text-xs text-gray-400 mt-1">{result.note}</p>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * MOSNoResults - Empty state when a search has no matches
+ */
+function MOSNoResults() {
+  return (
+    <div className="bg-gray-800/50 rounded-xl p-6 text-center">
+      <p className="text-gray-400">
+        No matching MOS found. Try a different code or job title.
+      </p>
+      <p className="text-gray-500 text-sm mt-2">
+        <strong>Modern:</strong> 11B, 68W, 88M (Army) | 2A3X3, 3P0X1
+        (Air Force) | GM, HM, BM (Navy) | 0311, 0331 (Marines)
+      </p>
+      <p className="text-gray-500 text-sm mt-1">
+        <strong>Historical:</strong> 91B, 63B (Army) | SK, BT (Navy) |
+        81130 (Air Force)
+      </p>
+      <p className="text-cyan-400/70 text-xs mt-2">
+        💡 We support historical codes that have been merged or renamed!
+      </p>
+    </div>
+  );
+}
+
+/**
+ * SelectedMOSDetails - Full details panel for the selected MOS
+ */
+function MOSBackButton({ setSelectedMOS, setSearchQuery }) {
+  return (
+    <button
+      onClick={() => {
+        setSelectedMOS(null);
+        setSearchQuery("");
+      }}
+      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 19l-7-7 7-7"
+        />
+      </svg>
+      Back to Search
+    </button>
+  );
+}
+
+function MOSHeaderCard({ selectedMOS }) {
+  return (
+    <div
+      className={`bg-gradient-to-r ${getBranchColor(selectedMOS.branch)} rounded-2xl p-6 shadow-xl`}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-white/70 text-sm">
+            {selectedMOS.branch} • {selectedMOS.category}
+          </p>
+          <h3 className="text-3xl font-black text-white">
+            {selectedMOS.code}
+          </h3>
+          <p className="text-xl text-white/90">{selectedMOS.title}</p>
+          {/* Historical aliases */}
+          {selectedMOS.aliases && selectedMOS.aliases.length > 0 && (
+            <p className="text-white/60 text-sm mt-2">
+              🕐 Also known as: {selectedMOS.aliases.join(", ")}
+            </p>
+          )}
+          {selectedMOS.historicalNotes && (
+            <p className="text-cyan-300/80 text-xs mt-1">
+              📜 {selectedMOS.historicalNotes}
+            </p>
+          )}
+          {selectedMOS.matchedAlias && (
+            <p className="text-cyan-300 text-sm mt-2 bg-cyan-900/30 px-2 py-1 rounded inline-block">
+              ✓ You searched for &quot;{selectedMOS.matchedAlias}
+              &quot; - this is the current designation
+            </p>
+          )}
+        </div>
+        <div className="text-right">
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-bold ${getNoiseColor(selectedMOS.noiseExposure)}`}
+          >
+            🔊 {selectedMOS.noiseExposure || "Varies"}
+          </span>
+          <p className="text-white/70 text-sm mt-2">
+            Physical: {selectedMOS.physicalDemand || "Varies"}
+          </p>
+          {selectedMOS.timePeriod &&
+            selectedMOS.timePeriod !== "Active" && (
+              <span className="mt-2 inline-block px-2 py-1 bg-amber-700/50 text-amber-200 rounded text-xs">
+                {selectedMOS.timePeriod}
+              </span>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MOSHazardsCard({ hazards }) {
+  return (
+    <div className="bg-gray-800/50 rounded-xl p-6 border border-slate-700">
+      <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        ⚠️ Job Hazards
+      </h4>
+      <div className="flex flex-wrap gap-2">
+        {(hazards || []).map((hazard, i) => (
+          <span
+            key={i}
+            className="px-3 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-200 text-sm"
+          >
+            {hazard}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MOSCommonInjuriesCard({ injuries, selectedConditions, toggleCondition }) {
+  return (
+    <div className="bg-gray-800/50 rounded-xl border border-slate-700 overflow-hidden">
+      <div className="p-4 bg-slate-700/50 border-b border-slate-600">
+        <h4 className="text-lg font-bold text-white flex items-center gap-2">
+          🩺 Common Service-Connected Conditions
+        </h4>
+        <p className="text-sm text-slate-400">
+          Click to add to your claim list
+        </p>
+      </div>
+      <div className="divide-y divide-slate-700">
+        {injuries.map((injury, i) => (
+          <button
+            key={i}
+            onClick={() => toggleCondition(injury.condition)}
+            className={`w-full p-4 text-left transition-colors ${
+              selectedConditions.includes(injury.condition)
+                ? "bg-green-900/30 border-l-4 border-green-500"
+                : "hover:bg-slate-700/50"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-xl ${selectedConditions.includes(injury.condition) ? "text-green-400" : "text-slate-500"}`}
+                >
+                  {selectedConditions.includes(injury.condition)
+                    ? "✓"
+                    : "○"}
+                </span>
+                <div>
+                  <p className="font-semibold text-white">
+                    {injury.condition}
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    {injury.notes}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`px-2 py-1 rounded text-xs font-bold ${getPrevalenceColor(injury.prevalence)}`}
+              >
+                {injury.prevalence}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SelectedConditionsSummary({
+  selectedConditions,
+  onAddToPathfinder,
+  onClose,
+}) {
+  if (selectedConditions.length === 0) return null;
+
+  return (
+    <div className="bg-green-900/30 border border-green-700/50 rounded-xl p-6">
+      <h4 className="font-bold text-green-300 mb-3">
+        ✓ {selectedConditions.length} Conditions Selected
+      </h4>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {selectedConditions.map((cond) => (
+          <span
+            key={cond}
+            className="px-3 py-1 bg-green-800/50 text-green-200 rounded-lg text-sm"
+          >
+            {cond}
+          </span>
+        ))}
+      </div>
+      <button
+        onClick={() => {
+          if (onAddToPathfinder) {
+            onAddToPathfinder(selectedConditions);
+          }
+          onClose();
+        }}
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
+      >
+        📋 Add to My Claim List
+      </button>
+    </div>
+  );
+}
+
+function SelectedMOSDetails({
+  selectedMOS,
+  selectedConditions,
+  toggleCondition,
+  onAddToPathfinder,
+  onClose,
+  setSelectedMOS,
+  setSearchQuery,
+}) {
+  return (
+    <div className="space-y-6">
+      <MOSBackButton
+        setSelectedMOS={setSelectedMOS}
+        setSearchQuery={setSearchQuery}
+      />
+
+      <MOSHeaderCard selectedMOS={selectedMOS} />
+
+      <MOSHazardsCard hazards={selectedMOS.hazards} />
+
+      <MOSCommonInjuriesCard
+        injuries={selectedMOS.commonInjuries}
+        selectedConditions={selectedConditions}
+        toggleCondition={toggleCondition}
+      />
+
+      <SelectedConditionsSummary
+        selectedConditions={selectedConditions}
+        onAddToPathfinder={onAddToPathfinder}
+        onClose={onClose}
+      />
+
+      {/* Validation Message */}
+      <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-6 text-center">
+        <p className="text-amber-200 text-lg">
+          <span className="text-2xl mr-2">💪</span>
+          <strong>{selectedMOS.title}s</strong> experience these
+          conditions at rates far above the general population.{" "}
+          <strong>Your service caused this.</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * MOSBranchBrowser - Browse by branch, plus popular/historical quick links
+ */
+function MOSBranchBrowser({ setSelectedMOS, setSearchQuery }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-bold text-white text-center">
+        Or browse by branch:
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {[
+          "Army",
+          "Air Force",
+          "Navy",
+          "Marines",
+          "Coast Guard",
+          "Space Force",
+        ].map((branch) => (
+          <button
+            key={branch}
+            onClick={() => {
+              const first = Object.entries(MOS_DATABASE).find(
+                ([_, d]) => d.branch === branch,
+              );
+              if (first) {
+                setSelectedMOS({ code: first[0], ...first[1] });
+                setSearchQuery(first[0]);
+              }
+            }}
+            className={`p-4 rounded-xl font-bold text-white bg-gradient-to-r ${getBranchColor(branch)} hover:opacity-90 transition-opacity`}
+          >
+            {branch}
+          </button>
+        ))}
+      </div>
+
+      {/* Popular MOS Quick Links */}
+      <div className="bg-gray-800/30 rounded-xl p-4 mt-6">
+        <p className="text-gray-400 text-sm text-center mb-3">
+          Popular searches:
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {["11B", "68W", "88M", "0311", "3P0X1", "HM", "GM", "BM"].map(
+            (code) => (
+              <button
+                key={code}
+                onClick={() => {
+                  setSearchQuery(code);
+                  const results = searchMOS(code);
+                  if (results.length > 0) setSelectedMOS(results[0]);
+                }}
+                className="px-3 py-1 bg-slate-700 text-slate-200 rounded-lg text-sm hover:bg-slate-600 transition-colors"
+              >
+                {code}
+              </button>
+            ),
+          )}
+        </div>
+      </div>
+
+      {/* Historical Code Quick Links */}
+      <div className="bg-cyan-900/20 rounded-xl p-4 mt-4 border border-cyan-700/30">
+        <p className="text-cyan-400 text-sm text-center mb-3">
+          🕐 Historical/Retired codes (for older veterans):
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {["91B", "63B", "SK", "BT", "81130", "76Y"].map((code) => (
+            <button
+              key={code}
+              onClick={() => {
+                setSearchQuery(code);
+                const results = searchMOS(code);
+                if (results.length > 0) setSelectedMOS(results[0]);
+              }}
+              className="px-3 py-1 bg-cyan-800/50 text-cyan-200 rounded-lg text-sm hover:bg-cyan-700/50 transition-colors border border-cyan-700/50"
+            >
+              {code}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * MOSSupportCTA - Developer support message shown after selecting an MOS
+ */
+function MOSSupportCTA() {
+  return (
+    <div className="bg-gradient-to-r from-slate-800/60 to-gray-800/60 rounded-2xl p-6 border border-slate-600/50 mt-6">
+      <div className="flex items-center gap-4">
+        <img
+          src="/images/Anth.jpg"
+          alt="Anthony - Vet-Rate Developer"
+          className="w-14 h-14 rounded-full object-cover border-2 border-slate-500 shadow-lg flex-shrink-0"
+        />
+        <div className="flex-1">
+          <p className="text-slate-200 font-semibold mb-1">
+            🏅 This database took 200+ hours to research
+          </p>
+          <p className="text-slate-400 text-sm">
+            Every MOS, every hazard, every common injury - compiled from
+            military studies, VA data, and veteran testimonies. Help add
+            more job codes and keep this resource free for every veteran
+            who needs to prove their service caused real damage.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MOSHazardMatcherBody({
+  searchQuery,
+  setSearchQuery,
+  selectedMOS,
+  setSelectedMOS,
+  searchResults,
+  selectedConditions,
+  toggleCondition,
+  onAddToPathfinder,
+  onClose,
+}) {
+  return (
+    <div className="space-y-6">
+      {/* Intro */}
+      <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
+        <p className="text-slate-200 text-center">
+          <span className="text-2xl mr-2">💡</span>
+          <strong>You aren&apos;t weak.</strong> You did a job that breaks
+          bodies. Here&apos;s the proof.
+        </p>
+      </div>
+
+      {/* Search Box */}
+      <div className="relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setSelectedMOS(null);
+          }}
+          placeholder="Enter your MOS code (e.g., 11B, 68W, GM, 0311...)"
+          className="w-full p-4 pl-12 bg-gray-800 border-2 border-slate-600 rounded-xl text-white text-lg placeholder-gray-500 focus:border-amber-500 focus:outline-none transition-colors"
+        />
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl">
+          🔍
+        </span>
+      </div>
+
+      {/* Search Results Dropdown */}
+      {searchQuery && !selectedMOS && searchResults.length > 0 && (
+        <MOSSearchResultsDropdown
+          results={searchResults}
+          setSelectedMOS={setSelectedMOS}
+          setSearchQuery={setSearchQuery}
+        />
+      )}
+
+      {/* No Results */}
+      {searchQuery && !selectedMOS && searchResults.length === 0 && (
+        <MOSNoResults />
+      )}
+
+      {/* Selected MOS Details */}
+      {selectedMOS && (
+        <SelectedMOSDetails
+          selectedMOS={selectedMOS}
+          selectedConditions={selectedConditions}
+          toggleCondition={toggleCondition}
+          onAddToPathfinder={onAddToPathfinder}
+          onClose={onClose}
+          setSelectedMOS={setSelectedMOS}
+          setSearchQuery={setSearchQuery}
+        />
+      )}
+
+      {/* Quick Browse by Branch */}
+      {!selectedMOS && !searchQuery && (
+        <MOSBranchBrowser
+          setSelectedMOS={setSelectedMOS}
+          setSearchQuery={setSearchQuery}
+        />
+      )}
+
+      {/* Support CTA when MOS is selected */}
+      {selectedMOS && <MOSSupportCTA />}
+    </div>
+  );
+}
+
 export default function MOSHazardMatcher({
   onClose,
   onAddToPathfinder,
   _onReportBug,
 }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMOS, setSelectedMOS] = useState(null);
   const [selectedConditions, setSelectedConditions] = useState([]);
@@ -1203,26 +1776,6 @@ export default function MOSHazardMatcher({
     );
   };
 
-  // Get branch color
-  const getBranchColor = (branch) => {
-    switch (branch) {
-      case "Army":
-        return "from-green-700 to-green-900";
-      case "Air Force":
-        return "from-blue-600 to-blue-900";
-      case "Navy":
-        return "from-blue-800 to-indigo-900";
-      case "Marines":
-        return "from-red-700 to-red-900";
-      case "Coast Guard":
-        return "from-orange-600 to-orange-800";
-      case "Space Force":
-        return "from-slate-700 to-slate-900";
-      default:
-        return "from-gray-600 to-gray-800";
-    }
-  };
-
   return (
     <>
       <ResponsiveModal
@@ -1231,436 +1784,19 @@ export default function MOSHazardMatcher({
         size="xl"
         labelledBy="mos-hazard-matcher-title"
         className="!bg-gray-900"
-        header={
-          <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-3xl">🎖️</span>
-                </div>
-                <div>
-                  <h2
-                    id="mos-hazard-matcher-title"
-                    className="text-2xl sm:text-3xl font-bold text-black"
-                  >
-                    MOS Hazard Matcher{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
-                    Your Job → Your Injuries
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        }
+        header={<MOSHazardMatcherHeader onClose={onClose} />}
       >
-        {/* Content - Scrollable */}
-        <div className="space-y-6">
-          {/* Intro */}
-          <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
-            <p className="text-slate-200 text-center">
-              <span className="text-2xl mr-2">💡</span>
-              <strong>You aren&apos;t weak.</strong> You did a job that breaks
-              bodies. Here&apos;s the proof.
-            </p>
-          </div>
-
-          {/* Search Box */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSelectedMOS(null);
-              }}
-              placeholder="Enter your MOS code (e.g., 11B, 68W, GM, 0311...)"
-              className="w-full p-4 pl-12 bg-gray-800 border-2 border-slate-600 rounded-xl text-white text-lg placeholder-gray-500 focus:border-amber-500 focus:outline-none transition-colors"
-            />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl">
-              🔍
-            </span>
-          </div>
-
-          {/* Search Results Dropdown */}
-          {searchQuery && !selectedMOS && searchResults.length > 0 && (
-            <div className="bg-gray-800 rounded-xl border border-slate-600 overflow-hidden">
-              {searchResults.map((result) => (
-                <button
-                  key={result.code}
-                  onClick={() => {
-                    setSelectedMOS(result);
-                    setSearchQuery(result.code);
-                  }}
-                  className="w-full p-4 text-left hover:bg-slate-700/50 transition-colors border-b border-slate-700 last:border-b-0"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-amber-400">
-                        {result.code}
-                      </span>
-                      <span className="text-white ml-2">{result.title}</span>
-                      {result.matchType === "alias" && result.matchedAlias && (
-                        <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">
-                          🕐 Was: {result.matchedAlias}
-                        </span>
-                      )}
-                      {result.timePeriod && result.timePeriod !== "Active" && (
-                        <span className="ml-2 text-xs text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">
-                          Historical
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-bold bg-gradient-to-r ${getBranchColor(result.branch)}`}
-                    >
-                      {result.branch}
-                    </span>
-                  </div>
-                  {result.note && (
-                    <p className="text-xs text-gray-400 mt-1">{result.note}</p>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* No Results */}
-          {searchQuery && !selectedMOS && searchResults.length === 0 && (
-            <div className="bg-gray-800/50 rounded-xl p-6 text-center">
-              <p className="text-gray-400">
-                No matching MOS found. Try a different code or job title.
-              </p>
-              <p className="text-gray-500 text-sm mt-2">
-                <strong>Modern:</strong> 11B, 68W, 88M (Army) | 2A3X3, 3P0X1
-                (Air Force) | GM, HM, BM (Navy) | 0311, 0331 (Marines)
-              </p>
-              <p className="text-gray-500 text-sm mt-1">
-                <strong>Historical:</strong> 91B, 63B (Army) | SK, BT (Navy) |
-                81130 (Air Force)
-              </p>
-              <p className="text-cyan-400/70 text-xs mt-2">
-                💡 We support historical codes that have been merged or renamed!
-              </p>
-            </div>
-          )}
-
-          {/* Selected MOS Details */}
-          {selectedMOS && (
-            <div className="space-y-6">
-              {/* Back Button */}
-              <button
-                onClick={() => {
-                  setSelectedMOS(null);
-                  setSearchQuery("");
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Back to Search
-              </button>
-
-              {/* MOS Header Card */}
-              <div
-                className={`bg-gradient-to-r ${getBranchColor(selectedMOS.branch)} rounded-2xl p-6 shadow-xl`}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-white/70 text-sm">
-                      {selectedMOS.branch} • {selectedMOS.category}
-                    </p>
-                    <h3 className="text-3xl font-black text-white">
-                      {selectedMOS.code}
-                    </h3>
-                    <p className="text-xl text-white/90">{selectedMOS.title}</p>
-                    {/* Historical aliases */}
-                    {selectedMOS.aliases && selectedMOS.aliases.length > 0 && (
-                      <p className="text-white/60 text-sm mt-2">
-                        🕐 Also known as: {selectedMOS.aliases.join(", ")}
-                      </p>
-                    )}
-                    {selectedMOS.historicalNotes && (
-                      <p className="text-cyan-300/80 text-xs mt-1">
-                        📜 {selectedMOS.historicalNotes}
-                      </p>
-                    )}
-                    {selectedMOS.matchedAlias && (
-                      <p className="text-cyan-300 text-sm mt-2 bg-cyan-900/30 px-2 py-1 rounded inline-block">
-                        ✓ You searched for &quot;{selectedMOS.matchedAlias}
-                        &quot; - this is the current designation
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-bold ${getNoiseColor(selectedMOS.noiseExposure)}`}
-                    >
-                      🔊 {selectedMOS.noiseExposure || "Varies"}
-                    </span>
-                    <p className="text-white/70 text-sm mt-2">
-                      Physical: {selectedMOS.physicalDemand || "Varies"}
-                    </p>
-                    {selectedMOS.timePeriod &&
-                      selectedMOS.timePeriod !== "Active" && (
-                        <span className="mt-2 inline-block px-2 py-1 bg-amber-700/50 text-amber-200 rounded text-xs">
-                          {selectedMOS.timePeriod}
-                        </span>
-                      )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Hazards */}
-              <div className="bg-gray-800/50 rounded-xl p-6 border border-slate-700">
-                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  ⚠️ Job Hazards
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {(selectedMOS.hazards || []).map((hazard, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-200 text-sm"
-                    >
-                      {hazard}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Common Injuries */}
-              <div className="bg-gray-800/50 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="p-4 bg-slate-700/50 border-b border-slate-600">
-                  <h4 className="text-lg font-bold text-white flex items-center gap-2">
-                    🩺 Common Service-Connected Conditions
-                  </h4>
-                  <p className="text-sm text-slate-400">
-                    Click to add to your claim list
-                  </p>
-                </div>
-                <div className="divide-y divide-slate-700">
-                  {selectedMOS.commonInjuries.map((injury, i) => (
-                    <button
-                      key={i}
-                      onClick={() => toggleCondition(injury.condition)}
-                      className={`w-full p-4 text-left transition-colors ${
-                        selectedConditions.includes(injury.condition)
-                          ? "bg-green-900/30 border-l-4 border-green-500"
-                          : "hover:bg-slate-700/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`text-xl ${selectedConditions.includes(injury.condition) ? "text-green-400" : "text-slate-500"}`}
-                          >
-                            {selectedConditions.includes(injury.condition)
-                              ? "✓"
-                              : "○"}
-                          </span>
-                          <div>
-                            <p className="font-semibold text-white">
-                              {injury.condition}
-                            </p>
-                            <p className="text-sm text-slate-400">
-                              {injury.notes}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${getPrevalenceColor(injury.prevalence)}`}
-                        >
-                          {injury.prevalence}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Selected Conditions Summary */}
-              {selectedConditions.length > 0 && (
-                <div className="bg-green-900/30 border border-green-700/50 rounded-xl p-6">
-                  <h4 className="font-bold text-green-300 mb-3">
-                    ✓ {selectedConditions.length} Conditions Selected
-                  </h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedConditions.map((cond) => (
-                      <span
-                        key={cond}
-                        className="px-3 py-1 bg-green-800/50 text-green-200 rounded-lg text-sm"
-                      >
-                        {cond}
-                      </span>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (onAddToPathfinder) {
-                        onAddToPathfinder(selectedConditions);
-                      }
-                      onClose();
-                    }}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
-                  >
-                    📋 Add to My Claim List
-                  </button>
-                </div>
-              )}
-
-              {/* Validation Message */}
-              <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-6 text-center">
-                <p className="text-amber-200 text-lg">
-                  <span className="text-2xl mr-2">💪</span>
-                  <strong>{selectedMOS.title}s</strong> experience these
-                  conditions at rates far above the general population.{" "}
-                  <strong>Your service caused this.</strong>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Browse by Branch */}
-          {!selectedMOS && !searchQuery && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white text-center">
-                Or browse by branch:
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  "Army",
-                  "Air Force",
-                  "Navy",
-                  "Marines",
-                  "Coast Guard",
-                  "Space Force",
-                ].map((branch) => (
-                  <button
-                    key={branch}
-                    onClick={() => {
-                      const first = Object.entries(MOS_DATABASE).find(
-                        ([_, d]) => d.branch === branch,
-                      );
-                      if (first) {
-                        setSelectedMOS({ code: first[0], ...first[1] });
-                        setSearchQuery(first[0]);
-                      }
-                    }}
-                    className={`p-4 rounded-xl font-bold text-white bg-gradient-to-r ${getBranchColor(branch)} hover:opacity-90 transition-opacity`}
-                  >
-                    {branch}
-                  </button>
-                ))}
-              </div>
-
-              {/* Popular MOS Quick Links */}
-              <div className="bg-gray-800/30 rounded-xl p-4 mt-6">
-                <p className="text-gray-400 text-sm text-center mb-3">
-                  Popular searches:
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["11B", "68W", "88M", "0311", "3P0X1", "HM", "GM", "BM"].map(
-                    (code) => (
-                      <button
-                        key={code}
-                        onClick={() => {
-                          setSearchQuery(code);
-                          const results = searchMOS(code);
-                          if (results.length > 0) setSelectedMOS(results[0]);
-                        }}
-                        className="px-3 py-1 bg-slate-700 text-slate-200 rounded-lg text-sm hover:bg-slate-600 transition-colors"
-                      >
-                        {code}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Historical Code Quick Links */}
-              <div className="bg-cyan-900/20 rounded-xl p-4 mt-4 border border-cyan-700/30">
-                <p className="text-cyan-400 text-sm text-center mb-3">
-                  🕐 Historical/Retired codes (for older veterans):
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["91B", "63B", "SK", "BT", "81130", "76Y"].map((code) => (
-                    <button
-                      key={code}
-                      onClick={() => {
-                        setSearchQuery(code);
-                        const results = searchMOS(code);
-                        if (results.length > 0) setSelectedMOS(results[0]);
-                      }}
-                      className="px-3 py-1 bg-cyan-800/50 text-cyan-200 rounded-lg text-sm hover:bg-cyan-700/50 transition-colors border border-cyan-700/50"
-                    >
-                      {code}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Support CTA when MOS is selected */}
-          {selectedMOS && (
-            <div className="bg-gradient-to-r from-slate-800/60 to-gray-800/60 rounded-2xl p-6 border border-slate-600/50 mt-6">
-              <div className="flex items-center gap-4">
-                <img
-                  src="/images/Anth.jpg"
-                  alt="Anthony - Vet-Rate Developer"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-slate-500 shadow-lg flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <p className="text-slate-200 font-semibold mb-1">
-                    🏅 This database took 200+ hours to research
-                  </p>
-                  <p className="text-slate-400 text-sm">
-                    Every MOS, every hazard, every common injury - compiled from
-                    military studies, VA data, and veteran testimonies. Help add
-                    more job codes and keep this resource free for every veteran
-                    who needs to prove their service caused real damage.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <MOSHazardMatcherBody
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedMOS={selectedMOS}
+          setSelectedMOS={setSelectedMOS}
+          searchResults={searchResults}
+          selectedConditions={selectedConditions}
+          toggleCondition={toggleCondition}
+          onAddToPathfinder={onAddToPathfinder}
+          onClose={onClose}
+        />
       </ResponsiveModal>
 
       {/* BuyMeCoffee - shows after selecting MOS */}

@@ -6,22 +6,22 @@ afterEach(() => {
   document.body.classList.remove("modal-open");
 });
 
+function renderModal(props = {}, children = "content") {
+  return render(
+    <ResponsiveModal isOpen onClose={() => {}} title="T" {...props}>
+      {children}
+    </ResponsiveModal>,
+  );
+}
+
 describe("ResponsiveModal", () => {
   it("renders nothing when closed", () => {
-    render(
-      <ResponsiveModal isOpen={false} onClose={() => {}} title="Hidden">
-        body
-      </ResponsiveModal>,
-    );
+    renderModal({ isOpen: false, title: "Hidden" }, "body");
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("renders a labelled dialog and locks body scroll when open", () => {
-    render(
-      <ResponsiveModal isOpen onClose={() => {}} title="My Title">
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ title: "My Title" });
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAttribute(
@@ -32,26 +32,13 @@ describe("ResponsiveModal", () => {
   });
 
   it("renders footer content", () => {
-    render(
-      <ResponsiveModal
-        isOpen
-        onClose={() => {}}
-        title="T"
-        footer={<button>Save</button>}
-      >
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ footer: <button>Save</button> });
     expect(screen.getByText("Save")).toBeInTheDocument();
   });
 
   it("calls onClose from the close button, Escape, and backdrop", () => {
     const onClose = vi.fn();
-    render(
-      <ResponsiveModal isOpen onClose={onClose} title="T">
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ onClose });
 
     fireEvent.click(screen.getByLabelText("Close dialog"));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -66,42 +53,24 @@ describe("ResponsiveModal", () => {
 
   it("does not close on backdrop when closeOnBackdrop is false", () => {
     const onClose = vi.fn();
-    render(
-      <ResponsiveModal
-        isOpen
-        onClose={onClose}
-        title="T"
-        closeOnBackdrop={false}
-      >
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ onClose, closeOnBackdrop: false });
     const overlay = screen.getByRole("dialog").parentElement;
     fireEvent.mouseDown(overlay);
     expect(onClose).not.toHaveBeenCalled();
   });
 
   it("hides the default close button when showClose is false", () => {
-    render(
-      <ResponsiveModal isOpen onClose={() => {}} title="T" showClose={false}>
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ showClose: false });
     expect(screen.queryByLabelText("Close dialog")).toBeNull();
     expect(screen.getByText("T")).toBeInTheDocument();
   });
 
   it("renders a custom header instead of the default bar and labels via labelledBy", () => {
-    render(
-      <ResponsiveModal
-        isOpen
-        onClose={() => {}}
-        labelledBy="gate-title"
-        header={<h2 id="gate-title">Consent Required</h2>}
-      >
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({
+      title: undefined,
+      labelledBy: "gate-title",
+      header: <h2 id="gate-title">Consent Required</h2>,
+    });
     expect(screen.queryByLabelText("Close dialog")).toBeNull();
     expect(screen.getByText("Consent Required")).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toHaveAttribute(
@@ -112,43 +81,23 @@ describe("ResponsiveModal", () => {
 
   it("ignores Escape and backdrop when dismissable is false", () => {
     const onClose = vi.fn();
-    render(
-      <ResponsiveModal
-        isOpen
-        onClose={onClose}
-        title="Gate"
-        dismissable={false}
-      >
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ onClose, title: "Gate", dismissable: false });
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     fireEvent.mouseDown(screen.getByRole("dialog").parentElement);
     expect(onClose).not.toHaveBeenCalled();
   });
 
   it("applies the zIndex prop to the overlay", () => {
-    render(
-      <ResponsiveModal isOpen onClose={() => {}} title="T" zIndex={100}>
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({ zIndex: 100 });
     expect(screen.getByRole("dialog").parentElement).toHaveStyle({
       zIndex: "100",
     });
   });
 
   it("uses backdropClassName instead of the default scrim when provided", () => {
-    render(
-      <ResponsiveModal
-        isOpen
-        onClose={() => {}}
-        title="T"
-        backdropClassName="bg-gradient-to-br from-va-blue/95 to-green-900/95"
-      >
-        content
-      </ResponsiveModal>,
-    );
+    renderModal({
+      backdropClassName: "bg-gradient-to-br from-va-blue/95 to-green-900/95",
+    });
     const overlay = screen.getByRole("dialog").parentElement;
     expect(overlay.className).toContain("from-va-blue/95");
     expect(overlay.className).not.toContain("bg-black/60");

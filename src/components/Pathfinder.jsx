@@ -31,23 +31,6 @@ import {
 } from "../utils/documentAnalyzer";
 
 // Icons
-// eslint-disable-next-line no-unused-vars
-const CompassIcon = () => (
-  <svg
-    className="w-6 h-6"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-    />
-  </svg>
-);
-
 const ChartIcon = () => (
   <svg
     className="w-5 h-5"
@@ -415,8 +398,7 @@ export default function Pathfinder({
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [, setAIStatus] = useState(getAIStatus());
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
   // File drop modal state
@@ -466,12 +448,6 @@ export default function Pathfinder({
       setLoadedFromPacket(true); // Show indicator that conditions were loaded
     }
   }, [initialConditions]);
-
-  // eslint-disable-next-line no-unused-vars
-  const handleSaveKey = (key) => {
-    localStorage.setItem("vetrate_gemini_key", key);
-    setApiKey(key);
-  };
 
   const handleConsent = () => {
     localStorage.setItem("vetrate_ai_consent", "true");
@@ -547,8 +523,10 @@ export default function Pathfinder({
       // Parse the extracted text for ratings
       // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
       const ratingPatterns = [
-        /([A-Z][a-z\s]+(?:[A-Z][a-z\s]*)*)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
-        /(\d+)%?\s+for\s+([A-Z][a-z\s]+(?:[A-Z][a-z\s]*)*)/gi, // "70% for PTSD"
+        // eslint-disable-next-line sonarjs/slow-regex -- nested quantifier already removed; empirically verified O(n^2) via .exec() loop restarts, not exponential (see PR notes)
+        /([A-Z][a-z\s]+)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
+        // eslint-disable-next-line sonarjs/slow-regex -- same as above; single quantifier, no nesting, no catastrophic backtracking
+        /(\d+)%?\s+for\s+([A-Z][a-z\s]+)/gi, // "70% for PTSD"
       ];
 
       const extractedRatings = [];

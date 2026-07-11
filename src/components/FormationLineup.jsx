@@ -154,6 +154,7 @@ const FormationEntry = ({
   const isCurrent = isEntryCurrent(entry.status);
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- native HTML5 drag-and-drop handlers (onDragStart/onDragOver/onDrop) only fire via drag input, not click/keyboard
     <div
       draggable={entry.status === FORMATION_STATUS.WAITING}
       onDragStart={(e) => onDragStart(e, index)}

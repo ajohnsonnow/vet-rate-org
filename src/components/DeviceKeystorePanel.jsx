@@ -48,8 +48,8 @@ const downloadJson = (filename, obj) => {
   triggerBlobDownload(blob, filename);
 };
 
-const DeviceKeystorePanel = ({ onDeauthorize }) => {
-  // Snapshot of the module-level keystore state, refreshed after each action.
+// Snapshot of the module-level keystore state, refreshed after each action.
+function useKeystoreState() {
   const [enabled, setEnabled] = useState(isDevicePassphraseEnabled());
   const [unlocked, setUnlocked] = useState(isKeystoreUnlocked());
   const [keyIds, setKeyIds] = useState(() => listBackupKeyIds());
@@ -73,9 +73,38 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
     setKeyIds(listBackupKeyIds());
   };
 
-  // Shared busy/error/refresh wrapper. The action returns a success message (or
-  // nothing); a thrown error becomes the visible error and stops the action.
-  const run = async (fn) => {
+  return {
+    enabled,
+    unlocked,
+    keyIds,
+    refresh,
+    busy,
+    setBusy,
+    msg,
+    setMsg,
+    err,
+    setErr,
+    newPass,
+    setNewPass,
+    confirmPass,
+    setConfirmPass,
+    unlockPass,
+    setUnlockPass,
+    rotatePass,
+    setRotatePass,
+    rotateConfirm,
+    setRotateConfirm,
+    showDeauth,
+    setShowDeauth,
+    deauthText,
+    setDeauthText,
+  };
+}
+
+// Shared busy/error/refresh wrapper. The action returns a success message (or
+// nothing); a thrown error becomes the visible error and stops the action.
+function createRunner({ refresh, setBusy, setErr, setMsg }) {
+  return async (fn) => {
     setBusy(true);
     setErr("");
     setMsg("");
@@ -89,7 +118,17 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
       setBusy(false);
     }
   };
+}
 
+function createPassphraseActions({
+  run,
+  newPass,
+  confirmPass,
+  setNewPass,
+  setConfirmPass,
+  unlockPass,
+  setUnlockPass,
+}) {
   const handleEnable = () =>
     run(async () => {
       if (newPass.length < MIN_PASSPHRASE) {
@@ -117,6 +156,16 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
       return "Keystore locked.";
     });
 
+  return { handleEnable, handleUnlock, handleLock };
+}
+
+function createRotateExportActions({
+  run,
+  rotatePass,
+  rotateConfirm,
+  setRotatePass,
+  setRotateConfirm,
+}) {
   const handleRotate = () =>
     run(async () => {
       if (rotatePass.length < MIN_PASSPHRASE) {
@@ -157,7 +206,17 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
     });
   };
 
-  const handleDeauthorize = () =>
+  return { handleRotate, handleExport, handleImportFile };
+}
+
+function createDeauthorizeAction({
+  run,
+  onDeauthorize,
+  deauthText,
+  setShowDeauth,
+  setDeauthText,
+}) {
+  return () =>
     run(async () => {
       if (deauthText.trim().toUpperCase() !== DEAUTH_CONFIRM_WORD) {
         throw new Error(`Type ${DEAUTH_CONFIRM_WORD} to confirm.`);
@@ -168,6 +227,407 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
       setDeauthText("");
       return `Device deauthorized: ${removed} key item(s) erased from this browser and connected providers signed out.`;
     });
+}
+
+// Status line + per-action messages
+const KeystoreStatusCard = ({ enabled, unlocked, keyIds, msg, err }) => (
+  <div className={cardClass}>
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span
+        className={`rounded px-2 py-1 ${
+          enabled
+            ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300"
+            : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+        }`}
+      >
+        {enabled ? "Passphrase enabled" : "Passphrase not set"}
+      </span>
+      {enabled && (
+        <span
+          className={`rounded px-2 py-1 ${
+            unlocked
+              ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300"
+              : "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
+          }`}
+        >
+          {unlocked ? "🔓 Unlocked" : "🔒 Locked"}
+        </span>
+      )}
+      <span className="rounded bg-gray-200 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+        {keyIds.length} stored key{keyIds.length === 1 ? "" : "s"}
+      </span>
+    </div>
+
+    {(msg || err) && (
+      <p
+        className={`mt-3 text-sm ${
+          err
+            ? "text-red-700 dark:text-red-300"
+            : "text-green-700 dark:text-green-300"
+        }`}
+        role={err ? "alert" : "status"}
+      >
+        {err ? `⚠️ ${err}` : msg}
+      </p>
+    )}
+  </div>
+);
+
+// Enable (not yet set) + import a recovery bundle
+const KeystoreEnableSection = ({
+  newPass,
+  setNewPass,
+  confirmPass,
+  setConfirmPass,
+  busy,
+  onEnable,
+  onImportFile,
+}) => (
+  <div className={cardClass}>
+    <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+      Set a device passphrase
+    </h5>
+    <div className="space-y-2">
+      <label htmlFor="ks-new" className="sr-only">
+        New device passphrase
+      </label>
+      <input
+        id="ks-new"
+        type="password"
+        value={newPass}
+        onChange={(e) => setNewPass(e.target.value)}
+        placeholder={`New passphrase (min ${MIN_PASSPHRASE} characters)`}
+        className={inputClass}
+        autoComplete="new-password"
+      />
+      <label htmlFor="ks-confirm" className="sr-only">
+        Confirm device passphrase
+      </label>
+      <input
+        id="ks-confirm"
+        type="password"
+        value={confirmPass}
+        onChange={(e) => setConfirmPass(e.target.value)}
+        placeholder="Confirm passphrase"
+        className={inputClass}
+        autoComplete="new-password"
+      />
+      <p className="text-xs text-amber-700 dark:text-amber-300">
+        ⚠️ If you forget this passphrase, the keys it protects cannot be
+        recovered. There is no reset — by design, we never see it.
+      </p>
+      <button
+        type="button"
+        onClick={onEnable}
+        disabled={busy || !newPass || !confirmPass}
+        className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+      >
+        Enable device passphrase
+      </button>
+    </div>
+
+    <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <h5 className="mb-1 font-medium text-gray-900 dark:text-white">
+        Restore from a recovery bundle
+      </h5>
+      <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
+        Importing a bundle you exported elsewhere puts its wrapped keys on
+        this device. You will then unlock with that bundle&apos;s
+        passphrase.
+      </p>
+      <label htmlFor="ks-import" className="sr-only">
+        Recovery bundle file
+      </label>
+      <input
+        id="ks-import"
+        type="file"
+        accept="application/json,.json"
+        onChange={onImportFile}
+        disabled={busy}
+        className="block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white hover:file:bg-cyan-500 dark:text-gray-300"
+      />
+    </div>
+  </div>
+);
+
+// Unlock (enabled but locked)
+const KeystoreUnlockSection = ({
+  unlockPass,
+  setUnlockPass,
+  busy,
+  onUnlock,
+}) => (
+  <div className={cardClass}>
+    <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+      Unlock the keystore
+    </h5>
+    <div className="space-y-2">
+      <label htmlFor="ks-unlock" className="sr-only">
+        Device passphrase
+      </label>
+      <input
+        id="ks-unlock"
+        type="password"
+        value={unlockPass}
+        onChange={(e) => setUnlockPass(e.target.value)}
+        placeholder="Device passphrase"
+        className={inputClass}
+        autoComplete="current-password"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && unlockPass && !busy) onUnlock();
+        }}
+      />
+      <button
+        type="button"
+        onClick={onUnlock}
+        disabled={busy || !unlockPass}
+        className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+      >
+        Unlock
+      </button>
+    </div>
+  </div>
+);
+
+// Change passphrase + lock (enabled and unlocked)
+const KeystoreRotateSection = ({
+  rotatePass,
+  setRotatePass,
+  rotateConfirm,
+  setRotateConfirm,
+  busy,
+  onRotate,
+  onLock,
+}) => (
+  <div className={cardClass}>
+    <div className="mb-3 flex items-center justify-between">
+      <h5 className="font-medium text-gray-900 dark:text-white">
+        Change device passphrase
+      </h5>
+      <button
+        type="button"
+        onClick={onLock}
+        disabled={busy}
+        className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+      >
+        🔒 Lock now
+      </button>
+    </div>
+    <div className="space-y-2">
+      <label htmlFor="ks-rotate" className="sr-only">
+        New device passphrase
+      </label>
+      <input
+        id="ks-rotate"
+        type="password"
+        value={rotatePass}
+        onChange={(e) => setRotatePass(e.target.value)}
+        placeholder={`New passphrase (min ${MIN_PASSPHRASE} characters)`}
+        className={inputClass}
+        autoComplete="new-password"
+      />
+      <label htmlFor="ks-rotate-confirm" className="sr-only">
+        Confirm new device passphrase
+      </label>
+      <input
+        id="ks-rotate-confirm"
+        type="password"
+        value={rotateConfirm}
+        onChange={(e) => setRotateConfirm(e.target.value)}
+        placeholder="Confirm new passphrase"
+        className={inputClass}
+        autoComplete="new-password"
+      />
+      <p className="text-xs text-gray-600 dark:text-gray-400">
+        Re-wraps every saved key under the new passphrase. Your cloud
+        backups are not re-uploaded or changed.
+      </p>
+      <button
+        type="button"
+        onClick={onRotate}
+        disabled={busy || !rotatePass || !rotateConfirm}
+        className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+      >
+        Change passphrase
+      </button>
+    </div>
+  </div>
+);
+
+// Recovery export (available whenever a passphrase is enabled)
+const KeystoreExportSection = ({ unlocked, busy, onExport }) => (
+  <div className={cardClass}>
+    <h5 className="mb-1 font-medium text-gray-900 dark:text-white">
+      Recovery bundle
+    </h5>
+    <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
+      Download a passphrase-protected copy of this device&apos;s wrapped
+      keys so you can restore them on another device or after a wipe.
+      {!unlocked && " Unlock first to include every key."}
+    </p>
+    <button
+      type="button"
+      onClick={onExport}
+      disabled={busy}
+      className="rounded-lg border border-cyan-500 px-4 py-2 text-sm font-medium text-cyan-700 hover:bg-cyan-50 disabled:opacity-50 dark:text-cyan-300 dark:hover:bg-cyan-500/10"
+    >
+      ⬇️ Export recovery bundle
+    </button>
+  </div>
+);
+
+const KeystoreDeauthConfirm = ({
+  busy,
+  deauthText,
+  setDeauthText,
+  onCancel,
+  onDeauthorize,
+}) => (
+  <div className="mt-3 space-y-2">
+    <label
+      htmlFor="ks-deauth"
+      className="block text-sm text-gray-700 dark:text-gray-300"
+    >
+      Type <strong>{DEAUTH_CONFIRM_WORD}</strong> to confirm:
+    </label>
+    <input
+      id="ks-deauth"
+      type="text"
+      value={deauthText}
+      onChange={(e) => setDeauthText(e.target.value)}
+      placeholder={DEAUTH_CONFIRM_WORD}
+      className={inputClass}
+      autoComplete="off"
+    />
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={busy}
+        className="flex-1 rounded-lg bg-gray-200 py-2 text-sm text-gray-800 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onClick={onDeauthorize}
+        disabled={
+          busy ||
+          deauthText.trim().toUpperCase() !== DEAUTH_CONFIRM_WORD
+        }
+        className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
+      >
+        Erase keys & sign out
+      </button>
+    </div>
+  </div>
+);
+
+// Deauthorize this device
+const KeystoreDeauthSection = ({
+  keyIds,
+  busy,
+  showDeauth,
+  setShowDeauth,
+  deauthText,
+  setDeauthText,
+  onDeauthorize,
+  setErr,
+  setMsg,
+}) => (
+  <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-400/30 dark:bg-red-500/10">
+    <h5 className="mb-1 font-semibold text-red-700 dark:text-red-300">
+      Deauthorize this device
+    </h5>
+    <p className="text-sm text-gray-700 dark:text-gray-300">
+      Erases every encryption key this browser holds and signs out your
+      connected cloud providers. This is enforced on{" "}
+      <strong>this device only</strong> — it cannot delete files already
+      in your cloud or recall backups that were already synced.
+    </p>
+    {keyIds.length > 0 && (
+      <p className="mt-2 rounded bg-red-100 p-2 text-xs text-red-800 dark:bg-red-500/20 dark:text-red-200">
+        ⚠️ {keyIds.length} backup key{keyIds.length === 1 ? "" : "s"} live
+        only on this device. Any passphrase-less backup whose only key is
+        here becomes <strong>permanently unrecoverable everywhere</strong>{" "}
+        after deauthorization. Export a recovery bundle first if you might
+        need them.
+      </p>
+    )}
+
+    {!showDeauth ? (
+      <button
+        type="button"
+        onClick={() => {
+          setShowDeauth(true);
+          setErr("");
+          setMsg("");
+        }}
+        disabled={busy}
+        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+      >
+        Deauthorize this device…
+      </button>
+    ) : (
+      <KeystoreDeauthConfirm
+        busy={busy}
+        deauthText={deauthText}
+        setDeauthText={setDeauthText}
+        onCancel={() => {
+          setShowDeauth(false);
+          setDeauthText("");
+        }}
+        onDeauthorize={onDeauthorize}
+      />
+    )}
+  </div>
+);
+
+function createKeystoreActions(state, onDeauthorize) {
+  const { refresh, setBusy, setErr, setMsg } = state;
+  const run = createRunner({ refresh, setBusy, setErr, setMsg });
+
+  const { handleEnable, handleUnlock, handleLock } = createPassphraseActions({
+    run,
+    newPass: state.newPass,
+    confirmPass: state.confirmPass,
+    setNewPass: state.setNewPass,
+    setConfirmPass: state.setConfirmPass,
+    unlockPass: state.unlockPass,
+    setUnlockPass: state.setUnlockPass,
+  });
+
+  const { handleRotate, handleExport, handleImportFile } =
+    createRotateExportActions({
+      run,
+      rotatePass: state.rotatePass,
+      rotateConfirm: state.rotateConfirm,
+      setRotatePass: state.setRotatePass,
+      setRotateConfirm: state.setRotateConfirm,
+    });
+
+  const handleDeauthorize = createDeauthorizeAction({
+    run,
+    onDeauthorize,
+    deauthText: state.deauthText,
+    setShowDeauth: state.setShowDeauth,
+    setDeauthText: state.setDeauthText,
+  });
+
+  return {
+    handleEnable,
+    handleUnlock,
+    handleLock,
+    handleRotate,
+    handleExport,
+    handleImportFile,
+    handleDeauthorize,
+  };
+}
+
+const DeviceKeystorePanel = ({ onDeauthorize }) => {
+  const state = useKeystoreState();
+  const actions = createKeystoreActions(state, onDeauthorize);
 
   return (
     <div className="space-y-4">
@@ -183,309 +643,67 @@ const DeviceKeystorePanel = ({ onDeauthorize }) => {
         </p>
       </div>
 
-      {/* Status line + per-action messages */}
-      <div className={cardClass}>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span
-            className={`rounded px-2 py-1 ${
-              enabled
-                ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-            }`}
-          >
-            {enabled ? "Passphrase enabled" : "Passphrase not set"}
-          </span>
-          {enabled && (
-            <span
-              className={`rounded px-2 py-1 ${
-                unlocked
-                  ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300"
-                  : "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
-              }`}
-            >
-              {unlocked ? "🔓 Unlocked" : "🔒 Locked"}
-            </span>
-          )}
-          <span className="rounded bg-gray-200 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-            {keyIds.length} stored key{keyIds.length === 1 ? "" : "s"}
-          </span>
-        </div>
+      <KeystoreStatusCard
+        enabled={state.enabled}
+        unlocked={state.unlocked}
+        keyIds={state.keyIds}
+        msg={state.msg}
+        err={state.err}
+      />
 
-        {(msg || err) && (
-          <p
-            className={`mt-3 text-sm ${
-              err
-                ? "text-red-700 dark:text-red-300"
-                : "text-green-700 dark:text-green-300"
-            }`}
-            role={err ? "alert" : "status"}
-          >
-            {err ? `⚠️ ${err}` : msg}
-          </p>
-        )}
-      </div>
-
-      {/* Enable (not yet set) + import a recovery bundle */}
-      {!enabled && (
-        <div className={cardClass}>
-          <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
-            Set a device passphrase
-          </h5>
-          <div className="space-y-2">
-            <label htmlFor="ks-new" className="sr-only">
-              New device passphrase
-            </label>
-            <input
-              id="ks-new"
-              type="password"
-              value={newPass}
-              onChange={(e) => setNewPass(e.target.value)}
-              placeholder={`New passphrase (min ${MIN_PASSPHRASE} characters)`}
-              className={inputClass}
-              autoComplete="new-password"
-            />
-            <label htmlFor="ks-confirm" className="sr-only">
-              Confirm device passphrase
-            </label>
-            <input
-              id="ks-confirm"
-              type="password"
-              value={confirmPass}
-              onChange={(e) => setConfirmPass(e.target.value)}
-              placeholder="Confirm passphrase"
-              className={inputClass}
-              autoComplete="new-password"
-            />
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              ⚠️ If you forget this passphrase, the keys it protects cannot be
-              recovered. There is no reset — by design, we never see it.
-            </p>
-            <button
-              type="button"
-              onClick={handleEnable}
-              disabled={busy || !newPass || !confirmPass}
-              className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-            >
-              Enable device passphrase
-            </button>
-          </div>
-
-          <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
-            <h5 className="mb-1 font-medium text-gray-900 dark:text-white">
-              Restore from a recovery bundle
-            </h5>
-            <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-              Importing a bundle you exported elsewhere puts its wrapped keys on
-              this device. You will then unlock with that bundle&apos;s
-              passphrase.
-            </p>
-            <label htmlFor="ks-import" className="sr-only">
-              Recovery bundle file
-            </label>
-            <input
-              id="ks-import"
-              type="file"
-              accept="application/json,.json"
-              onChange={handleImportFile}
-              disabled={busy}
-              className="block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white hover:file:bg-cyan-500 dark:text-gray-300"
-            />
-          </div>
-        </div>
+      {!state.enabled && (
+        <KeystoreEnableSection
+          newPass={state.newPass}
+          setNewPass={state.setNewPass}
+          confirmPass={state.confirmPass}
+          setConfirmPass={state.setConfirmPass}
+          busy={state.busy}
+          onEnable={actions.handleEnable}
+          onImportFile={actions.handleImportFile}
+        />
       )}
 
-      {/* Unlock (enabled but locked) */}
-      {enabled && !unlocked && (
-        <div className={cardClass}>
-          <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
-            Unlock the keystore
-          </h5>
-          <div className="space-y-2">
-            <label htmlFor="ks-unlock" className="sr-only">
-              Device passphrase
-            </label>
-            <input
-              id="ks-unlock"
-              type="password"
-              value={unlockPass}
-              onChange={(e) => setUnlockPass(e.target.value)}
-              placeholder="Device passphrase"
-              className={inputClass}
-              autoComplete="current-password"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && unlockPass && !busy) handleUnlock();
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleUnlock}
-              disabled={busy || !unlockPass}
-              className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-            >
-              Unlock
-            </button>
-          </div>
-        </div>
+      {state.enabled && !state.unlocked && (
+        <KeystoreUnlockSection
+          unlockPass={state.unlockPass}
+          setUnlockPass={state.setUnlockPass}
+          busy={state.busy}
+          onUnlock={actions.handleUnlock}
+        />
       )}
 
-      {/* Change passphrase + lock (enabled and unlocked) */}
-      {enabled && unlocked && (
-        <div className={cardClass}>
-          <div className="mb-3 flex items-center justify-between">
-            <h5 className="font-medium text-gray-900 dark:text-white">
-              Change device passphrase
-            </h5>
-            <button
-              type="button"
-              onClick={handleLock}
-              disabled={busy}
-              className="rounded bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-            >
-              🔒 Lock now
-            </button>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="ks-rotate" className="sr-only">
-              New device passphrase
-            </label>
-            <input
-              id="ks-rotate"
-              type="password"
-              value={rotatePass}
-              onChange={(e) => setRotatePass(e.target.value)}
-              placeholder={`New passphrase (min ${MIN_PASSPHRASE} characters)`}
-              className={inputClass}
-              autoComplete="new-password"
-            />
-            <label htmlFor="ks-rotate-confirm" className="sr-only">
-              Confirm new device passphrase
-            </label>
-            <input
-              id="ks-rotate-confirm"
-              type="password"
-              value={rotateConfirm}
-              onChange={(e) => setRotateConfirm(e.target.value)}
-              placeholder="Confirm new passphrase"
-              className={inputClass}
-              autoComplete="new-password"
-            />
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Re-wraps every saved key under the new passphrase. Your cloud
-              backups are not re-uploaded or changed.
-            </p>
-            <button
-              type="button"
-              onClick={handleRotate}
-              disabled={busy || !rotatePass || !rotateConfirm}
-              className="w-full rounded-lg bg-cyan-600 py-2 font-medium text-white hover:bg-cyan-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-            >
-              Change passphrase
-            </button>
-          </div>
-        </div>
+      {state.enabled && state.unlocked && (
+        <KeystoreRotateSection
+          rotatePass={state.rotatePass}
+          setRotatePass={state.setRotatePass}
+          rotateConfirm={state.rotateConfirm}
+          setRotateConfirm={state.setRotateConfirm}
+          busy={state.busy}
+          onRotate={actions.handleRotate}
+          onLock={actions.handleLock}
+        />
       )}
 
-      {/* Recovery export (available whenever a passphrase is enabled) */}
-      {enabled && (
-        <div className={cardClass}>
-          <h5 className="mb-1 font-medium text-gray-900 dark:text-white">
-            Recovery bundle
-          </h5>
-          <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-            Download a passphrase-protected copy of this device&apos;s wrapped
-            keys so you can restore them on another device or after a wipe.
-            {!unlocked && " Unlock first to include every key."}
-          </p>
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={busy}
-            className="rounded-lg border border-cyan-500 px-4 py-2 text-sm font-medium text-cyan-700 hover:bg-cyan-50 disabled:opacity-50 dark:text-cyan-300 dark:hover:bg-cyan-500/10"
-          >
-            ⬇️ Export recovery bundle
-          </button>
-        </div>
+      {state.enabled && (
+        <KeystoreExportSection
+          unlocked={state.unlocked}
+          busy={state.busy}
+          onExport={actions.handleExport}
+        />
       )}
 
-      {/* Deauthorize this device */}
-      {enabled && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-400/30 dark:bg-red-500/10">
-          <h5 className="mb-1 font-semibold text-red-700 dark:text-red-300">
-            Deauthorize this device
-          </h5>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            Erases every encryption key this browser holds and signs out your
-            connected cloud providers. This is enforced on{" "}
-            <strong>this device only</strong> — it cannot delete files already
-            in your cloud or recall backups that were already synced.
-          </p>
-          {keyIds.length > 0 && (
-            <p className="mt-2 rounded bg-red-100 p-2 text-xs text-red-800 dark:bg-red-500/20 dark:text-red-200">
-              ⚠️ {keyIds.length} backup key{keyIds.length === 1 ? "" : "s"} live
-              only on this device. Any passphrase-less backup whose only key is
-              here becomes <strong>permanently unrecoverable everywhere</strong>{" "}
-              after deauthorization. Export a recovery bundle first if you might
-              need them.
-            </p>
-          )}
-
-          {!showDeauth ? (
-            <button
-              type="button"
-              onClick={() => {
-                setShowDeauth(true);
-                setErr("");
-                setMsg("");
-              }}
-              disabled={busy}
-              className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
-            >
-              Deauthorize this device…
-            </button>
-          ) : (
-            <div className="mt-3 space-y-2">
-              <label
-                htmlFor="ks-deauth"
-                className="block text-sm text-gray-700 dark:text-gray-300"
-              >
-                Type <strong>{DEAUTH_CONFIRM_WORD}</strong> to confirm:
-              </label>
-              <input
-                id="ks-deauth"
-                type="text"
-                value={deauthText}
-                onChange={(e) => setDeauthText(e.target.value)}
-                placeholder={DEAUTH_CONFIRM_WORD}
-                className={inputClass}
-                autoComplete="off"
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeauth(false);
-                    setDeauthText("");
-                  }}
-                  disabled={busy}
-                  className="flex-1 rounded-lg bg-gray-200 py-2 text-sm text-gray-800 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeauthorize}
-                  disabled={
-                    busy ||
-                    deauthText.trim().toUpperCase() !== DEAUTH_CONFIRM_WORD
-                  }
-                  className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-                >
-                  Erase keys & sign out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+      {state.enabled && (
+        <KeystoreDeauthSection
+          keyIds={state.keyIds}
+          busy={state.busy}
+          showDeauth={state.showDeauth}
+          setShowDeauth={state.setShowDeauth}
+          deauthText={state.deauthText}
+          setDeauthText={state.setDeauthText}
+          onDeauthorize={actions.handleDeauthorize}
+          setErr={state.setErr}
+          setMsg={state.setMsg}
+        />
       )}
     </div>
   );

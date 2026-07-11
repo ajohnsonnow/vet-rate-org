@@ -266,8 +266,7 @@ const generateRequestText = (formData, selectedRecords) => {
 };
 
 export default function FOIAGenerator({ onClose, onReportBug }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  useLanguage();
 
   // Form state
   const [formData, setFormData] = useState({

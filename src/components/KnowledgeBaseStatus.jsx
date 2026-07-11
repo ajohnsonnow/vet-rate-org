@@ -320,7 +320,13 @@ function useDkbInitialCacheCheck({
     };
 
     checkDeviceAndCache();
-  }, []);
+  }, [
+    setDownloadProgress,
+    setIsDownloading,
+    setIsFullCached,
+    setIsMobile,
+    setKbStatus,
+  ]);
 }
 
 // Listen for cache updates broadcast elsewhere in the app (e.g. after a
@@ -343,7 +349,7 @@ function useDkbCacheUpdateListener({ setIsFullCached, setKbStatus }) {
     window.addEventListener("dkb-cache-updated", handleCacheUpdate);
     return () =>
       window.removeEventListener("dkb-cache-updated", handleCacheUpdate);
-  }, []);
+  }, [setIsFullCached, setKbStatus]);
 }
 
 // Close the compact dropdown when clicking outside of it.
@@ -361,7 +367,7 @@ function useDkbDropdownDismiss({ dropdownRef, showDetails, setShowDetails }) {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [showDetails]);
+  }, [dropdownRef, setShowDetails, showDetails]);
 }
 
 // Listen for Local AI (on-device model) status changes and switch between
@@ -408,7 +414,7 @@ function useDkbLocalAIListener({ setKbStatus }) {
         handleLocalAIStatusChange,
       );
     };
-  }, []);
+  }, [setKbStatus]);
 }
 
 // Load Diamond Knowledge Base (DKB) - Official sources only.
@@ -473,7 +479,7 @@ function useDkbStatsLoader({ setKbStatus }) {
     };
 
     loadKnowledgeBaseStats();
-  }, []);
+  }, [setKbStatus]);
 }
 
 // Handle manual download of full DKB (for mobile users).

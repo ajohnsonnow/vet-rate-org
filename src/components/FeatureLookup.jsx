@@ -108,9 +108,536 @@ const STATUS_CONFIG = {
   },
 };
 
+// Render priority badge
+const PriorityBadge = ({ priority }) => {
+  const config = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
+  const Icon = config.icon;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
+    >
+      <Icon className="w-3 h-3" />
+      {config.label}
+    </span>
+  );
+};
+
+// Render status badge
+const StatusBadge = ({ status }) => {
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.new;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
+    >
+      {config.label}
+    </span>
+  );
+};
+
+function FeatureLookupHeader({
+  storageAvailable,
+  onExport,
+  onClose,
+  searchQuery,
+  setSearchQuery,
+  onSearch,
+  showFilters,
+  setShowFilters,
+  filters,
+  setFilters,
+  onApplyFilters,
+}) {
+  return (
+    <>
+      {/* Title row */}
+      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80">
+        <div className="flex min-w-0 items-center gap-3">
+          <Lightbulb className="h-6 w-6 flex-shrink-0 text-purple-500" />
+          <div className="min-w-0">
+            <h1
+              id="feature-lookup-title"
+              className="truncate text-lg font-bold text-gray-900 dark:text-white"
+            >
+              Feature Requests - Admin Lookup
+            </h1>
+            <p className="truncate text-xs text-gray-500 dark:text-slate-400">
+              Search and manage feature requests
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {/* Storage Status */}
+          <div
+            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
+              storageAvailable
+                ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+            }`}
+          >
+            <Database className="h-3 w-3" />
+            {storageAvailable ? "DB Online" : "Fallback Mode"}
+          </div>
+
+          <button
+            onClick={onExport}
+            className="p-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
+            aria-label="Export All Requests"
+          >
+            <Download className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-500 transition-colors hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearch()}
+              placeholder="Enter Request ID (e.g., FEAT-MKNCUI1I) or search text..."
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
+            />
+          </div>
+          <button
+            onClick={onSearch}
+            className="rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
+          >
+            Search
+          </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`rounded-lg p-2 transition-colors ${
+              showFilters
+                ? "bg-purple-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+            }`}
+          >
+            <Filter className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Filters */}
+        {showFilters && (
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-gray-200 pt-3 dark:border-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-slate-400">
+                Status:
+              </span>
+              <select
+                value={filters.status || ""}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, status: e.target.value || null }))
+                }
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+              >
+                <option value="">All</option>
+                <option value="new">New</option>
+                <option value="under-review">Under Review</option>
+                <option value="planned">Planned</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-slate-400">
+                Priority:
+              </span>
+              <select
+                value={filters.priority || ""}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    priority: e.target.value || null,
+                  }))
+                }
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+              >
+                <option value="">All</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <button
+              onClick={onApplyFilters}
+              className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Apply Filters
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function RequestListPanel({
+  view,
+  loading,
+  error,
+  requests,
+  selectedRequest,
+  onViewRequest,
+}) {
+  let listContent;
+  if (loading) {
+    listContent = (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  } else if (error && requests.length === 0) {
+    listContent = (
+      <div className="p-8 text-center" role="alert" aria-live="polite">
+        <AlertCircle className="mx-auto mb-3 h-12 w-12 text-red-500" />
+        <p className="text-red-600 dark:text-red-400">{error}</p>
+      </div>
+    );
+  } else if (requests.length === 0) {
+    listContent = (
+      <div className="p-8 text-center">
+        <Lightbulb className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-slate-600" />
+        <p className="text-gray-600 dark:text-slate-400">
+          No feature requests found
+        </p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
+          Requests will appear here when users submit them
+        </p>
+      </div>
+    );
+  } else {
+    listContent = (
+      <div className="divide-y divide-gray-200 dark:divide-slate-700">
+        {requests.map((request) => (
+          <button
+            key={request.request_id}
+            onClick={() => onViewRequest(request)}
+            className={`w-full p-4 text-left transition-colors hover:bg-gray-100 dark:hover:bg-slate-700/30 ${
+              selectedRequest?.request_id === request.request_id
+                ? "bg-gray-100 dark:bg-slate-700/50"
+                : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="font-mono text-sm text-purple-600 dark:text-purple-400">
+                    {request.request_id}
+                  </span>
+                  <StatusBadge status={request.status} />
+                </div>
+                <p className="truncate text-sm text-gray-900 dark:text-white">
+                  {request.title || "No title"}
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <PriorityBadge priority={request.priority} />
+                  <span className="text-xs text-gray-500 dark:text-slate-500">
+                    {request.category}
+                  </span>
+                </div>
+              </div>
+              <div className="whitespace-nowrap text-xs text-gray-500 dark:text-slate-500">
+                {new Date(request.created_at).toLocaleDateString()}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={
+        view === "detail"
+          ? "md:w-1/3 md:border-r md:border-gray-200 md:pr-2 dark:md:border-slate-700"
+          : "w-full"
+      }
+    >
+      {listContent}
+    </div>
+  );
+}
+
+function RequestDetailPanel({
+  view,
+  selectedRequest,
+  copied,
+  auditLog,
+  onCopyRequest,
+  onShowStatusModal,
+  onDelete,
+}) {
+  if (view !== "detail" || !selectedRequest) {
+    return null;
+  }
+
+  return (
+    <div className="min-w-0 flex-1 border-t border-gray-200 pt-4 dark:border-slate-700 md:border-t-0 md:pl-4 md:pt-0">
+      <div className="mx-auto max-w-3xl space-y-4">
+        {/* Request Header */}
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-mono text-xl font-bold text-purple-600 dark:text-purple-400">
+                {selectedRequest.request_id}
+              </h2>
+              <p className="mt-2 text-lg text-gray-900 dark:text-white">
+                {selectedRequest.title}
+              </p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+                Created:{" "}
+                {new Date(selectedRequest.created_at).toLocaleString()}
+              </p>
+            </div>
+            <div className="flex flex-shrink-0 flex-col items-end gap-2">
+              <PriorityBadge priority={selectedRequest.priority} />
+              <StatusBadge status={selectedRequest.status} />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-200 pt-4 dark:border-slate-700">
+            <button
+              onClick={onCopyRequest}
+              className="flex items-center gap-1 rounded bg-gray-200 px-3 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+            >
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copied ? "Copied!" : "Copy JSON"}
+            </button>
+            <button
+              onClick={onShowStatusModal}
+              className="flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-purple-500"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Update Status
+            </button>
+            <button
+              onClick={() => onDelete(selectedRequest.request_id)}
+              className="flex items-center gap-1 rounded bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-500"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </div>
+        </div>
+
+        {/* Description */}
+        <DetailSection title="Description" icon={FileText}>
+          <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+            {selectedRequest.description || "(No description provided)"}
+          </p>
+        </DetailSection>
+
+        {/* Problem Solved */}
+        {selectedRequest.problemSolved && (
+          <DetailSection title="Problem This Would Solve" icon={Lightbulb}>
+            <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+              {selectedRequest.problemSolved}
+            </p>
+          </DetailSection>
+        )}
+
+        {/* Proposed Solution */}
+        {selectedRequest.proposedSolution && (
+          <DetailSection title="Proposed Solution" icon={Zap}>
+            <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+              {selectedRequest.proposedSolution}
+            </p>
+          </DetailSection>
+        )}
+
+        {/* Additional Context */}
+        {selectedRequest.additionalContext && (
+          <DetailSection title="Additional Context" icon={MessageSquare}>
+            <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
+              {selectedRequest.additionalContext}
+            </p>
+          </DetailSection>
+        )}
+
+        {/* Client Environment */}
+        <DetailSection title="Client Environment" icon={Monitor}>
+          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            <div>
+              <span className="text-gray-500 dark:text-slate-500">
+                Browser:
+              </span>
+              <span className="ml-2 break-all text-gray-700 dark:text-slate-300">
+                {selectedRequest.systemInfo?.browser}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500 dark:text-slate-500">
+                Screen:
+              </span>
+              <span className="ml-2 text-gray-700 dark:text-slate-300">
+                {selectedRequest.systemInfo?.screenResolution}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500 dark:text-slate-500">
+                Module:
+              </span>
+              <span className="ml-2 text-gray-700 dark:text-slate-300">
+                {selectedRequest.module}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500 dark:text-slate-500">
+                Category:
+              </span>
+              <span className="ml-2 text-gray-700 dark:text-slate-300">
+                {selectedRequest.category}
+              </span>
+            </div>
+          </div>
+        </DetailSection>
+
+        {/* Review Notes */}
+        {selectedRequest.review_notes && (
+          <DetailSection title="Review Notes" icon={CheckCircle}>
+            <p className="whitespace-pre-wrap text-purple-700 dark:text-purple-400">
+              {selectedRequest.review_notes}
+            </p>
+            <p className="mt-2 text-xs text-gray-500 dark:text-slate-500">
+              Reviewed:{" "}
+              {new Date(selectedRequest.reviewed_at).toLocaleString()}
+            </p>
+          </DetailSection>
+        )}
+
+        {/* Audit Log */}
+        {auditLog.length > 0 && (
+          <DetailSection title="Audit Log" icon={History}>
+            <div className="space-y-2">
+              {auditLog.map((entry, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-gray-600 dark:text-slate-400">
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {entry.action}
+                    </span>
+                    {" by "}
+                    {entry.accessor}
+                    {entry.details && (
+                      <span className="text-gray-500 dark:text-slate-500">
+                        {" "}
+                        - {entry.details}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-gray-500 dark:text-slate-500">
+                    {new Date(entry.timestamp).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DetailSection>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatusUpdateModal({
+  isOpen,
+  onClose,
+  newStatus,
+  setNewStatus,
+  reviewNotes,
+  setReviewNotes,
+  updating,
+  onUpdateStatus,
+}) {
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Update Status"
+      size="sm"
+      zIndex={70}
+      footer={
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onUpdateStatus}
+            disabled={updating || !newStatus}
+            className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-500 disabled:opacity-50"
+          >
+            {updating ? "Saving..." : "Update Status"}
+          </button>
+        </div>
+      }
+    >
+      <label
+        htmlFor="feature-new-status"
+        className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
+      >
+        New Status:
+      </label>
+      <select
+        id="feature-new-status"
+        value={newStatus}
+        onChange={(e) => setNewStatus(e.target.value)}
+        className="mb-4 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white"
+      >
+        <option value="">Select status...</option>
+        <option value="new">New</option>
+        <option value="under-review">Under Review</option>
+        <option value="planned">Planned</option>
+        <option value="in-progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="declined">Declined</option>
+      </select>
+      <label
+        htmlFor="feature-review-notes"
+        className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
+      >
+        Review Notes:
+      </label>
+      <textarea
+        id="feature-review-notes"
+        value={reviewNotes}
+        onChange={(e) => setReviewNotes(e.target.value)}
+        placeholder="Add notes about this status change (optional)"
+        className="h-32 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
+      />
+    </ResponsiveModal>
+  );
+}
+
 export default function FeatureLookup({ onClose }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  useLanguage();
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
@@ -311,171 +838,20 @@ export default function FeatureLookup({ onClose }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Render priority badge
-  const PriorityBadge = ({ priority }) => {
-    const config = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
-    const Icon = config.icon;
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
-      >
-        <Icon className="w-3 h-3" />
-        {config.label}
-      </span>
-    );
-  };
-
-  // Render status badge
-  const StatusBadge = ({ status }) => {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.new;
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
-      >
-        {config.label}
-      </span>
-    );
-  };
-
   const header = (
-    <>
-      {/* Title row */}
-      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80">
-        <div className="flex min-w-0 items-center gap-3">
-          <Lightbulb className="h-6 w-6 flex-shrink-0 text-purple-500" />
-          <div className="min-w-0">
-            <h1
-              id="feature-lookup-title"
-              className="truncate text-lg font-bold text-gray-900 dark:text-white"
-            >
-              Feature Requests - Admin Lookup
-            </h1>
-            <p className="truncate text-xs text-gray-500 dark:text-slate-400">
-              Search and manage feature requests
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-shrink-0 items-center gap-2">
-          {/* Storage Status */}
-          <div
-            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
-              storageAvailable
-                ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-            }`}
-          >
-            <Database className="h-3 w-3" />
-            {storageAvailable ? "DB Online" : "Fallback Mode"}
-          </div>
-
-          <button
-            onClick={handleExport}
-            className="p-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
-            aria-label="Export All Requests"
-          >
-            <Download className="h-5 w-5" />
-          </button>
-
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 transition-colors hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Enter Request ID (e.g., FEAT-MKNCUI1I) or search text..."
-              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
-            />
-          </div>
-          <button
-            onClick={handleSearch}
-            className="rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
-          >
-            Search
-          </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`rounded-lg p-2 transition-colors ${
-              showFilters
-                ? "bg-purple-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-            }`}
-          >
-            <Filter className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Filters */}
-        {showFilters && (
-          <div className="mt-3 flex flex-wrap gap-4 border-t border-gray-200 pt-3 dark:border-slate-700">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-slate-400">
-                Status:
-              </span>
-              <select
-                value={filters.status || ""}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, status: e.target.value || null }))
-                }
-                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-              >
-                <option value="">All</option>
-                <option value="new">New</option>
-                <option value="under-review">Under Review</option>
-                <option value="planned">Planned</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="declined">Declined</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-slate-400">
-                Priority:
-              </span>
-              <select
-                value={filters.priority || ""}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    priority: e.target.value || null,
-                  }))
-                }
-                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-              >
-                <option value="">All</option>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-            <button
-              onClick={loadRequests}
-              className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Apply Filters
-            </button>
-          </div>
-        )}
-      </div>
-    </>
+    <FeatureLookupHeader
+      storageAvailable={storageAvailable}
+      onExport={handleExport}
+      onClose={onClose}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      onSearch={handleSearch}
+      showFilters={showFilters}
+      setShowFilters={setShowFilters}
+      filters={filters}
+      setFilters={setFilters}
+      onApplyFilters={loadRequests}
+    />
   );
 
   return (
@@ -519,314 +895,38 @@ export default function FeatureLookup({ onClose }) {
 
         {/* Main Content */}
         <div className="flex flex-col md:flex-row">
-          {/* Request List */}
-          <div
-            className={
-              view === "detail"
-                ? "md:w-1/3 md:border-r md:border-gray-200 md:pr-2 dark:md:border-slate-700"
-                : "w-full"
-            }
-          >
-            {loading ? (
-              <div className="flex h-64 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
-              </div>
-            ) : error && requests.length === 0 ? (
-              <div className="p-8 text-center" role="alert" aria-live="polite">
-                <AlertCircle className="mx-auto mb-3 h-12 w-12 text-red-500" />
-                <p className="text-red-600 dark:text-red-400">{error}</p>
-              </div>
-            ) : requests.length === 0 ? (
-              <div className="p-8 text-center">
-                <Lightbulb className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-slate-600" />
-                <p className="text-gray-600 dark:text-slate-400">
-                  No feature requests found
-                </p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-slate-500">
-                  Requests will appear here when users submit them
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200 dark:divide-slate-700">
-                {requests.map((request) => (
-                  <button
-                    key={request.request_id}
-                    onClick={() => handleViewRequest(request)}
-                    className={`w-full p-4 text-left transition-colors hover:bg-gray-100 dark:hover:bg-slate-700/30 ${
-                      selectedRequest?.request_id === request.request_id
-                        ? "bg-gray-100 dark:bg-slate-700/50"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-1 flex items-center gap-2">
-                          <span className="font-mono text-sm text-purple-600 dark:text-purple-400">
-                            {request.request_id}
-                          </span>
-                          <StatusBadge status={request.status} />
-                        </div>
-                        <p className="truncate text-sm text-gray-900 dark:text-white">
-                          {request.title || "No title"}
-                        </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <PriorityBadge priority={request.priority} />
-                          <span className="text-xs text-gray-500 dark:text-slate-500">
-                            {request.category}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="whitespace-nowrap text-xs text-gray-500 dark:text-slate-500">
-                        {new Date(request.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <RequestListPanel
+            view={view}
+            loading={loading}
+            error={error}
+            requests={requests}
+            selectedRequest={selectedRequest}
+            onViewRequest={handleViewRequest}
+          />
 
-          {/* Request Detail */}
-          {view === "detail" && selectedRequest && (
-            <div className="min-w-0 flex-1 border-t border-gray-200 pt-4 dark:border-slate-700 md:border-t-0 md:pl-4 md:pt-0">
-              <div className="mx-auto max-w-3xl space-y-4">
-                {/* Request Header */}
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="font-mono text-xl font-bold text-purple-600 dark:text-purple-400">
-                        {selectedRequest.request_id}
-                      </h2>
-                      <p className="mt-2 text-lg text-gray-900 dark:text-white">
-                        {selectedRequest.title}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-                        Created:{" "}
-                        {new Date(selectedRequest.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex flex-shrink-0 flex-col items-end gap-2">
-                      <PriorityBadge priority={selectedRequest.priority} />
-                      <StatusBadge status={selectedRequest.status} />
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-200 pt-4 dark:border-slate-700">
-                    <button
-                      onClick={handleCopyRequest}
-                      className="flex items-center gap-1 rounded bg-gray-200 px-3 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
-                    >
-                      {copied ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                      {copied ? "Copied!" : "Copy JSON"}
-                    </button>
-                    <button
-                      onClick={() => setShowStatusModal(true)}
-                      className="flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-purple-500"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Update Status
-                    </button>
-                    <button
-                      onClick={() => handleDelete(selectedRequest.request_id)}
-                      className="flex items-center gap-1 rounded bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <DetailSection title="Description" icon={FileText}>
-                  <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
-                    {selectedRequest.description || "(No description provided)"}
-                  </p>
-                </DetailSection>
-
-                {/* Problem Solved */}
-                {selectedRequest.problemSolved && (
-                  <DetailSection
-                    title="Problem This Would Solve"
-                    icon={Lightbulb}
-                  >
-                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
-                      {selectedRequest.problemSolved}
-                    </p>
-                  </DetailSection>
-                )}
-
-                {/* Proposed Solution */}
-                {selectedRequest.proposedSolution && (
-                  <DetailSection title="Proposed Solution" icon={Zap}>
-                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
-                      {selectedRequest.proposedSolution}
-                    </p>
-                  </DetailSection>
-                )}
-
-                {/* Additional Context */}
-                {selectedRequest.additionalContext && (
-                  <DetailSection
-                    title="Additional Context"
-                    icon={MessageSquare}
-                  >
-                    <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
-                      {selectedRequest.additionalContext}
-                    </p>
-                  </DetailSection>
-                )}
-
-                {/* Client Environment */}
-                <DetailSection title="Client Environment" icon={Monitor}>
-                  <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                    <div>
-                      <span className="text-gray-500 dark:text-slate-500">
-                        Browser:
-                      </span>
-                      <span className="ml-2 break-all text-gray-700 dark:text-slate-300">
-                        {selectedRequest.systemInfo?.browser}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-slate-500">
-                        Screen:
-                      </span>
-                      <span className="ml-2 text-gray-700 dark:text-slate-300">
-                        {selectedRequest.systemInfo?.screenResolution}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-slate-500">
-                        Module:
-                      </span>
-                      <span className="ml-2 text-gray-700 dark:text-slate-300">
-                        {selectedRequest.module}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-slate-500">
-                        Category:
-                      </span>
-                      <span className="ml-2 text-gray-700 dark:text-slate-300">
-                        {selectedRequest.category}
-                      </span>
-                    </div>
-                  </div>
-                </DetailSection>
-
-                {/* Review Notes */}
-                {selectedRequest.review_notes && (
-                  <DetailSection title="Review Notes" icon={CheckCircle}>
-                    <p className="whitespace-pre-wrap text-purple-700 dark:text-purple-400">
-                      {selectedRequest.review_notes}
-                    </p>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-slate-500">
-                      Reviewed:{" "}
-                      {new Date(selectedRequest.reviewed_at).toLocaleString()}
-                    </p>
-                  </DetailSection>
-                )}
-
-                {/* Audit Log */}
-                {auditLog.length > 0 && (
-                  <DetailSection title="Audit Log" icon={History}>
-                    <div className="space-y-2">
-                      {auditLog.map((entry, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="text-gray-600 dark:text-slate-400">
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {entry.action}
-                            </span>
-                            {" by "}
-                            {entry.accessor}
-                            {entry.details && (
-                              <span className="text-gray-500 dark:text-slate-500">
-                                {" "}
-                                - {entry.details}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-gray-500 dark:text-slate-500">
-                            {new Date(entry.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </DetailSection>
-                )}
-              </div>
-            </div>
-          )}
+          <RequestDetailPanel
+            view={view}
+            selectedRequest={selectedRequest}
+            copied={copied}
+            auditLog={auditLog}
+            onCopyRequest={handleCopyRequest}
+            onShowStatusModal={() => setShowStatusModal(true)}
+            onDelete={handleDelete}
+          />
         </div>
       </ResponsiveModal>
 
       {/* Status Update Modal */}
-      <ResponsiveModal
+      <StatusUpdateModal
         isOpen={showStatusModal}
         onClose={() => setShowStatusModal(false)}
-        title="Update Status"
-        size="sm"
-        zIndex={70}
-        footer={
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setShowStatusModal(false)}
-              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-white"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleUpdateStatus}
-              disabled={updating || !newStatus}
-              className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-500 disabled:opacity-50"
-            >
-              {updating ? "Saving..." : "Update Status"}
-            </button>
-          </div>
-        }
-      >
-        <label
-          htmlFor="feature-new-status"
-          className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
-        >
-          New Status:
-        </label>
-        <select
-          id="feature-new-status"
-          value={newStatus}
-          onChange={(e) => setNewStatus(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white"
-        >
-          <option value="">Select status...</option>
-          <option value="new">New</option>
-          <option value="under-review">Under Review</option>
-          <option value="planned">Planned</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="declined">Declined</option>
-        </select>
-        <label
-          htmlFor="feature-review-notes"
-          className="mb-2 block text-sm text-gray-600 dark:text-slate-400"
-        >
-          Review Notes:
-        </label>
-        <textarea
-          id="feature-review-notes"
-          value={reviewNotes}
-          onChange={(e) => setReviewNotes(e.target.value)}
-          placeholder="Add notes about this status change (optional)"
-          className="h-32 w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder-slate-400"
-        />
-      </ResponsiveModal>
+        newStatus={newStatus}
+        setNewStatus={setNewStatus}
+        reviewNotes={reviewNotes}
+        setReviewNotes={setReviewNotes}
+        updating={updating}
+        onUpdateStatus={handleUpdateStatus}
+      />
     </>
   );
 }

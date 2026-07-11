@@ -16,7 +16,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
@@ -413,109 +412,14 @@ const PACT_ACT_DATA = {
 };
 
 /**
- * Check if a condition is presumptive for given exposure and location
+ * Render Step 1: Exposure Type Selection
  */
-// eslint-disable-next-line no-unused-vars
-const checkPresumptiveStatus = (exposureType, location, condition) => {
-  const exposure = PACT_ACT_DATA[exposureType];
-  if (!exposure) return null;
-
-  // Check if location qualifies
-  const locationMatch = exposure.locations.find((l) => l.name === location);
-  if (!locationMatch) return null;
-
-  // Check if condition is presumptive
-  const conditionMatch = exposure.conditions.find(
-    (c) =>
-      c.name.toLowerCase() === condition.toLowerCase() ||
-      c.name.toLowerCase().includes(condition.toLowerCase()) ||
-      condition.toLowerCase().includes(c.name.toLowerCase()),
-  );
-
-  return conditionMatch || null;
-};
-
-export default function PACTActNavigator({ onClose, onReportBug }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-
-  // Navigation state
-  const [step, setStep] = useState(1);
-  const [selectedExposure, setSelectedExposure] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [serviceDates, setServiceDates] = useState({ start: "", end: "" });
-  const [selectedConditions, setSelectedConditions] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Results
-  const [results, setResults] = useState(null);
-
-  /**
-   * Get exposure data
-   */
-  const getExposureData = () => PACT_ACT_DATA[selectedExposure];
-
-  /**
-   * Filter conditions based on search
-   */
-  const getFilteredConditions = () => {
-    if (!selectedExposure) return [];
-    const conditions = PACT_ACT_DATA[selectedExposure].conditions;
-    if (!searchQuery.trim()) return conditions;
-
-    return conditions.filter((c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  };
-
-  /**
-   * Toggle condition selection
-   */
-  const toggleCondition = (condition) => {
-    setSelectedConditions((prev) =>
-      prev.includes(condition)
-        ? prev.filter((c) => c !== condition)
-        : [...prev, condition],
-    );
-  };
-
-  /**
-   * Analyze presumptive status
-   */
-  const analyzeResults = () => {
-    const exposure = PACT_ACT_DATA[selectedExposure];
-    const locationData = exposure.locations.find(
-      (l) => l.name === selectedLocation,
-    );
-
-    const conditionResults = selectedConditions.map((condName) => {
-      const condData = exposure.conditions.find((c) => c.name === condName);
-      return {
-        name: condName,
-        presumptive: condData?.presumptive || false,
-        pactAdded: condData?.pactAdded || false,
-        notes: condData?.notes || null,
-      };
-    });
-
-    setResults({
-      exposure: exposure.name,
-      location: selectedLocation,
-      locationDates: locationData?.dates,
-      locationDescription: locationData?.description,
-      serviceDates,
-      conditions: conditionResults,
-      presumptiveCount: conditionResults.filter((c) => c.presumptive).length,
-      totalConditions: conditionResults.length,
-    });
-
-    setStep(4);
-  };
-
-  /**
-   * Render Step 1: Exposure Type Selection
-   */
-  const renderExposureSelection = () => (
+function renderExposureSelection({
+  selectedExposure,
+  setSelectedExposure,
+  setStep,
+}) {
+  return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* What is PACT Act */}
       <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
@@ -581,488 +485,891 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
       </div>
     </div>
   );
+}
 
-  /**
-   * Render Step 2: Location Selection
-   */
-  const renderLocationSelection = () => {
-    const exposure = getExposureData();
+/**
+ * Render Step 2: Location Selection
+ */
+function renderLocationSelection({
+  selectedExposure,
+  selectedLocation,
+  setSelectedLocation,
+  setStep,
+}) {
+  const exposure = PACT_ACT_DATA[selectedExposure];
 
-    return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-          <button onClick={() => setStep(1)} className="hover:text-blue-500">
-            Exposure Type
-          </button>
-          <span>→</span>
-          <span className="font-semibold text-gray-800 dark:text-gray-200">
-            Location
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">{exposure.icon}</span>
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                {exposure.name}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Select where you served
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
-            {exposure.locations.map((loc) => (
-              <button
-                key={loc.name}
-                onClick={() => {
-                  setSelectedLocation(loc.name);
-                  setStep(3);
-                }}
-                className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                  selectedLocation === loc.name
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-100">
-                      {loc.name}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {loc.description}
-                    </p>
-                  </div>
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded">
-                    {loc.dates}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={() => setStep(1)}
-          className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          ← Back to Exposure Selection
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+        <button onClick={() => setStep(1)} className="hover:text-blue-500">
+          Exposure Type
         </button>
+        <span>→</span>
+        <span className="font-semibold text-gray-800 dark:text-gray-200">
+          Location
+        </span>
       </div>
-    );
-  };
 
-  /**
-   * Render Step 3: Condition Selection
-   */
-  const renderConditionSelection = () => {
-    const exposure = getExposureData();
-    const locationData = exposure.locations.find(
-      (l) => l.name === selectedLocation,
-    );
-    const filteredConditions = getFilteredConditions();
-
-    return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-          <button onClick={() => setStep(1)} className="hover:text-blue-500">
-            Exposure Type
-          </button>
-          <span>→</span>
-          <button onClick={() => setStep(2)} className="hover:text-blue-500">
-            Location
-          </button>
-          <span>→</span>
-          <span className="font-semibold text-gray-800 dark:text-gray-200">
-            Conditions
-          </span>
-        </div>
-
-        {/* Selected Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <div className="flex items-center gap-4">
-            <span className="text-3xl">{exposure.icon}</span>
-            <div>
-              <p className="font-bold text-gray-800 dark:text-gray-100">
-                {exposure.name}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                📍 {selectedLocation} • {locationData?.dates}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Service Dates (Optional) */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">
-            When did you serve there? (Optional)
-          </h4>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
-                From
-              </label>
-              <input
-                type="month"
-                value={serviceDates.start}
-                onChange={(e) =>
-                  setServiceDates((prev) => ({
-                    ...prev,
-                    start: e.target.value,
-                  }))
-                }
-                className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              />
-            </div>
-            <div className="flex-1">
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
-                To
-              </label>
-              <input
-                type="month"
-                value={serviceDates.end}
-                onChange={(e) =>
-                  setServiceDates((prev) => ({ ...prev, end: e.target.value }))
-                }
-                className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Condition Selection */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">
-              What conditions do you have? (Select all that apply)
-            </h4>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conditions..."
-              className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-            />
-          </div>
-
-          <div className="max-h-96 overflow-y-auto p-4 space-y-2">
-            {filteredConditions.map((cond) => (
-              <button
-                key={cond.name}
-                onClick={() => toggleCondition(cond.name)}
-                className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                  selectedConditions.includes(cond.name)
-                    ? "border-green-500 bg-green-50 dark:bg-green-900/30"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800 dark:text-gray-100">
-                      {selectedConditions.includes(cond.name) ? "✓ " : ""}
-                      {cond.name}
-                    </p>
-                    {cond.notes && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {cond.notes}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span
-                      className={`px-2 py-1 text-xs rounded ${
-                        cond.presumptive
-                          ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                      }`}
-                    >
-                      {cond.presumptive ? "✓ Presumptive" : "Not Presumptive"}
-                    </span>
-                    {cond.pactAdded && (
-                      <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded">
-                        🆕 PACT Act
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Selected Summary */}
-        {selectedConditions.length > 0 && (
-          <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
-            <p className="font-semibold text-green-800 dark:text-green-200">
-              {selectedConditions.length} condition
-              {selectedConditions.length > 1 ? "s" : ""} selected
-            </p>
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-              {selectedConditions.slice(0, 3).join(", ")}
-              {selectedConditions.length > 3 ? "..." : ""}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">{exposure.icon}</span>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+              {exposure.name}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Select where you served
             </p>
           </div>
-        )}
-
-        {/* Navigation */}
-        <div className="flex gap-4">
-          <button
-            onClick={() => setStep(2)}
-            className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            ← Back
-          </button>
-          <button
-            onClick={analyzeResults}
-            disabled={selectedConditions.length === 0}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Check Presumptive Status →
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  /**
-   * Render Step 4: Results
-   */
-  const renderResults = () => {
-    if (!results) return null;
-
-    const presumptiveConditions = results.conditions.filter(
-      (c) => c.presumptive,
-    );
-    const nonPresumptiveConditions = results.conditions.filter(
-      (c) => !c.presumptive,
-    );
-    const pactAddedConditions = results.conditions.filter((c) => c.pactAdded);
-
-    return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Success/Status Banner */}
-        <div
-          className={`rounded-xl p-6 text-white shadow-lg ${
-            results.presumptiveCount > 0
-              ? "bg-gradient-to-r from-green-500 to-emerald-600"
-              : "bg-gradient-to-r from-amber-500 to-orange-500"
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 rounded-full p-3">
-              <span className="text-4xl">
-                {results.presumptiveCount > 0 ? "✅" : "⚠️"}
-              </span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold">
-                {results.presumptiveCount > 0
-                  ? `${results.presumptiveCount} Presumptive Condition${results.presumptiveCount > 1 ? "s" : ""} Found!`
-                  : "No Presumptive Conditions Found"}
-              </h3>
-              <p className="text-white/90">
-                {results.presumptiveCount > 0
-                  ? "You may qualify for expedited service connection under the PACT Act"
-                  : "You may still qualify on a direct connection basis"}
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* Exposure Summary */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4">
-            📋 Your Exposure Profile
-          </h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Exposure Type
-              </p>
-              <p className="font-medium text-gray-800 dark:text-gray-100">
-                {results.exposure}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Location
-              </p>
-              <p className="font-medium text-gray-800 dark:text-gray-100">
-                {results.location}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Qualifying Dates
-              </p>
-              <p className="font-medium text-gray-800 dark:text-gray-100">
-                {results.locationDates}
-              </p>
-            </div>
-            {results.serviceDates.start && (
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Your Service Dates
-                </p>
-                <p className="font-medium text-gray-800 dark:text-gray-100">
-                  {results.serviceDates.start} to{" "}
-                  {results.serviceDates.end || "present"}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Presumptive Conditions */}
-        {presumptiveConditions.length > 0 && (
-          <div className="bg-green-50 dark:bg-green-900/30 rounded-xl shadow-lg overflow-hidden">
-            <div className="p-4 bg-green-100 dark:bg-green-900/50 border-b border-green-200 dark:border-green-700">
-              <h4 className="font-bold text-green-800 dark:text-green-200 flex items-center gap-2">
-                ✅ Presumptive Conditions ({presumptiveConditions.length})
-              </h4>
-              <p className="text-sm text-green-600 dark:text-green-400">
-                VA will presume these are related to your service - no nexus
-                letter required!
-              </p>
-            </div>
-            <div className="divide-y divide-green-200 dark:divide-green-700">
-              {presumptiveConditions.map((cond) => (
-                <div key={cond.name} className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-green-800 dark:text-green-200">
-                        {cond.name}
-                      </p>
-                      {cond.notes && (
-                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                          {cond.notes}
-                        </p>
-                      )}
-                    </div>
-                    {cond.pactAdded && (
-                      <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded font-medium">
-                        🆕 PACT Act Added
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Non-Presumptive Conditions */}
-        {nonPresumptiveConditions.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl shadow-lg overflow-hidden">
-            <div className="p-4 bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-700">
-              <h4 className="font-bold text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                ⚠️ Not Currently Presumptive ({nonPresumptiveConditions.length})
-              </h4>
-              <p className="text-sm text-amber-600 dark:text-amber-400">
-                You can still claim these conditions but will need medical
-                evidence/nexus
-              </p>
-            </div>
-            <div className="divide-y divide-amber-200 dark:divide-amber-700">
-              {nonPresumptiveConditions.map((cond) => (
-                <div key={cond.name} className="p-4">
-                  <p className="font-medium text-amber-800 dark:text-amber-200">
-                    {cond.name}
+        <div className="grid gap-3">
+          {exposure.locations.map((loc) => (
+            <button
+              key={loc.name}
+              onClick={() => {
+                setSelectedLocation(loc.name);
+                setStep(3);
+              }}
+              className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                selectedLocation === loc.name
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {loc.name}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {loc.description}
                   </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded">
+                  {loc.dates}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {/* PACT Act Info */}
-        {pactAddedConditions.length > 0 && (
-          <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 rounded-r-lg">
-            <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">
-              🆕 New Under PACT Act
-            </h4>
-            <p className="text-purple-700 dark:text-purple-300 text-sm">
-              {pactAddedConditions.length} of your conditions were added as
-              presumptive by the PACT Act in 2022. These claims are now much
-              easier to win!
+      <button
+        onClick={() => setStep(1)}
+        className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        ← Back to Exposure Selection
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Filter conditions based on search
+ */
+function getFilteredConditions(selectedExposure, searchQuery) {
+  if (!selectedExposure) return [];
+  const conditions = PACT_ACT_DATA[selectedExposure].conditions;
+  if (!searchQuery.trim()) return conditions;
+
+  return conditions.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+}
+
+/**
+ * Render Step 3 section: Service Dates (Optional)
+ */
+function renderServiceDatesSection({ serviceDates, setServiceDates }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">
+        When did you serve there? (Optional)
+      </h4>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
+            From
+          </label>
+          <input
+            type="month"
+            value={serviceDates.start}
+            onChange={(e) =>
+              setServiceDates((prev) => ({
+                ...prev,
+                start: e.target.value,
+              }))
+            }
+            className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+          />
+        </div>
+        <div className="flex-1">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
+            To
+          </label>
+          <input
+            type="month"
+            value={serviceDates.end}
+            onChange={(e) =>
+              setServiceDates((prev) => ({ ...prev, end: e.target.value }))
+            }
+            className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 3 section: Conditions list (search + selectable list)
+ */
+function renderConditionsListSection({
+  searchQuery,
+  setSearchQuery,
+  filteredConditions,
+  selectedConditions,
+  toggleCondition,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">
+          What conditions do you have? (Select all that apply)
+        </h4>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search conditions..."
+          className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        />
+      </div>
+
+      <div className="max-h-96 overflow-y-auto p-4 space-y-2">
+        {filteredConditions.map((cond) => (
+          <button
+            key={cond.name}
+            onClick={() => toggleCondition(cond.name)}
+            className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+              selectedConditions.includes(cond.name)
+                ? "border-green-500 bg-green-50 dark:bg-green-900/30"
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 dark:text-gray-100">
+                  {selectedConditions.includes(cond.name) ? "✓ " : ""}
+                  {cond.name}
+                </p>
+                {cond.notes && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {cond.notes}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span
+                  className={`px-2 py-1 text-xs rounded ${
+                    cond.presumptive
+                      ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {cond.presumptive ? "✓ Presumptive" : "Not Presumptive"}
+                </span>
+                {cond.pactAdded && (
+                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded">
+                    🆕 PACT Act
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 3 section: breadcrumb navigation
+ */
+function renderConditionSelectionBreadcrumb({ setStep }) {
+  return (
+    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+      <button onClick={() => setStep(1)} className="hover:text-blue-500">
+        Exposure Type
+      </button>
+      <span>→</span>
+      <button onClick={() => setStep(2)} className="hover:text-blue-500">
+        Location
+      </button>
+      <span>→</span>
+      <span className="font-semibold text-gray-800 dark:text-gray-200">
+        Conditions
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Render Step 3 section: selected exposure + location info
+ */
+function renderSelectedExposureInfo({
+  exposure,
+  selectedLocation,
+  locationData,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+      <div className="flex items-center gap-4">
+        <span className="text-3xl">{exposure.icon}</span>
+        <div>
+          <p className="font-bold text-gray-800 dark:text-gray-100">
+            {exposure.name}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            📍 {selectedLocation} • {locationData?.dates}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 3: Condition Selection
+ */
+function renderConditionSelection({
+  selectedExposure,
+  selectedLocation,
+  serviceDates,
+  setServiceDates,
+  searchQuery,
+  setSearchQuery,
+  selectedConditions,
+  toggleCondition,
+  setStep,
+  analyzeResults,
+}) {
+  const exposure = PACT_ACT_DATA[selectedExposure];
+  const locationData = exposure.locations.find(
+    (l) => l.name === selectedLocation,
+  );
+  const filteredConditions = getFilteredConditions(
+    selectedExposure,
+    searchQuery,
+  );
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {renderConditionSelectionBreadcrumb({ setStep })}
+
+      {/* Selected Info */}
+      {renderSelectedExposureInfo({ exposure, selectedLocation, locationData })}
+
+      {/* Service Dates (Optional) */}
+      {renderServiceDatesSection({ serviceDates, setServiceDates })}
+
+      {/* Condition Selection */}
+      {renderConditionsListSection({
+        searchQuery,
+        setSearchQuery,
+        filteredConditions,
+        selectedConditions,
+        toggleCondition,
+      })}
+
+      {/* Selected Summary */}
+      {selectedConditions.length > 0 && (
+        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
+          <p className="font-semibold text-green-800 dark:text-green-200">
+            {selectedConditions.length} condition
+            {selectedConditions.length > 1 ? "s" : ""} selected
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+            {selectedConditions.slice(0, 3).join(", ")}
+            {selectedConditions.length > 3 ? "..." : ""}
+          </p>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex gap-4">
+        <button
+          onClick={() => setStep(2)}
+          className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          ← Back
+        </button>
+        <button
+          onClick={analyzeResults}
+          disabled={selectedConditions.length === 0}
+          className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Check Presumptive Status →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Status banner
+ */
+function renderResultsBanner({ results }) {
+  const conditionCountSuffix = results.presumptiveCount > 1 ? "s" : "";
+  const headline =
+    results.presumptiveCount > 0
+      ? `${results.presumptiveCount} Presumptive Condition${conditionCountSuffix} Found!`
+      : "No Presumptive Conditions Found";
+
+  return (
+    <div
+      className={`rounded-xl p-6 text-white shadow-lg ${
+        results.presumptiveCount > 0
+          ? "bg-gradient-to-r from-green-500 to-emerald-600"
+          : "bg-gradient-to-r from-amber-500 to-orange-500"
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        <div className="bg-white/20 rounded-full p-3">
+          <span className="text-4xl">
+            {results.presumptiveCount > 0 ? "✅" : "⚠️"}
+          </span>
+        </div>
+        <div>
+          <h3 className="text-2xl font-bold">{headline}</h3>
+          <p className="text-white/90">
+            {results.presumptiveCount > 0
+              ? "You may qualify for expedited service connection under the PACT Act"
+              : "You may still qualify on a direct connection basis"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Exposure summary
+ */
+function renderExposureProfileSummary({ results }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4">
+        📋 Your Exposure Profile
+      </h4>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Exposure Type
+          </p>
+          <p className="font-medium text-gray-800 dark:text-gray-100">
+            {results.exposure}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Location</p>
+          <p className="font-medium text-gray-800 dark:text-gray-100">
+            {results.location}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Qualifying Dates
+          </p>
+          <p className="font-medium text-gray-800 dark:text-gray-100">
+            {results.locationDates}
+          </p>
+        </div>
+        {results.serviceDates.start && (
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Your Service Dates
+            </p>
+            <p className="font-medium text-gray-800 dark:text-gray-100">
+              {results.serviceDates.start} to{" "}
+              {results.serviceDates.end || "present"}
             </p>
           </div>
         )}
-
-        {/* Next Steps */}
-        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
-          <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3">
-            📋 Next Steps
-          </h4>
-          <ol className="text-blue-700 dark:text-blue-300 text-sm space-y-2 list-decimal list-inside">
-            {presumptiveConditions.length > 0 ? (
-              <>
-                <li>
-                  Gather proof you served in the qualifying location (DD-214,
-                  orders, personnel records)
-                </li>
-                <li>
-                  Get a current diagnosis for each condition from your doctor
-                </li>
-                <li>
-                  File your claim on VA.gov or eBenefits - select the
-                  presumptive exposure
-                </li>
-                <li>
-                  <strong>No nexus letter needed</strong> for presumptive
-                  conditions!
-                </li>
-              </>
-            ) : (
-              <>
-                <li>Gather proof you served in the qualifying location</li>
-                <li>Get a current diagnosis for each condition</li>
-                <li>
-                  Obtain a nexus letter from a doctor linking your condition to
-                  service
-                </li>
-                <li>File your claim with supporting evidence</li>
-              </>
-            )}
-          </ol>
-        </div>
-
-        {/* CFR Reference */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">
-            📚 Legal References
-          </h4>
-          <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <li>• PACT Act of 2022 (Public Law 117-168)</li>
-            <li>• 38 CFR § 3.309 - Presumptive service connection</li>
-            <li>• 38 CFR § 3.317 - Gulf War presumptives</li>
-            <li>• 38 CFR § 3.311 - Radiation exposure</li>
-          </ul>
-        </div>
-
-        {/* Start Over */}
-        <button
-          onClick={() => {
-            setStep(1);
-            setSelectedExposure(null);
-            setSelectedLocation(null);
-            setSelectedConditions([]);
-            setServiceDates({ start: "", end: "" });
-            setSearchQuery("");
-            setResults(null);
-          }}
-          className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          🔄 Check Another Exposure
-        </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Presumptive conditions list
+ */
+function renderPresumptiveConditionsSection({ presumptiveConditions }) {
+  return (
+    <div className="bg-green-50 dark:bg-green-900/30 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-4 bg-green-100 dark:bg-green-900/50 border-b border-green-200 dark:border-green-700">
+        <h4 className="font-bold text-green-800 dark:text-green-200 flex items-center gap-2">
+          ✅ Presumptive Conditions ({presumptiveConditions.length})
+        </h4>
+        <p className="text-sm text-green-600 dark:text-green-400">
+          VA will presume these are related to your service - no nexus letter
+          required!
+        </p>
+      </div>
+      <div className="divide-y divide-green-200 dark:divide-green-700">
+        {presumptiveConditions.map((cond) => (
+          <div key={cond.name} className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-medium text-green-800 dark:text-green-200">
+                  {cond.name}
+                </p>
+                {cond.notes && (
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    {cond.notes}
+                  </p>
+                )}
+              </div>
+              {cond.pactAdded && (
+                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded font-medium">
+                  🆕 PACT Act Added
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Non-presumptive conditions list
+ */
+function renderNonPresumptiveConditionsSection({ nonPresumptiveConditions }) {
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-4 bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-700">
+        <h4 className="font-bold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+          ⚠️ Not Currently Presumptive ({nonPresumptiveConditions.length})
+        </h4>
+        <p className="text-sm text-amber-600 dark:text-amber-400">
+          You can still claim these conditions but will need medical
+          evidence/nexus
+        </p>
+      </div>
+      <div className="divide-y divide-amber-200 dark:divide-amber-700">
+        {nonPresumptiveConditions.map((cond) => (
+          <div key={cond.name} className="p-4">
+            <p className="font-medium text-amber-800 dark:text-amber-200">
+              {cond.name}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: PACT Act info banner
+ */
+function renderPactActInfoSection({ pactAddedConditions }) {
+  return (
+    <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 rounded-r-lg">
+      <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">
+        🆕 New Under PACT Act
+      </h4>
+      <p className="text-purple-700 dark:text-purple-300 text-sm">
+        {pactAddedConditions.length} of your conditions were added as
+        presumptive by the PACT Act in 2022. These claims are now much easier to
+        win!
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Next steps
+ */
+function renderNextStepsSection({ presumptiveConditions }) {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
+      <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3">
+        📋 Next Steps
+      </h4>
+      <ol className="text-blue-700 dark:text-blue-300 text-sm space-y-2 list-decimal list-inside">
+        {presumptiveConditions.length > 0 ? (
+          <>
+            <li>
+              Gather proof you served in the qualifying location (DD-214,
+              orders, personnel records)
+            </li>
+            <li>Get a current diagnosis for each condition from your doctor</li>
+            <li>
+              File your claim on VA.gov or eBenefits - select the presumptive
+              exposure
+            </li>
+            <li>
+              <strong>No nexus letter needed</strong> for presumptive
+              conditions!
+            </li>
+          </>
+        ) : (
+          <>
+            <li>Gather proof you served in the qualifying location</li>
+            <li>Get a current diagnosis for each condition</li>
+            <li>
+              Obtain a nexus letter from a doctor linking your condition to
+              service
+            </li>
+            <li>File your claim with supporting evidence</li>
+          </>
+        )}
+      </ol>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Legal references
+ */
+function renderLegalReferencesSection() {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+      <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">
+        📚 Legal References
+      </h4>
+      <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+        <li>• PACT Act of 2022 (Public Law 117-168)</li>
+        <li>• 38 CFR § 3.309 - Presumptive service connection</li>
+        <li>• 38 CFR § 3.317 - Gulf War presumptives</li>
+        <li>• 38 CFR § 3.311 - Radiation exposure</li>
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Render Step 4 section: Start over button
+ */
+function renderStartOverButton({ onReset }) {
+  return (
+    <button
+      onClick={onReset}
+      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      🔄 Check Another Exposure
+    </button>
+  );
+}
+
+/**
+ * Render Step 4: Results
+ */
+function renderResults({ results, onReset }) {
+  if (!results) return null;
+
+  const presumptiveConditions = results.conditions.filter((c) => c.presumptive);
+  const nonPresumptiveConditions = results.conditions.filter(
+    (c) => !c.presumptive,
+  );
+  const pactAddedConditions = results.conditions.filter((c) => c.pactAdded);
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {renderResultsBanner({ results })}
+      {renderExposureProfileSummary({ results })}
+      {presumptiveConditions.length > 0 &&
+        renderPresumptiveConditionsSection({ presumptiveConditions })}
+      {nonPresumptiveConditions.length > 0 &&
+        renderNonPresumptiveConditionsSection({ nonPresumptiveConditions })}
+      {pactAddedConditions.length > 0 &&
+        renderPactActInfoSection({ pactAddedConditions })}
+      {renderNextStepsSection({ presumptiveConditions })}
+      {renderLegalReferencesSection()}
+      {renderStartOverButton({ onReset })}
+    </div>
+  );
+}
+
+/**
+ * Render the modal header (title + report bug + close button)
+ */
+function renderModalHeader({ onClose, onReportBug }) {
+  return (
+    <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🔥</span>
+          <div>
+            <h2
+              id="pact-act-navigator-title"
+              className="text-xl font-bold text-white"
+            >
+              PACT Act Navigator{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-amber-100">
+              Presumptive Condition Checker
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="PACT Act Navigator"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render the step progress indicator
+ */
+function renderProgressSteps({ step }) {
+  return (
+    <div className="max-w-4xl mx-auto px-2 pt-2">
+      <div className="flex items-center justify-center gap-4 mb-6">
+        {[1, 2, 3, 4].map((s) => (
+          <div key={s} className="flex items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                step >= s
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              {step > s ? "✓" : s}
+            </div>
+            {s < 4 && (
+              <div
+                className={`w-12 h-1 ${step > s ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"}`}
+              ></div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-6">
+        <span className={step === 1 ? "font-bold text-blue-600" : ""}>
+          Exposure
+        </span>
+        <span className={step === 2 ? "font-bold text-blue-600" : ""}>
+          Location
+        </span>
+        <span className={step === 3 ? "font-bold text-blue-600" : ""}>
+          Conditions
+        </span>
+        <span className={step === 4 ? "font-bold text-blue-600" : ""}>
+          Results
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Render the "Support CTA" banner shown on the results page
+ */
+function renderSupportCta() {
+  return (
+    <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
+      <div className="flex items-center gap-4">
+        <img
+          src="/images/Anth.jpg"
+          alt="Anthony - Vet-Rate Developer"
+          className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
+        />
+        <div className="flex-1">
+          <p className="text-blue-200 font-semibold mb-1">
+            🔥 You just saved $1,500+ on nexus letters
+          </p>
+          <p className="text-blue-300/70 text-sm">
+            Presumptive conditions don&apos;t require expensive medical nexus
+            letters - the VA MUST grant them if you served in the right place at
+            the right time. This database took months to compile from 38 CFR and
+            the PACT Act. Keep it free.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Compute presumptive-status analysis results for the current selections
+ */
+function computeAnalysisResults({
+  selectedExposure,
+  selectedLocation,
+  selectedConditions,
+  serviceDates,
+}) {
+  const exposure = PACT_ACT_DATA[selectedExposure];
+  const locationData = exposure.locations.find(
+    (l) => l.name === selectedLocation,
+  );
+
+  const conditionResults = selectedConditions.map((condName) => {
+    const condData = exposure.conditions.find((c) => c.name === condName);
+    return {
+      name: condName,
+      presumptive: condData?.presumptive || false,
+      pactAdded: condData?.pactAdded || false,
+      notes: condData?.notes || null,
+    };
+  });
+
+  return {
+    exposure: exposure.name,
+    location: selectedLocation,
+    locationDates: locationData?.dates,
+    locationDescription: locationData?.description,
+    serviceDates,
+    conditions: conditionResults,
+    presumptiveCount: conditionResults.filter((c) => c.presumptive).length,
+    totalConditions: conditionResults.length,
+  };
+}
+
+/**
+ * Render the step 1-4 wizard body plus the results-page support CTA
+ */
+function renderMainContent({
+  step,
+  selectedExposure,
+  setSelectedExposure,
+  selectedLocation,
+  setSelectedLocation,
+  serviceDates,
+  setServiceDates,
+  searchQuery,
+  setSearchQuery,
+  selectedConditions,
+  toggleCondition,
+  setStep,
+  analyzeResults,
+  results,
+  onReset,
+}) {
+  return (
+    <div className="max-w-4xl mx-auto p-6 pt-0">
+      {step === 1 &&
+        renderExposureSelection({
+          selectedExposure,
+          setSelectedExposure,
+          setStep,
+        })}
+      {step === 2 &&
+        renderLocationSelection({
+          selectedExposure,
+          selectedLocation,
+          setSelectedLocation,
+          setStep,
+        })}
+      {step === 3 &&
+        renderConditionSelection({
+          selectedExposure,
+          selectedLocation,
+          serviceDates,
+          setServiceDates,
+          searchQuery,
+          setSearchQuery,
+          selectedConditions,
+          toggleCondition,
+          setStep,
+          analyzeResults,
+        })}
+      {step === 4 && renderResults({ results, onReset })}
+
+      {/* Support CTA on results page */}
+      {step === 4 &&
+        results &&
+        results?.presumptive?.length > 0 &&
+        renderSupportCta()}
+    </div>
+  );
+}
+
+export default function PACTActNavigator({ onClose, onReportBug }) {
+  // Navigation state
+  const [step, setStep] = useState(1);
+  const [selectedExposure, setSelectedExposure] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [serviceDates, setServiceDates] = useState({ start: "", end: "" });
+  const [selectedConditions, setSelectedConditions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Results
+  const [results, setResults] = useState(null);
+
+  /**
+   * Toggle condition selection
+   */
+  const toggleCondition = (condition) => {
+    setSelectedConditions((prev) =>
+      prev.includes(condition)
+        ? prev.filter((c) => c !== condition)
+        : [...prev, condition],
     );
+  };
+
+  /**
+   * Analyze presumptive status
+   */
+  const analyzeResults = () => {
+    setResults(
+      computeAnalysisResults({
+        selectedExposure,
+        selectedLocation,
+        selectedConditions,
+        serviceDates,
+      }),
+    );
+
+    setStep(4);
+  };
+
+  /**
+   * Reset the wizard back to step 1
+   */
+  const resetWizard = () => {
+    setStep(1);
+    setSelectedExposure(null);
+    setSelectedLocation(null);
+    setSelectedConditions([]);
+    setServiceDates({ start: "", end: "" });
+    setSearchQuery("");
+    setResults(null);
   };
 
   return (
@@ -1072,129 +1379,30 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
         onClose={onClose}
         size="2xl"
         labelledBy="pact-act-navigator-title"
-        header={
-          <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🔥</span>
-                <div>
-                  <h2
-                    id="pact-act-navigator-title"
-                    className="text-xl font-bold text-white"
-                  >
-                    PACT Act Navigator{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-sm text-amber-100">
-                    Presumptive Condition Checker
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="PACT Act Navigator"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
+        header={renderModalHeader({ onClose, onReportBug })}
       >
         <div>
           {/* Progress Steps */}
-          <div className="max-w-4xl mx-auto px-2 pt-2">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              {[1, 2, 3, 4].map((s) => (
-                <div key={s} className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      step >= s
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    {step > s ? "✓" : s}
-                  </div>
-                  {s < 4 && (
-                    <div
-                      className={`w-12 h-1 ${step > s ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"}`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-6">
-              <span className={step === 1 ? "font-bold text-blue-600" : ""}>
-                Exposure
-              </span>
-              <span className={step === 2 ? "font-bold text-blue-600" : ""}>
-                Location
-              </span>
-              <span className={step === 3 ? "font-bold text-blue-600" : ""}>
-                Conditions
-              </span>
-              <span className={step === 4 ? "font-bold text-blue-600" : ""}>
-                Results
-              </span>
-            </div>
-          </div>
+          {renderProgressSteps({ step })}
 
           {/* Main Content */}
-          <div className="max-w-4xl mx-auto p-6 pt-0">
-            {step === 1 && renderExposureSelection()}
-            {step === 2 && renderLocationSelection()}
-            {step === 3 && renderConditionSelection()}
-            {step === 4 && renderResults()}
-
-            {/* Support CTA on results page */}
-            {step === 4 && results && results?.presumptive?.length > 0 && (
-              <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    src="/images/Anth.jpg"
-                    alt="Anthony - Vet-Rate Developer"
-                    className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-blue-200 font-semibold mb-1">
-                      🔥 You just saved $1,500+ on nexus letters
-                    </p>
-                    <p className="text-blue-300/70 text-sm">
-                      Presumptive conditions don&apos;t require expensive
-                      medical nexus letters - the VA MUST grant them if you
-                      served in the right place at the right time. This database
-                      took months to compile from 38 CFR and the PACT Act. Keep
-                      it free.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {renderMainContent({
+            step,
+            selectedExposure,
+            setSelectedExposure,
+            selectedLocation,
+            setSelectedLocation,
+            serviceDates,
+            setServiceDates,
+            searchQuery,
+            setSearchQuery,
+            selectedConditions,
+            toggleCondition,
+            setStep,
+            analyzeResults,
+            results,
+            onReset: resetWizard,
+          })}
         </div>
       </ResponsiveModal>
 

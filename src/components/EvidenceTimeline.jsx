@@ -13,327 +13,709 @@ import { loadVKB } from "../utils/veteranKnowledgeBase";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 
-const EvidenceTimeline = ({
-  events = [],
-  onEventsUpdate,
-  onClose,
-  onReportBug,
-}) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-  // Load persisted events on mount, fallback to props
-  const [timelineEvents, setTimelineEvents] = useState(() => {
-    const persisted = getTimelineEvents();
-    return persisted.length > 0 ? persisted : events;
+// Event categories with their visual styles
+const EVENT_TYPES = {
+  service: {
+    label: "Service Event",
+    color: "#22c55e",
+    icon: "⭐",
+    description: "Active duty dates, deployments, injuries in service",
+  },
+  injury: {
+    label: "Injury/Incident",
+    color: "#ef4444",
+    icon: "💥",
+    description: "When the injury or condition first occurred",
+  },
+  diagnosis: {
+    label: "Diagnosis",
+    color: "#3b82f6",
+    icon: "💊",
+    description: "Official medical diagnosis dates",
+  },
+  treatment: {
+    label: "Medical Treatment",
+    color: "#8b5cf6",
+    icon: "🏥",
+    description: "Doctor visits, procedures, prescriptions",
+  },
+  buddy: {
+    label: "Buddy Statement",
+    color: "#f59e0b",
+    icon: "👥",
+    description: "Witness statements or lay evidence",
+  },
+  records: {
+    label: "Medical Records",
+    color: "#06b6d4",
+    icon: "📋",
+    description: "Existing medical documentation",
+  },
+};
+
+function detectTimelineGaps(timelineEvents) {
+  if (timelineEvents.length < 2) {
+    return [];
+  }
+
+  // Sort events by date
+  const sorted = [...timelineEvents].sort(
+    (a, b) => new Date(a.date) - new Date(b.date),
+  );
+
+  const detectedGaps = [];
+  const GAP_THRESHOLD_YEARS = 5;
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const currentDate = new Date(sorted[i].date);
+    const nextDate = new Date(sorted[i + 1].date);
+
+    const yearsDiff = (nextDate - currentDate) / (1000 * 60 * 60 * 24 * 365);
+
+    if (yearsDiff >= GAP_THRESHOLD_YEARS) {
+      detectedGaps.push({
+        start: sorted[i],
+        end: sorted[i + 1],
+        years: Math.floor(yearsDiff),
+        severity: yearsDiff >= 10 ? "CRITICAL" : "WARNING",
+      });
+    }
+  }
+
+  return detectedGaps;
+}
+
+function drawTimelineBaseLine(ctx, { padding, lineY, width }) {
+  // Draw base line
+  ctx.strokeStyle = "#4b5563";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(padding, lineY);
+  ctx.lineTo(width - padding, lineY);
+  ctx.stroke();
+}
+
+function drawTimelineGapWarnings(
+  ctx,
+  gaps,
+  { firstDate, lastDate, lineY, padding, lineWidth },
+) {
+  // Draw gap warnings
+  gaps.forEach((gap) => {
+    const gapStartDate = new Date(gap.start.date);
+    const gapEndDate = new Date(gap.end.date);
+
+    const startX =
+      padding +
+      ((gapStartDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+    const endX =
+      padding +
+      ((gapEndDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+
+    // Draw red warning section
+    ctx.strokeStyle = gap.severity === "CRITICAL" ? "#dc2626" : "#f59e0b";
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(startX, lineY);
+    ctx.lineTo(endX, lineY);
+    ctx.stroke();
+
+    // Draw warning label
+    ctx.fillStyle = gap.severity === "CRITICAL" ? "#dc2626" : "#f59e0b";
+    ctx.font = "12px monospace";
+    ctx.fillText(
+      `⚠️ ${gap.years} YEAR GAP`,
+      (startX + endX) / 2 - 40,
+      lineY - 20,
+    );
   });
-  const [isAddingEvent, setIsAddingEvent] = useState(false);
-  const [newEvent, setNewEvent] = useState({
+}
+
+function drawTimelineEventMarkers(
+  ctx,
+  sortedEvents,
+  { firstDate, lastDate, lineY, padding, lineWidth },
+) {
+  // Draw events
+  sortedEvents.forEach((event, index) => {
+    const eventDate = new Date(event.date);
+    const x =
+      padding +
+      ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+
+    // Draw event marker
+    const eventColor = EVENT_TYPES[event.type]?.color || "#6b7280";
+    ctx.fillStyle = eventColor;
+    ctx.beginPath();
+    ctx.arc(x, lineY, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw event border
+    ctx.strokeStyle = "#1f2937";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw connecting line to label
+    const labelY = index % 2 === 0 ? lineY - 60 : lineY + 60;
+    ctx.strokeStyle = eventColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(x, lineY + 8);
+    ctx.lineTo(x, labelY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw year label
+    ctx.fillStyle = "#e5e7eb";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      eventDate.getFullYear(),
+      x,
+      labelY + (index % 2 === 0 ? -5 : 15),
+    );
+  });
+}
+
+function drawTimelineStartEndLabels(ctx, { padding, lineY, width }) {
+  // Draw start and end labels
+  ctx.fillStyle = "#22c55e";
+  ctx.font = "bold 14px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("START", padding - 40, lineY - 20);
+
+  ctx.fillStyle = "#ef4444";
+  ctx.textAlign = "right";
+  ctx.fillText("NOW", width - padding + 35, lineY - 20);
+}
+
+function renderEvidenceTimelineCanvas(
+  ctx,
+  width,
+  height,
+  timelineEvents,
+  gaps,
+) {
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height);
+
+  // Sort events by date
+  const sorted = [...timelineEvents].sort(
+    (a, b) => new Date(a.date) - new Date(b.date),
+  );
+
+  const firstDate = new Date(sorted[0].date);
+  const lastDate = new Date(sorted[sorted.length - 1].date);
+
+  // Draw main timeline line
+  const lineY = height / 2;
+  const padding = 50;
+  const lineWidth = width - padding * 2;
+  const geometry = { firstDate, lastDate, lineY, padding, lineWidth, width };
+
+  drawTimelineBaseLine(ctx, geometry);
+  drawTimelineGapWarnings(ctx, gaps, geometry);
+  drawTimelineEventMarkers(ctx, sorted, geometry);
+  drawTimelineStartEndLabels(ctx, geometry);
+}
+
+// Pull dated events the C-File analyzer filed into the VKB
+// (evidenceTimeline entries + dated evidence items) into this timeline.
+async function performImportFromRecords({
+  timelineEvents,
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  try {
+    const vkb = await loadVKB();
+    const vkbEvents = [
+      ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
+      ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
+    ].filter((e) => e?.date && (e.description || e.text));
+
+    const normalize = (s) =>
+      String(s || "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    const existing = new Set(
+      timelineEvents.map((e) => `${e.date}|${normalize(e.description)}`),
+    );
+    const fresh = vkbEvents
+      .filter(
+        (e) =>
+          !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
+      )
+      .map((e, i) => ({
+        id: `vkb_${Date.now()}_${i}`,
+        type: "records",
+        date: e.date,
+        description: e.description || e.text,
+        title: String(e.description || e.text).substring(0, 50),
+        category: "Medical Records",
+        sourceDocumentId: e.sourceDocumentId || null,
+      }));
+
+    if (fresh.length === 0) {
+      alert("No new dated events found in your records.");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
+      )
+    ) {
+      return;
+    }
+    const updated = [...timelineEvents, ...fresh];
+    setTimelineEvents(updated);
+    saveTimelineEvents(updated);
+    if (onEventsUpdate) {
+      onEventsUpdate(updated);
+    }
+  } catch (e) {
+    console.error("Failed to import events from records:", e);
+    alert("Could not read your records. Please try again.");
+  }
+}
+
+function performAddEvent({
+  newEvent,
+  timelineEvents,
+  setTimelineEvents,
+  setNewEvent,
+  setIsAddingEvent,
+  onEventsUpdate,
+}) {
+  if (!newEvent.date || !newEvent.description) {
+    alert("Please fill in date and description");
+    return;
+  }
+
+  const event = {
+    ...newEvent,
+    id: Date.now(),
+    title: newEvent.description.substring(0, 50), // For My Packet display
+    category: EVENT_TYPES[newEvent.type]?.label || "Event",
+  };
+
+  const updated = [...timelineEvents, event];
+  setTimelineEvents(updated);
+
+  // Persist to localStorage
+  saveTimelineEvents(updated);
+
+  if (onEventsUpdate) {
+    onEventsUpdate(updated);
+  }
+
+  // Reset form
+  setNewEvent({
     type: "service",
     date: "",
     description: "",
     category: "Service Event",
   });
-  const [gaps, setGaps] = useState([]);
-  const canvasRef = useRef(null);
+  setIsAddingEvent(false);
+}
 
-  // Event categories with their visual styles
-  const EVENT_TYPES = {
-    service: {
-      label: "Service Event",
-      color: "#22c55e",
-      icon: "⭐",
-      description: "Active duty dates, deployments, injuries in service",
-    },
-    injury: {
-      label: "Injury/Incident",
-      color: "#ef4444",
-      icon: "💥",
-      description: "When the injury or condition first occurred",
-    },
-    diagnosis: {
-      label: "Diagnosis",
-      color: "#3b82f6",
-      icon: "💊",
-      description: "Official medical diagnosis dates",
-    },
-    treatment: {
-      label: "Medical Treatment",
-      color: "#8b5cf6",
-      icon: "🏥",
-      description: "Doctor visits, procedures, prescriptions",
-    },
-    buddy: {
-      label: "Buddy Statement",
-      color: "#f59e0b",
-      icon: "👥",
-      description: "Witness statements or lay evidence",
-    },
-    records: {
-      label: "Medical Records",
-      color: "#06b6d4",
-      icon: "📋",
-      description: "Existing medical documentation",
-    },
-  };
+function performRemoveEvent({
+  id,
+  timelineEvents,
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  const updated = timelineEvents.filter((e) => e.id !== id);
+  setTimelineEvents(updated);
 
-  useEffect(() => {
-    if (timelineEvents.length > 0) {
-      detectGaps();
-      drawTimeline();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timelineEvents]);
+  // Persist to localStorage
+  saveTimelineEvents(updated);
 
-  const detectGaps = () => {
-    if (timelineEvents.length < 2) {
-      setGaps([]);
-      return;
-    }
+  if (onEventsUpdate) {
+    onEventsUpdate(updated);
+  }
+}
 
-    // Sort events by date
-    const sorted = [...timelineEvents].sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
+function TimelineModalHeader({ onClose, onReportBug }) {
+  return (
+    <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🧵</span>
+          <div>
+            <h2
+              id="evidence-timeline-title"
+              className="text-xl font-bold text-white"
+            >
+              🧵 The Continuity Thread - Evidence Timeline{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-slate-100">
+              Visual nexus timeline with gap detection
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="The Continuity Thread"
+            />
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Close"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GapWarningsList({ gaps }) {
+  if (gaps.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6 space-y-3">
+      <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+        ⚠️ Evidence Gaps Detected: {gaps.length}
+      </h3>
+      {gaps.map((gap, idx) => (
+        <div
+          key={idx}
+          className={`border-l-4 p-4 rounded ${
+            gap.severity === "CRITICAL"
+              ? "border-red-500 bg-red-900/20"
+              : "border-yellow-500 bg-yellow-900/20"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h4
+              className={`font-bold ${
+                gap.severity === "CRITICAL"
+                  ? "text-red-400"
+                  : "text-yellow-400"
+              }`}
+            >
+              {gap.years}-Year Evidence Gap
+            </h4>
+            <span
+              className={`px-2 py-1 text-xs font-bold rounded ${
+                gap.severity === "CRITICAL"
+                  ? "bg-red-500 text-white"
+                  : "bg-yellow-500 text-gray-900"
+              }`}
+            >
+              {gap.severity}
+            </span>
+          </div>
+          <p className="text-white text-sm mb-2">
+            Gap between{" "}
+            <span className="font-semibold">
+              {new Date(gap.start.date).getFullYear()}
+            </span>{" "}
+            and{" "}
+            <span className="font-semibold">
+              {new Date(gap.end.date).getFullYear()}
+            </span>
+          </p>
+          <p className="text-gray-300 text-xs mb-2">
+            <span className="font-semibold">From:</span>{" "}
+            {gap.start.description}
+          </p>
+          <p className="text-gray-300 text-xs mb-3">
+            <span className="font-semibold">To:</span> {gap.end.description}
+          </p>
+          <div className="bg-gray-800 p-2 rounded text-xs text-gray-300">
+            <span className="font-semibold text-yellow-400">
+              Recommendation:
+            </span>{" "}
+            Fill this gap with buddy statements, medical records, or lay
+            evidence showing continuity of condition.
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TimelineEventList({ events, onRemove }) {
+  if (events.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6">
+      <h3 className="text-xl font-bold text-blue-400 mb-3">
+        📋 Timeline Events ({events.length})
+      </h3>
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {[...events]
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((event) => (
+            <div
+              key={event.id}
+              className="bg-gray-800 p-3 rounded border border-gray-700 flex items-start gap-3"
+            >
+              <div
+                className="text-2xl flex-shrink-0"
+                aria-label={EVENT_TYPES[event.type]?.label}
+              >
+                {EVENT_TYPES[event.type]?.icon || "📌"}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="px-2 py-0.5 text-xs font-semibold rounded"
+                    style={{
+                      backgroundColor:
+                        EVENT_TYPES[event.type]?.color || "#6b7280",
+                      color: "#fff",
+                    }}
+                  >
+                    {event.category}
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    {new Date(event.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-white text-sm">{event.description}</p>
+              </div>
+              <button
+                onClick={() => onRemove(event.id)}
+                className="text-red-400 hover:text-red-300 text-sm flex-shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function EventTypeSelector({ newEvent, setNewEvent }) {
+  return (
+    <div className="mb-4">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-gray-300 text-sm font-semibold mb-2">
+        Event Type:
+      </label>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {Object.entries(EVENT_TYPES).map(([key, info]) => (
+          <button
+            key={key}
+            onClick={() =>
+              setNewEvent({
+                ...newEvent,
+                type: key,
+                category: info.label,
+              })
+            }
+            className={`p-2 rounded border-2 transition text-left ${
+              newEvent.type === key
+                ? "border-blue-500 bg-blue-900/30"
+                : "border-gray-700 bg-gray-700 hover:border-gray-600"
+            }`}
+            aria-label={info.description}
+          >
+            <div className="text-lg mb-1">{info.icon}</div>
+            <div className="text-xs text-white font-semibold">
+              {info.label}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AddEventForm({ newEvent, setNewEvent, setIsAddingEvent, onAdd }) {
+  return (
+    <div className="bg-gray-800 border border-blue-500/50 rounded-lg p-4">
+      <h4 className="text-blue-400 font-bold mb-4">Add New Event</h4>
+
+      <EventTypeSelector newEvent={newEvent} setNewEvent={setNewEvent} />
+
+      {/* Date Input */}
+      <div className="mb-4">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-gray-300 text-sm font-semibold mb-2">
+          Date:
+        </label>
+        <input
+          type="date"
+          value={newEvent.date}
+          onChange={(e) =>
+            setNewEvent({ ...newEvent, date: e.target.value })
+          }
+          className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none"
+        />
+      </div>
+
+      {/* Description Input */}
+      <div className="mb-4">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-gray-300 text-sm font-semibold mb-2">
+          Description:
+        </label>
+        <textarea
+          value={newEvent.description}
+          onChange={(e) =>
+            setNewEvent({ ...newEvent, description: e.target.value })
+          }
+          placeholder="e.g., 'Deployed to Iraq - Combat Engineer', 'IED blast - TBI diagnosis', 'Started physical therapy for lower back'"
+          className="w-full h-20 bg-gray-700 border border-gray-600 rounded p-2 text-white resize-none focus:border-blue-500 focus:outline-none"
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={onAdd}
+          className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
+        >
+          Add Event
+        </button>
+        <button
+          onClick={() => setIsAddingEvent(false)}
+          className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AddEventSection({
+  isAddingEvent,
+  newEvent,
+  setNewEvent,
+  setIsAddingEvent,
+  onAdd,
+  onImport,
+}) {
+  if (!isAddingEvent) {
+    return (
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          onClick={() => setIsAddingEvent(true)}
+          className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
+        >
+          ➕ Add Timeline Event
+        </button>
+        <button
+          onClick={onImport}
+          className="flex-1 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded transition"
+        >
+          📂 Import from My Records
+        </button>
+      </div>
     );
+  }
 
-    const detectedGaps = [];
-    const GAP_THRESHOLD_YEARS = 5;
+  return (
+    <AddEventForm
+      newEvent={newEvent}
+      setNewEvent={setNewEvent}
+      setIsAddingEvent={setIsAddingEvent}
+      onAdd={onAdd}
+    />
+  );
+}
 
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const currentDate = new Date(sorted[i].date);
-      const nextDate = new Date(sorted[i + 1].date);
+function TimelineHelpSection() {
+  return (
+    <div className="mt-6 bg-green-900/20 border border-green-500/30 rounded p-4">
+      <h4 className="text-green-400 font-bold mb-2">💡 How to Use:</h4>
+      <ul className="text-gray-300 text-sm space-y-1">
+        <li>• Add key dates from your service and medical history</li>
+        <li>
+          • The timeline will automatically detect gaps longer than 5 years
+        </li>
+        <li>
+          • <span className="text-red-400 font-semibold">Red sections</span> =
+          Critical gaps (10+ years) - High denial risk
+        </li>
+        <li>
+          •{" "}
+          <span className="text-yellow-400 font-semibold">
+            Yellow sections
+          </span>{" "}
+          = Moderate gaps (5-10 years) - Needs explanation
+        </li>
+        <li>
+          • Fill gaps with buddy statements, medical visits, or lay evidence
+        </li>
+      </ul>
+    </div>
+  );
+}
 
-      const yearsDiff = (nextDate - currentDate) / (1000 * 60 * 60 * 24 * 365);
+function ExportTimelineButton({ events }) {
+  if (events.length === 0) {
+    return null;
+  }
 
-      if (yearsDiff >= GAP_THRESHOLD_YEARS) {
-        detectedGaps.push({
-          start: sorted[i],
-          end: sorted[i + 1],
-          years: Math.floor(yearsDiff),
-          severity: yearsDiff >= 10 ? "CRITICAL" : "WARNING",
-        });
-      }
-    }
+  return (
+    <button
+      onClick={() => {
+        const text = events
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map(
+            (e) =>
+              `${new Date(e.date).toLocaleDateString()} - ${e.category}: ${e.description}`,
+          )
+          .join("\n");
 
-    setGaps(detectedGaps);
-  };
+        navigator.clipboard.writeText(text);
+        alert("Timeline copied to clipboard!");
+      }}
+      className="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition"
+    >
+      📋 Copy Timeline to Clipboard
+    </button>
+  );
+}
 
-  const drawTimeline = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || timelineEvents.length === 0) return;
-
-    const ctx = canvas.getContext("2d");
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Sort events by date
-    const sorted = [...timelineEvents].sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
-    );
-
-    const firstDate = new Date(sorted[0].date);
-    const lastDate = new Date(sorted[sorted.length - 1].date);
-    // eslint-disable-next-line no-unused-vars
-    const totalYears = (lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365);
-
-    // Draw main timeline line
-    const lineY = height / 2;
-    const padding = 50;
-    const lineWidth = width - padding * 2;
-
-    // Draw base line
-    ctx.strokeStyle = "#4b5563";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(padding, lineY);
-    ctx.lineTo(width - padding, lineY);
-    ctx.stroke();
-
-    // Draw gap warnings
-    gaps.forEach((gap) => {
-      const gapStartDate = new Date(gap.start.date);
-      const gapEndDate = new Date(gap.end.date);
-
-      const startX =
-        padding +
-        ((gapStartDate - firstDate) / (lastDate - firstDate)) * lineWidth;
-      const endX =
-        padding +
-        ((gapEndDate - firstDate) / (lastDate - firstDate)) * lineWidth;
-
-      // Draw red warning section
-      ctx.strokeStyle = gap.severity === "CRITICAL" ? "#dc2626" : "#f59e0b";
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(startX, lineY);
-      ctx.lineTo(endX, lineY);
-      ctx.stroke();
-
-      // Draw warning label
-      ctx.fillStyle = gap.severity === "CRITICAL" ? "#dc2626" : "#f59e0b";
-      ctx.font = "12px monospace";
-      ctx.fillText(
-        `⚠️ ${gap.years} YEAR GAP`,
-        (startX + endX) / 2 - 40,
-        lineY - 20,
-      );
-    });
-
-    // Draw events
-    sorted.forEach((event, index) => {
-      const eventDate = new Date(event.date);
-      const x =
-        padding +
-        ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
-
-      // Draw event marker
-      const eventColor = EVENT_TYPES[event.type]?.color || "#6b7280";
-      ctx.fillStyle = eventColor;
-      ctx.beginPath();
-      ctx.arc(x, lineY, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Draw event border
-      ctx.strokeStyle = "#1f2937";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Draw connecting line to label
-      const labelY = index % 2 === 0 ? lineY - 60 : lineY + 60;
-      ctx.strokeStyle = eventColor;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 2]);
-      ctx.beginPath();
-      ctx.moveTo(x, lineY + 8);
-      ctx.lineTo(x, labelY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Draw year label
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "bold 12px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        eventDate.getFullYear(),
-        x,
-        labelY + (index % 2 === 0 ? -5 : 15),
-      );
-    });
-
-    // Draw start and end labels
-    ctx.fillStyle = "#22c55e";
-    ctx.font = "bold 14px sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("START", padding - 40, lineY - 20);
-
-    ctx.fillStyle = "#ef4444";
-    ctx.textAlign = "right";
-    ctx.fillText("NOW", width - padding + 35, lineY - 20);
-  };
-
-  // Pull dated events the C-File analyzer filed into the VKB
-  // (evidenceTimeline entries + dated evidence items) into this timeline.
-  const importFromRecords = async () => {
-    try {
-      const vkb = await loadVKB();
-      const vkbEvents = [
-        ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
-        ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
-      ].filter((e) => e?.date && (e.description || e.text));
-
-      const normalize = (s) =>
-        String(s || "")
-          .toLowerCase()
-          .replace(/\s+/g, " ")
-          .trim();
-      const existing = new Set(
-        timelineEvents.map((e) => `${e.date}|${normalize(e.description)}`),
-      );
-      const fresh = vkbEvents
-        .filter(
-          (e) =>
-            !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
-        )
-        .map((e, i) => ({
-          id: `vkb_${Date.now()}_${i}`,
-          type: "records",
-          date: e.date,
-          description: e.description || e.text,
-          title: String(e.description || e.text).substring(0, 50),
-          category: "Medical Records",
-          sourceDocumentId: e.sourceDocumentId || null,
-        }));
-
-      if (fresh.length === 0) {
-        alert("No new dated events found in your records.");
-        return;
-      }
-      if (
-        !window.confirm(
-          `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
-        )
-      ) {
-        return;
-      }
-      const updated = [...timelineEvents, ...fresh];
-      setTimelineEvents(updated);
-      saveTimelineEvents(updated);
-      if (onEventsUpdate) {
-        onEventsUpdate(updated);
-      }
-    } catch (e) {
-      console.error("Failed to import events from records:", e);
-      alert("Could not read your records. Please try again.");
-    }
-  };
-
-  const addEvent = () => {
-    if (!newEvent.date || !newEvent.description) {
-      alert("Please fill in date and description");
-      return;
-    }
-
-    const event = {
-      ...newEvent,
-      id: Date.now(),
-      title: newEvent.description.substring(0, 50), // For My Packet display
-      category: EVENT_TYPES[newEvent.type]?.label || "Event",
-    };
-
-    const updated = [...timelineEvents, event];
-    setTimelineEvents(updated);
-
-    // Persist to localStorage
-    saveTimelineEvents(updated);
-
-    if (onEventsUpdate) {
-      onEventsUpdate(updated);
-    }
-
-    // Reset form
-    setNewEvent({
-      type: "service",
-      date: "",
-      description: "",
-      category: "Service Event",
-    });
-    setIsAddingEvent(false);
-  };
-
-  const removeEvent = (id) => {
-    const updated = timelineEvents.filter((e) => e.id !== id);
-    setTimelineEvents(updated);
-
-    // Persist to localStorage
-    saveTimelineEvents(updated);
-
-    if (onEventsUpdate) {
-      onEventsUpdate(updated);
-    }
-  };
-
+function TimelineModalBody({
+  onClose,
+  onReportBug,
+  timelineEvents,
+  canvasRef,
+  gaps,
+  isAddingEvent,
+  newEvent,
+  setNewEvent,
+  setIsAddingEvent,
+  onAddEvent,
+  onRemoveEvent,
+  onImportFromRecords,
+}) {
   return (
     <ResponsiveModal
       isOpen
@@ -342,57 +724,7 @@ const EvidenceTimeline = ({
       labelledBy="evidence-timeline-title"
       className="bg-gray-900 border border-blue-500/30"
       header={
-        <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🧵</span>
-              <div>
-                <h2
-                  id="evidence-timeline-title"
-                  className="text-xl font-bold text-white"
-                >
-                  🧵 The Continuity Thread - Evidence Timeline{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-sm text-slate-100">
-                  Visual nexus timeline with gap detection
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="The Continuity Thread"
-                />
-              )}
-              {onClose && (
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <TimelineModalHeader onClose={onClose} onReportBug={onReportBug} />
       }
     >
       {/* Intro */}
@@ -415,269 +747,99 @@ const EvidenceTimeline = ({
         </div>
       )}
 
-      {/* Gap Warnings */}
-      {gaps.length > 0 && (
-        <div className="mb-6 space-y-3">
-          <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
-            ⚠️ Evidence Gaps Detected: {gaps.length}
-          </h3>
-          {gaps.map((gap, idx) => (
-            <div
-              key={idx}
-              className={`border-l-4 p-4 rounded ${
-                gap.severity === "CRITICAL"
-                  ? "border-red-500 bg-red-900/20"
-                  : "border-yellow-500 bg-yellow-900/20"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h4
-                  className={`font-bold ${
-                    gap.severity === "CRITICAL"
-                      ? "text-red-400"
-                      : "text-yellow-400"
-                  }`}
-                >
-                  {gap.years}-Year Evidence Gap
-                </h4>
-                <span
-                  className={`px-2 py-1 text-xs font-bold rounded ${
-                    gap.severity === "CRITICAL"
-                      ? "bg-red-500 text-white"
-                      : "bg-yellow-500 text-gray-900"
-                  }`}
-                >
-                  {gap.severity}
-                </span>
-              </div>
-              <p className="text-white text-sm mb-2">
-                Gap between{" "}
-                <span className="font-semibold">
-                  {new Date(gap.start.date).getFullYear()}
-                </span>{" "}
-                and{" "}
-                <span className="font-semibold">
-                  {new Date(gap.end.date).getFullYear()}
-                </span>
-              </p>
-              <p className="text-gray-300 text-xs mb-2">
-                <span className="font-semibold">From:</span>{" "}
-                {gap.start.description}
-              </p>
-              <p className="text-gray-300 text-xs mb-3">
-                <span className="font-semibold">To:</span> {gap.end.description}
-              </p>
-              <div className="bg-gray-800 p-2 rounded text-xs text-gray-300">
-                <span className="font-semibold text-yellow-400">
-                  Recommendation:
-                </span>{" "}
-                Fill this gap with buddy statements, medical records, or lay
-                evidence showing continuity of condition.
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <GapWarningsList gaps={gaps} />
 
-      {/* Event List */}
-      {timelineEvents.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">
-            📋 Timeline Events ({timelineEvents.length})
-          </h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {[...timelineEvents]
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-gray-800 p-3 rounded border border-gray-700 flex items-start gap-3"
-                >
-                  <div
-                    className="text-2xl flex-shrink-0"
-                    aria-label={EVENT_TYPES[event.type]?.label}
-                  >
-                    {EVENT_TYPES[event.type]?.icon || "📌"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="px-2 py-0.5 text-xs font-semibold rounded"
-                        style={{
-                          backgroundColor:
-                            EVENT_TYPES[event.type]?.color || "#6b7280",
-                          color: "#fff",
-                        }}
-                      >
-                        {event.category}
-                      </span>
-                      <span className="text-gray-400 text-xs">
-                        {new Date(event.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-white text-sm">{event.description}</p>
-                  </div>
-                  <button
-                    onClick={() => removeEvent(event.id)}
-                    className="text-red-400 hover:text-red-300 text-sm flex-shrink-0"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
+      <TimelineEventList events={timelineEvents} onRemove={onRemoveEvent} />
 
-      {/* Add Event Section */}
-      {!isAddingEvent ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            onClick={() => setIsAddingEvent(true)}
-            className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
-          >
-            ➕ Add Timeline Event
-          </button>
-          <button
-            onClick={importFromRecords}
-            className="flex-1 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded transition"
-          >
-            📂 Import from My Records
-          </button>
-        </div>
-      ) : (
-        <div className="bg-gray-800 border border-blue-500/50 rounded-lg p-4">
-          <h4 className="text-blue-400 font-bold mb-4">Add New Event</h4>
+      <AddEventSection
+        isAddingEvent={isAddingEvent}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+        setIsAddingEvent={setIsAddingEvent}
+        onAdd={onAddEvent}
+        onImport={onImportFromRecords}
+      />
 
-          {/* Event Type Selector */}
-          <div className="mb-4">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-gray-300 text-sm font-semibold mb-2">
-              Event Type:
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(EVENT_TYPES).map(([key, info]) => (
-                <button
-                  key={key}
-                  onClick={() =>
-                    setNewEvent({
-                      ...newEvent,
-                      type: key,
-                      category: info.label,
-                    })
-                  }
-                  className={`p-2 rounded border-2 transition text-left ${
-                    newEvent.type === key
-                      ? "border-blue-500 bg-blue-900/30"
-                      : "border-gray-700 bg-gray-700 hover:border-gray-600"
-                  }`}
-                  aria-label={info.description}
-                >
-                  <div className="text-lg mb-1">{info.icon}</div>
-                  <div className="text-xs text-white font-semibold">
-                    {info.label}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+      <TimelineHelpSection />
 
-          {/* Date Input */}
-          <div className="mb-4">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-gray-300 text-sm font-semibold mb-2">
-              Date:
-            </label>
-            <input
-              type="date"
-              value={newEvent.date}
-              onChange={(e) =>
-                setNewEvent({ ...newEvent, date: e.target.value })
-              }
-              className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Description Input */}
-          <div className="mb-4">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-gray-300 text-sm font-semibold mb-2">
-              Description:
-            </label>
-            <textarea
-              value={newEvent.description}
-              onChange={(e) =>
-                setNewEvent({ ...newEvent, description: e.target.value })
-              }
-              placeholder="e.g., 'Deployed to Iraq - Combat Engineer', 'IED blast - TBI diagnosis', 'Started physical therapy for lower back'"
-              className="w-full h-20 bg-gray-700 border border-gray-600 rounded p-2 text-white resize-none focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={addEvent}
-              className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded transition"
-            >
-              Add Event
-            </button>
-            <button
-              onClick={() => setIsAddingEvent(false)}
-              className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Help Section */}
-      <div className="mt-6 bg-green-900/20 border border-green-500/30 rounded p-4">
-        <h4 className="text-green-400 font-bold mb-2">💡 How to Use:</h4>
-        <ul className="text-gray-300 text-sm space-y-1">
-          <li>• Add key dates from your service and medical history</li>
-          <li>
-            • The timeline will automatically detect gaps longer than 5 years
-          </li>
-          <li>
-            • <span className="text-red-400 font-semibold">Red sections</span> =
-            Critical gaps (10+ years) - High denial risk
-          </li>
-          <li>
-            •{" "}
-            <span className="text-yellow-400 font-semibold">
-              Yellow sections
-            </span>{" "}
-            = Moderate gaps (5-10 years) - Needs explanation
-          </li>
-          <li>
-            • Fill gaps with buddy statements, medical visits, or lay evidence
-          </li>
-        </ul>
-      </div>
-
-      {/* Export Timeline */}
-      {timelineEvents.length > 0 && (
-        <button
-          onClick={() => {
-            const text = timelineEvents
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .map(
-                (e) =>
-                  `${new Date(e.date).toLocaleDateString()} - ${e.category}: ${e.description}`,
-              )
-              .join("\n");
-
-            navigator.clipboard.writeText(text);
-            alert("Timeline copied to clipboard!");
-          }}
-          className="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded transition"
-        >
-          📋 Copy Timeline to Clipboard
-        </button>
-      )}
+      <ExportTimelineButton events={timelineEvents} />
     </ResponsiveModal>
+  );
+}
+
+const EvidenceTimeline = ({
+  events = [],
+  onEventsUpdate,
+  onClose,
+  onReportBug,
+}) => {
+  useLanguage();
+  // Load persisted events on mount, fallback to props
+  const [timelineEvents, setTimelineEvents] = useState(() => {
+    const persisted = getTimelineEvents();
+    return persisted.length > 0 ? persisted : events;
+  });
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    type: "service",
+    date: "",
+    description: "",
+    category: "Service Event",
+  });
+  const [gaps, setGaps] = useState([]);
+  const canvasRef = useRef(null);
+
+  const drawTimeline = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || timelineEvents.length === 0) return;
+    renderEvidenceTimelineCanvas(
+      canvas.getContext("2d"),
+      canvas.width,
+      canvas.height,
+      timelineEvents,
+      gaps,
+    );
+  };
+
+  useEffect(() => {
+    if (timelineEvents.length > 0) {
+      setGaps(detectTimelineGaps(timelineEvents));
+      drawTimeline();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timelineEvents]);
+
+  const importFromRecords = () =>
+    performImportFromRecords({ timelineEvents, setTimelineEvents, onEventsUpdate });
+
+  const addEvent = () =>
+    performAddEvent({
+      newEvent,
+      timelineEvents,
+      setTimelineEvents,
+      setNewEvent,
+      setIsAddingEvent,
+      onEventsUpdate,
+    });
+
+  const removeEvent = (id) =>
+    performRemoveEvent({ id, timelineEvents, setTimelineEvents, onEventsUpdate });
+
+  return (
+    <TimelineModalBody
+      onClose={onClose}
+      onReportBug={onReportBug}
+      timelineEvents={timelineEvents}
+      canvasRef={canvasRef}
+      gaps={gaps}
+      isAddingEvent={isAddingEvent}
+      newEvent={newEvent}
+      setNewEvent={setNewEvent}
+      setIsAddingEvent={setIsAddingEvent}
+      onAddEvent={addEvent}
+      onRemoveEvent={removeEvent}
+      onImportFromRecords={importFromRecords}
+    />
   );
 };
 

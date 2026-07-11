@@ -21,6 +21,17 @@ import {
 } from "../utils/veteranKnowledgeBase";
 
 /**
+ * Sections for the briefing
+ */
+const sections = [
+  { id: "personal", label: "👤 Personal Info", icon: "🪪" },
+  { id: "service", label: "🎖️ Service History", icon: "🎖️" },
+  { id: "conditions", label: "🏥 Conditions", icon: "🏥" },
+  { id: "medical", label: "📋 Medical Records", icon: "📋" },
+  { id: "documents", label: "📄 Documents", icon: "📄" },
+];
+
+/**
  * Intelligence Briefing - Field Review Modal
  * Shows all extracted data from Muster Call for review/editing
  *
@@ -54,58 +65,6 @@ export default function IntelligenceBriefing({
   }, [isOpen, extractedData]);
 
   /**
-   * Find discrepancies in extracted data
-   * (e.g., conflicting dates, multiple values for same field)
-   */
-  const findDiscrepancies = (data) => {
-    const issues = [];
-
-    // Check for multiple DOBs
-    if (data.dob && Array.isArray(data.dob) && data.dob.length > 1) {
-      issues.push({
-        field: "dob",
-        type: "multiple_values",
-        values: data.dob,
-        message: "Found multiple dates of birth in documents",
-      });
-    }
-
-    // Check for multiple service dates
-    if (
-      data.serviceStart &&
-      Array.isArray(data.serviceStart) &&
-      data.serviceStart.length > 1
-    ) {
-      issues.push({
-        field: "serviceStart",
-        type: "multiple_values",
-        values: data.serviceStart,
-        message: "Multiple service start dates detected",
-      });
-    }
-
-    // Check for conflicting disability ratings
-    if (data.conditions && Array.isArray(data.conditions)) {
-      const ratingConflicts = {};
-      data.conditions.forEach((cond) => {
-        if (cond.rating && ratingConflicts[cond.name]) {
-          if (ratingConflicts[cond.name] !== cond.rating) {
-            issues.push({
-              field: `condition_${cond.name}`,
-              type: "conflicting_ratings",
-              values: [ratingConflicts[cond.name], cond.rating],
-              message: `"${cond.name}" has conflicting ratings`,
-            });
-          }
-        }
-        if (cond.rating) ratingConflicts[cond.name] = cond.rating;
-      });
-    }
-
-    return issues;
-  };
-
-  /**
    * Handle field edit
    */
   const handleFieldEdit = (section, field, value) => {
@@ -136,45 +95,113 @@ export default function IntelligenceBriefing({
   /**
    * Confirm and commit to My Packet
    */
-  const handleConfirm = async () => {
-    if (discrepancies.length > 0) {
-      const proceed = window.confirm(
-        `⚠️ You have ${discrepancies.length} unresolved discrepancy(ies). Proceed anyway?`,
-      );
-      if (!proceed) return;
-    }
-
-    // Build Veteran Knowledge Base from extracted data
-    try {
-      let vkb = await loadVKB();
-      vkb = mergeMusterCallIntoVKB(vkb, editableData);
-      await saveVKB(vkb);
-      // eslint-disable-next-line no-console
-      console.log("✅ VKB updated with Muster Call data");
-    } catch (err) {
-      console.error("Error updating VKB:", err);
-      // Don't block confirmation if VKB fails
-    }
-
-    if (onConfirm) {
-      onConfirm(editableData);
-    }
-  };
-
-  /**
-   * Sections for the briefing
-   */
-  const sections = [
-    { id: "personal", label: "👤 Personal Info", icon: "🪪" },
-    { id: "service", label: "🎖️ Service History", icon: "🎖️" },
-    { id: "conditions", label: "🏥 Conditions", icon: "🏥" },
-    { id: "medical", label: "📋 Medical Records", icon: "📋" },
-    { id: "documents", label: "📄 Documents", icon: "📄" },
-  ];
+  const handleConfirm = () =>
+    commitBriefingData({ discrepancies, editableData, onConfirm });
 
   if (!isOpen) return null;
 
-  const header = (
+  return (
+    <BriefingModal
+      discrepancies={discrepancies}
+      editableData={editableData}
+      activeSection={activeSection}
+      showDiscardWarning={showDiscardWarning}
+      onSelectSection={setActiveSection}
+      onFieldEdit={handleFieldEdit}
+      onResolve={resolveDiscrepancy}
+      onConfirm={handleConfirm}
+      onRequestDiscard={() => setShowDiscardWarning(true)}
+      onKeepEditing={() => setShowDiscardWarning(false)}
+      onDiscard={onClose}
+    />
+  );
+}
+
+/**
+ * BriefingModal - Renders the review modal shell (header, footer, body)
+ * plus the discard-confirmation modal.
+ */
+function BriefingModal({
+  discrepancies,
+  editableData,
+  activeSection,
+  showDiscardWarning,
+  onSelectSection,
+  onFieldEdit,
+  onResolve,
+  onConfirm,
+  onRequestDiscard,
+  onKeepEditing,
+  onDiscard,
+}) {
+  const header = <BriefingHeader onRequestDiscard={onRequestDiscard} />;
+  const footer = (
+    <BriefingFooter
+      fieldsCount={Object.keys(editableData).length}
+      discrepanciesCount={discrepancies.length}
+      onRequestDiscard={onRequestDiscard}
+      onConfirm={onConfirm}
+    />
+  );
+
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onRequestDiscard}
+        header={header}
+        footer={footer}
+        labelledBy="intel-briefing-title"
+        size="2xl"
+        className="border-2 border-amber-200 dark:border-amber-500/30"
+      >
+        {/* Discrepancies Warning */}
+        {discrepancies.length > 0 && (
+          <DiscrepancyBanner count={discrepancies.length} />
+        )}
+
+        <div className="flex flex-col gap-4 md:flex-row">
+          {/* Sidebar Navigation */}
+          <BriefingSidebarNav
+            activeSection={activeSection}
+            onSelectSection={onSelectSection}
+          />
+
+          {/* Main Content Area */}
+          <div className="min-w-0 flex-1 md:max-h-[55vh] md:overflow-y-auto">
+            {/* Discrepancies Section */}
+            {discrepancies.length > 0 && (
+              <DiscrepancyResolver
+                discrepancies={discrepancies}
+                onResolve={onResolve}
+              />
+            )}
+
+            {/* Dynamic content based on active section */}
+            <BriefingSectionContent
+              activeSection={activeSection}
+              editableData={editableData}
+              onFieldEdit={onFieldEdit}
+            />
+          </div>
+        </div>
+      </ResponsiveModal>
+
+      {/* Discard Warning Modal */}
+      <DiscardWarningModal
+        isOpen={showDiscardWarning}
+        onKeepEditing={onKeepEditing}
+        onDiscard={onDiscard}
+      />
+    </>
+  );
+}
+
+/**
+ * BriefingHeader - Modal header banner with title and close button
+ */
+function BriefingHeader({ onRequestDiscard }) {
+  return (
     <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 sm:px-6 sm:py-4">
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur sm:flex">
@@ -196,7 +223,7 @@ export default function IntelligenceBriefing({
         </div>
       </div>
       <button
-        onClick={() => setShowDiscardWarning(true)}
+        onClick={onRequestDiscard}
         className="shrink-0 rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
         aria-label="Close dialog"
       >
@@ -216,18 +243,28 @@ export default function IntelligenceBriefing({
       </button>
     </div>
   );
+}
 
-  const footer = (
+/**
+ * BriefingFooter - Modal footer with progress summary and confirm/cancel actions
+ */
+function BriefingFooter({
+  fieldsCount,
+  discrepanciesCount,
+  onRequestDiscard,
+  onConfirm,
+}) {
+  return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <span className="text-2xl">📊</span>
         <div>
           <p className="text-sm font-bold text-gray-900 dark:text-white">
-            {Object.keys(editableData).length} Fields Extracted
+            {fieldsCount} Fields Extracted
           </p>
           <p className="text-xs text-gray-500 dark:text-slate-400">
-            {discrepancies.length > 0
-              ? `${discrepancies.length} discrepancies remaining`
+            {discrepanciesCount > 0
+              ? `${discrepanciesCount} discrepancies remaining`
               : "All clear - ready to commit"}
           </p>
         </div>
@@ -235,13 +272,13 @@ export default function IntelligenceBriefing({
 
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setShowDiscardWarning(true)}
+          onClick={onRequestDiscard}
           className="rounded-xl bg-gray-200 px-6 py-3 font-bold text-gray-800 transition-all hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
         >
           Cancel
         </button>
         <button
-          onClick={handleConfirm}
+          onClick={onConfirm}
           className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-3 font-bold text-white shadow-lg transition-all hover:from-green-500 hover:to-emerald-500 hover:shadow-xl"
         >
           <span>✅</span>
@@ -250,251 +287,355 @@ export default function IntelligenceBriefing({
       </div>
     </div>
   );
+}
 
+/**
+ * DiscrepancyBanner - Small warning banner shown above the tab content
+ */
+function DiscrepancyBanner({ count }) {
   return (
-    <>
-      <ResponsiveModal
-        isOpen
-        onClose={() => setShowDiscardWarning(true)}
-        header={header}
-        footer={footer}
-        labelledBy="intel-briefing-title"
-        size="2xl"
-        className="border-2 border-amber-200 dark:border-amber-500/30"
-      >
-        {/* Discrepancies Warning */}
-        {discrepancies.length > 0 && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-500 dark:bg-red-900/30">
-            <div className="flex items-center gap-3">
-              <span className="animate-pulse text-3xl">⚠️</span>
-              <div>
-                <p className="font-bold text-red-700 dark:text-red-200">
-                  {discrepancies.length} Discrepancy(ies) Detected
-                </p>
-                <p className="text-sm text-red-600 dark:text-red-300">
-                  Multiple values found for some fields. Review and select the
-                  correct one.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-500 dark:bg-red-900/30">
+      <div className="flex items-center gap-3">
+        <span className="animate-pulse text-3xl">⚠️</span>
+        <div>
+          <p className="font-bold text-red-700 dark:text-red-200">
+            {count} Discrepancy(ies) Detected
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-300">
+            Multiple values found for some fields. Review and select the
+            correct one.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="flex flex-col gap-4 md:flex-row">
-          {/* Sidebar Navigation */}
-          <nav className="flex gap-2 overflow-x-auto md:max-h-[55vh] md:w-56 md:shrink-0 md:flex-col md:overflow-x-visible md:overflow-y-auto md:border-r md:border-gray-200 md:pr-3 dark:md:border-slate-700">
-            <p className="hidden text-xs font-bold uppercase text-gray-500 dark:text-slate-400 md:mb-1 md:block">
-              Briefing Sections
-            </p>
-            {sections.map((section) => (
+/**
+ * BriefingSidebarNav - Section navigation for the briefing tabs
+ */
+function BriefingSidebarNav({ activeSection, onSelectSection }) {
+  return (
+    <nav className="flex gap-2 overflow-x-auto md:max-h-[55vh] md:w-56 md:shrink-0 md:flex-col md:overflow-x-visible md:overflow-y-auto md:border-r md:border-gray-200 md:pr-3 dark:md:border-slate-700">
+      <p className="hidden text-xs font-bold uppercase text-gray-500 dark:text-slate-400 md:mb-1 md:block">
+        Briefing Sections
+      </p>
+      {sections.map((section) => (
+        <button
+          key={section.id}
+          onClick={() => onSelectSection(section.id)}
+          className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 transition-all md:mb-1 md:w-full md:gap-3 ${
+            activeSection === section.id
+              ? "bg-amber-500 font-bold text-white"
+              : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
+          }`}
+        >
+          <span className="text-xl">{section.icon}</span>
+          <span className="text-sm">{section.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/**
+ * DiscrepancyResolver - Lets the veteran pick the correct value for each
+ * unresolved discrepancy before committing
+ */
+function DiscrepancyResolver({ discrepancies, onResolve }) {
+  return (
+    <div className="mb-6 rounded-xl border-2 border-red-200 bg-red-50 p-4 dark:border-red-500/50 dark:bg-red-900/20">
+      <h3 className="mb-3 text-lg font-bold text-red-700 dark:text-red-200">
+        🚨 Resolve Discrepancies First
+      </h3>
+      {discrepancies.map((disc, idx) => (
+        <div
+          key={idx}
+          className="mb-4 rounded-lg bg-gray-100 p-3 dark:bg-slate-800/50"
+        >
+          <p className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
+            {disc.message}
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {disc.values.map((value, vIdx) => (
               <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 transition-all md:mb-1 md:w-full md:gap-3 ${
-                  activeSection === section.id
-                    ? "bg-amber-500 font-bold text-white"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
-                }`}
+                key={vIdx}
+                onClick={() => onResolve(disc, value)}
+                className="rounded-lg bg-gray-200 p-3 text-left text-gray-900 transition-all hover:bg-amber-500 hover:text-white dark:bg-slate-700 dark:text-white"
               >
-                <span className="text-xl">{section.icon}</span>
-                <span className="text-sm">{section.label}</span>
+                <p className="font-mono text-sm">{value}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  Click to select
+                </p>
               </button>
             ))}
-          </nav>
-
-          {/* Main Content Area */}
-          <div className="min-w-0 flex-1 md:max-h-[55vh] md:overflow-y-auto">
-            {/* Discrepancies Section */}
-            {discrepancies.length > 0 && (
-              <div className="mb-6 rounded-xl border-2 border-red-200 bg-red-50 p-4 dark:border-red-500/50 dark:bg-red-900/20">
-                <h3 className="mb-3 text-lg font-bold text-red-700 dark:text-red-200">
-                  🚨 Resolve Discrepancies First
-                </h3>
-                {discrepancies.map((disc, idx) => (
-                  <div
-                    key={idx}
-                    className="mb-4 rounded-lg bg-gray-100 p-3 dark:bg-slate-800/50"
-                  >
-                    <p className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
-                      {disc.message}
-                    </p>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {disc.values.map((value, vIdx) => (
-                        <button
-                          key={vIdx}
-                          onClick={() => resolveDiscrepancy(disc, value)}
-                          className="rounded-lg bg-gray-200 p-3 text-left text-gray-900 transition-all hover:bg-amber-500 hover:text-white dark:bg-slate-700 dark:text-white"
-                        >
-                          <p className="font-mono text-sm">{value}</p>
-                          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
-                            Click to select
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Dynamic content based on active section */}
-            {activeSection === "personal" && (
-              <div>
-                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                  👤 Personal Information
-                </h3>
-                <div className="space-y-4">
-                  <Field
-                    label="Full Name"
-                    value={editableData.fullName || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("personal", "fullName", val)
-                    }
-                  />
-                  <Field
-                    label="Date of Birth"
-                    value={editableData.dob || ""}
-                    onChange={(val) => handleFieldEdit("personal", "dob", val)}
-                    type="date"
-                  />
-                  <Field
-                    label="SSN (Last 4)"
-                    value={editableData.ssnLast4 || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("personal", "ssnLast4", val)
-                    }
-                    maxLength={4}
-                  />
-                  <Field
-                    label="VA File Number"
-                    value={editableData.vaFileNumber || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("personal", "vaFileNumber", val)
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {activeSection === "service" && (
-              <div>
-                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                  🎖️ Service History
-                </h3>
-                <div className="space-y-4">
-                  <Field
-                    label="Branch"
-                    value={editableData.branch || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("service", "branch", val)
-                    }
-                  />
-                  <Field
-                    label="Service Start Date"
-                    value={editableData.serviceStart || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("service", "serviceStart", val)
-                    }
-                    type="date"
-                  />
-                  <Field
-                    label="Service End Date"
-                    value={editableData.serviceEnd || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("service", "serviceEnd", val)
-                    }
-                    type="date"
-                  />
-                  <Field
-                    label="Character of Service"
-                    value={editableData.characterOfService || ""}
-                    onChange={(val) =>
-                      handleFieldEdit("service", "characterOfService", val)
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {activeSection === "conditions" && (
-              <div>
-                <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                  🏥 Service-Connected Conditions
-                </h3>
-                {editableData.conditions &&
-                editableData.conditions.length > 0 ? (
-                  <div className="space-y-3">
-                    {editableData.conditions.map((condition, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
-                      >
-                        <div className="mb-2 flex items-start justify-between">
-                          <div>
-                            <p className="font-bold text-gray-900 dark:text-white">
-                              {condition.name}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-slate-400">
-                              {condition.diagnosticCode || "No code"}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-blue-500 px-3 py-1 font-bold text-white">
-                            {condition.rating}%
-                          </span>
-                        </div>
-                        {condition.effectiveDate && (
-                          <p className="text-xs text-gray-500 dark:text-slate-400">
-                            Effective: {condition.effectiveDate}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="italic text-gray-500 dark:text-slate-400">
-                    No conditions extracted from documents
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Add more sections as needed */}
           </div>
         </div>
-      </ResponsiveModal>
+      ))}
+    </div>
+  );
+}
 
-      {/* Discard Warning Modal */}
-      <ResponsiveModal
-        isOpen={showDiscardWarning}
-        onClose={() => setShowDiscardWarning(false)}
-        title="⚠️ Discard Changes?"
-        size="sm"
-        zIndex={70}
-        className="border-2 border-red-300 dark:border-red-500"
-        footer={
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowDiscardWarning(false)}
-              className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-800 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
-            >
-              Keep Editing
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-bold text-white transition-colors hover:bg-red-500"
-            >
-              Discard & Close
-            </button>
-          </div>
-        }
-      >
-        <p className="text-gray-700 dark:text-slate-300">
-          You haven&apos;t committed this data to your packet yet. If you close
-          now, all extracted information will be lost.
-        </p>
-      </ResponsiveModal>
+/**
+ * BriefingSectionContent - Dynamic content for the active briefing section
+ */
+function BriefingSectionContent({ activeSection, editableData, onFieldEdit }) {
+  return (
+    <>
+      {activeSection === "personal" && (
+        <PersonalSection editableData={editableData} onFieldEdit={onFieldEdit} />
+      )}
+
+      {activeSection === "service" && (
+        <ServiceSection editableData={editableData} onFieldEdit={onFieldEdit} />
+      )}
+
+      {activeSection === "conditions" && (
+        <ConditionsSection editableData={editableData} />
+      )}
+
+      {/* Add more sections as needed */}
     </>
   );
+}
+
+/**
+ * PersonalSection - Personal Info tab content
+ */
+function PersonalSection({ editableData, onFieldEdit }) {
+  return (
+    <div>
+      <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+        👤 Personal Information
+      </h3>
+      <div className="space-y-4">
+        <Field
+          label="Full Name"
+          value={editableData.fullName || ""}
+          onChange={(val) => onFieldEdit("personal", "fullName", val)}
+        />
+        <Field
+          label="Date of Birth"
+          value={editableData.dob || ""}
+          onChange={(val) => onFieldEdit("personal", "dob", val)}
+          type="date"
+        />
+        <Field
+          label="SSN (Last 4)"
+          value={editableData.ssnLast4 || ""}
+          onChange={(val) => onFieldEdit("personal", "ssnLast4", val)}
+          maxLength={4}
+        />
+        <Field
+          label="VA File Number"
+          value={editableData.vaFileNumber || ""}
+          onChange={(val) => onFieldEdit("personal", "vaFileNumber", val)}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * ServiceSection - Service History tab content
+ */
+function ServiceSection({ editableData, onFieldEdit }) {
+  return (
+    <div>
+      <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+        🎖️ Service History
+      </h3>
+      <div className="space-y-4">
+        <Field
+          label="Branch"
+          value={editableData.branch || ""}
+          onChange={(val) => onFieldEdit("service", "branch", val)}
+        />
+        <Field
+          label="Service Start Date"
+          value={editableData.serviceStart || ""}
+          onChange={(val) => onFieldEdit("service", "serviceStart", val)}
+          type="date"
+        />
+        <Field
+          label="Service End Date"
+          value={editableData.serviceEnd || ""}
+          onChange={(val) => onFieldEdit("service", "serviceEnd", val)}
+          type="date"
+        />
+        <Field
+          label="Character of Service"
+          value={editableData.characterOfService || ""}
+          onChange={(val) =>
+            onFieldEdit("service", "characterOfService", val)
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * ConditionsSection - Service-Connected Conditions tab content
+ */
+function ConditionsSection({ editableData }) {
+  return (
+    <div>
+      <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+        🏥 Service-Connected Conditions
+      </h3>
+      {editableData.conditions && editableData.conditions.length > 0 ? (
+        <div className="space-y-3">
+          {editableData.conditions.map((condition, idx) => (
+            <div
+              key={idx}
+              className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+            >
+              <div className="mb-2 flex items-start justify-between">
+                <div>
+                  <p className="font-bold text-gray-900 dark:text-white">
+                    {condition.name}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    {condition.diagnosticCode || "No code"}
+                  </p>
+                </div>
+                <span className="rounded-full bg-blue-500 px-3 py-1 font-bold text-white">
+                  {condition.rating}%
+                </span>
+              </div>
+              {condition.effectiveDate && (
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  Effective: {condition.effectiveDate}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="italic text-gray-500 dark:text-slate-400">
+          No conditions extracted from documents
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * DiscardWarningModal - Confirmation before losing unsaved review data
+ */
+function DiscardWarningModal({ isOpen, onKeepEditing, onDiscard }) {
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onKeepEditing}
+      title="⚠️ Discard Changes?"
+      size="sm"
+      zIndex={70}
+      className="border-2 border-red-300 dark:border-red-500"
+      footer={
+        <div className="flex gap-3">
+          <button
+            onClick={onKeepEditing}
+            className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-800 transition-colors hover:bg-gray-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+          >
+            Keep Editing
+          </button>
+          <button
+            onClick={onDiscard}
+            className="flex-1 rounded-lg bg-red-600 px-4 py-2 font-bold text-white transition-colors hover:bg-red-500"
+          >
+            Discard & Close
+          </button>
+        </div>
+      }
+    >
+      <p className="text-gray-700 dark:text-slate-300">
+        You haven&apos;t committed this data to your packet yet. If you close
+        now, all extracted information will be lost.
+      </p>
+    </ResponsiveModal>
+  );
+}
+
+/**
+ * Find discrepancies in extracted data
+ * (e.g., conflicting dates, multiple values for same field)
+ */
+function findDiscrepancies(data) {
+  const issues = [];
+
+  // Check for multiple DOBs
+  if (data.dob && Array.isArray(data.dob) && data.dob.length > 1) {
+    issues.push({
+      field: "dob",
+      type: "multiple_values",
+      values: data.dob,
+      message: "Found multiple dates of birth in documents",
+    });
+  }
+
+  // Check for multiple service dates
+  if (
+    data.serviceStart &&
+    Array.isArray(data.serviceStart) &&
+    data.serviceStart.length > 1
+  ) {
+    issues.push({
+      field: "serviceStart",
+      type: "multiple_values",
+      values: data.serviceStart,
+      message: "Multiple service start dates detected",
+    });
+  }
+
+  // Check for conflicting disability ratings
+  if (data.conditions && Array.isArray(data.conditions)) {
+    const ratingConflicts = {};
+    data.conditions.forEach((cond) => {
+      if (cond.rating && ratingConflicts[cond.name]) {
+        if (ratingConflicts[cond.name] !== cond.rating) {
+          issues.push({
+            field: `condition_${cond.name}`,
+            type: "conflicting_ratings",
+            values: [ratingConflicts[cond.name], cond.rating],
+            message: `"${cond.name}" has conflicting ratings`,
+          });
+        }
+      }
+      if (cond.rating) ratingConflicts[cond.name] = cond.rating;
+    });
+  }
+
+  return issues;
+}
+
+/**
+ * Confirm and commit extracted data to My Packet
+ */
+async function commitBriefingData({ discrepancies, editableData, onConfirm }) {
+  if (discrepancies.length > 0) {
+    const proceed = window.confirm(
+      `⚠️ You have ${discrepancies.length} unresolved discrepancy(ies). Proceed anyway?`,
+    );
+    if (!proceed) return;
+  }
+
+  // Build Veteran Knowledge Base from extracted data
+  try {
+    let vkb = await loadVKB();
+    vkb = mergeMusterCallIntoVKB(vkb, editableData);
+    await saveVKB(vkb);
+    // eslint-disable-next-line no-console
+    console.log("✅ VKB updated with Muster Call data");
+  } catch (err) {
+    console.error("Error updating VKB:", err);
+    // Don't block confirmation if VKB fails
+  }
+
+  if (onConfirm) {
+    onConfirm(editableData);
+  }
 }
 
 /**
