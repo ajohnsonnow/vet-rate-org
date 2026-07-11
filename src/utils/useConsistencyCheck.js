@@ -226,8 +226,9 @@ const CONSISTENCY_RULES = [
               const activities = extractActivities(log.notes);
 
               inabilities.forEach((inability) => {
-                const contradictoryActivity = activities.find((activity) =>
-                  isContradictoryActivity(inability, activity),
+                const contradictoryActivity = findContradictoryActivity(
+                  inability,
+                  activities,
                 );
 
                 if (contradictoryActivity) {
@@ -304,16 +305,20 @@ function extractLaterality(text) {
   const leftMentions = (text.match(/\bleft\b/gi) || []).length;
   const rightMentions = (text.match(/\bright\b/gi) || []).length;
 
+  let side;
+  if (leftMentions > rightMentions) {
+    side = "left";
+  } else if (rightMentions > leftMentions) {
+    side = "right";
+  } else {
+    side = null;
+  }
+
   return {
     left: leftMentions,
     right: rightMentions,
     hasConflict: leftMentions > 0 && rightMentions > 0,
-    side:
-      leftMentions > rightMentions
-        ? "left"
-        : rightMentions > leftMentions
-          ? "right"
-          : null,
+    side,
   };
 }
 
@@ -365,6 +370,12 @@ function isContradictoryActivity(inability, activity) {
 
   const contradictoryTerms = contradictions[inability] || [];
   return contradictoryTerms.some((term) => activity.includes(term));
+}
+
+function findContradictoryActivity(inability, activities) {
+  return activities.find((activity) =>
+    isContradictoryActivity(inability, activity),
+  );
 }
 
 // Main Hook

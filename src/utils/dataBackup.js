@@ -281,6 +281,7 @@ export const parseBackupFile = (file) => {
         const backup = JSON.parse(text);
         resolve(backup);
       } catch (error) {
+        console.error("Failed to parse backup file:", error);
         reject(
           new Error(
             "Failed to parse backup file. Please ensure it is a valid JSON file.",

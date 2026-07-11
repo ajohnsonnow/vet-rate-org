@@ -190,6 +190,30 @@ export async function initialize() {
 }
 
 /**
+ * Resolve a file (PDF page or image) to an image blob for the worker
+ */
+async function resolveImageBlob(file, pageNumber, scale) {
+  let imageBlob;
+
+  if (isPdfFile(file)) {
+    // Get optimal scale if not specified
+    let renderScale = scale;
+    if (!renderScale) {
+      const metadata = await getPdfMetadata(file);
+      renderScale = getOptimalScale(metadata);
+    }
+
+    imageBlob = await convertPdfPageToBlob(file, pageNumber, renderScale);
+  } else if (isImageFile(file)) {
+    imageBlob = await imageFileToBlob(file);
+  } else {
+    throw new Error("Unsupported file type. Use PDF or image files.");
+  }
+
+  return imageBlob;
+}
+
+/**
  * Process a document (PDF or image) and extract text
  *
  * @param {File} file - PDF or image file
@@ -211,22 +235,7 @@ export async function processDocument(file, options = {}) {
   }
 
   // Convert file to image blob
-  let imageBlob;
-
-  if (isPdfFile(file)) {
-    // Get optimal scale if not specified
-    let renderScale = scale;
-    if (!renderScale) {
-      const metadata = await getPdfMetadata(file);
-      renderScale = getOptimalScale(metadata);
-    }
-
-    imageBlob = await convertPdfPageToBlob(file, pageNumber, renderScale);
-  } else if (isImageFile(file)) {
-    imageBlob = await imageFileToBlob(file);
-  } else {
-    throw new Error("Unsupported file type. Use PDF or image files.");
-  }
+  const imageBlob = await resolveImageBlob(file, pageNumber, scale);
 
   // Send to worker and wait for result
   return new Promise((resolve, reject) => {

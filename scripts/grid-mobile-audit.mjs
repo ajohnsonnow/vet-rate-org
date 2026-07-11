@@ -94,13 +94,51 @@ function skipTemplate(code, i) {
  * codebase authors classes with double quotes / backticks, and single-quote
  * scanning is the source of the apostrophe false positives.
  */
+/** Collect every "..." and `...` fragment from a balanced `{...}` brace expression. */
+function extractBraceFragments(code, i, lineOf) {
+  let depth = 1;
+  i++;
+  const fragments = [];
+  while (i < code.length && depth > 0) {
+    const c = code[i];
+    if (c === "{") depth++;
+    else if (c === "}") depth--;
+    else if (c === '"') {
+      const end = skipString(code, i, '"');
+      fragments.push({ inner: code.slice(i + 1, end - 1), tpl: false, at: i });
+      i = end;
+      continue;
+    } else if (c === "`") {
+      const end = skipTemplate(code, i);
+      fragments.push({ inner: code.slice(i + 1, end - 1), tpl: true, at: i });
+      i = end;
+      continue;
+    } else if (c === "'") {
+      i = skipString(code, i, "'");
+      continue;
+    }
+    i++;
+  }
+  const conditional = fragments.length > 1;
+  const results = [];
+  for (const f of fragments) {
+    if (!f.inner.includes("grid-cols-")) continue;
+    results.push({
+      inner: f.inner,
+      line: lineOf(f.at),
+      isTemplate: f.tpl || conditional,
+      at: f.at,
+    });
+  }
+  return results;
+}
+
 function extractClassNames(code) {
   const results = [];
   const re = /className\s*=\s*/g;
-  let m;
-  while ((m = re.exec(code)) !== null) {
-    let i = re.lastIndex;
-    const lineOf = (idx) => code.slice(0, idx).split("\n").length;
+  const lineOf = (idx) => code.slice(0, idx).split("\n").length;
+  while (re.exec(code) !== null) {
+    const i = re.lastIndex;
     if (code[i] === '"' || code[i] === "'") {
       const end = skipString(code, i, code[i]);
       const inner = code.slice(i + 1, end - 1);
@@ -108,39 +146,7 @@ function extractClassNames(code) {
         results.push({ inner, line: lineOf(i), isTemplate: false, at: i });
     } else if (code[i] === "{") {
       // balanced brace expression — collect every "..." and `...` fragment
-      let depth = 1;
-      i++;
-      const fragments = [];
-      while (i < code.length && depth > 0) {
-        const c = code[i];
-        if (c === "{") depth++;
-        else if (c === "}") depth--;
-        else if (c === '"') {
-          const end = skipString(code, i, '"');
-          fragments.push({ inner: code.slice(i + 1, end - 1), tpl: false, at: i });
-          i = end;
-          continue;
-        } else if (c === "`") {
-          const end = skipTemplate(code, i);
-          fragments.push({ inner: code.slice(i + 1, end - 1), tpl: true, at: i });
-          i = end;
-          continue;
-        } else if (c === "'") {
-          i = skipString(code, i, "'");
-          continue;
-        }
-        i++;
-      }
-      const conditional = fragments.length > 1;
-      for (const f of fragments) {
-        if (!f.inner.includes("grid-cols-")) continue;
-        results.push({
-          inner: f.inner,
-          line: lineOf(f.at),
-          isTemplate: f.tpl || conditional,
-          at: f.at,
-        });
-      }
+      results.push(...extractBraceFragments(code, i, lineOf));
     }
   }
   return results;
@@ -191,7 +197,10 @@ function analyze(str) {
   // responsive ladder and the base IS the deliberate mobile layout — the
   // mechanical prefix must reconcile with the existing variants, not concat.
   const hasUpVariant = UP_VARIANT_RE.test(inner);
-  const priority = cols >= 4 ? "high" : cols === 3 ? "medium" : "low";
+  let priority;
+  if (cols >= 4) priority = "high";
+  else if (cols === 3) priority = "medium";
+  else priority = "low";
 
   return {
     cols,

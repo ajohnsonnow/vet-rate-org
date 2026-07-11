@@ -135,12 +135,14 @@ function main() {
       a.localeCompare(b, "en", { numeric: true }),
     )) {
       const dcs = affectedDcs(section, dcMap);
-      const dcNote =
-        dcs === null
-          ? "(ecfr-dc-map.json missing — affected DCs unknown)"
-          : dcs.length
-            ? `affects DCs: ${dcs.join(", ")}`
-            : "no mapped diagnostic codes";
+      let dcNote;
+      if (dcs === null) {
+        dcNote = "(ecfr-dc-map.json missing — affected DCs unknown)";
+      } else if (dcs.length) {
+        dcNote = `affects DCs: ${dcs.join(", ")}`;
+      } else {
+        dcNote = "no mapped diagnostic codes";
+      }
       lines.push(`- **§ ${section}** — ${dcNote}`);
     }
   }

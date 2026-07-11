@@ -820,9 +820,16 @@ export function scoreNexusQuality(nexusText) {
   if (checks.rulesOutOther) score += 15;
   if (checks.hasRationale) score += 10;
 
+  let quality = "weak";
+  if (score >= 80) {
+    quality = "strong";
+  } else if (score >= 50) {
+    quality = "adequate";
+  }
+
   return {
     score,
-    quality: score >= 80 ? "strong" : score >= 50 ? "adequate" : "weak",
+    quality,
     checks,
     recommendations: Object.entries(checks)
       .filter(([_, passed]) => !passed)

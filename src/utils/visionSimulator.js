@@ -49,6 +49,66 @@ async function initTesseract() {
 }
 
 /**
+ * Calculate total/light-pixel brightness statistics from raw pixel data
+ */
+function computeBrightnessStats(data) {
+  let totalBrightness = 0;
+  let lightPixels = 0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const brightness = (r + g + b) / 3;
+
+    totalBrightness += brightness;
+    if (brightness > 192) lightPixels++;
+  }
+
+  return { totalBrightness, lightPixels };
+}
+
+/**
+ * Count high-gradient pixels between neighbors for text density estimation
+ */
+function computeEdgeCount(data, width, height) {
+  let edgeCount = 0;
+
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      const center = data[idx];
+      const left = data[idx - 4];
+      const right = data[idx + 4];
+      const up = data[idx - width * 4];
+      const down = data[idx + width * 4];
+
+      const gradient =
+        Math.abs(center - left) +
+        Math.abs(center - right) +
+        Math.abs(center - up) +
+        Math.abs(center - down);
+
+      if (gradient > 100) edgeCount++;
+    }
+  }
+
+  return edgeCount;
+}
+
+/**
+ * Estimate the document/image type from structural signals
+ */
+function estimateImageType(isLikelyDocument, isStandardLetter, hasHighTextDensity) {
+  if (isLikelyDocument) {
+    return isStandardLetter
+      ? "Official Document (Letter Size)"
+      : "Document/Form";
+  }
+  return hasHighTextDensity ? "Text-Heavy Image" : "Photo/Graphics";
+}
+
+/**
  * Extract visual metadata from an image using Canvas API
  * This gives us structural information without needing u8 shaders
  */
@@ -69,22 +129,7 @@ async function analyzeImageStructure(imageBlob) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
-      // Calculate basic statistics
-      let totalBrightness = 0;
-      let darkPixels = 0;
-      let lightPixels = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const brightness = (r + g + b) / 3;
-
-        totalBrightness += brightness;
-        // eslint-disable-next-line no-unused-vars
-        if (brightness < 64) darkPixels++;
-        if (brightness > 192) lightPixels++;
-      }
+      const { totalBrightness, lightPixels } = computeBrightnessStats(data);
 
       const pixelCount = data.length / 4;
       const avgBrightness = totalBrightness / pixelCount;
@@ -101,25 +146,7 @@ async function analyzeImageStructure(imageBlob) {
       const isStandardLetter = Math.abs(aspectRatio - 0.773) < 0.1; // 8.5x11 ratio
 
       // Edge detection for text density estimation
-      let edgeCount = 0;
-      for (let y = 1; y < canvas.height - 1; y++) {
-        for (let x = 1; x < canvas.width - 1; x++) {
-          const idx = (y * canvas.width + x) * 4;
-          const center = data[idx];
-          const left = data[idx - 4];
-          const right = data[idx + 4];
-          const up = data[idx - canvas.width * 4];
-          const down = data[idx + canvas.width * 4];
-
-          const gradient =
-            Math.abs(center - left) +
-            Math.abs(center - right) +
-            Math.abs(center - up) +
-            Math.abs(center - down);
-
-          if (gradient > 100) edgeCount++;
-        }
-      }
+      const edgeCount = computeEdgeCount(data, canvas.width, canvas.height);
 
       const textDensity = edgeCount / pixelCount;
       const hasHighTextDensity = textDensity > 0.1;
@@ -138,13 +165,11 @@ async function analyzeImageStructure(imageBlob) {
         isStandardLetter,
         hasHighTextDensity,
         textDensityScore: (textDensity * 100).toFixed(1) + "%",
-        estimatedType: isLikelyDocument
-          ? isStandardLetter
-            ? "Official Document (Letter Size)"
-            : "Document/Form"
-          : hasHighTextDensity
-            ? "Text-Heavy Image"
-            : "Photo/Graphics",
+        estimatedType: estimateImageType(
+          isLikelyDocument,
+          isStandardLetter,
+          hasHighTextDensity,
+        ),
       });
     };
 
@@ -300,12 +325,19 @@ function buildVisionSimulatorPrompt(
   dd214Elements,
   userQuery,
 ) {
+  let orientation = "Square";
+  if (structureInfo.isPortrait) {
+    orientation = "Portrait";
+  } else if (structureInfo.isLandscape) {
+    orientation = "Landscape";
+  }
+
   let contextPrompt = `You are analyzing a document image. Here's what I can see:
 
 📊 IMAGE STRUCTURE:
 - Dimensions: ${structureInfo.width} x ${structureInfo.height} pixels
 - Type: ${structureInfo.estimatedType}
-- Orientation: ${structureInfo.isPortrait ? "Portrait" : structureInfo.isLandscape ? "Landscape" : "Square"}
+- Orientation: ${orientation}
 - Text Density: ${structureInfo.textDensityScore}
 ${structureInfo.isLikelyDocument ? "- This appears to be an official document" : ""}
 ${structureInfo.isStandardLetter ? '- Standard letter size (8.5" x 11")' : ""}

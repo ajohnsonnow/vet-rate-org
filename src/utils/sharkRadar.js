@@ -74,7 +74,7 @@ const SHARK_PATTERNS = [
       /we charge.*initial claim/i,
       /upfront fee/i,
       /pay.*before.*decision/i,
-      /\$\d{3,}.*before/i,
+      /\$\d{3,}.{0,200}before/i,
       /non-refundable.*fee/i,
       /consultation fee/i,
     ],

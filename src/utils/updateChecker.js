@@ -21,8 +21,7 @@
 import { APP_VERSION, UPDATE_CHECK_INTERVAL } from "./version";
 
 let checkInterval = null;
-// eslint-disable-next-line no-unused-vars
-let lastCheckTime = null;
+let _lastCheckTime = null;
 
 /**
  * Compare semantic versions
@@ -49,7 +48,7 @@ const compareVersions = (v1, v2) => {
  */
 export const checkForUpdates = async () => {
   try {
-    lastCheckTime = Date.now();
+    _lastCheckTime = Date.now();
 
     // Fetch version.json with cache-busting
     const response = await fetch(`/version.json?t=${Date.now()}`, {

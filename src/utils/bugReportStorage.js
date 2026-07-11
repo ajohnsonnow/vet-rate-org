@@ -152,23 +152,12 @@ export const generateReportId = () => {
 };
 
 /**
- * Save a new bug report to storage
- * Automatically sanitizes the payload before saving
- * @param {Object} reportData - Raw bug report data
- * @returns {Promise<Object>} Saved report with ID
+ * Build the core sanitized text fields of a bug report record
+ * @param {Object} sanitizedData - Sanitized bug report payload
+ * @returns {Object}
  */
-export const saveBugReport = async (reportData) => {
-  const database = await openDatabase();
-
-  // Generate ID if not provided
-  const reportId = reportData.report_id || generateReportId();
-
-  // Sanitize the entire payload
-  const sanitizedData = createSanitizedReport(reportData);
-
-  // Build the report object
-  const report = {
-    report_id: reportId,
+const buildBugReportCoreFields = (sanitizedData) => {
+  return {
     stack_trace:
       sanitizedData.consoleErrors?.[0]?.stack ||
       sanitizedData.stack_trace ||
@@ -189,20 +178,42 @@ export const saveBugReport = async (reportData) => {
       sanitizedData.expectedBehavior || sanitizedData.expected_behavior || "",
     actual_behavior:
       sanitizedData.actualBehavior || sanitizedData.actual_behavior || "",
-    client_metadata: {
-      browser: sanitizedData.systemInfo?.userAgent || navigator.userAgent,
-      os: sanitizedData.systemInfo?.platform || navigator.platform,
-      screen_resolution:
-        sanitizedData.systemInfo?.screenResolution ||
-        `${screen.width}x${screen.height}`,
-      window_size:
-        sanitizedData.systemInfo?.windowSize ||
-        `${window.innerWidth}x${window.innerHeight}`,
-      app_version: sanitizedData.appVersion || "1.0.0",
-      timezone:
-        sanitizedData.systemInfo?.timezone ||
-        Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
+  };
+};
+
+/**
+ * Build the client_metadata sub-object of a bug report record
+ * @param {Object} sanitizedData - Sanitized bug report payload
+ * @returns {Object}
+ */
+const buildBugReportClientMetadata = (sanitizedData) => {
+  return {
+    browser: sanitizedData.systemInfo?.userAgent || navigator.userAgent,
+    os: sanitizedData.systemInfo?.platform || navigator.platform,
+    screen_resolution:
+      sanitizedData.systemInfo?.screenResolution ||
+      `${screen.width}x${screen.height}`,
+    window_size:
+      sanitizedData.systemInfo?.windowSize ||
+      `${window.innerWidth}x${window.innerHeight}`,
+    app_version: sanitizedData.appVersion || "1.0.0",
+    timezone:
+      sanitizedData.systemInfo?.timezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
+};
+
+/**
+ * Build the sanitized bug report record for storage
+ * @param {string} reportId - The bug report ID
+ * @param {Object} sanitizedData - Sanitized bug report payload
+ * @returns {Object}
+ */
+const buildBugReportRecord = (reportId, sanitizedData) => {
+  return {
+    report_id: reportId,
+    ...buildBugReportCoreFields(sanitizedData),
+    client_metadata: buildBugReportClientMetadata(sanitizedData),
     app_state: sanitizedData.appState || {},
     console_errors: sanitizedData.consoleErrors || [],
     storage_info: sanitizedData.storageInfo || {},
@@ -217,6 +228,25 @@ export const saveBugReport = async (reportData) => {
       version: "1.0",
     },
   };
+};
+
+/**
+ * Save a new bug report to storage
+ * Automatically sanitizes the payload before saving
+ * @param {Object} reportData - Raw bug report data
+ * @returns {Promise<Object>} Saved report with ID
+ */
+export const saveBugReport = async (reportData) => {
+  const database = await openDatabase();
+
+  // Generate ID if not provided
+  const reportId = reportData.report_id || generateReportId();
+
+  // Sanitize the entire payload
+  const sanitizedData = createSanitizedReport(reportData);
+
+  // Build the report object
+  const report = buildBugReportRecord(reportId, sanitizedData);
 
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([REPORTS_STORE], "readwrite");

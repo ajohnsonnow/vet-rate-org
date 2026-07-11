@@ -62,8 +62,18 @@ const MEMES = [
   "🎖️ The Medal of Honor we all deserve.",
 ];
 
-const ZonkButton = ({ className = "" }) => {
-  const { _t } = useLanguage();
+const ZONK_COLOR_CLASSES = {
+  green: "bg-green-50 border-green-300 text-green-900",
+  blue: "bg-blue-50 border-blue-300 text-blue-900",
+  purple: "bg-purple-50 border-purple-300 text-purple-900",
+  indigo: "bg-indigo-50 border-indigo-300 text-indigo-900",
+  teal: "bg-teal-50 border-teal-300 text-teal-900",
+};
+
+const getZonkColorClasses = (color) =>
+  ZONK_COLOR_CLASSES[color] || ZONK_COLOR_CLASSES.green;
+
+function useZonkState() {
   const [showZonk, setShowZonk] = useState(false);
   const [zonkData, setZonkData] = useState(null);
   const [clickCount, setClickCount] = useState(0);
@@ -75,7 +85,7 @@ const ZonkButton = ({ className = "" }) => {
     onEscape: () => setShowZonk(false),
   });
 
-  const handleZonkClick = () => {
+  const triggerZonk = () => {
     // Pick a random zonk message
     const randomZonk =
       ZONK_MESSAGES[Math.floor(Math.random() * ZONK_MESSAGES.length)];
@@ -94,84 +104,92 @@ const ZonkButton = ({ className = "" }) => {
       audio.play().catch(() => {
         // Silently fail if audio doesn't play
       });
-    } catch (e) {
+    } catch (_e) {
       // Audio not supported, no problem
     }
   };
 
-  const getColorClasses = (color) => {
-    const colors = {
-      green: "bg-green-50 border-green-300 text-green-900",
-      blue: "bg-blue-50 border-blue-300 text-blue-900",
-      purple: "bg-purple-50 border-purple-300 text-purple-900",
-      indigo: "bg-indigo-50 border-indigo-300 text-indigo-900",
-      teal: "bg-teal-50 border-teal-300 text-teal-900",
-    };
-    return colors[color] || colors.green;
-  };
+  const closeZonk = () => setShowZonk(false);
+
+  return { showZonk, zonkData, clickCount, zonkRef, triggerZonk, closeZonk };
+}
+
+const ZonkPrompt = ({ onClick, clickCount }) => (
+  <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 text-center">
+    <p className="text-sm text-gray-600 mb-4">
+      You&apos;ve been working hard. Need a morale boost?
+    </p>
+    <button
+      onClick={onClick}
+      className="bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold py-3 px-8 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+    >
+      DISMISSED
+    </button>
+    {clickCount > 0 && (
+      <p className="text-xs text-gray-500 mt-3">Zonks: {clickCount} 🎖️</p>
+    )}
+  </div>
+);
+
+const ZonkModal = ({ zonkRef, zonkData, clickCount, onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fadeIn">
+    <div
+      ref={zonkRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="zonk-title"
+      className={`max-w-md w-full border-4 rounded-2xl p-8 shadow-2xl transform animate-bounce ${getZonkColorClasses(zonkData.color)}`}
+    >
+      <div className="text-center">
+        {/* Icon */}
+        <zonkData.icon className="w-24 h-24 mx-auto mb-4" />
+
+        {/* Title */}
+        <h2 id="zonk-title" className="text-4xl font-black mb-4">
+          {zonkData.title}
+        </h2>
+
+        {/* Message */}
+        <p className="text-xl font-semibold mb-6 leading-relaxed">
+          {zonkData.message}
+        </p>
+
+        {/* Meme */}
+        <p className="text-base italic opacity-80 mb-8">{zonkData.meme}</p>
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="bg-white text-gray-800 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition-all shadow-md hover:shadow-lg"
+        >
+          Back to Work 💪
+        </button>
+
+        {/* Counter */}
+        <p className="text-xs opacity-60 mt-6">Zonk #{clickCount}</p>
+      </div>
+    </div>
+  </div>
+);
+
+const ZonkButton = ({ className = "" }) => {
+  const { _t } = useLanguage();
+  const { showZonk, zonkData, clickCount, zonkRef, triggerZonk, closeZonk } =
+    useZonkState();
 
   return (
     <div className={className}>
       {/* The Button */}
-      {!showZonk && (
-        <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 text-center">
-          <p className="text-sm text-gray-600 mb-4">
-            You&apos;ve been working hard. Need a morale boost?
-          </p>
-          <button
-            onClick={handleZonkClick}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold py-3 px-8 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            DISMISSED
-          </button>
-          {clickCount > 0 && (
-            <p className="text-xs text-gray-500 mt-3">Zonks: {clickCount} 🎖️</p>
-          )}
-        </div>
-      )}
+      {!showZonk && <ZonkPrompt onClick={triggerZonk} clickCount={clickCount} />}
 
       {/* The Zonk Modal */}
       {showZonk && zonkData && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div
-            ref={zonkRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="zonk-title"
-            className={`max-w-md w-full border-4 rounded-2xl p-8 shadow-2xl transform animate-bounce ${getColorClasses(zonkData.color)}`}
-          >
-            <div className="text-center">
-              {/* Icon */}
-              <zonkData.icon className="w-24 h-24 mx-auto mb-4" />
-
-              {/* Title */}
-              <h2 id="zonk-title" className="text-4xl font-black mb-4">
-                {zonkData.title}
-              </h2>
-
-              {/* Message */}
-              <p className="text-xl font-semibold mb-6 leading-relaxed">
-                {zonkData.message}
-              </p>
-
-              {/* Meme */}
-              <p className="text-base italic opacity-80 mb-8">
-                {zonkData.meme}
-              </p>
-
-              {/* Close Button */}
-              <button
-                onClick={() => setShowZonk(false)}
-                className="bg-white text-gray-800 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition-all shadow-md hover:shadow-lg"
-              >
-                Back to Work 💪
-              </button>
-
-              {/* Counter */}
-              <p className="text-xs opacity-60 mt-6">Zonk #{clickCount}</p>
-            </div>
-          </div>
-        </div>
+        <ZonkModal
+          zonkRef={zonkRef}
+          zonkData={zonkData}
+          clickCount={clickCount}
+          onClose={closeZonk}
+        />
       )}
 
       <style jsx>{`

@@ -55,8 +55,7 @@ const MONITORED_STORAGE_KEYS = [
 let backupTimer = null;
 let backupInProgress = false;
 let backupListeners = [];
-// eslint-disable-next-line no-unused-vars
-let lastBackupTime = null;
+let _lastBackupTime = null;
 
 // ============================================================================
 // INDEXEDDB SETUP
@@ -218,7 +217,7 @@ export const performBackup = async (type = "auto") => {
     await cleanupOldBackups();
 
     // Update last backup time
-    lastBackupTime = backup.timestamp;
+    _lastBackupTime = backup.timestamp;
     localStorage.setItem(CONFIG.LAST_BACKUP_KEY, backup.timestamp);
 
     // Notify listeners
@@ -574,7 +573,7 @@ export const initAutoBackup = async () => {
     // Load last backup time
     const lastBackup = localStorage.getItem(CONFIG.LAST_BACKUP_KEY);
     if (lastBackup) {
-      lastBackupTime = lastBackup;
+      _lastBackupTime = lastBackup;
     }
 
     // Perform initial backup if none exists

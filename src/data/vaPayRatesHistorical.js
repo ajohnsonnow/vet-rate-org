@@ -606,13 +606,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
       const month = currentDate.getMonth();
 
       // Get the correct rate table year (rates effective Dec 1 of previous year)
-      let rateYear = year;
-      if (month < 11) {
-        // Before December
-        rateYear = year;
-      } else {
-        rateYear = year + 1;
-      }
+      const rateYear = month < 11 ? year : year + 1;
 
       // Ensure we have data for this year
       if (VA_PAY_RATES_HISTORICAL[rateYear]) {
