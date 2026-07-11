@@ -34,6 +34,44 @@ function getStateLabel(state) {
   return labels[state] || "Ready, FRONT...";
 }
 
+function MusterCallFileProgressList({ fileProgress }) {
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        File Progress:
+      </h4>
+      {Object.entries(fileProgress).map(([filename, fileData]) => (
+        <div
+          key={filename}
+          className="bg-white dark:bg-gray-800 rounded-lg p-4"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
+              {filename}
+            </p>
+            <span className="text-xs text-gray-500 ml-2">
+              {fileData.progress?.toFixed(0) || 0}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 rounded-full ${
+                fileData.error ? "bg-red-500" : "bg-green-500"
+              }`}
+              style={{ width: `${fileData.progress || 0}%` }}
+            />
+          </div>
+          {fileData.error && (
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              {fileData.error}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MusterCallBatchProgress({ processingState, batch, onStop }) {
   const { progress, fileProgress } = batch;
   return (
@@ -75,40 +113,7 @@ function MusterCallBatchProgress({ processingState, batch, onStop }) {
         </div>
       </div>
 
-      {/* Individual File Progress */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          File Progress:
-        </h4>
-        {Object.entries(fileProgress).map(([filename, fileData]) => (
-          <div
-            key={filename}
-            className="bg-white dark:bg-gray-800 rounded-lg p-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
-                {filename}
-              </p>
-              <span className="text-xs text-gray-500 ml-2">
-                {fileData.progress?.toFixed(0) || 0}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 rounded-full ${
-                  fileData.error ? "bg-red-500" : "bg-green-500"
-                }`}
-                style={{ width: `${fileData.progress || 0}%` }}
-              />
-            </div>
-            {fileData.error && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                {fileData.error}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+      <MusterCallFileProgressList fileProgress={fileProgress} />
 
       {/* Processing Animation */}
       <div className="flex justify-center">

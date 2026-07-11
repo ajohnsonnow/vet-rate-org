@@ -83,6 +83,53 @@ import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import VADataCenter from "./VADataCenter";
 
+function getRatingBadgeClass(rating) {
+  if (rating >= 70)
+    return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300";
+  if (rating >= 50)
+    return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300";
+  if (rating >= 30)
+    return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
+  return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
+}
+
+function getTimelineDotClass(type) {
+  if (type === "treatment") return "bg-blue-500";
+  if (type === "diagnosis") return "bg-green-500";
+  if (type === "military") return "bg-amber-500";
+  if (type === "symptom") return "bg-red-500";
+  if (type === "hospitalization") return "bg-purple-500";
+  return "bg-gray-400";
+}
+
+function getTimelineBadgeClass(type) {
+  if (type === "treatment")
+    return "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300";
+  if (type === "diagnosis")
+    return "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300";
+  if (type === "military")
+    return "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300";
+  if (type === "symptom")
+    return "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300";
+  if (type === "hospitalization")
+    return "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300";
+  return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+}
+
+function getPainSeverityDotClass(severity) {
+  if (severity === "severe") return "bg-red-500";
+  if (severity === "moderate") return "bg-orange-500";
+  return "bg-yellow-500";
+}
+
+function safeImportToStorage(key, value, label) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error importing ${label}:`, e);
+  }
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -834,14 +881,11 @@ Return ONLY the JSON object, no explanation.`,
 
     // Import veteran profile if present
     if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0) {
-      try {
-        localStorage.setItem(
-          "vet_rate_veteran_profile",
-          JSON.stringify(data.veteranProfile),
-        );
-      } catch (e) {
-        console.error("Error importing profile:", e);
-      }
+      safeImportToStorage(
+        "vet_rate_veteran_profile",
+        data.veteranProfile,
+        "profile",
+      );
     }
 
     // Import saved forms if present
@@ -875,50 +919,30 @@ Return ONLY the JSON object, no explanation.`,
 
     // Import service history
     if (data.serviceHistory) {
-      try {
-        localStorage.setItem(
-          "vet_rate_service_history",
-          JSON.stringify(data.serviceHistory),
-        );
-      } catch (e) {
-        console.error("Error importing service history:", e);
-      }
+      safeImportToStorage(
+        "vet_rate_service_history",
+        data.serviceHistory,
+        "service history",
+      );
     }
 
     // Import ratings
     if (data.myRatings && Array.isArray(data.myRatings)) {
-      try {
-        localStorage.setItem(
-          "vet_rate_my_ratings",
-          JSON.stringify(data.myRatings),
-        );
-      } catch (e) {
-        console.error("Error importing ratings:", e);
-      }
+      safeImportToStorage("vet_rate_my_ratings", data.myRatings, "ratings");
     }
 
     // Import timeline events
     if (data.timelineEvents && Array.isArray(data.timelineEvents)) {
-      try {
-        localStorage.setItem(
-          "vet_rate_timeline_events",
-          JSON.stringify(data.timelineEvents),
-        );
-      } catch (e) {
-        console.error("Error importing timeline events:", e);
-      }
+      safeImportToStorage(
+        "vet_rate_timeline_events",
+        data.timelineEvents,
+        "timeline events",
+      );
     }
 
     // Import pain maps
     if (data.painMaps && Array.isArray(data.painMaps)) {
-      try {
-        localStorage.setItem(
-          "vet_rate_pain_maps",
-          JSON.stringify(data.painMaps),
-        );
-      } catch (e) {
-        console.error("Error importing pain maps:", e);
-      }
+      safeImportToStorage("vet_rate_pain_maps", data.painMaps, "pain maps");
     }
 
     // Reload ALL state after import
@@ -1729,15 +1753,7 @@ Return ONLY the JSON object, no explanation.`,
                                     {rating.name || rating.condition}
                                   </h3>
                                   <span
-                                    className={`px-3 py-1 rounded-full text-sm font-bold ${
-                                      rating.rating >= 70
-                                        ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                                        : rating.rating >= 50
-                                          ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300"
-                                          : rating.rating >= 30
-                                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                                            : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                                    }`}
+                                    className={`px-3 py-1 rounded-full text-sm font-bold ${getRatingBadgeClass(rating.rating)}`}
                                   >
                                     {rating.rating}%
                                   </span>
@@ -3524,19 +3540,7 @@ Return ONLY the JSON object, no explanation.`,
                             >
                               {/* Timeline dot */}
                               <div
-                                className={`absolute left-2.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
-                                  event.type === "treatment"
-                                    ? "bg-blue-500"
-                                    : event.type === "diagnosis"
-                                      ? "bg-green-500"
-                                      : event.type === "military"
-                                        ? "bg-amber-500"
-                                        : event.type === "symptom"
-                                          ? "bg-red-500"
-                                          : event.type === "hospitalization"
-                                            ? "bg-purple-500"
-                                            : "bg-gray-400"
-                                }`}
+                                className={`absolute left-2.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getTimelineDotClass(event.type)}`}
                               ></div>
 
                               <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -3544,20 +3548,7 @@ Return ONLY the JSON object, no explanation.`,
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span
-                                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                          event.type === "treatment"
-                                            ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                                            : event.type === "diagnosis"
-                                              ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
-                                              : event.type === "military"
-                                                ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
-                                                : event.type === "symptom"
-                                                  ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
-                                                  : event.type ===
-                                                      "hospitalization"
-                                                    ? "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
-                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                                        }`}
+                                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${getTimelineBadgeClass(event.type)}`}
                                       >
                                         {event.type?.charAt(0).toUpperCase() +
                                           event.type?.slice(1) || "Event"}
@@ -3876,13 +3867,7 @@ Return ONLY the JSON object, no explanation.`,
                           >
                             <div className="flex items-center gap-2">
                               <span
-                                className={`w-3 h-3 rounded-full ${
-                                  point.severity === "severe"
-                                    ? "bg-red-500"
-                                    : point.severity === "moderate"
-                                      ? "bg-orange-500"
-                                      : "bg-yellow-500"
-                                }`}
+                                className={`w-3 h-3 rounded-full ${getPainSeverityDotClass(point.severity)}`}
                               ></span>
                               <span className="font-medium text-gray-900 dark:text-gray-100">
                                 {point.region || point.bodyPart}

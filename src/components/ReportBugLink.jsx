@@ -40,11 +40,13 @@ function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
       ? "text-white/90 hover:text-white hover:bg-white/10"
       : "text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700";
 
+  const ariaLabel = moduleName ? `Report a bug in ${moduleName}` : "Report a bug";
+
   return (
     <button
       onClick={handleClick}
       className={`${baseStyles} ${variantStyles}`}
-      aria-label={`Report a bug${moduleName ? ` in ${moduleName}` : ""}`}
+      aria-label={ariaLabel}
     >
       <span>🐛</span>
       <span>Bug?</span>

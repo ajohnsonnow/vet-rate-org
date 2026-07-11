@@ -92,64 +92,72 @@ function getDirSizeMB(dir, excludeDirs = ['node_modules', '.git', 'models']) {
 // Stats Calculation Functions
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Calculate all live project statistics
- */
-export function calculateLiveStats() {
-  const srcDir = path.join(rootDir, 'src');
-  const publicDir = path.join(rootDir, 'public');
-  const componentsDir = path.join(srcDir, 'components');
-  const utilsDir = path.join(srcDir, 'utils');
-  const hooksDir = path.join(srcDir, 'hooks');
-  const contextsDir = path.join(srcDir, 'contexts');
-  const dataDir = path.join(srcDir, 'data');
-  const formsDir = path.join(publicDir, 'forms');
-  
+function countProjectFiles({ rootDir: root, srcDir, componentsDir, utilsDir, hooksDir, contextsDir, formsDir }) {
   // Count all project files (excluding node_modules, dist, .git)
-  const allFiles = getFiles(rootDir);
+  const allFiles = getFiles(root);
   const totalFiles = allFiles.length;
-  
+
   // Count source code files
   const sourceExtensions = ['.js', '.jsx', '.ts', '.tsx', '.css', '.json'];
   const sourceFiles = getFiles(srcDir, sourceExtensions);
-  
+
   // Count lines of code in source files
   const codeExtensions = ['.js', '.jsx', '.ts', '.tsx', '.css'];
   const codeFiles = getFiles(srcDir, codeExtensions);
   const linesOfCode = codeFiles.reduce((total, file) => total + countLines(file), 0);
-  
+
   // Count React components (.jsx files in components folder)
   const componentFiles = getFiles(componentsDir, ['.jsx']);
   const componentCount = componentFiles.length;
-  
+
   // Count utility modules (.js files in utils folder)
   const utilFiles = getFiles(utilsDir, ['.js']);
   const utilityCount = utilFiles.length;
-  
+
   // Count hooks
   const hookFiles = getFiles(hooksDir, ['.js', '.ts']);
   const hookCount = hookFiles.length;
-  
+
   // Count contexts
   const contextFiles = getFiles(contextsDir, ['.jsx', '.js']);
   const contextCount = contextFiles.length;
-  
+
   // Count PDF forms in public/forms
   const formFiles = fs.existsSync(formsDir) ? getFiles(formsDir, ['.pdf']) : [];
   const vaFormsCount = formFiles.length;
-  
+
+  return {
+    totalFiles,
+    sourceFileCount: sourceFiles.length,
+    linesOfCode,
+    componentCount,
+    utilityCount,
+    hookCount,
+    contextCount,
+    vaFormsCount,
+  };
+}
+
+function getDisabilityCount(dataDir) {
   // Get disability count from data file
   let disabilityCount = 748; // fallback
   try {
     const disabilityDataPath = path.join(dataDir, 'disabilityData.json');
     if (fs.existsSync(disabilityDataPath)) {
       const data = JSON.parse(fs.readFileSync(disabilityDataPath, 'utf8'));
-      disabilityCount = data.disabilities ? data.disabilities.length : (Array.isArray(data) ? data.length : 748);
+      if (data.disabilities) {
+        disabilityCount = data.disabilities.length;
+      } else if (Array.isArray(data)) {
+        disabilityCount = data.length;
+      }
     }
   } catch (e) {
     console.warn('Could not read disability data:', e.message);
   }
-  
+  return disabilityCount;
+}
+
+function getSecondaryCount(dataDir) {
   // Get secondary conditions count from actual data files
   let secondaryCount = 0;
   try {
@@ -162,7 +170,7 @@ export function calculateLiveStats() {
         secondaryCount = matches.length;
       }
     }
-    
+
     // Also count relatedSecondaryConditions from disabilityData.json
     const disabilityPath = path.join(dataDir, 'disabilityData.json');
     if (fs.existsSync(disabilityPath)) {
@@ -174,13 +182,17 @@ export function calculateLiveStats() {
         }
       }
     }
-    
+
     // Fallback if still 0
     if (secondaryCount === 0) secondaryCount = 65;
   } catch (e) {
+    console.warn('Could not read secondary conditions data:', e.message);
     secondaryCount = 65; // fallback to known minimum
   }
-  
+  return secondaryCount;
+}
+
+function getToolCount(dataDir) {
   // Get tool count from toolkitData
   let toolCount = 40; // fallback
   try {
@@ -194,10 +206,14 @@ export function calculateLiveStats() {
       }
     }
   } catch (e) {
+    console.warn('Could not read toolkit data:', e.message);
     // Use fallback
   }
-  
-  // Get Local AI model count 
+  return toolCount;
+}
+
+function getLocalAIModelCount(componentsDir) {
+  // Get Local AI model count
   // Diamond Swarm: 3 Desktop (7B) + 3 Mobile (1.7B distilled) = 6 total
   let localAIModels = 6; // Diamond Swarm full suite
   try {
@@ -215,42 +231,67 @@ export function calculateLiveStats() {
       }
     }
   } catch (e) {
+    console.warn('Could not read local AI model data:', e.message);
     // Use fallback
   }
-  
+  return localAIModels;
+}
+
+function getAppSizeMB(srcDir, publicDir) {
   // Calculate project size (src + public only, not node_modules/dist/.git)
   const srcSizeMB = getDirSizeMB(srcDir);
   const publicSizeMB = getDirSizeMB(publicDir);
-  const appSizeMB = (parseFloat(srcSizeMB) + parseFloat(publicSizeMB)).toFixed(2);
-  
+  return (parseFloat(srcSizeMB) + parseFloat(publicSizeMB)).toFixed(2);
+}
+
+/**
+ * Calculate all live project statistics
+ */
+export function calculateLiveStats() {
+  const srcDir = path.join(rootDir, 'src');
+  const publicDir = path.join(rootDir, 'public');
+  const componentsDir = path.join(srcDir, 'components');
+  const utilsDir = path.join(srcDir, 'utils');
+  const hooksDir = path.join(srcDir, 'hooks');
+  const contextsDir = path.join(srcDir, 'contexts');
+  const dataDir = path.join(srcDir, 'data');
+  const formsDir = path.join(publicDir, 'forms');
+
+  const fileCounts = countProjectFiles({ rootDir, srcDir, componentsDir, utilsDir, hooksDir, contextsDir, formsDir });
+  const disabilityCount = getDisabilityCount(dataDir);
+  const secondaryCount = getSecondaryCount(dataDir);
+  const toolCount = getToolCount(dataDir);
+  const localAIModels = getLocalAIModelCount(componentsDir);
+  const appSizeMB = getAppSizeMB(srcDir, publicDir);
+
   // Calculate supporting components (total - major tools)
-  const supportingComponents = componentCount - toolCount;
-  
+  const supportingComponents = fileCounts.componentCount - toolCount;
+
   return {
     // File counts
-    totalFiles,
-    sourceFileCount: sourceFiles.length,
-    
+    totalFiles: fileCounts.totalFiles,
+    sourceFileCount: fileCounts.sourceFileCount,
+
     // Code metrics
-    linesOfCode,
-    
+    linesOfCode: fileCounts.linesOfCode,
+
     // Component counts
-    componentCount,
+    componentCount: fileCounts.componentCount,
     toolCount,
     supportingComponents: Math.max(0, supportingComponents),
-    utilityCount,
-    hookCount,
-    contextCount,
-    
+    utilityCount: fileCounts.utilityCount,
+    hookCount: fileCounts.hookCount,
+    contextCount: fileCounts.contextCount,
+
     // Data counts
     disabilityCount,
     secondaryCount,
-    vaFormsCount,
+    vaFormsCount: fileCounts.vaFormsCount,
     localAIModels,
-    
+
     // Size
     appSizeMB: parseFloat(appSizeMB),
-    
+
     // Calculated timestamp
     calculatedAt: new Date().toISOString()
   };

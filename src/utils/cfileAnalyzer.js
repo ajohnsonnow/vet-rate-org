@@ -501,7 +501,7 @@ function attemptJSONRepair(jsonStr) {
       if (result && typeof result === "object") {
         return result;
       }
-    } catch (e) {
+    } catch {
       // Strategy failed, try next
       continue;
     }
@@ -527,7 +527,6 @@ function splitIntoChunks(fullText, aiMode) {
   // Parse page markers to get page boundaries
   const pageMarkerRegex = /--- PAGE (\d+) ---/g;
   const pages = [];
-  let lastIndex = 0;
   let match;
 
   while ((match = pageMarkerRegex.exec(fullText)) !== null) {
@@ -539,8 +538,6 @@ function splitIntoChunks(fullText, aiMode) {
       startIndex: match.index,
       endIndex: fullText.length, // Will be updated on next iteration
     });
-    // eslint-disable-next-line no-unused-vars
-    lastIndex = match.index;
   }
 
   // If no page markers found, treat as single chunk
@@ -738,8 +735,14 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
   const tier = profile?.tier ?? "desktop-high";
   const localRate =
     AI_CHUNK_RATE[tier]?.p50 ?? AI_CHUNK_RATE["desktop-high"].p50;
-  const baseTimePerChunk =
-    aiMode === AI_MODES.CLOUD ? 30 : aiMode === AI_MODES.SWARM ? localRate : 45;
+  let baseTimePerChunk;
+  if (aiMode === AI_MODES.CLOUD) {
+    baseTimePerChunk = 30;
+  } else if (aiMode === AI_MODES.SWARM) {
+    baseTimePerChunk = localRate;
+  } else {
+    baseTimePerChunk = 45;
+  }
 
   const totalSeconds = aiChunks * baseTimePerChunk;
 
@@ -980,7 +983,7 @@ function normalizeDateKey(dateStr) {
       month = parseInt(ymd[1], 10);
       day = ymd[2] ? parseInt(ymd[2], 10) : 0;
     } else {
-      const mdy = str.match(/\b(\d{1,2})[/](?:(\d{1,2})[/])?\d{4}/);
+      const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
       if (mdy) {
         month = parseInt(mdy[1], 10);
         day = mdy[2] ? parseInt(mdy[2], 10) : 0;
@@ -1286,7 +1289,7 @@ export async function analyzeCFile(
 
   // Local engines generate sequentially — skip boilerplate pages before AI.
   // Cloud mode reads everything (1M context, few calls).
-  // NOTE: analyzePageByPage exists but is NOT used yet — WebLLM's ~14 s fixed
+  // NOTE: _analyzePageByPage exists but is NOT used yet — WebLLM's ~14 s fixed
   // overhead per call × 1755 page calls = 12+ hours vs chunk-based ~260 min.
   // The right future path is page-level parsing + small-batch AI (3-5 pages).
   const isLocalAIMode = [
@@ -1296,11 +1299,9 @@ export async function analyzeCFile(
     AI_MODES.LOCAL_SERVER,
   ].includes(aiMode);
 
-  let analysisText = fullText;
-  let skippedPages = 0;
   const screened = screenRelevantPages(fullText);
-  analysisText = screened.text;
-  skippedPages = screened.skippedPages;
+  const analysisText = screened.text;
+  const skippedPages = screened.skippedPages;
   if (skippedPages > 0) {
     // eslint-disable-next-line no-console
     console.log(
@@ -1804,101 +1805,6 @@ function scoreChunkRelevance(text) {
   return Math.max(0, score);
 }
 
-// JSON Schema for XGrammar constrained decoding — enforces valid JSON output
-// per-token so parse errors and repair retries are impossible. Keep this schema
-// constant across all 304 chunk calls (WebLLM issue #560: changing schemas on a
-// live engine disposes the matcher and throws).
-const CFILE_CHUNK_SCHEMA = {
-  type: "object",
-  properties: {
-    summary: { type: "string" },
-    servicePeriod: {
-      type: "object",
-      properties: {
-        branch: { type: "string" },
-        entryDate: { type: "string" },
-        separationDate: { type: "string" },
-        mos: { type: "string" },
-      },
-    },
-    timeline: {
-      type: "array",
-      maxItems: 8,
-      items: {
-        type: "object",
-        properties: {
-          date: { type: "string" },
-          page_number: { type: "integer" },
-          category: { type: "string" },
-          description: { type: "string" },
-          significance: { type: "string", enum: ["high", "medium", "low"] },
-        },
-        required: ["date", "description"],
-      },
-    },
-    potential_claims: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          condition: { type: "string" },
-          likelihood: { type: "string", enum: ["high", "medium", "low"] },
-          inServiceEvent: { type: "string" },
-          currentDiagnosis: { type: "string", enum: ["yes", "no", "unclear"] },
-          missing_element: { type: "string" },
-        },
-        required: ["condition"],
-      },
-    },
-    exposures: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          type: { type: "string" },
-          location: { type: "string" },
-          timeframe: { type: "string" },
-        },
-      },
-    },
-    combatIndicators: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          indicator: { type: "string" },
-          page_number: { type: "integer" },
-        },
-      },
-    },
-    mentalHealth: {
-      type: "object",
-      properties: {
-        indicators: { type: "array", maxItems: 5, items: { type: "string" } },
-        diagnoses: { type: "array", maxItems: 5, items: { type: "string" } },
-        stressors: { type: "array", maxItems: 5, items: { type: "string" } },
-        pages: { type: "array", maxItems: 5, items: { type: "integer" } },
-      },
-    },
-    redFlags: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          issue: { type: "string" },
-          suggestion: { type: "string" },
-        },
-      },
-    },
-    actionItems: { type: "array", maxItems: 8, items: { type: "string" } },
-  },
-  required: ["summary"],
-};
-
 /**
  * Analyze a single chunk of text
  */
@@ -2266,7 +2172,7 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
  * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
  * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
  */
-async function analyzePageByPage(
+async function _analyzePageByPage(
   fullText,
   aiMode,
   onProgress,

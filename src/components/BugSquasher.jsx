@@ -22,9 +22,71 @@ const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
 // Empty string disables remote send (local save still works).
 const FORMSUBMIT_URL = import.meta.env.VITE_BUG_REPORT_ENDPOINT ?? "";
 
+// Ordered module-detection flags — first match wins, mirrors legacy if-chain order.
+const MODULE_FLAG_MAP = [
+  ["showMyPacket", APP_MODULES.MY_PACKET],
+  ["showUserManual", APP_MODULES.USER_MANUAL],
+  ["showVAResources", APP_MODULES.VA_RESOURCES],
+  ["showTacticalCalculator", APP_MODULES.TACTICAL_CALCULATOR],
+  ["showMillionDollarDashboard", APP_MODULES.MILLION_DOLLAR_DASHBOARD],
+  ["showWhatIfSandbox", APP_MODULES.WHAT_IF_SANDBOX],
+  ["showRetroPayHunter", APP_MODULES.RETRO_PAY_HUNTER],
+  ["showTimeMachine", APP_MODULES.TIME_MACHINE],
+  ["showSecondaryScout", APP_MODULES.SECONDARY_SCOUT],
+  ["showSecondaryScoutLauncher", APP_MODULES.SECONDARY_SCOUT_LAUNCHER],
+  ["showCAPSimulator", APP_MODULES.CAP_SIMULATOR],
+  ["showPathfinder", APP_MODULES.PATHFINDER],
+  ["showClaimNavigator", APP_MODULES.CLAIM_NAVIGATOR],
+  ["showMOSHazardMatcher", APP_MODULES.MOS_HAZARD_MATCHER],
+  ["showPACTActNavigator", APP_MODULES.PACT_ACT_NAVIGATOR],
+  ["showWebOfConditions", APP_MODULES.WEB_OF_CONDITIONS],
+  ["showCFileAnalyzer", APP_MODULES.CFILE_ANALYZER],
+  ["showBlueButtonXRay", APP_MODULES.BLUE_BUTTON_XRAY],
+  ["showRecordSearch", APP_MODULES.RECORD_SEARCH],
+  ["showWitnessBench", APP_MODULES.WITNESS_BENCH],
+  ["showNexusBuilder", APP_MODULES.NEXUS_BUILDER],
+  ["showFormsHelper", APP_MODULES.FORMS_HELPER],
+  ["showSymptomLogger", APP_MODULES.SYMPTOM_LOGGER],
+  ["showPainPainter", APP_MODULES.PAIN_PAINTER],
+  ["showEvidenceTimeline", APP_MODULES.EVIDENCE_TIMELINE],
+  ["showFOIAGenerator", APP_MODULES.FOIA_GENERATOR],
+  ["showDD214Analyzer", APP_MODULES.DD214_ANALYZER],
+  ["showRedTeam", APP_MODULES.RED_TEAM],
+  ["showClaimStressTest", APP_MODULES.CLAIM_STRESS_TEST],
+  ["showDecisionDecoder", APP_MODULES.DECISION_DECODER],
+  ["showDenialDecoder", APP_MODULES.DENIAL_DECODER],
+  ["showSharkRadar", APP_MODULES.SHARK_RADAR],
+  ["showConsistencyEngine", APP_MODULES.CONSISTENCY_ENGINE],
+  ["showEvidenceGapVisualizer", APP_MODULES.EVIDENCE_GAP_VISUALIZER],
+  ["showRiskAssessment", APP_MODULES.RISK_ASSESSMENT],
+  ["showTDIUBuilder", APP_MODULES.TDIU_BUILDER],
+  ["showStateBenefitHunter", APP_MODULES.STATE_BENEFIT_HUNTER],
+  ["showTheTribunal", APP_MODULES.THE_TRIBUNAL],
+  ["showLegislativeWatchdog", APP_MODULES.LEGISLATIVE_WATCHDOG],
+  ["showVSOFinder", APP_MODULES.VSO_FINDER],
+  ["showVAAITransparency", APP_MODULES.VA_AI_TRANSPARENCY],
+  ["showBackupManager", APP_MODULES.BACKUP_MANAGER],
+  ["showCloudSyncManager", APP_MODULES.CLOUD_SYNC],
+  ["showAISettings", APP_MODULES.AI_SETTINGS],
+  ["showLocalAIPanel", APP_MODULES.LOCAL_AI_PANEL],
+  ["showPrivacyPolicy", APP_MODULES.PRIVACY_POLICY],
+  ["showAboutUs", APP_MODULES.ABOUT_US],
+  ["showContactUs", APP_MODULES.CONTACT_US],
+  ["showTermsOfService", APP_MODULES.TERMS_OF_SERVICE],
+];
+
+// Legacy fallback detection (if currentModule not passed from App.jsx)
+// DIAMOND LEVEL: Now supports ALL 45+ tools!
+function detectCurrentModule(state) {
+  for (const [flag, moduleValue] of MODULE_FLAG_MAP) {
+    if (state[flag]) return moduleValue;
+  }
+  if (state.selectedResult) return APP_MODULES.DISABILITY_DETAILS;
+  return APP_MODULES.SEARCH;
+}
+
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
 
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);

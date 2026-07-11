@@ -117,50 +117,58 @@ async function readAuditJson() {
 
 // ── extract CVE list from audit output ────────────────────────────────────
 
-function extractVulns(auditJson) {
-  const vulns = [];
+function cvesForVia(via) {
+  return via.filter((v) => typeof v === "object" && v.cves?.length);
+}
 
-  // npm audit --json v2 (npm 7+) uses auditJson.vulnerabilities
-  if (auditJson.vulnerabilities) {
-    for (const [pkgName, vuln] of Object.entries(auditJson.vulnerabilities)) {
-      const via = Array.isArray(vuln.via) ? vuln.via : [];
-      for (const v of via) {
-        if (typeof v === "object" && v.cves?.length) {
-          for (const cve of v.cves) {
-            vulns.push({
-              cve: cve.toUpperCase(),
-              severity: vuln.severity ?? v.severity ?? "unknown",
-              package: pkgName,
-            });
-          }
-        }
-      }
-      // deduplicate: if no direct CVE list but has severity, add a placeholder
-      if (!via.some((v) => typeof v === "object" && v.cves?.length)) {
+// npm audit --json v2 (npm 7+) uses auditJson.vulnerabilities
+function extractVulnsV2(auditJson) {
+  const vulns = [];
+  if (!auditJson.vulnerabilities) return vulns;
+
+  for (const [pkgName, vuln] of Object.entries(auditJson.vulnerabilities)) {
+    const via = Array.isArray(vuln.via) ? vuln.via : [];
+    const viaWithCves = cvesForVia(via);
+    for (const v of viaWithCves) {
+      for (const cve of v.cves) {
         vulns.push({
-          cve: "(no CVE)",
-          severity: vuln.severity ?? "unknown",
+          cve: cve.toUpperCase(),
+          severity: vuln.severity ?? v.severity ?? "unknown",
           package: pkgName,
         });
       }
     }
-  }
-
-  // npm audit --json v1 (npm 6) uses auditJson.advisories
-  if (auditJson.advisories) {
-    for (const adv of Object.values(auditJson.advisories)) {
-      const cves = adv.cves?.length ? adv.cves : ["(no CVE)"];
-      for (const cve of cves) {
-        vulns.push({
-          cve: cve.toUpperCase(),
-          severity: adv.severity ?? "unknown",
-          package: adv.module_name ?? "unknown",
-        });
-      }
+    // deduplicate: if no direct CVE list but has severity, add a placeholder
+    if (viaWithCves.length === 0) {
+      vulns.push({
+        cve: "(no CVE)",
+        severity: vuln.severity ?? "unknown",
+        package: pkgName,
+      });
     }
   }
+  return vulns;
+}
 
-  // deduplicate by cve+package
+// npm audit --json v1 (npm 6) uses auditJson.advisories
+function extractVulnsV1(auditJson) {
+  const vulns = [];
+  if (!auditJson.advisories) return vulns;
+
+  for (const adv of Object.values(auditJson.advisories)) {
+    const cves = adv.cves?.length ? adv.cves : ["(no CVE)"];
+    for (const cve of cves) {
+      vulns.push({
+        cve: cve.toUpperCase(),
+        severity: adv.severity ?? "unknown",
+        package: adv.module_name ?? "unknown",
+      });
+    }
+  }
+  return vulns;
+}
+
+function dedupeVulns(vulns) {
   const seen = new Set();
   return vulns.filter((v) => {
     const key = `${v.cve}::${v.package}`;
@@ -168,6 +176,11 @@ function extractVulns(auditJson) {
     seen.add(key);
     return true;
   });
+}
+
+function extractVulns(auditJson) {
+  const vulns = [...extractVulnsV2(auditJson), ...extractVulnsV1(auditJson)];
+  return dedupeVulns(vulns);
 }
 
 // ── main ───────────────────────────────────────────────────────────────────

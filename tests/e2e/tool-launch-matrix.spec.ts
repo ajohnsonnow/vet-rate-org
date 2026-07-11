@@ -304,6 +304,7 @@ test("48-tool launch matrix — all clusters", async ({ page }) => {
       .filter((e) => !e.includes("ResizeObserver") && !isNoise(e));
 
     const status = rendered ? "✓" : "✗";
+    // eslint-disable-next-line no-console
     console.log(`  ${status} [${tool.cluster}] ${tool.name}`);
 
     results.push({

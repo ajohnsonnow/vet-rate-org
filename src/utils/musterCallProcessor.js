@@ -307,6 +307,115 @@ export const validateFilesBatch = (files) => {
  * Process a single document: extract text, classify, parse
  * Enhanced for sequential formation processing with VISION AI PRIMARY for DD214s
  */
+const ensureFlorenceVisionReady = async (file, onProgress) => {
+  // Initialize Florence if needed (only once)
+  if (!visionInitialized && !visionInitializing) {
+    visionInitializing = true;
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.EXTRACTING,
+      progress: 30,
+      stage: "vision_init",
+      message: "⚡ Loading Florence-2 Vision engine (first time only)...",
+    });
+
+    const initSuccess = await florenceOCRService.initialize();
+    visionInitialized = initSuccess;
+    visionInitializing = false;
+
+    if (!initSuccess) {
+      console.warn(
+        "⚠️ Florence Vision initialization failed, falling back to OCR",
+      );
+    }
+  }
+
+  // Wait for vision to be ready if still initializing
+  if (visionInitializing) {
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.EXTRACTING,
+      progress: 35,
+      stage: "vision_wait",
+      message: "⏳ Waiting for Vision engine to load...",
+    });
+    // Wait for initialization to complete
+    while (visionInitializing) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+};
+
+const extractDD214TextViaVision = async (file, onProgress, result) => {
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.EXTRACTING,
+    progress: 40,
+    stage: "vision_process",
+    message: "👁️ Florence-2 Vision analyzing DD214...",
+  });
+
+  // Process all pages for multi-page DD214s
+  const visionResult = await florenceOCRService.processMultiplePages(file, {
+    maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
+    onPageComplete: (pageNum, total, _pageResult) => {
+      const progress = 40 + (pageNum / total) * 30; // 40-70%
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: Math.round(progress),
+        stage: "vision_page",
+        message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
+        currentPage: pageNum,
+        totalPages: total,
+      });
+    },
+  });
+
+  if (
+    visionResult.combinedText &&
+    visionResult.combinedText.trim().length > 100
+  ) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
+    );
+
+    // Log the parsed data from vision
+    if (visionResult.parsedData?.fields) {
+      const fields = visionResult.parsedData.fields;
+      // eslint-disable-next-line no-console
+      console.log("🔍 Vision parsed fields:", {
+        name: fields.name,
+        branch: fields.branch,
+        rank: fields.rank,
+        mos: fields.mos,
+        awards: fields.awardCount,
+        confidence: fields.overallConfidence,
+      });
+    }
+
+    result.visionUsed = true;
+    result.confidence = 90;
+
+    return {
+      text: visionResult.combinedText,
+      pageCount: visionResult.totalPages,
+      method: "vision_florence",
+      confidence: 90, // Florence vision is highly accurate
+      ocrUsed: false,
+      visionUsed: true,
+      // Pass through the parsed data from vision!
+      visionParsedData: visionResult.parsedData,
+    };
+  }
+
+  console.warn(
+    "⚠️ Vision extraction returned minimal text, falling back to OCR",
+  );
+  return null; // Will trigger OCR fallback
+};
+
 const runVisionFirstDD214Extraction = async (file, onProgress, result) => {
   // ============================================================
   // VISION-FIRST PATH: DD214s get Florence-2 treatment
@@ -324,116 +433,17 @@ const runVisionFirstDD214Extraction = async (file, onProgress, result) => {
     message: "👁️ DD214 detected - engaging Vision AI...",
   });
 
-  let extractionResult;
+  let extractionResult = null;
 
   try {
-    // Initialize Florence if needed (only once)
-    if (!visionInitialized && !visionInitializing) {
-      visionInitializing = true;
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 30,
-        stage: "vision_init",
-        message: "⚡ Loading Florence-2 Vision engine (first time only)...",
-      });
-
-      const initSuccess = await florenceOCRService.initialize();
-      visionInitialized = initSuccess;
-      visionInitializing = false;
-
-      if (!initSuccess) {
-        console.warn(
-          "⚠️ Florence Vision initialization failed, falling back to OCR",
-        );
-      }
-    }
-
-    // Wait for vision to be ready if still initializing
-    if (visionInitializing) {
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 35,
-        stage: "vision_wait",
-        message: "⏳ Waiting for Vision engine to load...",
-      });
-      // Wait for initialization to complete
-      while (visionInitializing) {
-        await new Promise((r) => setTimeout(r, 500));
-      }
-    }
+    await ensureFlorenceVisionReady(file, onProgress);
 
     if (visionInitialized) {
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 40,
-        stage: "vision_process",
-        message: "👁️ Florence-2 Vision analyzing DD214...",
-      });
-
-      // Process all pages for multi-page DD214s
-      const visionResult = await florenceOCRService.processMultiplePages(
+      extractionResult = await extractDD214TextViaVision(
         file,
-        {
-          maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
-          onPageComplete: (pageNum, total, _pageResult) => {
-            const progress = 40 + (pageNum / total) * 30; // 40-70%
-            onProgress?.({
-              filename: file.name,
-              state: PROCESSING_STATES.EXTRACTING,
-              progress: Math.round(progress),
-              stage: "vision_page",
-              message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
-              currentPage: pageNum,
-              totalPages: total,
-            });
-          },
-        },
+        onProgress,
+        result,
       );
-
-      if (
-        visionResult.combinedText &&
-        visionResult.combinedText.trim().length > 100
-      ) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
-        );
-
-        // Log the parsed data from vision
-        if (visionResult.parsedData?.fields) {
-          const fields = visionResult.parsedData.fields;
-          // eslint-disable-next-line no-console
-          console.log("🔍 Vision parsed fields:", {
-            name: fields.name,
-            branch: fields.branch,
-            rank: fields.rank,
-            mos: fields.mos,
-            awards: fields.awardCount,
-            confidence: fields.overallConfidence,
-          });
-        }
-
-        extractionResult = {
-          text: visionResult.combinedText,
-          pageCount: visionResult.totalPages,
-          method: "vision_florence",
-          confidence: 90, // Florence vision is highly accurate
-          ocrUsed: false,
-          visionUsed: true,
-          // Pass through the parsed data from vision!
-          visionParsedData: visionResult.parsedData,
-        };
-        result.visionUsed = true;
-        result.confidence = 90;
-      } else {
-        console.warn(
-          "⚠️ Vision extraction returned minimal text, falling back to OCR",
-        );
-        extractionResult = null; // Will trigger OCR fallback
-      }
     }
   } catch (visionError) {
     console.warn("⚠️ Vision primary extraction failed:", visionError.message);
@@ -624,6 +634,111 @@ const runStandardDocumentExtraction = async (
   return extractionResult;
 };
 
+const storeDocumentInVKB = async (file, result) => {
+  const vkbResult = await addDocumentToVKB({
+    fileName: file.name,
+    fileSize: file.size,
+    pageCount: result.pageCount || 1,
+    classification: result.classification.type,
+    extractedText: result.text,
+    extractedData: result.extractedData,
+    ocrUsed: result.ocrUsed || false,
+    method: result.method || "text",
+  });
+
+  if (vkbResult.success) {
+    result.vkbDocumentId = vkbResult.documentId;
+    // eslint-disable-next-line no-console
+    console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
+
+    if (vkbResult.storageWarning) {
+      console.warn(`⚠️ ${vkbResult.storageWarning}`);
+      result.storageWarning = vkbResult.storageWarning;
+    }
+  }
+};
+
+const CLASS_TO_PACKET_TYPE = {
+  DD214: PACKET_DOC_TYPES.DD214,
+  service_record: PACKET_DOC_TYPES.DD214,
+  NGB22: PACKET_DOC_TYPES.NGB22,
+  DD256: PACKET_DOC_TYPES.DD256,
+  DD257: PACKET_DOC_TYPES.DD257,
+  rating_decision: PACKET_DOC_TYPES.RATING_DECISION,
+  claim_letter: PACKET_DOC_TYPES.CLAIM_LETTER,
+  c_file: PACKET_DOC_TYPES.C_FILE,
+  blue_button: PACKET_DOC_TYPES.BLUE_BUTTON,
+  medical_record: PACKET_DOC_TYPES.MEDICAL_RECORD,
+  dbq: PACKET_DOC_TYPES.DBQ,
+  nexus_letter: PACKET_DOC_TYPES.NEXUS_LETTER,
+  personal_statement: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+  buddy_statement: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+  va_decision: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+};
+
+const archiveDocumentInPacket = async (file, result) => {
+  try {
+    const packetType =
+      CLASS_TO_PACKET_TYPE[result.classification.type] || PACKET_DOC_TYPES.OTHER;
+
+    await saveDocumentToPacket({
+      fileName: file.name,
+      classification: packetType,
+      rawText: result.text || "",
+      extractedData: result.extractedData || {},
+      pageCount: result.pageCount || 1,
+      fileSize: file.size || 0,
+      ocrMethod: result.method || "text",
+      ocrConfidence: result.classification?.confidence || 0,
+      tags: [
+        result.classification?.type,
+        result.classification?.subtype,
+      ].filter(Boolean),
+    });
+    // eslint-disable-next-line no-console
+    console.log(`📁 Archived ${file.name} in My Packet`);
+  } catch (packetErr) {
+    console.warn(
+      `My Packet save failed for ${file.name} (non-fatal):`,
+      packetErr.message,
+    );
+  }
+};
+
+const classifyAndParseDocument = async (
+  file,
+  onProgress,
+  result,
+  extractionResult,
+) => {
+  // Step 2: Classify document (SecOps Intelligence Briefing - Part 1)
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.CLASSIFYING,
+    progress: 75,
+    stage: "intel_classify",
+  });
+
+  result.classification = classifyDocument(result.text, file.name);
+
+  // Step 3: Parse based on classification (SecOps Intelligence Briefing - Part 2)
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.ANALYZING,
+    progress: 85,
+    stage: "intel_extract",
+    docType: result.classification.type,
+    confidence: result.classification.confidence,
+  });
+
+  result.extractedData = await parseDocumentByType(
+    result.text,
+    result.classification.type,
+    file.name,
+    extractionResult.visionParsedData, // Pass vision-parsed data if available
+  );
+};
+
 const processSingleDocument = async (file, onProgress) => {
   const result = {
     filename: file.name,
@@ -655,316 +770,9 @@ const processSingleDocument = async (file, onProgress) => {
       /dd[-_]?214|service.?record|discharge|dd256|dd257|ngb22/i.test(file.name);
     const useVisionPrimary = isPDF && looksLikeDD214 && isWebGPUSupported();
 
-    let extractionResult;
-
-    if (useVisionPrimary) {
-      // ============================================================
-      // VISION-FIRST PATH: DD214s get Florence-2 treatment
-      // ============================================================
-      // eslint-disable-next-line no-console
-      console.log(
-        `👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`,
-      );
-
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25,
-        stage: "vision_primary",
-        message: "👁️ DD214 detected - engaging Vision AI...",
-      });
-
-      try {
-        // Initialize Florence if needed (only once)
-        if (!visionInitialized && !visionInitializing) {
-          visionInitializing = true;
-          onProgress?.({
-            filename: file.name,
-            state: PROCESSING_STATES.EXTRACTING,
-            progress: 30,
-            stage: "vision_init",
-            message: "⚡ Loading Florence-2 Vision engine (first time only)...",
-          });
-
-          const initSuccess = await florenceOCRService.initialize();
-          visionInitialized = initSuccess;
-          visionInitializing = false;
-
-          if (!initSuccess) {
-            console.warn(
-              "⚠️ Florence Vision initialization failed, falling back to OCR",
-            );
-          }
-        }
-
-        // Wait for vision to be ready if still initializing
-        if (visionInitializing) {
-          onProgress?.({
-            filename: file.name,
-            state: PROCESSING_STATES.EXTRACTING,
-            progress: 35,
-            stage: "vision_wait",
-            message: "⏳ Waiting for Vision engine to load...",
-          });
-          // Wait for initialization to complete
-          while (visionInitializing) {
-            await new Promise((r) => setTimeout(r, 500));
-          }
-        }
-
-        if (visionInitialized) {
-          onProgress?.({
-            filename: file.name,
-            state: PROCESSING_STATES.EXTRACTING,
-            progress: 40,
-            stage: "vision_process",
-            message: "👁️ Florence-2 Vision analyzing DD214...",
-          });
-
-          // Process all pages for multi-page DD214s
-          const visionResult = await florenceOCRService.processMultiplePages(
-            file,
-            {
-              maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
-              onPageComplete: (pageNum, total, _pageResult) => {
-                const progress = 40 + (pageNum / total) * 30; // 40-70%
-                onProgress?.({
-                  filename: file.name,
-                  state: PROCESSING_STATES.EXTRACTING,
-                  progress: Math.round(progress),
-                  stage: "vision_page",
-                  message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
-                  currentPage: pageNum,
-                  totalPages: total,
-                });
-              },
-            },
-          );
-
-          if (
-            visionResult.combinedText &&
-            visionResult.combinedText.trim().length > 100
-          ) {
-            // eslint-disable-next-line no-console
-            console.log(
-              `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
-            );
-
-            // Log the parsed data from vision
-            if (visionResult.parsedData?.fields) {
-              const fields = visionResult.parsedData.fields;
-              // eslint-disable-next-line no-console
-              console.log("🔍 Vision parsed fields:", {
-                name: fields.name,
-                branch: fields.branch,
-                rank: fields.rank,
-                mos: fields.mos,
-                awards: fields.awardCount,
-                confidence: fields.overallConfidence,
-              });
-            }
-
-            extractionResult = {
-              text: visionResult.combinedText,
-              pageCount: visionResult.totalPages,
-              method: "vision_florence",
-              confidence: 90, // Florence vision is highly accurate
-              ocrUsed: false,
-              visionUsed: true,
-              // Pass through the parsed data from vision!
-              visionParsedData: visionResult.parsedData,
-            };
-            result.visionUsed = true;
-            result.confidence = 90;
-          } else {
-            console.warn(
-              "⚠️ Vision extraction returned minimal text, falling back to OCR",
-            );
-            extractionResult = null; // Will trigger OCR fallback
-          }
-        }
-      } catch (visionError) {
-        console.warn(
-          "⚠️ Vision primary extraction failed:",
-          visionError.message,
-        );
-        extractionResult = null; // Will trigger OCR fallback
-      }
-
-      // Fall back to OCR if vision failed
-      if (!extractionResult) {
-        // eslint-disable-next-line no-console
-        console.log("📷 Falling back to OCR extraction...");
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 45,
-          stage: "ocr_fallback",
-          message: "📷 Vision unavailable - using OCR...",
-        });
-
-        extractionResult = await analyzeDocument(file, (state) => {
-          onProgress?.({
-            filename: file.name,
-            state: PROCESSING_STATES.EXTRACTING,
-            progress: 45 + (state.progress || 0) * 0.25, // 45-70%
-            ocrState: state.message || state.state,
-            currentPage: state.currentPage,
-            totalPages: state.totalPages,
-            quality: state.quality,
-            confidence: state.confidence,
-            stage: "platoon_sergeant",
-          });
-        });
-      }
-    } else {
-      // ============================================================
-      // STANDARD PATH: OCR extraction for non-DD214 documents
-      // ============================================================
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25,
-        stage: "platoon_sergeant",
-      });
-
-      const isLargePDF =
-        file.name.toLowerCase().endsWith(".pdf") &&
-        file.size > 50 * 1024 * 1024;
-
-      if (isLargePDF) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
-        );
-        const etaTracker = createEtaTracker();
-        const largeResult = await processLargePDF(file, {
-          batchSize: 20,
-          onProgress: (cur, total, pct) => {
-            onProgress?.({
-              filename: file.name,
-              state: PROCESSING_STATES.EXTRACTING,
-              progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
-              stage: "platoon_sergeant",
-              message: `Streaming page ${cur}/${total} (${pct}%)...`,
-              currentPage: cur,
-              totalPages: total,
-              etaSeconds: etaTracker.etaSeconds(total - cur),
-              pagesPerSecond: etaTracker.pagesPerSecond(),
-            });
-          },
-          onBatch: (batch) => {
-            etaTracker.sample(batch.processedSoFar);
-            // Forward per-batch updates for responsive UI on very large files
-            onProgress?.({
-              filename: file.name,
-              state: PROCESSING_STATES.EXTRACTING,
-              progress: 25 + batch.pct * 0.4,
-              stage: "platoon_sergeant",
-              message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
-              currentPage: batch.processedSoFar,
-              totalPages: batch.totalPages,
-              etaSeconds: etaTracker.etaSeconds(
-                batch.totalPages - batch.processedSoFar,
-              ),
-              pagesPerSecond: etaTracker.pagesPerSecond(),
-            });
-          },
-        });
-        extractionResult = {
-          text: largeResult.text,
-          pageCount: largeResult.pageCount,
-          method: largeResult.method,
-          fileType: "PDF",
-          ocrUsed: false,
-          hasScannedSections: largeResult.hasScannedSections,
-          scannedPageRanges: largeResult.scannedPageRanges || [],
-          pagesWithText: largeResult.pagesWithText,
-          pagesEmpty: largeResult.pagesEmpty,
-        };
-      } else {
-        extractionResult = await analyzeDocument(file, (state) => {
-          onProgress?.({
-            filename: file.name,
-            state: PROCESSING_STATES.EXTRACTING,
-            progress: 25 + (state.progress || 0) * 0.4, // 25-65%
-            ocrState: state.message || state.state,
-            currentPage: state.currentPage,
-            totalPages: state.totalPages,
-            quality: state.quality,
-            confidence: state.confidence,
-            stage: "platoon_sergeant",
-          });
-        });
-      }
-
-      // Store OCR confidence for fallback decision
-      const ocrConfidence = extractionResult.confidence || 0;
-      result.confidence = ocrConfidence;
-
-      // Vision fallback for poor OCR quality on any PDF
-      const shouldTryVisionFallback =
-        isPDF &&
-        ocrConfidence < VISION_FALLBACK_THRESHOLD &&
-        isWebGPUSupported() &&
-        extractionResult.ocrUsed;
-
-      if (shouldTryVisionFallback) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`,
-        );
-
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 65,
-          stage: "vision_fallback",
-          message: "🔬 Low OCR quality detected - engaging Vision AI...",
-        });
-
-        try {
-          // Initialize Florence if needed
-          if (!visionInitialized && !visionInitializing) {
-            visionInitializing = true;
-            const initSuccess = await florenceOCRService.initialize();
-            visionInitialized = initSuccess;
-            visionInitializing = false;
-          }
-
-          if (visionInitialized) {
-            const visionResult = await florenceOCRService.processDocument(
-              file,
-              {
-                pageNumber: 1,
-                parseDD214: false,
-              },
-            );
-
-            if (
-              visionResult.text &&
-              visionResult.text.trim().length >
-                extractionResult.text.trim().length * 0.5
-            ) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`,
-              );
-              extractionResult = {
-                ...extractionResult,
-                text: visionResult.text,
-                method: "vision_florence",
-                confidence: 85,
-                visionUsed: true,
-              };
-              result.visionUsed = true;
-            }
-          }
-        } catch (visionError) {
-          console.warn("⚠️ Vision fallback failed:", visionError.message);
-        }
-      }
-    }
+    const extractionResult = useVisionPrimary
+      ? await runVisionFirstDD214Extraction(file, onProgress, result)
+      : await runStandardDocumentExtraction(file, onProgress, result, isPDF);
 
     // analyzeDocument throws on error, no need to check .success
     if (!extractionResult.text || extractionResult.text.trim().length === 0) {
@@ -976,100 +784,13 @@ const processSingleDocument = async (file, onProgress) => {
     result.method = extractionResult.method || "text";
     result.ocrUsed = extractionResult.ocrUsed || false;
 
-    // Step 2: Classify document (SecOps Intelligence Briefing - Part 1)
-    onProgress?.({
-      filename: file.name,
-      state: PROCESSING_STATES.CLASSIFYING,
-      progress: 75,
-      stage: "intel_classify",
-    });
-
-    result.classification = classifyDocument(result.text, file.name);
-
-    // Step 3: Parse based on classification (SecOps Intelligence Briefing - Part 2)
-    onProgress?.({
-      filename: file.name,
-      state: PROCESSING_STATES.ANALYZING,
-      progress: 85,
-      stage: "intel_extract",
-      docType: result.classification.type,
-      confidence: result.classification.confidence,
-    });
-
-    result.extractedData = await parseDocumentByType(
-      result.text,
-      result.classification.type,
-      file.name,
-      extractionResult.visionParsedData, // Pass vision-parsed data if available
-    );
+    await classifyAndParseDocument(file, onProgress, result, extractionResult);
 
     // Step 4: Store document in VKB (keeps data separate per document)
-    const vkbResult = await addDocumentToVKB({
-      fileName: file.name,
-      fileSize: file.size,
-      pageCount: result.pageCount || 1,
-      classification: result.classification.type,
-      extractedText: result.text,
-      extractedData: result.extractedData,
-      ocrUsed: result.ocrUsed || false,
-      method: result.method || "text",
-    });
-
-    if (vkbResult.success) {
-      result.vkbDocumentId = vkbResult.documentId;
-      // eslint-disable-next-line no-console
-      console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
-
-      if (vkbResult.storageWarning) {
-        console.warn(`⚠️ ${vkbResult.storageWarning}`);
-        result.storageWarning = vkbResult.storageWarning;
-      }
-    }
+    await storeDocumentInVKB(file, result);
 
     // Step 5: Also save to My Packet (permanent document archive)
-    try {
-      const classToPacketType = {
-        DD214: PACKET_DOC_TYPES.DD214,
-        service_record: PACKET_DOC_TYPES.DD214,
-        NGB22: PACKET_DOC_TYPES.NGB22,
-        DD256: PACKET_DOC_TYPES.DD256,
-        DD257: PACKET_DOC_TYPES.DD257,
-        rating_decision: PACKET_DOC_TYPES.RATING_DECISION,
-        claim_letter: PACKET_DOC_TYPES.CLAIM_LETTER,
-        c_file: PACKET_DOC_TYPES.C_FILE,
-        blue_button: PACKET_DOC_TYPES.BLUE_BUTTON,
-        medical_record: PACKET_DOC_TYPES.MEDICAL_RECORD,
-        dbq: PACKET_DOC_TYPES.DBQ,
-        nexus_letter: PACKET_DOC_TYPES.NEXUS_LETTER,
-        personal_statement: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
-        buddy_statement: PACKET_DOC_TYPES.BUDDY_STATEMENT,
-        va_decision: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
-      };
-      const packetType =
-        classToPacketType[result.classification.type] || PACKET_DOC_TYPES.OTHER;
-
-      await saveDocumentToPacket({
-        fileName: file.name,
-        classification: packetType,
-        rawText: result.text || "",
-        extractedData: result.extractedData || {},
-        pageCount: result.pageCount || 1,
-        fileSize: file.size || 0,
-        ocrMethod: result.method || "text",
-        ocrConfidence: result.classification?.confidence || 0,
-        tags: [
-          result.classification?.type,
-          result.classification?.subtype,
-        ].filter(Boolean),
-      });
-      // eslint-disable-next-line no-console
-      console.log(`📁 Archived ${file.name} in My Packet`);
-    } catch (packetErr) {
-      console.warn(
-        `My Packet save failed for ${file.name} (non-fatal):`,
-        packetErr.message,
-      );
-    }
+    await archiveDocumentInPacket(file, result);
 
     result.status = "complete";
     onProgress?.({

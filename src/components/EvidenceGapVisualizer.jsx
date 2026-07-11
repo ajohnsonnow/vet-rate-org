@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   EVIDENCE_REQUIREMENTS,
@@ -23,9 +22,6 @@ const EvidenceGapVisualizer = ({
   initialRating = null,
   onReportBug,
 }) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-
   // State
   const [selectedCondition, setSelectedCondition] = useState(
     initialCondition || "",
@@ -122,6 +118,11 @@ const EvidenceGapVisualizer = ({
 
     // Save to My Packet for centralized evidence management
     try {
+      const missingGapsSummary =
+        analysis.criticalGaps.length > 0
+          ? `Missing: ${analysis.criticalGaps.map((g) => g.label).join(", ")}`
+          : "All critical evidence gathered!";
+
       const packetClaim = {
         conditionName: analysis.condition,
         status: analysis.isClaimReady
@@ -146,7 +147,7 @@ const EvidenceGapVisualizer = ({
             dateSaved: new Date().toISOString(),
           },
         ],
-        notes: `Gap Analysis: ${analysis.completenessPercent}% complete for ${analysis.targetRating}% rating. ${analysis.criticalGaps.length > 0 ? `Missing: ${analysis.criticalGaps.map((g) => g.label).join(", ")}` : "All critical evidence gathered!"}`,
+        notes: `Gap Analysis: ${analysis.completenessPercent}% complete for ${analysis.targetRating}% rating. ${missingGapsSummary}`,
       };
 
       const success = saveClaim(packetClaim);

@@ -147,7 +147,14 @@ export const PROJECT_STATS = {
 
 // Helper to format numbers with commas
 export const formatNumber = (num) => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const str = num.toString();
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    const remaining = str.length - i;
+    if (i > 0 && remaining % 3 === 0) result += ",";
+    result += str[i];
+  }
+  return result;
 };
 
 // Delegate to toolkitData's authoritative dynamic count — toolCounts below is

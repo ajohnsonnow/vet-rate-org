@@ -123,72 +123,28 @@ async function promptUser(question) {
   });
 }
 
-async function main() {
-  log("\n🚀 Vet-Rate.org Release Process\n", "bright");
+function runPreview(nextVersion) {
+  log("📋 PREVIEW MODE - No changes will be made\n", "yellow");
 
-  // Validate version type
-  if (!["patch", "minor", "major"].includes(versionType)) {
-    log(`❌ Invalid version type: ${versionType}`, "red");
-    log("Valid types: patch, minor, major", "yellow");
-    process.exit(1);
-  }
-
-  const currentVersion = getCurrentVersion();
-  const nextVersion = getNextVersion(currentVersion, versionType);
-
-  log(`📦 Current version: ${currentVersion}`, "cyan");
-  log(`📦 Next version: ${nextVersion} (${versionType})`, "green");
+  log("Would execute the following steps:", "bright");
+  log("1. Bump version to " + nextVersion);
+  log("2. Generate changelog from git commits");
+  log("3. Sync version across files");
+  log("4. Update project stats");
+  log("5. Sync legal pages");
+  log("6. Create git tag v" + nextVersion);
+  log("7. Commit changes");
+  log("8. Push to origin");
   log("");
 
-  // Check git status
-  const isClean = checkGitStatus();
-  if (!isClean && !isPreview) {
-    const proceed = await promptUser("Continue with uncommitted changes?");
-    if (!proceed) {
-      log("❌ Aborted", "red");
-      process.exit(0);
-    }
-  }
+  // Preview changelog
+  log("📝 Generating changelog preview...", "cyan");
+  execCommand("npm run changelog-preview");
 
-  // Preview mode
-  if (isPreview) {
-    log("📋 PREVIEW MODE - No changes will be made\n", "yellow");
+  process.exit(0);
+}
 
-    log("Would execute the following steps:", "bright");
-    log("1. Bump version to " + nextVersion);
-    log("2. Generate changelog from git commits");
-    log("3. Sync version across files");
-    log("4. Update project stats");
-    log("5. Sync legal pages");
-    log("6. Create git tag v" + nextVersion);
-    log("7. Commit changes");
-    log("8. Push to origin");
-    log("");
-
-    // Preview changelog
-    log("📝 Generating changelog preview...", "cyan");
-    execCommand("npm run changelog-preview");
-
-    process.exit(0);
-  }
-
-  // Confirm release
-  log("This will:", "bright");
-  log(`  • Bump version from ${currentVersion} to ${nextVersion}`);
-  log("  • Generate changelog from recent commits");
-  log("  • Update all version references");
-  log("  • Create git tag and commit");
-  log("  • Push to remote repository");
-  log("");
-
-  const confirmed = await promptUser("Proceed with release?");
-  if (!confirmed) {
-    log("❌ Aborted", "red");
-    process.exit(0);
-  }
-
-  log("\n🔧 Starting release process...\n", "bright");
-
+async function runReleaseSteps(nextVersion) {
   // Step 1: Bump version in package.json
   log("1️⃣ Bumping version...", "cyan");
   execCommand(`npm version ${versionType} --no-git-tag-version`);
@@ -251,6 +207,58 @@ async function main() {
       "yellow",
     );
   }
+}
+
+async function main() {
+  log("\n🚀 Vet-Rate.org Release Process\n", "bright");
+
+  // Validate version type
+  if (!["patch", "minor", "major"].includes(versionType)) {
+    log(`❌ Invalid version type: ${versionType}`, "red");
+    log("Valid types: patch, minor, major", "yellow");
+    process.exit(1);
+  }
+
+  const currentVersion = getCurrentVersion();
+  const nextVersion = getNextVersion(currentVersion, versionType);
+
+  log(`📦 Current version: ${currentVersion}`, "cyan");
+  log(`📦 Next version: ${nextVersion} (${versionType})`, "green");
+  log("");
+
+  // Check git status
+  const isClean = checkGitStatus();
+  if (!isClean && !isPreview) {
+    const proceed = await promptUser("Continue with uncommitted changes?");
+    if (!proceed) {
+      log("❌ Aborted", "red");
+      process.exit(0);
+    }
+  }
+
+  if (isPreview) {
+    runPreview(nextVersion);
+    return;
+  }
+
+  // Confirm release
+  log("This will:", "bright");
+  log(`  • Bump version from ${currentVersion} to ${nextVersion}`);
+  log("  • Generate changelog from recent commits");
+  log("  • Update all version references");
+  log("  • Create git tag and commit");
+  log("  • Push to remote repository");
+  log("");
+
+  const confirmed = await promptUser("Proceed with release?");
+  if (!confirmed) {
+    log("❌ Aborted", "red");
+    process.exit(0);
+  }
+
+  log("\n🔧 Starting release process...\n", "bright");
+
+  await runReleaseSteps(nextVersion);
 
   // Done!
   log("\n🎉 Release complete!", "bright");
