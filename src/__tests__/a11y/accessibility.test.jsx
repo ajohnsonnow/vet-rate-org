@@ -40,9 +40,10 @@ function formatViolations(violations) {
 // Semantic HTML structure tests
 // ---------------------------------------------------------------------------
 
-describe("Accessibility: semantic HTML structures", () => {
-  it("search form has no a11y violations", async () => {
-    const { container } = render(
+const semanticHtmlCases = [
+  {
+    name: "search form has no a11y violations",
+    build: () => (
       <form aria-label="Search veteran disabilities">
         <label htmlFor="search-input">Search conditions</label>
         <input
@@ -52,14 +53,12 @@ describe("Accessibility: semantic HTML structures", () => {
           placeholder="e.g. PTSD, tinnitus"
         />
         <button type="submit">Search</button>
-      </form>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("results list has no a11y violations", async () => {
-    const { container } = render(
+      </form>
+    ),
+  },
+  {
+    name: "results list has no a11y violations",
+    build: () => (
       <section aria-label="Search results">
         <h2>Results</h2>
         <ul>
@@ -76,14 +75,12 @@ describe("Accessibility: semantic HTML structures", () => {
             </article>
           </li>
         </ul>
-      </section>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("modal dialog has no a11y violations", async () => {
-    const { container } = render(
+      </section>
+    ),
+  },
+  {
+    name: "modal dialog has no a11y violations",
+    build: () => (
       <div
         role="dialog"
         aria-modal="true"
@@ -98,14 +95,12 @@ describe("Accessibility: semantic HTML structures", () => {
         <button type="button" aria-label="Close disclaimer dialog">
           Close
         </button>
-      </div>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("navigation landmarks have no a11y violations", async () => {
-    const { container } = render(
+      </div>
+    ),
+  },
+  {
+    name: "navigation landmarks have no a11y violations",
+    build: () => (
       <div>
         <header>
           <nav aria-label="Main navigation">
@@ -128,14 +123,12 @@ describe("Accessibility: semantic HTML structures", () => {
         <footer>
           <p>Not affiliated with the U.S. Department of Veterans Affairs.</p>
         </footer>
-      </div>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("rating result card has no a11y violations", async () => {
-    const { container } = render(
+      </div>
+    ),
+  },
+  {
+    name: "rating result card has no a11y violations",
+    build: () => (
       <section aria-label="Rating result">
         <h2>Combined Rating: 70%</h2>
         <dl>
@@ -149,28 +142,24 @@ describe("Accessibility: semantic HTML structures", () => {
         <button type="button" aria-label="Download rating summary as PDF">
           Download PDF
         </button>
-      </section>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("crisis resources section has no a11y violations", async () => {
-    const { container } = render(
+      </section>
+    ),
+  },
+  {
+    name: "crisis resources section has no a11y violations",
+    build: () => (
       <aside aria-label="Crisis resources">
         <h2>Need Help Now?</h2>
         <p>If you are in crisis, please reach out immediately.</p>
         <a href="tel:988" aria-label="Call Veterans Crisis Line at 9-8-8">
           Veterans Crisis Line: 988
         </a>
-      </aside>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("skip-to-content link has no a11y violations", async () => {
-    const { container } = render(
+      </aside>
+    ),
+  },
+  {
+    name: "skip-to-content link has no a11y violations",
+    build: () => (
       <div>
         <a href="#main-content" className="sr-only focus:not-sr-only">
           Skip to main content
@@ -178,14 +167,12 @@ describe("Accessibility: semantic HTML structures", () => {
         <main id="main-content">
           <h1>Main content</h1>
         </main>
-      </div>,
-    );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
-  });
-
-  it("data table has no a11y violations", async () => {
-    const { container } = render(
+      </div>
+    ),
+  },
+  {
+    name: "data table has no a11y violations",
+    build: () => (
       <table aria-label="VA disability pay rates 2026">
         <caption>2026 VA Disability Compensation Rates</caption>
         <thead>
@@ -204,8 +191,14 @@ describe("Accessibility: semantic HTML structures", () => {
             <td>$4,063.89</td>
           </tr>
         </tbody>
-      </table>,
-    );
+      </table>
+    ),
+  },
+];
+
+describe("Accessibility: semantic HTML structures", () => {
+  it.each(semanticHtmlCases)("$name", async ({ build }) => {
+    const { container } = render(build());
     const violations = await checkA11y(container);
     expect(violations, formatViolations(violations)).toHaveLength(0);
   });

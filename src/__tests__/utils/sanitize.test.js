@@ -179,6 +179,7 @@ describe("isLLMOutputUrlAllowed — government allow-list", () => {
   it("blocks arbitrary http(s) hosts", () => {
     expect(isLLMOutputUrlAllowed("https://evil.com")).toBe(false);
     expect(isLLMOutputUrlAllowed("https://va.gov.evil.com")).toBe(false);
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- fixture asserts http is rejected, not a real request
     expect(isLLMOutputUrlAllowed("http://va.gov")).toBe(false); // http, not https
   });
 

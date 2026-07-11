@@ -6,7 +6,7 @@ import {
   scanDocumentForCrisis,
 } from "../../utils/crisisInterceptor";
 
-describe("crisisInterceptor", () => {
+function describeDetectCrisisLanguage() {
   describe("detectCrisisLanguage", () => {
     it("returns no crisis for normal text", () => {
       const result = detectCrisisLanguage("I need help with my VA claim");
@@ -92,7 +92,9 @@ describe("crisisInterceptor", () => {
       ).toBe(false);
     });
   });
+}
 
+function describeCrisisResources() {
   describe("CRISIS_RESOURCES", () => {
     it("has correct 988 crisis line", () => {
       expect(CRISIS_RESOURCES.phone.primary).toBe("988");
@@ -107,7 +109,9 @@ describe("crisisInterceptor", () => {
       expect(CRISIS_RESOURCES.chat.url).toContain("veteranscrisisline.net");
     });
   });
+}
 
+function describeInterceptBeforeAICall() {
   describe("interceptBeforeAICall", () => {
     it("blocks AI calls when crisis detected", () => {
       const result = interceptBeforeAICall("I want to end it all");
@@ -127,7 +131,9 @@ describe("crisisInterceptor", () => {
       expect(result.crisisDetected).toBe(true);
     });
   });
+}
 
+function describeScanDocumentForCrisis() {
   describe("scanDocumentForCrisis (AIS-05, non-blocking)", () => {
     it("returns true and fires a passive crisis-resources event on a hit", () => {
       let fired = false;
@@ -157,4 +163,11 @@ describe("crisisInterceptor", () => {
       expect(fired).toBe(false);
     });
   });
+}
+
+describe("crisisInterceptor", () => {
+  describeDetectCrisisLanguage();
+  describeCrisisResources();
+  describeInterceptBeforeAICall();
+  describeScanDocumentForCrisis();
 });

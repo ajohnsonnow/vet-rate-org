@@ -36,7 +36,19 @@ beforeEach(() => {
   lockDeviceKeystore();
 });
 
-describe("cloudEncryption — device keystore (S16 commit F)", () => {
+// Injects a crash exactly when phase 2 tries to swap in the new KEK
+// descriptor — temp slots are already promoted, marker still present.
+function installKekWriteCrashSpy() {
+  const originalSetItem = localStorage.setItem;
+  return vi.spyOn(localStorage, "setItem").mockImplementation((k, v) => {
+    if (k === META && localStorage.getItem(MARKER)) {
+      throw new Error("simulated crash during rotation phase 2");
+    }
+    originalSetItem(k, v);
+  });
+}
+
+function registerKeystoreCoreTests() {
   it("wraps a DEK on store and unwraps it on get (roundtrip)", async () => {
     await enableDevicePassphrase("hunter2");
     const dek = makeDEK();
@@ -93,7 +105,9 @@ describe("cloudEncryption — device keystore (S16 commit F)", () => {
     lockDeviceKeystore();
     await expect(storeLocalKey("y", makeDEK())).rejects.toThrow(/locked/);
   });
+}
 
+function registerKeystoreRotationTests() {
   it("rotates the passphrase atomically (old fails, new opens every key)", async () => {
     await enableDevicePassphrase("old");
     const dekA = makeDEK();
@@ -118,13 +132,7 @@ describe("cloudEncryption — device keystore (S16 commit F)", () => {
 
     // Inject a crash exactly when phase 2 tries to swap in the new KEK
     // descriptor — temp slots are already promoted, marker still present.
-    const originalSetItem = localStorage.setItem;
-    const spy = vi.spyOn(localStorage, "setItem").mockImplementation((k, v) => {
-      if (k === META && localStorage.getItem(MARKER)) {
-        throw new Error("simulated crash during rotation phase 2");
-      }
-      originalSetItem(k, v);
-    });
+    const spy = installKekWriteCrashSpy();
 
     await expect(rotateDevicePassphrase("new")).rejects.toThrow(
       /simulated crash/,
@@ -163,9 +171,14 @@ describe("cloudEncryption — device keystore (S16 commit F)", () => {
     expect(isKeystoreUnlocked()).toBe(false);
     expect(localStorage.getItem("vet_rate_app_version")).toBe("9.9.9");
   });
+}
+
+describe("cloudEncryption — device keystore (S16 commit F)", () => {
+  registerKeystoreCoreTests();
+  registerKeystoreRotationTests();
 });
 
-describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () => {
+function registerVerifierAndMetaCorruptionTests() {
   it("reports a corrupt verifier blob as corruption, not a wrong passphrase", async () => {
     await enableDevicePassphrase("pw");
     lockDeviceKeystore();
@@ -234,7 +247,9 @@ describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () =>
     expect(localStorage.getItem(WRAPPED + "stray")).not.toBeNull();
     expect(await getLocalKey("stray")).toBe(dek);
   });
+}
 
+function registerRotationIntegrityTests() {
   it("folds in a key stored concurrently during rotation (re-scan-fold)", async () => {
     await enableDevicePassphrase("old");
     await storeLocalKey("a", makeDEK());
@@ -294,7 +309,9 @@ describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () =>
     expect(localStorage.getItem(VERIFIER)).toBe(verifierBefore);
     expect(await getLocalKey("a")).toBe(dek);
   });
+}
 
+function registerPhase2CrashRecoveryTests() {
   it("rejects the OLD passphrase after a phase-2 crash instead of a false-success (keys already under the new KEK)", async () => {
     await enableDevicePassphrase("old");
     const dek = makeDEK();
@@ -303,13 +320,7 @@ describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () =>
     // Same fault injection as the mid-phase-2 recovery test: crash when phase 2
     // swaps in the new descriptor. The key is already promoted to WRAPPED under
     // the NEW KEK, the marker is present, old META/VERIFIER are still intact.
-    const originalSetItem = localStorage.setItem;
-    const spy = vi.spyOn(localStorage, "setItem").mockImplementation((k, v) => {
-      if (k === META && localStorage.getItem(MARKER)) {
-        throw new Error("simulated crash during rotation phase 2");
-      }
-      originalSetItem(k, v);
-    });
+    const spy = installKekWriteCrashSpy();
     await expect(rotateDevicePassphrase("new")).rejects.toThrow(
       /simulated crash/,
     );
@@ -331,7 +342,9 @@ describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () =>
     expect(localStorage.getItem(MARKER)).toBeNull();
     expect(await getLocalKey("a")).toBe(dek);
   });
+}
 
+function registerUnlockSelfHealTests() {
   it("self-heals an invalid meta.iterations by falling back to the default", async () => {
     await enableDevicePassphrase("pw");
     lockDeviceKeystore();
@@ -387,6 +400,13 @@ describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () =>
     expect(localStorage.getItem(WRAPPED + "good")).not.toBeNull();
     expect(await getLocalKey("good")).toBe(good);
   });
+}
+
+describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () => {
+  registerVerifierAndMetaCorruptionTests();
+  registerRotationIntegrityTests();
+  registerPhase2CrashRecoveryTests();
+  registerUnlockSelfHealTests();
 });
 
 describe("cloudEncryption — Web Locks rotation serialization (S16 deferred)", () => {

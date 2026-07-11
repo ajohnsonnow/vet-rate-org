@@ -232,7 +232,11 @@ describe("legalAnswerer — parent-child expansion (expandChunksWithSiblings)", 
 
   it("excludes siblings that are themselves in the retrieved set", () => {
     // X0 and X1 both retrieved → X1's block must not re-pack X0.
-    const out = expandChunksWithSiblings([family[1], family[0]], getSiblings, 1000);
+    const out = expandChunksWithSiblings(
+      [family[1], family[0]],
+      getSiblings,
+      1000,
+    );
     expect(out[0].id).toBe("X1");
     expect(out[0].text).toBe("BBBB\n\nCCCC\n\nDDDD"); // X0 omitted (retrieved)
     expect(out[1].id).toBe("X0");
@@ -252,22 +256,56 @@ describe("legalAnswerer — parent-child expansion (expandChunksWithSiblings)", 
   });
 });
 
+const expansionWiringRetrieved = [
+  {
+    id: "a0",
+    citation: "38 CFR § 4.14",
+    title: "Pyramiding",
+    text: "primary A",
+    source_url: "urlA",
+    fetched_at: "fa",
+    score: 0.5,
+  },
+  {
+    id: "b0",
+    citation: "38 CFR § 4.22",
+    title: "Aggravation",
+    text: "primary B",
+    source_url: "urlB",
+    fetched_at: "fb",
+    score: 0.4,
+  },
+];
+const expansionWiringFamilies = {
+  "38 CFR § 4.14": [
+    expansionWiringRetrieved[0],
+    {
+      id: "a1",
+      citation: "38 CFR § 4.14",
+      title: "Pyramiding",
+      text: "SIBLING-A-DETAIL",
+      source_url: "urlA",
+      fetched_at: "fa",
+    },
+  ],
+  "38 CFR § 4.22": [
+    expansionWiringRetrieved[1],
+    {
+      id: "b1",
+      citation: "38 CFR § 4.22",
+      title: "Aggravation",
+      text: "SIBLING-B-DETAIL",
+      source_url: "urlB",
+      fetched_at: "fb",
+    },
+  ],
+};
+const getExpansionWiringSiblings = (citation) =>
+  expansionWiringFamilies[citation] || [];
+
 describe("legalAnswerer — expansion wiring + security invariant", () => {
-  const retrieved = [
-    { id: "a0", citation: "38 CFR § 4.14", title: "Pyramiding", text: "primary A", source_url: "urlA", fetched_at: "fa", score: 0.5 },
-    { id: "b0", citation: "38 CFR § 4.22", title: "Aggravation", text: "primary B", source_url: "urlB", fetched_at: "fb", score: 0.4 },
-  ];
-  const families = {
-    "38 CFR § 4.14": [
-      retrieved[0],
-      { id: "a1", citation: "38 CFR § 4.14", title: "Pyramiding", text: "SIBLING-A-DETAIL", source_url: "urlA", fetched_at: "fa" },
-    ],
-    "38 CFR § 4.22": [
-      retrieved[1],
-      { id: "b1", citation: "38 CFR § 4.22", title: "Aggravation", text: "SIBLING-B-DETAIL", source_url: "urlB", fetched_at: "fb" },
-    ],
-  };
-  const getSiblings = (citation) => families[citation] || [];
+  const retrieved = expansionWiringRetrieved;
+  const getSiblings = getExpansionWiringSiblings;
 
   it("expands sibling text into the extractor only; attributes facts to the right citation", async () => {
     const generateAI = vi
@@ -276,8 +314,16 @@ describe("legalAnswerer — expansion wiring + security invariant", () => {
       // (not raw text) so we can prove no raw/expanded text leaks to synth.
       .mockResolvedValueOnce(
         JSON.stringify([
-          { applicable: true, rule_summary: "rule from A block", supporting_quote: "quote-A" },
-          { applicable: true, rule_summary: "rule from B block", supporting_quote: "quote-B" },
+          {
+            applicable: true,
+            rule_summary: "rule from A block",
+            supporting_quote: "quote-A",
+          },
+          {
+            applicable: true,
+            rule_summary: "rule from B block",
+            supporting_quote: "quote-B",
+          },
         ]),
       )
       .mockResolvedValueOnce("Synthesized answer.");
@@ -317,10 +363,16 @@ describe("legalAnswerer — expansion wiring + security invariant", () => {
   it("does not expand when opts.expandContext is false", async () => {
     const generateAI = vi
       .fn()
-      .mockResolvedValueOnce(JSON.stringify([{ applicable: false }, { applicable: false }]));
+      .mockResolvedValueOnce(
+        JSON.stringify([{ applicable: false }, { applicable: false }]),
+      );
     await answer(
       "q",
-      { generateAI, retrieve: async () => ({ chunks: retrieved }), getSiblings },
+      {
+        generateAI,
+        retrieve: async () => ({ chunks: retrieved }),
+        getSiblings,
+      },
       { expandContext: false },
     );
     const extractorPrompt = generateAI.mock.calls[0][0];
@@ -336,7 +388,11 @@ describe("legalAnswerer — expansion wiring + security invariant", () => {
       .mockResolvedValueOnce(
         JSON.stringify([
           { applicable: false, rule_summary: "n/a", supporting_quote: "n/a" },
-          { applicable: true, rule_summary: "B applies", supporting_quote: "quote-B" },
+          {
+            applicable: true,
+            rule_summary: "B applies",
+            supporting_quote: "quote-B",
+          },
         ]),
       )
       .mockResolvedValueOnce("Answer B.");

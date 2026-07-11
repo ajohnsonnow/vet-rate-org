@@ -8,6 +8,35 @@ import {
   LEGACY_DEFAULT_KEY,
 } from "../../utils/cloudSync";
 
+async function deriveLegacyAesGcmKey(password, salt, iterations) {
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"],
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    km,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"],
+  );
+}
+
+function concatBytes(...parts) {
+  const total = parts.reduce((n, p) => n + p.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const p of parts) {
+    out.set(p, offset);
+    offset += p.length;
+  }
+  return out;
+}
+
 describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
   it("encrypts to VS3 envelope and roundtrips", async () => {
     const plaintext = JSON.stringify({ packet: "test", n: 7 });
@@ -51,37 +80,14 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
     const enc = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const km = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"],
-    );
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations: 600_000, hash: "SHA-256" },
-      km,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt"],
-    );
+    const key = await deriveLegacyAesGcmKey(password, salt, 600_000);
     const ct = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
       enc.encode(plaintext),
     );
     const magicV2 = new Uint8Array([0x56, 0x53, 0x32, 0x00]);
-    const out = new Uint8Array(
-      magicV2.length + salt.length + iv.length + ct.byteLength,
-    );
-    let o = 0;
-    out.set(magicV2, o);
-    o += magicV2.length;
-    out.set(salt, o);
-    o += salt.length;
-    out.set(iv, o);
-    o += iv.length;
-    out.set(new Uint8Array(ct), o);
+    const out = concatBytes(magicV2, salt, iv, new Uint8Array(ct));
     const b64 = btoa(String.fromCharCode(...out));
 
     const decrypted = await decryptData(b64, password);
@@ -97,28 +103,13 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
     const enc = new TextEncoder();
     const salt = enc.encode("vet-rate-salt-v1");
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const km = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"],
-    );
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
-      km,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt"],
-    );
+    const key = await deriveLegacyAesGcmKey(password, salt, 100_000);
     const ct = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
       enc.encode(plaintext),
     );
-    const out = new Uint8Array(iv.length + ct.byteLength);
-    out.set(iv, 0);
-    out.set(new Uint8Array(ct), iv.length);
+    const out = concatBytes(iv, new Uint8Array(ct));
     const b64 = btoa(String.fromCharCode(...out));
 
     const decrypted = await decryptData(b64, password);

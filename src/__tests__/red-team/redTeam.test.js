@@ -87,6 +87,7 @@ describe("Red team — URL bait stripped from LLM output", () => {
       expect(safe).not.toContain("attacker.example");
       expect(safe).not.toContain("va.gov.evil.com");
       expect(safe).not.toContain("my-va-account.com");
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- fixture asserts http downgrade is blocked, not a real request
       expect(safe).not.toContain("http://va.gov"); // protocol-downgrade blocked
     },
   );

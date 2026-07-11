@@ -111,7 +111,8 @@ describe("pure helpers", () => {
     const long = "x".repeat(MAX_EMBED_CHARS * 2 + 100);
     const windows = chunkPageText(long);
     expect(windows.length).toBeGreaterThan(1);
-    for (const w of windows) expect(w.length).toBeLessThanOrEqual(MAX_EMBED_CHARS);
+    for (const w of windows)
+      expect(w.length).toBeLessThanOrEqual(MAX_EMBED_CHARS);
     // Windows cover the whole page (last window reaches the end).
     expect(windows[windows.length - 1].endsWith("x")).toBe(true);
   });
@@ -187,13 +188,20 @@ describe("streaming / bounded-memory indexing", () => {
   it("clearPrevious wipes stale sessions so storage stays bounded to the current doc", async () => {
     const store = makeMemStore();
     await indexDocumentPages({
-      pages: [{ pageNumber: 1, text: "old knee injury noted in the service record" }],
+      pages: [
+        { pageNumber: 1, text: "old knee injury noted in the service record" },
+      ],
       sessionKey: "old",
       embed: conceptEmbed,
       store,
     });
     await indexDocumentPages({
-      pages: [{ pageNumber: 1, text: "new lumbar back strain documented on the exam" }],
+      pages: [
+        {
+          pageNumber: 1,
+          text: "new lumbar back strain documented on the exam",
+        },
+      ],
       sessionKey: "new",
       embed: conceptEmbed,
       store,
@@ -203,27 +211,45 @@ describe("streaming / bounded-memory indexing", () => {
   });
 });
 
+// Synthetic, non-PII pages. Each is about ONE concept.
+const GOLDEN_PAGES = [
+  {
+    pageNumber: 5,
+    text: "Veteran reports constant tinnitus and reduced hearing acuity after acoustic trauma in service.",
+  },
+  {
+    pageNumber: 12,
+    text: "Chronic lumbar strain with degenerative disc disease of the spine documented on MRI.",
+  },
+  {
+    pageNumber: 20,
+    text: "Sleep study consistent with obstructive apnea; frequent nighttime awakening reported.",
+  },
+  {
+    pageNumber: 33,
+    text: "Right knee pain with a meniscus tear; patella tracking abnormality noted.",
+  },
+  {
+    pageNumber: 41,
+    text: "Positive PTSD screen with recurrent nightmare and situational anxiety.",
+  },
+  {
+    pageNumber: 50,
+    text: "Complaints of shortness of breath; pulmonary testing suggests asthma.",
+  },
+];
+// Queries phrased with DIFFERENT words than the target page (synonyms).
+const GOLDEN_QUERIES = [
+  { q: "ringing in my ears", expected: 5 },
+  { q: "problems with my lower back", expected: 12 },
+  { q: "trouble sleeping at night", expected: 20 },
+  { q: "hurt my kneecap", expected: 33 },
+  { q: "mental health and bad dreams", expected: 41 },
+  { q: "hard to breathe", expected: 50 },
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 describe("semantic search — mini golden set (recall)", () => {
-  // Synthetic, non-PII pages. Each is about ONE concept.
-  const GOLDEN_PAGES = [
-    { pageNumber: 5, text: "Veteran reports constant tinnitus and reduced hearing acuity after acoustic trauma in service." },
-    { pageNumber: 12, text: "Chronic lumbar strain with degenerative disc disease of the spine documented on MRI." },
-    { pageNumber: 20, text: "Sleep study consistent with obstructive apnea; frequent nighttime awakening reported." },
-    { pageNumber: 33, text: "Right knee pain with a meniscus tear; patella tracking abnormality noted." },
-    { pageNumber: 41, text: "Positive PTSD screen with recurrent nightmare and situational anxiety." },
-    { pageNumber: 50, text: "Complaints of shortness of breath; pulmonary testing suggests asthma." },
-  ];
-  // Queries phrased with DIFFERENT words than the target page (synonyms).
-  const GOLDEN_QUERIES = [
-    { q: "ringing in my ears", expected: 5 },
-    { q: "problems with my lower back", expected: 12 },
-    { q: "trouble sleeping at night", expected: 20 },
-    { q: "hurt my kneecap", expected: 33 },
-    { q: "mental health and bad dreams", expected: 41 },
-    { q: "hard to breathe", expected: 50 },
-  ];
-
   it("retrieves the correct page by meaning (recall@1 = recall@3 = 1.0)", async () => {
     const store = makeMemStore();
     await indexDocumentPages({
@@ -359,7 +385,12 @@ describe("clearDocumentIndex", () => {
   it("removes a session's vectors", async () => {
     const store = makeMemStore();
     await indexDocumentPages({
-      pages: [{ pageNumber: 1, text: "chronic knee pain reported during the exam visit" }],
+      pages: [
+        {
+          pageNumber: 1,
+          text: "chronic knee pain reported during the exam visit",
+        },
+      ],
       sessionKey: "c",
       embed: conceptEmbed,
       store,
