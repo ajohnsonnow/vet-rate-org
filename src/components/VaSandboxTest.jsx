@@ -84,29 +84,1329 @@ import {
   BookOpen,
 } from "lucide-react";
 
-const VaSandboxTest = ({ onClose }) => {
-  // Power User Feature States
-  const [showDbqFinder, setShowDbqFinder] = useState(false);
-  const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
-  const [selectedClaimForUpload, setSelectedClaimForUpload] = useState(null);
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
 
-  // Consent & Save States
-  const [showConsentPrompt, setShowConsentPrompt] = useState(false);
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState(null);
+const getTestStatusIcon = (key, testResults) => {
+  const status = testResults[key];
+  if (status === "pass") return <Check className="w-5 h-5 text-green-500" />;
+  if (status === "fail") return <X className="w-5 h-5 text-red-500" />;
+  return <Clock className="w-5 h-5 text-gray-400" />;
+};
 
-  const {
-    isAuthenticated,
-    isLoading: authLoading,
-    userInfo,
-    login,
-    logout,
-    accessToken,
-    error: authError,
-  } = useVaAuth();
+const getTestStatusBg = (key, testResults) => {
+  const status = testResults[key];
+  if (status === "pass")
+    return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700";
+  if (status === "fail")
+    return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700";
+  return "bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600";
+};
 
-  // =========================================================================
+// Loading spinner component
+const LoadingSpinner = ({ text = "Loading..." }) => (
+  <div className="flex items-center justify-center py-6 text-gray-500 dark:text-gray-400">
+    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+    <span className="text-sm">{text}</span>
+  </div>
+);
+
+// Error component
+const ErrorMessage = ({ message, onRetry }) => (
+  <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
+    <div className="flex items-start gap-2">
+      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="text-red-700 dark:text-red-300 text-sm">{message}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-1 text-xs text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
+          >
+            <RefreshCw className="w-3 h-3" /> Retry
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// Raw JSON toggle component
+const RawJsonToggle = ({ isOpen, onToggle, data }) => (
+  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+    >
+      <Code className="w-3 h-3" />
+      {isOpen ? "Hide" : "Show"} Raw JSON
+      {isOpen ? (
+        <ChevronUp className="w-3 h-3" />
+      ) : (
+        <ChevronDown className="w-3 h-3" />
+      )}
+    </button>
+    {isOpen && data && (
+      <pre className="mt-2 p-3 bg-gray-900 text-gray-100 rounded-lg text-xs overflow-auto max-h-64 font-mono">
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    )}
+  </div>
+);
+
+function getAuthStatusDotClass(isAuthenticated, isConfigured) {
+  if (isAuthenticated) return "bg-green-400";
+  if (isConfigured) return "bg-yellow-400";
+  return "bg-red-400";
+}
+
+function getAuthStatusText(authLoading, isAuthenticated, isConfigured) {
+  if (authLoading) return "Checking...";
+  if (isAuthenticated) return "Connected to VA.gov";
+  if (isConfigured) return "Not Connected";
+  return "Configuration Required";
+}
+
+/**
+ * Modal header: title, VA OAuth config warning, and connect/disconnect status
+ */
+function SandboxConfigWarning({ configStatus }) {
+  return (
+    <div className="mt-4 bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="font-semibold text-yellow-100">
+            VA OAuth Not Configured
+          </p>
+          <p className="text-sm text-yellow-200 mt-1">
+            Missing environment variables. Set these in your Render Dashboard
+            or .env.local:
+          </p>
+          <ul className="text-xs text-yellow-300 mt-2 space-y-1 font-mono">
+            {!configStatus.hasOAuth && (
+              <>
+                <li>
+                  • VITE_VA_AUTH_ID (from sandbox form at
+                  developer.va.gov/explore)
+                </li>
+                <li>
+                  • VITE_VA_REDIRECT_URL (must match what you submitted on the
+                  VA sandbox form)
+                </li>
+                <li>
+                  • VITE_VA_OAUTH_API_PATH (e.g., veteran-verification/v1)
+                </li>
+              </>
+            )}
+            {!configStatus.hasApiKey && (
+              <li>• VITE_VA_API_KEY (for Facilities API)</li>
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuthStatusBar({
+  isAuthenticated,
+  userInfo,
+  authLoading,
+  configured,
+  login,
+  logout,
+}) {
+  return (
+    <div className="mt-4 flex items-center justify-between bg-white/10 rounded-xl p-4">
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-3 h-3 rounded-full ${getAuthStatusDotClass(isAuthenticated, configured)} animate-pulse`}
+        />
+        <span className="font-medium">
+          {getAuthStatusText(authLoading, isAuthenticated, configured)}
+        </span>
+        {isAuthenticated && userInfo && (
+          <span className="text-green-200 text-sm ml-2">
+            • {userInfo.given_name || "Veteran"}
+          </span>
+        )}
+      </div>
+      {isAuthenticated ? (
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg"
+        >
+          <LogOut className="w-4 h-4" /> Disconnect
+        </button>
+      ) : (
+        <button
+          onClick={login}
+          disabled={authLoading || !configured}
+          className="flex items-center gap-2 bg-white text-green-800 hover:bg-green-50 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label={
+            !configured
+              ? "Configure environment variables first"
+              : "Connect to VA.gov"
+          }
+        >
+          <LogIn className="w-4 h-4" /> Connect VA Account
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SandboxHeader({
+  onClose,
+  isAuthenticated,
+  userInfo,
+  authLoading,
+  authError,
+  login,
+  logout,
+}) {
+  const configured = isVaIntegrationConfigured();
+  const configStatus = getVaConfigStatus();
+
+  return (
+    <div className="bg-gradient-to-r from-green-800 via-green-700 to-teal-700 text-white p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center">
+            <ListChecks className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 id="va-sandbox-title" className="text-2xl font-bold">
+              VA Sandbox Validation Dashboard{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-green-200 text-sm mt-1">
+              Production Access Demo • All APIs Tested
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Configuration Status Warning */}
+      {!configured && <SandboxConfigWarning configStatus={configStatus} />}
+
+      <AuthStatusBar
+        isAuthenticated={isAuthenticated}
+        userInfo={userInfo}
+        authLoading={authLoading}
+        configured={configured}
+        login={login}
+        logout={logout}
+      />
+
+      {authError && (
+        <div className="mt-3 bg-red-500/20 border border-red-300/30 rounded-lg p-3 text-sm text-red-100">
+          <AlertTriangle className="w-4 h-4 inline mr-2" />
+          {authError}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Section A: Open Data APIs (Facilities, Forms, Benefits Reference) — no
+ * OAuth login required, only API keys
+ */
+function ApiKeyWarningBanner({
+  isFacilitiesApiKeyConfigured,
+  isFormsApiKeyConfigured,
+  isBenefitsApiKeyConfigured,
+}) {
+  if (
+    isFacilitiesApiKeyConfigured &&
+    isFormsApiKeyConfigured &&
+    isBenefitsApiKeyConfigured
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-yellow-800 dark:text-yellow-200">
+            API Key(s) Required
+          </p>
+          <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
+            {!isFacilitiesApiKeyConfigured && (
+              <li>
+                •{" "}
+                <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
+                  VITE_VA_API_KEY
+                </code>{" "}
+                (VA Facilities)
+              </li>
+            )}
+            {!isFormsApiKeyConfigured && (
+              <li>
+                •{" "}
+                <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
+                  VITE_VA_FORMS_API_KEY
+                </code>{" "}
+                (VA Forms)
+              </li>
+            )}
+            {!isBenefitsApiKeyConfigured && (
+              <li>
+                •{" "}
+                <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
+                  VITE_VA_BENEFITS_REF_API_KEY
+                </code>{" "}
+                (Benefits Reference)
+              </li>
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FacilitiesApiCard({
+  isFacilitiesApiKeyConfigured,
+  loading,
+  error,
+  testResults,
+  testFacilitiesApi,
+  facilities,
+  rawFacilities,
+  showRawJson,
+  toggleRawJson,
+}) {
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("facilities", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Facilities API
+          </h4>
+        </div>
+        {getTestStatusIcon("facilities", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Search ZIP: 97217
+      </p>
+
+      <button
+        onClick={testFacilitiesApi}
+        disabled={loading || !isFacilitiesApiKeyConfigured}
+        className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Building2 className="w-4 h-4" />
+        )}
+        Test Facilities
+      </button>
+
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {facilities && (
+        <div className="mt-3 text-sm">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Found {facilities.length} facilities
+          </p>
+          {facilities.slice(0, 2).map((f, i) => (
+            <p
+              key={i}
+              className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
+            >
+              • {f.name}
+            </p>
+          ))}
+        </div>
+      )}
+      <RawJsonToggle
+        isOpen={showRawJson.facilities}
+        onToggle={() => toggleRawJson("facilities")}
+        data={rawFacilities}
+      />
+    </div>
+  );
+}
+
+function FormsApiCard({
+  isFormsApiKeyConfigured,
+  loading,
+  error,
+  testResults,
+  testFormsApi,
+  forms,
+  rawForms,
+  showRawJson,
+  toggleRawJson,
+}) {
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("forms", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <FileType className="w-5 h-5 text-purple-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Forms API
+          </h4>
+        </div>
+        {getTestStatusIcon("forms", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Search: &quot;21-526EZ&quot;
+      </p>
+
+      <button
+        onClick={testFormsApi}
+        disabled={loading || !isFormsApiKeyConfigured}
+        className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <FileSearch className="w-4 h-4" />
+        )}
+        Test Forms
+      </button>
+
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {forms && forms.length > 0 && (
+        <div className="mt-3 text-sm">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Found {forms.length} form(s)
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            {forms[0]?.title?.slice(0, 60)}...
+          </p>
+          {forms[0]?.pdfUrl && (
+            <a
+              href={forms[0].pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1"
+            >
+              <ExternalLink className="w-3 h-3" /> View PDF
+            </a>
+          )}
+        </div>
+      )}
+      <RawJsonToggle
+        isOpen={showRawJson.forms}
+        onToggle={() => toggleRawJson("forms")}
+        data={rawForms}
+      />
+    </div>
+  );
+}
+
+function BenefitsReferenceCard({
+  isBenefitsApiKeyConfigured,
+  loading,
+  error,
+  testResults,
+  testDisabilitiesApi,
+  disabilities,
+  rawDisabilities,
+  showRawJson,
+  toggleRawJson,
+}) {
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("disabilities", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Database className="w-5 h-5 text-teal-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Reference Data
+          </h4>
+        </div>
+        {getTestStatusIcon("disabilities", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Disabilities List
+      </p>
+
+      <button
+        onClick={testDisabilitiesApi}
+        disabled={loading || !isBenefitsApiKeyConfigured}
+        className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <ListChecks className="w-4 h-4" />
+        )}
+        Test Reference Data
+      </button>
+
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {disabilities && (
+        <div className="mt-3 text-sm">
+          <p className="text-green-600 dark:text-green-400 font-medium">
+            ✓ Found {disabilities.length} disabilities
+          </p>
+          {disabilities.slice(0, 3).map((d, i) => (
+            <p
+              key={i}
+              className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
+            >
+              • {d.name}
+            </p>
+          ))}
+        </div>
+      )}
+      <RawJsonToggle
+        isOpen={showRawJson.disabilities}
+        onToggle={() => toggleRawJson("disabilities")}
+        data={rawDisabilities}
+      />
+    </div>
+  );
+}
+
+/**
+ * Section A: Open Data APIs (Facilities, Forms, Benefits Reference) — no
+ * OAuth login required, only API keys
+ */
+function OpenDataSection({
+  isFacilitiesApiKeyConfigured,
+  isFormsApiKeyConfigured,
+  isBenefitsApiKeyConfigured,
+  loading,
+  errors,
+  testResults,
+  testFacilitiesApi,
+  testFormsApi,
+  testDisabilitiesApi,
+  facilities,
+  rawFacilities,
+  forms,
+  rawForms,
+  disabilities,
+  rawDisabilities,
+  showRawJson,
+  toggleRawJson,
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <Database className="w-6 h-6 text-blue-600" />
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          Section A: Open Data APIs
+        </h3>
+        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-bold rounded">
+          API KEY
+        </span>
+      </div>
+
+      <ApiKeyWarningBanner
+        isFacilitiesApiKeyConfigured={isFacilitiesApiKeyConfigured}
+        isFormsApiKeyConfigured={isFormsApiKeyConfigured}
+        isBenefitsApiKeyConfigured={isBenefitsApiKeyConfigured}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FacilitiesApiCard
+          isFacilitiesApiKeyConfigured={isFacilitiesApiKeyConfigured}
+          loading={loading.facilities}
+          error={errors.facilities}
+          testResults={testResults}
+          testFacilitiesApi={testFacilitiesApi}
+          facilities={facilities}
+          rawFacilities={rawFacilities}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+        />
+        <FormsApiCard
+          isFormsApiKeyConfigured={isFormsApiKeyConfigured}
+          loading={loading.forms}
+          error={errors.forms}
+          testResults={testResults}
+          testFormsApi={testFormsApi}
+          forms={forms}
+          rawForms={rawForms}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+        />
+        <BenefitsReferenceCard
+          isBenefitsApiKeyConfigured={isBenefitsApiKeyConfigured}
+          loading={loading.disabilities}
+          error={errors.disabilities}
+          testResults={testResults}
+          testDisabilitiesApi={testDisabilitiesApi}
+          disabilities={disabilities}
+          rawDisabilities={rawDisabilities}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+        />
+      </div>
+    </div>
+  );
+}
+
+function getEvidenceUploadLabel(isAuthenticated, claims) {
+  if (!isAuthenticated) return "Login to Upload";
+  if (!claims || claims.length === 0) return "No Active Claims";
+  return "Upload Evidence";
+}
+
+/**
+ * Power user tools: DBQ Finder and direct-to-VA Evidence Upload
+ */
+function DbqFinderCard({ setShowDbqFinder }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-amber-200 dark:border-amber-700 shadow-sm">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center">
+          <BookOpen className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+        </div>
+        <div>
+          <h4 className="font-bold text-gray-900 dark:text-white">
+            DBQ Finder
+          </h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Find the right medical form
+          </p>
+        </div>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+        Search for Disability Benefits Questionnaires by condition. Get the
+        exact form your private doctor needs to fill out.
+      </p>
+      <button
+        onClick={() => setShowDbqFinder(true)}
+        className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+      >
+        <FileSearch className="w-4 h-4" />
+        Find DBQ Forms
+      </button>
+    </div>
+  );
+}
+
+function EvidenceUploadCard({
+  isAuthenticated,
+  claims,
+  setSelectedClaimForUpload,
+  setShowEvidenceUpload,
+  login,
+}) {
+  const handleUploadClick = () => {
+    if (isAuthenticated && claims && claims.length > 0) {
+      setSelectedClaimForUpload(claims[0]);
+      setShowEvidenceUpload(true);
+    } else if (!isAuthenticated) {
+      login();
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-amber-200 dark:border-amber-700 shadow-sm">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+          <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div>
+          <h4 className="font-bold text-gray-900 dark:text-white">
+            Evidence Upload
+          </h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Submit directly to VA
+          </p>
+        </div>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+        Upload completed DBQs, Nexus Letters, or buddy statements directly to
+        your active claim via VA API.
+      </p>
+      <button
+        onClick={handleUploadClick}
+        disabled={isAuthenticated && (!claims || claims.length === 0)}
+        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Upload className="w-4 h-4" />
+        {getEvidenceUploadLabel(isAuthenticated, claims)}
+      </button>
+      {isAuthenticated && claims && claims.length > 0 && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+          Will upload to: {claims[0].type || "Compensation"} Claim
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PowerUserFeatures({
+  setShowDbqFinder,
+  isAuthenticated,
+  claims,
+  setSelectedClaimForUpload,
+  setShowEvidenceUpload,
+  login,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-700">
+      <div className="flex items-center gap-3 mb-4">
+        <Sparkles className="w-6 h-6 text-amber-600" />
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          Power User Features
+        </h3>
+        <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 text-xs font-bold rounded">
+          NEW
+        </span>
+      </div>
+
+      <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+        Advanced tools for managing your VA claim directly through official
+        APIs
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DbqFinderCard setShowDbqFinder={setShowDbqFinder} />
+        <EvidenceUploadCard
+          isAuthenticated={isAuthenticated}
+          claims={claims}
+          setSelectedClaimForUpload={setSelectedClaimForUpload}
+          setShowEvidenceUpload={setShowEvidenceUpload}
+          login={login}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ServiceHistoryCard({
+  testResults,
+  loading,
+  error,
+  serviceHistory,
+  onRetry,
+  showRawJson,
+  toggleRawJson,
+  rawServiceHistory,
+}) {
+  const renderBody = () => {
+    if (loading) return <LoadingSpinner text="Fetching service history..." />;
+    if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+    if (serviceHistory && serviceHistory.length > 0) {
+      return (
+        <div className="space-y-2">
+          {serviceHistory.map((s, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
+            >
+              <p className="font-medium text-gray-900 dark:text-white">
+                {s.branch}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {formatDate(s.startDate)} - {formatDate(s.endDate)}
+              </p>
+              <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 rounded">
+                {s.dischargeStatus}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return <p className="text-sm text-gray-500">No service history found</p>;
+  };
+
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("serviceHistory", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Medal className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Service History
+          </h4>
+        </div>
+        {getTestStatusIcon("serviceHistory", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Scope: service_history.read
+      </p>
+      {renderBody()}
+      <RawJsonToggle
+        isOpen={showRawJson.serviceHistory}
+        onToggle={() => toggleRawJson("serviceHistory")}
+        data={rawServiceHistory}
+      />
+    </div>
+  );
+}
+
+function ClaimsCard({
+  testResults,
+  loading,
+  error,
+  claims,
+  onRetry,
+  showRawJson,
+  toggleRawJson,
+  rawClaims,
+}) {
+  const renderBody = () => {
+    if (loading) return <LoadingSpinner text="Fetching claims..." />;
+    if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+    if (claims && claims.length > 0) {
+      return (
+        <div className="space-y-2">
+          {claims.slice(0, 3).map((c, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
+            >
+              <p className="font-medium text-gray-900 dark:text-white">
+                {c.type} Claim
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Filed: {formatDate(c.dateFiled)}
+              </p>
+              <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded">
+                Phase {c.phase?.number}: {c.phase?.name}
+              </span>
+            </div>
+          ))}
+          {claims.length > 3 && (
+            <p className="text-xs text-gray-500">
+              +{claims.length - 3} more claims
+            </p>
+          )}
+        </div>
+      );
+    }
+    return <p className="text-sm text-gray-500">No claims found</p>;
+  };
+
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("claims", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-green-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Claims
+          </h4>
+        </div>
+        {getTestStatusIcon("claims", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Scope: claim.read
+      </p>
+      {renderBody()}
+      <RawJsonToggle
+        isOpen={showRawJson.claims}
+        onToggle={() => toggleRawJson("claims")}
+        data={rawClaims}
+      />
+    </div>
+  );
+}
+
+function AppealableIssuesCard({
+  testResults,
+  loading,
+  error,
+  appealableIssues,
+  onRetry,
+  showRawJson,
+  toggleRawJson,
+  rawAppealableIssues,
+}) {
+  const renderBody = () => {
+    if (loading) return <LoadingSpinner text="Fetching issues..." />;
+    if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+    if (appealableIssues && appealableIssues.length > 0) {
+      return (
+        <div className="space-y-2">
+          {appealableIssues.slice(0, 3).map((issue, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
+            >
+              <p className="font-medium text-gray-900 dark:text-white">
+                {issue.subject}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Decision: {formatDate(issue.decisionDate)}
+              </p>
+              {issue.percentNumber !== undefined && (
+                <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 rounded">
+                  Rated: {issue.percentNumber}%
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <p className="text-sm text-gray-500 flex items-center gap-1">
+        <Check className="w-4 h-4 text-green-500" /> No appealable issues
+      </p>
+    );
+  };
+
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("appealableIssues", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-orange-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Appealable Issues
+          </h4>
+        </div>
+        {getTestStatusIcon("appealableIssues", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Scope: appealable_issues.read
+      </p>
+      {renderBody()}
+      <RawJsonToggle
+        isOpen={showRawJson.appealableIssues}
+        onToggle={() => toggleRawJson("appealableIssues")}
+        data={rawAppealableIssues}
+      />
+    </div>
+  );
+}
+
+function AppealsStatusCard({
+  testResults,
+  loading,
+  error,
+  appealsStatus,
+  onRetry,
+  showRawJson,
+  toggleRawJson,
+  rawAppealsStatus,
+}) {
+  const renderBody = () => {
+    if (loading) return <LoadingSpinner text="Fetching appeals..." />;
+    if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+    if (appealsStatus && appealsStatus.length > 0) {
+      return (
+        <div className="space-y-2">
+          {appealsStatus.slice(0, 3).map((appeal, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
+            >
+              <p className="font-medium text-gray-900 dark:text-white capitalize">
+                {appeal.type} Appeal
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Program: {appeal.programArea}
+              </p>
+              <span
+                className={`text-xs px-2 py-0.5 rounded ${appeal.active ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"}`}
+              >
+                {appeal.active ? "Active" : "Closed"}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return <p className="text-sm text-gray-500">No active appeals</p>;
+  };
+
+  return (
+    <div
+      className={`border rounded-xl p-4 ${getTestStatusBg("appealsStatus", testResults)}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Gavel className="w-5 h-5 text-purple-600" />
+          <h4 className="font-semibold text-gray-900 dark:text-white">
+            Appeals Status
+          </h4>
+        </div>
+        {getTestStatusIcon("appealsStatus", testResults)}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Scope: appeals_status.read
+      </p>
+      {renderBody()}
+      <RawJsonToggle
+        isOpen={showRawJson.appealsStatus}
+        onToggle={() => toggleRawJson("appealsStatus")}
+        data={rawAppealsStatus}
+      />
+    </div>
+  );
+}
+
+/**
+ * Section B: OAuth-protected user data APIs (service history, claims,
+ * appealable issues, appeals status)
+ */
+function UserDataLoginPrompt({ authLoading, login }) {
+  return (
+    <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+      <User className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Login Required
+      </h4>
+      <p className="text-gray-600 dark:text-gray-300 mb-4">
+        Connect your VA.gov account to test user data APIs
+      </p>
+      <button
+        onClick={login}
+        disabled={authLoading}
+        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold disabled:opacity-50 flex items-center gap-2 mx-auto"
+      >
+        <LogIn className="w-5 h-5" /> Connect VA Account
+      </button>
+    </div>
+  );
+}
+
+function RefreshAllUserDataButton({ fetchAllUserData, anyLoading }) {
+  return (
+    <div className="flex justify-end mb-4">
+      <button
+        onClick={fetchAllUserData}
+        disabled={anyLoading}
+        className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1 disabled:opacity-50"
+      >
+        <RefreshCw className={`w-4 h-4 ${anyLoading ? "animate-spin" : ""}`} />
+        Refresh All User Data
+      </button>
+    </div>
+  );
+}
+
+function UserDataCardsGrid({
+  fetchAllUserData,
+  loading,
+  testResults,
+  errors,
+  serviceHistory,
+  fetchServiceHistory,
+  claims,
+  fetchClaims,
+  appealableIssues,
+  fetchAppealableIssues,
+  appealsStatus,
+  fetchAppealsStatus,
+  showRawJson,
+  toggleRawJson,
+  rawServiceHistory,
+  rawClaims,
+  rawAppealableIssues,
+  rawAppealsStatus,
+}) {
+  const anyLoading =
+    loading.serviceHistory ||
+    loading.claims ||
+    loading.appealableIssues ||
+    loading.appealsStatus;
+
+  return (
+    <>
+      <RefreshAllUserDataButton
+        fetchAllUserData={fetchAllUserData}
+        anyLoading={anyLoading}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ServiceHistoryCard
+          testResults={testResults}
+          loading={loading.serviceHistory}
+          error={errors.serviceHistory}
+          serviceHistory={serviceHistory}
+          onRetry={fetchServiceHistory}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+          rawServiceHistory={rawServiceHistory}
+        />
+        <ClaimsCard
+          testResults={testResults}
+          loading={loading.claims}
+          error={errors.claims}
+          claims={claims}
+          onRetry={fetchClaims}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+          rawClaims={rawClaims}
+        />
+        <AppealableIssuesCard
+          testResults={testResults}
+          loading={loading.appealableIssues}
+          error={errors.appealableIssues}
+          appealableIssues={appealableIssues}
+          onRetry={fetchAppealableIssues}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+          rawAppealableIssues={rawAppealableIssues}
+        />
+        <AppealsStatusCard
+          testResults={testResults}
+          loading={loading.appealsStatus}
+          error={errors.appealsStatus}
+          appealsStatus={appealsStatus}
+          onRetry={fetchAppealsStatus}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+          rawAppealsStatus={rawAppealsStatus}
+        />
+      </div>
+    </>
+  );
+}
+
+function UserDataSection({
+  isAuthenticated,
+  authLoading,
+  login,
+  fetchAllUserData,
+  loading,
+  testResults,
+  errors,
+  serviceHistory,
+  fetchServiceHistory,
+  claims,
+  fetchClaims,
+  appealableIssues,
+  fetchAppealableIssues,
+  appealsStatus,
+  fetchAppealsStatus,
+  showRawJson,
+  toggleRawJson,
+  rawServiceHistory,
+  rawClaims,
+  rawAppealableIssues,
+  rawAppealsStatus,
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <Shield className="w-6 h-6 text-green-600" />
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          Section B: User Data APIs
+        </h3>
+        <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-bold rounded">
+          OAUTH
+        </span>
+      </div>
+
+      {!isAuthenticated ? (
+        <UserDataLoginPrompt authLoading={authLoading} login={login} />
+      ) : (
+        <UserDataCardsGrid
+          fetchAllUserData={fetchAllUserData}
+          loading={loading}
+          testResults={testResults}
+          errors={errors}
+          serviceHistory={serviceHistory}
+          fetchServiceHistory={fetchServiceHistory}
+          claims={claims}
+          fetchClaims={fetchClaims}
+          appealableIssues={appealableIssues}
+          fetchAppealableIssues={fetchAppealableIssues}
+          appealsStatus={appealsStatus}
+          fetchAppealsStatus={fetchAppealsStatus}
+          showRawJson={showRawJson}
+          toggleRawJson={toggleRawJson}
+          rawServiceHistory={rawServiceHistory}
+          rawClaims={rawClaims}
+          rawAppealableIssues={rawAppealableIssues}
+          rawAppealsStatus={rawAppealsStatus}
+        />
+      )}
+    </div>
+  );
+}
+
+const TEST_SUMMARY_KEYS = [
+  "facilities",
+  "forms",
+  "disabilities",
+  "serviceHistory",
+  "claims",
+  "appealableIssues",
+  "appealsStatus",
+];
+
+/**
+ * API test summary grid plus the sandbox-environment info footer
+ */
+function TestSummaryFooter({ testResults }) {
+  return (
+    <>
+      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+          <ListChecks className="w-5 h-5" /> API Test Summary
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+          {TEST_SUMMARY_KEYS.map((key) => (
+            <div
+              key={key}
+              className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded-lg"
+            >
+              {getTestStatusIcon(key, testResults)}
+              <span className="capitalize text-gray-700 dark:text-gray-300">
+                {key.replace(/([A-Z])/g, " $1").trim()}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            <strong>Scopes Requested:</strong> openid profile offline_access
+            claim.read service_history.read appealable_issues.read
+            appeals_status.read
+          </p>
+        </div>
+      </div>
+
+      {/* Info Footer */}
+      <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-800 dark:text-blue-200">
+            <p className="font-semibold">Sandbox Environment</p>
+            <p className="mt-1">
+              All data shown is synthetic test data from VA.gov Sandbox.
+              Production access requires VA approval.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/**
+ * Power-user feature modals, VA data consent prompt, and success toast
+ * rendered outside the main ResponsiveModal
+ */
+function SandboxModals({
+  showDbqFinder,
+  setShowDbqFinder,
+  showEvidenceUpload,
+  selectedClaimForUpload,
+  accessToken,
+  fetchClaims,
+  setShowEvidenceUpload,
+  setSelectedClaimForUpload,
+  showConsentPrompt,
+  handleConsent,
+  handleSkipConsent,
+  claims,
+  serviceHistory,
+  appealsStatus,
+  appealableIssues,
+  saveSuccessMessage,
+}) {
+  return (
+    <>
+      {/* Power User Feature Modals */}
+      {showDbqFinder && <DbqFinder onClose={() => setShowDbqFinder(false)} />}
+
+      {showEvidenceUpload && selectedClaimForUpload && (
+        <ClaimEvidenceUpload
+          claimId={selectedClaimForUpload.id}
+          accessToken={accessToken}
+          claimDetails={selectedClaimForUpload}
+          onUploadSuccess={() => {
+            // Optionally refresh claims after successful upload
+            fetchClaims();
+          }}
+          onClose={() => {
+            setShowEvidenceUpload(false);
+            setSelectedClaimForUpload(null);
+          }}
+        />
+      )}
+
+      {/* Consent Prompt */}
+      {showConsentPrompt && (
+        <VaDataConsentPrompt
+          onConsent={handleConsent}
+          onSkip={handleSkipConsent}
+          vaData={{
+            claims,
+            serviceHistory,
+            appeals: appealsStatus,
+            appealableIssues,
+          }}
+        />
+      )}
+
+      {/* Success Message Toast */}
+      {saveSuccessMessage && (
+        <div className="fixed top-4 right-4 z-[10000] max-w-md">
+          <div className="bg-green-600 text-white rounded-lg shadow-2xl p-4 flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Success!</p>
+              <p className="text-sm text-green-100">{saveSuccessMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/**
+ * Encapsulates all VA Sandbox API data: OAuth-protected user data
+ * (service history, claims, appealable issues, appeals status) and
+ * API-key-protected open data (facilities, forms, benefits reference),
+ * plus their loading/error/raw-JSON state and fetchers.
+ */
+function useVaSandboxData(isAuthenticated, accessToken) {
   // USER DATA STATES (OAuth Required)
-  // =========================================================================
   const [serviceHistory, setServiceHistory] = useState(null);
   const [claims, setClaims] = useState(null);
   const [appealableIssues, setAppealableIssues] = useState(null);
@@ -118,9 +1418,7 @@ const VaSandboxTest = ({ onClose }) => {
   const [rawAppealableIssues, setRawAppealableIssues] = useState(null);
   const [rawAppealsStatus, setRawAppealsStatus] = useState(null);
 
-  // =========================================================================
   // OPEN DATA STATES (API Key Required)
-  // =========================================================================
   const [facilities, setFacilities] = useState(null);
   const [forms, setForms] = useState(null);
   const [disabilities, setDisabilities] = useState(null);
@@ -130,9 +1428,7 @@ const VaSandboxTest = ({ onClose }) => {
   const [rawForms, setRawForms] = useState(null);
   const [rawDisabilities, setRawDisabilities] = useState(null);
 
-  // =========================================================================
   // UI STATES
-  // =========================================================================
   const [loading, setLoading] = useState({
     serviceHistory: false,
     claims: false,
@@ -173,50 +1469,6 @@ const VaSandboxTest = ({ onClose }) => {
     VA_BENEFITS_REF_API_KEY &&
     VA_BENEFITS_REF_API_KEY !== "your_benefits_api_key_here",
   );
-  // eslint-disable-next-line no-unused-vars
-  const isApiKeyConfigured = isFacilitiesApiKeyConfigured; // Backward compatibility
-
-  // =========================================================================
-  // DATA FETCHING FUNCTIONS
-  // =========================================================================
-
-  // Fetch all user data when authenticated
-  const fetchAllUserData = useCallback(async () => {
-    if (!accessToken) return;
-    fetchServiceHistory();
-    fetchClaims();
-    fetchAppealableIssues();
-    fetchAppealsStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
-
-  // Auto-fetch user data when authenticated
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      fetchAllUserData();
-    }
-  }, [isAuthenticated, accessToken, fetchAllUserData]);
-
-  // Show consent prompt after data is successfully loaded
-  useEffect(() => {
-    if (
-      isAuthenticated &&
-      (serviceHistory || claims || appealableIssues || appealsStatus)
-    ) {
-      // Check if user has already seen consent for this session
-      const hasSeenConsent = sessionStorage.getItem("va_consent_shown");
-      if (!hasSeenConsent) {
-        setShowConsentPrompt(true);
-        sessionStorage.setItem("va_consent_shown", "true");
-      }
-    }
-  }, [
-    isAuthenticated,
-    serviceHistory,
-    claims,
-    appealableIssues,
-    appealsStatus,
-  ]);
 
   // === USER DATA FETCHERS ===
 
@@ -288,6 +1540,23 @@ const VaSandboxTest = ({ onClose }) => {
     }
   };
 
+  // Fetch all user data when authenticated
+  const fetchAllUserData = useCallback(async () => {
+    if (!accessToken) return;
+    fetchServiceHistory();
+    fetchClaims();
+    fetchAppealableIssues();
+    fetchAppealsStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
+
+  // Auto-fetch user data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      fetchAllUserData();
+    }
+  }, [isAuthenticated, accessToken, fetchAllUserData]);
+
   // === OPEN DATA FETCHERS ===
 
   const testFacilitiesApi = async () => {
@@ -346,93 +1615,117 @@ const VaSandboxTest = ({ onClose }) => {
     }
   };
 
-  // =========================================================================
-  // HELPERS
-  // =========================================================================
-
   const toggleRawJson = (key) => {
     setShowRawJson((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return dateString;
+  return {
+    serviceHistory,
+    claims,
+    appealableIssues,
+    appealsStatus,
+    rawServiceHistory,
+    rawClaims,
+    rawAppealableIssues,
+    rawAppealsStatus,
+    facilities,
+    forms,
+    disabilities,
+    rawFacilities,
+    rawForms,
+    rawDisabilities,
+    loading,
+    errors,
+    showRawJson,
+    testResults,
+    isFacilitiesApiKeyConfigured,
+    isFormsApiKeyConfigured,
+    isBenefitsApiKeyConfigured,
+    fetchAllUserData,
+    fetchServiceHistory,
+    fetchClaims,
+    fetchAppealableIssues,
+    fetchAppealsStatus,
+    testFacilitiesApi,
+    testFormsApi,
+    testDisabilitiesApi,
+    toggleRawJson,
+  };
+}
+
+const VaSandboxTest = ({ onClose }) => {
+  // Power User Feature States
+  const [showDbqFinder, setShowDbqFinder] = useState(false);
+  const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
+  const [selectedClaimForUpload, setSelectedClaimForUpload] = useState(null);
+
+  // Consent & Save States
+  const [showConsentPrompt, setShowConsentPrompt] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState(null);
+
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    userInfo,
+    login,
+    logout,
+    accessToken,
+    error: authError,
+  } = useVaAuth();
+
+  const {
+    serviceHistory,
+    claims,
+    appealableIssues,
+    appealsStatus,
+    rawServiceHistory,
+    rawClaims,
+    rawAppealableIssues,
+    rawAppealsStatus,
+    facilities,
+    forms,
+    disabilities,
+    rawFacilities,
+    rawForms,
+    rawDisabilities,
+    loading,
+    errors,
+    showRawJson,
+    testResults,
+    isFacilitiesApiKeyConfigured,
+    isFormsApiKeyConfigured,
+    isBenefitsApiKeyConfigured,
+    fetchAllUserData,
+    fetchServiceHistory,
+    fetchClaims,
+    fetchAppealableIssues,
+    fetchAppealsStatus,
+    testFacilitiesApi,
+    testFormsApi,
+    testDisabilitiesApi,
+    toggleRawJson,
+  } = useVaSandboxData(isAuthenticated, accessToken);
+
+  // Show consent prompt after data is successfully loaded
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      (serviceHistory || claims || appealableIssues || appealsStatus)
+    ) {
+      // Check if user has already seen consent for this session
+      const hasSeenConsent = sessionStorage.getItem("va_consent_shown");
+      if (!hasSeenConsent) {
+        setShowConsentPrompt(true);
+        sessionStorage.setItem("va_consent_shown", "true");
+      }
     }
-  };
-
-  const getTestStatusIcon = (key) => {
-    const status = testResults[key];
-    if (status === "pass") return <Check className="w-5 h-5 text-green-500" />;
-    if (status === "fail") return <X className="w-5 h-5 text-red-500" />;
-    return <Clock className="w-5 h-5 text-gray-400" />;
-  };
-
-  const getTestStatusBg = (key) => {
-    const status = testResults[key];
-    if (status === "pass")
-      return "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700";
-    if (status === "fail")
-      return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700";
-    return "bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600";
-  };
-
-  // Loading spinner component
-  const LoadingSpinner = ({ text = "Loading..." }) => (
-    <div className="flex items-center justify-center py-6 text-gray-500 dark:text-gray-400">
-      <Loader2 className="w-5 h-5 animate-spin mr-2" />
-      <span className="text-sm">{text}</span>
-    </div>
-  );
-
-  // Error component
-  const ErrorMessage = ({ message, onRetry }) => (
-    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
-      <div className="flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <p className="text-red-700 dark:text-red-300 text-sm">{message}</p>
-          {onRetry && (
-            <button
-              onClick={onRetry}
-              className="mt-1 text-xs text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
-            >
-              <RefreshCw className="w-3 h-3" /> Retry
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  // Raw JSON toggle component
-  const RawJsonToggle = ({ isOpen, onToggle, data }) => (
-    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-      <button
-        onClick={onToggle}
-        className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-      >
-        <Code className="w-3 h-3" />
-        {isOpen ? "Hide" : "Show"} Raw JSON
-        {isOpen ? (
-          <ChevronUp className="w-3 h-3" />
-        ) : (
-          <ChevronDown className="w-3 h-3" />
-        )}
-      </button>
-      {isOpen && data && (
-        <pre className="mt-2 p-3 bg-gray-900 text-gray-100 rounded-lg text-xs overflow-auto max-h-64 font-mono">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      )}
-    </div>
-  );
+  }, [
+    isAuthenticated,
+    serviceHistory,
+    claims,
+    appealableIssues,
+    appealsStatus,
+  ]);
 
   // =========================================================================
   // CONSENT HANDLER
@@ -490,134 +1783,15 @@ const VaSandboxTest = ({ onClose }) => {
   // =========================================================================
 
   const header = (
-    <div className="bg-gradient-to-r from-green-800 via-green-700 to-teal-700 text-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center">
-            <ListChecks className="w-8 h-8" />
-          </div>
-          <div>
-            <h2 id="va-sandbox-title" className="text-2xl font-bold">
-              VA Sandbox Validation Dashboard{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                BETA
-              </span>
-            </h2>
-            <p className="text-green-200 text-sm mt-1">
-              Production Access Demo • All APIs Tested
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2"
-          aria-label="Close"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Configuration Status Warning */}
-      {!isVaIntegrationConfigured() && (
-        <div className="mt-4 bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="font-semibold text-yellow-100">
-                VA OAuth Not Configured
-              </p>
-              <p className="text-sm text-yellow-200 mt-1">
-                Missing environment variables. Set these in your Render
-                Dashboard or .env.local:
-              </p>
-              <ul className="text-xs text-yellow-300 mt-2 space-y-1 font-mono">
-                {!getVaConfigStatus().hasOAuth && (
-                  <>
-                    <li>
-                      • VITE_VA_AUTH_ID (from sandbox form at
-                      developer.va.gov/explore)
-                    </li>
-                    <li>
-                      • VITE_VA_REDIRECT_URL (must match what you submitted on
-                      the VA sandbox form)
-                    </li>
-                    <li>
-                      • VITE_VA_OAUTH_API_PATH (e.g., veteran-verification/v1)
-                    </li>
-                  </>
-                )}
-                {!getVaConfigStatus().hasApiKey && (
-                  <li>• VITE_VA_API_KEY (for Facilities API)</li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Auth Status */}
-      <div className="mt-4 flex items-center justify-between bg-white/10 rounded-xl p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-3 h-3 rounded-full ${isAuthenticated ? "bg-green-400" : isVaIntegrationConfigured() ? "bg-yellow-400" : "bg-red-400"} animate-pulse`}
-          />
-          <span className="font-medium">
-            {authLoading
-              ? "Checking..."
-              : isAuthenticated
-                ? "Connected to VA.gov"
-                : isVaIntegrationConfigured()
-                  ? "Not Connected"
-                  : "Configuration Required"}
-          </span>
-          {isAuthenticated && userInfo && (
-            <span className="text-green-200 text-sm ml-2">
-              • {userInfo.given_name || "Veteran"}
-            </span>
-          )}
-        </div>
-        {isAuthenticated ? (
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg"
-          >
-            <LogOut className="w-4 h-4" /> Disconnect
-          </button>
-        ) : (
-          <button
-            onClick={login}
-            disabled={authLoading || !isVaIntegrationConfigured()}
-            className="flex items-center gap-2 bg-white text-green-800 hover:bg-green-50 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={
-              !isVaIntegrationConfigured()
-                ? "Configure environment variables first"
-                : "Connect to VA.gov"
-            }
-          >
-            <LogIn className="w-4 h-4" /> Connect VA Account
-          </button>
-        )}
-      </div>
-
-      {authError && (
-        <div className="mt-3 bg-red-500/20 border border-red-300/30 rounded-lg p-3 text-sm text-red-100">
-          <AlertTriangle className="w-4 h-4 inline mr-2" />
-          {authError}
-        </div>
-      )}
-    </div>
+    <SandboxHeader
+      onClose={onClose}
+      isAuthenticated={isAuthenticated}
+      userInfo={userInfo}
+      authLoading={authLoading}
+      authError={authError}
+      login={login}
+      logout={logout}
+    />
   );
 
   return (
@@ -630,719 +1804,81 @@ const VaSandboxTest = ({ onClose }) => {
         size="2xl"
       >
         <div className="space-y-8">
-          {/* ============================================================ */}
-          {/* SECTION A: OPEN DATA APIs (No Login Required) */}
-          {/* ============================================================ */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <Database className="w-6 h-6 text-blue-600" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Section A: Open Data APIs
-              </h3>
-              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-bold rounded">
-                API KEY
-              </span>
-            </div>
+          <OpenDataSection
+            isFacilitiesApiKeyConfigured={isFacilitiesApiKeyConfigured}
+            isFormsApiKeyConfigured={isFormsApiKeyConfigured}
+            isBenefitsApiKeyConfigured={isBenefitsApiKeyConfigured}
+            loading={loading}
+            errors={errors}
+            testResults={testResults}
+            testFacilitiesApi={testFacilitiesApi}
+            testFormsApi={testFormsApi}
+            testDisabilitiesApi={testDisabilitiesApi}
+            facilities={facilities}
+            rawFacilities={rawFacilities}
+            forms={forms}
+            rawForms={rawForms}
+            disabilities={disabilities}
+            rawDisabilities={rawDisabilities}
+            showRawJson={showRawJson}
+            toggleRawJson={toggleRawJson}
+          />
 
-            {(!isFacilitiesApiKeyConfigured ||
-              !isFormsApiKeyConfigured ||
-              !isBenefitsApiKeyConfigured) && (
-              <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                      API Key(s) Required
-                    </p>
-                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-                      {!isFacilitiesApiKeyConfigured && (
-                        <li>
-                          •{" "}
-                          <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
-                            VITE_VA_API_KEY
-                          </code>{" "}
-                          (VA Facilities)
-                        </li>
-                      )}
-                      {!isFormsApiKeyConfigured && (
-                        <li>
-                          •{" "}
-                          <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
-                            VITE_VA_FORMS_API_KEY
-                          </code>{" "}
-                          (VA Forms)
-                        </li>
-                      )}
-                      {!isBenefitsApiKeyConfigured && (
-                        <li>
-                          •{" "}
-                          <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">
-                            VITE_VA_BENEFITS_REF_API_KEY
-                          </code>{" "}
-                          (Benefits Reference)
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
+          <PowerUserFeatures
+            setShowDbqFinder={setShowDbqFinder}
+            isAuthenticated={isAuthenticated}
+            claims={claims}
+            setSelectedClaimForUpload={setSelectedClaimForUpload}
+            setShowEvidenceUpload={setShowEvidenceUpload}
+            login={login}
+          />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Facilities API Test */}
-              <div
-                className={`border rounded-xl p-4 ${getTestStatusBg("facilities")}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Facilities API
-                    </h4>
-                  </div>
-                  {getTestStatusIcon("facilities")}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Search ZIP: 97217
-                </p>
+          <UserDataSection
+            isAuthenticated={isAuthenticated}
+            authLoading={authLoading}
+            login={login}
+            fetchAllUserData={fetchAllUserData}
+            loading={loading}
+            testResults={testResults}
+            errors={errors}
+            serviceHistory={serviceHistory}
+            fetchServiceHistory={fetchServiceHistory}
+            claims={claims}
+            fetchClaims={fetchClaims}
+            appealableIssues={appealableIssues}
+            fetchAppealableIssues={fetchAppealableIssues}
+            appealsStatus={appealsStatus}
+            fetchAppealsStatus={fetchAppealsStatus}
+            showRawJson={showRawJson}
+            toggleRawJson={toggleRawJson}
+            rawServiceHistory={rawServiceHistory}
+            rawClaims={rawClaims}
+            rawAppealableIssues={rawAppealableIssues}
+            rawAppealsStatus={rawAppealsStatus}
+          />
 
-                <button
-                  onClick={testFacilitiesApi}
-                  disabled={loading.facilities || !isFacilitiesApiKeyConfigured}
-                  className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading.facilities ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Building2 className="w-4 h-4" />
-                  )}
-                  Test Facilities
-                </button>
-
-                {errors.facilities && (
-                  <p className="mt-2 text-xs text-red-600">
-                    {errors.facilities}
-                  </p>
-                )}
-                {facilities && (
-                  <div className="mt-3 text-sm">
-                    <p className="text-green-600 dark:text-green-400 font-medium">
-                      ✓ Found {facilities.length} facilities
-                    </p>
-                    {facilities.slice(0, 2).map((f, i) => (
-                      <p
-                        key={i}
-                        className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
-                      >
-                        • {f.name}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                <RawJsonToggle
-                  isOpen={showRawJson.facilities}
-                  onToggle={() => toggleRawJson("facilities")}
-                  data={rawFacilities}
-                />
-              </div>
-
-              {/* Forms API Test */}
-              <div
-                className={`border rounded-xl p-4 ${getTestStatusBg("forms")}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileType className="w-5 h-5 text-purple-600" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Forms API
-                    </h4>
-                  </div>
-                  {getTestStatusIcon("forms")}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Search: &quot;21-526EZ&quot;
-                </p>
-
-                <button
-                  onClick={testFormsApi}
-                  disabled={loading.forms || !isFormsApiKeyConfigured}
-                  className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading.forms ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <FileSearch className="w-4 h-4" />
-                  )}
-                  Test Forms
-                </button>
-
-                {errors.forms && (
-                  <p className="mt-2 text-xs text-red-600">{errors.forms}</p>
-                )}
-                {forms && forms.length > 0 && (
-                  <div className="mt-3 text-sm">
-                    <p className="text-green-600 dark:text-green-400 font-medium">
-                      ✓ Found {forms.length} form(s)
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      {forms[0]?.title?.slice(0, 60)}...
-                    </p>
-                    {forms[0]?.pdfUrl && (
-                      <a
-                        href={forms[0].pdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1"
-                      >
-                        <ExternalLink className="w-3 h-3" /> View PDF
-                      </a>
-                    )}
-                  </div>
-                )}
-                <RawJsonToggle
-                  isOpen={showRawJson.forms}
-                  onToggle={() => toggleRawJson("forms")}
-                  data={rawForms}
-                />
-              </div>
-
-              {/* Benefits Reference Data Test */}
-              <div
-                className={`border rounded-xl p-4 ${getTestStatusBg("disabilities")}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Database className="w-5 h-5 text-teal-600" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      Reference Data
-                    </h4>
-                  </div>
-                  {getTestStatusIcon("disabilities")}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Disabilities List
-                </p>
-
-                <button
-                  onClick={testDisabilitiesApi}
-                  disabled={loading.disabilities || !isBenefitsApiKeyConfigured}
-                  className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading.disabilities ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ListChecks className="w-4 h-4" />
-                  )}
-                  Test Reference Data
-                </button>
-
-                {errors.disabilities && (
-                  <p className="mt-2 text-xs text-red-600">
-                    {errors.disabilities}
-                  </p>
-                )}
-                {disabilities && (
-                  <div className="mt-3 text-sm">
-                    <p className="text-green-600 dark:text-green-400 font-medium">
-                      ✓ Found {disabilities.length} disabilities
-                    </p>
-                    {disabilities.slice(0, 3).map((d, i) => (
-                      <p
-                        key={i}
-                        className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
-                      >
-                        • {d.name}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                <RawJsonToggle
-                  isOpen={showRawJson.disabilities}
-                  onToggle={() => toggleRawJson("disabilities")}
-                  data={rawDisabilities}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ============================================================ */}
-          {/* POWER USER FEATURES */}
-          {/* ============================================================ */}
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-700">
-            <div className="flex items-center gap-3 mb-4">
-              <Sparkles className="w-6 h-6 text-amber-600" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Power User Features
-              </h3>
-              <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 text-xs font-bold rounded">
-                NEW
-              </span>
-            </div>
-
-            <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
-              Advanced tools for managing your VA claim directly through
-              official APIs
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* DBQ Finder Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-amber-200 dark:border-amber-700 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">
-                      DBQ Finder
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Find the right medical form
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Search for Disability Benefits Questionnaires by condition.
-                  Get the exact form your private doctor needs to fill out.
-                </p>
-                <button
-                  onClick={() => setShowDbqFinder(true)}
-                  className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
-                >
-                  <FileSearch className="w-4 h-4" />
-                  Find DBQ Forms
-                </button>
-              </div>
-
-              {/* Evidence Upload Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-amber-200 dark:border-amber-700 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                    <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">
-                      Evidence Upload
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Submit directly to VA
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Upload completed DBQs, Nexus Letters, or buddy statements
-                  directly to your active claim via VA API.
-                </p>
-                <button
-                  onClick={() => {
-                    if (isAuthenticated && claims && claims.length > 0) {
-                      setSelectedClaimForUpload(claims[0]);
-                      setShowEvidenceUpload(true);
-                    } else if (!isAuthenticated) {
-                      login();
-                    }
-                  }}
-                  disabled={isAuthenticated && (!claims || claims.length === 0)}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Upload className="w-4 h-4" />
-                  {!isAuthenticated
-                    ? "Login to Upload"
-                    : !claims || claims.length === 0
-                      ? "No Active Claims"
-                      : "Upload Evidence"}
-                </button>
-                {isAuthenticated && claims && claims.length > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                    Will upload to: {claims[0].type || "Compensation"} Claim
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ============================================================ */}
-          {/* SECTION B: USER DATA APIs (OAuth Required) */}
-          {/* ============================================================ */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <Shield className="w-6 h-6 text-green-600" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Section B: User Data APIs
-              </h3>
-              <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-bold rounded">
-                OAUTH
-              </span>
-            </div>
-
-            {!isAuthenticated ? (
-              <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                <User className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Login Required
-                </h4>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Connect your VA.gov account to test user data APIs
-                </p>
-                <button
-                  onClick={login}
-                  disabled={authLoading}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold disabled:opacity-50 flex items-center gap-2 mx-auto"
-                >
-                  <LogIn className="w-5 h-5" /> Connect VA Account
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Refresh All Button */}
-                <div className="flex justify-end mb-4">
-                  <button
-                    onClick={fetchAllUserData}
-                    disabled={
-                      loading.serviceHistory ||
-                      loading.claims ||
-                      loading.appealableIssues ||
-                      loading.appealsStatus
-                    }
-                    className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1 disabled:opacity-50"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${loading.serviceHistory || loading.claims || loading.appealableIssues || loading.appealsStatus ? "animate-spin" : ""}`}
-                    />
-                    Refresh All User Data
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Service History Card */}
-                  <div
-                    className={`border rounded-xl p-4 ${getTestStatusBg("serviceHistory")}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Medal className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Service History
-                        </h4>
-                      </div>
-                      {getTestStatusIcon("serviceHistory")}
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Scope: service_history.read
-                    </p>
-
-                    {loading.serviceHistory ? (
-                      <LoadingSpinner text="Fetching service history..." />
-                    ) : errors.serviceHistory ? (
-                      <ErrorMessage
-                        message={errors.serviceHistory}
-                        onRetry={fetchServiceHistory}
-                      />
-                    ) : serviceHistory && serviceHistory.length > 0 ? (
-                      <div className="space-y-2">
-                        {serviceHistory.map((s, i) => (
-                          <div
-                            key={i}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {s.branch}
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              {formatDate(s.startDate)} -{" "}
-                              {formatDate(s.endDate)}
-                            </p>
-                            <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 rounded">
-                              {s.dischargeStatus}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No service history found
-                      </p>
-                    )}
-                    <RawJsonToggle
-                      isOpen={showRawJson.serviceHistory}
-                      onToggle={() => toggleRawJson("serviceHistory")}
-                      data={rawServiceHistory}
-                    />
-                  </div>
-
-                  {/* Claims Card */}
-                  <div
-                    className={`border rounded-xl p-4 ${getTestStatusBg("claims")}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-green-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Claims
-                        </h4>
-                      </div>
-                      {getTestStatusIcon("claims")}
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Scope: claim.read
-                    </p>
-
-                    {loading.claims ? (
-                      <LoadingSpinner text="Fetching claims..." />
-                    ) : errors.claims ? (
-                      <ErrorMessage
-                        message={errors.claims}
-                        onRetry={fetchClaims}
-                      />
-                    ) : claims && claims.length > 0 ? (
-                      <div className="space-y-2">
-                        {claims.slice(0, 3).map((c, i) => (
-                          <div
-                            key={i}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {c.type} Claim
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Filed: {formatDate(c.dateFiled)}
-                            </p>
-                            <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded">
-                              Phase {c.phase?.number}: {c.phase?.name}
-                            </span>
-                          </div>
-                        ))}
-                        {claims.length > 3 && (
-                          <p className="text-xs text-gray-500">
-                            +{claims.length - 3} more claims
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No claims found</p>
-                    )}
-                    <RawJsonToggle
-                      isOpen={showRawJson.claims}
-                      onToggle={() => toggleRawJson("claims")}
-                      data={rawClaims}
-                    />
-                  </div>
-
-                  {/* Appealable Issues Card */}
-                  <div
-                    className={`border rounded-xl p-4 ${getTestStatusBg("appealableIssues")}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-orange-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Appealable Issues
-                        </h4>
-                      </div>
-                      {getTestStatusIcon("appealableIssues")}
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Scope: appealable_issues.read
-                    </p>
-
-                    {loading.appealableIssues ? (
-                      <LoadingSpinner text="Fetching issues..." />
-                    ) : errors.appealableIssues ? (
-                      <ErrorMessage
-                        message={errors.appealableIssues}
-                        onRetry={fetchAppealableIssues}
-                      />
-                    ) : appealableIssues && appealableIssues.length > 0 ? (
-                      <div className="space-y-2">
-                        {appealableIssues.slice(0, 3).map((issue, i) => (
-                          <div
-                            key={i}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {issue.subject}
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Decision: {formatDate(issue.decisionDate)}
-                            </p>
-                            {issue.percentNumber !== undefined && (
-                              <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 rounded">
-                                Rated: {issue.percentNumber}%
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
-                        <Check className="w-4 h-4 text-green-500" /> No
-                        appealable issues
-                      </p>
-                    )}
-                    <RawJsonToggle
-                      isOpen={showRawJson.appealableIssues}
-                      onToggle={() => toggleRawJson("appealableIssues")}
-                      data={rawAppealableIssues}
-                    />
-                  </div>
-
-                  {/* Appeals Status Card */}
-                  <div
-                    className={`border rounded-xl p-4 ${getTestStatusBg("appealsStatus")}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Gavel className="w-5 h-5 text-purple-600" />
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Appeals Status
-                        </h4>
-                      </div>
-                      {getTestStatusIcon("appealsStatus")}
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Scope: appeals_status.read
-                    </p>
-
-                    {loading.appealsStatus ? (
-                      <LoadingSpinner text="Fetching appeals..." />
-                    ) : errors.appealsStatus ? (
-                      <ErrorMessage
-                        message={errors.appealsStatus}
-                        onRetry={fetchAppealsStatus}
-                      />
-                    ) : appealsStatus && appealsStatus.length > 0 ? (
-                      <div className="space-y-2">
-                        {appealsStatus.slice(0, 3).map((appeal, i) => (
-                          <div
-                            key={i}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
-                          >
-                            <p className="font-medium text-gray-900 dark:text-white capitalize">
-                              {appeal.type} Appeal
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Program: {appeal.programArea}
-                            </p>
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded ${appeal.active ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"}`}
-                            >
-                              {appeal.active ? "Active" : "Closed"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No active appeals</p>
-                    )}
-                    <RawJsonToggle
-                      isOpen={showRawJson.appealsStatus}
-                      onToggle={() => toggleRawJson("appealsStatus")}
-                      data={rawAppealsStatus}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* ============================================================ */}
-          {/* TEST SUMMARY */}
-          {/* ============================================================ */}
-          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <ListChecks className="w-5 h-5" /> API Test Summary
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-              {[
-                "facilities",
-                "forms",
-                "disabilities",
-                "serviceHistory",
-                "claims",
-                "appealableIssues",
-                "appealsStatus",
-              ].map((key) => (
-                <div
-                  key={key}
-                  className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded-lg"
-                >
-                  {getTestStatusIcon(key)}
-                  <span className="capitalize text-gray-700 dark:text-gray-300">
-                    {key.replace(/([A-Z])/g, " $1").trim()}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <strong>Scopes Requested:</strong> openid profile offline_access
-                claim.read service_history.read appealable_issues.read
-                appeals_status.read
-              </p>
-            </div>
-          </div>
-
-          {/* Info Footer */}
-          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800 dark:text-blue-200">
-                <p className="font-semibold">Sandbox Environment</p>
-                <p className="mt-1">
-                  All data shown is synthetic test data from VA.gov Sandbox.
-                  Production access requires VA approval.
-                </p>
-              </div>
-            </div>
-          </div>
+          <TestSummaryFooter testResults={testResults} />
         </div>
       </ResponsiveModal>
 
-      {/* Power User Feature Modals */}
-      {showDbqFinder && <DbqFinder onClose={() => setShowDbqFinder(false)} />}
-
-      {showEvidenceUpload && selectedClaimForUpload && (
-        <ClaimEvidenceUpload
-          claimId={selectedClaimForUpload.id}
-          accessToken={accessToken}
-          claimDetails={selectedClaimForUpload}
-          onUploadSuccess={() => {
-            // Optionally refresh claims after successful upload
-            fetchClaims();
-          }}
-          onClose={() => {
-            setShowEvidenceUpload(false);
-            setSelectedClaimForUpload(null);
-          }}
-        />
-      )}
-
-      {/* Consent Prompt */}
-      {showConsentPrompt && (
-        <VaDataConsentPrompt
-          onConsent={handleConsent}
-          onSkip={handleSkipConsent}
-          vaData={{
-            claims,
-            serviceHistory,
-            appeals: appealsStatus,
-            appealableIssues,
-          }}
-        />
-      )}
-
-      {/* Success Message Toast */}
-      {saveSuccessMessage && (
-        <div className="fixed top-4 right-4 z-[10000] max-w-md">
-          <div className="bg-green-600 text-white rounded-lg shadow-2xl p-4 flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Success!</p>
-              <p className="text-sm text-green-100">{saveSuccessMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <SandboxModals
+        showDbqFinder={showDbqFinder}
+        setShowDbqFinder={setShowDbqFinder}
+        showEvidenceUpload={showEvidenceUpload}
+        selectedClaimForUpload={selectedClaimForUpload}
+        accessToken={accessToken}
+        fetchClaims={fetchClaims}
+        setShowEvidenceUpload={setShowEvidenceUpload}
+        setSelectedClaimForUpload={setSelectedClaimForUpload}
+        showConsentPrompt={showConsentPrompt}
+        handleConsent={handleConsent}
+        handleSkipConsent={handleSkipConsent}
+        claims={claims}
+        serviceHistory={serviceHistory}
+        appealsStatus={appealsStatus}
+        appealableIssues={appealableIssues}
+        saveSuccessMessage={saveSuccessMessage}
+      />
     </>
   );
 };
