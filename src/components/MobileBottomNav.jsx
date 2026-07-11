@@ -100,6 +100,87 @@ const NAV_ITEMS = [
   },
 ];
 
+function NavButton({
+  item,
+  isActive,
+  badge,
+  pressedItem,
+  setPressedItem,
+  onClick,
+  isDark,
+  isTbiComfort,
+  isAaaContrast,
+}) {
+  const isDarkMode = isDark || isTbiComfort;
+  const activeTextColor = isDarkMode ? "text-blue-400" : "text-blue-600";
+  const inactiveTextColor = isDarkMode ? "text-gray-400" : "text-slate-500";
+  const itemTextColor = isActive ? activeTextColor : inactiveTextColor;
+
+  return (
+    <button
+      onClick={onClick}
+      onTouchStart={() => setPressedItem(item.id)}
+      onTouchEnd={() => setPressedItem(null)}
+      className={`
+        relative flex flex-col items-center justify-center flex-1 py-2 px-1
+        min-h-[60px] min-w-touch
+        transition-all duration-150 ease-out
+        ${itemTextColor}
+        ${pressedItem === item.id ? "scale-95 opacity-80" : ""}
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
+        ${isAaaContrast && isActive ? "text-yellow-400" : ""}
+      `}
+      aria-label={item.label}
+      aria-current={isActive ? "page" : undefined}
+    >
+      {/* Icon */}
+      <div className="relative">
+        {item.icon(isActive)}
+
+        {/* Badge */}
+        {badge && (
+          <span
+            className={`
+            absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1
+            flex items-center justify-center
+            text-[10px] font-bold rounded-full
+            ${isDark || isTbiComfort ? "bg-blue-500 text-white" : "bg-blue-600 text-white"}
+          `}
+          >
+            {badge}
+          </span>
+        )}
+
+        {/* New feature highlight */}
+        {item.highlight && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+        )}
+      </div>
+
+      {/* Label */}
+      <span
+        className={`
+        text-[10px] font-medium mt-1 truncate max-w-full
+        ${isActive ? "font-bold" : ""}
+      `}
+      >
+        {item.label}
+      </span>
+
+      {/* Active indicator bar */}
+      {isActive && (
+        <span
+          className={`
+          absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-full
+          ${isDark || isTbiComfort ? "bg-blue-400" : "bg-blue-600"}
+          ${isAaaContrast ? "bg-yellow-400" : ""}
+        `}
+        />
+      )}
+    </button>
+  );
+}
+
 export default function MobileBottomNav({
   activeItem = null,
   onSearchClick,
@@ -159,79 +240,20 @@ export default function MobileBottomNav({
       aria-label="Main navigation"
     >
       <div className="flex items-stretch justify-around">
-        {NAV_ITEMS.map((item) => {
-          const isActive = activeItem === item.id;
-          const badge = getBadge(item.id);
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleClick(item.id)}
-              onTouchStart={() => setPressedItem(item.id)}
-              onTouchEnd={() => setPressedItem(null)}
-              className={`
-                relative flex flex-col items-center justify-center flex-1 py-2 px-1
-                min-h-[60px] min-w-touch
-                transition-all duration-150 ease-out
-                ${
-                  isActive
-                    ? `${isDark || isTbiComfort ? "text-blue-400" : "text-blue-600"}`
-                    : `${isDark || isTbiComfort ? "text-gray-400" : "text-slate-500"}`
-                }
-                ${pressedItem === item.id ? "scale-95 opacity-80" : ""}
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
-                ${isAaaContrast && isActive ? "text-yellow-400" : ""}
-              `}
-              aria-label={item.label}
-              aria-current={isActive ? "page" : undefined}
-            >
-              {/* Icon */}
-              <div className="relative">
-                {item.icon(isActive)}
-
-                {/* Badge */}
-                {badge && (
-                  <span
-                    className={`
-                    absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1
-                    flex items-center justify-center
-                    text-[10px] font-bold rounded-full
-                    ${isDark || isTbiComfort ? "bg-blue-500 text-white" : "bg-blue-600 text-white"}
-                  `}
-                  >
-                    {badge}
-                  </span>
-                )}
-
-                {/* New feature highlight */}
-                {item.highlight && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                )}
-              </div>
-
-              {/* Label */}
-              <span
-                className={`
-                text-[10px] font-medium mt-1 truncate max-w-full
-                ${isActive ? "font-bold" : ""}
-              `}
-              >
-                {item.label}
-              </span>
-
-              {/* Active indicator bar */}
-              {isActive && (
-                <span
-                  className={`
-                  absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-full
-                  ${isDark || isTbiComfort ? "bg-blue-400" : "bg-blue-600"}
-                  ${isAaaContrast ? "bg-yellow-400" : ""}
-                `}
-                />
-              )}
-            </button>
-          );
-        })}
+        {NAV_ITEMS.map((item) => (
+          <NavButton
+            key={item.id}
+            item={item}
+            isActive={activeItem === item.id}
+            badge={getBadge(item.id)}
+            pressedItem={pressedItem}
+            setPressedItem={setPressedItem}
+            onClick={() => handleClick(item.id)}
+            isDark={isDark}
+            isTbiComfort={isTbiComfort}
+            isAaaContrast={isAaaContrast}
+          />
+        ))}
       </div>
     </nav>
   );

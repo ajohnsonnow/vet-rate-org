@@ -19,6 +19,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useScreenshot } from "../hooks/useScreenshot";
 import { savePainMap } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
+import { logger } from "../utils/logger";
 
 // Diagnostic codes by body region
 const DIAGNOSTIC_CODES = {
@@ -433,6 +434,647 @@ const PAIN_TYPES = {
   stiffness: { color: "#8b5cf6", name: "Stiffness", emoji: "🔒" },
 };
 
+// Severity label for a pain point's intensity (0-1 scale)
+function getSeverityLabel(intensity) {
+  if (intensity > 0.7) return "severe";
+  if (intensity > 0.4) return "moderate";
+  return "mild";
+}
+
+// Front-view body region path map (module-level: no closures over component state)
+function getFrontViewRegions(centerX, s, shoulderWidth, showPhantomLimbs) {
+  return {
+          head: `M ${centerX},${20 * s.head} 
+                 Q ${centerX + 30 * s.head},${20 * s.head} ${centerX + 30 * s.head},${50 * s.head} 
+                 Q ${centerX + 30 * s.head},${80 * s.head} ${centerX},${80 * s.head} 
+                 Q ${centerX - 30 * s.head},${80 * s.head} ${centerX - 30 * s.head},${50 * s.head} 
+                 Q ${centerX - 30 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
+          neck: `M ${centerX - 10},80 L ${centerX + 10},80 L ${centerX + 10},100 L ${centerX - 10},100 Z`,
+          shoulder_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - shoulderWidth},100 Q ${centerX - shoulderWidth - 20},100 ${centerX - shoulderWidth - 20},120 
+             L ${centerX - shoulderWidth},130 L ${centerX - 30},110 Z`
+            : null,
+          shoulder_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + shoulderWidth},100 Q ${centerX + shoulderWidth + 20},100 ${centerX + shoulderWidth + 20},120 
+             L ${centerX + shoulderWidth},130 L ${centerX + 30},110 Z`
+            : null,
+          chest: `M ${centerX - 30},100 L ${centerX + 30},100 
+                  L ${centerX + 40 * s.shoulders},160 L ${centerX - 40 * s.shoulders},160 Z`,
+          abdomen: `M ${centerX - 40 * s.shoulders},160 L ${centerX + 40 * s.shoulders},160 
+                    L ${centerX + 35 * s.hips},220 L ${centerX - 35 * s.hips},220 Z`,
+          elbow_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - 80 * s.arms},150 Q ${centerX - 90 * s.arms},160 ${centerX - 80 * s.arms},180 
+             L ${centerX - 65 * s.arms},175 L ${centerX - 65 * s.arms},155 Z`
+            : null,
+          elbow_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + 80 * s.arms},150 Q ${centerX + 90 * s.arms},160 ${centerX + 80 * s.arms},180 
+             L ${centerX + 65 * s.arms},175 L ${centerX + 65 * s.arms},155 Z`
+            : null,
+          wrist_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - 95 * s.arms},200 Q ${centerX - 105 * s.arms},210 ${centerX - 95 * s.arms},230 
+             L ${centerX - 80 * s.arms},225 L ${centerX - 80 * s.arms},205 Z`
+            : null,
+          wrist_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + 95 * s.arms},200 Q ${centerX + 105 * s.arms},210 ${centerX + 95 * s.arms},230 
+             L ${centerX + 80 * s.arms},225 L ${centerX + 80 * s.arms},205 Z`
+            : null,
+          hip_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 35 * s.hips},220 L ${centerX - 10},220 L ${centerX - 20 * s.legs},260 L ${centerX - 40 * s.hips},260 Z`
+            : null,
+          hip_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 35 * s.hips},220 L ${centerX + 10},220 L ${centerX + 20 * s.legs},260 L ${centerX + 40 * s.hips},260 Z`
+            : null,
+          knee_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 40 * s.legs},300 Q ${centerX - 50 * s.legs},320 ${centerX - 40 * s.legs},340 
+             L ${centerX - 20 * s.legs},340 L ${centerX - 20 * s.legs},300 Z`
+            : null,
+          knee_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 40 * s.legs},300 Q ${centerX + 50 * s.legs},320 ${centerX + 40 * s.legs},340 
+             L ${centerX + 20 * s.legs},340 L ${centerX + 20 * s.legs},300 Z`
+            : null,
+          ankle_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 40 * s.legs},380 Q ${centerX - 50 * s.legs},395 ${centerX - 40 * s.legs},410 
+             L ${centerX - 20 * s.legs},410 L ${centerX - 20 * s.legs},380 Z`
+            : null,
+          ankle_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 40 * s.legs},380 Q ${centerX + 50 * s.legs},395 ${centerX + 40 * s.legs},410 
+             L ${centerX + 20 * s.legs},410 L ${centerX + 20 * s.legs},380 Z`
+            : null,
+  };
+}
+
+// Back-view body region path map
+function getBackViewRegions(centerX, s, shoulderWidth, showPhantomLimbs) {
+  return {
+          head: `M ${centerX},${20 * s.head} 
+                 Q ${centerX + 30 * s.head},${20 * s.head} ${centerX + 30 * s.head},${50 * s.head} 
+                 Q ${centerX + 30 * s.head},${80 * s.head} ${centerX},${80 * s.head} 
+                 Q ${centerX - 30 * s.head},${80 * s.head} ${centerX - 30 * s.head},${50 * s.head} 
+                 Q ${centerX - 30 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
+          neck: `M ${centerX - 10},80 L ${centerX + 10},80 L ${centerX + 10},100 L ${centerX - 10},100 Z`,
+          upper_back: `M ${centerX - 30},100 L ${centerX + 30},100 L ${centerX + 35 * s.shoulders},160 L ${centerX - 35 * s.shoulders},160 Z`,
+          lower_back: `M ${centerX - 35 * s.shoulders},160 L ${centerX + 35 * s.shoulders},160 L ${centerX + 30 * s.hips},220 L ${centerX - 30 * s.hips},220 Z`,
+          shoulder_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - shoulderWidth},100 Q ${centerX - shoulderWidth - 20},100 ${centerX - shoulderWidth - 20},120 
+             L ${centerX - shoulderWidth},130 L ${centerX - 30},110 Z`
+            : null,
+          shoulder_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + shoulderWidth},100 Q ${centerX + shoulderWidth + 20},100 ${centerX + shoulderWidth + 20},120 
+             L ${centerX + shoulderWidth},130 L ${centerX + 30},110 Z`
+            : null,
+          elbow_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - 80 * s.arms},150 Q ${centerX - 90 * s.arms},160 ${centerX - 80 * s.arms},180 
+             L ${centerX - 65 * s.arms},175 L ${centerX - 65 * s.arms},155 Z`
+            : null,
+          elbow_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + 80 * s.arms},150 Q ${centerX + 90 * s.arms},160 ${centerX + 80 * s.arms},180 
+             L ${centerX + 65 * s.arms},175 L ${centerX + 65 * s.arms},155 Z`
+            : null,
+          wrist_left: showPhantomLimbs.leftArm
+            ? `M ${centerX - 95 * s.arms},200 Q ${centerX - 105 * s.arms},210 ${centerX - 95 * s.arms},230 
+             L ${centerX - 80 * s.arms},225 L ${centerX - 80 * s.arms},205 Z`
+            : null,
+          wrist_right: showPhantomLimbs.rightArm
+            ? `M ${centerX + 95 * s.arms},200 Q ${centerX + 105 * s.arms},210 ${centerX + 95 * s.arms},230 
+             L ${centerX + 80 * s.arms},225 L ${centerX + 80 * s.arms},205 Z`
+            : null,
+          hip_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 30 * s.hips},220 L ${centerX - 10},220 L ${centerX - 20},260 L ${centerX - 35 * s.hips},260 Z`
+            : null,
+          hip_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 30 * s.hips},220 L ${centerX + 10},220 L ${centerX + 20},260 L ${centerX + 35 * s.hips},260 Z`
+            : null,
+          knee_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 40 * s.legs},300 Q ${centerX - 50 * s.legs},320 ${centerX - 40 * s.legs},340 
+             L ${centerX - 20 * s.legs},340 L ${centerX - 20 * s.legs},300 Z`
+            : null,
+          knee_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 40 * s.legs},300 Q ${centerX + 50 * s.legs},320 ${centerX + 40 * s.legs},340 
+             L ${centerX + 20 * s.legs},340 L ${centerX + 20 * s.legs},300 Z`
+            : null,
+          ankle_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX - 40 * s.legs},380 Q ${centerX - 50 * s.legs},395 ${centerX - 40 * s.legs},410 
+             L ${centerX - 20 * s.legs},410 L ${centerX - 20 * s.legs},380 Z`
+            : null,
+          ankle_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX + 40 * s.legs},380 Q ${centerX + 50 * s.legs},395 ${centerX + 40 * s.legs},410 
+             L ${centerX + 20 * s.legs},410 L ${centerX + 20 * s.legs},380 Z`
+            : null,
+  };
+}
+
+// Left-side-view body region path map
+function getLeftViewRegions(centerX, s, showPhantomLimbs) {
+  const depth = 25 * s.torso; // Body depth from side
+  return {
+          head: `M ${centerX},${20 * s.head} 
+                 Q ${centerX + 25 * s.head},${20 * s.head} ${centerX + 20 * s.head},${50 * s.head} 
+                 Q ${centerX + 15 * s.head},${80 * s.head} ${centerX - 5},${80 * s.head} 
+                 Q ${centerX - 25 * s.head},${75 * s.head} ${centerX - 20 * s.head},${50 * s.head} 
+                 Q ${centerX - 15 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
+          neck: `M ${centerX - 8},80 L ${centerX + 8},80 L ${centerX + 8},100 L ${centerX - 8},100 Z`,
+          // Torso side profile
+          chest: `M ${centerX - depth},100 L ${centerX + depth},105 
+                  L ${centerX + depth * 1.1},160 L ${centerX - depth * 0.9},160 Z`,
+          abdomen: `M ${centerX - depth * 0.9},160 L ${centerX + depth * 1.1},160 
+                    L ${centerX + depth * 1.2 * s.hips},220 L ${centerX - depth * 0.8 * s.hips},220 Z`,
+          lower_back: `M ${centerX - depth * 0.9},160 L ${centerX - depth * 0.8 * s.hips},220 
+                       L ${centerX - depth * 0.5},220 L ${centerX - depth * 0.5},160 Z`,
+          // Left arm (visible in front)
+          shoulder_left: showPhantomLimbs.leftArm
+            ? `M ${centerX + depth},105 Q ${centerX + depth + 20},110 ${centerX + depth + 15},130 
+             L ${centerX + depth - 5},125 L ${centerX - 5},110 Z`
+            : null,
+          elbow_left: showPhantomLimbs.leftArm
+            ? `M ${centerX + 30 * s.arms},150 Q ${centerX + 40 * s.arms},165 ${centerX + 35 * s.arms},180 
+             L ${centerX + 20 * s.arms},175 L ${centerX + 25 * s.arms},155 Z`
+            : null,
+          wrist_left: showPhantomLimbs.leftArm
+            ? `M ${centerX + 40 * s.arms},200 Q ${centerX + 50 * s.arms},215 ${centerX + 45 * s.arms},235 
+             L ${centerX + 30 * s.arms},230 L ${centerX + 35 * s.arms},205 Z`
+            : null,
+          // Hip/leg side profile
+          hip_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX + depth * 1.2 * s.hips},220 L ${centerX - depth * 0.3},220 
+             L ${centerX + 5},260 L ${centerX + 35 * s.hips},260 Z`
+            : null,
+          knee_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX + 25 * s.legs},300 Q ${centerX + 35 * s.legs},320 ${centerX + 25 * s.legs},340 
+             L ${centerX - 5 * s.legs},340 L ${centerX - 5 * s.legs},300 Z`
+            : null,
+          ankle_left: showPhantomLimbs.leftLeg
+            ? `M ${centerX + 25 * s.legs},380 Q ${centerX + 35 * s.legs},395 ${centerX + 25 * s.legs},410 
+             L ${centerX - 5 * s.legs},410 L ${centerX - 5 * s.legs},380 Z`
+            : null,
+  };
+}
+
+// Right-side-view body region path map
+function getRightViewRegions(centerX, s, showPhantomLimbs) {
+  const depth = 25 * s.torso;
+  return {
+          head: `M ${centerX},${20 * s.head} 
+                 Q ${centerX - 25 * s.head},${20 * s.head} ${centerX - 20 * s.head},${50 * s.head} 
+                 Q ${centerX - 15 * s.head},${80 * s.head} ${centerX + 5},${80 * s.head} 
+                 Q ${centerX + 25 * s.head},${75 * s.head} ${centerX + 20 * s.head},${50 * s.head} 
+                 Q ${centerX + 15 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
+          neck: `M ${centerX - 8},80 L ${centerX + 8},80 L ${centerX + 8},100 L ${centerX - 8},100 Z`,
+          chest: `M ${centerX + depth},100 L ${centerX - depth},105 
+                  L ${centerX - depth * 1.1},160 L ${centerX + depth * 0.9},160 Z`,
+          abdomen: `M ${centerX + depth * 0.9},160 L ${centerX - depth * 1.1},160 
+                    L ${centerX - depth * 1.2 * s.hips},220 L ${centerX + depth * 0.8 * s.hips},220 Z`,
+          lower_back: `M ${centerX + depth * 0.9},160 L ${centerX + depth * 0.8 * s.hips},220 
+                       L ${centerX + depth * 0.5},220 L ${centerX + depth * 0.5},160 Z`,
+          // Right arm (visible in front)
+          shoulder_right: showPhantomLimbs.rightArm
+            ? `M ${centerX - depth},105 Q ${centerX - depth - 20},110 ${centerX - depth - 15},130 
+             L ${centerX - depth + 5},125 L ${centerX + 5},110 Z`
+            : null,
+          elbow_right: showPhantomLimbs.rightArm
+            ? `M ${centerX - 30 * s.arms},150 Q ${centerX - 40 * s.arms},165 ${centerX - 35 * s.arms},180 
+             L ${centerX - 20 * s.arms},175 L ${centerX - 25 * s.arms},155 Z`
+            : null,
+          wrist_right: showPhantomLimbs.rightArm
+            ? `M ${centerX - 40 * s.arms},200 Q ${centerX - 50 * s.arms},215 ${centerX - 45 * s.arms},235 
+             L ${centerX - 30 * s.arms},230 L ${centerX - 35 * s.arms},205 Z`
+            : null,
+          // Hip/leg side profile
+          hip_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX - depth * 1.2 * s.hips},220 L ${centerX + depth * 0.3},220 
+             L ${centerX - 5},260 L ${centerX - 35 * s.hips},260 Z`
+            : null,
+          knee_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX - 25 * s.legs},300 Q ${centerX - 35 * s.legs},320 ${centerX - 25 * s.legs},340 
+             L ${centerX + 5 * s.legs},340 L ${centerX + 5 * s.legs},300 Z`
+            : null,
+          ankle_right: showPhantomLimbs.rightLeg
+            ? `M ${centerX - 25 * s.legs},380 Q ${centerX - 35 * s.legs},395 ${centerX - 25 * s.legs},410 
+             L ${centerX + 5 * s.legs},410 L ${centerX + 5 * s.legs},380 Z`
+            : null,
+  };
+}
+
+// Get regions based on current view
+function getRegionsForView(view, centerX, s, shoulderWidth, showPhantomLimbs) {
+  if (view === "front")
+    return getFrontViewRegions(centerX, s, shoulderWidth, showPhantomLimbs);
+  if (view === "back")
+    return getBackViewRegions(centerX, s, shoulderWidth, showPhantomLimbs);
+  if (view === "left") return getLeftViewRegions(centerX, s, showPhantomLimbs);
+  if (view === "right")
+    return getRightViewRegions(centerX, s, showPhantomLimbs);
+  return {}; // fallback
+}
+
+// Standard Views Configuration - matches official VA DBQ diagrams
+const STANDARD_VIEWS = {
+  front: {
+    id: "front",
+    name: "Front View",
+    icon: "👤",
+    shortcut: "F",
+    description: "Anterior view showing front of body",
+  },
+  back: {
+    id: "back",
+    name: "Back View",
+    icon: "🔙",
+    shortcut: "B",
+    description: "Posterior view showing back of body",
+  },
+  left: {
+    id: "left",
+    name: "Left Side",
+    icon: "⬅️",
+    shortcut: "L",
+    description: "Left lateral view showing side profile",
+  },
+  right: {
+    id: "right",
+    name: "Right Side",
+    icon: "➡️",
+    shortcut: "R",
+    description: "Right lateral view showing side profile",
+  },
+};
+
+// Body type presets
+const BODY_PRESETS = {
+  masculine: {
+    name: "Masculine",
+    shoulders: 1.15,
+    hips: 0.9,
+    torso: 1.05,
+    arms: 1.05,
+    legs: 1,
+    head: 1,
+    icon: "👨",
+  },
+  feminine: {
+    name: "Feminine",
+    shoulders: 0.9,
+    hips: 1.1,
+    torso: 0.95,
+    arms: 0.95,
+    legs: 1,
+    head: 0.95,
+    icon: "👩",
+  },
+  average: {
+    name: "Average",
+    shoulders: 1,
+    hips: 1,
+    torso: 1,
+    arms: 1,
+    legs: 1,
+    head: 1,
+    icon: "🧑",
+  },
+  "trans-ftm": {
+    name: "Trans (FtM)",
+    shoulders: 1.05,
+    hips: 1,
+    torso: 1,
+    arms: 1,
+    legs: 1,
+    head: 1,
+    icon: "⚧️",
+  },
+  "trans-mtf": {
+    name: "Trans (MtF)",
+    shoulders: 0.95,
+    hips: 1.05,
+    torso: 0.98,
+    arms: 0.98,
+    legs: 1,
+    head: 0.97,
+    icon: "⚧️",
+  },
+  nonbinary: {
+    name: "Non-Binary",
+    shoulders: 1,
+    hips: 1,
+    torso: 1,
+    arms: 1,
+    legs: 1,
+    head: 1,
+    icon: "🏳️‍🌈",
+  },
+};
+
+// Render enhanced body SVG with scaling - supports 4 standard views
+// Background glow, skin-tone gradient, and per-pain-type glow filters
+function BodySvgDefs() {
+  return (
+    <defs>
+      <radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="rgba(59, 130, 246, 0.1)" />
+        <stop offset="100%" stopColor="transparent" />
+      </radialGradient>
+
+      {/* Skin tone gradient */}
+      <linearGradient id="skinTone" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="rgba(255, 224, 189, 0.3)" />
+        <stop offset="100%" stopColor="rgba(255, 206, 158, 0.2)" />
+      </linearGradient>
+
+      {/* Pain type filters */}
+      {Object.entries(PAIN_TYPES).map(([type, { color }]) => (
+        <filter
+          key={type}
+          id={`glow-${type}`}
+          x="-50%"
+          y="-50%"
+          width="200%"
+          height="200%"
+        >
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feFlood floodColor={color} floodOpacity="0.6" />
+          <feComposite in2="blur" operator="in" />
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      ))}
+    </defs>
+  );
+}
+
+function PhantomLimbIndicators({ view, showPhantomLimbs }) {
+  return (
+    <>
+      {/* Phantom limb indicators - only for front/back views */}
+      {(view === "front" || view === "back") && !showPhantomLimbs.leftArm && (
+        <text
+          x="70"
+          y="150"
+          fill="rgba(255,100,100,0.5)"
+          fontSize="10"
+          textAnchor="middle"
+        >
+          ❌ Removed
+        </text>
+      )}
+      {(view === "front" || view === "back") &&
+        !showPhantomLimbs.rightArm && (
+          <text
+            x="230"
+            y="150"
+            fill="rgba(255,100,100,0.5)"
+            fontSize="10"
+            textAnchor="middle"
+          >
+            ❌ Removed
+          </text>
+        )}
+      {(view === "front" || view === "back") && !showPhantomLimbs.leftLeg && (
+        <text
+          x="120"
+          y="350"
+          fill="rgba(255,100,100,0.5)"
+          fontSize="10"
+          textAnchor="middle"
+        >
+          ❌
+        </text>
+      )}
+      {(view === "front" || view === "back") &&
+        !showPhantomLimbs.rightLeg && (
+          <text
+            x="180"
+            y="350"
+            fill="rgba(255,100,100,0.5)"
+            fontSize="10"
+            textAnchor="middle"
+          >
+            ❌
+          </text>
+        )}
+    </>
+  );
+}
+
+function BodyRegionPaths({
+  activeRegions,
+  painPoints,
+  getRegionStyle,
+  onRegionClick,
+  onRegionHover,
+}) {
+  return (
+    <>
+      {Object.entries(activeRegions).map(([regionId, path]) => {
+        const style = getRegionStyle(regionId);
+        const pain = painPoints[regionId];
+
+        return (
+          <path
+            key={regionId}
+            d={path}
+            fill={style.fill}
+            stroke={style.stroke}
+            strokeWidth={style.strokeWidth}
+            style={{
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              filter: pain ? `url(#glow-${pain.type})` : "none",
+            }}
+            onClick={() => onRegionClick(regionId)}
+            onMouseEnter={() => onRegionHover(regionId)}
+            onMouseLeave={() => onRegionHover(null)}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function BodyOutlineEllipse({ centerX, s, view }) {
+  return (
+    <ellipse
+      cx={centerX}
+      cy="220"
+      rx={
+        view === "left" || view === "right"
+          ? 60
+          : 100 * Math.max(s.shoulders, s.hips)
+      }
+      ry={200 * s.torso}
+      fill="url(#bodyGlow)"
+    />
+  );
+}
+
+function BodySVG({
+  view,
+  zoom,
+  bodyScale,
+  showPhantomLimbs,
+  painPoints,
+  hoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  onRegionClick,
+  onRegionHover,
+}) {
+  const s = bodyScale; // shorthand
+  const centerX = 150;
+
+  // Calculate scaled positions based on body type
+  const shoulderWidth = 50 * s.shoulders;
+  const _hipWidth = 40 * s.hips;
+  const _torsoHeight = 60 * s.torso;
+  const _armLength = 100 * s.arms;
+  const _legLength = 150 * s.legs;
+
+  // Get regions based on current view
+  const regions = getRegionsForView(
+    view,
+    centerX,
+    s,
+    shoulderWidth,
+    showPhantomLimbs,
+  );
+
+  // Filter out null regions (phantom limbs)
+  const activeRegions = Object.fromEntries(
+    Object.entries(regions).filter(([_, path]) => path !== null),
+  );
+
+  return (
+    <svg
+      viewBox="0 0 300 440"
+      className="w-full max-w-md mx-auto transition-transform duration-300"
+      style={{
+        filter: "drop-shadow(0 0 20px rgba(0,0,0,0.5))",
+        transform: `scale(${zoom})`,
+        transformOrigin: "center center",
+      }}
+      role="img"
+      aria-label={`Body diagram - ${STANDARD_VIEWS[view].name}. ${Object.keys(painPoints).length} pain points marked.`}
+    >
+      {/* Background glow */}
+      <BodySvgDefs />
+
+      {/* View label for accessibility */}
+      <title>{STANDARD_VIEWS[view].description}</title>
+
+      {/* Body outline background */}
+      <BodyOutlineEllipse centerX={centerX} s={s} view={view} />
+
+      <PhantomLimbIndicators view={view} showPhantomLimbs={showPhantomLimbs} />
+
+      {/* Body regions */}
+      <BodyRegionPaths
+        activeRegions={activeRegions}
+        painPoints={painPoints}
+        getRegionStyle={getRegionStyle}
+        onRegionClick={onRegionClick}
+        onRegionHover={onRegionHover}
+      />
+
+      {/* Labels for hovered/selected regions */}
+      {(hoveredRegion || selectedRegion) && (
+        <text
+          x="150"
+          y="430"
+          textAnchor="middle"
+          fill="white"
+          fontSize="12"
+          fontWeight="bold"
+        >
+          {(hoveredRegion || selectedRegion)
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase())}
+        </text>
+      )}
+    </svg>
+  );
+}
+
+// Render diagnostic codes panel
+function DiagnosticCodesPanel({ selectedRegion }) {
+    if (!selectedRegion) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <span className="text-4xl">👆</span>
+          <p className="mt-2">
+            Click a body region to see related diagnostic codes
+          </p>
+        </div>
+      );
+    }
+
+    const codes = DIAGNOSTIC_CODES[selectedRegion] || [];
+    const regionName = selectedRegion
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+
+    return (
+      <div className="space-y-3">
+        <h4 className="text-lg font-bold text-white flex items-center gap-2">
+          <span>📋</span> {regionName} - Diagnostic Codes
+        </h4>
+
+        {codes.length > 0 ? (
+          <div className="space-y-2">
+            {codes.map((code) => (
+              <div
+                key={code.code}
+                className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono text-blue-400 font-bold">
+                    DC {code.code}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
+                    Max {code.maxRating}%
+                  </span>
+                </div>
+                <p className="text-white font-semibold">{code.name}</p>
+                <p className="text-gray-400 text-sm">{code.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No specific codes for this region</p>
+        )}
+      </div>
+    );
+}
+
+// Render nexus suggestions
+function NexusSuggestions({ detectedNexus }) {
+    if (detectedNexus.length === 0) return null;
+
+    return (
+      <div className="bg-purple-900/30 border-2 border-purple-500/50 rounded-xl p-4 mt-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xl">🔗</span>
+          <h4 className="font-bold text-purple-400">Nexus Pattern Detected!</h4>
+        </div>
+
+        {detectedNexus.map((nexus, index) => (
+          <div key={index} className="p-3 bg-gray-800/50 rounded-lg mb-2">
+            <p className="font-semibold text-white">{nexus.name}</p>
+            <p className="text-gray-400 text-sm mt-1">{nexus.description}</p>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {nexus.suggestedCodes.map((code) => (
+                <span
+                  key={code}
+                  className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded"
+                >
+                  DC {code}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+}
+
 const PainPainter = ({ onClose, _onExport, onReportBug }) => {
   const { _t } = useLanguage();
 
@@ -441,38 +1083,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
   const [mode, setMode] = useState("select"); // 'select' | 'paint'
   const [selectedPainType, setSelectedPainType] = useState("sharp");
   const [activeTab, setActiveTab] = useState("map"); // 'map' | 'config'
-
-  // Standard Views Configuration - matches official VA DBQ diagrams
-  const STANDARD_VIEWS = {
-    front: {
-      id: "front",
-      name: "Front View",
-      icon: "👤",
-      shortcut: "F",
-      description: "Anterior view showing front of body",
-    },
-    back: {
-      id: "back",
-      name: "Back View",
-      icon: "🔙",
-      shortcut: "B",
-      description: "Posterior view showing back of body",
-    },
-    left: {
-      id: "left",
-      name: "Left Side",
-      icon: "⬅️",
-      shortcut: "L",
-      description: "Left lateral view showing side profile",
-    },
-    right: {
-      id: "right",
-      name: "Right Side",
-      icon: "➡️",
-      shortcut: "R",
-      description: "Right lateral view showing side profile",
-    },
-  };
 
   // Pain data
   const [painPoints, setPainPoints] = useState({});
@@ -539,69 +1149,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
   const bodyMapRef = useRef(null);
   const { captureScreenshot, downloadScreenshot } = useScreenshot();
 
-  // Body type presets
-  const BODY_PRESETS = {
-    masculine: {
-      name: "Masculine",
-      shoulders: 1.15,
-      hips: 0.9,
-      torso: 1.05,
-      arms: 1.05,
-      legs: 1,
-      head: 1,
-      icon: "👨",
-    },
-    feminine: {
-      name: "Feminine",
-      shoulders: 0.9,
-      hips: 1.1,
-      torso: 0.95,
-      arms: 0.95,
-      legs: 1,
-      head: 0.95,
-      icon: "👩",
-    },
-    average: {
-      name: "Average",
-      shoulders: 1,
-      hips: 1,
-      torso: 1,
-      arms: 1,
-      legs: 1,
-      head: 1,
-      icon: "🧑",
-    },
-    "trans-ftm": {
-      name: "Trans (FtM)",
-      shoulders: 1.05,
-      hips: 1,
-      torso: 1,
-      arms: 1,
-      legs: 1,
-      head: 1,
-      icon: "⚧️",
-    },
-    "trans-mtf": {
-      name: "Trans (MtF)",
-      shoulders: 0.95,
-      hips: 1.05,
-      torso: 0.98,
-      arms: 0.98,
-      legs: 1,
-      head: 0.97,
-      icon: "⚧️",
-    },
-    nonbinary: {
-      name: "Non-Binary",
-      shoulders: 1,
-      hips: 1,
-      torso: 1,
-      arms: 1,
-      legs: 1,
-      head: 1,
-      icon: "🏳️‍🌈",
-    },
-  };
 
   // Apply body preset
   const applyBodyPreset = (preset) => {
@@ -683,478 +1230,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     [painPoints, hoveredRegion, selectedRegion],
   );
 
-  // Render enhanced body SVG with scaling - supports 4 standard views
-  const renderBodySVG = () => {
-    const s = bodyScale; // shorthand
-    const centerX = 150;
-
-    // Calculate scaled positions based on body type
-    const shoulderWidth = 50 * s.shoulders;
-    const _hipWidth = 40 * s.hips;
-    const _torsoHeight = 60 * s.torso;
-    const _armLength = 100 * s.arms;
-    const _legLength = 150 * s.legs;
-
-    // Get regions based on current view
-    const getRegionsForView = () => {
-      // FRONT VIEW
-      if (view === "front") {
-        return {
-          head: `M ${centerX},${20 * s.head} 
-                 Q ${centerX + 30 * s.head},${20 * s.head} ${centerX + 30 * s.head},${50 * s.head} 
-                 Q ${centerX + 30 * s.head},${80 * s.head} ${centerX},${80 * s.head} 
-                 Q ${centerX - 30 * s.head},${80 * s.head} ${centerX - 30 * s.head},${50 * s.head} 
-                 Q ${centerX - 30 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
-          neck: `M ${centerX - 10},80 L ${centerX + 10},80 L ${centerX + 10},100 L ${centerX - 10},100 Z`,
-          shoulder_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - shoulderWidth},100 Q ${centerX - shoulderWidth - 20},100 ${centerX - shoulderWidth - 20},120 
-             L ${centerX - shoulderWidth},130 L ${centerX - 30},110 Z`
-            : null,
-          shoulder_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + shoulderWidth},100 Q ${centerX + shoulderWidth + 20},100 ${centerX + shoulderWidth + 20},120 
-             L ${centerX + shoulderWidth},130 L ${centerX + 30},110 Z`
-            : null,
-          chest: `M ${centerX - 30},100 L ${centerX + 30},100 
-                  L ${centerX + 40 * s.shoulders},160 L ${centerX - 40 * s.shoulders},160 Z`,
-          abdomen: `M ${centerX - 40 * s.shoulders},160 L ${centerX + 40 * s.shoulders},160 
-                    L ${centerX + 35 * s.hips},220 L ${centerX - 35 * s.hips},220 Z`,
-          elbow_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - 80 * s.arms},150 Q ${centerX - 90 * s.arms},160 ${centerX - 80 * s.arms},180 
-             L ${centerX - 65 * s.arms},175 L ${centerX - 65 * s.arms},155 Z`
-            : null,
-          elbow_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + 80 * s.arms},150 Q ${centerX + 90 * s.arms},160 ${centerX + 80 * s.arms},180 
-             L ${centerX + 65 * s.arms},175 L ${centerX + 65 * s.arms},155 Z`
-            : null,
-          wrist_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - 95 * s.arms},200 Q ${centerX - 105 * s.arms},210 ${centerX - 95 * s.arms},230 
-             L ${centerX - 80 * s.arms},225 L ${centerX - 80 * s.arms},205 Z`
-            : null,
-          wrist_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + 95 * s.arms},200 Q ${centerX + 105 * s.arms},210 ${centerX + 95 * s.arms},230 
-             L ${centerX + 80 * s.arms},225 L ${centerX + 80 * s.arms},205 Z`
-            : null,
-          hip_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 35 * s.hips},220 L ${centerX - 10},220 L ${centerX - 20 * s.legs},260 L ${centerX - 40 * s.hips},260 Z`
-            : null,
-          hip_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 35 * s.hips},220 L ${centerX + 10},220 L ${centerX + 20 * s.legs},260 L ${centerX + 40 * s.hips},260 Z`
-            : null,
-          knee_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 40 * s.legs},300 Q ${centerX - 50 * s.legs},320 ${centerX - 40 * s.legs},340 
-             L ${centerX - 20 * s.legs},340 L ${centerX - 20 * s.legs},300 Z`
-            : null,
-          knee_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 40 * s.legs},300 Q ${centerX + 50 * s.legs},320 ${centerX + 40 * s.legs},340 
-             L ${centerX + 20 * s.legs},340 L ${centerX + 20 * s.legs},300 Z`
-            : null,
-          ankle_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 40 * s.legs},380 Q ${centerX - 50 * s.legs},395 ${centerX - 40 * s.legs},410 
-             L ${centerX - 20 * s.legs},410 L ${centerX - 20 * s.legs},380 Z`
-            : null,
-          ankle_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 40 * s.legs},380 Q ${centerX + 50 * s.legs},395 ${centerX + 40 * s.legs},410 
-             L ${centerX + 20 * s.legs},410 L ${centerX + 20 * s.legs},380 Z`
-            : null,
-        };
-      }
-
-      // BACK VIEW
-      if (view === "back") {
-        return {
-          head: `M ${centerX},${20 * s.head} 
-                 Q ${centerX + 30 * s.head},${20 * s.head} ${centerX + 30 * s.head},${50 * s.head} 
-                 Q ${centerX + 30 * s.head},${80 * s.head} ${centerX},${80 * s.head} 
-                 Q ${centerX - 30 * s.head},${80 * s.head} ${centerX - 30 * s.head},${50 * s.head} 
-                 Q ${centerX - 30 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
-          neck: `M ${centerX - 10},80 L ${centerX + 10},80 L ${centerX + 10},100 L ${centerX - 10},100 Z`,
-          upper_back: `M ${centerX - 30},100 L ${centerX + 30},100 L ${centerX + 35 * s.shoulders},160 L ${centerX - 35 * s.shoulders},160 Z`,
-          lower_back: `M ${centerX - 35 * s.shoulders},160 L ${centerX + 35 * s.shoulders},160 L ${centerX + 30 * s.hips},220 L ${centerX - 30 * s.hips},220 Z`,
-          shoulder_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - shoulderWidth},100 Q ${centerX - shoulderWidth - 20},100 ${centerX - shoulderWidth - 20},120 
-             L ${centerX - shoulderWidth},130 L ${centerX - 30},110 Z`
-            : null,
-          shoulder_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + shoulderWidth},100 Q ${centerX + shoulderWidth + 20},100 ${centerX + shoulderWidth + 20},120 
-             L ${centerX + shoulderWidth},130 L ${centerX + 30},110 Z`
-            : null,
-          elbow_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - 80 * s.arms},150 Q ${centerX - 90 * s.arms},160 ${centerX - 80 * s.arms},180 
-             L ${centerX - 65 * s.arms},175 L ${centerX - 65 * s.arms},155 Z`
-            : null,
-          elbow_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + 80 * s.arms},150 Q ${centerX + 90 * s.arms},160 ${centerX + 80 * s.arms},180 
-             L ${centerX + 65 * s.arms},175 L ${centerX + 65 * s.arms},155 Z`
-            : null,
-          wrist_left: showPhantomLimbs.leftArm
-            ? `M ${centerX - 95 * s.arms},200 Q ${centerX - 105 * s.arms},210 ${centerX - 95 * s.arms},230 
-             L ${centerX - 80 * s.arms},225 L ${centerX - 80 * s.arms},205 Z`
-            : null,
-          wrist_right: showPhantomLimbs.rightArm
-            ? `M ${centerX + 95 * s.arms},200 Q ${centerX + 105 * s.arms},210 ${centerX + 95 * s.arms},230 
-             L ${centerX + 80 * s.arms},225 L ${centerX + 80 * s.arms},205 Z`
-            : null,
-          hip_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 30 * s.hips},220 L ${centerX - 10},220 L ${centerX - 20},260 L ${centerX - 35 * s.hips},260 Z`
-            : null,
-          hip_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 30 * s.hips},220 L ${centerX + 10},220 L ${centerX + 20},260 L ${centerX + 35 * s.hips},260 Z`
-            : null,
-          knee_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 40 * s.legs},300 Q ${centerX - 50 * s.legs},320 ${centerX - 40 * s.legs},340 
-             L ${centerX - 20 * s.legs},340 L ${centerX - 20 * s.legs},300 Z`
-            : null,
-          knee_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 40 * s.legs},300 Q ${centerX + 50 * s.legs},320 ${centerX + 40 * s.legs},340 
-             L ${centerX + 20 * s.legs},340 L ${centerX + 20 * s.legs},300 Z`
-            : null,
-          ankle_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX - 40 * s.legs},380 Q ${centerX - 50 * s.legs},395 ${centerX - 40 * s.legs},410 
-             L ${centerX - 20 * s.legs},410 L ${centerX - 20 * s.legs},380 Z`
-            : null,
-          ankle_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX + 40 * s.legs},380 Q ${centerX + 50 * s.legs},395 ${centerX + 40 * s.legs},410 
-             L ${centerX + 20 * s.legs},410 L ${centerX + 20 * s.legs},380 Z`
-            : null,
-        };
-      }
-
-      // LEFT SIDE VIEW - Side profile showing left arm/leg forward
-      if (view === "left") {
-        const depth = 25 * s.torso; // Body depth from side
-        return {
-          head: `M ${centerX},${20 * s.head} 
-                 Q ${centerX + 25 * s.head},${20 * s.head} ${centerX + 20 * s.head},${50 * s.head} 
-                 Q ${centerX + 15 * s.head},${80 * s.head} ${centerX - 5},${80 * s.head} 
-                 Q ${centerX - 25 * s.head},${75 * s.head} ${centerX - 20 * s.head},${50 * s.head} 
-                 Q ${centerX - 15 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
-          neck: `M ${centerX - 8},80 L ${centerX + 8},80 L ${centerX + 8},100 L ${centerX - 8},100 Z`,
-          // Torso side profile
-          chest: `M ${centerX - depth},100 L ${centerX + depth},105 
-                  L ${centerX + depth * 1.1},160 L ${centerX - depth * 0.9},160 Z`,
-          abdomen: `M ${centerX - depth * 0.9},160 L ${centerX + depth * 1.1},160 
-                    L ${centerX + depth * 1.2 * s.hips},220 L ${centerX - depth * 0.8 * s.hips},220 Z`,
-          lower_back: `M ${centerX - depth * 0.9},160 L ${centerX - depth * 0.8 * s.hips},220 
-                       L ${centerX - depth * 0.5},220 L ${centerX - depth * 0.5},160 Z`,
-          // Left arm (visible in front)
-          shoulder_left: showPhantomLimbs.leftArm
-            ? `M ${centerX + depth},105 Q ${centerX + depth + 20},110 ${centerX + depth + 15},130 
-             L ${centerX + depth - 5},125 L ${centerX - 5},110 Z`
-            : null,
-          elbow_left: showPhantomLimbs.leftArm
-            ? `M ${centerX + 30 * s.arms},150 Q ${centerX + 40 * s.arms},165 ${centerX + 35 * s.arms},180 
-             L ${centerX + 20 * s.arms},175 L ${centerX + 25 * s.arms},155 Z`
-            : null,
-          wrist_left: showPhantomLimbs.leftArm
-            ? `M ${centerX + 40 * s.arms},200 Q ${centerX + 50 * s.arms},215 ${centerX + 45 * s.arms},235 
-             L ${centerX + 30 * s.arms},230 L ${centerX + 35 * s.arms},205 Z`
-            : null,
-          // Hip/leg side profile
-          hip_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX + depth * 1.2 * s.hips},220 L ${centerX - depth * 0.3},220 
-             L ${centerX + 5},260 L ${centerX + 35 * s.hips},260 Z`
-            : null,
-          knee_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX + 25 * s.legs},300 Q ${centerX + 35 * s.legs},320 ${centerX + 25 * s.legs},340 
-             L ${centerX - 5 * s.legs},340 L ${centerX - 5 * s.legs},300 Z`
-            : null,
-          ankle_left: showPhantomLimbs.leftLeg
-            ? `M ${centerX + 25 * s.legs},380 Q ${centerX + 35 * s.legs},395 ${centerX + 25 * s.legs},410 
-             L ${centerX - 5 * s.legs},410 L ${centerX - 5 * s.legs},380 Z`
-            : null,
-        };
-      }
-
-      // RIGHT SIDE VIEW - Side profile showing right arm/leg forward
-      if (view === "right") {
-        const depth = 25 * s.torso;
-        return {
-          head: `M ${centerX},${20 * s.head} 
-                 Q ${centerX - 25 * s.head},${20 * s.head} ${centerX - 20 * s.head},${50 * s.head} 
-                 Q ${centerX - 15 * s.head},${80 * s.head} ${centerX + 5},${80 * s.head} 
-                 Q ${centerX + 25 * s.head},${75 * s.head} ${centerX + 20 * s.head},${50 * s.head} 
-                 Q ${centerX + 15 * s.head},${20 * s.head} ${centerX},${20 * s.head}`,
-          neck: `M ${centerX - 8},80 L ${centerX + 8},80 L ${centerX + 8},100 L ${centerX - 8},100 Z`,
-          chest: `M ${centerX + depth},100 L ${centerX - depth},105 
-                  L ${centerX - depth * 1.1},160 L ${centerX + depth * 0.9},160 Z`,
-          abdomen: `M ${centerX + depth * 0.9},160 L ${centerX - depth * 1.1},160 
-                    L ${centerX - depth * 1.2 * s.hips},220 L ${centerX + depth * 0.8 * s.hips},220 Z`,
-          lower_back: `M ${centerX + depth * 0.9},160 L ${centerX + depth * 0.8 * s.hips},220 
-                       L ${centerX + depth * 0.5},220 L ${centerX + depth * 0.5},160 Z`,
-          // Right arm (visible in front)
-          shoulder_right: showPhantomLimbs.rightArm
-            ? `M ${centerX - depth},105 Q ${centerX - depth - 20},110 ${centerX - depth - 15},130 
-             L ${centerX - depth + 5},125 L ${centerX + 5},110 Z`
-            : null,
-          elbow_right: showPhantomLimbs.rightArm
-            ? `M ${centerX - 30 * s.arms},150 Q ${centerX - 40 * s.arms},165 ${centerX - 35 * s.arms},180 
-             L ${centerX - 20 * s.arms},175 L ${centerX - 25 * s.arms},155 Z`
-            : null,
-          wrist_right: showPhantomLimbs.rightArm
-            ? `M ${centerX - 40 * s.arms},200 Q ${centerX - 50 * s.arms},215 ${centerX - 45 * s.arms},235 
-             L ${centerX - 30 * s.arms},230 L ${centerX - 35 * s.arms},205 Z`
-            : null,
-          // Hip/leg side profile
-          hip_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX - depth * 1.2 * s.hips},220 L ${centerX + depth * 0.3},220 
-             L ${centerX - 5},260 L ${centerX - 35 * s.hips},260 Z`
-            : null,
-          knee_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX - 25 * s.legs},300 Q ${centerX - 35 * s.legs},320 ${centerX - 25 * s.legs},340 
-             L ${centerX + 5 * s.legs},340 L ${centerX + 5 * s.legs},300 Z`
-            : null,
-          ankle_right: showPhantomLimbs.rightLeg
-            ? `M ${centerX - 25 * s.legs},380 Q ${centerX - 35 * s.legs},395 ${centerX - 25 * s.legs},410 
-             L ${centerX + 5 * s.legs},410 L ${centerX + 5 * s.legs},380 Z`
-            : null,
-        };
-      }
-
-      return {}; // fallback
-    };
-
-    const regions = getRegionsForView();
-
-    // Filter out null regions (phantom limbs)
-    const activeRegions = Object.fromEntries(
-      Object.entries(regions).filter(([_, path]) => path !== null),
-    );
-
-    return (
-      <svg
-        viewBox="0 0 300 440"
-        className="w-full max-w-md mx-auto transition-transform duration-300"
-        style={{
-          filter: "drop-shadow(0 0 20px rgba(0,0,0,0.5))",
-          transform: `scale(${zoom})`,
-          transformOrigin: "center center",
-        }}
-        role="img"
-        aria-label={`Body diagram - ${STANDARD_VIEWS[view].name}. ${Object.keys(painPoints).length} pain points marked.`}
-      >
-        {/* Background glow */}
-        <defs>
-          <radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.1)" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-
-          {/* Skin tone gradient */}
-          <linearGradient id="skinTone" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255, 224, 189, 0.3)" />
-            <stop offset="100%" stopColor="rgba(255, 206, 158, 0.2)" />
-          </linearGradient>
-
-          {/* Pain type filters */}
-          {Object.entries(PAIN_TYPES).map(([type, { color }]) => (
-            <filter
-              key={type}
-              id={`glow-${type}`}
-              x="-50%"
-              y="-50%"
-              width="200%"
-              height="200%"
-            >
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor={color} floodOpacity="0.6" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          ))}
-        </defs>
-
-        {/* View label for accessibility */}
-        <title>{STANDARD_VIEWS[view].description}</title>
-
-        {/* Body outline background */}
-        <ellipse
-          cx={centerX}
-          cy="220"
-          rx={
-            view === "left" || view === "right"
-              ? 60
-              : 100 * Math.max(s.shoulders, s.hips)
-          }
-          ry={200 * s.torso}
-          fill="url(#bodyGlow)"
-        />
-
-        {/* Phantom limb indicators - only for front/back views */}
-        {(view === "front" || view === "back") && !showPhantomLimbs.leftArm && (
-          <text
-            x="70"
-            y="150"
-            fill="rgba(255,100,100,0.5)"
-            fontSize="10"
-            textAnchor="middle"
-          >
-            ❌ Removed
-          </text>
-        )}
-        {(view === "front" || view === "back") &&
-          !showPhantomLimbs.rightArm && (
-            <text
-              x="230"
-              y="150"
-              fill="rgba(255,100,100,0.5)"
-              fontSize="10"
-              textAnchor="middle"
-            >
-              ❌ Removed
-            </text>
-          )}
-        {(view === "front" || view === "back") && !showPhantomLimbs.leftLeg && (
-          <text
-            x="120"
-            y="350"
-            fill="rgba(255,100,100,0.5)"
-            fontSize="10"
-            textAnchor="middle"
-          >
-            ❌
-          </text>
-        )}
-        {(view === "front" || view === "back") &&
-          !showPhantomLimbs.rightLeg && (
-            <text
-              x="180"
-              y="350"
-              fill="rgba(255,100,100,0.5)"
-              fontSize="10"
-              textAnchor="middle"
-            >
-              ❌
-            </text>
-          )}
-
-        {/* Body regions */}
-        {Object.entries(activeRegions).map(([regionId, path]) => {
-          const style = getRegionStyle(regionId);
-          const pain = painPoints[regionId];
-
-          return (
-            <path
-              key={regionId}
-              d={path}
-              fill={style.fill}
-              stroke={style.stroke}
-              strokeWidth={style.strokeWidth}
-              style={{
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                filter: pain ? `url(#glow-${pain.type})` : "none",
-              }}
-              onClick={() => handleRegionClick(regionId)}
-              onMouseEnter={() => setHoveredRegion(regionId)}
-              onMouseLeave={() => setHoveredRegion(null)}
-            />
-          );
-        })}
-
-        {/* Labels for hovered/selected regions */}
-        {(hoveredRegion || selectedRegion) && (
-          <text
-            x="150"
-            y="430"
-            textAnchor="middle"
-            fill="white"
-            fontSize="12"
-            fontWeight="bold"
-          >
-            {(hoveredRegion || selectedRegion)
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (l) => l.toUpperCase())}
-          </text>
-        )}
-      </svg>
-    );
-  };
-
-  // Render diagnostic codes panel
-  const renderDiagnosticCodes = () => {
-    if (!selectedRegion) {
-      return (
-        <div className="text-center py-8 text-gray-500">
-          <span className="text-4xl">👆</span>
-          <p className="mt-2">
-            Click a body region to see related diagnostic codes
-          </p>
-        </div>
-      );
-    }
-
-    const codes = DIAGNOSTIC_CODES[selectedRegion] || [];
-    const regionName = selectedRegion
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-
-    return (
-      <div className="space-y-3">
-        <h4 className="text-lg font-bold text-white flex items-center gap-2">
-          <span>📋</span> {regionName} - Diagnostic Codes
-        </h4>
-
-        {codes.length > 0 ? (
-          <div className="space-y-2">
-            {codes.map((code) => (
-              <div
-                key={code.code}
-                className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono text-blue-400 font-bold">
-                    DC {code.code}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
-                    Max {code.maxRating}%
-                  </span>
-                </div>
-                <p className="text-white font-semibold">{code.name}</p>
-                <p className="text-gray-400 text-sm">{code.description}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">No specific codes for this region</p>
-        )}
-      </div>
-    );
-  };
-
-  // Render nexus suggestions
-  const renderNexusSuggestions = () => {
-    if (detectedNexus.length === 0) return null;
-
-    return (
-      <div className="bg-purple-900/30 border-2 border-purple-500/50 rounded-xl p-4 mt-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl">🔗</span>
-          <h4 className="font-bold text-purple-400">Nexus Pattern Detected!</h4>
-        </div>
-
-        {detectedNexus.map((nexus, index) => (
-          <div key={index} className="p-3 bg-gray-800/50 rounded-lg mb-2">
-            <p className="font-semibold text-white">{nexus.name}</p>
-            <p className="text-gray-400 text-sm mt-1">{nexus.description}</p>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {nexus.suggestedCodes.map((code) => (
-                <span
-                  key={code}
-                  className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-300 rounded"
-                >
-                  DC {code}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   // Handle export
   const handleExport = async () => {
     if (bodyMapRef.current) {
@@ -1178,8 +1253,9 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
       try {
         thumbnail = await captureScreenshot(bodyMapRef);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log("Could not capture thumbnail");
+        logger.debug("PainPainter: could not capture thumbnail", {
+          error: String(e),
+        });
       }
     }
 
@@ -1189,12 +1265,7 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
         region: region.replace(/_/g, " "),
         bodyPart: region,
         type: PAIN_TYPES[data.type]?.name || data.type,
-        severity:
-          data.intensity > 0.7
-            ? "severe"
-            : data.intensity > 0.4
-              ? "moderate"
-              : "mild",
+        severity: getSeverityLabel(data.intensity),
         notes: "",
       }),
     );
@@ -1528,7 +1599,20 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
             {/* Preview */}
             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
               <h3 className="text-lg font-bold text-white mb-3">Preview</h3>
-              <div className="max-h-64 overflow-hidden">{renderBodySVG()}</div>
+              <div className="max-h-64 overflow-hidden">
+                <BodySVG
+                  view={view}
+                  zoom={zoom}
+                  bodyScale={bodyScale}
+                  showPhantomLimbs={showPhantomLimbs}
+                  painPoints={painPoints}
+                  hoveredRegion={hoveredRegion}
+                  selectedRegion={selectedRegion}
+                  getRegionStyle={getRegionStyle}
+                  onRegionClick={handleRegionClick}
+                  onRegionHover={setHoveredRegion}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -1706,7 +1790,18 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
                   </button>
                 </div>
 
-                {renderBodySVG()}
+                <BodySVG
+                  view={view}
+                  zoom={zoom}
+                  bodyScale={bodyScale}
+                  showPhantomLimbs={showPhantomLimbs}
+                  painPoints={painPoints}
+                  hoveredRegion={hoveredRegion}
+                  selectedRegion={selectedRegion}
+                  getRegionStyle={getRegionStyle}
+                  onRegionClick={handleRegionClick}
+                  onRegionHover={setHoveredRegion}
+                />
 
                 {/* Pain Legend */}
                 {Object.keys(painPoints).length > 0 && (
@@ -1737,11 +1832,11 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
               <div className="space-y-4">
                 {/* Diagnostic Codes */}
                 <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
-                  {renderDiagnosticCodes()}
+                  <DiagnosticCodesPanel selectedRegion={selectedRegion} />
                 </div>
 
                 {/* Nexus Suggestions */}
-                {renderNexusSuggestions()}
+                <NexusSuggestions detectedNexus={detectedNexus} />
               </div>
             </div>
 

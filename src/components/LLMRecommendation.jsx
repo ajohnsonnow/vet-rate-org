@@ -15,6 +15,70 @@ import {
 import { getAIStatus, AI_MODES } from "../utils/unifiedAIService";
 
 /**
+ * Expanded dropdown content for the compact badge
+ */
+const LLMRecommendationBadgeDetails = ({ recommendation, analysis }) => (
+  <div className="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 p-3">
+    <div className="text-xs space-y-2">
+      <div className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        {recommendation.category.icon} Best AI for {recommendation.name}
+      </div>
+
+      {/* Primary Recommendation */}
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded p-2 border border-green-200 dark:border-green-800">
+        <div className="font-medium text-green-800 dark:text-green-300">
+          ⭐ {recommendation.primary.modelName}
+        </div>
+        <div className="text-green-600 dark:text-green-400 text-[10px]">
+          {recommendation.primary.reason}
+        </div>
+      </div>
+
+      {/* Current Status */}
+      {analysis.message && (
+        <div
+          className={`text-[10px] p-2 rounded ${
+            analysis.isOptimal
+              ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+              : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
+          }`}
+        >
+          {analysis.message}
+        </div>
+      )}
+
+      {/* Alternatives */}
+      {recommendation.alternatives.length > 0 && (
+        <div>
+          <div className="text-gray-500 dark:text-gray-400 text-[10px] mb-1">
+            Also works well:
+          </div>
+          <div className="space-y-1">
+            {recommendation.alternatives.slice(0, 2).map((alt, i) => (
+              <div
+                key={i}
+                className="text-gray-600 dark:text-gray-300 text-[10px]"
+              >
+                • <strong>{alt.modelName}</strong>: {alt.reason}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tips */}
+      {recommendation.tips && recommendation.tips.length > 0 && (
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+          <div className="text-gray-500 dark:text-gray-400 text-[10px]">
+            💡 {recommendation.tips[0]}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+/**
  * Compact badge showing current model and recommendation
  */
 export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
@@ -77,68 +141,82 @@ export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
       </button>
 
       {isExpanded && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 p-3">
-          <div className="text-xs space-y-2">
-            <div className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-              {recommendation.category.icon} Best AI for {recommendation.name}
-            </div>
-
-            {/* Primary Recommendation */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded p-2 border border-green-200 dark:border-green-800">
-              <div className="font-medium text-green-800 dark:text-green-300">
-                ⭐ {recommendation.primary.modelName}
-              </div>
-              <div className="text-green-600 dark:text-green-400 text-[10px]">
-                {recommendation.primary.reason}
-              </div>
-            </div>
-
-            {/* Current Status */}
-            {analysis.message && (
-              <div
-                className={`text-[10px] p-2 rounded ${
-                  analysis.isOptimal
-                    ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                    : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
-                }`}
-              >
-                {analysis.message}
-              </div>
-            )}
-
-            {/* Alternatives */}
-            {recommendation.alternatives.length > 0 && (
-              <div>
-                <div className="text-gray-500 dark:text-gray-400 text-[10px] mb-1">
-                  Also works well:
-                </div>
-                <div className="space-y-1">
-                  {recommendation.alternatives.slice(0, 2).map((alt, i) => (
-                    <div
-                      key={i}
-                      className="text-gray-600 dark:text-gray-300 text-[10px]"
-                    >
-                      • <strong>{alt.modelName}</strong>: {alt.reason}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tips */}
-            {recommendation.tips && recommendation.tips.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                <div className="text-gray-500 dark:text-gray-400 text-[10px]">
-                  💡 {recommendation.tips[0]}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <LLMRecommendationBadgeDetails
+          recommendation={recommendation}
+          analysis={analysis}
+        />
       )}
     </div>
   );
 };
+
+/**
+ * Primary recommendation card for the full panel
+ */
+const LLMRecommendationPanelPrimary = ({ recommendation, onModelSelect }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 mb-3 border-2 border-green-400 dark:border-green-600">
+    <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center gap-2">
+        <span className="text-lg">⭐</span>
+        <span className="font-bold text-gray-800 dark:text-gray-200">
+          {recommendation.primary.modelName}
+        </span>
+        {recommendation.primary.badge && (
+          <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+            {recommendation.primary.badge}
+          </span>
+        )}
+      </div>
+      {onModelSelect && (
+        <button
+          onClick={() => onModelSelect(recommendation.primary.modelId)}
+          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition-colors"
+        >
+          Load Model
+        </button>
+      )}
+    </div>
+    <p className="text-sm text-gray-600 dark:text-gray-400">
+      {recommendation.primary.reason}
+    </p>
+  </div>
+);
+
+/**
+ * Alternative models list for the full panel
+ */
+const LLMRecommendationPanelAlternatives = ({ alternatives, onModelSelect }) => (
+  <div className="mb-3">
+    <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      Alternative Models
+    </h5>
+    <div className="space-y-2">
+      {alternatives.map((alt, i) => (
+        <div
+          key={i}
+          className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+        >
+          <div>
+            <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+              {alt.modelName}
+            </span>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {alt.reason}
+            </p>
+          </div>
+          {onModelSelect && (
+            <button
+              onClick={() => onModelSelect(alt.modelId)}
+              className="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded transition-colors"
+            >
+              Load
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 /**
  * Full panel showing complete recommendations (for AI Settings or tool modals)
@@ -172,32 +250,10 @@ export const LLMRecommendationPanel = ({
       </div>
 
       {/* Primary Recommendation */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 mb-3 border-2 border-green-400 dark:border-green-600">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⭐</span>
-            <span className="font-bold text-gray-800 dark:text-gray-200">
-              {recommendation.primary.modelName}
-            </span>
-            {recommendation.primary.badge && (
-              <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
-                {recommendation.primary.badge}
-              </span>
-            )}
-          </div>
-          {onModelSelect && (
-            <button
-              onClick={() => onModelSelect(recommendation.primary.modelId)}
-              className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition-colors"
-            >
-              Load Model
-            </button>
-          )}
-        </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {recommendation.primary.reason}
-        </p>
-      </div>
+      <LLMRecommendationPanelPrimary
+        recommendation={recommendation}
+        onModelSelect={onModelSelect}
+      />
 
       {/* Current Model Status */}
       {analysis.message && (
@@ -222,36 +278,10 @@ export const LLMRecommendationPanel = ({
 
       {/* Alternatives */}
       {recommendation.alternatives.length > 0 && (
-        <div className="mb-3">
-          <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Alternative Models
-          </h5>
-          <div className="space-y-2">
-            {recommendation.alternatives.map((alt, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
-              >
-                <div>
-                  <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                    {alt.modelName}
-                  </span>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {alt.reason}
-                  </p>
-                </div>
-                {onModelSelect && (
-                  <button
-                    onClick={() => onModelSelect(alt.modelId)}
-                    className="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded transition-colors"
-                  >
-                    Load
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <LLMRecommendationPanelAlternatives
+          alternatives={recommendation.alternatives}
+          onModelSelect={onModelSelect}
+        />
       )}
 
       {/* Tips */}

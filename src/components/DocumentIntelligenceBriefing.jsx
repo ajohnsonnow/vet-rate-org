@@ -617,39 +617,11 @@ function MissingFieldsExpandedPanel({
 }
 
 /**
- * Panel to add missing fields manually when OCR fails
- * Shows ALL DD214 fields as a scrollable list of input fields
- * ONLY FOR DD214/DD215/NGB22 documents - not for claim letters!
+ * Owns the local field-value state and add/save handlers for the manual
+ * DD214 field-entry panel.
  */
-const AddMissingFieldPanel = ({
-  classification,
-  onAddField,
-  existingFields,
-  autoExpand = false,
-}) => {
-  // Auto-expand when OCR fails (no existing fields extracted)
-  const [isExpanded, setIsExpanded] = useState(autoExpand);
-  // Track values for each field
+function useFieldEntryState(existingFields, onAddField) {
   const [fieldValues, setFieldValues] = useState({});
-
-  // Check if this is a service record document (DD214, DD215, NGB22, DD256, DD257)
-  const isServiceRecord = [
-    "dd214",
-    "dd215",
-    "ngb22",
-    "dd256",
-    "dd257",
-  ].includes(classification?.toLowerCase());
-
-  // Don't show DD214 fields for non-service-record documents (like claim letters)
-  if (!isServiceRecord) {
-    return null;
-  }
-
-  const allFields = DD214_FIELDS_BY_SECTION.flatMap((s) => s.fields);
-  const availableFields = allFields.filter(
-    (f) => !existingFields?.includes(f.key),
-  );
 
   const handleFieldChange = (key, value) => {
     setFieldValues((prev) => ({ ...prev, [key]: value }));
@@ -671,6 +643,53 @@ const AddMissingFieldPanel = ({
     });
     setFieldValues({});
   };
+
+  return {
+    fieldValues,
+    handleFieldChange,
+    handleAddField,
+    handleAddAllFilledFields,
+  };
+}
+
+/**
+ * Panel to add missing fields manually when OCR fails
+ * Shows ALL DD214 fields as a scrollable list of input fields
+ * ONLY FOR DD214/DD215/NGB22 documents - not for claim letters!
+ */
+const AddMissingFieldPanel = ({
+  classification,
+  onAddField,
+  existingFields,
+  autoExpand = false,
+}) => {
+  // Auto-expand when OCR fails (no existing fields extracted)
+  const [isExpanded, setIsExpanded] = useState(autoExpand);
+  const {
+    fieldValues,
+    handleFieldChange,
+    handleAddField,
+    handleAddAllFilledFields,
+  } = useFieldEntryState(existingFields, onAddField);
+
+  // Check if this is a service record document (DD214, DD215, NGB22, DD256, DD257)
+  const isServiceRecord = [
+    "dd214",
+    "dd215",
+    "ngb22",
+    "dd256",
+    "dd257",
+  ].includes(classification?.toLowerCase());
+
+  // Don't show DD214 fields for non-service-record documents (like claim letters)
+  if (!isServiceRecord) {
+    return null;
+  }
+
+  const allFields = DD214_FIELDS_BY_SECTION.flatMap((s) => s.fields);
+  const availableFields = allFields.filter(
+    (f) => !existingFields?.includes(f.key),
+  );
 
   if (availableFields.length === 0) return null;
 
@@ -950,7 +969,6 @@ function useConflictResolution({ conflicts, setEditedData }) {
 }
 
 function DocumentBriefingHeader({
-  filename,
   isMultiDocument,
   currentDocIndex,
   totalDocuments,
@@ -1272,36 +1290,31 @@ function OCRFailedMessage() {
   );
 }
 
-function ArrayValueField({
-  fieldKey,
-  value,
-  filteredData,
-  getTooltip,
-  onArrayItemDelete,
-}) {
-  // Format array items for display
-  const formatItem = (item) => {
-    if (typeof item === "string") return item;
-    // Handle award objects from parseDD214Text
-    if (item?.award?.name) {
-      const name = item.award.name;
-      let qty = "";
-      if (item.quantity > 1) {
-        qty = ` (${item.quantity}x)`;
-      }
-      const devices =
-        item.devices?.length > 0
-          ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
-          : "";
-      return `${name}${qty}${devices}`;
+// Format array items for display
+function formatArrayItem(item) {
+  if (typeof item === "string") return item;
+  // Handle award objects from parseDD214Text
+  if (item?.award?.name) {
+    const name = item.award.name;
+    let qty = "";
+    if (item.quantity > 1) {
+      qty = ` (${item.quantity}x)`;
     }
-    // Handle other objects
-    if (typeof item === "object") {
-      return item.name || item.title || item.value || JSON.stringify(item);
-    }
-    return String(item);
-  };
+    const devices =
+      item.devices?.length > 0
+        ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
+        : "";
+    return `${name}${qty}${devices}`;
+  }
+  // Handle other objects
+  if (typeof item === "object") {
+    return item.name || item.title || item.value || JSON.stringify(item);
+  }
+  return String(item);
+}
 
+// Derive visual ribbon/badge display data for an awards array field
+function getAwardsDisplayData(fieldKey, value, filteredData) {
   // Check if this is an awards array with award objects
   const isAwardsArray =
     fieldKey.toLowerCase() === "awards" &&
@@ -1328,11 +1341,29 @@ function ArrayValueField({
   const awardsText = value
     .map((item) => item?.matchedText || item?.award?.name || String(item))
     .join("\n");
-  const branchForBadges = filteredData?.branch?.replace(/\/.*$/, "") || "Army";
+  // Strip everything from the first "/" onward (equivalent to the former
+  // /\/.*$/ regex) without introducing a super-linear backtracking pattern.
+  const rawBranch = filteredData?.branch;
+  const slashIndex = rawBranch ? rawBranch.indexOf("/") : -1;
+  const branchForBadges =
+    (slashIndex >= 0 ? rawBranch.slice(0, slashIndex) : rawBranch) || "Army";
   const { badges, tabs, combatIndicators } = parseDD214Badges(
     awardsText,
     branchForBadges,
   );
+
+  return { sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges };
+}
+
+function ArrayValueField({
+  fieldKey,
+  value,
+  filteredData,
+  getTooltip,
+  onArrayItemDelete,
+}) {
+  const { sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges } =
+    getAwardsDisplayData(fieldKey, value, filteredData);
 
   return (
     <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -1389,7 +1420,7 @@ function ArrayValueField({
             key={idx}
             className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
           >
-            <span>• {formatItem(item)}</span>
+            <span>• {formatArrayItem(item)}</span>
             <button
               onClick={() => onArrayItemDelete(fieldKey, idx)}
               className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
@@ -1531,17 +1562,63 @@ function DocumentBriefingOptions({
 }
 
 /**
- * Main Document Intelligence Briefing Modal
+ * Extracted Information section: shows the OCR-failed message, the grouped
+ * verified fields, and the always-visible Add Missing Field panel.
  */
-export default function DocumentIntelligenceBriefing({
-  _document,
-  extractionResult,
-  conflicts: providedConflicts = [],
-  onVerify,
-  onSkip,
-  onClose,
-  onOpenDD214Analyzer,
+function ExtractedInformationSection({
+  hasFields,
+  groupedFields,
+  filteredData,
+  getTooltip,
+  verifiedFields,
+  onFieldCheck,
+  onFieldEdit,
+  hasConflict,
+  onFieldDelete,
+  onArrayItemDelete,
+  classification,
+  onAddField,
 }) {
+  return (
+    <div className="py-6">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        Extracted Information (Verify before saving):
+      </h3>
+
+      {/* Show apologetic message when OCR fails */}
+      {!hasFields && <OCRFailedMessage />}
+
+      {/* Show extracted fields when OCR succeeded */}
+      {hasFields && (
+        <DocumentFieldGroups
+          groupedFields={groupedFields}
+          filteredData={filteredData}
+          getTooltip={getTooltip}
+          verifiedFields={verifiedFields}
+          onFieldCheck={onFieldCheck}
+          onFieldEdit={onFieldEdit}
+          hasConflict={hasConflict}
+          onFieldDelete={onFieldDelete}
+          onArrayItemDelete={onArrayItemDelete}
+        />
+      )}
+
+      {/* ALWAYS show Add Missing Field panel - auto-expand when OCR failed */}
+      <AddMissingFieldPanel
+        classification={classification?.type}
+        onAddField={onAddField}
+        existingFields={Object.keys(filteredData)}
+        autoExpand={!hasFields}
+      />
+    </div>
+  );
+}
+
+/**
+ * Loads the base extraction/navigation/document state that the briefing
+ * controller builds on.
+ */
+function useDocumentBriefingSourceState({ extractionResult, providedConflicts }) {
   const {
     filename,
     size,
@@ -1569,17 +1646,7 @@ export default function DocumentIntelligenceBriefing({
   const [saveToVKB, setSaveToVKB] = useState(true);
   const [updateProfile, setUpdateProfile] = useState(true);
 
-  const {
-    editedData,
-    setEditedData,
-    verifiedFields,
-    setVerifiedFields,
-    conflicts,
-    filteredData,
-    setFilteredData,
-    groupedFields,
-    setGroupedFields,
-  } = useDocumentBriefingData({
+  const documentData = useDocumentBriefingData({
     currentData,
     classification,
     filename,
@@ -1589,6 +1656,56 @@ export default function DocumentIntelligenceBriefing({
     isMultiDocument,
     extractedData,
   });
+
+  return {
+    filename,
+    size,
+    classification,
+    pageCount,
+    method,
+    visionUsed,
+    confidence,
+    isMultiDocument,
+    totalDocuments,
+    currentDocIndex,
+    goToNextDocument,
+    goToPrevDocument,
+    currentData,
+    saveToVKB,
+    setSaveToVKB,
+    updateProfile,
+    setUpdateProfile,
+    ...documentData,
+  };
+}
+
+/**
+ * Owns all state, data-loading, and derived values for the Document
+ * Intelligence Briefing modal.
+ */
+function useDocumentBriefingController({
+  extractionResult,
+  providedConflicts,
+  onVerify,
+}) {
+  const sourceState = useDocumentBriefingSourceState({
+    extractionResult,
+    providedConflicts,
+  });
+  const {
+    filename,
+    classification,
+    saveToVKB,
+    updateProfile,
+    editedData,
+    setEditedData,
+    verifiedFields,
+    setVerifiedFields,
+    conflicts,
+    filteredData,
+    setFilteredData,
+    setGroupedFields,
+  } = sourceState;
 
   const {
     handleFieldCheck,
@@ -1637,6 +1754,212 @@ export default function DocumentIntelligenceBriefing({
 
   const hasFields = Object.keys(filteredData).length > 0;
 
+  return {
+    ...sourceState,
+    handleFieldCheck,
+    handleFieldEdit,
+    handleFieldDelete,
+    handleArrayItemDelete,
+    handleConflictResolve,
+    hasConflict,
+    getTooltip,
+    handleVerifyAndSave,
+    allFieldsVerified,
+    hasFields,
+  };
+}
+
+// Builds the onAddField handler that writes a manually-entered value into
+// filteredData/editedData and marks it verified.
+function addVerifiedField(setFilteredData, setEditedData, setVerifiedFields) {
+  return (field, value) => {
+    setFilteredData((prev) => ({ ...prev, [field]: value }));
+    setEditedData((prev) => ({ ...prev, [field]: value }));
+    setVerifiedFields((prev) => ({ ...prev, [field]: true }));
+  };
+}
+
+/**
+ * Renders the save-to-VKB / update-profile checkboxes plus the trailing
+ * help text shown at the bottom of the briefing modal.
+ */
+function DocumentBriefingOptionsAndHelp({
+  saveToVKB,
+  setSaveToVKB,
+  updateProfile,
+  setUpdateProfile,
+}) {
+  return (
+    <>
+      {/* Options */}
+      <DocumentBriefingOptions
+        saveToVKB={saveToVKB}
+        setSaveToVKB={setSaveToVKB}
+        updateProfile={updateProfile}
+        setUpdateProfile={setUpdateProfile}
+      />
+
+      {/* Help Text */}
+      <p className="pt-6 text-xs text-gray-500 dark:text-gray-400 italic">
+        💡 Review each field carefully. Check the boxes to verify accuracy,
+        click [Edit] to correct mistakes, or click 🗑️ to delete incorrect OCR
+        extractions. Only verified fields will be saved to your profile.
+      </p>
+    </>
+  );
+}
+
+/**
+ * Renders the document info summary and any detected-conflicts banner
+ * at the top of the briefing modal body.
+ */
+function DocumentBriefingInfoAndConflicts({
+  filename,
+  size,
+  pageCount,
+  method,
+  visionUsed,
+  confidence,
+  currentData,
+  isMultiDocument,
+  currentDocIndex,
+  classification,
+  onOpenDD214Analyzer,
+  conflicts,
+  handleConflictResolve,
+}) {
+  return (
+    <>
+      {/* Document Info */}
+      <DocumentInfoSection
+        filename={filename}
+        size={size}
+        pageCount={pageCount}
+        method={method}
+        visionUsed={visionUsed}
+        confidence={confidence}
+        currentData={currentData}
+        isMultiDocument={isMultiDocument}
+        currentDocIndex={currentDocIndex}
+        classification={classification}
+        onOpenDD214Analyzer={onOpenDD214Analyzer}
+      />
+
+      {/* Conflicts */}
+      {conflicts.length > 0 && (
+        <ConflictsSection
+          conflicts={conflicts}
+          onResolve={handleConflictResolve}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * Renders the body content of the briefing modal: document info, any
+ * detected conflicts, extracted fields, save options, and help text.
+ */
+function DocumentBriefingBody({
+  filename,
+  size,
+  pageCount,
+  method,
+  visionUsed,
+  confidence,
+  currentData,
+  isMultiDocument,
+  currentDocIndex,
+  classification,
+  onOpenDD214Analyzer,
+  conflicts,
+  handleConflictResolve,
+  hasFields,
+  groupedFields,
+  filteredData,
+  getTooltip,
+  verifiedFields,
+  handleFieldCheck,
+  handleFieldEdit,
+  hasConflict,
+  handleFieldDelete,
+  handleArrayItemDelete,
+  setFilteredData,
+  setEditedData,
+  setVerifiedFields,
+  saveToVKB,
+  setSaveToVKB,
+  updateProfile,
+  setUpdateProfile,
+}) {
+  return (
+    <>
+      <DocumentBriefingInfoAndConflicts
+        filename={filename}
+        size={size}
+        pageCount={pageCount}
+        method={method}
+        visionUsed={visionUsed}
+        confidence={confidence}
+        currentData={currentData}
+        isMultiDocument={isMultiDocument}
+        currentDocIndex={currentDocIndex}
+        classification={classification}
+        onOpenDD214Analyzer={onOpenDD214Analyzer}
+        conflicts={conflicts}
+        handleConflictResolve={handleConflictResolve}
+      />
+
+      {/* Extracted Information */}
+      <ExtractedInformationSection
+        hasFields={hasFields}
+        groupedFields={groupedFields}
+        filteredData={filteredData}
+        getTooltip={getTooltip}
+        verifiedFields={verifiedFields}
+        onFieldCheck={handleFieldCheck}
+        onFieldEdit={handleFieldEdit}
+        hasConflict={hasConflict}
+        onFieldDelete={handleFieldDelete}
+        onArrayItemDelete={handleArrayItemDelete}
+        classification={classification}
+        onAddField={addVerifiedField(
+          setFilteredData,
+          setEditedData,
+          setVerifiedFields,
+        )}
+      />
+
+      <DocumentBriefingOptionsAndHelp
+        saveToVKB={saveToVKB}
+        setSaveToVKB={setSaveToVKB}
+        updateProfile={updateProfile}
+        setUpdateProfile={setUpdateProfile}
+      />
+    </>
+  );
+}
+
+/**
+ * Assembles the ResponsiveModal chrome (header/footer) around the briefing
+ * body content.
+ */
+function DocumentBriefingModal({
+  onClose,
+  onSkip,
+  onOpenDD214Analyzer,
+  filename,
+  isMultiDocument,
+  currentDocIndex,
+  totalDocuments,
+  currentData,
+  goToPrevDocument,
+  goToNextDocument,
+  handleVerifyAndSave,
+  allFieldsVerified,
+  hasFields,
+  ...bodyProps
+}) {
   return (
     <ResponsiveModal
       isOpen
@@ -1665,80 +1988,43 @@ export default function DocumentIntelligenceBriefing({
       labelledBy="doc-intel-briefing-title"
       size="xl"
     >
-      {/* Document Info */}
-      <DocumentInfoSection
+      <DocumentBriefingBody
+        {...bodyProps}
         filename={filename}
-        size={size}
-        pageCount={pageCount}
-        method={method}
-        visionUsed={visionUsed}
-        confidence={confidence}
         currentData={currentData}
         isMultiDocument={isMultiDocument}
         currentDocIndex={currentDocIndex}
-        classification={classification}
+        hasFields={hasFields}
         onOpenDD214Analyzer={onOpenDD214Analyzer}
       />
-
-      {/* Conflicts */}
-      {conflicts.length > 0 && (
-        <ConflictsSection
-          conflicts={conflicts}
-          onResolve={handleConflictResolve}
-        />
-      )}
-
-      {/* Extracted Information */}
-      <div className="py-6">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Extracted Information (Verify before saving):
-        </h3>
-
-        {/* Show apologetic message when OCR fails */}
-        {!hasFields && <OCRFailedMessage />}
-
-        {/* Show extracted fields when OCR succeeded */}
-        {hasFields && (
-          <DocumentFieldGroups
-            groupedFields={groupedFields}
-            filteredData={filteredData}
-            getTooltip={getTooltip}
-            verifiedFields={verifiedFields}
-            onFieldCheck={handleFieldCheck}
-            onFieldEdit={handleFieldEdit}
-            hasConflict={hasConflict}
-            onFieldDelete={handleFieldDelete}
-            onArrayItemDelete={handleArrayItemDelete}
-          />
-        )}
-
-        {/* ALWAYS show Add Missing Field panel - auto-expand when OCR failed */}
-        <AddMissingFieldPanel
-          classification={classification?.type}
-          onAddField={(field, value) => {
-            setFilteredData((prev) => ({ ...prev, [field]: value }));
-            setEditedData((prev) => ({ ...prev, [field]: value }));
-            setVerifiedFields((prev) => ({ ...prev, [field]: true }));
-          }}
-          existingFields={Object.keys(filteredData)}
-          autoExpand={!hasFields}
-        />
-      </div>
-
-      {/* Options */}
-      <DocumentBriefingOptions
-        saveToVKB={saveToVKB}
-        setSaveToVKB={setSaveToVKB}
-        updateProfile={updateProfile}
-        setUpdateProfile={setUpdateProfile}
-      />
-
-      {/* Help Text */}
-      <p className="pt-6 text-xs text-gray-500 dark:text-gray-400 italic">
-        💡 Review each field carefully. Check the boxes to verify accuracy,
-        click [Edit] to correct mistakes, or click 🗑️ to delete incorrect OCR
-        extractions. Only verified fields will be saved to your profile.
-      </p>
     </ResponsiveModal>
+  );
+}
+
+/**
+ * Main Document Intelligence Briefing Modal
+ */
+export default function DocumentIntelligenceBriefing({
+  _document,
+  extractionResult,
+  conflicts: providedConflicts = [],
+  onVerify,
+  onSkip,
+  onClose,
+  onOpenDD214Analyzer,
+}) {
+  const state = useDocumentBriefingController({
+    extractionResult,
+    providedConflicts,
+    onVerify,
+  });
+
+  return (
+    <DocumentBriefingModal
+      {...state}
+      onSkip={onSkip}
+      onClose={onClose}
+      onOpenDD214Analyzer={onOpenDD214Analyzer}
+    />
   );
 }
