@@ -17,159 +17,189 @@ import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
+function clearLocalAndSessionStorage() {
+  // 1. Clear all localStorage
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing localStorage...");
+  localStorage.clear();
+
+  // 2. Clear all sessionStorage
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing sessionStorage...");
+  sessionStorage.clear();
+}
+
+function clearCookies() {
+  // 3. Clear cookies
+  // eslint-disable-next-line no-console
+  console.log("Clearing cookies...");
+  document.cookie.split(";").forEach((c) => {
+    const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
+    // Expire cookie with all security attributes to ensure deletion
+    document.cookie =
+      cookieName +
+      "=;expires=" +
+      new Date(0).toUTCString() +
+      ";path=/;Secure;SameSite=Lax";
+  });
+}
+
+function deleteDatabaseModern(dbName) {
+  // eslint-disable-next-line no-console
+  console.log(`  Deleting database: ${dbName}`);
+  return new Promise((resolve) => {
+    const req = window.indexedDB.deleteDatabase(dbName);
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+    req.onblocked = () => {
+      // eslint-disable-next-line no-console
+      console.log(`  Database ${dbName} blocked, forcing...`);
+      setTimeout(resolve, 100);
+    };
+  });
+}
+
+function deleteDatabaseFallback(dbName) {
+  return new Promise((resolve) => {
+    try {
+      const req = window.indexedDB.deleteDatabase(dbName);
+      req.onsuccess = () => {
+        // eslint-disable-next-line no-console
+        console.log(`  Deleted: ${dbName}`);
+        resolve();
+      };
+      req.onerror = () => resolve();
+      req.onblocked = () => {
+        setTimeout(resolve, 100);
+      };
+    } catch (err) {
+      console.error(`  Failed to delete database ${dbName}:`, err);
+      resolve();
+    }
+  });
+}
+
+async function clearIndexedDbModern() {
+  const databases = await window.indexedDB.databases();
+  const deletePromises = databases.map((db) => {
+    if (db.name) {
+      return deleteDatabaseModern(db.name);
+    }
+  });
+  await Promise.all(deletePromises);
+}
+
+async function clearIndexedDbFallback() {
+  // Fallback: delete known database names
+  // eslint-disable-next-line no-console
+  console.log("  Using fallback database deletion...");
+  const knownDbs = [
+    "vetrate-storage",
+    "vetrate-ai-models",
+    "vetrate-vectors",
+    "voy-vectors",
+    "transformers-cache",
+    "onnx-models",
+    "webllm-cache",
+    "vet-rate-cache",
+    "keyval-store",
+  ];
+  const deletePromises = knownDbs.map(deleteDatabaseFallback);
+  await Promise.all(deletePromises);
+}
+
+async function clearIndexedDb() {
+  // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing IndexedDB...");
+  if (!window.indexedDB) return;
+
+  try {
+    // Try modern API first
+    if (window.indexedDB.databases) {
+      await clearIndexedDbModern();
+    } else {
+      await clearIndexedDbFallback();
+    }
+  } catch (e) {
+    console.error("  IndexedDB cleanup error:", e);
+  }
+}
+
+async function clearCacheStorage() {
+  // 5. Clear Cache Storage (PWA caches)
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing Cache Storage...");
+  if (!("caches" in window)) return;
+
+  try {
+    const cacheNames = await caches.keys();
+    const deletePromises = cacheNames.map((cacheName) => {
+      // eslint-disable-next-line no-console
+      console.log(`  Deleting cache: ${cacheName}`);
+      return caches.delete(cacheName);
+    });
+    await Promise.all(deletePromises);
+  } catch (e) {
+    console.error("  Cache cleanup error:", e);
+  }
+}
+
+async function unregisterServiceWorkers() {
+  // 6. Unregister Service Workers
+  // eslint-disable-next-line no-console
+  console.log("🔥 Unregistering Service Workers...");
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const unregisterPromises = registrations.map((registration) => {
+      // eslint-disable-next-line no-console
+      console.log("  Unregistering service worker");
+      return registration.unregister();
+    });
+    await Promise.all(unregisterPromises);
+  } catch (e) {
+    console.error("  Service worker cleanup error:", e);
+  }
+}
+
+function forceReloadWithCacheBypass() {
+  window.location.href =
+    window.location.href.split("#")[0] + "?nocache=" + Date.now();
+}
+
+async function handleAtomicWipe(setIsWiping, onWipeComplete) {
+  setIsWiping(true);
+
+  try {
+    clearLocalAndSessionStorage();
+    clearCookies();
+    await clearIndexedDb();
+    await clearCacheStorage();
+    await unregisterServiceWorkers();
+
+    // eslint-disable-next-line no-console
+    console.log("✅ Atomic Wipe complete!");
+
+    // Notify completion
+    if (onWipeComplete) {
+      onWipeComplete();
+    }
+
+    // Force hard reload with cache bypass
+    setTimeout(forceReloadWithCacheBypass, 500);
+  } catch (error) {
+    console.error("Error during atomic wipe:", error);
+    // Still try to reload with cache bypass
+    forceReloadWithCacheBypass();
+  }
+}
+
 export default function AtomicWipe({ compact = false, onWipeComplete }) {
   const { isDark, isTbiComfort } = useTheme();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isWiping, setIsWiping] = useState(false);
-
-  const handleAtomicWipe = async () => {
-    setIsWiping(true);
-
-    try {
-      // 1. Clear all localStorage
-      // eslint-disable-next-line no-console
-      console.log("🔥 Clearing localStorage...");
-      localStorage.clear();
-
-      // 2. Clear all sessionStorage
-      // eslint-disable-next-line no-console
-      console.log("🔥 Clearing sessionStorage...");
-      sessionStorage.clear();
-
-      // 3. Clear cookies
-      // eslint-disable-next-line no-console
-      console.log("Clearing cookies...");
-      document.cookie.split(";").forEach((c) => {
-        const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
-        // Expire cookie with all security attributes to ensure deletion
-        document.cookie =
-          cookieName +
-          "=;expires=" +
-          new Date(0).toUTCString() +
-          ";path=/;Secure;SameSite=Lax";
-      });
-
-      // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
-      // eslint-disable-next-line no-console
-      console.log("🔥 Clearing IndexedDB...");
-      if (window.indexedDB) {
-        try {
-          // Try modern API first
-          if (window.indexedDB.databases) {
-            const databases = await window.indexedDB.databases();
-            const deletePromises = databases.map((db) => {
-              if (db.name) {
-                // eslint-disable-next-line no-console
-                console.log(`  Deleting database: ${db.name}`);
-                return new Promise((resolve) => {
-                  const req = window.indexedDB.deleteDatabase(db.name);
-                  req.onsuccess = () => resolve();
-                  req.onerror = () => resolve();
-                  req.onblocked = () => {
-                    // eslint-disable-next-line no-console
-                    console.log(`  Database ${db.name} blocked, forcing...`);
-                    setTimeout(resolve, 100);
-                  };
-                });
-              }
-            });
-            await Promise.all(deletePromises);
-          } else {
-            // Fallback: delete known database names
-            // eslint-disable-next-line no-console
-            console.log("  Using fallback database deletion...");
-            const knownDbs = [
-              "vetrate-storage",
-              "vetrate-ai-models",
-              "vetrate-vectors",
-              "voy-vectors",
-              "transformers-cache",
-              "onnx-models",
-              "webllm-cache",
-              "vet-rate-cache",
-              "keyval-store",
-            ];
-            const deletePromises = knownDbs.map((dbName) => {
-              return new Promise((resolve) => {
-                try {
-                  const req = window.indexedDB.deleteDatabase(dbName);
-                  req.onsuccess = () => {
-                    // eslint-disable-next-line no-console
-                    console.log(`  Deleted: ${dbName}`);
-                    resolve();
-                  };
-                  req.onerror = () => resolve();
-                  req.onblocked = () => {
-                    setTimeout(resolve, 100);
-                  };
-                } catch (err) {
-                  console.error(`  Failed to delete database ${dbName}:`, err);
-                  resolve();
-                }
-              });
-            });
-            await Promise.all(deletePromises);
-          }
-        } catch (e) {
-          console.error("  IndexedDB cleanup error:", e);
-        }
-      }
-
-      // 5. Clear Cache Storage (PWA caches)
-      // eslint-disable-next-line no-console
-      console.log("🔥 Clearing Cache Storage...");
-      if ("caches" in window) {
-        try {
-          const cacheNames = await caches.keys();
-          const deletePromises = cacheNames.map((cacheName) => {
-            // eslint-disable-next-line no-console
-            console.log(`  Deleting cache: ${cacheName}`);
-            return caches.delete(cacheName);
-          });
-          await Promise.all(deletePromises);
-        } catch (e) {
-          console.error("  Cache cleanup error:", e);
-        }
-      }
-
-      // 6. Unregister Service Workers
-      // eslint-disable-next-line no-console
-      console.log("🔥 Unregistering Service Workers...");
-      if ("serviceWorker" in navigator) {
-        try {
-          const registrations =
-            await navigator.serviceWorker.getRegistrations();
-          const unregisterPromises = registrations.map((registration) => {
-            // eslint-disable-next-line no-console
-            console.log("  Unregistering service worker");
-            return registration.unregister();
-          });
-          await Promise.all(unregisterPromises);
-        } catch (e) {
-          console.error("  Service worker cleanup error:", e);
-        }
-      }
-
-      // eslint-disable-next-line no-console
-      console.log("✅ Atomic Wipe complete!");
-
-      // Notify completion
-      if (onWipeComplete) {
-        onWipeComplete();
-      }
-
-      // Force hard reload with cache bypass
-      setTimeout(() => {
-        window.location.href =
-          window.location.href.split("#")[0] + "?nocache=" + Date.now();
-      }, 500);
-    } catch (error) {
-      console.error("Error during atomic wipe:", error);
-      // Still try to reload with cache bypass
-      window.location.href =
-        window.location.href.split("#")[0] + "?nocache=" + Date.now();
-    }
-  };
 
   return (
     <>
@@ -184,7 +214,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
         <ConfirmModal
           isDark={isDark || isTbiComfort}
           isWiping={isWiping}
-          onConfirm={handleAtomicWipe}
+          onConfirm={() => handleAtomicWipe(setIsWiping, onWipeComplete)}
           onCancel={() => setShowConfirm(false)}
         />
       )}

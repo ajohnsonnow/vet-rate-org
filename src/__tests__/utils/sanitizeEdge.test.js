@@ -15,6 +15,7 @@ describe("sanitizeUrl - edge cases", () => {
   });
 
   it("handles ftp protocol (blocked)", () => {
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- test fixture verifying ftp:// is rejected by sanitizeUrl
     expect(sanitizeUrl("ftp://files.va.gov/doc")).toBe("#");
   });
 

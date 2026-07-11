@@ -129,6 +129,7 @@ const Badge = ({ badge, size = "md", showTooltip = true }) => {
     // First try: use image file if available and not errored
     if (imagePath && !imageError) {
       return (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onError is an image-load fallback handler, not a user interaction
         <img
           src={imagePath}
           alt={badge.name}
@@ -231,6 +232,7 @@ const Tab = ({ tab, size = "md" }) => {
   if (imagePath && !imageError) {
     return (
       <div className="relative inline-flex items-center justify-center group">
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onError is an image-load fallback handler, not a user interaction */}
         <img
           src={imagePath}
           alt={tab.name}

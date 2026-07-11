@@ -76,6 +76,7 @@ describe("Python LLM tool stays in sync with the SSOT", () => {
     );
     const block = source.match(/VA_COMPENSATION_RATES = \{([\s\S]*?)\}/);
     expect(block).not.toBeNull();
+    // eslint-disable-next-line sonarjs/slow-regex -- disjoint char classes (\d, ':', \s, [\d.]) per segment; no ambiguous backtracking, and input is this repo's own vaCalculatorTool.py, not attacker-controlled
     const entries = [...block[1].matchAll(/(\d+):\s*([\d.]+)/g)];
     expect(entries.length).toBe(10);
     for (const [, rating, value] of entries) {

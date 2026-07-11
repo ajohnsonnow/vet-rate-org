@@ -56,24 +56,42 @@ const ISSUE_COLORS = {
  * @param {Array} props.issues - Array of issue objects with quote_target, type, explanation, etc.
  * @param {string} props.className - Additional CSS classes
  */
-const DiffHighlighter = ({ text, issues = [], className = "" }) => {
-  const { _t } = useLanguage();
+// Render a buffer of text with optional highlighting
+const renderBuffer = (buffer, issue, key) => {
+  if (!buffer) return null;
 
-  // If no text, return nothing
-  if (!text) return null;
-
-  // If no issues, just render the plain text
-  if (!issues || issues.length === 0) {
-    return (
-      <div
-        className={`whitespace-pre-wrap text-gray-300 leading-relaxed ${className}`}
-      >
-        {text}
-      </div>
-    );
+  // No issue = plain text
+  if (!issue) {
+    return <span key={key}>{buffer}</span>;
   }
 
-  // Build a "mask" array for the text - each character maps to an issue (or null)
+  // Get color scheme for this issue type
+  const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
+
+  // Build tooltip text
+  const _tooltipText = [
+    `${colors.icon} ${issue.type}`,
+    issue.severity ? `Severity: ${issue.severity}` : null,
+    issue.explanation || null,
+    issue.fix_suggestion ? `💡 Fix: ${issue.fix_suggestion}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return (
+    <span
+      key={key}
+      className={`${colors.bg} ${colors.text} ${colors.border} px-0.5 rounded cursor-help transition-all hover:opacity-80`}
+      role="mark"
+      aria-label={`Issue: ${issue.type}`}
+    >
+      {buffer}
+    </span>
+  );
+};
+
+// Build a "mask" array for the text - each character maps to an issue (or null)
+const buildIssueMask = (text, issues) => {
   const mask = new Array(text.length).fill(null);
 
   // Sort issues by quote length (longest first) to prevent overlapping issues
@@ -99,41 +117,11 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
     }
   });
 
-  // Render a buffer of text with optional highlighting
-  const renderBuffer = (buffer, issue, key) => {
-    if (!buffer) return null;
+  return mask;
+};
 
-    // No issue = plain text
-    if (!issue) {
-      return <span key={key}>{buffer}</span>;
-    }
-
-    // Get color scheme for this issue type
-    const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
-
-    // Build tooltip text
-    const _tooltipText = [
-      `${colors.icon} ${issue.type}`,
-      issue.severity ? `Severity: ${issue.severity}` : null,
-      issue.explanation || null,
-      issue.fix_suggestion ? `💡 Fix: ${issue.fix_suggestion}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    return (
-      <span
-        key={key}
-        className={`${colors.bg} ${colors.text} ${colors.border} px-0.5 rounded cursor-help transition-all hover:opacity-80`}
-        role="mark"
-        aria-label={`Issue: ${issue.type}`}
-      >
-        {buffer}
-      </span>
-    );
-  };
-
-  // Build the DOM by walking through the mask
+// Build the DOM by walking through the mask
+const buildHighlightedNodes = (text, mask) => {
   const nodes = [];
   let currentIssue = null;
   let buffer = "";
@@ -157,32 +145,63 @@ const DiffHighlighter = ({ text, issues = [], className = "" }) => {
     nodes.push(renderBuffer(buffer, currentIssue, "segment-end"));
   }
 
+  return nodes;
+};
+
+const IssueLegend = () => (
+  <div className="mt-6 pt-4 border-t border-gray-700">
+    <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+      Issue Legend
+    </p>
+    <div className="flex flex-wrap gap-3 text-xs">
+      {Object.entries(ISSUE_COLORS)
+        .filter(([key]) => key !== "default")
+        .map(([type, colors]) => (
+          <span
+            key={type}
+            className={`${colors.bg} ${colors.text} px-2 py-1 rounded`}
+          >
+            {colors.icon} {type}
+          </span>
+        ))}
+    </div>
+  </div>
+);
+
+const DiffHighlighter = ({ text, issues = [], className = "" }) => {
+  const { _t } = useLanguage();
+
+  // If no text, return nothing
+  if (!text) return null;
+
+  // If no issues, just render the plain text
+  if (!issues || issues.length === 0) {
+    return (
+      <div
+        className={`whitespace-pre-wrap text-gray-300 leading-relaxed ${className}`}
+      >
+        {text}
+      </div>
+    );
+  }
+
+  const mask = buildIssueMask(text, issues);
+  const nodes = buildHighlightedNodes(text, mask);
+
   return (
     <div
       className={`whitespace-pre-wrap text-gray-300 leading-relaxed font-mono text-sm ${className}`}
     >
       {nodes}
-
-      {/* Legend */}
-      <div className="mt-6 pt-4 border-t border-gray-700">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-          Issue Legend
-        </p>
-        <div className="flex flex-wrap gap-3 text-xs">
-          {Object.entries(ISSUE_COLORS)
-            .filter(([key]) => key !== "default")
-            .map(([type, colors]) => (
-              <span
-                key={type}
-                className={`${colors.bg} ${colors.text} px-2 py-1 rounded`}
-              >
-                {colors.icon} {type}
-              </span>
-            ))}
-        </div>
-      </div>
+      <IssueLegend />
     </div>
   );
+};
+
+const getSeverityBadgeClass = (severity) => {
+  if (severity === "High") return "bg-red-900/50 text-red-200";
+  if (severity === "Medium") return "bg-yellow-900/50 text-yellow-200";
+  return "bg-gray-700 text-gray-300";
 };
 
 /**
@@ -204,13 +223,7 @@ export const IssueCard = ({ issue, _index }) => {
             <h4 className="font-bold text-red-300">{issue.type} Warning</h4>
             {issue.severity && (
               <span
-                className={`text-xs font-mono uppercase px-2 py-1 rounded ${
-                  issue.severity === "High"
-                    ? "bg-red-900/50 text-red-200"
-                    : issue.severity === "Medium"
-                      ? "bg-yellow-900/50 text-yellow-200"
-                      : "bg-gray-700 text-gray-300"
-                }`}
+                className={`text-xs font-mono uppercase px-2 py-1 rounded ${getSeverityBadgeClass(issue.severity)}`}
               >
                 {issue.severity} Severity
               </span>

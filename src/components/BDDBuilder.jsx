@@ -816,6 +816,79 @@ function ConditionsQuickStats({ nextMilestone, conditions, checkedItems, checkli
   );
 }
 
+function ConditionChip({ condition, onRemove }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 rounded-full text-sm border border-emerald-200 dark:border-emerald-700"
+    >
+      {condition}
+      <button
+        onClick={() => onRemove(condition)}
+        className="hover:text-red-500 transition-colors"
+        aria-label={`Remove ${condition}`}
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </span>
+  );
+}
+
+function ConditionsList({ conditions, onRemoveCondition }) {
+  if (conditions.length === 0) {
+    return (
+      <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+        No conditions added yet. Start by adding your known conditions.
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {conditions.map((c) => (
+        <ConditionChip key={c} condition={c} onRemove={onRemoveCondition} />
+      ))}
+    </div>
+  );
+}
+
+function ConditionsTrackerToolLinks({ onNavigateToTool }) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      <ToolLink
+        icon="🔍"
+        label="Secondary Scout"
+        onClick={() => onNavigateToTool("secondary-scout")}
+      />
+      <ToolLink
+        icon="🎖️"
+        label="MOS Hazard Matcher"
+        onClick={() => onNavigateToTool("mos-hazard")}
+      />
+      <ToolLink
+        icon="☢️"
+        label="PACT Act Navigator"
+        onClick={() => onNavigateToTool("pact-act")}
+      />
+      <ToolLink
+        icon="🕸️"
+        label="Web of Conditions"
+        onClick={() => onNavigateToTool("web-of-conditions")}
+      />
+    </div>
+  );
+}
+
 function ConditionsTracker({
   conditions,
   newCondition,
@@ -867,65 +940,13 @@ function ConditionsTracker({
       </div>
 
       {/* Conditions list */}
-      {conditions.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {conditions.map((c) => (
-            <span
-              key={c}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 rounded-full text-sm border border-emerald-200 dark:border-emerald-700"
-            >
-              {c}
-              <button
-                onClick={() => onRemoveCondition(c)}
-                className="hover:text-red-500 transition-colors"
-                aria-label={`Remove ${c}`}
-              >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-          No conditions added yet. Start by adding your known conditions.
-        </p>
-      )}
+      <ConditionsList
+        conditions={conditions}
+        onRemoveCondition={onRemoveCondition}
+      />
 
       {/* Tool Links */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <ToolLink
-          icon="🔍"
-          label="Secondary Scout"
-          onClick={() => onNavigateToTool("secondary-scout")}
-        />
-        <ToolLink
-          icon="🎖️"
-          label="MOS Hazard Matcher"
-          onClick={() => onNavigateToTool("mos-hazard")}
-        />
-        <ToolLink
-          icon="☢️"
-          label="PACT Act Navigator"
-          onClick={() => onNavigateToTool("pact-act")}
-        />
-        <ToolLink
-          icon="🕸️"
-          label="Web of Conditions"
-          onClick={() => onNavigateToTool("web-of-conditions")}
-        />
-      </div>
+      <ConditionsTrackerToolLinks onNavigateToTool={onNavigateToTool} />
     </div>
   );
 }
