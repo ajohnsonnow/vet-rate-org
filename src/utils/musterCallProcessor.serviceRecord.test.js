@@ -69,7 +69,9 @@ describe("musterCallProcessor: parseServiceRecord (DD214 parser)", () => {
     expect(result.type).toBe("service_record");
     expect(result.veteranName).toBeNull();
   });
+});
 
+describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
   it("does not hang on a long run of letters with no field markers (regression: ReDoS)", async () => {
     const pathological = "A".repeat(100000);
     const start = Date.now();
