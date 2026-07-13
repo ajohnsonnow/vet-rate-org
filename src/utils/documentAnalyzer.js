@@ -255,7 +255,7 @@ async function analyzeRTFDocument(file, onProgress) {
     // Basic RTF to plain text conversion
     // Remove RTF control sequences
     const plainText = text
-      .replace(/\\[a-z]+[-]?\d*[ ]?/g, "") // Remove RTF commands
+      .replace(/\\[a-z]+-?\d* ?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars
       .replace(/\\\*/g, "") // Remove escaped asterisks
@@ -375,6 +375,55 @@ export const formatFileSize = (bytes) => {
  * @param {Function} onProgress - Progress callback
  * @returns {Promise<{images: string[], pageCount: number, renderedPages: number}>}
  */
+async function _renderPdfPagesToImages({
+  pdf,
+  pagesToRender,
+  scale,
+  format,
+  quality,
+  onProgress,
+}) {
+  const images = [];
+
+  for (let i = 1; i <= pagesToRender; i++) {
+    const progress = 10 + ((i - 1) / pagesToRender) * 80;
+    onProgress({
+      state: OCR_STATES.OCR_IN_PROGRESS,
+      progress: Math.round(progress),
+      message: `Rendering page ${i} of ${pagesToRender}...`,
+      currentPage: i,
+      totalPages: pagesToRender,
+    });
+
+    // Get page
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale });
+
+    // Create canvas
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    // Render PDF page to canvas
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
+
+    // Convert to data URL
+    const mimeType = format === "png" ? "image/png" : "image/jpeg";
+    const dataUrl = canvas.toDataURL(mimeType, quality);
+    images.push(dataUrl);
+
+    // Clean up
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+
+  return images;
+}
+
 export async function renderPDFToImages(
   file,
   options = {},
@@ -428,43 +477,14 @@ export async function renderPDFToImages(
       totalPages: pagesToRender,
     });
 
-    const images = [];
-
-    for (let i = 1; i <= pagesToRender; i++) {
-      const progress = 10 + ((i - 1) / pagesToRender) * 80;
-      onProgress({
-        state: OCR_STATES.OCR_IN_PROGRESS,
-        progress: Math.round(progress),
-        message: `Rendering page ${i} of ${pagesToRender}...`,
-        currentPage: i,
-        totalPages: pagesToRender,
-      });
-
-      // Get page
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale });
-
-      // Create canvas
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      // Render PDF page to canvas
-      await page.render({
-        canvasContext: context,
-        viewport: viewport,
-      }).promise;
-
-      // Convert to data URL
-      const mimeType = format === "png" ? "image/png" : "image/jpeg";
-      const dataUrl = canvas.toDataURL(mimeType, quality);
-      images.push(dataUrl);
-
-      // Clean up
-      canvas.width = 0;
-      canvas.height = 0;
-    }
+    const images = await _renderPdfPagesToImages({
+      pdf,
+      pagesToRender,
+      scale,
+      format,
+      quality,
+      onProgress,
+    });
 
     onProgress({
       state: OCR_STATES.COMPLETE,

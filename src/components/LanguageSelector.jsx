@@ -786,7 +786,7 @@ function useCloseDropdownOnOutsideClick(dropdownRef, setIsOpen, setSearchTerm) {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [dropdownRef, setIsOpen, setSearchTerm]);
 }
 
 function filterLanguagesBySearch(availableLanguages, searchTerm) {
@@ -807,14 +807,7 @@ function filterLanguagesBySearch(availableLanguages, searchTerm) {
  * @param {string} className - Additional CSS classes
  * @param {function} onReportBug - Handler for bug reporting (passed to child modals)
  */
-const LanguageSelector = ({
-  variant = "dropdown",
-  showFlag = true,
-  showNativeName = true,
-  groupByRegion = true,
-  className = "",
-  onReportBug,
-}) => {
+function useLanguageSelectorState({ className, showFlag, onReportBug }) {
   const {
     language,
     setLanguage,
@@ -853,29 +846,48 @@ const LanguageSelector = ({
     return filteredLanguages.filter((lang) => lang.region === regionId);
   };
 
-  const sharedVariantProps = {
-    dropdownRef,
-    className,
+  return {
+    SUPPORTED_LANGUAGES,
     isOpen,
     setIsOpen,
-    t,
-    showFlag,
+    sharedVariantProps: {
+      dropdownRef,
+      className,
+      isOpen,
+      setIsOpen,
+      t,
+      showFlag,
+      language,
+      currentLang,
+      searchTerm,
+      setSearchTerm,
+      getLanguagesByRegion,
+      filteredLanguages,
+      handleLanguageChange,
+      availableLanguages,
+      setShowTranslator,
+      setShowLanguageTutor,
+      setShowSuggestionModal,
+      showSuggestionModal,
+      showTranslator,
+      showLanguageTutor,
+      onReportBug,
+    },
     language,
-    currentLang,
-    searchTerm,
-    setSearchTerm,
-    getLanguagesByRegion,
-    filteredLanguages,
     handleLanguageChange,
-    availableLanguages,
-    setShowTranslator,
-    setShowLanguageTutor,
-    setShowSuggestionModal,
-    showSuggestionModal,
-    showTranslator,
-    showLanguageTutor,
-    onReportBug,
   };
+}
+
+const LanguageSelector = ({
+  variant = "dropdown",
+  showFlag = true,
+  showNativeName = true,
+  groupByRegion = true,
+  className = "",
+  onReportBug,
+}) => {
+  const { SUPPORTED_LANGUAGES, isOpen, setIsOpen, sharedVariantProps, language, handleLanguageChange } =
+    useLanguageSelectorState({ className, showFlag, onReportBug });
 
   if (variant === "compact") {
     return (

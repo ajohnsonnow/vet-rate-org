@@ -2281,25 +2281,27 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                                 ✅ Possible Answers:
                               </h4>
                               <div className="space-y-2">
-                                {q.options.map((opt, i) => (
+                                {q.options.map((opt, i) => {
+                                  let weightClass =
+                                    "bg-green-500/20 text-green-300";
+                                  let weightIcon = "✓";
+                                  if (opt.weight >= 3) {
+                                    weightClass = "bg-red-500/20 text-red-300";
+                                    weightIcon = "⚠️";
+                                  } else if (opt.weight >= 2) {
+                                    weightClass =
+                                      "bg-yellow-500/20 text-yellow-300";
+                                    weightIcon = "⚡";
+                                  }
+                                  return (
                                   <div
                                     key={i}
                                     className="bg-gray-800 border border-gray-600 rounded p-3 flex items-start gap-3"
                                   >
                                     <div
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                        opt.weight >= 3
-                                          ? "bg-red-500/20 text-red-300"
-                                          : opt.weight >= 2
-                                            ? "bg-yellow-500/20 text-yellow-300"
-                                            : "bg-green-500/20 text-green-300"
-                                      }`}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${weightClass}`}
                                     >
-                                      {opt.weight >= 3
-                                        ? "⚠️"
-                                        : opt.weight >= 2
-                                          ? "⚡"
-                                          : "✓"}
+                                      {weightIcon}
                                     </div>
                                     <div className="flex-1">
                                       <p className="text-white font-medium">
@@ -2312,7 +2314,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                                       )}
                                     </div>
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

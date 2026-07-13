@@ -760,6 +760,12 @@ function wrapTextToLines(font, text, fontSize, maxWidth = 500) {
   return lines;
 }
 
+function makeDrawWrappedText(font, drawText) {
+  return (text, maxWidth = 500) => {
+    wrapTextToLines(font, text, 11, maxWidth).forEach((line) => drawText(line));
+  };
+}
+
 /**
  * Create a drawText function that paginates onto a new letter-size page
  * once the current page runs out of vertical space
@@ -1336,11 +1342,7 @@ async function createPersonalStatementPdf(data) {
       y = v;
     },
   );
-  const drawWrappedText = (text, maxWidth = 500) => {
-    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
-      drawText(line),
-    );
-  };
+  const drawWrappedText = makeDrawWrappedText(font, drawText);
 
   drawPersonalStatementHeader(drawText, adjustY, data);
   drawPersonalStatementBody(drawText, drawWrappedText, adjustY, data);
@@ -1602,11 +1604,7 @@ async function createPTSDStatementPdfFallback(data) {
       y = v;
     },
   );
-  const drawWrappedText = (text, maxWidth = 500) => {
-    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
-      drawText(line),
-    );
-  };
+  const drawWrappedText = makeDrawWrappedText(font, drawText);
 
   drawText("STATEMENT IN SUPPORT OF CLAIM FOR PTSD", { bold: true, size: 14 });
   drawText("(Reference for VA Form 21-0781)", { size: 10 });
@@ -2014,11 +2012,7 @@ async function createPriorityProcessingPdf(data) {
       y = v;
     },
   );
-  const drawWrappedText = (text, maxWidth = 500) => {
-    wrapTextToLines(font, text, 11, maxWidth).forEach((line) =>
-      drawText(line),
-    );
-  };
+  const drawWrappedText = makeDrawWrappedText(font, drawText);
 
   drawText("REQUEST FOR PRIORITY PROCESSING", { bold: true, size: 14 });
   drawText("(Reference for VA Form 20-10207)", { size: 10 });
@@ -2301,6 +2295,195 @@ async function createVSOAppointmentPdf(data) {
 /**
  * Fill VA Form 21-22a (Individual Representative Appointment) with actual field mappings
  */
+function _parseForm2122aFields(data) {
+  const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
+  const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
+  const dobParts = (data.dob || data.veteranDOB || "").split(/[/-]/);
+  const phoneRaw = (data.phone || data.veteranPhone || "").replace(/\D/g, "");
+  const today = new Date();
+
+  return {
+    firstName: nameParts[0] || "",
+    lastName: nameParts[nameParts.length - 1] || "",
+    middleInitial: nameParts.length > 2 ? nameParts[1]?.[0] : "",
+    ssn: {
+      first: ssnRaw.substring(0, 3),
+      middle: ssnRaw.substring(3, 5),
+      last: ssnRaw.substring(5, 9),
+    },
+    dob: {
+      month: dobParts[0] || "",
+      day: dobParts[1] || "",
+      year: dobParts[2] || "",
+    },
+    phone: {
+      area: phoneRaw.substring(0, 3),
+      prefix: phoneRaw.substring(3, 6),
+      line: phoneRaw.substring(6, 10),
+    },
+    todayParts: {
+      month: String(today.getMonth() + 1).padStart(2, "0"),
+      day: String(today.getDate()).padStart(2, "0"),
+      year: String(today.getFullYear()),
+    },
+  };
+}
+
+function _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed) {
+  setTextField(fieldMap.veteranFirstName, parsed.firstName);
+  setTextField(fieldMap.veteranMiddleInitial, parsed.middleInitial);
+  setTextField(fieldMap.veteranLastName, parsed.lastName);
+  setTextField(fieldMap.veteranSSN1, parsed.ssn.first);
+  setTextField(fieldMap.veteranSSN2, parsed.ssn.middle);
+  setTextField(fieldMap.veteranSSN3, parsed.ssn.last);
+  setTextField(fieldMap.veteranDOBMonth, parsed.dob.month);
+  setTextField(fieldMap.veteranDOBDay, parsed.dob.day);
+  setTextField(fieldMap.veteranDOBYear, parsed.dob.year);
+  setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+  setTextField(fieldMap.veteranPhone1, parsed.phone.area);
+  setTextField(fieldMap.veteranPhone2, parsed.phone.prefix);
+  setTextField(fieldMap.veteranPhone3, parsed.phone.line);
+  setTextField(fieldMap.veteranIntlPhone, data.veteranIntlPhone || "");
+  setTextField(fieldMap.veteranEmail, data.email || data.veteranEmail || "");
+}
+
+function _fillForm2122aClaimantIdentity(setTextField, fieldMap, data) {
+  const claimantParts = (data.claimantName || "").split(" ").filter(Boolean);
+  setTextField(
+    fieldMap.claimantFirstName,
+    data.claimantFirstName || claimantParts[0] || "",
+  );
+  setTextField(
+    fieldMap.claimantMiddleInitial,
+    data.claimantMiddleInitial ||
+      (claimantParts.length > 2 ? claimantParts[1]?.[0] : ""),
+  );
+  setTextField(
+    fieldMap.claimantLastName,
+    data.claimantLastName || claimantParts[claimantParts.length - 1] || "",
+  );
+  setTextField(fieldMap.claimantRelationship, data.claimantRelationship || "");
+
+  const claimantDobParts = (data.claimantDOB || "").split(/[/-]/);
+  setTextField(fieldMap.claimantDOBMonth, claimantDobParts[0] || "");
+  setTextField(fieldMap.claimantDOBDay, claimantDobParts[1] || "");
+  setTextField(fieldMap.claimantDOBYear, claimantDobParts[2] || "");
+}
+
+function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
+  setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
+  setTextField(fieldMap.claimantApt, data.claimantApt || "");
+  setTextField(fieldMap.claimantCity, data.claimantCity || "");
+  setTextField(fieldMap.claimantState, data.claimantState || "");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
+  setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
+  setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
+
+  const claimantPhoneRaw = (data.claimantPhone || "").replace(/\D/g, "");
+  setTextField(fieldMap.claimantPhone1, claimantPhoneRaw.substring(0, 3));
+  setTextField(fieldMap.claimantPhone2, claimantPhoneRaw.substring(3, 6));
+  setTextField(fieldMap.claimantPhone3, claimantPhoneRaw.substring(6, 10));
+  setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
+}
+
+function _fillForm2122aClaimantInfo(setTextField, fieldMap, data) {
+  if (!data.claimantName && !data.claimantFirstName) return;
+  _fillForm2122aClaimantIdentity(setTextField, fieldMap, data);
+  _fillForm2122aClaimantContact(setTextField, fieldMap, data);
+}
+
+function _fillForm2122aRepresentativeInfo(
+  setTextField,
+  fieldMap,
+  data,
+  ssn,
+) {
+  const repParts = (data.representativeName || "").split(" ").filter(Boolean);
+  setTextField(
+    fieldMap.representativeFirstName,
+    data.repFirstName || repParts[0] || "",
+  );
+  setTextField(
+    fieldMap.representativeMiddleInitial,
+    data.repMiddleInitial || (repParts.length > 2 ? repParts[1]?.[0] : ""),
+  );
+  setTextField(
+    fieldMap.representativeLastName,
+    data.repLastName || repParts[repParts.length - 1] || "",
+  );
+  setTextField(
+    fieldMap.representativeOrganization,
+    data.repOrganization || data.firmName || "",
+  );
+
+  setTextField(fieldMap.page2SSN1, ssn.first);
+  setTextField(fieldMap.page2SSN2, ssn.middle);
+  setTextField(fieldMap.page2SSN3, ssn.last);
+  setTextField(fieldMap.firmName, data.firmName || "");
+  setTextField(fieldMap.additionalReps, data.additionalReps || "");
+
+  setTextField(fieldMap.repStreet, data.repStreet || "");
+  setTextField(fieldMap.repApt, data.repApt || "");
+  setTextField(fieldMap.repCity, data.repCity || "");
+  setTextField(fieldMap.repState, data.repState || "");
+  setTextField(fieldMap.repCountry, data.repCountry || "USA");
+  const repZip = (data.repZip || "").replace(/\D/g, "");
+  setTextField(fieldMap.repZip5, repZip.substring(0, 5));
+  setTextField(fieldMap.repZip4, repZip.substring(5, 9));
+
+  const repPhoneRaw = (data.repPhone || "").replace(/\D/g, "");
+  setTextField(fieldMap.repPhone1, repPhoneRaw.substring(0, 3));
+  setTextField(fieldMap.repPhone2, repPhoneRaw.substring(3, 6));
+  setTextField(fieldMap.repPhone3, repPhoneRaw.substring(6, 10));
+  setTextField(fieldMap.repEmail, data.repEmail || "");
+}
+
+function _fillForm2122aAuthorizationAndSignature(
+  setTextField,
+  setCheckbox,
+  fieldMap,
+  data,
+  parsed,
+) {
+  setCheckbox(
+    fieldMap.authorizeRecordAccess,
+    data.authorizeRecordAccess !== false,
+  );
+  setCheckbox(
+    fieldMap.authorizeActOnBehalf,
+    data.authorizeActOnBehalf !== false,
+  );
+  setCheckbox(
+    fieldMap.authorizeDisclosure1,
+    data.authorizeDisclosure !== false,
+  );
+  setCheckbox(fieldMap.authorizeDisclosure2, data.authorizeDisclosure2);
+
+  setTextField(
+    fieldMap.claimantSignDateMonth,
+    data.signDateMonth || parsed.todayParts.month,
+  );
+  setTextField(
+    fieldMap.claimantSignDateDay,
+    data.signDateDay || parsed.todayParts.day,
+  );
+  setTextField(
+    fieldMap.claimantSignDateYear,
+    data.signDateYear || parsed.todayParts.year,
+  );
+
+  if (!data.limitations) return;
+  setTextField(fieldMap.limitations, data.limitations);
+  setTextField(fieldMap.page3SSN1, parsed.ssn.first);
+  setTextField(fieldMap.page3SSN2, parsed.ssn.middle);
+  setTextField(fieldMap.page3SSN3, parsed.ssn.last);
+  setTextField(fieldMap.page3SignDateMonth, parsed.todayParts.month);
+  setTextField(fieldMap.page3SignDateDay, parsed.todayParts.day);
+  setTextField(fieldMap.page3SignDateYear, parsed.todayParts.year);
+}
+
 export async function fillForm21_22a(data) {
   const pdfBytes = await fetchPdfForm("21-22a");
   const fieldMap = VA_FORM_FIELDS["21-22a"];
@@ -2319,7 +2502,7 @@ export async function fillForm21_22a(data) {
           if (field) field.setText(String(value));
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`);
+          console.log(`Field not found: ${fieldName}`, e.message);
         }
       };
 
@@ -2329,206 +2512,27 @@ export async function fillForm21_22a(data) {
           if (field && checked) field.check();
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`);
+          console.log(`Checkbox not found: ${fieldName}`, e.message);
         }
       };
 
-      // Parse veteran name
-      const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts[nameParts.length - 1] || "";
-      const middleInitial = nameParts.length > 2 ? nameParts[1]?.[0] : "";
-
-      // Parse SSN
-      const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
-      const ssn = {
-        first: ssnRaw.substring(0, 3),
-        middle: ssnRaw.substring(3, 5),
-        last: ssnRaw.substring(5, 9),
-      };
-
-      // Parse DOB
-      const dobRaw = data.dob || data.veteranDOB || "";
-      const dobParts = dobRaw.split(/[/-]/);
-      const dob = {
-        month: dobParts[0] || "",
-        day: dobParts[1] || "",
-        year: dobParts[2] || "",
-      };
-
-      // Parse phone
-      const phoneRaw = (data.phone || data.veteranPhone || "").replace(
-        /\D/g,
-        "",
+      const parsed = _parseForm2122aFields(data);
+      _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed);
+      _fillForm2122aClaimantInfo(setTextField, fieldMap, data);
+      _fillForm2122aRepresentativeInfo(
+        setTextField,
+        fieldMap,
+        data,
+        parsed.ssn,
       );
-      const phone = {
-        area: phoneRaw.substring(0, 3),
-        prefix: phoneRaw.substring(3, 6),
-        line: phoneRaw.substring(6, 10),
-      };
-
-      // Fill veteran information
-      setTextField(fieldMap.veteranFirstName, firstName);
-      setTextField(fieldMap.veteranMiddleInitial, middleInitial);
-      setTextField(fieldMap.veteranLastName, lastName);
-      setTextField(fieldMap.veteranSSN1, ssn.first);
-      setTextField(fieldMap.veteranSSN2, ssn.middle);
-      setTextField(fieldMap.veteranSSN3, ssn.last);
-      setTextField(fieldMap.veteranDOBMonth, dob.month);
-      setTextField(fieldMap.veteranDOBDay, dob.day);
-      setTextField(fieldMap.veteranDOBYear, dob.year);
-      setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-      setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-      setTextField(fieldMap.veteranPhone1, phone.area);
-      setTextField(fieldMap.veteranPhone2, phone.prefix);
-      setTextField(fieldMap.veteranPhone3, phone.line);
-      setTextField(fieldMap.veteranIntlPhone, data.veteranIntlPhone || "");
-      setTextField(
-        fieldMap.veteranEmail,
-        data.email || data.veteranEmail || "",
+      _fillForm2122aAuthorizationAndSignature(
+        setTextField,
+        setCheckbox,
+        fieldMap,
+        data,
+        parsed,
       );
 
-      // Fill claimant information (if different from veteran)
-      if (data.claimantName || data.claimantFirstName) {
-        const claimantParts = (data.claimantName || "")
-          .split(" ")
-          .filter(Boolean);
-        setTextField(
-          fieldMap.claimantFirstName,
-          data.claimantFirstName || claimantParts[0] || "",
-        );
-        setTextField(
-          fieldMap.claimantMiddleInitial,
-          data.claimantMiddleInitial ||
-            (claimantParts.length > 2 ? claimantParts[1]?.[0] : ""),
-        );
-        setTextField(
-          fieldMap.claimantLastName,
-          data.claimantLastName ||
-            claimantParts[claimantParts.length - 1] ||
-            "",
-        );
-        setTextField(
-          fieldMap.claimantRelationship,
-          data.claimantRelationship || "",
-        );
-
-        const claimantDobParts = (data.claimantDOB || "").split(/[/-]/);
-        setTextField(fieldMap.claimantDOBMonth, claimantDobParts[0] || "");
-        setTextField(fieldMap.claimantDOBDay, claimantDobParts[1] || "");
-        setTextField(fieldMap.claimantDOBYear, claimantDobParts[2] || "");
-
-        setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
-        setTextField(fieldMap.claimantApt, data.claimantApt || "");
-        setTextField(fieldMap.claimantCity, data.claimantCity || "");
-        setTextField(fieldMap.claimantState, data.claimantState || "");
-        setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
-        const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
-        setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
-        setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
-
-        const claimantPhoneRaw = (data.claimantPhone || "").replace(/\D/g, "");
-        setTextField(fieldMap.claimantPhone1, claimantPhoneRaw.substring(0, 3));
-        setTextField(fieldMap.claimantPhone2, claimantPhoneRaw.substring(3, 6));
-        setTextField(
-          fieldMap.claimantPhone3,
-          claimantPhoneRaw.substring(6, 10),
-        );
-        setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
-      }
-
-      // Fill representative information
-      const repParts = (data.representativeName || "")
-        .split(" ")
-        .filter(Boolean);
-      setTextField(
-        fieldMap.representativeFirstName,
-        data.repFirstName || repParts[0] || "",
-      );
-      setTextField(
-        fieldMap.representativeMiddleInitial,
-        data.repMiddleInitial || (repParts.length > 2 ? repParts[1]?.[0] : ""),
-      );
-      setTextField(
-        fieldMap.representativeLastName,
-        data.repLastName || repParts[repParts.length - 1] || "",
-      );
-      setTextField(
-        fieldMap.representativeOrganization,
-        data.repOrganization || data.firmName || "",
-      );
-
-      // Page 2 information
-      setTextField(fieldMap.page2SSN1, ssn.first);
-      setTextField(fieldMap.page2SSN2, ssn.middle);
-      setTextField(fieldMap.page2SSN3, ssn.last);
-      setTextField(fieldMap.firmName, data.firmName || "");
-      setTextField(fieldMap.additionalReps, data.additionalReps || "");
-
-      // Rep address
-      setTextField(fieldMap.repStreet, data.repStreet || "");
-      setTextField(fieldMap.repApt, data.repApt || "");
-      setTextField(fieldMap.repCity, data.repCity || "");
-      setTextField(fieldMap.repState, data.repState || "");
-      setTextField(fieldMap.repCountry, data.repCountry || "USA");
-      const repZip = (data.repZip || "").replace(/\D/g, "");
-      setTextField(fieldMap.repZip5, repZip.substring(0, 5));
-      setTextField(fieldMap.repZip4, repZip.substring(5, 9));
-
-      const repPhoneRaw = (data.repPhone || "").replace(/\D/g, "");
-      setTextField(fieldMap.repPhone1, repPhoneRaw.substring(0, 3));
-      setTextField(fieldMap.repPhone2, repPhoneRaw.substring(3, 6));
-      setTextField(fieldMap.repPhone3, repPhoneRaw.substring(6, 10));
-      setTextField(fieldMap.repEmail, data.repEmail || "");
-
-      // Authorization checkboxes
-      setCheckbox(
-        fieldMap.authorizeRecordAccess,
-        data.authorizeRecordAccess !== false,
-      );
-      setCheckbox(
-        fieldMap.authorizeActOnBehalf,
-        data.authorizeActOnBehalf !== false,
-      );
-      setCheckbox(
-        fieldMap.authorizeDisclosure1,
-        data.authorizeDisclosure !== false,
-      );
-      setCheckbox(fieldMap.authorizeDisclosure2, data.authorizeDisclosure2);
-
-      // Signature dates
-      const today = new Date();
-      const todayParts = {
-        month: String(today.getMonth() + 1).padStart(2, "0"),
-        day: String(today.getDate()).padStart(2, "0"),
-        year: String(today.getFullYear()),
-      };
-
-      setTextField(
-        fieldMap.claimantSignDateMonth,
-        data.signDateMonth || todayParts.month,
-      );
-      setTextField(
-        fieldMap.claimantSignDateDay,
-        data.signDateDay || todayParts.day,
-      );
-      setTextField(
-        fieldMap.claimantSignDateYear,
-        data.signDateYear || todayParts.year,
-      );
-
-      // Page 3 - Limitations
-      if (data.limitations) {
-        setTextField(fieldMap.limitations, data.limitations);
-        setTextField(fieldMap.page3SSN1, ssn.first);
-        setTextField(fieldMap.page3SSN2, ssn.middle);
-        setTextField(fieldMap.page3SSN3, ssn.last);
-        setTextField(fieldMap.page3SignDateMonth, todayParts.month);
-        setTextField(fieldMap.page3SignDateDay, todayParts.day);
-        setTextField(fieldMap.page3SignDateYear, todayParts.year);
-      }
-
-      // Flatten form
       form.flatten();
 
       return await pdfDoc.save();

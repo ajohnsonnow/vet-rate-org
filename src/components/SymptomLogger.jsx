@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -593,6 +592,80 @@ const addPDFFooter = (doc, margin) => {
 };
 
 
+const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
+  <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
+    <div className="flex items-center justify-between mb-3">
+      <span className="font-medium">🤖 AI Assistant</span>
+      <span className="text-sm text-white/70">
+        {aiStatus.available ? `Using ${aiStatus.mode}` : "Not configured"}
+      </span>
+    </div>
+    <AIModeSelector
+      onModeChange={async () => {
+        const status = await getAIStatus();
+        setAIStatus(status);
+      }}
+    />
+    <p className="text-xs text-white/70 mt-2">
+      ✨ AI can help suggest triggers, activity impact, and clinical-style
+      notes for your symptom entries.
+    </p>
+  </div>
+);
+
+const SymptomLoggerHeaderActions = ({
+  showAISettings,
+  setShowAISettings,
+  symptomLoggerContentRef,
+  onReportBug,
+  onClose,
+}) => (
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => setShowAISettings(!showAISettings)}
+      className={`p-2 rounded-lg transition-colors ${
+        showAISettings
+          ? "bg-white/30 text-white"
+          : "hover:bg-white/20 text-white/80"
+      }`}
+      aria-label="AI Settings"
+    >
+      <span className="text-xl">🤖</span>
+    </button>
+    <ShareButton
+      targetRef={symptomLoggerContentRef}
+      filename="symptom-log"
+      variant="icon"
+    />
+    {onReportBug && (
+      <ReportBugLink
+        onClick={onReportBug}
+        variant="light"
+        moduleName="Symptom Logger"
+      />
+    )}
+    <button
+      onClick={onClose}
+      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+      aria-label="Close"
+    >
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  </div>
+);
+
 const SymptomLoggerHeader = ({
   config,
   aiStatus,
@@ -627,74 +700,21 @@ const SymptomLoggerHeader = ({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowAISettings(!showAISettings)}
-                className={`p-2 rounded-lg transition-colors ${
-                  showAISettings
-                    ? "bg-white/30 text-white"
-                    : "hover:bg-white/20 text-white/80"
-                }`}
-                aria-label="AI Settings"
-              >
-                <span className="text-xl">🤖</span>
-              </button>
-              <ShareButton
-                targetRef={symptomLoggerContentRef}
-                filename="symptom-log"
-                variant="icon"
-              />
-              {onReportBug && (
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="Symptom Logger"
-                />
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+            <SymptomLoggerHeaderActions
+              showAISettings={showAISettings}
+              setShowAISettings={setShowAISettings}
+              symptomLoggerContentRef={symptomLoggerContentRef}
+              onReportBug={onReportBug}
+              onClose={onClose}
+            />
           </div>
 
           {/* AI Settings Panel */}
           {showAISettings && (
-            <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-medium">🤖 AI Assistant</span>
-                <span className="text-sm text-white/70">
-                  {aiStatus.available
-                    ? `Using ${aiStatus.mode}`
-                    : "Not configured"}
-                </span>
-              </div>
-              <AIModeSelector
-                onModeChange={async () => {
-                  const status = await getAIStatus();
-                  setAIStatus(status);
-                }}
-              />
-              <p className="text-xs text-white/70 mt-2">
-                ✨ AI can help suggest triggers, activity impact, and
-                clinical-style notes for your symptom entries.
-              </p>
-            </div>
+            <SymptomLoggerAISettingsPanel
+              aiStatus={aiStatus}
+              setAIStatus={setAIStatus}
+            />
           )}
         </div>
 );
@@ -1094,6 +1114,95 @@ const StressProstratingMedicationFields = ({ newLog, setNewLog, config }) => (
   </>
 );
 
+const TriggersField = ({
+  newLog,
+  setNewLog,
+  config,
+  aiStatus,
+  isAIGenerating,
+  generateAISuggestion,
+}) => (
+  <div className="md:col-span-2">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      ⚡ {config.questions.triggers}
+    </label>
+    <div className="relative">
+      <input
+        type="text"
+        value={newLog.triggers}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            triggers: e.target.value,
+          }))
+        }
+        placeholder="e.g., stress, weather, certain foods, loud noise..."
+        className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+      />
+      {aiStatus.available && (
+        <button
+          onClick={() => generateAISuggestion("triggers")}
+          disabled={isAIGenerating === "triggers"}
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+        >
+          {isAIGenerating === "triggers" ? "..." : "✨ AI"}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+const NotesField = ({
+  newLog,
+  setNewLog,
+  aiStatus,
+  isAIGenerating,
+  generateAISuggestion,
+  aiError,
+}) => (
+  <div className="md:col-span-2">
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      📝 Additional Notes
+    </label>
+    <div className="relative">
+      <textarea
+        value={newLog.notes}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            notes: e.target.value,
+          }))
+        }
+        placeholder="Describe what happened, impact on your day, etc. Use the microphone to speak."
+        rows={3}
+        className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+      />
+      <div className="absolute right-2 top-2 flex gap-1">
+        <VoiceInputButton
+          onTranscript={(text) =>
+            setNewLog((prev) => ({
+              ...prev,
+              notes: prev.notes ? `${prev.notes} ${text}` : text,
+            }))
+          }
+          size="sm"
+        />
+        {aiStatus.available && (
+          <button
+            onClick={() => generateAISuggestion("notes")}
+            disabled={isAIGenerating === "notes"}
+            className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+          >
+            {isAIGenerating === "notes" ? "..." : "✨ AI"}
+          </button>
+        )}
+      </div>
+    </div>
+    {aiError && <p className="text-xs text-red-500 mt-1">{aiError}</p>}
+  </div>
+);
+
 const TriggersNotesFields = ({
   newLog,
   setNewLog,
@@ -1104,80 +1213,22 @@ const TriggersNotesFields = ({
   aiError,
 }) => (
   <>
-                {/* Triggers */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ⚡ {config.questions.triggers}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={newLog.triggers}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          triggers: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g., stress, weather, certain foods, loud noise..."
-                      className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                    />
-                    {aiStatus.available && (
-                      <button
-                        onClick={() => generateAISuggestion("triggers")}
-                        disabled={isAIGenerating === "triggers"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
-                      >
-                        {isAIGenerating === "triggers" ? "..." : "✨ AI"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div className="md:col-span-2">
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    📝 Additional Notes
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      value={newLog.notes}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          notes: e.target.value,
-                        }))
-                      }
-                      placeholder="Describe what happened, impact on your day, etc. Use the microphone to speak."
-                      rows={3}
-                      className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
-                    />
-                    <div className="absolute right-2 top-2 flex gap-1">
-                      <VoiceInputButton
-                        onTranscript={(text) =>
-                          setNewLog((prev) => ({
-                            ...prev,
-                            notes: prev.notes ? `${prev.notes} ${text}` : text,
-                          }))
-                        }
-                        size="sm"
-                      />
-                      {aiStatus.available && (
-                        <button
-                          onClick={() => generateAISuggestion("notes")}
-                          disabled={isAIGenerating === "notes"}
-                          className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
-                        >
-                          {isAIGenerating === "notes" ? "..." : "✨ AI"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {aiError && (
-                    <p className="text-xs text-red-500 mt-1">{aiError}</p>
-                  )}
-                </div>
+    <TriggersField
+      newLog={newLog}
+      setNewLog={setNewLog}
+      config={config}
+      aiStatus={aiStatus}
+      isAIGenerating={isAIGenerating}
+      generateAISuggestion={generateAISuggestion}
+    />
+    <NotesField
+      newLog={newLog}
+      setNewLog={setNewLog}
+      aiStatus={aiStatus}
+      isAIGenerating={isAIGenerating}
+      generateAISuggestion={generateAISuggestion}
+      aiError={aiError}
+    />
   </>
 );
 
@@ -1259,6 +1310,91 @@ const EmptyHistoryState = ({ config, colors, setActiveTab }) => (
                 </div>
 );
 
+const LogEntryDetails = ({ log, colors }) => (
+  <div className="flex-1">
+    <div className="flex items-center gap-3">
+      <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
+        {new Date(log.date).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })}
+      </span>
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        at {log.time}
+      </span>
+      {log.prostrating && (
+        <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold rounded-full">
+          PROSTRATING
+        </span>
+      )}
+    </div>
+    <div className="flex items-center gap-4 mt-2 text-sm">
+      <span className={colors.text}>
+        Severity: <strong>{log.severity}/10</strong>
+      </span>
+      <span className={colors.text}>
+        Duration: <strong>{log.duration}</strong>
+      </span>
+      {log.medication && (
+        <span className="text-gray-500 dark:text-gray-400">
+          💊 Medication
+        </span>
+      )}
+    </div>
+    {log.bodyLocation && (
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <strong>📍 Location:</strong> {log.bodyLocation}
+      </p>
+    )}
+    {log.activityImpact && (
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <strong>🎯 Activities Affected:</strong> {log.activityImpact}
+      </p>
+    )}
+    {(log.weather || log.stressLevel !== undefined) && (
+      <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
+        {log.weather && <span>🌤️ {log.weather}</span>}
+        {log.stressLevel !== undefined && (
+          <span>😰 Stress: {log.stressLevel}/10</span>
+        )}
+      </div>
+    )}
+    {log.triggers && (
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <strong>⚡ Triggers:</strong> {log.triggers}
+      </p>
+    )}
+    {log.notes && (
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <strong>📝 Notes:</strong> {log.notes}
+      </p>
+    )}
+  </div>
+);
+
+const LogEntryDeleteConfirm = ({ log, setShowDeleteConfirm, handleDeleteLog }) => (
+  <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/50 rounded-lg flex items-center justify-between">
+    <span className="text-sm text-red-700 dark:text-red-300">
+      Delete this entry?
+    </span>
+    <div className="flex gap-2">
+      <button
+        onClick={() => handleDeleteLog(log.id)}
+        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+      >
+        Delete
+      </button>
+      <button
+        onClick={() => setShowDeleteConfirm(null)}
+        className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+);
+
 const LogEntryCard = ({
   log,
   colors,
@@ -1266,117 +1402,37 @@ const LogEntryCard = ({
   setShowDeleteConfirm,
   handleDeleteLog,
 }) => (
-  <div
-    className={`p-4 ${colors.bgLight} ${colors.border} border rounded-lg`}
-  >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                                {new Date(log.date).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "short",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )}
-                              </span>
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                at {log.time}
-                              </span>
-                              {log.prostrating && (
-                                <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold rounded-full">
-                                  PROSTRATING
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-4 mt-2 text-sm">
-                              <span className={colors.text}>
-                                Severity: <strong>{log.severity}/10</strong>
-                              </span>
-                              <span className={colors.text}>
-                                Duration: <strong>{log.duration}</strong>
-                              </span>
-                              {log.medication && (
-                                <span className="text-gray-500 dark:text-gray-400">
-                                  💊 Medication
-                                </span>
-                              )}
-                            </div>
-                            {log.bodyLocation && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                <strong>📍 Location:</strong> {log.bodyLocation}
-                              </p>
-                            )}
-                            {log.activityImpact && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <strong>🎯 Activities Affected:</strong>{" "}
-                                {log.activityImpact}
-                              </p>
-                            )}
-                            {(log.weather || log.stressLevel !== undefined) && (
-                              <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                {log.weather && <span>🌤️ {log.weather}</span>}
-                                {log.stressLevel !== undefined && (
-                                  <span>😰 Stress: {log.stressLevel}/10</span>
-                                )}
-                              </div>
-                            )}
-                            {log.triggers && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                <strong>⚡ Triggers:</strong> {log.triggers}
-                              </p>
-                            )}
-                            {log.notes && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <strong>📝 Notes:</strong> {log.notes}
-                              </p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => setShowDeleteConfirm(log.id)}
-                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                            aria-label="Delete entry"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
+  <div className={`p-4 ${colors.bgLight} ${colors.border} border rounded-lg`}>
+    <div className="flex items-start justify-between">
+      <LogEntryDetails log={log} colors={colors} />
+      <button
+        onClick={() => setShowDeleteConfirm(log.id)}
+        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+        aria-label="Delete entry"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      </button>
+    </div>
 
-                        {/* Delete Confirmation */}
-                        {showDeleteConfirm === log.id && (
-                          <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/50 rounded-lg flex items-center justify-between">
-                            <span className="text-sm text-red-700 dark:text-red-300">
-                              Delete this entry?
-                            </span>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleDeleteLog(log.id)}
-                                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                              >
-                                Delete
-                              </button>
-                              <button
-                                onClick={() => setShowDeleteConfirm(null)}
-                                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        )}
+    {showDeleteConfirm === log.id && (
+      <LogEntryDeleteConfirm
+        log={log}
+        setShowDeleteConfirm={setShowDeleteConfirm}
+        handleDeleteLog={handleDeleteLog}
+      />
+    )}
   </div>
 );
 
@@ -1532,48 +1588,133 @@ const ExportTab = ({ stats, colors, config, logs, symptomType, handleExportPDF }
   </div>
 );
 
-const SymptomLogger = ({ onClose, onReportBug }) => {
-  const { _t } = useLanguage();
+const SYMPTOM_COLOR_CLASSES = {
+  purple: {
+    bg: "bg-purple-600",
+    bgLight: "bg-purple-50 dark:bg-purple-900/30",
+    border: "border-purple-200 dark:border-purple-700",
+    text: "text-purple-700 dark:text-purple-300",
+  },
+  blue: {
+    bg: "bg-blue-600",
+    bgLight: "bg-blue-50 dark:bg-blue-900/30",
+    border: "border-blue-200 dark:border-blue-700",
+    text: "text-blue-700 dark:text-blue-300",
+  },
+  red: {
+    bg: "bg-red-600",
+    bgLight: "bg-red-50 dark:bg-red-900/30",
+    border: "border-red-200 dark:border-red-700",
+    text: "text-red-700 dark:text-red-300",
+  },
+  orange: {
+    bg: "bg-orange-600",
+    bgLight: "bg-orange-50 dark:bg-orange-900/30",
+    border: "border-orange-200 dark:border-orange-700",
+    text: "text-orange-700 dark:text-orange-300",
+  },
+  indigo: {
+    bg: "bg-indigo-600",
+    bgLight: "bg-indigo-50 dark:bg-indigo-900/30",
+    border: "border-indigo-200 dark:border-indigo-700",
+    text: "text-indigo-700 dark:text-indigo-300",
+  },
+  amber: {
+    bg: "bg-amber-600",
+    bgLight: "bg-amber-50 dark:bg-amber-900/30",
+    border: "border-amber-200 dark:border-amber-700",
+    text: "text-amber-700 dark:text-amber-300",
+  },
+  teal: {
+    bg: "bg-teal-600",
+    bgLight: "bg-teal-50 dark:bg-teal-900/30",
+    border: "border-teal-200 dark:border-teal-700",
+    text: "text-teal-700 dark:text-teal-300",
+  },
+  slate: {
+    bg: "bg-slate-600",
+    bgLight: "bg-slate-50 dark:bg-slate-900/30",
+    border: "border-slate-200 dark:border-slate-700",
+    text: "text-slate-700 dark:text-slate-300",
+  },
+};
 
-  const symptomLoggerContentRef = useRef(null);
-  const [logs, setLogs] = useState([]);
-  const [activeTab, setActiveTab] = useState("log"); // 'log', 'history', 'export'
-  const [symptomType, setSymptomType] = useState("migraine");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-
-  // AI State
-  const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState({ available: false });
-  const [isAIGenerating, setIsAIGenerating] = useState(null); // null or field name being generated
-  const [aiError, setAIError] = useState("");
-
-  // Form state for new log
-  const [newLog, setNewLog] = useState({
+function _newSymptomLogFormState() {
+  return {
     date: new Date().toISOString().split("T")[0],
     time: new Date().toTimeString().slice(0, 5),
     severity: 5,
     duration: "",
-    bodyLocation: "", // NEW: Track where the symptom occurred
-    painScale: 5, // NEW: For pain-specific tracking (0-10)
-    activityImpact: "", // NEW: What activities were affected
+    bodyLocation: "",
+    painScale: 5,
+    activityImpact: "",
     prostrating: false,
     medication: false,
     triggers: "",
-    weather: "", // NEW: Weather conditions
-    stressLevel: 5, // NEW: Stress level (0-10)
+    weather: "",
+    stressLevel: 5,
     notes: "",
-  });
+  };
+}
 
-  // Check AI status on mount
+function _computeSymptomStats(logs, symptomType) {
+  const filteredLogs = logs.filter((log) => log.type === symptomType);
+  const now = new Date();
+
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const last30Days = filteredLogs.filter(
+    (log) => new Date(log.date) >= thirtyDaysAgo,
+  );
+
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+  const last90Days = filteredLogs.filter(
+    (log) => new Date(log.date) >= ninetyDaysAgo,
+  );
+
+  const prostratingLast30 = last30Days.filter((log) => log.prostrating).length;
+  const prostratingLast90 = last90Days.filter((log) => log.prostrating).length;
+
+  const avgSeverity =
+    last30Days.length > 0
+      ? (
+          last30Days.reduce((sum, log) => sum + log.severity, 0) /
+          last30Days.length
+        ).toFixed(1)
+      : 0;
+
+  let suggestedRating = 0;
+  const avgPerMonth = prostratingLast90 / 3;
+
+  if (symptomType === "migraine") {
+    if (avgPerMonth >= 1) suggestedRating = 50;
+    else if (avgPerMonth >= 0.5) suggestedRating = 30;
+    else if (avgPerMonth > 0) suggestedRating = 10;
+  } else if (symptomType === "ibs") {
+    if (prostratingLast30 >= 10) suggestedRating = 30;
+    else if (prostratingLast30 >= 4) suggestedRating = 10;
+  }
+
+  return {
+    total: filteredLogs.length,
+    last30Days: last30Days.length,
+    last90Days: last90Days.length,
+    prostratingLast30,
+    prostratingLast90,
+    avgSeverity,
+    avgPerMonth: avgPerMonth.toFixed(1),
+    suggestedRating,
+  };
+}
+
+function useSymptomLoggerInitEffects({ setLogs, setSymptomType, setNewLog, setActiveTab, setAIStatus }) {
   useEffect(() => {
     const checkAI = async () => {
       const status = await getAIStatus();
       setAIStatus(status);
     };
     checkAI();
-  }, []);
+  }, [setAIStatus]);
 
-  // Load logs from localStorage on mount
   useEffect(() => {
     const savedLogs = localStorage.getItem(STORAGE_KEY);
     if (savedLogs) {
@@ -1585,92 +1726,134 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       }
     }
 
-    // Check for prefilled data from Somatic Target
     const prefillData = localStorage.getItem("vetrate_symptom_prefill");
     if (prefillData) {
       try {
         const data = JSON.parse(prefillData);
-        // Set the symptom type and prefill form
         if (data.type) setSymptomType(data.type);
         setNewLog((prev) => ({
           ...prev,
           bodyLocation: data.bodyPart || "",
           notes: data.notes || "",
         }));
-        // Clear the prefill data after using it
         localStorage.removeItem("vetrate_symptom_prefill");
-        // Switch to log tab to show the prefilled form
         setActiveTab("log");
       } catch (e) {
         console.error("Failed to parse prefill data:", e);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+}
 
-  // Save logs to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-  }, [logs]);
+function _getAISuggestionPrompt(field, symptomType, newLog) {
+  const config = SYMPTOM_TYPES[symptomType];
+  const contextData = {
+    symptomType: config.label,
+    severity: newLog.severity,
+    duration: newLog.duration,
+    bodyLocation: newLog.bodyLocation,
+    weather: newLog.weather,
+    stressLevel: newLog.stressLevel,
+    prostrating: newLog.prostrating,
+    medication: newLog.medication,
+  };
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const filteredLogs = logs.filter((log) => log.type === symptomType);
-    const now = new Date();
+  const builder = SYMPTOM_PROMPT_BUILDERS[symptomType];
+  const symptomPrompts = builder ? builder(contextData) : null;
+  const defaultPrompts = buildDefaultPrompts(contextData, config);
 
-    // Last 30 days
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const last30Days = filteredLogs.filter(
-      (log) => new Date(log.date) >= thirtyDaysAgo,
+  return symptomPrompts?.[field] || defaultPrompts[field];
+}
+
+async function _runAISuggestion({
+  field,
+  symptomType,
+  newLog,
+  setNewLog,
+  setIsAIGenerating,
+  setAIError,
+}) {
+  setIsAIGenerating(field);
+  setAIError("");
+
+  try {
+    const prompt = _getAISuggestionPrompt(field, symptomType, newLog);
+
+    const veteranContext = await getVeteranAIContext({
+      maxPacketTokens: 300,
+      includePacket: false,
+    });
+    const contextBlock = veteranContext
+      ? `\nVETERAN CASE DATA:\n${veteranContext}\n`
+      : "";
+
+    const response = await generateAI(
+      `${prompt}${contextBlock}
+
+IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
+      {
+        temperature: 0.7,
+        maxTokens: 300,
+        systemPrompt:
+          "You are a VA disability documentation assistant helping veterans create accurate, clinical-quality symptom logs. Provide concise, directly usable text that veterans can customize. Use appropriate medical terminology when relevant.",
+      },
     );
 
-    // Last 90 days
-    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    const last90Days = filteredLogs.filter(
-      (log) => new Date(log.date) >= ninetyDaysAgo,
-    );
-
-    // Prostrating attacks
-    const prostratingLast30 = last30Days.filter(
-      (log) => log.prostrating,
-    ).length;
-    const prostratingLast90 = last90Days.filter(
-      (log) => log.prostrating,
-    ).length;
-
-    // Average severity
-    const avgSeverity =
-      last30Days.length > 0
-        ? (
-            last30Days.reduce((sum, log) => sum + log.severity, 0) /
-            last30Days.length
-          ).toFixed(1)
-        : 0;
-
-    // Suggested rating based on frequency
-    let suggestedRating = 0;
-    const avgPerMonth = prostratingLast90 / 3;
-
-    if (symptomType === "migraine") {
-      if (avgPerMonth >= 1) suggestedRating = 50;
-      else if (avgPerMonth >= 0.5) suggestedRating = 30;
-      else if (avgPerMonth > 0) suggestedRating = 10;
-    } else if (symptomType === "ibs") {
-      if (prostratingLast30 >= 10) suggestedRating = 30;
-      else if (prostratingLast30 >= 4) suggestedRating = 10;
+    const text = response?.text || response;
+    if (text) {
+      const textStr = typeof text === "string" ? text : JSON.stringify(text);
+      setNewLog((prev) => ({
+        ...prev,
+        [field]: prev[field] ? `${prev[field]} ${textStr}` : textStr,
+      }));
+    } else {
+      setAIError("Failed to generate suggestion");
     }
+  } catch (error) {
+    console.error("AI suggestion generation failed:", error);
+    setAIError("AI generation failed. Please try again.");
+  } finally {
+    setIsAIGenerating(null);
+  }
+}
 
-    return {
-      total: filteredLogs.length,
-      last30Days: last30Days.length,
-      last90Days: last90Days.length,
-      prostratingLast30,
-      prostratingLast90,
-      avgSeverity,
-      avgPerMonth: avgPerMonth.toFixed(1),
-      suggestedRating,
-    };
-  }, [logs, symptomType]);
+function _exportSymptomLogPDF({ symptomType, logs, stats }) {
+  const config = SYMPTOM_TYPES[symptomType];
+  const filteredLogs = logs.filter((log) => log.type === symptomType);
 
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let y = 20;
+
+  y = addPDFTitleSection(doc, config, filteredLogs.length, margin, y);
+  y = addPDFStatsSummary(doc, stats, pageWidth, margin, y);
+  y = addPDFRatingCriteriaSection(doc, config, margin, y);
+
+  doc.setFontSize(9);
+  filteredLogs.forEach((log, index) => {
+    y = addPDFLogEntry(doc, log, index, pageWidth, margin, y);
+  });
+
+  addPDFFooter(doc, margin);
+
+  doc.save(`${symptomType}_log_${new Date().toISOString().split("T")[0]}.pdf`);
+}
+
+function useSymptomLoggerHandlers({
+  logs,
+  setLogs,
+  symptomType,
+  newLog,
+  setNewLog,
+  setActiveTab,
+  setShowDeleteConfirm,
+  aiStatus,
+  setIsAIGenerating,
+  setAIError,
+  stats,
+}) {
   const handleAddLog = () => {
     if (!newLog.duration) {
       alert("Please select a duration.");
@@ -1686,7 +1869,6 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
 
     setLogs((prev) => [logEntry, ...prev]);
 
-    // Save symptom log entry to My Packet
     saveAnalysisResults({
       toolName: "Symptom Logger",
       classification: PACKET_DOC_TYPES.MEDICAL_RECORD,
@@ -1694,24 +1876,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       extractedData: logEntry,
     }).catch((err) => console.warn("Failed to save symptom log:", err));
 
-    // Reset form
-    setNewLog({
-      date: new Date().toISOString().split("T")[0],
-      time: new Date().toTimeString().slice(0, 5),
-      severity: 5,
-      duration: "",
-      bodyLocation: "",
-      painScale: 5,
-      activityImpact: "",
-      prostrating: false,
-      medication: false,
-      triggers: "",
-      weather: "",
-      stressLevel: 5,
-      notes: "",
-    });
-
-    // Switch to history tab to show new entry
+    setNewLog(_newSymptomLogFormState());
     setActiveTab("history");
   };
 
@@ -1720,159 +1885,113 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
     setShowDeleteConfirm(null);
   };
 
-  // AI Suggestion Prompts for each symptom type and field
-  const getAISuggestionPrompt = (field) => {
-    const config = SYMPTOM_TYPES[symptomType];
-    const contextData = {
-      symptomType: config.label,
-      severity: newLog.severity,
-      duration: newLog.duration,
-      bodyLocation: newLog.bodyLocation,
-      weather: newLog.weather,
-      stressLevel: newLog.stressLevel,
-      prostrating: newLog.prostrating,
-      medication: newLog.medication,
-    };
-
-    const builder = SYMPTOM_PROMPT_BUILDERS[symptomType];
-    const symptomPrompts = builder ? builder(contextData) : null;
-    const defaultPrompts = buildDefaultPrompts(contextData, config);
-
-    return symptomPrompts?.[field] || defaultPrompts[field];
-  };
-
-  // Generate AI suggestion for a field
-  const generateAISuggestion = async (field) => {
+  const generateAISuggestion = (field) => {
     if (!aiStatus.available) {
       setAIError("Please configure AI in settings first");
-      return;
+      return Promise.resolve();
     }
-
-    setIsAIGenerating(field);
-    setAIError("");
-
-    try {
-      const prompt = getAISuggestionPrompt(field);
-
-      // Load veteran context for smarter suggestions
-      const veteranContext = await getVeteranAIContext({
-        maxPacketTokens: 300,
-        includePacket: false,
-      });
-      const contextBlock = veteranContext
-        ? `\nVETERAN CASE DATA:\n${veteranContext}\n`
-        : "";
-
-      const response = await generateAI(
-        `${prompt}${contextBlock}
-
-IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
-        {
-          temperature: 0.7,
-          maxTokens: 300,
-          systemPrompt:
-            "You are a VA disability documentation assistant helping veterans create accurate, clinical-quality symptom logs. Provide concise, directly usable text that veterans can customize. Use appropriate medical terminology when relevant.",
-        },
-      );
-
-      // generateAI returns { text, mode } object - extract the text content
-      const text = response?.text || response;
-      if (text) {
-        const textStr = typeof text === "string" ? text : JSON.stringify(text);
-        setNewLog((prev) => ({
-          ...prev,
-          [field]: prev[field] ? `${prev[field]} ${textStr}` : textStr,
-        }));
-      } else {
-        setAIError("Failed to generate suggestion");
-      }
-    } catch (error) {
-      console.error("AI suggestion generation failed:", error);
-      setAIError("AI generation failed. Please try again.");
-    } finally {
-      setIsAIGenerating(null);
-    }
+    return _runAISuggestion({
+      field,
+      symptomType,
+      newLog,
+      setNewLog,
+      setIsAIGenerating,
+      setAIError,
+    });
   };
 
   const handleExportPDF = () => {
-    const config = SYMPTOM_TYPES[symptomType];
-    const filteredLogs = logs.filter((log) => log.type === symptomType);
+    _exportSymptomLogPDF({ symptomType, logs, stats });
+  };
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    let y = 20;
+  return {
+    handleAddLog,
+    handleDeleteLog,
+    generateAISuggestion,
+    handleExportPDF,
+  };
+}
 
-    y = addPDFTitleSection(doc, config, filteredLogs.length, margin, y);
-    y = addPDFStatsSummary(doc, stats, pageWidth, margin, y);
-    y = addPDFRatingCriteriaSection(doc, config, margin, y);
+function useSymptomLoggerState() {
+  const symptomLoggerContentRef = useRef(null);
+  const [logs, setLogs] = useState([]);
+  const [activeTab, setActiveTab] = useState("log"); // 'log', 'history', 'export'
+  const [symptomType, setSymptomType] = useState("migraine");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-    doc.setFontSize(9);
-    filteredLogs.forEach((log, index) => {
-      y = addPDFLogEntry(doc, log, index, pageWidth, margin, y);
+  // AI State
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState({ available: false });
+  const [isAIGenerating, setIsAIGenerating] = useState(null); // null or field name being generated
+  const [aiError, setAIError] = useState("");
+
+  // Form state for new log
+  const [newLog, setNewLog] = useState(_newSymptomLogFormState());
+
+  useSymptomLoggerInitEffects({
+    setLogs,
+    setSymptomType,
+    setNewLog,
+    setActiveTab,
+    setAIStatus,
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  }, [logs]);
+
+  const stats = useMemo(
+    () => _computeSymptomStats(logs, symptomType),
+    [logs, symptomType],
+  );
+
+  const { handleAddLog, handleDeleteLog, generateAISuggestion, handleExportPDF } =
+    useSymptomLoggerHandlers({
+      logs,
+      setLogs,
+      symptomType,
+      newLog,
+      setNewLog,
+      setActiveTab,
+      setShowDeleteConfirm,
+      aiStatus,
+      setIsAIGenerating,
+      setAIError,
+      stats,
     });
 
-    addPDFFooter(doc, margin);
-
-    // Save PDF
-    doc.save(
-      `${symptomType}_log_${new Date().toISOString().split("T")[0]}.pdf`,
-    );
-  };
-
   const config = SYMPTOM_TYPES[symptomType];
-  const colorClasses = {
-    purple: {
-      bg: "bg-purple-600",
-      bgLight: "bg-purple-50 dark:bg-purple-900/30",
-      border: "border-purple-200 dark:border-purple-700",
-      text: "text-purple-700 dark:text-purple-300",
-    },
-    blue: {
-      bg: "bg-blue-600",
-      bgLight: "bg-blue-50 dark:bg-blue-900/30",
-      border: "border-blue-200 dark:border-blue-700",
-      text: "text-blue-700 dark:text-blue-300",
-    },
-    red: {
-      bg: "bg-red-600",
-      bgLight: "bg-red-50 dark:bg-red-900/30",
-      border: "border-red-200 dark:border-red-700",
-      text: "text-red-700 dark:text-red-300",
-    },
-    orange: {
-      bg: "bg-orange-600",
-      bgLight: "bg-orange-50 dark:bg-orange-900/30",
-      border: "border-orange-200 dark:border-orange-700",
-      text: "text-orange-700 dark:text-orange-300",
-    },
-    indigo: {
-      bg: "bg-indigo-600",
-      bgLight: "bg-indigo-50 dark:bg-indigo-900/30",
-      border: "border-indigo-200 dark:border-indigo-700",
-      text: "text-indigo-700 dark:text-indigo-300",
-    },
-    amber: {
-      bg: "bg-amber-600",
-      bgLight: "bg-amber-50 dark:bg-amber-900/30",
-      border: "border-amber-200 dark:border-amber-700",
-      text: "text-amber-700 dark:text-amber-300",
-    },
-    teal: {
-      bg: "bg-teal-600",
-      bgLight: "bg-teal-50 dark:bg-teal-900/30",
-      border: "border-teal-200 dark:border-teal-700",
-      text: "text-teal-700 dark:text-teal-300",
-    },
-    slate: {
-      bg: "bg-slate-600",
-      bgLight: "bg-slate-50 dark:bg-slate-900/30",
-      border: "border-slate-200 dark:border-slate-700",
-      text: "text-slate-700 dark:text-slate-300",
-    },
-  };
-  const colors = colorClasses[config.color];
+  const colors = SYMPTOM_COLOR_CLASSES[config.color];
 
+  return {
+    symptomLoggerContentRef,
+    logs,
+    activeTab,
+    setActiveTab,
+    symptomType,
+    setSymptomType,
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    showAISettings,
+    setShowAISettings,
+    aiStatus,
+    setAIStatus,
+    isAIGenerating,
+    aiError,
+    newLog,
+    setNewLog,
+    stats,
+    handleAddLog,
+    handleDeleteLog,
+    generateAISuggestion,
+    handleExportPDF,
+    config,
+    colors,
+  };
+}
+
+const SymptomLogger = ({ onClose, onReportBug }) => {
+  const s = useSymptomLoggerState();
 
   return (
     <ResponsiveModal
@@ -1882,70 +2001,70 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
       labelledBy="symptom-logger-title"
       header={
         <SymptomLoggerHeader
-          config={config}
-          aiStatus={aiStatus}
-          setAIStatus={setAIStatus}
-          showAISettings={showAISettings}
-          setShowAISettings={setShowAISettings}
-          symptomLoggerContentRef={symptomLoggerContentRef}
+          config={s.config}
+          aiStatus={s.aiStatus}
+          setAIStatus={s.setAIStatus}
+          showAISettings={s.showAISettings}
+          setShowAISettings={s.setShowAISettings}
+          symptomLoggerContentRef={s.symptomLoggerContentRef}
           onReportBug={onReportBug}
           onClose={onClose}
         />
       }
-      footer={<SymptomLoggerFooter logs={logs} onClose={onClose} />}
+      footer={<SymptomLoggerFooter logs={s.logs} onClose={onClose} />}
     >
-      <div ref={symptomLoggerContentRef}>
+      <div ref={s.symptomLoggerContentRef}>
         <SymptomTypeSelector
-          symptomType={symptomType}
-          setSymptomType={setSymptomType}
+          symptomType={s.symptomType}
+          setSymptomType={s.setSymptomType}
         />
 
         <TabNavigation
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          colors={colors}
-          logs={logs}
-          symptomType={symptomType}
+          activeTab={s.activeTab}
+          setActiveTab={s.setActiveTab}
+          colors={s.colors}
+          logs={s.logs}
+          symptomType={s.symptomType}
         />
 
         {/* Content */}
         <div className="p-6">
-          {activeTab === "log" && (
+          {s.activeTab === "log" && (
             <LogAttackTab
-              newLog={newLog}
-              setNewLog={setNewLog}
-              config={config}
-              colors={colors}
-              symptomType={symptomType}
-              aiStatus={aiStatus}
-              isAIGenerating={isAIGenerating}
-              generateAISuggestion={generateAISuggestion}
-              aiError={aiError}
-              handleAddLog={handleAddLog}
+              newLog={s.newLog}
+              setNewLog={s.setNewLog}
+              config={s.config}
+              colors={s.colors}
+              symptomType={s.symptomType}
+              aiStatus={s.aiStatus}
+              isAIGenerating={s.isAIGenerating}
+              generateAISuggestion={s.generateAISuggestion}
+              aiError={s.aiError}
+              handleAddLog={s.handleAddLog}
             />
           )}
 
-          {activeTab === "history" && (
+          {s.activeTab === "history" && (
             <HistoryTab
-              logs={logs}
-              symptomType={symptomType}
-              config={config}
-              colors={colors}
-              setActiveTab={setActiveTab}
-              showDeleteConfirm={showDeleteConfirm}
-              setShowDeleteConfirm={setShowDeleteConfirm}
-              handleDeleteLog={handleDeleteLog}
+              logs={s.logs}
+              symptomType={s.symptomType}
+              config={s.config}
+              colors={s.colors}
+              setActiveTab={s.setActiveTab}
+              showDeleteConfirm={s.showDeleteConfirm}
+              setShowDeleteConfirm={s.setShowDeleteConfirm}
+              handleDeleteLog={s.handleDeleteLog}
             />
           )}
 
-          {activeTab === "export" && (
+          {s.activeTab === "export" && (
             <ExportTab
-              stats={stats}
-              colors={colors}
-              config={config}
-              logs={logs}
-              symptomType={symptomType}
-              handleExportPDF={handleExportPDF}
+              stats={s.stats}
+              colors={s.colors}
+              config={s.config}
+              logs={s.logs}
+              symptomType={s.symptomType}
+              handleExportPDF={s.handleExportPDF}
             />
           )}
         </div>

@@ -200,6 +200,59 @@ export function clearVARecords() {
   }
 }
 
+async function _savePacketData(vaData, results) {
+  if (vaData.claims && vaData.claims.length > 0) {
+    const claimsResult = await saveVAClaimsToPacket(
+      vaData.claims,
+      vaData.rawClaims,
+    );
+    if (claimsResult.success) {
+      results.packet.saved = true;
+      results.packet.count += claimsResult.count || 0;
+    } else {
+      results.errors.push("Failed to save claims to packet");
+    }
+  }
+
+  if (vaData.appeals && vaData.appeals.length > 0) {
+    const appealsResult = await saveAppealsToPacket(
+      vaData.appeals,
+      vaData.rawAppeals,
+    );
+    if (appealsResult.success) {
+      results.packet.count += appealsResult.count || 0;
+    } else {
+      results.errors.push("Failed to save appeals to packet");
+    }
+  }
+}
+
+async function _saveVKBData(vaData, results) {
+  if (vaData.serviceHistory) {
+    const historyResult = await saveServiceHistoryToVKB(
+      vaData.serviceHistory,
+      vaData.rawServiceHistory,
+    );
+    if (historyResult.success) {
+      results.vkb.saved = true;
+    } else {
+      results.errors.push("Failed to save service history to VKB");
+    }
+  }
+
+  if (vaData.appealableIssues && vaData.appealableIssues.length > 0) {
+    const issuesResult = await saveAppealableIssuesToVKB(
+      vaData.appealableIssues,
+      vaData.rawAppealableIssues,
+    );
+    if (issuesResult.success) {
+      results.vkb.saved = true;
+    } else {
+      results.errors.push("Failed to save appealable issues to VKB");
+    }
+  }
+}
+
 /**
  * Master save function - called after consent
  */
@@ -217,59 +270,12 @@ export async function saveVADataWithConsent(vaData, consent) {
       results.errors.push("Failed to save raw VA records");
     }
 
-    // Save to MyPacket if consented
     if (consent.saveToPacket) {
-      if (vaData.claims && vaData.claims.length > 0) {
-        const claimsResult = await saveVAClaimsToPacket(
-          vaData.claims,
-          vaData.rawClaims,
-        );
-        if (claimsResult.success) {
-          results.packet.saved = true;
-          results.packet.count += claimsResult.count || 0;
-        } else {
-          results.errors.push("Failed to save claims to packet");
-        }
-      }
-
-      if (vaData.appeals && vaData.appeals.length > 0) {
-        const appealsResult = await saveAppealsToPacket(
-          vaData.appeals,
-          vaData.rawAppeals,
-        );
-        if (appealsResult.success) {
-          results.packet.count += appealsResult.count || 0;
-        } else {
-          results.errors.push("Failed to save appeals to packet");
-        }
-      }
+      await _savePacketData(vaData, results);
     }
 
-    // Save to VKB if consented
     if (consent.saveToVKB) {
-      if (vaData.serviceHistory) {
-        const historyResult = await saveServiceHistoryToVKB(
-          vaData.serviceHistory,
-          vaData.rawServiceHistory,
-        );
-        if (historyResult.success) {
-          results.vkb.saved = true;
-        } else {
-          results.errors.push("Failed to save service history to VKB");
-        }
-      }
-
-      if (vaData.appealableIssues && vaData.appealableIssues.length > 0) {
-        const issuesResult = await saveAppealableIssuesToVKB(
-          vaData.appealableIssues,
-          vaData.rawAppealableIssues,
-        );
-        if (issuesResult.success) {
-          results.vkb.saved = true;
-        } else {
-          results.errors.push("Failed to save appealable issues to VKB");
-        }
-      }
+      await _saveVKBData(vaData, results);
     }
 
     return results;

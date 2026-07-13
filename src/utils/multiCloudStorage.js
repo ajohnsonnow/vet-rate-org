@@ -133,6 +133,7 @@ const generatePKCE = async () => {
   const challenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
+    // eslint-disable-next-line sonarjs/slow-regex -- fixed-length base64 hash output (~43 chars), not attacker-controlled length
     .replace(/=+$/, "");
 
   return { verifier: verifierStr, challenge };
@@ -221,7 +222,8 @@ export const connectDropbox = async () => {
             exchangeDropboxCode(code).then(resolve).catch(reject);
           }
         }
-      } catch (_e) {
+        // eslint-disable-next-line sonarjs/no-ignored-exceptions -- expected on every poll tick while the popup is still cross-origin on Dropbox; logging would spam the console
+      } catch {
         // Cross-origin access denied - popup still on Dropbox
       }
     }, 500);
@@ -533,7 +535,8 @@ export const connectOneDrive = async () => {
             exchangeOneDriveCode(code).then(resolve).catch(reject);
           }
         }
-      } catch (_e) {
+        // eslint-disable-next-line sonarjs/no-ignored-exceptions -- expected on every poll tick while the popup is still cross-origin on OneDrive; logging would spam the console
+      } catch {
         // Cross-origin
       }
     }, 500);

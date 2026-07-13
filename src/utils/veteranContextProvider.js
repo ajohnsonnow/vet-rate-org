@@ -45,6 +45,7 @@ export const normalizeConditionName = (name) => {
   if (typeof name !== "string") return "";
   return name
     .toLowerCase()
+    // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
     .replace(/\([^)]*\)/g, " ")
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
@@ -188,20 +189,90 @@ export const getVeteranAIContext = async (options = {}) => {
  * @param {number} opts.pageCount         — optional page count
  * @param {Object} opts.vkbMergeData      — optional extra fields to merge directly into VKB
  */
-export const saveAnalysisResults = async ({
+function _mergeAiInsightsAndKeyFacts(vkb, vkbMergeData) {
+  if (vkbMergeData.aiInsights) {
+    vkb.aiInsights = vkb.aiInsights || {};
+    Object.assign(vkb.aiInsights, vkbMergeData.aiInsights);
+  }
+  if (vkbMergeData.keyFacts && Array.isArray(vkbMergeData.keyFacts)) {
+    vkb.keyFacts = vkb.keyFacts || [];
+    vkb.keyFacts.push(...vkbMergeData.keyFacts);
+  }
+}
+
+function _mergeClaims(vkb, vkbMergeData, sourceDocumentId) {
+  if (!vkbMergeData.claims || !Array.isArray(vkbMergeData.claims)) return;
+
+  vkb.claims = vkb.claims || [];
+  const existingConditions = new Set(
+    vkb.claims.map((c) =>
+      normalizeConditionName(c.condition || c.conditionName),
+    ),
+  );
+  vkbMergeData.claims.forEach((claim) => {
+    const key = normalizeConditionName(claim.condition || claim.conditionName);
+    if (key && !existingConditions.has(key)) {
+      existingConditions.add(key);
+      vkb.claims.push(
+        sourceDocumentId && !claim.sourceDocumentId
+          ? { ...claim, sourceDocumentId }
+          : claim,
+      );
+    }
+  });
+}
+
+function _mergeEvidence(vkb, vkbMergeData, sourceDocumentId) {
+  if (!vkbMergeData.evidence || !Array.isArray(vkbMergeData.evidence)) return;
+
+  vkb.evidence = vkb.evidence || [];
+  const evidenceKey = (e) =>
+    `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
+  const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
+  vkbMergeData.evidence.forEach((item) => {
+    const key = evidenceKey(item);
+    if (existingEvidence.has(key)) return;
+    existingEvidence.add(key);
+    vkb.evidence.push(
+      sourceDocumentId && !item.sourceDocumentId
+        ? { ...item, sourceDocumentId }
+        : item,
+    );
+  });
+}
+
+function _mergeMedical(vkb, vkbMergeData) {
+  if (!vkbMergeData.medical) return;
+
+  vkb.medical = vkb.medical || {};
+  if (vkbMergeData.medical.conditions) {
+    vkb.medical.conditions = vkb.medical.conditions || [];
+    const existing = new Set(
+      vkb.medical.conditions.map((c) => normalizeConditionName(c.name)),
+    );
+    vkbMergeData.medical.conditions.forEach((cond) => {
+      const key = normalizeConditionName(cond.name);
+      if (key && !existing.has(key)) {
+        existing.add(key);
+        vkb.medical.conditions.push(cond);
+      }
+    });
+  }
+  if (vkbMergeData.medical.medications) {
+    vkb.medical.medications = vkb.medical.medications || [];
+    vkb.medical.medications.push(...vkbMergeData.medical.medications);
+  }
+}
+
+async function _saveToPacket({
   toolName,
   classification,
-  rawText = "",
-  extractedData = {},
-  vkbDocument = null,
-  fileName = null,
-  pageCount = 1,
-  vkbMergeData = null,
-}) => {
-  const timestamp = new Date().toISOString();
-
-  // 1) Save to My Packet (document archive)
-  let sourceDocumentId = null;
+  rawText,
+  extractedData,
+  fileName,
+  pageCount,
+  timestamp,
+}) {
   try {
     const packetResult = await saveDocumentToPacket({
       classification,
@@ -218,19 +289,27 @@ export const saveAnalysisResults = async ({
         analyzedAt: timestamp,
       },
     });
-    sourceDocumentId = packetResult?.documentId || null;
     // eslint-disable-next-line no-console
     console.log(
       `[VeteranContextProvider] ✅ Saved ${toolName} results to My Packet`,
     );
+    return packetResult?.documentId || null;
   } catch (err) {
     console.error(
       `[VeteranContextProvider] ❌ Failed to save to My Packet:`,
       err,
     );
+    return null;
   }
+}
 
-  // 2) Save to VKB (structured knowledge graph)
+async function _saveToVkb({
+  toolName,
+  vkbDocument,
+  vkbMergeData,
+  sourceDocumentId,
+  timestamp,
+}) {
   try {
     if (vkbDocument) {
       await addDocumentToVKB(vkbDocument);
@@ -240,94 +319,61 @@ export const saveAnalysisResults = async ({
       );
     }
 
-    // Merge extra data directly into VKB if provided
-    if (vkbMergeData) {
-      const vkb = await loadVKB();
-      if (vkb) {
-        // Merge aiInsights
-        if (vkbMergeData.aiInsights) {
-          vkb.aiInsights = vkb.aiInsights || {};
-          Object.assign(vkb.aiInsights, vkbMergeData.aiInsights);
-        }
-        // Merge keyFacts
-        if (vkbMergeData.keyFacts && Array.isArray(vkbMergeData.keyFacts)) {
-          vkb.keyFacts = vkb.keyFacts || [];
-          vkb.keyFacts.push(...vkbMergeData.keyFacts);
-        }
-        // Merge claims data (normalized names so "PTSD (chronic)" and
-        // "ptsd" don't stack as duplicates; each claim keeps a pointer to
-        // the My Packet document it came from)
-        if (vkbMergeData.claims && Array.isArray(vkbMergeData.claims)) {
-          vkb.claims = vkb.claims || [];
-          const existingConditions = new Set(
-            vkb.claims.map((c) =>
-              normalizeConditionName(c.condition || c.conditionName),
-            ),
-          );
-          vkbMergeData.claims.forEach((claim) => {
-            const key = normalizeConditionName(
-              claim.condition || claim.conditionName,
-            );
-            if (key && !existingConditions.has(key)) {
-              existingConditions.add(key);
-              vkb.claims.push(
-                sourceDocumentId && !claim.sourceDocumentId
-                  ? { ...claim, sourceDocumentId }
-                  : claim,
-              );
-            }
-          });
-        }
-        // Merge evidence items (deduped by date + description; stamped with
-        // the source document like claims above)
-        if (vkbMergeData.evidence && Array.isArray(vkbMergeData.evidence)) {
-          vkb.evidence = vkb.evidence || [];
-          const evidenceKey = (e) =>
-            `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
-          const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
-          vkbMergeData.evidence.forEach((item) => {
-            const key = evidenceKey(item);
-            if (existingEvidence.has(key)) return;
-            existingEvidence.add(key);
-            vkb.evidence.push(
-              sourceDocumentId && !item.sourceDocumentId
-                ? { ...item, sourceDocumentId }
-                : item,
-            );
-          });
-        }
-        // Merge medical conditions
-        if (vkbMergeData.medical) {
-          vkb.medical = vkb.medical || {};
-          if (vkbMergeData.medical.conditions) {
-            vkb.medical.conditions = vkb.medical.conditions || [];
-            const existing = new Set(
-              vkb.medical.conditions.map((c) => normalizeConditionName(c.name)),
-            );
-            vkbMergeData.medical.conditions.forEach((cond) => {
-              const key = normalizeConditionName(cond.name);
-              if (key && !existing.has(key)) {
-                existing.add(key);
-                vkb.medical.conditions.push(cond);
-              }
-            });
-          }
-          if (vkbMergeData.medical.medications) {
-            vkb.medical.medications = vkb.medical.medications || [];
-            vkb.medical.medications.push(...vkbMergeData.medical.medications);
-          }
-        }
-        vkb.lastUpdated = timestamp;
-        await saveVKB(vkb);
-        // eslint-disable-next-line no-console
-        console.log(
-          `[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`,
-        );
-      }
-    }
+    if (!vkbMergeData) return;
+
+    const vkb = await loadVKB();
+    if (!vkb) return;
+
+    _mergeAiInsightsAndKeyFacts(vkb, vkbMergeData);
+    // Merge claims data (normalized names so "PTSD (chronic)" and "ptsd"
+    // don't stack as duplicates; each claim keeps a pointer to the My
+    // Packet document it came from)
+    _mergeClaims(vkb, vkbMergeData, sourceDocumentId);
+    // Merge evidence items (deduped by date + description; stamped with
+    // the source document like claims above)
+    _mergeEvidence(vkb, vkbMergeData, sourceDocumentId);
+    _mergeMedical(vkb, vkbMergeData);
+
+    vkb.lastUpdated = timestamp;
+    await saveVKB(vkb);
+    // eslint-disable-next-line no-console
+    console.log(`[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`);
   } catch (err) {
     console.error(`[VeteranContextProvider] ❌ Failed to save to VKB:`, err);
   }
+}
+
+export const saveAnalysisResults = async ({
+  toolName,
+  classification,
+  rawText = "",
+  extractedData = {},
+  vkbDocument = null,
+  fileName = null,
+  pageCount = 1,
+  vkbMergeData = null,
+}) => {
+  const timestamp = new Date().toISOString();
+
+  // 1) Save to My Packet (document archive)
+  const sourceDocumentId = await _saveToPacket({
+    toolName,
+    classification,
+    rawText,
+    extractedData,
+    fileName,
+    pageCount,
+    timestamp,
+  });
+
+  // 2) Save to VKB (structured knowledge graph)
+  await _saveToVkb({
+    toolName,
+    vkbDocument,
+    vkbMergeData,
+    sourceDocumentId,
+    timestamp,
+  });
 };
 
 // Re-export commonly-used constants so tools only need ONE import line

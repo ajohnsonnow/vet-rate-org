@@ -255,6 +255,39 @@ export const calculateBilateralFactor = (bilateralRatings) => {
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none', bodyPart: string }
  * @returns {Object} - Calculation results
  */
+function _calculateBilateralGroup(bilateralConditions, steps) {
+  const bilateralRatings = bilateralConditions.map((c) => c.rating);
+  const combinedBilateral = combineMultipleRatings(bilateralRatings);
+
+  // Calculate bilateral factor (10% of combined)
+  const bilateralFactor = Math.round(combinedBilateral * 0.1 * 10) / 10;
+  const bilateralGroupRating = Math.round(combinedBilateral + bilateralFactor);
+
+  steps.push({
+    step: 2,
+    description: "Calculate Bilateral Group",
+    bilateralRatings: bilateralRatings.sort((a, b) => b - a),
+    combinedBilateral: combinedBilateral,
+    bilateralFactor: bilateralFactor,
+    bilateralGroupRating: bilateralGroupRating,
+  });
+
+  return { bilateralFactor, bilateralGroupRating };
+}
+
+function _calculateGapAnalysis(rawScore) {
+  const nextTier = Math.min(100, Math.ceil(rawScore / 10) * 10);
+  const gapToNext10 = nextTier - rawScore;
+
+  // Using reverse VA math: If current = C, need X where C + X(1-C) >= 95 (rounds to 100)
+  const currentEfficiency = 1 - rawScore / 100;
+  const neededForRoundTo100 =
+    currentEfficiency > 0 ? Math.ceil((95 - rawScore) / currentEfficiency) : 0;
+  const ratingNeededFor100 = Math.max(0, Math.min(100, neededForRoundTo100));
+
+  return { nextTier, gapToNext10, currentEfficiency, ratingNeededFor100 };
+}
+
 export const calculateVARating = (conditions) => {
   if (!conditions || conditions.length === 0) {
     return {
@@ -293,21 +326,10 @@ export const calculateVARating = (conditions) => {
 
   // Handle bilateral conditions if any exist
   if (bilateralConditions.length > 0) {
-    const bilateralRatings = bilateralConditions.map((c) => c.rating);
-    const combinedBilateral = combineMultipleRatings(bilateralRatings);
-
-    // Calculate bilateral factor (10% of combined)
-    bilateralFactor = Math.round(combinedBilateral * 0.1 * 10) / 10;
-    bilateralGroupRating = Math.round(combinedBilateral + bilateralFactor);
-
-    steps.push({
-      step: 2,
-      description: "Calculate Bilateral Group",
-      bilateralRatings: bilateralRatings.sort((a, b) => b - a),
-      combinedBilateral: combinedBilateral,
-      bilateralFactor: bilateralFactor,
-      bilateralGroupRating: bilateralGroupRating,
-    });
+    ({ bilateralFactor, bilateralGroupRating } = _calculateBilateralGroup(
+      bilateralConditions,
+      steps,
+    ));
 
     // Add bilateral group as single rating
     allRatings.push(bilateralGroupRating);
@@ -346,16 +368,8 @@ export const calculateVARating = (conditions) => {
     },
   });
 
-  // Calculate gap analysis
-  const nextTier = Math.min(100, Math.ceil(rawScore / 10) * 10);
-  const gapToNext10 = nextTier - rawScore;
-
-  // Calculate what rating would be needed to reach 100%
-  // Using reverse VA math: If current = C, need X where C + X(1-C) >= 95 (rounds to 100)
-  const currentEfficiency = 1 - rawScore / 100;
-  const neededForRoundTo100 =
-    currentEfficiency > 0 ? Math.ceil((95 - rawScore) / currentEfficiency) : 0;
-  const ratingNeededFor100 = Math.max(0, Math.min(100, neededForRoundTo100));
+  const { nextTier, gapToNext10, currentEfficiency, ratingNeededFor100 } =
+    _calculateGapAnalysis(rawScore);
 
   return {
     combinedRating,
@@ -497,7 +511,7 @@ export const calculateWhatIf = (
  * @param {Array} conditions - Array of condition objects with bodyPart, manifestations
  * @returns {Object} - Pyramiding analysis and warnings
  */
-export const detectPyramiding = (conditions) => {
+function _detectBodyPartPyramiding(conditions) {
   const warnings = [];
   const bodyPartGroups = {};
 
@@ -528,7 +542,11 @@ export const detectPyramiding = (conditions) => {
     }
   });
 
-  // Check for nerve + supplied part pyramiding
+  return warnings;
+}
+
+function _detectNervePyramiding(conditions) {
+  const warnings = [];
   const nerveConditions = conditions.filter(
     (c) =>
       c.name?.toLowerCase().includes("nerve") ||
@@ -561,7 +579,10 @@ export const detectPyramiding = (conditions) => {
     }
   });
 
-  // Check for spine + extremity pyramiding (common issue)
+  return warnings;
+}
+
+function _detectSpineExtremityPyramiding(conditions) {
   const spineConditions = conditions.filter(
     (c) =>
       c.bodyPart === "cervical-spine" ||
@@ -572,29 +593,39 @@ export const detectPyramiding = (conditions) => {
       c.name?.toLowerCase().includes("lumbar"),
   );
 
-  if (spineConditions.length > 0) {
-    const extremityConditions = conditions.filter((c) =>
-      ["shoulder", "arm", "hand", "hip", "leg", "knee", "foot"].includes(
-        c.bodyPart,
-      ),
-    );
+  if (spineConditions.length === 0) return [];
 
-    if (extremityConditions.length > 0) {
-      warnings.push({
-        type: "spine_extremity_warning",
-        severity: "medium",
-        message:
-          "You have both spine and extremity conditions. Ensure extremity issues are independent, not just manifestations of spine pathology.",
-        regulation: "38 CFR § 4.14, § 4.71a",
-        guidance:
-          "Radicular pain (nerve pain radiating down limbs) is rated under spine codes. Separate extremity conditions need independent pathology.",
-        affectedConditions: [
-          ...spineConditions.map((c) => c.name),
-          ...extremityConditions.map((c) => c.name),
-        ],
-      });
-    }
-  }
+  const extremityConditions = conditions.filter((c) =>
+    ["shoulder", "arm", "hand", "hip", "leg", "knee", "foot"].includes(
+      c.bodyPart,
+    ),
+  );
+
+  if (extremityConditions.length === 0) return [];
+
+  return [
+    {
+      type: "spine_extremity_warning",
+      severity: "medium",
+      message:
+        "You have both spine and extremity conditions. Ensure extremity issues are independent, not just manifestations of spine pathology.",
+      regulation: "38 CFR § 4.14, § 4.71a",
+      guidance:
+        "Radicular pain (nerve pain radiating down limbs) is rated under spine codes. Separate extremity conditions need independent pathology.",
+      affectedConditions: [
+        ...spineConditions.map((c) => c.name),
+        ...extremityConditions.map((c) => c.name),
+      ],
+    },
+  ];
+}
+
+export const detectPyramiding = (conditions) => {
+  const warnings = [
+    ..._detectBodyPartPyramiding(conditions),
+    ..._detectNervePyramiding(conditions),
+    ..._detectSpineExtremityPyramiding(conditions),
+  ];
 
   return {
     hasPotentialPyramiding: warnings.length > 0,

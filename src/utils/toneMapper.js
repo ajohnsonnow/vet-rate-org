@@ -80,6 +80,7 @@ const cleanCitationsForSpeech = (text) => {
 
   // 38 CFR § 3.309 → "Section 3 point 3 0 9 of the VA regulations"
   cleaned = cleaned.replace(
+    // eslint-disable-next-line sonarjs/slow-regex -- each \s* is bounded by adjacent required literals (CFR, digits), no overlapping ambiguity
     /38\s*CFR\s*§?\s*(\d+)\.(\d+)/gi,
     (match, part, section) =>
       `Section ${part} point ${section.split("").join(" ")} of the VA regulations`,
@@ -140,6 +141,7 @@ const cleanSymbolsForSpeech = (text) => {
   let cleaned = text;
 
   // Percentages: 70% → "70 percent"
+  // eslint-disable-next-line sonarjs/slow-regex -- single quantified group, no overlapping ambiguity
   cleaned = cleaned.replace(/(\d+)%/g, "$1 percent");
 
   // Bullets and special characters
@@ -151,6 +153,7 @@ const cleanSymbolsForSpeech = (text) => {
   // Remove markdown-style formatting
   cleaned = cleaned.replace(/\*\*/g, "");
   cleaned = cleaned.replace(/\*/g, "");
+  // eslint-disable-next-line sonarjs/slow-regex -- single quantified group, no overlapping ambiguity
   cleaned = cleaned.replace(/#+ /g, "");
 
   return cleaned.trim();

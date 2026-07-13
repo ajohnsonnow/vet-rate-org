@@ -22,10 +22,7 @@ import {
   removeRating,
   hasMyRatings,
 } from "../utils/veteranProfile";
-import {
-  getLoadableConditions,
-  normalizeConditionName,
-} from "../utils/veteranContextProvider";
+import { normalizeConditionName } from "../utils/veteranContextProvider";
 
 /**
  * TacticalCalculator - "The Rate You Deserve"
@@ -191,188 +188,55 @@ function useTacticalCalculatorFormState(initialConditions, capSimulatorResults) 
 }
 
 /**
- * Edit-condition modal state + the "load from records" candidate banner state
- */
-function useEditModalAndRecordsState() {
-  // Edit condition modal
-  const [editingCondition, setEditingCondition] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    bodyPart: "",
-    rating: 10,
-    side: "none",
-  });
-
-  // Rated conditions found in the veteran's records (saved claims + C-File
-  // analyzer output in the VKB) that aren't in My Ratings yet — offered via
-  // a one-click load banner instead of silent auto-import.
-  const [recordCandidates, setRecordCandidates] = useState([]);
-  const [recordsAnnouncement, setRecordsAnnouncement] = useState("");
-  useEffect(() => {
-    let alive = true;
-    getLoadableConditions()
-      .then((found) => {
-        if (alive) setRecordCandidates(found);
-      })
-      .catch((err) => {
-        console.warn("Could not load conditions from records:", err);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  return {
-    editingCondition,
-    setEditingCondition,
-    editForm,
-    setEditForm,
-    recordCandidates,
-    setRecordCandidates,
-    recordsAnnouncement,
-    setRecordsAnnouncement,
-  };
-}
-
-/**
- * Handlers for adding/removing a condition in the calculator tab
- */
-function useAddRemoveConditionHandlers({ setConditions, newCondition, setNewCondition, t }) {
-  // Get all body parts as flat array
-  const allBodyParts = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
-
-  // Check if selected body part can be bilateral
-  const selectedBodyPartInfo = allBodyParts.find(
-    (bp) => bp.value === newCondition.bodyPart,
-  );
-  const canBeBilateral = selectedBodyPartInfo?.canBeBilateral || false;
-
-  // Handle adding a condition
-  const handleAddCondition = () => {
-    if (!newCondition.bodyPart) {
-      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
-      return;
-    }
-
-    const bodyPartLabel =
-      allBodyParts.find((bp) => bp.value === newCondition.bodyPart)?.label ||
-      newCondition.bodyPart;
-    const sideSuffix =
-      newCondition.side !== "none"
-        ? ` (${newCondition.side.charAt(0).toUpperCase() + newCondition.side.slice(1)})`
-        : "";
-
-    const condition = {
-      id: Date.now().toString(),
-      name: newCondition.name || `${bodyPartLabel}${sideSuffix}`,
-      bodyPart: newCondition.bodyPart,
-      rating: newCondition.rating,
-      side: canBeBilateral ? newCondition.side : "none",
-    };
-
-    setConditions((prev) => [...prev, condition]);
-
-    // Reset form
-    setNewCondition({
-      name: "",
-      bodyPart: "",
-      rating: 10,
-      side: "none",
-    });
-  };
-
-  // Handle removing a condition
-  const handleRemoveCondition = (id) => {
-    setConditions((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  return {
-    allBodyParts,
-    selectedBodyPartInfo,
-    canBeBilateral,
-    handleAddCondition,
-    handleRemoveCondition,
-  };
-}
-
-/**
- * Handlers for editing an existing condition (the Edit Condition modal)
- */
-function useEditConditionHandlers({
-  setConditions,
-  editingCondition,
-  setEditingCondition,
-  editForm,
-  setEditForm,
-  allBodyParts,
-  t,
-}) {
-  // Handle editing a condition
-  const handleEditCondition = (condition) => {
-    setEditingCondition(condition);
-    setEditForm({
-      name: condition.name,
-      bodyPart: condition.bodyPart,
-      rating: condition.rating,
-      side: condition.side || "none",
-    });
-  };
-
-  // Handle saving edited condition
-  const handleSaveEdit = () => {
-    if (!editForm.bodyPart) {
-      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
-      return;
-    }
-
-    const bodyPartInfo = allBodyParts.find(
-      (bp) => bp.value === editForm.bodyPart,
-    );
-    const canBeBilateral = bodyPartInfo?.canBeBilateral || false;
-
-    setConditions((prev) =>
-      prev.map((c) =>
-        c.id === editingCondition.id
-          ? {
-              ...c,
-              name: editForm.name || c.name,
-              bodyPart: editForm.bodyPart,
-              rating: editForm.rating,
-              side: canBeBilateral ? editForm.side : "none",
-            }
-          : c,
-      ),
-    );
-
-    setEditingCondition(null);
-  };
-
-  // Handle canceling edit
-  const handleCancelEdit = () => {
-    setEditingCondition(null);
-    setEditForm({
-      name: "",
-      bodyPart: "",
-      rating: 10,
-      side: "none",
-    });
-  };
-
-  return {
-    allBodyParts,
-    selectedBodyPartInfo,
-    canBeBilateral,
-    handleAddCondition,
-    handleRemoveCondition,
-    handleEditCondition,
-    handleSaveEdit,
-    handleCancelEdit,
-  };
-}
-
-/**
  * Handlers for My Ratings, C&P results, and the records-import banner
  */
+function _loadConditionsFromRecords({
+  setConditions,
+  recordCandidates,
+  setRecordCandidates,
+  setRecordsAnnouncement,
+  setActiveTab,
+}) {
+  let added = 0;
+  setConditions((prev) => {
+    const have = new Set(prev.map((c) => normalizeConditionName(c.name)));
+    const fresh = recordCandidates.filter(
+      (c) => !have.has(normalizeConditionName(c.name)),
+    );
+    added = fresh.length;
+    return [...prev, ...fresh];
+  });
+  setRecordCandidates([]);
+  setRecordsAnnouncement(
+    `${added} condition${added === 1 ? "" : "s"} loaded from your records.`,
+  );
+  setActiveTab("calculator");
+}
+
+function _applyPastedVaGovRatings({
+  parsedRatings,
+  myRatings,
+  setMyRatings,
+  setShowVAGovPaster,
+}) {
+  // Convert parsed VA.gov format to our rating format
+  const formattedRatings = parsedRatings.map((r, index) => ({
+    id: Date.now().toString() + index,
+    name: r.condition,
+    bodyPart: "other", // Default to 'other' since we don't know the body part
+    rating: r.rating || 0,
+    side: "none",
+    source: "VA.gov",
+    effectiveDate: r.effectiveDate,
+  }));
+
+  // Save directly to My Ratings
+  const updated = [...myRatings, ...formattedRatings];
+  saveMyRatings(updated);
+  setMyRatings(updated);
+  setShowVAGovPaster(false);
+}
+
 function useMyRatingsHandlers({
   conditions,
   setConditions,
@@ -387,22 +251,14 @@ function useMyRatingsHandlers({
   setRecordsAnnouncement,
   t,
 }) {
-  const handleLoadFromRecords = () => {
-    let added = 0;
-    setConditions((prev) => {
-      const have = new Set(prev.map((c) => normalizeConditionName(c.name)));
-      const fresh = recordCandidates.filter(
-        (c) => !have.has(normalizeConditionName(c.name)),
-      );
-      added = fresh.length;
-      return [...prev, ...fresh];
+  const handleLoadFromRecords = () =>
+    _loadConditionsFromRecords({
+      setConditions,
+      recordCandidates,
+      setRecordCandidates,
+      setRecordsAnnouncement,
+      setActiveTab,
     });
-    setRecordCandidates([]);
-    setRecordsAnnouncement(
-      `${added} condition${added === 1 ? "" : "s"} loaded from your records.`,
-    );
-    setActiveTab("calculator");
-  };
 
   // Load my ratings from storage when saved ratings change
   const loadMyRatings = () => {
@@ -449,24 +305,13 @@ function useMyRatingsHandlers({
   };
 
   // Handle pasted ratings from VA.gov
-  const handlePastedRatings = (parsedRatings) => {
-    // Convert parsed VA.gov format to our rating format
-    const formattedRatings = parsedRatings.map((r, index) => ({
-      id: Date.now().toString() + index,
-      name: r.condition,
-      bodyPart: "other", // Default to 'other' since we don't know the body part
-      rating: r.rating || 0,
-      side: "none",
-      source: "VA.gov",
-      effectiveDate: r.effectiveDate,
-    }));
-
-    // Save directly to My Ratings
-    const updated = [...myRatings, ...formattedRatings];
-    saveMyRatings(updated);
-    setMyRatings(updated);
-    setShowVAGovPaster(false);
-  };
+  const handlePastedRatings = (parsedRatings) =>
+    _applyPastedVaGovRatings({
+      parsedRatings,
+      myRatings,
+      setMyRatings,
+      setShowVAGovPaster,
+    });
 
   return {
     handleLoadFromRecords,

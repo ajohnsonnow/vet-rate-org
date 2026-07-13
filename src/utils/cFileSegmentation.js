@@ -101,7 +101,7 @@ export const DOCUMENT_SIGNATURES = {
   // BVA Decisions
   BVA_DECISION: {
     patterns: [
-      /BOARD\s*OF\s*VETERANS[']?\s*APPEALS/i,
+      /BOARD\s*OF\s*VETERANS'?\s*APPEALS/i,
       /BVA\s*DECISION/i,
       /DOCKET\s*NO/i,
     ],
@@ -127,7 +127,7 @@ export const DOCUMENT_SIGNATURES = {
   VA_LETTER: {
     patterns: [
       /DEPARTMENT\s*OF\s*VETERANS\s*AFFAIRS/i,
-      /(?:DEAR\s*)?(?:MR\.|MRS\.|MS\.)\s+[A-Z][A-Za-z]+:/i,
+      /(?:DEAR\s*)?(?:MR\.|MRS\.|MS\.)\s+[A-Z]{2,}:/i,
       /(?:YOUR\s*)?CLAIM\s*(?:NUMBER|#)/i,
     ],
     priority: 50,
@@ -169,17 +169,6 @@ export const DOCUMENT_SIGNATURES = {
 };
 
 /**
- * Page break patterns commonly found in VA documents
- */
-// eslint-disable-next-line no-unused-vars
-const PAGE_BREAK_PATTERNS = [
-  /(?:^|\n)[-=]{20,}(?:\n|$)/,
-  /(?:^|\n)PAGE\s*\d+\s*(?:OF\s*\d+)?(?:\n|$)/i,
-  /(?:^|\n)\d+\s*\/\s*\d+(?:\n|$)/,
-  /(?:^|\n)(?:CONTINUED|CONTINUATION)(?:\n|$)/i,
-];
-
-/**
  * Segment a C-File into individual documents
  * Uses backwards search strategy
  *
@@ -187,6 +176,60 @@ const PAGE_BREAK_PATTERNS = [
  * @param {Object} options - Segmentation options
  * @returns {Object} Segmented C-File with parsed documents
  */
+function _extractCodeSheet(text, result) {
+  const codeSheetIndex = findLastOccurrence(
+    text,
+    DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
+  );
+  if (codeSheetIndex !== -1) {
+    const codeSheetText = text.substring(codeSheetIndex);
+    result.codeSheet = parseCodeSheet(codeSheetText);
+    result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
+
+    // Trim the text to exclude the code sheet from further processing
+    return text.substring(0, codeSheetIndex);
+  }
+
+  result.notes.push("No Code Sheet found - this may be an incomplete C-File");
+  return text;
+}
+
+function _burstIntoSegments(text, boundaries, options, result) {
+  const { maxSegments, minSegmentLength, parseDocuments } = options;
+
+  for (let i = 0; i < boundaries.length && i < maxSegments; i++) {
+    const boundary = boundaries[i];
+    const nextBoundary = boundaries[i + 1];
+    const endPosition = nextBoundary ? nextBoundary.position : text.length;
+
+    const segmentText = text.substring(boundary.position, endPosition).trim();
+
+    if (segmentText.length < minSegmentLength) {
+      continue; // Skip tiny fragments
+    }
+
+    const segment = {
+      id: `segment_${i + 1}`,
+      type: boundary.type,
+      category: DOCUMENT_SIGNATURES[boundary.type]?.category || "UNKNOWN",
+      position: boundary.position,
+      length: segmentText.length,
+      preview: segmentText.substring(0, 300),
+      confidence: boundary.confidence,
+      rawText: segmentText,
+      parsed: null,
+    };
+
+    if (parseDocuments) {
+      segment.parsed = parseVADocument(segmentText);
+    }
+
+    result.segments.push(segment);
+    result.byCategory[segment.category].push(segment.id);
+    result.segmentCount++;
+  }
+}
+
 export function segmentCFile(text, options = {}) {
   const {
     maxSegments = 1000,
@@ -227,60 +270,19 @@ export function segmentCFile(text, options = {}) {
   try {
     // === STEP 1: BACKWARDS SEARCH FOR CODE SHEET ===
     if (prioritizeCodeSheet) {
-      const codeSheetIndex = findLastOccurrence(
-        text,
-        DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
-      );
-      if (codeSheetIndex !== -1) {
-        const codeSheetText = text.substring(codeSheetIndex);
-        result.codeSheet = parseCodeSheet(codeSheetText);
-        result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
-
-        // Trim the text to exclude the code sheet from further processing
-        text = text.substring(0, codeSheetIndex);
-      } else {
-        result.notes.push(
-          "No Code Sheet found - this may be an incomplete C-File",
-        );
-      }
+      text = _extractCodeSheet(text, result);
     }
 
     // === STEP 2: IDENTIFY DOCUMENT BOUNDARIES ===
     const boundaries = findDocumentBoundaries(text);
 
-    // === STEP 3: BURST INTO SEGMENTS ===
-    for (let i = 0; i < boundaries.length && i < maxSegments; i++) {
-      const boundary = boundaries[i];
-      const nextBoundary = boundaries[i + 1];
-      const endPosition = nextBoundary ? nextBoundary.position : text.length;
-
-      const segmentText = text.substring(boundary.position, endPosition).trim();
-
-      if (segmentText.length < minSegmentLength) {
-        continue; // Skip tiny fragments
-      }
-
-      const segment = {
-        id: `segment_${i + 1}`,
-        type: boundary.type,
-        category: DOCUMENT_SIGNATURES[boundary.type]?.category || "UNKNOWN",
-        position: boundary.position,
-        length: segmentText.length,
-        preview: segmentText.substring(0, 300),
-        confidence: boundary.confidence,
-        rawText: segmentText,
-        parsed: null,
-      };
-
-      // === STEP 4: PARSE SEGMENT IF REQUESTED ===
-      if (parseDocuments) {
-        segment.parsed = parseVADocument(segmentText);
-      }
-
-      result.segments.push(segment);
-      result.byCategory[segment.category].push(segment.id);
-      result.segmentCount++;
-    }
+    // === STEP 3-4: BURST INTO SEGMENTS + PARSE ===
+    _burstIntoSegments(
+      text,
+      boundaries,
+      { maxSegments, minSegmentLength, parseDocuments },
+      result,
+    );
 
     // === STEP 5: BUILD SUMMARY ===
     result.summary = {
@@ -414,6 +416,21 @@ export function extractDecisions(cFileText) {
   );
 }
 
+const QUICK_SCAN_FLAGS = {
+  CODE_SHEET: "hasCodeSheet",
+  DD214: "hasDD214",
+  DBQ: "hasDBQs",
+  BVA_DECISION: "hasBVA",
+};
+
+function _markDetectedType(scan, typeName) {
+  if (!scan.detectedTypes.includes(typeName)) {
+    scan.detectedTypes.push(typeName);
+  }
+  const flag = QUICK_SCAN_FLAGS[typeName];
+  if (flag) scan[flag] = true;
+}
+
 /**
  * Quick scan to get C-File overview without full parsing
  */
@@ -428,17 +445,9 @@ export function quickScanCFile(text) {
   };
 
   for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
-    for (const pattern of signature.patterns) {
-      if (text.match(pattern)) {
-        if (!scan.detectedTypes.includes(typeName)) {
-          scan.detectedTypes.push(typeName);
-        }
-
-        if (typeName === "CODE_SHEET") scan.hasCodeSheet = true;
-        if (typeName === "DD214") scan.hasDD214 = true;
-        if (typeName === "DBQ") scan.hasDBQs = true;
-        if (typeName === "BVA_DECISION") scan.hasBVA = true;
-      }
+    const isDetected = signature.patterns.some((pattern) => text.match(pattern));
+    if (isDetected) {
+      _markDetectedType(scan, typeName);
     }
   }
 

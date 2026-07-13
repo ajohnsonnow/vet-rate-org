@@ -838,6 +838,11 @@ function parseConditionsFromText(text) {
   const conditions = [];
   const seenConditions = new Set();
 
+  // Security review note: patterns below extract condition names from real veterans'
+  // VA decision letters/rating decisions. Their permissive shapes are load-bearing for
+  // matching format variants, not accidental complexity — mechanically re-bounding them
+  // risks silently narrowing what's matched. Deserves a dedicated fixture-tested pass.
+  /* eslint-disable sonarjs/slow-regex */
   // Common patterns in VA decision letters and rating decisions
   const patterns = [
     // "XX% rating for [condition]" format
@@ -853,6 +858,7 @@ function parseConditionsFromText(text) {
     // Conditions with percentages at start of lines
     /^(?:\s*[-•*]\s*)?([A-Z][a-zA-Z\s,]+?)\s*[-–—:]\s*(\d+)%/gm,
   ];
+  /* eslint-enable sonarjs/slow-regex */
 
   for (const pattern of patterns) {
     let match;
@@ -863,6 +869,7 @@ function parseConditionsFromText(text) {
         condition = condition
           .replace(/\s+/g, " ")
           .replace(/^\d+%?\s*/, "")
+          // eslint-disable-next-line sonarjs/slow-regex -- condition-name cleanup on already-extracted VA decision text
           .replace(/\s*[-–—:]\s*\d+%?\s*$/, "")
           .replace(/^\s*for\s+/i, "")
           .trim();
@@ -1070,6 +1077,7 @@ function ConditionSystemGroup({
             // Extract DC code from condition name if present
             // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
             const dcMatch = condition.match(
+              // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
               /\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i,
             );
             let displayDCCode = null;
@@ -1090,11 +1098,10 @@ function ConditionSystemGroup({
             ) {
               // Has a "rated under" clause but no specific DC - don't look up, just clean the display
               displayCondition = condition
+                // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
                 .replace(/\s*\(rated under [^)]+\)/gi, "")
-                .replace(
-                  /\s*\(rated analogously[^)]*\)/gi,
-                  "",
-                )
+                // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
+                .replace(/\s*\(rated analogously[^)]*\)/gi, "")
                 .trim();
             } else {
               // Try to look up DC code from disabilityData
@@ -1892,6 +1899,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     const conditions = lines
       .map((line) => {
         // Check if line matches VA.gov format: "XX% rating for [condition]"
+        // eslint-disable-next-line sonarjs/slow-regex -- single-line, non-nested quantifiers
         const vaFormatMatch = line.match(/^\d+%\s+rating\s+for\s+(.+)$/i);
         if (vaFormatMatch) {
           // Extract just the condition name, capitalize properly

@@ -50,8 +50,7 @@ export default function CFileAnalyzer({
   const fileInputRef = useRef(null);
 
   // AI status state (unified AI service handles API keys internally)
-  // eslint-disable-next-line no-unused-vars
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [_aiStatus, setAIStatus] = useState(getAIStatus());
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -92,8 +91,7 @@ export default function CFileAnalyzer({
 
   // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [hasConsented, setHasConsented] = useState(false);
+  const [_hasConsented, setHasConsented] = useState(false);
 
   // Results state
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -418,15 +416,15 @@ export default function CFileAnalyzer({
       )}
 
       {/* Drop Zone */}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      {(() => {
+        let dropZoneClass =
+          "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500";
+        if (isDragging) dropZoneClass = "border-blue-500 bg-blue-50 dark:bg-blue-900/30";
+        else if (file) dropZoneClass = "border-green-500 bg-green-50 dark:bg-green-900/30";
+        return (
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
-        className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-          isDragging
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-            : file
-              ? "border-green-500 bg-green-50 dark:bg-green-900/30"
-              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500"
-        }`}
+        className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${dropZoneClass}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -474,6 +472,8 @@ export default function CFileAnalyzer({
           </div>
         )}
       </div>
+        );
+      })()}
 
       {/* Error Display */}
       {error && (
@@ -1180,6 +1180,10 @@ export default function CFileAnalyzer({
     </div>
   );
 
+  let mainContent = renderUploadForm();
+  if (isProcessing) mainContent = renderProcessing();
+  else if (analysisResult) mainContent = renderDashboard();
+
   return (
     <>
       <ResponsiveModal
@@ -1256,11 +1260,7 @@ export default function CFileAnalyzer({
           </div>
         }
       >
-        {isProcessing
-          ? renderProcessing()
-          : analysisResult
-            ? renderDashboard()
-            : renderUploadForm()}
+        {mainContent}
       </ResponsiveModal>
       {renderPrivacyConsent()}
     </>

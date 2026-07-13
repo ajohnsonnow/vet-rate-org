@@ -501,6 +501,22 @@ const _getMilestonesByPhase = () => {
   return grouped;
 };
 
+function _buildPhaseProgress(phase, milestones, completed) {
+  const phaseMilestones = milestones.filter((m) => m.phase === phase.id);
+  const phaseCompleted = phaseMilestones.filter((pm) =>
+    completed.some((c) => c.id === pm.id),
+  );
+  return {
+    ...phase,
+    milestones: phaseMilestones,
+    completed: phaseCompleted.length,
+    total: phaseMilestones.length,
+    percentage: Math.round(
+      (phaseCompleted.length / phaseMilestones.length) * 100,
+    ),
+  };
+}
+
 /**
  * Custom hook to track claim progress across all tools
  */
@@ -543,19 +559,7 @@ export default function useClaimProgress() {
     // Group by phase with completion status
     const byPhase = {};
     Object.values(PHASES).forEach((phase) => {
-      const phaseMilestones = MILESTONES.filter((m) => m.phase === phase.id);
-      const phaseCompleted = phaseMilestones.filter((pm) =>
-        completed.some((c) => c.id === pm.id),
-      );
-      byPhase[phase.id] = {
-        ...phase,
-        milestones: phaseMilestones,
-        completed: phaseCompleted.length,
-        total: phaseMilestones.length,
-        percentage: Math.round(
-          (phaseCompleted.length / phaseMilestones.length) * 100,
-        ),
-      };
+      byPhase[phase.id] = _buildPhaseProgress(phase, MILESTONES, completed);
     });
 
     setProgress({

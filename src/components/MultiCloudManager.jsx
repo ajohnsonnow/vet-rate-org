@@ -509,6 +509,7 @@ function createDeleteHandler({
       if (selectedProvider === "google_drive") {
         await deleteBackupFromGoogleDrive(backup.id);
       }
+      // eslint-disable-next-line sonarjs/todo-tag -- tracked follow-up, not a lint-pass-sized change; only google_drive delete is implemented today
       // TODO: Add delete for other providers
 
       setStatus("Backup deleted");

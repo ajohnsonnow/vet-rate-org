@@ -73,6 +73,12 @@ const APP_MODULE_KEYS = [
   "OTHER",
 ];
 
+function _charCountClass(length, minLength) {
+  if (length >= minLength) return "text-green-600 dark:text-green-400";
+  if (length > 0) return "text-red-500 dark:text-red-400";
+  return "text-gray-500 dark:text-gray-400";
+}
+
 function FeatureRequest({ onClose, appState = {}, onOpenRoadmap }) {
   const { t } = useLanguage();
 
@@ -345,12 +351,33 @@ ${t("featureRequest", "thankYouMessage")}
     formData.description.trim().length >= 20 &&
     isValidEmail(formData.veteranEmail);
 
+  let backButtonHandler = () => setStep(step - 1);
+  if (step === 1 || submitted) backButtonHandler = onClose;
+
+  let backButtonLabel = `← ${t("common", "back")}`;
+  if (step === 1) backButtonLabel = t("common", "cancel");
+  else if (submitted) backButtonLabel = t("common", "close");
+
+  let step2ValidationMessage = "";
+  const titleTooShort = formData.title.trim().length < 5;
+  const descTooShort = formData.description.trim().length < 20;
+  if (titleTooShort && descTooShort) {
+    step2ValidationMessage = `⚠️ ${t("featureRequest", "validationTitleAndDesc")}`;
+  } else if (titleTooShort) {
+    step2ValidationMessage = `⚠️ ${t("featureRequest", "validationTitleOnly")}`;
+  } else if (descTooShort) {
+    step2ValidationMessage = `⚠️ ${t("featureRequest", "validationDescOnly")}`;
+  } else if (emailError) {
+    step2ValidationMessage = `⚠️ ${t("featureRequest", "validationEmailFix")}`;
+  }
+
+  const canProceedCurrentStep =
+    step === 1 ? canProceedStep1 : canProceedStep2;
+
   const footer = (
     <div className="flex justify-between items-center">
       <button
-        onClick={
-          step === 1 ? onClose : submitted ? onClose : () => setStep(step - 1)
-        }
+        onClick={backButtonHandler}
         disabled={submitting}
         className={`px-4 py-2 font-medium transition-colors ${
           submitting
@@ -358,36 +385,23 @@ ${t("featureRequest", "thankYouMessage")}
             : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
         }`}
       >
-        {step === 1
-          ? t("common", "cancel")
-          : submitted
-            ? t("common", "close")
-            : `← ${t("common", "back")}`}
+        {backButtonLabel}
       </button>
 
       {step < 3 ? (
         <div className="flex flex-col items-end gap-1">
           {step === 2 && !canProceedStep2 && (
             <p className="text-xs text-red-500 dark:text-red-400">
-              {formData.title.trim().length < 5 &&
-              formData.description.trim().length < 20
-                ? `⚠️ ${t("featureRequest", "validationTitleAndDesc")}`
-                : formData.title.trim().length < 5
-                  ? `⚠️ ${t("featureRequest", "validationTitleOnly")}`
-                  : formData.description.trim().length < 20
-                    ? `⚠️ ${t("featureRequest", "validationDescOnly")}`
-                    : emailError
-                      ? `⚠️ ${t("featureRequest", "validationEmailFix")}`
-                      : ""}
+              {step2ValidationMessage}
             </p>
           )}
           <button
             onClick={() =>
               step === 2 ? handleGenerateReport() : setStep(step + 1)
             }
-            disabled={step === 1 ? !canProceedStep1 : !canProceedStep2}
+            disabled={!canProceedCurrentStep}
             className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-              (step === 1 ? canProceedStep1 : canProceedStep2)
+              canProceedCurrentStep
                 ? "bg-purple-600 text-white hover:bg-purple-700"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
@@ -608,13 +622,7 @@ ${t("featureRequest", "thankYouMessage")}
               }`}
             />
             <p
-              className={`text-xs mt-1 ${
-                formData.title.trim().length >= 5
-                  ? "text-green-600 dark:text-green-400"
-                  : formData.title.trim().length > 0
-                    ? "text-red-500 dark:text-red-400"
-                    : "text-gray-500 dark:text-gray-400"
-              }`}
+              className={`text-xs mt-1 ${_charCountClass(formData.title.trim().length, 5)}`}
             >
               {formData.title.trim().length >= 5
                 ? `✓ ${formData.title.length}/100 ${t("featureRequest", "characters")}`
@@ -641,13 +649,7 @@ ${t("featureRequest", "thankYouMessage")}
               }`}
             />
             <p
-              className={`text-xs mt-1 ${
-                formData.description.trim().length >= 20
-                  ? "text-green-600 dark:text-green-400"
-                  : formData.description.trim().length > 0
-                    ? "text-red-500 dark:text-red-400"
-                    : "text-gray-500 dark:text-gray-400"
-              }`}
+              className={`text-xs mt-1 ${_charCountClass(formData.description.trim().length, 20)}`}
             >
               {formData.description.trim().length >= 20
                 ? `✓ ${formData.description.trim().length} ${t("featureRequest", "characters")}`

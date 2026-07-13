@@ -446,48 +446,55 @@ export const exportAllVeteranData = () => {
  * @param {string} mode - 'replace' or 'merge'
  * @returns {Object} Result with success status and message
  */
+function _importProfile(data, mode) {
+  if (!data.profile || typeof data.profile !== "object") return null;
+
+  const profileSaved =
+    mode === "replace"
+      ? saveVeteranProfile(data.profile)
+      : saveVeteranProfile({ ...getVeteranProfile(), ...data.profile });
+
+  if (!profileSaved) {
+    return {
+      success: false,
+      message:
+        "Your profile could not be saved — your device storage may be full. Free up space and try the import again.",
+    };
+  }
+  return null;
+}
+
+function _importForms(data, mode) {
+  if (!data.forms || !Array.isArray(data.forms)) return;
+
+  if (mode === "replace") {
+    localStorage.setItem(SAVED_FORMS_KEY, JSON.stringify(data.forms));
+    return;
+  }
+
+  const currentForms = getSavedForms();
+  const mergedForms = [...currentForms];
+
+  for (const form of data.forms) {
+    const existingIndex = currentForms.findIndex((f) => f.id === form.id);
+    if (existingIndex === -1) {
+      mergedForms.push(form);
+    }
+  }
+
+  localStorage.setItem(SAVED_FORMS_KEY, JSON.stringify(mergedForms));
+}
+
 export const importVeteranData = (data, mode = "replace") => {
   try {
     if (!data || typeof data !== "object") {
       return { success: false, message: "Invalid backup data" };
     }
 
-    // Import profile
-    if (data.profile && typeof data.profile === "object") {
-      let profileSaved;
-      if (mode === "replace") {
-        profileSaved = saveVeteranProfile(data.profile);
-      } else {
-        const current = getVeteranProfile();
-        profileSaved = saveVeteranProfile({ ...current, ...data.profile });
-      }
-      if (!profileSaved) {
-        return {
-          success: false,
-          message:
-            "Your profile could not be saved — your device storage may be full. Free up space and try the import again.",
-        };
-      }
-    }
+    const profileError = _importProfile(data, mode);
+    if (profileError) return profileError;
 
-    // Import forms
-    if (data.forms && Array.isArray(data.forms)) {
-      if (mode === "replace") {
-        localStorage.setItem(SAVED_FORMS_KEY, JSON.stringify(data.forms));
-      } else {
-        const currentForms = getSavedForms();
-        const mergedForms = [...currentForms];
-
-        for (const form of data.forms) {
-          const existingIndex = currentForms.findIndex((f) => f.id === form.id);
-          if (existingIndex === -1) {
-            mergedForms.push(form);
-          }
-        }
-
-        localStorage.setItem(SAVED_FORMS_KEY, JSON.stringify(mergedForms));
-      }
-    }
+    _importForms(data, mode);
 
     return {
       success: true,
@@ -780,73 +787,75 @@ export const getServiceHistory = () => {
  * @param {Object} history - The service history data
  * @returns {boolean} Success status
  */
+function _sanitizeDeployments(deployments) {
+  if (!Array.isArray(deployments)) return [];
+  return deployments.map((d) => ({
+    id: d.id || `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    theater: VALID_THEATERS.includes(d.theater) ? d.theater : "Other",
+    location: sanitizeString(d.location || "", 200),
+    startDate: d.startDate || null,
+    endDate: d.endDate || null,
+    unit: sanitizeString(d.unit || "", 200),
+    notes: sanitizeString(d.notes || "", 1000),
+    hazardous: !!d.hazardous,
+    combat: !!d.combat,
+    dateAdded: d.dateAdded || new Date().toISOString(),
+  }));
+}
+
+function _sanitizeAwards(awards) {
+  if (!Array.isArray(awards)) return [];
+  return awards.map((a) => ({
+    id:
+      a.id || `award_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    name: sanitizeString(a.name || "", 200),
+    abbreviation: sanitizeString(a.abbreviation || "", 50),
+    dateReceived: a.dateReceived || null,
+    notes: sanitizeString(a.notes || "", 500),
+    isCombat: !!a.isCombat,
+    dateAdded: a.dateAdded || new Date().toISOString(),
+  }));
+}
+
+function _sanitizeDd214Data(dd214Data) {
+  if (!dd214Data) return null;
+  return {
+    branch: sanitizeString(dd214Data.branch || "", 100),
+    mos: sanitizeString(dd214Data.mos || "", 200),
+    mosTitle: sanitizeString(dd214Data.mosTitle || "", 200),
+    entryDate: dd214Data.entryDate || null,
+    separationDate: dd214Data.separationDate || null,
+    yearsService: dd214Data.yearsService || null,
+    monthsService: dd214Data.monthsService || null,
+    separationType: sanitizeString(dd214Data.separationType || "", 100),
+    characterOfService: sanitizeString(
+      dd214Data.characterOfService || "",
+      100,
+    ),
+    reenlisted: !!dd214Data.reenlisted,
+    foreignService: !!dd214Data.foreignService,
+    extractedText: sanitizeString(dd214Data.extractedText || "", 10000),
+    dateProcessed: dd214Data.dateProcessed || new Date().toISOString(),
+  };
+}
+
+function _sanitizeServiceInfo(serviceInfo) {
+  if (!serviceInfo) return null;
+  return {
+    branch: sanitizeString(serviceInfo.branch || "", 100),
+    component: sanitizeString(serviceInfo.component || "", 100), // Active, Reserve, Guard
+    rank: sanitizeString(serviceInfo.rank || "", 100),
+    mos: sanitizeString(serviceInfo.mos || "", 200),
+  };
+}
+
 export const saveServiceHistory = (history) => {
   try {
     const sanitized = {
-      deployments: Array.isArray(history.deployments)
-        ? history.deployments.map((d) => ({
-            id:
-              d.id ||
-              `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            theater: VALID_THEATERS.includes(d.theater) ? d.theater : "Other",
-            location: sanitizeString(d.location || "", 200),
-            startDate: d.startDate || null,
-            endDate: d.endDate || null,
-            unit: sanitizeString(d.unit || "", 200),
-            notes: sanitizeString(d.notes || "", 1000),
-            hazardous: !!d.hazardous,
-            combat: !!d.combat,
-            dateAdded: d.dateAdded || new Date().toISOString(),
-          }))
-        : [],
-      awards: Array.isArray(history.awards)
-        ? history.awards.map((a) => ({
-            id:
-              a.id ||
-              `award_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: sanitizeString(a.name || "", 200),
-            abbreviation: sanitizeString(a.abbreviation || "", 50),
-            dateReceived: a.dateReceived || null,
-            notes: sanitizeString(a.notes || "", 500),
-            isCombat: !!a.isCombat,
-            dateAdded: a.dateAdded || new Date().toISOString(),
-          }))
-        : [],
-      dd214Data: history.dd214Data
-        ? {
-            branch: sanitizeString(history.dd214Data.branch || "", 100),
-            mos: sanitizeString(history.dd214Data.mos || "", 200),
-            mosTitle: sanitizeString(history.dd214Data.mosTitle || "", 200),
-            entryDate: history.dd214Data.entryDate || null,
-            separationDate: history.dd214Data.separationDate || null,
-            yearsService: history.dd214Data.yearsService || null,
-            monthsService: history.dd214Data.monthsService || null,
-            separationType: sanitizeString(
-              history.dd214Data.separationType || "",
-              100,
-            ),
-            characterOfService: sanitizeString(
-              history.dd214Data.characterOfService || "",
-              100,
-            ),
-            reenlisted: !!history.dd214Data.reenlisted,
-            foreignService: !!history.dd214Data.foreignService,
-            extractedText: sanitizeString(
-              history.dd214Data.extractedText || "",
-              10000,
-            ),
-            dateProcessed:
-              history.dd214Data.dateProcessed || new Date().toISOString(),
-          }
-        : null,
-      serviceInfo: history.serviceInfo
-        ? {
-            branch: sanitizeString(history.serviceInfo.branch || "", 100),
-            component: sanitizeString(history.serviceInfo.component || "", 100), // Active, Reserve, Guard
-            rank: sanitizeString(history.serviceInfo.rank || "", 100),
-            mos: sanitizeString(history.serviceInfo.mos || "", 200),
-          }
-        : null,
+      deployments: _sanitizeDeployments(history.deployments),
+      awards: _sanitizeAwards(history.awards),
+      dd214Data: _sanitizeDd214Data(history.dd214Data),
+      serviceInfo: _sanitizeServiceInfo(history.serviceInfo),
       dateUpdated: new Date().toISOString(),
     };
 
@@ -983,106 +992,122 @@ export const removeAward = (awardId) => {
  * @param {Object} dd214Data - Extracted DD214 information
  * @returns {boolean} Success status
  */
+function _dd214PersonalFields(d) {
+  // === Personal Identification (SENSITIVE) ===
+  return {
+    fullName: sanitizeString(d.fullName || "", 200),
+    lastName: sanitizeString(d.lastName || "", 100),
+    firstName: sanitizeString(d.firstName || "", 100),
+    middleName: sanitizeString(d.middleName || "", 100),
+    ssnLast4: sanitizeString(d.ssnLast4 || "", 4), // Only last 4 digits
+    ssnFull: sanitizeString(d.ssnFull || "", 11), // Full SSN if user opts in
+    serviceNumber: sanitizeString(d.serviceNumber || "", 50),
+    dateOfBirth: d.dateOfBirth || null,
+    placeOfBirth: sanitizeString(d.placeOfBirth || "", 200),
+    homeOfRecord: sanitizeString(d.homeOfRecord || "", 300),
+  };
+}
+
+function _dd214ServiceFields(d) {
+  // === Service Information ===
+  return {
+    branch: sanitizeString(d.branch || "", 100),
+    component: sanitizeString(d.component || "", 50),
+    componentFull: sanitizeString(d.componentFull || "", 100),
+    rank: sanitizeString(d.rank || "", 100),
+    payGrade: sanitizeString(d.payGrade || "", 10),
+    dateOfRank: d.dateOfRank || null,
+    mos: sanitizeString(d.mos || "", 200),
+    mosTitle: sanitizeString(d.mosTitle || "", 200),
+    primarySpecialty: sanitizeString(d.primarySpecialty || "", 200),
+    lastDutyAssignment: sanitizeString(d.lastDutyAssignment || "", 500),
+    commandTransferredTo: sanitizeString(d.commandTransferredTo || "", 500),
+  };
+}
+
+function _dd214DateFields(d) {
+  // === Dates and Service Time ===
+  return {
+    entryDate: d.entryDate || null,
+    separationDate: d.separationDate || null,
+    netActiveService: d.netActiveService || null,
+    totalPriorActiveService: d.totalPriorActiveService || null,
+    totalPriorInactiveService: d.totalPriorInactiveService || null,
+    yearsService: d.yearsService || null,
+    monthsService: d.monthsService || null,
+    daysService: d.daysService || null,
+    totalActiveDutyDays: d.totalActiveDutyDays || null,
+  };
+}
+
+function _dd214BenefitsFields(d) {
+  // === Benefits & Obligations ===
+  return {
+    sglCoverage: sanitizeString(d.sglCoverage || "", 100),
+    giBlStatus: sanitizeString(d.giBlStatus || "", 100),
+    reserveObligationDate: d.reserveObligationDate || null,
+    daysLost: d.daysLost || null,
+    foreignService: !!d.foreignService,
+    foreignServiceDetails: sanitizeString(d.foreignServiceDetails || "", 500),
+    seaService: d.seaService || null,
+  };
+}
+
+function _dd214SeparationFields(d) {
+  // === Separation Info ===
+  return {
+    separationAuthority: sanitizeString(d.separationAuthority || "", 200),
+    separationCode: sanitizeString(d.separationCode || "", 50),
+    reentryCode: sanitizeString(d.reentryCode || "", 50),
+    separationProgramDesignator: sanitizeString(
+      d.separationProgramDesignator || "",
+      50,
+    ),
+    separationType: sanitizeString(d.separationType || "", 100),
+    characterOfService: sanitizeString(d.characterOfService || "", 100),
+    narrativeReason: sanitizeString(d.narrativeReason || "", 500),
+  };
+}
+
+function _dd214MiscFields(d) {
+  return {
+    // === Education & Training ===
+    militaryEducation: Array.isArray(d.militaryEducation)
+      ? d.militaryEducation
+      : [],
+    memberRequests: sanitizeString(d.memberRequests || "", 500),
+
+    // === Contact ===
+    homeAddress: sanitizeString(d.homeAddress || "", 500),
+
+    // === Combat & Qualifications ===
+    combatService: d.combatService || null,
+    specialQualifications: Array.isArray(d.specialQualifications)
+      ? d.specialQualifications
+      : [],
+    securityClearance: sanitizeString(d.securityClearance || "", 100),
+
+    // === Legacy ===
+    reenlisted: !!d.reenlisted,
+
+    // === Metadata ===
+    extractedText: sanitizeString(d.extractedText || "", 10000),
+    dd214Count: d.dd214Count || 1,
+    dateProcessed: new Date().toISOString(),
+    sensitiveDataStored: !!(d.ssnFull || d.serviceNumber), // Flag if PII present
+  };
+}
+
 export const saveDD214Data = (dd214Data) => {
   try {
     const history = getServiceHistory();
     history.dd214Data = {
-      // === Personal Identification (SENSITIVE) ===
-      fullName: sanitizeString(dd214Data.fullName || "", 200),
-      lastName: sanitizeString(dd214Data.lastName || "", 100),
-      firstName: sanitizeString(dd214Data.firstName || "", 100),
-      middleName: sanitizeString(dd214Data.middleName || "", 100),
-      ssnLast4: sanitizeString(dd214Data.ssnLast4 || "", 4), // Only last 4 digits
-      ssnFull: sanitizeString(dd214Data.ssnFull || "", 11), // Full SSN if user opts in
-      serviceNumber: sanitizeString(dd214Data.serviceNumber || "", 50),
-      dateOfBirth: dd214Data.dateOfBirth || null,
-      placeOfBirth: sanitizeString(dd214Data.placeOfBirth || "", 200),
-      homeOfRecord: sanitizeString(dd214Data.homeOfRecord || "", 300),
-
-      // === Service Information ===
-      branch: sanitizeString(dd214Data.branch || "", 100),
-      component: sanitizeString(dd214Data.component || "", 50),
-      componentFull: sanitizeString(dd214Data.componentFull || "", 100),
-      rank: sanitizeString(dd214Data.rank || "", 100),
-      payGrade: sanitizeString(dd214Data.payGrade || "", 10),
-      dateOfRank: dd214Data.dateOfRank || null,
-      mos: sanitizeString(dd214Data.mos || "", 200),
-      mosTitle: sanitizeString(dd214Data.mosTitle || "", 200),
-      primarySpecialty: sanitizeString(dd214Data.primarySpecialty || "", 200),
-      lastDutyAssignment: sanitizeString(
-        dd214Data.lastDutyAssignment || "",
-        500,
-      ),
-      commandTransferredTo: sanitizeString(
-        dd214Data.commandTransferredTo || "",
-        500,
-      ),
-
-      // === Dates and Service Time ===
-      entryDate: dd214Data.entryDate || null,
-      separationDate: dd214Data.separationDate || null,
-      netActiveService: dd214Data.netActiveService || null,
-      totalPriorActiveService: dd214Data.totalPriorActiveService || null,
-      totalPriorInactiveService: dd214Data.totalPriorInactiveService || null,
-      yearsService: dd214Data.yearsService || null,
-      monthsService: dd214Data.monthsService || null,
-      daysService: dd214Data.daysService || null,
-      totalActiveDutyDays: dd214Data.totalActiveDutyDays || null,
-
-      // === Benefits & Obligations ===
-      sglCoverage: sanitizeString(dd214Data.sglCoverage || "", 100),
-      giBlStatus: sanitizeString(dd214Data.giBlStatus || "", 100),
-      reserveObligationDate: dd214Data.reserveObligationDate || null,
-      daysLost: dd214Data.daysLost || null,
-      foreignService: !!dd214Data.foreignService,
-      foreignServiceDetails: sanitizeString(
-        dd214Data.foreignServiceDetails || "",
-        500,
-      ),
-      seaService: dd214Data.seaService || null,
-
-      // === Separation Info ===
-      separationAuthority: sanitizeString(
-        dd214Data.separationAuthority || "",
-        200,
-      ),
-      separationCode: sanitizeString(dd214Data.separationCode || "", 50),
-      reentryCode: sanitizeString(dd214Data.reentryCode || "", 50),
-      separationProgramDesignator: sanitizeString(
-        dd214Data.separationProgramDesignator || "",
-        50,
-      ),
-      separationType: sanitizeString(dd214Data.separationType || "", 100),
-      characterOfService: sanitizeString(
-        dd214Data.characterOfService || "",
-        100,
-      ),
-      narrativeReason: sanitizeString(dd214Data.narrativeReason || "", 500),
-
-      // === Education & Training ===
-      militaryEducation: Array.isArray(dd214Data.militaryEducation)
-        ? dd214Data.militaryEducation
-        : [],
-      memberRequests: sanitizeString(dd214Data.memberRequests || "", 500),
-
-      // === Contact ===
-      homeAddress: sanitizeString(dd214Data.homeAddress || "", 500),
-
-      // === Combat & Qualifications ===
-      combatService: dd214Data.combatService || null,
-      specialQualifications: Array.isArray(dd214Data.specialQualifications)
-        ? dd214Data.specialQualifications
-        : [],
-      securityClearance: sanitizeString(dd214Data.securityClearance || "", 100),
-
-      // === Legacy ===
-      reenlisted: !!dd214Data.reenlisted,
-
-      // === Metadata ===
-      extractedText: sanitizeString(dd214Data.extractedText || "", 10000),
-      dd214Count: dd214Data.dd214Count || 1,
-      dateProcessed: new Date().toISOString(),
-      sensitiveDataStored: !!(dd214Data.ssnFull || dd214Data.serviceNumber), // Flag if PII present
+      ..._dd214PersonalFields(dd214Data),
+      ..._dd214ServiceFields(dd214Data),
+      ..._dd214DateFields(dd214Data),
+      ..._dd214BenefitsFields(dd214Data),
+      ..._dd214SeparationFields(dd214Data),
+      ..._dd214MiscFields(dd214Data),
     };
     return saveServiceHistory(history);
   } catch (error) {

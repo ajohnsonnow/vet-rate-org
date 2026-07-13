@@ -92,6 +92,86 @@ self.onmessage = async (e) => {
   }
 };
 
+async function _loadProcessorAndModel() {
+  // Load processor + tokenizer (small, fast)
+  self.postMessage({
+    status: "loading",
+    progress: 5,
+    stage: "processor",
+    message: "Loading image processor and tokenizer...",
+  });
+
+  // Florence-2 requires a separate tokenizer for batch_decode
+  // (processor.batch_decode does NOT work — use tokenizer.batch_decode)
+  [processor, tokenizer] = await Promise.all([
+    AutoProcessor.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
+    AutoTokenizer.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
+  ]);
+
+  // Load model with mixed precision for optimal memory/quality balance
+  // This is the "secret sauce" that prevents browser crashes
+  self.postMessage({
+    status: "loading",
+    progress: 10,
+    stage: "model",
+    message:
+      "Loading vision model (this may take 1-2 minutes on first load)...",
+  });
+
+  model = await Florence2ForConditionalGeneration.from_pretrained(MODEL_ID, {
+    revision: MODEL_REVISION,
+    device: "webgpu",
+    dtype: {
+      // Mixed Precision Strategy:
+      // - Keep vision encoder in fp16 for accuracy (the "eyes")
+      // - Compress language model to q4 for memory savings (the "brain")
+      embed_tokens: "fp16", // Token embeddings - keep sharp
+      vision_encoder: "fp16", // Vision transformer - critical for OCR
+      encoder_model: "q4", // Text encoder - can compress
+      decoder_model_merged: "q4", // Text decoder - can compress
+    },
+    progress_callback: (info) => {
+      if (info.status === "progress") {
+        // Scale progress from 10-95%
+        const scaledProgress = 10 + info.progress * 0.85;
+        self.postMessage({
+          status: "loading",
+          progress: Math.round(scaledProgress),
+          stage: "download",
+          file: info.file || "model weights",
+          message: `Downloading: ${info.file || "model weights"}...`,
+        });
+      }
+    },
+  });
+}
+
+function _classifyLoadError(err) {
+  // Provide helpful error messages for common failures
+  if (err.message.includes("WebGPU")) {
+    return {
+      errorType: "webgpu",
+      errorMessage:
+        "WebGPU not supported. Please use Chrome/Edge 113+ on desktop.",
+    };
+  }
+  if (err.message.includes("memory") || err.message.includes("OOM")) {
+    return {
+      errorType: "memory",
+      errorMessage:
+        "Insufficient GPU memory. Try closing other tabs or applications.",
+    };
+  }
+  if (err.message.includes("network") || err.message.includes("fetch")) {
+    return {
+      errorType: "network",
+      errorMessage:
+        "Network error downloading model. Check internet connection.",
+    };
+  }
+  return { errorType: "unknown", errorMessage: err.message };
+}
+
 /**
  * Load Florence-2 model with mixed precision
  * Uses fp16 for vision (accuracy) and q4 for decoder (memory savings)
@@ -117,57 +197,7 @@ async function loadModel() {
       message: "Initializing Florence-2 Vision Engine...",
     });
 
-    // Load processor + tokenizer (small, fast)
-    self.postMessage({
-      status: "loading",
-      progress: 5,
-      stage: "processor",
-      message: "Loading image processor and tokenizer...",
-    });
-
-    // Florence-2 requires a separate tokenizer for batch_decode
-    // (processor.batch_decode does NOT work — use tokenizer.batch_decode)
-    [processor, tokenizer] = await Promise.all([
-      AutoProcessor.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
-      AutoTokenizer.from_pretrained(MODEL_ID, { revision: MODEL_REVISION }),
-    ]);
-
-    // Load model with mixed precision for optimal memory/quality balance
-    // This is the "secret sauce" that prevents browser crashes
-    self.postMessage({
-      status: "loading",
-      progress: 10,
-      stage: "model",
-      message:
-        "Loading vision model (this may take 1-2 minutes on first load)...",
-    });
-
-    model = await Florence2ForConditionalGeneration.from_pretrained(MODEL_ID, {
-      revision: MODEL_REVISION,
-      device: "webgpu",
-      dtype: {
-        // Mixed Precision Strategy:
-        // - Keep vision encoder in fp16 for accuracy (the "eyes")
-        // - Compress language model to q4 for memory savings (the "brain")
-        embed_tokens: "fp16", // Token embeddings - keep sharp
-        vision_encoder: "fp16", // Vision transformer - critical for OCR
-        encoder_model: "q4", // Text encoder - can compress
-        decoder_model_merged: "q4", // Text decoder - can compress
-      },
-      progress_callback: (info) => {
-        if (info.status === "progress") {
-          // Scale progress from 10-95%
-          const scaledProgress = 10 + info.progress * 0.85;
-          self.postMessage({
-            status: "loading",
-            progress: Math.round(scaledProgress),
-            stage: "download",
-            file: info.file || "model weights",
-            message: `Downloading: ${info.file || "model weights"}...`,
-          });
-        }
-      },
-    });
+    await _loadProcessorAndModel();
 
     isLoading = false;
 
@@ -185,26 +215,7 @@ async function loadModel() {
   } catch (err) {
     isLoading = false;
 
-    // Provide helpful error messages for common failures
-    let errorMessage = err.message;
-    let errorType = "unknown";
-
-    if (err.message.includes("WebGPU")) {
-      errorType = "webgpu";
-      errorMessage =
-        "WebGPU not supported. Please use Chrome/Edge 113+ on desktop.";
-    } else if (err.message.includes("memory") || err.message.includes("OOM")) {
-      errorType = "memory";
-      errorMessage =
-        "Insufficient GPU memory. Try closing other tabs or applications.";
-    } else if (
-      err.message.includes("network") ||
-      err.message.includes("fetch")
-    ) {
-      errorType = "network";
-      errorMessage =
-        "Network error downloading model. Check internet connection.";
-    }
+    const { errorType, errorMessage } = _classifyLoadError(err);
 
     self.postMessage({
       status: "error",

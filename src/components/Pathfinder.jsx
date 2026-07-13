@@ -380,34 +380,666 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam, t }) => {
 /**
  * Main Pathfinder Component
  */
-export default function Pathfinder({
-  onNavigate,
-  onOpenAISettings,
-  initialConditions = null,
+const PathfinderConsentGate = ({ handleConsent, t }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+    <div className="text-center mb-6">
+      <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full mb-3">
+        <TargetIcon />
+      </div>
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        {t("pathfinder", "privacyFirst")}
+      </h2>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">
+        {t("pathfinder", "privacyReviewPrompt")}
+      </p>
+    </div>
+
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-6 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+      {getPathfinderPrivacyDisclosure()}
+    </div>
+
+    <button
+      onClick={handleConsent}
+      className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
+    >
+      <CheckIcon /> {t("pathfinder", "iUnderstandContinue")}
+    </button>
+  </div>
+);
+
+const PathfinderAIBanner = ({ t }) =>
+  !isAnyAIAvailable() ? (
+    <div className="mb-6">
+      <SmartAILoadButton
+        toolId="pathfinder"
+        onLoadComplete={(model) =>
+          // eslint-disable-next-line no-console
+          console.log("Smart AI loaded for Pathfinder:", model?.name)
+        }
+      />
+    </div>
+  ) : (
+    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
+      <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+        <span>💡</span>
+        <span>
+          <strong>{t("pathfinder", "aiTip")}</strong>{" "}
+          {t("pathfinder", "aiTipText")}
+        </span>
+      </div>
+    </div>
+  );
+
+const PathfinderInputToolbar = ({
+  t,
+  hasMyRatings,
+  handleLoadMyRatings,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  loadFromPacket,
+}) => (
+  <div className="flex items-center gap-2">
+    {hasMyRatings() && (
+      <button
+        onClick={handleLoadMyRatings}
+        className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
+      >
+        📊 {t("pathfinder", "loadMyRatings")}
+      </button>
+    )}
+    <button
+      onClick={() => setShowVAGovPaster(true)}
+      className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+    >
+      📋 {t("pathfinder", "pasteFromVaGov")}
+    </button>
+    <button
+      onClick={() => setShowDropInModal(true)}
+      className="text-sm px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1.5"
+    >
+      📄 {t("pathfinder", "dropInFile")}
+    </button>
+    <button
+      onClick={loadFromPacket}
+      className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
+    >
+      {t("pathfinder", "loadFromPacket")}
+    </button>
+  </div>
+);
+
+const PathfinderAnalyzeButton = ({ isAnalyzing, ratings, handleAnalyze, t }) => (
+  <button
+    onClick={handleAnalyze}
+    disabled={
+      isAnalyzing ||
+      !isAnyAIAvailable() ||
+      ratings.filter((r) => r.condition && r.condition.trim()).length === 0
+    }
+    className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+  >
+    {isAnalyzing ? (
+      <>
+        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        {t("pathfinder", "analyzingStrategy")}
+      </>
+    ) : (
+      <>
+        <SparklesIcon /> {t("pathfinder", "analyzeMyStrategy")}
+      </>
+    )}
+  </button>
+);
+
+const PathfinderRatingsList = ({
+  ratings,
+  updateRating,
+  removeRating,
+  addRating,
+  t,
+}) => (
+  <>
+    <div className="space-y-2 mb-4">
+      {ratings.map((rating, index) => (
+        <RatingInput
+          key={index}
+          rating={rating}
+          index={index}
+          onUpdate={updateRating}
+          onRemove={removeRating}
+          t={t}
+        />
+      ))}
+    </div>
+
+    <button
+      onClick={addRating}
+      className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:border-teal-500 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
+    >
+      <PlusIcon /> {t("pathfinder", "addAnotherRating")}
+    </button>
+  </>
+);
+
+const PathfinderInputSection = ({
+  t,
+  hasMyRatings,
+  handleLoadMyRatings,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  loadFromPacket,
+  loadedFromPacket,
+  ratings,
+  updateRating,
+  removeRating,
+  addRating,
+  additionalContext,
+  setAdditionalContext,
+  handleClear,
+  handleAnalyze,
+  isAnalyzing,
+}) => (
+  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        {t("pathfinder", "currentRatingsTitle")}
+      </h2>
+      <PathfinderInputToolbar
+        t={t}
+        hasMyRatings={hasMyRatings}
+        handleLoadMyRatings={handleLoadMyRatings}
+        setShowVAGovPaster={setShowVAGovPaster}
+        setShowDropInModal={setShowDropInModal}
+        loadFromPacket={loadFromPacket}
+      />
+    </div>
+
+    {loadedFromPacket && (
+      <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
+        ✓ {t("pathfinder", "loadedFromPacket")}
+      </div>
+    )}
+
+    <PathfinderRatingsList
+      ratings={ratings}
+      updateRating={updateRating}
+      removeRating={removeRating}
+      addRating={addRating}
+      t={t}
+    />
+
+    {/* Additional Context */}
+    <div className="mt-6">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {t("pathfinder", "additionalContext")}
+      </label>
+      <textarea
+        value={additionalContext}
+        onChange={(e) => setAdditionalContext(e.target.value)}
+        placeholder={t("pathfinder", "additionalContextPlaceholder")}
+        className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
+      />
+    </div>
+
+    {/* Actions */}
+    <div className="flex gap-3 mt-6">
+      <button
+        onClick={handleClear}
+        className="px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+      >
+        {t("pathfinder", "clearAll")}
+      </button>
+      <PathfinderAnalyzeButton
+        isAnalyzing={isAnalyzing}
+        ratings={ratings}
+        handleAnalyze={handleAnalyze}
+        t={t}
+      />
+    </div>
+  </div>
+);
+
+const PathfinderStrategyOverview = ({ results, t }) => (
+  <div className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white rounded-2xl p-6">
+    <div className="flex items-start gap-4">
+      <div className="p-3 bg-white/20 rounded-xl">
+        <ChartIcon />
+      </div>
+      <div className="flex-1">
+        <h3 className="text-xl font-bold mb-2">
+          {t("pathfinder", "strategyAnalysis")}
+        </h3>
+        <p className="text-white">{results.data.strategy_analysis}</p>
+
+        {(results.data.current_estimated_combined ||
+          results.data.potential_combined) && (
+          <div className="flex gap-6 mt-4">
+            {results.data.current_estimated_combined && (
+              <div>
+                <div className="text-sm text-white/80">
+                  {t("pathfinder", "currentEstimated")}
+                </div>
+                <div className="text-2xl font-bold">
+                  {results.data.current_estimated_combined}
+                </div>
+              </div>
+            )}
+            {results.data.potential_combined && (
+              <div>
+                <div className="text-sm text-white/80">
+                  {t("pathfinder", "potentialWithOpportunities")}
+                </div>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  {results.data.potential_combined}
+                  <TrendingUpIcon />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const PathfinderOpportunities = ({
+  results,
+  t,
+  handleBuildNexus,
+  handlePracticeExam,
+}) =>
+  results.data.opportunities &&
+  results.data.opportunities.length > 0 && (
+    <div>
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <TargetIcon /> {t("pathfinder", "strategicOpportunities")} (
+        {results.data.opportunities.length})
+      </h3>
+      <div className="grid md:grid-cols-2 gap-4">
+        {results.data.opportunities.map((opp, index) => (
+          <OpportunityCard
+            key={index}
+            opportunity={opp}
+            onBuildNexus={handleBuildNexus}
+            onPracticeExam={handlePracticeExam}
+            t={t}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+const PathfinderMissingDiagnoses = ({ results, t }) =>
+  results.data.missing_diagnoses &&
+  results.data.missing_diagnoses.length > 0 && (
+    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
+      <h3 className="text-lg font-bold text-purple-900 dark:text-purple-200 mb-4 flex items-center gap-2">
+        <LightbulbIcon /> {t("pathfinder", "potentialUndiagnosedConditions")}
+      </h3>
+      <div className="space-y-4">
+        {results.data.missing_diagnoses.map((item, index) => (
+          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+            <div className="font-semibold text-gray-900 dark:text-white mb-1">
+              {item.condition}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {t("pathfinder", "linkedTo")} {item.linked_to}
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              {item.reasoning}
+            </p>
+            {item.action && (
+              <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">
+                → {item.action}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+const PathfinderIncreaseOpportunities = ({ results, t }) =>
+  results.data.increase_opportunities &&
+  results.data.increase_opportunities.length > 0 && (
+    <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+      <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-4 flex items-center gap-2">
+        <TrendingUpIcon /> {t("pathfinder", "potentialRatingIncreases")}
+      </h3>
+      <div className="space-y-4">
+        {results.data.increase_opportunities.map((item, index) => (
+          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {item.current_condition}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">{item.current_rating}</span>
+                <span className="text-green-600">→</span>
+                <span className="text-green-600 font-bold">
+                  {item.potential_rating}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              <strong>{t("pathfinder", "criteria")}</strong> {item.criteria}
+            </p>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              <strong>{t("pathfinder", "action")}</strong> {item.action}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+const PathfinderResultsSection = ({
+  results,
+  t,
+  handleBuildNexus,
+  handlePracticeExam,
+  setResults,
+}) =>
+  results &&
+  results.success && (
+    <div className="space-y-6">
+      <PathfinderStrategyOverview results={results} t={t} />
+
+      <PathfinderOpportunities
+        results={results}
+        t={t}
+        handleBuildNexus={handleBuildNexus}
+        handlePracticeExam={handlePracticeExam}
+      />
+
+      <PathfinderMissingDiagnoses results={results} t={t} />
+
+      <PathfinderIncreaseOpportunities results={results} t={t} />
+
+      {/* Strategic Notes */}
+      {results.data.strategic_notes && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
+          <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-2">
+            <InfoIcon /> {t("pathfinder", "strategicNotes")}
+          </h4>
+          <p className="text-sm text-amber-700 dark:text-amber-400">
+            {results.data.strategic_notes}
+          </p>
+        </div>
+      )}
+
+      {/* Analyze Again */}
+      <div className="text-center">
+        <button
+          onClick={() => setResults(null)}
+          className="px-6 py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors font-medium"
+        >
+          {t("pathfinder", "analyzeDifferentRatings")}
+        </button>
+      </div>
+    </div>
+  );
+
+const PathfinderDropInModalHeader = ({ onDismiss, t }) => (
+  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+    <div>
+      <h3
+        id="pathfinder-dropin-title"
+        className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+      >
+        📄 {t("pathfinder", "dropInFile") || "Drop In Document"}
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        Files stay in your browser - never uploaded to any server
+      </p>
+    </div>
+    <button
+      onClick={onDismiss}
+      aria-label="Close"
+      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+    >
+      <svg
+        className="w-6 h-6 text-gray-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  </div>
+);
+
+const PathfinderDropZone = ({ fileInputRef, handleFileSelect, t }) => (
+  <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+    onClick={() => fileInputRef.current?.click()}
+    className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-violet-400 dark:hover:border-violet-500 transition-colors cursor-pointer"
+  >
+    <div className="text-6xl mb-4">📄</div>
+    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      {t("pathfinder", "dropFileHere")}
+    </p>
+    <p className="text-sm text-gray-500 dark:text-gray-400">
+      {t("pathfinder", "supportsFormats")}
+    </p>
+    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+      {t("pathfinder", "maxFileSize")}
+    </p>
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept={getAcceptString()}
+      onChange={(e) => handleFileSelect(e.target.files)}
+      className="hidden"
+    />
+  </div>
+);
+
+const PathfinderSelectedFileInfo = ({
+  uploadedFile,
+  setUploadedFile,
+  setFileProgress,
+}) => (
+  <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="text-3xl">📄</div>
+        <div>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {uploadedFile.name}
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {getFileTypeLabel(uploadedFile)} •{" "}
+            {(uploadedFile.size / 1024).toFixed(0)} KB
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          setUploadedFile(null);
+          setFileProgress(null);
+        }}
+        className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors"
+      >
+        <svg
+          className="w-5 h-5 text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+);
+
+const PathfinderUploadedFilePanel = ({
+  uploadedFile,
+  setUploadedFile,
+  fileProgress,
+  setFileProgress,
+  isProcessingFile,
+  handleProcessFile,
+  t,
+}) => (
+  <div className="space-y-4">
+    <PathfinderSelectedFileInfo
+      uploadedFile={uploadedFile}
+      setUploadedFile={setUploadedFile}
+      setFileProgress={setFileProgress}
+    />
+
+    {/* Processing Progress */}
+    {fileProgress && (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+          {fileProgress.message}
+        </p>
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div
+            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${fileProgress.progress}%` }}
+          />
+        </div>
+      </div>
+    )}
+
+    {/* Info */}
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        💡 <strong>{t("pathfinder", "whatHappensNext")}</strong>{" "}
+        {t("pathfinder", "whatHappensNextDesc")}
+      </p>
+    </div>
+
+    {/* Process Button */}
+    <button
+      onClick={handleProcessFile}
+      disabled={isProcessingFile}
+      className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+    >
+      {isProcessingFile ? (
+        <>
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          {t("pathfinder", "processing")}
+        </>
+      ) : (
+        <>✨ {t("pathfinder", "extractAndLoad")}</>
+      )}
+    </button>
+  </div>
+);
+
+const PathfinderDropInModal = ({
+  showDropInModal,
+  setShowDropInModal,
+  uploadedFile,
+  setUploadedFile,
+  fileProgress,
+  setFileProgress,
+  isProcessingFile,
+  fileInputRef,
+  handleFileSelect,
+  handleProcessFile,
+  t,
+}) => {
+  const dismiss = () => {
+    setShowDropInModal(false);
+    setUploadedFile(null);
+    setFileProgress(null);
+  };
+
+  return (
+    showDropInModal && (
+      <ResponsiveModal
+        isOpen
+        onClose={dismiss}
+        size="md"
+        zIndex={70}
+        labelledBy="pathfinder-dropin-title"
+        header={<PathfinderDropInModalHeader onDismiss={dismiss} t={t} />}
+      >
+        {!uploadedFile ? (
+          <PathfinderDropZone
+            fileInputRef={fileInputRef}
+            handleFileSelect={handleFileSelect}
+            t={t}
+          />
+        ) : (
+          <PathfinderUploadedFilePanel
+            uploadedFile={uploadedFile}
+            setUploadedFile={setUploadedFile}
+            fileProgress={fileProgress}
+            setFileProgress={setFileProgress}
+            isProcessingFile={isProcessingFile}
+            handleProcessFile={handleProcessFile}
+            t={t}
+          />
+        )}
+      </ResponsiveModal>
+    )
+  );
+};
+
+function _extractRatingsFromText(text) {
+  // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
+  const ratingPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex -- nested quantifier already removed; empirically verified O(n^2) via .exec() loop restarts, not exponential (see PR notes)
+    /([A-Z][a-z\s]+)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
+    // eslint-disable-next-line sonarjs/slow-regex -- same as above; single quantifier, no nesting, no catastrophic backtracking
+    /(\d+)%?\s+for\s+([A-Z][a-z\s]+)/gi, // "70% for PTSD"
+  ];
+
+  const extractedRatings = [];
+  for (const pattern of ratingPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const condition = match[1] || match[2];
+      const rating = match[2] || match[1];
+      if (condition && rating && !isNaN(parseInt(rating))) {
+        extractedRatings.push({
+          condition: condition.trim(),
+          rating: parseInt(rating).toString(),
+        });
+      }
+    }
+  }
+  return extractedRatings;
+}
+
+function usePathfinderInitEffects({
+  initialConditions,
+  setApiKey,
+  setHasConsented,
+  setAIStatus,
+  setRatings,
+  setLoadedFromPacket,
 }) {
-  const { t } = useLanguage();
-
-  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
-
-  const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
-  const [additionalContext, setAdditionalContext] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState(null);
-  const [error, setError] = useState(null);
-  const [showPrivacy, setShowPrivacy] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [hasConsented, setHasConsented] = useState(false);
-  const [loadedFromPacket, setLoadedFromPacket] = useState(false);
-  const [, setAIStatus] = useState(getAIStatus());
-  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
-
-  // File drop modal state
-  const [showDropInModal, setShowDropInModal] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [fileProgress, setFileProgress] = useState(null);
-  const fileInputRef = useRef(null);
-
   // Load API key, check consent, and monitor AI status
   useEffect(() => {
     const storedKey = localStorage.getItem("vetrate_gemini_key");
@@ -425,7 +1057,7 @@ export default function Pathfinder({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [setApiKey, setHasConsented, setAIStatus]);
 
   // Load initial conditions from BlueButtonXRay if provided
   useEffect(() => {
@@ -447,13 +1079,166 @@ export default function Pathfinder({
       setRatings(formattedConditions);
       setLoadedFromPacket(true); // Show indicator that conditions were loaded
     }
-  }, [initialConditions]);
+  }, [initialConditions, setRatings, setLoadedFromPacket]);
+}
 
-  const handleConsent = () => {
-    localStorage.setItem("vetrate_ai_consent", "true");
-    setHasConsented(true);
-  };
+async function _processUploadedFile({
+  uploadedFile,
+  t,
+  setIsProcessingFile,
+  setError,
+  setFileProgress,
+  setRatings,
+  setAdditionalContext,
+  setShowDropInModal,
+  setUploadedFile,
+}) {
+  if (!uploadedFile) return;
 
+  setIsProcessingFile(true);
+  setError(null);
+
+  try {
+    const result = await analyzeDocument(uploadedFile, setFileProgress);
+    const extractedRatings = _extractRatingsFromText(result.text);
+
+    if (extractedRatings.length > 0) {
+      setRatings(extractedRatings);
+      setAdditionalContext(result.text.substring(0, 2000)); // First 2000 chars as context
+    } else {
+      // No structured ratings found, just use the text as context
+      setAdditionalContext(result.text);
+      alert(t("pathfinder", "noRatingsExtracted"));
+    }
+
+    setShowDropInModal(false);
+    setUploadedFile(null);
+    setFileProgress(null);
+  } catch (err) {
+    console.error("File processing error:", err);
+    setError(`${t("pathfinder", "errorProcessingFile")} ${err.message}`);
+  } finally {
+    setIsProcessingFile(false);
+  }
+}
+
+function _clearPathfinder({
+  setRatings,
+  setAdditionalContext,
+  setResults,
+  setError,
+  setLoadedFromPacket,
+}) {
+  setRatings([{ condition: "", rating: "" }]);
+  setAdditionalContext("");
+  setResults(null);
+  setError(null);
+  setLoadedFromPacket(false);
+}
+
+function _selectDroppedFile({ files, t, setError, setUploadedFile, setShowDropInModal }) {
+  const file = files[0];
+  if (!file) return;
+
+  if (!isFileSupported(file)) {
+    setError(t("pathfinder", "errorUnsupportedFile"));
+    return;
+  }
+
+  setUploadedFile(file);
+  setShowDropInModal(true);
+}
+
+function _loadRatingsFromPacket({ setRatings, setLoadedFromPacket }) {
+  try {
+    const claims = getSavedClaims();
+    if (claims && claims.length > 0) {
+      // Filter for primary claims (conditions that would be service-connected)
+      const loadedRatings = claims
+        .map((claim) => ({
+          condition:
+            claim.primaryCondition || claim.conditionName || claim.condition,
+          rating: "",
+        }))
+        .filter((r) => r.condition);
+
+      if (loadedRatings.length > 0) {
+        setRatings(loadedRatings);
+        setLoadedFromPacket(true);
+      }
+    }
+  } catch (err) {
+    console.error("Error loading from packet:", err);
+  }
+}
+
+async function _runStrategyAnalysis({
+  ratings,
+  apiKey,
+  additionalContext,
+  t,
+  onOpenAISettings,
+  setError,
+  setIsAnalyzing,
+  setResults,
+}) {
+  const validRatings = ratings.filter((r) => r.condition.trim());
+
+  if (validRatings.length === 0) {
+    setError(t("pathfinder", "errorAddRating"));
+    return;
+  }
+
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    setError(t("pathfinder", "errorNoAI"));
+    onOpenAISettings?.();
+    return;
+  }
+
+  setIsAnalyzing(true);
+  setError(null);
+  setResults(null);
+
+  try {
+    const result = await analyzeStrategy(apiKey, validRatings, additionalContext);
+    setResults(result);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setIsAnalyzing(false);
+  }
+}
+
+function _buildNexus(onNavigate, opportunity) {
+  // Navigate to NexusBuilder with pre-filled data
+  if (onNavigate) {
+    onNavigate("nexus", {
+      condition: opportunity.proposed_condition,
+      primaryCondition: opportunity.primary_source?.replace(
+        "Secondary to ",
+        "",
+      ),
+    });
+  }
+}
+
+function _practiceExam(onNavigate, opportunity) {
+  // Navigate to DBQ/Exam tool
+  if (onNavigate) {
+    onNavigate("dbq", {
+      condition: opportunity.proposed_condition,
+    });
+  }
+}
+
+function usePathfinderRatingsHandlers({
+  t,
+  ratings,
+  setRatings,
+  setShowVAGovPaster,
+  setLoadedFromPacket,
+}) {
   const addRating = () => {
     setRatings([...ratings, { condition: "", rating: "" }]);
   };
@@ -492,78 +1277,6 @@ export default function Pathfinder({
     setShowVAGovPaster(false);
   };
 
-  /**
-   * Handle file selection from input or drop
-   */
-  const handleFileSelect = async (files) => {
-    const file = files[0];
-    if (!file) return;
-
-    if (!isFileSupported(file)) {
-      setError(t("pathfinder", "errorUnsupportedFile"));
-      return;
-    }
-
-    setUploadedFile(file);
-    setShowDropInModal(true);
-  };
-
-  /**
-   * Process the uploaded file
-   */
-  const handleProcessFile = async () => {
-    if (!uploadedFile) return;
-
-    setIsProcessingFile(true);
-    setError(null);
-
-    try {
-      const result = await analyzeDocument(uploadedFile, setFileProgress);
-
-      // Parse the extracted text for ratings
-      // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
-      const ratingPatterns = [
-        // eslint-disable-next-line sonarjs/slow-regex -- nested quantifier already removed; empirically verified O(n^2) via .exec() loop restarts, not exponential (see PR notes)
-        /([A-Z][a-z\s]+)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
-        // eslint-disable-next-line sonarjs/slow-regex -- same as above; single quantifier, no nesting, no catastrophic backtracking
-        /(\d+)%?\s+for\s+([A-Z][a-z\s]+)/gi, // "70% for PTSD"
-      ];
-
-      const extractedRatings = [];
-      for (const pattern of ratingPatterns) {
-        let match;
-        while ((match = pattern.exec(result.text)) !== null) {
-          const condition = match[1] || match[2];
-          const rating = match[2] || match[1];
-          if (condition && rating && !isNaN(parseInt(rating))) {
-            extractedRatings.push({
-              condition: condition.trim(),
-              rating: parseInt(rating).toString(),
-            });
-          }
-        }
-      }
-
-      if (extractedRatings.length > 0) {
-        setRatings(extractedRatings);
-        setAdditionalContext(result.text.substring(0, 2000)); // First 2000 chars as context
-      } else {
-        // No structured ratings found, just use the text as context
-        setAdditionalContext(result.text);
-        alert(t("pathfinder", "noRatingsExtracted"));
-      }
-
-      setShowDropInModal(false);
-      setUploadedFile(null);
-      setFileProgress(null);
-    } catch (err) {
-      console.error("File processing error:", err);
-      setError(`${t("pathfinder", "errorProcessingFile")} ${err.message}`);
-    } finally {
-      setIsProcessingFile(false);
-    }
-  };
-
   // Load ratings from veteranProfile
   const handleLoadMyRatings = () => {
     const savedRatings = getMyRatings();
@@ -578,672 +1291,349 @@ export default function Pathfinder({
     }
   };
 
-  const loadFromPacket = () => {
-    try {
-      const claims = getSavedClaims();
-      if (claims && claims.length > 0) {
-        // Filter for primary claims (conditions that would be service-connected)
-        const loadedRatings = claims
-          .map((claim) => ({
-            condition:
-              claim.primaryCondition || claim.conditionName || claim.condition,
-            rating: "",
-          }))
-          .filter((r) => r.condition);
+  const loadFromPacket = () =>
+    _loadRatingsFromPacket({ setRatings, setLoadedFromPacket });
 
-        if (loadedRatings.length > 0) {
-          setRatings(loadedRatings);
-          setLoadedFromPacket(true);
-        }
-      }
-    } catch (err) {
-      console.error("Error loading from packet:", err);
-    }
+  return {
+    addRating,
+    updateRating,
+    removeRating,
+    handlePastedRatings,
+    handleLoadMyRatings,
+    loadFromPacket,
   };
+}
 
-  const handleAnalyze = async () => {
-    const validRatings = ratings.filter((r) => r.condition.trim());
+function usePathfinderHandlers({
+  t,
+  onNavigate,
+  onOpenAISettings,
+  ratings,
+  apiKey,
+  additionalContext,
+  uploadedFile,
+  setRatings,
+  setAdditionalContext,
+  setIsAnalyzing,
+  setResults,
+  setError,
+  setHasConsented,
+  setLoadedFromPacket,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  setUploadedFile,
+  setIsProcessingFile,
+  setFileProgress,
+}) {
+  const {
+    addRating,
+    updateRating,
+    removeRating,
+    handlePastedRatings,
+    handleLoadMyRatings,
+    loadFromPacket,
+  } = usePathfinderRatingsHandlers({
+    t,
+    ratings,
+    setRatings,
+    setShowVAGovPaster,
+    setLoadedFromPacket,
+  });
 
-    if (validRatings.length === 0) {
-      setError(t("pathfinder", "errorAddRating"));
-      return;
-    }
-
-    // Check if ANY AI is available (Cloud or Local)
-    if (!isAnyAIAvailable()) {
-      setError(t("pathfinder", "errorNoAI"));
-      onOpenAISettings?.();
-      return;
-    }
-
-    setIsAnalyzing(true);
-    setError(null);
-    setResults(null);
-
-    try {
-      const result = await analyzeStrategy(
+  return {
+    handleConsent: () => _consentToAI(setHasConsented),
+    addRating,
+    updateRating,
+    removeRating,
+    handlePastedRatings,
+    handleFileSelect: (files) =>
+      _selectDroppedFile({ files, t, setError, setUploadedFile, setShowDropInModal }),
+    handleProcessFile: () =>
+      _processUploadedFile({
+        uploadedFile,
+        t,
+        setIsProcessingFile,
+        setError,
+        setFileProgress,
+        setRatings,
+        setAdditionalContext,
+        setShowDropInModal,
+        setUploadedFile,
+      }),
+    handleLoadMyRatings,
+    loadFromPacket,
+    handleAnalyze: () =>
+      _runStrategyAnalysis({
+        ratings,
         apiKey,
-        validRatings,
         additionalContext,
-      );
-      setResults(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsAnalyzing(false);
-    }
+        t,
+        onOpenAISettings,
+        setError,
+        setIsAnalyzing,
+        setResults,
+      }),
+    handleBuildNexus: (opportunity) => _buildNexus(onNavigate, opportunity),
+    handlePracticeExam: (opportunity) => _practiceExam(onNavigate, opportunity),
+    handleClear: () =>
+      _clearPathfinder({
+        setRatings,
+        setAdditionalContext,
+        setResults,
+        setError,
+        setLoadedFromPacket,
+      }),
   };
+}
 
-  const handleBuildNexus = (opportunity) => {
-    // Navigate to NexusBuilder with pre-filled data
-    if (onNavigate) {
-      onNavigate("nexus", {
-        condition: opportunity.proposed_condition,
-        primaryCondition: opportunity.primary_source?.replace(
-          "Secondary to ",
-          "",
-        ),
-      });
-    }
-  };
+function _consentToAI(setHasConsented) {
+  localStorage.setItem("vetrate_ai_consent", "true");
+  setHasConsented(true);
+}
 
-  const handlePracticeExam = (opportunity) => {
-    // Navigate to DBQ/Exam tool
-    if (onNavigate) {
-      onNavigate("dbq", {
-        condition: opportunity.proposed_condition,
-      });
-    }
-  };
+function usePathfinderState({ onNavigate, onOpenAISettings, initialConditions }) {
+  const { t } = useLanguage();
 
-  const handleClear = () => {
-    setRatings([{ condition: "", rating: "" }]);
-    setAdditionalContext("");
-    setResults(null);
-    setError(null);
-    setLoadedFromPacket(false);
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
+
+  const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
+  const [additionalContext, setAdditionalContext] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [hasConsented, setHasConsented] = useState(false);
+  const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  const [, setAIStatus] = useState(getAIStatus());
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
+
+  // File drop modal state
+  const [showDropInModal, setShowDropInModal] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [fileProgress, setFileProgress] = useState(null);
+  const fileInputRef = useRef(null);
+
+  usePathfinderInitEffects({
+    initialConditions,
+    setApiKey,
+    setHasConsented,
+    setAIStatus,
+    setRatings,
+    setLoadedFromPacket,
+  });
+
+  const handlers = usePathfinderHandlers({
+    t,
+    onNavigate,
+    onOpenAISettings,
+    ratings,
+    apiKey,
+    additionalContext,
+    uploadedFile,
+    setRatings,
+    setAdditionalContext,
+    setIsAnalyzing,
+    setResults,
+    setError,
+    setHasConsented,
+    setLoadedFromPacket,
+    setShowVAGovPaster,
+    setShowDropInModal,
+    setUploadedFile,
+    setIsProcessingFile,
+    setFileProgress,
+  });
+
+  return {
+    t,
+    ratings,
+    additionalContext,
+    setAdditionalContext,
+    isAnalyzing,
+    results,
+    setResults,
+    error,
+    showPrivacy,
+    setShowPrivacy,
+    hasConsented,
+    loadedFromPacket,
+    showVAGovPaster,
+    setShowVAGovPaster,
+    showDropInModal,
+    setShowDropInModal,
+    uploadedFile,
+    setUploadedFile,
+    isProcessingFile,
+    fileProgress,
+    setFileProgress,
+    fileInputRef,
+    ...handlers,
   };
+}
+
+const PathfinderErrorDisplay = ({ error }) =>
+  error && (
+    <div
+      className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3"
+      role="alert"
+      aria-live="polite"
+    >
+      <svg
+        className="w-5 h-5 text-red-500 mt-0.5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <div className="text-red-700 dark:text-red-300">{error}</div>
+    </div>
+  );
+
+const PathfinderPrivacyToggle = ({ showPrivacy, setShowPrivacy, t }) => (
+  <>
+    <button
+      onClick={() => setShowPrivacy(!showPrivacy)}
+      className="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
+    >
+      <InfoIcon />{" "}
+      {showPrivacy
+        ? t("pathfinder", "hidePrivacyInfo")
+        : t("pathfinder", "viewPrivacyInfo")}
+    </button>
+
+    {showPrivacy && (
+      <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+        {getPathfinderPrivacyDisclosure()}
+      </div>
+    )}
+  </>
+);
+
+const PathfinderAuthenticatedContent = ({
+  t,
+  hasMyRatings,
+  handleLoadMyRatings,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  loadFromPacket,
+  loadedFromPacket,
+  ratings,
+  updateRating,
+  removeRating,
+  addRating,
+  additionalContext,
+  setAdditionalContext,
+  handleClear,
+  handleAnalyze,
+  isAnalyzing,
+  error,
+  results,
+  setResults,
+  handleBuildNexus,
+  handlePracticeExam,
+  showPrivacy,
+  setShowPrivacy,
+}) => (
+  <>
+    <PathfinderAIBanner t={t} />
+
+    <PathfinderInputSection
+      t={t}
+      hasMyRatings={hasMyRatings}
+      handleLoadMyRatings={handleLoadMyRatings}
+      setShowVAGovPaster={setShowVAGovPaster}
+      setShowDropInModal={setShowDropInModal}
+      loadFromPacket={loadFromPacket}
+      loadedFromPacket={loadedFromPacket}
+      ratings={ratings}
+      updateRating={updateRating}
+      removeRating={removeRating}
+      addRating={addRating}
+      additionalContext={additionalContext}
+      setAdditionalContext={setAdditionalContext}
+      handleClear={handleClear}
+      handleAnalyze={handleAnalyze}
+      isAnalyzing={isAnalyzing}
+    />
+    <PathfinderErrorDisplay error={error} />
+
+    <PathfinderResultsSection
+      results={results}
+      t={t}
+      handleBuildNexus={handleBuildNexus}
+      handlePracticeExam={handlePracticeExam}
+      setResults={setResults}
+    />
+
+    <PathfinderPrivacyToggle
+      showPrivacy={showPrivacy}
+      setShowPrivacy={setShowPrivacy}
+      t={t}
+    />
+  </>
+);
+
+const PathfinderHeader = ({ t, onOpenAISettings }) => (
+  <div className="text-center mb-8">
+    <div className="flex items-center justify-center gap-4 mb-4">
+      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl shadow-lg">
+        <span className="text-3xl">🧭</span>
+      </div>
+      <LLMRecommendationBadge toolId="pathfinder" />
+      <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+    </div>
+    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      {t("pathfinder", "title")}{" "}
+      <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+        BETA
+      </span>
+    </h1>
+    <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      {t("pathfinder", "subtitle")}
+    </p>
+  </div>
+);
+
+export default function Pathfinder({
+  onNavigate,
+  onOpenAISettings,
+  initialConditions = null,
+}) {
+  const pf = usePathfinderState({ onNavigate, onOpenAISettings, initialConditions });
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl shadow-lg">
-            <span className="text-3xl">🧭</span>
-          </div>
-          <LLMRecommendationBadge toolId="pathfinder" />
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {t("pathfinder", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            BETA
-          </span>
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          {t("pathfinder", "subtitle")}
-        </p>
-      </div>
+      <PathfinderHeader t={pf.t} onOpenAISettings={onOpenAISettings} />
 
       {/* Consent Check */}
-      {!hasConsented ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full mb-3">
-              <TargetIcon />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {t("pathfinder", "privacyFirst")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              {t("pathfinder", "privacyReviewPrompt")}
-            </p>
-          </div>
-
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-6 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {getPathfinderPrivacyDisclosure()}
-          </div>
-
-          <button
-            onClick={handleConsent}
-            className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
-          >
-            <CheckIcon /> {t("pathfinder", "iUnderstandContinue")}
-          </button>
-        </div>
+      {!pf.hasConsented ? (
+        <PathfinderConsentGate handleConsent={pf.handleConsent} t={pf.t} />
       ) : (
-        <>
-          {/* Smart AI Load Button - shown when no AI is available */}
-          {!isAnyAIAvailable() ? (
-            <div className="mb-6">
-              <SmartAILoadButton
-                toolId="pathfinder"
-                onLoadComplete={(model) =>
-                  // eslint-disable-next-line no-console
-                  console.log("Smart AI loaded for Pathfinder:", model?.name)
-                }
-              />
-            </div>
-          ) : (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
-              <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
-                <span>💡</span>
-                <span>
-                  <strong>{t("pathfinder", "aiTip")}</strong>{" "}
-                  {t("pathfinder", "aiTipText")}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Input Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t("pathfinder", "currentRatingsTitle")}
-              </h2>
-              <div className="flex items-center gap-2">
-                {hasMyRatings() && (
-                  <button
-                    onClick={handleLoadMyRatings}
-                    className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
-                  >
-                    📊 {t("pathfinder", "loadMyRatings")}
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowVAGovPaster(true)}
-                  className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
-                >
-                  📋 {t("pathfinder", "pasteFromVaGov")}
-                </button>
-                <button
-                  onClick={() => setShowDropInModal(true)}
-                  className="text-sm px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1.5"
-                >
-                  📄 {t("pathfinder", "dropInFile")}
-                </button>
-                <button
-                  onClick={loadFromPacket}
-                  className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
-                >
-                  {t("pathfinder", "loadFromPacket")}
-                </button>
-              </div>
-            </div>
-
-            {loadedFromPacket && (
-              <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
-                ✓ {t("pathfinder", "loadedFromPacket")}
-              </div>
-            )}
-
-            <div className="space-y-2 mb-4">
-              {ratings.map((rating, index) => (
-                <RatingInput
-                  key={index}
-                  rating={rating}
-                  index={index}
-                  onUpdate={updateRating}
-                  onRemove={removeRating}
-                  t={t}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={addRating}
-              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:border-teal-500 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
-            >
-              <PlusIcon /> {t("pathfinder", "addAnotherRating")}
-            </button>
-
-            {/* Additional Context */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("pathfinder", "additionalContext")}
-              </label>
-              <textarea
-                value={additionalContext}
-                onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder={t("pathfinder", "additionalContextPlaceholder")}
-                className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleClear}
-                className="px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                {t("pathfinder", "clearAll")}
-              </button>
-              <button
-                onClick={handleAnalyze}
-                disabled={
-                  isAnalyzing ||
-                  !isAnyAIAvailable() ||
-                  ratings.filter((r) => r.condition && r.condition.trim())
-                    .length === 0
-                }
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <svg
-                      className="w-5 h-5 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    {t("pathfinder", "analyzingStrategy")}
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon /> {t("pathfinder", "analyzeMyStrategy")}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Error Display */}
-          {error && (
-            <div
-              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3"
-              role="alert"
-              aria-live="polite"
-            >
-              <svg
-                className="w-5 h-5 text-red-500 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div className="text-red-700 dark:text-red-300">{error}</div>
-            </div>
-          )}
-
-          {/* Results Section */}
-          {results && results.success && (
-            <div className="space-y-6">
-              {/* Strategy Overview */}
-              <div className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white rounded-2xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <ChartIcon />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">
-                      {t("pathfinder", "strategyAnalysis")}
-                    </h3>
-                    <p className="text-white">
-                      {results.data.strategy_analysis}
-                    </p>
-
-                    {(results.data.current_estimated_combined ||
-                      results.data.potential_combined) && (
-                      <div className="flex gap-6 mt-4">
-                        {results.data.current_estimated_combined && (
-                          <div>
-                            <div className="text-sm text-white/80">
-                              {t("pathfinder", "currentEstimated")}
-                            </div>
-                            <div className="text-2xl font-bold">
-                              {results.data.current_estimated_combined}
-                            </div>
-                          </div>
-                        )}
-                        {results.data.potential_combined && (
-                          <div>
-                            <div className="text-sm text-white/80">
-                              {t("pathfinder", "potentialWithOpportunities")}
-                            </div>
-                            <div className="text-2xl font-bold flex items-center gap-2">
-                              {results.data.potential_combined}
-                              <TrendingUpIcon />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Opportunities */}
-              {results.data.opportunities &&
-                results.data.opportunities.length > 0 && (
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <TargetIcon /> {t("pathfinder", "strategicOpportunities")}{" "}
-                      ({results.data.opportunities.length})
-                    </h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {results.data.opportunities.map((opp, index) => (
-                        <OpportunityCard
-                          key={index}
-                          opportunity={opp}
-                          onBuildNexus={handleBuildNexus}
-                          onPracticeExam={handlePracticeExam}
-                          t={t}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Missing Diagnoses */}
-              {results.data.missing_diagnoses &&
-                results.data.missing_diagnoses.length > 0 && (
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
-                    <h3 className="text-lg font-bold text-purple-900 dark:text-purple-200 mb-4 flex items-center gap-2">
-                      <LightbulbIcon />{" "}
-                      {t("pathfinder", "potentialUndiagnosedConditions")}
-                    </h3>
-                    <div className="space-y-4">
-                      {results.data.missing_diagnoses.map((item, index) => (
-                        <div
-                          key={index}
-                          className="bg-white dark:bg-gray-800 rounded-xl p-4"
-                        >
-                          <div className="font-semibold text-gray-900 dark:text-white mb-1">
-                            {item.condition}
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            {t("pathfinder", "linkedTo")} {item.linked_to}
-                          </div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                            {item.reasoning}
-                          </p>
-                          {item.action && (
-                            <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">
-                              → {item.action}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Increase Opportunities */}
-              {results.data.increase_opportunities &&
-                results.data.increase_opportunities.length > 0 && (
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
-                    <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-4 flex items-center gap-2">
-                      <TrendingUpIcon />{" "}
-                      {t("pathfinder", "potentialRatingIncreases")}
-                    </h3>
-                    <div className="space-y-4">
-                      {results.data.increase_opportunities.map(
-                        (item, index) => (
-                          <div
-                            key={index}
-                            className="bg-white dark:bg-gray-800 rounded-xl p-4"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="font-semibold text-gray-900 dark:text-white">
-                                {item.current_condition}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-500">
-                                  {item.current_rating}
-                                </span>
-                                <span className="text-green-600">→</span>
-                                <span className="text-green-600 font-bold">
-                                  {item.potential_rating}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                              <strong>{t("pathfinder", "criteria")}</strong>{" "}
-                              {item.criteria}
-                            </p>
-                            <p className="text-sm text-green-700 dark:text-green-300">
-                              <strong>{t("pathfinder", "action")}</strong>{" "}
-                              {item.action}
-                            </p>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-              {/* Strategic Notes */}
-              {results.data.strategic_notes && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
-                  <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-2">
-                    <InfoIcon /> {t("pathfinder", "strategicNotes")}
-                  </h4>
-                  <p className="text-sm text-amber-700 dark:text-amber-400">
-                    {results.data.strategic_notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Analyze Again */}
-              <div className="text-center">
-                <button
-                  onClick={() => setResults(null)}
-                  className="px-6 py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors font-medium"
-                >
-                  {t("pathfinder", "analyzeDifferentRatings")}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Privacy Toggle */}
-          <button
-            onClick={() => setShowPrivacy(!showPrivacy)}
-            className="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
-          >
-            <InfoIcon />{" "}
-            {showPrivacy
-              ? t("pathfinder", "hidePrivacyInfo")
-              : t("pathfinder", "viewPrivacyInfo")}
-          </button>
-
-          {showPrivacy && (
-            <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-              {getPathfinderPrivacyDisclosure()}
-            </div>
-          )}
-        </>
+        <PathfinderAuthenticatedContent
+          {...pf}
+          hasMyRatings={hasMyRatings}
+        />
       )}
 
       {/* VA.gov Rating Paster Modal */}
-      {showVAGovPaster && (
+      {pf.showVAGovPaster && (
         <VAGovRatingPaster
-          onRatingsParsed={handlePastedRatings}
-          onClose={() => setShowVAGovPaster(false)}
+          onRatingsParsed={pf.handlePastedRatings}
+          onClose={() => pf.setShowVAGovPaster(false)}
           showExample={true}
         />
       )}
 
-      {/* File Drop In Modal */}
-      {showDropInModal && (
-        <ResponsiveModal
-          isOpen
-          onClose={() => {
-            setShowDropInModal(false);
-            setUploadedFile(null);
-            setFileProgress(null);
-          }}
-          size="md"
-          zIndex={70}
-          labelledBy="pathfinder-dropin-title"
-          header={
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <div>
-                <h3
-                  id="pathfinder-dropin-title"
-                  className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
-                >
-                  📄 {t("pathfinder", "dropInFile") || "Drop In Document"}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Files stay in your browser - never uploaded to any server
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowDropInModal(false);
-                  setUploadedFile(null);
-                  setFileProgress(null);
-                }}
-                aria-label="Close"
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          }
-        >
-          {/* Content */}
-          {!uploadedFile ? (
-            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-violet-400 dark:hover:border-violet-500 transition-colors cursor-pointer"
-            >
-              <div className="text-6xl mb-4">📄</div>
-              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {t("pathfinder", "dropFileHere")}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t("pathfinder", "supportsFormats")}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {t("pathfinder", "maxFileSize")}
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={getAcceptString()}
-                onChange={(e) => handleFileSelect(e.target.files)}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Selected File Info */}
-              <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-3xl">📄</div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        {uploadedFile.name}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {getFileTypeLabel(uploadedFile)} •{" "}
-                        {(uploadedFile.size / 1024).toFixed(0)} KB
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setFileProgress(null);
-                    }}
-                    className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors"
-                  >
-                    <svg
-                      className="w-5 h-5 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Processing Progress */}
-              {fileProgress && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
-                    {fileProgress.message}
-                  </p>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${fileProgress.progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Info */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  💡 <strong>{t("pathfinder", "whatHappensNext")}</strong>{" "}
-                  {t("pathfinder", "whatHappensNextDesc")}
-                </p>
-              </div>
-
-              {/* Process Button */}
-              <button
-                onClick={handleProcessFile}
-                disabled={isProcessingFile}
-                className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                {isProcessingFile ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {t("pathfinder", "processing")}
-                  </>
-                ) : (
-                  <>✨ {t("pathfinder", "extractAndLoad")}</>
-                )}
-              </button>
-            </div>
-          )}
-        </ResponsiveModal>
-      )}
+      <PathfinderDropInModal {...pf} />
     </div>
   );
 }

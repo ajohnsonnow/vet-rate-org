@@ -75,14 +75,114 @@ const MODULE_FLAG_MAP = [
   ["showTermsOfService", APP_MODULES.TERMS_OF_SERVICE],
 ];
 
-// Legacy fallback detection (if currentModule not passed from App.jsx)
-// DIAMOND LEVEL: Now supports ALL 45+ tools!
-function detectCurrentModule(state) {
-  for (const [flag, moduleValue] of MODULE_FLAG_MAP) {
-    if (state[flag]) return moduleValue;
+async function _saveBugReportLocally(reportId, formData, appState) {
+  try {
+    const systemInfo = formData.includeSystemInfo ? getSystemInfo() : {};
+    const currentAppState = formData.includeAppState
+      ? getAppState(appState)
+      : {};
+    const storageInfo = formData.includeStorageInfo ? getStorageInfo() : {};
+    const consoleErrors = formData.includeConsoleErrors
+      ? getConsoleErrors()
+      : [];
+
+    // Save to IndexedDB (sanitized automatically)
+    await saveBugReport({
+      report_id: reportId,
+      severity: formData.severity,
+      category: formData.category,
+      module: formData.module,
+      diagnosticCode: formData.diagnosticCode,
+      userDescription: formData.userDescription,
+      stepsToReproduce: formData.stepsToReproduce,
+      expectedBehavior: formData.expectedBehavior,
+      actualBehavior: formData.actualBehavior,
+      additionalContext: formData.additionalContext,
+      veteranEmail: formData.veteranEmail || null,
+      systemInfo,
+      appState: currentAppState,
+      storageInfo,
+      consoleErrors,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(`✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`);
+  } catch (storageError) {
+    // Fallback to localStorage if IndexedDB fails
+    console.warn(
+      "IndexedDB save failed, using localStorage fallback:",
+      storageError,
+    );
+    saveToLocalStorage({
+      report_id: reportId,
+      severity: formData.severity?.value,
+      category: formData.category,
+      module: formData.module,
+      userDescription: formData.userDescription,
+      created_at: new Date().toISOString(),
+    });
   }
-  if (state.selectedResult) return APP_MODULES.DISABILITY_DETAILS;
-  return APP_MODULES.SEARCH;
+}
+
+async function _sendBugReportRemote(reportId, formData, generatedReport) {
+  try {
+    const severityLabel = formData.severity?.label || "Unknown";
+
+    const formPayload = {
+      _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
+      _template: "table",
+      report_id: reportId,
+      severity: severityLabel,
+      category: formData.category,
+      module: formData.module,
+      diagnostic_code: formData.diagnosticCode || "N/A",
+      description: scrubText(formData.userDescription),
+      steps_to_reproduce: scrubText(
+        formData.stepsToReproduce || "Not provided",
+      ),
+      expected_behavior: scrubText(
+        formData.expectedBehavior || "Not provided",
+      ),
+      actual_behavior: scrubText(formData.actualBehavior || "Not provided"),
+      additional_context: scrubText(formData.additionalContext || "None"),
+      veteran_email: formData.veteranEmail || "Anonymous (no reply requested)",
+      submitted_at: new Date().toISOString(),
+      full_report: scrubText(generatedReport),
+    };
+
+    const response = await fetch(FORMSUBMIT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(formPayload),
+    });
+
+    if (!response.ok) {
+      console.warn(
+        `⚠️ FormSubmit returned ${response.status} - report saved locally`,
+      );
+      return;
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `✅ Bug report ${reportId} sent via FormSubmit AND saved locally`,
+      );
+    } else {
+      console.warn(
+        `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - report saved locally`,
+      );
+    }
+  } catch (emailError) {
+    // Log but don't fail - local save is what matters
+    console.warn(
+      `⚠️ Could not send email notification (${emailError.message}). Your report was saved locally in My Tickets.`,
+    );
+  }
 }
 
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
@@ -152,79 +252,9 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
   // Legacy fallback detection (if currentModule not passed from App.jsx)
   // DIAMOND LEVEL: Now supports ALL 45+ tools!
   const detectCurrentModule = (state) => {
-    // Core Navigation
-    if (state.showMyPacket) return APP_MODULES.MY_PACKET;
-    if (state.showUserManual) return APP_MODULES.USER_MANUAL;
-    if (state.showVAResources) return APP_MODULES.VA_RESOURCES;
-
-    // Calculate Tools
-    if (state.showTacticalCalculator) return APP_MODULES.TACTICAL_CALCULATOR;
-    if (state.showMillionDollarDashboard)
-      return APP_MODULES.MILLION_DOLLAR_DASHBOARD;
-    if (state.showWhatIfSandbox) return APP_MODULES.WHAT_IF_SANDBOX;
-    if (state.showRetroPayHunter) return APP_MODULES.RETRO_PAY_HUNTER;
-    if (state.showTimeMachine) return APP_MODULES.TIME_MACHINE;
-
-    // Discover Tools
-    if (state.showSecondaryScout) return APP_MODULES.SECONDARY_SCOUT;
-    if (state.showSecondaryScoutLauncher)
-      return APP_MODULES.SECONDARY_SCOUT_LAUNCHER;
-    if (state.showCAPSimulator) return APP_MODULES.CAP_SIMULATOR;
-    if (state.showPathfinder) return APP_MODULES.PATHFINDER;
-    if (state.showClaimNavigator) return APP_MODULES.CLAIM_NAVIGATOR;
-    if (state.showMOSHazardMatcher) return APP_MODULES.MOS_HAZARD_MATCHER;
-    if (state.showPACTActNavigator) return APP_MODULES.PACT_ACT_NAVIGATOR;
-    if (state.showWebOfConditions) return APP_MODULES.WEB_OF_CONDITIONS;
-
-    // Build Evidence Tools
-    if (state.showCFileAnalyzer) return APP_MODULES.CFILE_ANALYZER;
-    if (state.showBlueButtonXRay) return APP_MODULES.BLUE_BUTTON_XRAY;
-    if (state.showRecordSearch) return APP_MODULES.RECORD_SEARCH;
-    if (state.showWitnessBench) return APP_MODULES.WITNESS_BENCH;
-    if (state.showNexusBuilder) return APP_MODULES.NEXUS_BUILDER;
-    if (state.showFormsHelper) return APP_MODULES.FORMS_HELPER;
-    if (state.showSymptomLogger) return APP_MODULES.SYMPTOM_LOGGER;
-    if (state.showPainPainter) return APP_MODULES.PAIN_PAINTER;
-    if (state.showEvidenceTimeline) return APP_MODULES.EVIDENCE_TIMELINE;
-    if (state.showFOIAGenerator) return APP_MODULES.FOIA_GENERATOR;
-    if (state.showDD214Analyzer) return APP_MODULES.DD214_ANALYZER;
-
-    // Quality Control Tools
-    if (state.showRedTeam) return APP_MODULES.RED_TEAM;
-    if (state.showClaimStressTest) return APP_MODULES.CLAIM_STRESS_TEST;
-    if (state.showDecisionDecoder) return APP_MODULES.DECISION_DECODER;
-    if (state.showDenialDecoder) return APP_MODULES.DENIAL_DECODER;
-    if (state.showSharkRadar) return APP_MODULES.SHARK_RADAR;
-    if (state.showConsistencyEngine) return APP_MODULES.CONSISTENCY_ENGINE;
-    if (state.showEvidenceGapVisualizer)
-      return APP_MODULES.EVIDENCE_GAP_VISUALIZER;
-    if (state.showRiskAssessment) return APP_MODULES.RISK_ASSESSMENT;
-
-    // Maximize Rating Tools
-    if (state.showTDIUBuilder) return APP_MODULES.TDIU_BUILDER;
-    if (state.showStateBenefitHunter) return APP_MODULES.STATE_BENEFIT_HUNTER;
-    if (state.showTheTribunal) return APP_MODULES.THE_TRIBUNAL;
-    if (state.showLegislativeWatchdog) return APP_MODULES.LEGISLATIVE_WATCHDOG;
-
-    // Support Tools
-    if (state.showVSOFinder) return APP_MODULES.VSO_FINDER;
-    if (state.showVAAITransparency) return APP_MODULES.VA_AI_TRANSPARENCY;
-
-    // Data Management
-    if (state.showBackupManager) return APP_MODULES.BACKUP_MANAGER;
-    if (state.showCloudSyncManager) return APP_MODULES.CLOUD_SYNC;
-
-    // AI & Settings
-    if (state.showAISettings) return APP_MODULES.AI_SETTINGS;
-    if (state.showLocalAIPanel) return APP_MODULES.LOCAL_AI_PANEL;
-
-    // Modals
-    if (state.showPrivacyPolicy) return APP_MODULES.PRIVACY_POLICY;
-    if (state.showAboutUs) return APP_MODULES.ABOUT_US;
-    if (state.showContactUs) return APP_MODULES.CONTACT_US;
-    if (state.showTermsOfService) return APP_MODULES.TERMS_OF_SERVICE;
-
-    // Default fallbacks
+    for (const [flag, moduleValue] of MODULE_FLAG_MAP) {
+      if (state[flag]) return moduleValue;
+    }
     if (state.selectedResult) return APP_MODULES.DISABILITY_DETAILS;
     return APP_MODULES.SEARCH;
   };
@@ -276,56 +306,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
       // === SAFE-SQUASH: Save to local database if user wants to track ===
       if (formData.saveToMyTickets) {
-        try {
-          const systemInfo = formData.includeSystemInfo ? getSystemInfo() : {};
-          const currentAppState = formData.includeAppState
-            ? getAppState(appState)
-            : {};
-          const storageInfo = formData.includeStorageInfo
-            ? getStorageInfo()
-            : {};
-          const consoleErrors = formData.includeConsoleErrors
-            ? getConsoleErrors()
-            : [];
-
-          // Save to IndexedDB (sanitized automatically)
-          await saveBugReport({
-            report_id: reportId,
-            severity: formData.severity,
-            category: formData.category,
-            module: formData.module,
-            diagnosticCode: formData.diagnosticCode,
-            userDescription: formData.userDescription,
-            stepsToReproduce: formData.stepsToReproduce,
-            expectedBehavior: formData.expectedBehavior,
-            actualBehavior: formData.actualBehavior,
-            additionalContext: formData.additionalContext,
-            veteranEmail: formData.veteranEmail || null,
-            systemInfo,
-            appState: currentAppState,
-            storageInfo,
-            consoleErrors,
-          });
-
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`,
-          );
-        } catch (storageError) {
-          // Fallback to localStorage if IndexedDB fails
-          console.warn(
-            "IndexedDB save failed, using localStorage fallback:",
-            storageError,
-          );
-          saveToLocalStorage({
-            report_id: reportId,
-            severity: formData.severity?.value,
-            category: formData.category,
-            module: formData.module,
-            userDescription: formData.userDescription,
-            created_at: new Date().toISOString(),
-          });
-        }
+        await _saveBugReportLocally(reportId, formData, appState);
       }
       // === END SAFE-SQUASH ===
 
@@ -335,68 +316,9 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
       // Note: This is best-effort. Local save is the primary success path.
       // Remote send is skipped entirely when VITE_BUG_REPORT_ENDPOINT is unset.
-      if (FORMSUBMIT_URL)
-        try {
-          const severityLabel = formData.severity?.label || "Unknown";
-
-          const formPayload = {
-            _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
-            _template: "table",
-            report_id: reportId,
-            severity: severityLabel,
-            category: formData.category,
-            module: formData.module,
-            diagnostic_code: formData.diagnosticCode || "N/A",
-            description: scrubText(formData.userDescription),
-            steps_to_reproduce: scrubText(
-              formData.stepsToReproduce || "Not provided",
-            ),
-            expected_behavior: scrubText(
-              formData.expectedBehavior || "Not provided",
-            ),
-            actual_behavior: scrubText(
-              formData.actualBehavior || "Not provided",
-            ),
-            additional_context: scrubText(formData.additionalContext || "None"),
-            veteran_email:
-              formData.veteranEmail || "Anonymous (no reply requested)",
-            submitted_at: new Date().toISOString(),
-            full_report: scrubText(generatedReport),
-          };
-
-          const response = await fetch(FORMSUBMIT_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify(formPayload),
-          });
-
-          if (!response.ok) {
-            console.warn(
-              `⚠️ FormSubmit returned ${response.status} - report saved locally`,
-            );
-          } else {
-            const result = await response.json();
-
-            if (result.success) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `✅ Bug report ${reportId} sent via FormSubmit AND saved locally`,
-              );
-            } else {
-              console.warn(
-                `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - report saved locally`,
-              );
-            }
-          }
-        } catch (emailError) {
-          // Log but don't fail - local save is what matters
-          console.warn(
-            `⚠️ Could not send email notification (${emailError.message}). Your report was saved locally in My Tickets.`,
-          );
-        }
+      if (FORMSUBMIT_URL) {
+        await _sendBugReportRemote(reportId, formData, generatedReport);
+      }
 
       // Always succeed if we got this far (local save succeeded)
       setSubmitted(true);
@@ -425,12 +347,20 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
     formData.module && formData.severity && formData.category;
   const canProceedStep2 = formData.userDescription.trim().length >= 10;
 
+  let backButtonHandler = () => setStep(step - 1);
+  if (step === 1 || submitted) backButtonHandler = onClose;
+
+  let backButtonLabel = "← Back";
+  if (step === 1) backButtonLabel = "Cancel";
+  else if (submitted) backButtonLabel = "Close";
+
+  const canProceedCurrentStep =
+    step === 1 ? canProceedStep1 : canProceedStep2;
+
   const footer = (
     <div className="flex justify-between items-center">
       <button
-        onClick={
-          step === 1 ? onClose : submitted ? onClose : () => setStep(step - 1)
-        }
+        onClick={backButtonHandler}
         disabled={submitting}
         className={`px-4 py-2 font-medium transition-colors ${
           submitting
@@ -438,7 +368,7 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
             : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
         }`}
       >
-        {step === 1 ? "Cancel" : submitted ? "Close" : "← Back"}
+        {backButtonLabel}
       </button>
 
       {step < 3 ? (
@@ -446,9 +376,9 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
           onClick={() =>
             step === 2 ? handleGenerateReport() : setStep(step + 1)
           }
-          disabled={step === 1 ? !canProceedStep1 : !canProceedStep2}
+          disabled={!canProceedCurrentStep}
           className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-            (step === 1 ? canProceedStep1 : canProceedStep2)
+            canProceedCurrentStep
               ? "bg-red-600 text-white hover:bg-red-700"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
@@ -525,24 +455,26 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 
           {/* Progress Steps */}
           <div className="flex items-center justify-between mt-6">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center flex-1">
-                <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                    step >= s
-                      ? "bg-white text-red-600"
-                      : "bg-white/30 text-white"
-                  }`}
-                >
-                  {step > s ? "✓" : s}
+            {[1, 2, 3].map((s) => {
+              let connectorClass = "hidden";
+              if (s < 3) connectorClass = step > s ? "bg-white" : "bg-white/30";
+              return (
+                <div key={s} className="flex items-center flex-1">
+                  <div
+                    className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                      step >= s
+                        ? "bg-white text-red-600"
+                        : "bg-white/30 text-white"
+                    }`}
+                  >
+                    {step > s ? "✓" : s}
+                  </div>
+                  <div
+                    className={`flex-1 h-1 mx-2 rounded ${connectorClass}`}
+                  ></div>
                 </div>
-                <div
-                  className={`flex-1 h-1 mx-2 rounded ${
-                    s < 3 ? (step > s ? "bg-white" : "bg-white/30") : "hidden"
-                  }`}
-                ></div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="flex justify-between text-xs text-red-100 mt-2 px-1">
             <span>Classification</span>

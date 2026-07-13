@@ -573,138 +573,33 @@ export default function GlobalCommandSearch({
         aria-label="Quick search"
       >
         {/* Search Input */}
-        <div
-          className={`flex items-center gap-3 p-4 border-b ${isDark || isTbiComfort ? "border-gray-700" : "border-slate-200"}`}
-        >
-          <svg
-            className={`w-5 h-5 ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-400"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Search tools, conditions, or diagnostic codes (e.g., 5237)"
-            className={`
-              flex-1 bg-transparent text-lg outline-none
-              ${isDark || isTbiComfort ? "text-white placeholder-gray-500" : "text-slate-900 placeholder-slate-400"}
-            `}
-            aria-label="Search query"
-          />
-          <kbd
-            className={`hidden sm:inline-block px-2 py-1 text-xs font-mono rounded ${isDark || isTbiComfort ? "bg-gray-800 text-gray-400" : "bg-slate-100 text-slate-500"}`}
-          >
-            ESC
-          </kbd>
-        </div>
+        <CommandSearchInputBar
+          inputRef={inputRef}
+          query={query}
+          onQueryChange={setQuery}
+          onKeyDown={handleKeyDown}
+          isDark={isDark}
+          isTbiComfort={isTbiComfort}
+        />
 
         {/* Results */}
         <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto">
-          {/* Tools Section */}
-          {results.tools.length > 0 && (
-            <div className="p-2">
-              <p
-                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-400"}`}
-              >
-                Tools
-              </p>
-              {results.tools.map((tool, index) => (
-                <button
-                  key={tool.id}
-                  onClick={() => handleSelect(index)}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors
-                    ${
-                      index === selectedIndex
-                        ? `${isDark || isTbiComfort ? "bg-blue-900/50 text-blue-300" : "bg-blue-50 text-blue-900"}`
-                        : `${isDark || isTbiComfort ? "hover:bg-gray-800 text-gray-300" : "hover:bg-slate-50 text-slate-700"}`
-                    }
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
-                  `}
-                >
-                  <span className="text-2xl" aria-hidden="true">
-                    {tool.icon}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{tool.name}</p>
-                    <p
-                      className={`text-xs ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-500"}`}
-                    >
-                      {tool.category}
-                    </p>
-                  </div>
-                  {index === selectedIndex && (
-                    <kbd
-                      className={`px-2 py-1 text-xs font-mono rounded ${isDark || isTbiComfort ? "bg-gray-700 text-gray-400" : "bg-slate-200 text-slate-500"}`}
-                    >
-                      ↵
-                    </kbd>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+          <ToolResultsSection
+            tools={results.tools}
+            selectedIndex={selectedIndex}
+            isDark={isDark}
+            isTbiComfort={isTbiComfort}
+            onSelect={handleSelect}
+          />
 
-          {/* Conditions Section */}
-          {results.conditions.length > 0 && (
-            <div className="p-2">
-              <p
-                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-400"}`}
-              >
-                Diagnostic Codes
-              </p>
-              {results.conditions.map((condition, idx) => {
-                const index = results.tools.length + idx;
-                return (
-                  <button
-                    key={condition.code}
-                    onClick={() => handleSelect(index)}
-                    className={`
-                      w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors
-                      ${
-                        index === selectedIndex
-                          ? `${isDark || isTbiComfort ? "bg-blue-900/50 text-blue-300" : "bg-blue-50 text-blue-900"}`
-                          : `${isDark || isTbiComfort ? "hover:bg-gray-800 text-gray-300" : "hover:bg-slate-50 text-slate-700"}`
-                      }
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset
-                    `}
-                  >
-                    <span
-                      className={`font-mono text-sm font-bold px-2 py-1 rounded ${isDark || isTbiComfort ? "bg-gray-800 text-amber-400" : "bg-amber-100 text-amber-800"}`}
-                    >
-                      {condition.code}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{condition.name}</p>
-                      <p
-                        className={`text-xs ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-500"}`}
-                      >
-                        {condition.category}
-                      </p>
-                    </div>
-                    {index === selectedIndex && (
-                      <kbd
-                        className={`px-2 py-1 text-xs font-mono rounded ${isDark || isTbiComfort ? "bg-gray-700 text-gray-400" : "bg-slate-200 text-slate-500"}`}
-                      >
-                        ↵
-                      </kbd>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <ConditionResultsSection
+            conditions={results.conditions}
+            toolsCount={results.tools.length}
+            selectedIndex={selectedIndex}
+            isDark={isDark}
+            isTbiComfort={isTbiComfort}
+            onSelect={handleSelect}
+          />
 
           {/* No Results */}
           {results.tools.length === 0 &&
@@ -722,30 +617,7 @@ export default function GlobalCommandSearch({
         </div>
 
         {/* Footer */}
-        <div
-          className={`px-4 py-3 border-t ${isDark || isTbiComfort ? "border-gray-700 bg-gray-800/50" : "border-slate-200 bg-slate-50"}`}
-        >
-          <div className="flex items-center justify-between text-xs">
-            <div
-              className={`flex items-center gap-4 ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-500"}`}
-            >
-              <span>
-                <kbd className="font-mono">↑↓</kbd> Navigate
-              </span>
-              <span>
-                <kbd className="font-mono">↵</kbd> Select
-              </span>
-              <span>
-                <kbd className="font-mono">ESC</kbd> Close
-              </span>
-            </div>
-            <span
-              className={`${isDark || isTbiComfort ? "text-gray-600" : "text-slate-400"}`}
-            >
-              Powered by Local Search
-            </span>
-          </div>
-        </div>
+        <CommandSearchFooter isDark={isDark} isTbiComfort={isTbiComfort} />
       </div>
     </div>
   );
