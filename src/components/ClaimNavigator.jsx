@@ -16,7 +16,7 @@
  * - Phase progression visualization
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -70,7 +70,31 @@ import {
   hasBigThree,
 } from "../data/claimNavigatorSchema";
 
-import { determineNextStep } from "../utils/claimNavigatorEngine";
+import {
+  determineNextStep,
+  analyzeMultipleClaims,
+} from "../utils/claimNavigatorEngine";
+
+import {
+  getAllClaims,
+  createClaim,
+  updateClaim,
+  deleteClaim,
+  exportClaimsData,
+  importClaimsData,
+  getClaimStatistics,
+} from "../utils/claimNavigatorStorage";
+
+// Integration bridge - syncs with ClaimProgress & useClaimProgress
+import {
+  setBigThreeStatus,
+  recordClaimCreated,
+  recordPhaseAdvanced,
+  markItfFiled,
+  getOverallMilestoneProgress,
+  initIntegrationListeners,
+  dispatchNavigatorUpdate,
+} from "../utils/claimIntegration";
 
 import ReportBugLink from "./ReportBugLink";
 
@@ -97,6 +121,262 @@ const UrgencyIcons = {
 // ============================================
 // MAIN COMPONENT
 // ============================================
+// ============================================
+// NAVIGATOR STATE + ACTIONS HOOKS
+// ============================================
+const useClaimNavigatorData = () => {
+  const [claims, setClaims] = useState([]);
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [view, setView] = useState("dashboard"); // dashboard, wizard, detail, evidence
+  const [triageState, setTriageState] = useState({ step: 0, answers: {} });
+  const [isLoading, setIsLoading] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
+  const [dashboardAnalysis, setDashboardAnalysis] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [milestoneProgress, setMilestoneProgress] = useState(null);
+
+  const loadClaims = useCallback(() => {
+    setIsLoading(true);
+    try {
+      const loadedClaims = getAllClaims();
+      setClaims(loadedClaims);
+
+      // Analyze all claims
+      const analysis = analyzeMultipleClaims(loadedClaims);
+      setDashboardAnalysis(analysis);
+
+      // Get statistics
+      const stats = getClaimStatistics();
+      setStatistics(stats);
+    } catch (error) {
+      console.error("Error loading claims:", error);
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Initialize integration listeners and load claims on mount
+  useEffect(() => {
+    initIntegrationListeners();
+    loadClaims();
+
+    // Load overall milestone progress from other tools
+    const progress = getOverallMilestoneProgress();
+    setMilestoneProgress(progress);
+
+    // Listen for updates from other tools
+    const handleProgressUpdate = () => {
+      const updated = getOverallMilestoneProgress();
+      setMilestoneProgress(updated);
+    };
+
+    window.addEventListener("claimProgressUpdate", handleProgressUpdate);
+    window.addEventListener("bigThreeUpdate", handleProgressUpdate);
+
+    return () => {
+      window.removeEventListener("claimProgressUpdate", handleProgressUpdate);
+      window.removeEventListener("bigThreeUpdate", handleProgressUpdate);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refresh analysis when claims change
+  useEffect(() => {
+    if (claims.length > 0) {
+      const analysis = analyzeMultipleClaims(claims);
+      setDashboardAnalysis(analysis);
+    }
+  }, [claims]);
+
+  return {
+    claims,
+    setClaims,
+    selectedClaim,
+    setSelectedClaim,
+    view,
+    setView,
+    triageState,
+    setTriageState,
+    isLoading,
+    showHelp,
+    setShowHelp,
+    dashboardAnalysis,
+    statistics,
+    milestoneProgress,
+    loadClaims,
+  };
+};
+
+const syncBigThreeFromChecklist = (conditionName, evidenceChecklist) => {
+  if (evidenceChecklist.diagnosis !== undefined) {
+    setBigThreeStatus(conditionName, "diagnosis", evidenceChecklist.diagnosis);
+  }
+  if (evidenceChecklist.inServiceEvent !== undefined) {
+    setBigThreeStatus(
+      conditionName,
+      "event",
+      evidenceChecklist.inServiceEvent,
+    );
+  }
+  if (evidenceChecklist.nexus !== undefined) {
+    setBigThreeStatus(conditionName, "nexus", evidenceChecklist.nexus);
+  }
+};
+
+const syncPhaseChange = (claimId, previousPhase, newPhase) => {
+  if (!newPhase || newPhase === previousPhase) return;
+  recordPhaseAdvanced(claimId, previousPhase, newPhase);
+  dispatchNavigatorUpdate("phase_changed", { claimId, phase: newPhase });
+};
+
+const useClaimMutations = ({
+  claims,
+  selectedClaim,
+  setClaims,
+  setSelectedClaim,
+  setView,
+  setTriageState,
+}) => {
+  const handleCreateClaim = (claimData) => {
+    const newClaim = createClaim(claimData);
+    setClaims((prev) => [...prev, newClaim]);
+    setSelectedClaim(newClaim);
+    setView("detail");
+    setTriageState({ step: 0, answers: {} });
+
+    // Sync with integration bridge - marks milestone in useClaimProgress
+    recordClaimCreated(newClaim.claimType);
+
+    // If ITF date was set, sync that too
+    if (newClaim.criticalDates?.itfDate) {
+      markItfFiled(newClaim.criticalDates.itfDate);
+    }
+
+    // Dispatch event for other components to react
+    dispatchNavigatorUpdate("claim_created", {
+      claimId: newClaim.id,
+      type: newClaim.claimType,
+    });
+  };
+
+  const handleUpdateClaim = (claimId, updates) => {
+    const updated = updateClaim(claimId, updates);
+    if (!updated) return;
+
+    setClaims((prev) => prev.map((c) => (c.id === claimId ? updated : c)));
+    if (selectedClaim?.id === claimId) {
+      setSelectedClaim(updated);
+    }
+
+    // Sync evidence checklist with Big 3 (ClaimProgress integration)
+    if (updates.evidenceChecklist && updated.conditionName) {
+      syncBigThreeFromChecklist(
+        updated.conditionName,
+        updates.evidenceChecklist,
+      );
+    }
+
+    if (updates.currentPhase) {
+      const previousPhase = claims.find((c) => c.id === claimId)?.currentPhase;
+      syncPhaseChange(claimId, previousPhase, updates.currentPhase);
+    }
+  };
+
+  const handleDeleteClaim = (claimId) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this claim? This cannot be undone.",
+      )
+    ) {
+      deleteClaim(claimId);
+      setClaims((prev) => prev.filter((c) => c.id !== claimId));
+      if (selectedClaim?.id === claimId) {
+        setSelectedClaim(null);
+        setView("dashboard");
+      }
+    }
+  };
+
+  return { handleCreateClaim, handleUpdateClaim, handleDeleteClaim };
+};
+
+const useClaimImportExport = (loadClaims) => {
+  const handleExport = () => {
+    try {
+      const data = exportClaimsData();
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vetrate-claims-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Export failed. Please try again.");
+    }
+  };
+
+  const handleImport = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = importClaimsData(e.target.result, true);
+        if (result.success) {
+          loadClaims();
+          alert(
+            `Imported ${result.imported} claim(s). ${result.skipped} skipped (duplicates).`,
+          );
+        } else {
+          alert("Import failed: " + result.error);
+        }
+      } catch (error) {
+        console.error("Import failed:", error);
+        alert("Import failed: Invalid file format");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return { handleExport, handleImport };
+};
+
+// Combines the state/data hook with the two action hooks into the single
+// shape the ClaimNavigator component destructures. Split into three hooks
+// above for testability/readability; combined here because handleCreateClaim
+// etc. need setters that only useClaimNavigatorData owns.
+const useClaimNavigatorController = () => {
+  const data = useClaimNavigatorData();
+  const mutations = useClaimMutations({
+    claims: data.claims,
+    selectedClaim: data.selectedClaim,
+    setClaims: data.setClaims,
+    setSelectedClaim: data.setSelectedClaim,
+    setView: data.setView,
+    setTriageState: data.setTriageState,
+  });
+  const importExport = useClaimImportExport(data.loadClaims);
+
+  return {
+    claims: data.claims,
+    selectedClaim: data.selectedClaim,
+    setSelectedClaim: data.setSelectedClaim,
+    view: data.view,
+    setView: data.setView,
+    triageState: data.triageState,
+    setTriageState: data.setTriageState,
+    isLoading: data.isLoading,
+    showHelp: data.showHelp,
+    setShowHelp: data.setShowHelp,
+    dashboardAnalysis: data.dashboardAnalysis,
+    statistics: data.statistics,
+    milestoneProgress: data.milestoneProgress,
+    ...mutations,
+    ...importExport,
+  };
+};
 
 // ============================================
 // LOADING SCREEN + HEADER
