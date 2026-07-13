@@ -1204,12 +1204,1602 @@ function WhatIfTab({
   );
 }
 
+function CalculatorInputSection({
+  t,
+  conditions,
+  setConditions,
+  myRatings,
+  newCondition,
+  setNewCondition,
+  recordCandidates,
+  recordsAnnouncement,
+  allBodyParts,
+  canBeBilateral,
+  handleAddCondition,
+  handleRemoveCondition,
+  handleEditCondition,
+  handleLoadFromRecords,
+  handleLoadMyRatings,
+}) {
+  return (
+            <div className="space-y-6 flex flex-col h-full">
+              {/* Quick Load from My Ratings */}
+              {myRatings.length > 0 && conditions.length === 0 && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
+                  <span className="text-sm text-amber-700 dark:text-amber-300">
+                    ⭐ {t("tacticalCalc", "youHaveSavedRatings")} (
+                    {myRatings.length})
+                  </span>
+                  <button
+                    onClick={handleLoadMyRatings}
+                    className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
+                  >
+                    {t("tacticalCalc", "loadNow")}
+                  </button>
+                </div>
+              )}
+
+              {/* Add Condition Form */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                  <span>➕</span> {t("tacticalCalc", "addRatedCondition")}
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Body Part */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t("tacticalCalc", "bodyPartConditionType")}
+                    </label>
+                    <select
+                      aria-label={t(
+                        "tacticalCalc",
+                        "bodyPartConditionType",
+                      )}
+                      value={newCondition.bodyPart}
+                      onChange={(e) => {
+                        const bp = e.target.value;
+                        const info = allBodyParts.find(
+                          (p) => p.value === bp,
+                        );
+                        setNewCondition((prev) => ({
+                          ...prev,
+                          bodyPart: bp,
+                          side: info?.canBeBilateral ? prev.side : "none",
+                        }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    >
+                      <option value="">
+                        {t("tacticalCalc", "select")}
+                      </option>
+                      <optgroup
+                        label={t("tacticalCalc", "extremitiesBilateral")}
+                      >
+                        {BODY_PARTS.extremities.map((bp) => (
+                          <option key={bp.value} value={bp.value}>
+                            {bp.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup
+                        label={t("tacticalCalc", "otherBodySystems")}
+                      >
+                        {BODY_PARTS.other.map((bp) => (
+                          <option key={bp.value} value={bp.value}>
+                            {bp.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {/* Side (if bilateral capable) */}
+                  {canBeBilateral && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {t("tacticalCalc", "side")}
+                      </label>
+                      <select
+                        aria-label={t("tacticalCalc", "side")}
+                        value={newCondition.side}
+                        onChange={(e) =>
+                          setNewCondition((prev) => ({
+                            ...prev,
+                            side: e.target.value,
+                          }))
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      >
+                        <option value="none">
+                          {t("tacticalCalc", "notBilateral")}
+                        </option>
+                        <option value="left">
+                          {t("tacticalCalc", "left")}
+                        </option>
+                        <option value="right">
+                          {t("tacticalCalc", "right")}
+                        </option>
+                        <option value="bilateral">
+                          {t("tacticalCalc", "bothBilateral")}
+                        </option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Rating */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t("tacticalCalc", "ratingPercent")}
+                    </label>
+                    <select
+                      aria-label={t("tacticalCalc", "ratingPercent")}
+                      value={newCondition.rating}
+                      onChange={(e) =>
+                        setNewCondition((prev) => ({
+                          ...prev,
+                          rating: parseInt(e.target.value),
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    >
+                      {ratingOptions.map((r) => (
+                        <option key={r} value={r}>
+                          {r}%
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom Name (optional) */}
+                  <div className={canBeBilateral ? "sm:col-span-2" : ""}>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t("tacticalCalc", "customLabelOptional")}
+                    </label>
+                    <input
+                      type="text"
+                      value={newCondition.name}
+                      onChange={(e) =>
+                        setNewCondition((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder={t(
+                        "tacticalCalc",
+                        "customLabelPlaceholder",
+                      )}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAddCondition}
+                  disabled={!newCondition.bodyPart}
+                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t("tacticalCalc", "addToCalculatorBtn")}
+                </button>
+              </div>
+
+              <div aria-live="polite" className="sr-only">
+                {recordsAnnouncement}
+              </div>
+              {recordCandidates.length > 0 && (
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
+                    📂 {recordCandidates.length} rated condition
+                    {recordCandidates.length === 1 ? "" : "s"} found in your
+                    records (saved claims &amp; analyzed documents).
+                  </p>
+                  <button
+                    onClick={handleLoadFromRecords}
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    Load into calculator
+                  </button>
+                </div>
+              )}
+
+              {/* Conditions List - Expands to fill remaining space */}
+              <div className="flex flex-col flex-1 min-h-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
+                  <span>
+                    📋 {t("tacticalCalc", "yourRatedConditions")} (
+                    {conditions.length})
+                  </span>
+                  {conditions.length > 0 && (
+                    <button
+                      onClick={() => setConditions([])}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      {t("tacticalCalc", "clearAll")}
+                    </button>
+                  )}
+                </h3>
+
+                {conditions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                    <div className="text-4xl mb-2">📝</div>
+                    <p>{t("tacticalCalc", "noConditionsYet")}</p>
+                    <p className="text-sm mt-1">
+                      {t("tacticalCalc", "noConditionsAddYours")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 overflow-y-auto flex-1 pr-2">
+                    {/*  Removed max-h-64, added flex-1 */}
+                    {conditions.map((condition) => (
+                      <div
+                        key={condition.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          condition.side !== "none"
+                            ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+                            {condition.rating}%
+                          </span>
+                          <div>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">
+                              {condition.name}
+                            </p>
+                            {condition.side !== "none" && (
+                              <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+                                🔄 Bilateral ({condition.side})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditCondition(condition)}
+                            className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                            aria-label="Edit"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleRemoveCondition(condition.id)
+                            }
+                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            aria-label="Remove"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+  );
+}
+
+function CalculatorResultsSection({
+  t,
+  showSteps,
+  setShowSteps,
+  results,
+  pyramiding,
+  tdiu,
+  ratingNeededFor90,
+  ratingNeededFor100,
+}) {
+  return (
+            <div className="space-y-6">
+              {/* Validation Badge */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
+                <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
+                  <span className="text-lg">✓</span>
+                  <span className="font-medium">
+                    {t("tacticalCalc", "verifiedPer")}
+                  </span>
+                  <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
+                    {t("tacticalCalc", "matchesVAGov")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Main Rating Display */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-center gap-6">
+                  {/* Progress Ring */}
+                  <div className="relative">
+                    <ProgressRing
+                      percentage={results.combinedRating}
+                      size={160}
+                      strokeWidth={14}
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                        {results.combinedRating}%
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {t("tacticalCalc", "combined")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-2">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {t("tacticalCalc", "rawScore")}
+                      </p>
+                      <p className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
+                        {results.rawScore}%
+                      </p>
+                    </div>
+                    {results.bilateralFactor > 0 && (
+                      <div className="text-center px-3 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                          {t("tacticalCalc", "bilateralFactor")}
+                        </p>
+                        <p className="font-semibold text-purple-700 dark:text-purple-300">
+                          +{results.bilateralFactor}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pyramiding Warnings - NEW */}
+              {pyramiding.hasPotentialPyramiding && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-xl p-4">
+                  <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-3 flex items-center gap-2">
+                    <span>⚠️</span> {t("tacticalCalc", "pyramidingAlert")}
+                  </h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
+                    {pyramiding.summary}
+                  </p>
+                  <div className="space-y-2">
+                    {pyramiding.warnings.map((warning, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-lg border-l-4 ${
+                          warning.severity === "high"
+                            ? "bg-red-50 dark:bg-red-900/30 border-red-500"
+                            : "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-1">
+                          <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                            {warning.message}
+                          </p>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              warning.severity === "high"
+                                ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200"
+                                : "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
+                            }`}
+                          >
+                            {warning.severity.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                          <strong>{warning.regulation}:</strong>{" "}
+                          {warning.guidance}
+                        </p>
+                        {warning.conditions && (
+                          <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                            <strong>
+                              {t("tacticalCalc", "affectedConditions")}:
+                            </strong>{" "}
+                            {warning.conditions.join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
+                    {t("tacticalCalc", "automatedCheck")}
+                  </p>
+                </div>
+              )}
+
+              {/* TDIU Advisory (38 CFR § 4.16(a)) */}
+              {tdiu.eligible && (
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-400 dark:border-indigo-600 rounded-xl p-4">
+                  <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                    <span>💼</span> You may qualify for TDIU
+                  </h4>
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                    {tdiu.basis === "single60"
+                      ? "One of these conditions is rated 60% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."
+                      : "These ratings combine to 70% or higher with at least one condition rated 40% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."}{" "}
+                    If your service-connected conditions prevent you from
+                    maintaining substantially gainful employment, TDIU pays
+                    at the 100% rate even below a 100% schedular rating. The
+                    TDIU Work Impact Builder tool can help you prepare VA
+                    Form 21-8940 — and speak with a VSO before filing.
+                  </p>
+                </div>
+              )}
+
+              {/* Gap Analysis */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                  <span>🎯</span> {t("tacticalCalc", "gapAnalysis")}
+                </h4>
+
+                {results.combinedRating >= 100 ? (
+                  <div className="text-center py-4">
+                    <span className="text-4xl">🎉</span>
+                    <p className="text-green-600 dark:text-green-400 font-bold text-lg mt-2">
+                      {t("tacticalCalc", "youveReached100")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Gap to next tier */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t("tacticalCalc", "gapTo")} {results.nextTier}%:
+                      </span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">
+                        {results.gapToNext10}% {t("tacticalCalc", "away")}
+                      </span>
+                    </div>
+
+                    {/* Progress bar to next tier */}
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${((10 - results.gapToNext10) / 10) * 100}%`,
+                        }}
+                      />
+                    </div>
+
+                    {/* What you need */}
+                    {results.combinedRating < 90 && (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          <strong>{t("tacticalCalc", "toReach90")}</strong>{" "}
+                          {t("tacticalCalc", "needApprox")}{" "}
+                          <strong>{ratingNeededFor90}%</strong>{" "}
+                          {t("tacticalCalc", "moreInNewRatings")}.
+                        </p>
+                      </div>
+                    )}
+
+                    {results.combinedRating < 100 && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          <strong>{t("tacticalCalc", "toReach100")}</strong>{" "}
+                          {t("tacticalCalc", "needApprox")}{" "}
+                          <strong>{ratingNeededFor100}%</strong>{" "}
+                          {t("tacticalCalc", "moreInNewRatings")}.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Pay Preview */}
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      {t("tacticalCalc", "monthlyPaySolo")}
+                    </p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                      $
+                      {VA_PAY_RATES_2026.solo[
+                        results.combinedRating
+                      ]?.toLocaleString() || "0"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("paycheck")}
+                    className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+                  >
+                    {t("tacticalCalc", "addDependents")}
+                  </button>
+                </div>
+              </div>
+
+              {/* Show Calculation Steps */}
+              <button
+                onClick={() => setShowSteps(!showSteps)}
+                className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
+              >
+                <span>{showSteps ? "▼" : "▶"}</span>
+                {showSteps
+                  ? t("tacticalCalc", "hideCalculationSteps")
+                  : t("tacticalCalc", "showCalculationSteps")}
+              </button>
+
+              {showSteps && results.calculationSteps.length > 0 && (
+                <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 space-y-3">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                    <span>📋</span>
+                    <span>{t("tacticalCalc", "officialVAMethod")}</span>
+                  </div>
+                  {results.calculationSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-blue-500"
+                    >
+                      <div className="font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                        <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                          {step.step}
+                        </span>
+                        {step.description}
+                      </div>
+                      {step.bilateral && step.bilateral.length > 0 && (
+                        <div className="ml-8 text-sm space-y-1">
+                          <div className="text-purple-600 dark:text-purple-400 font-medium">
+                            🔄 Bilateral: {step.bilateral.join(", ")}
+                          </div>
+                        </div>
+                      )}
+                      {step.nonBilateral &&
+                        step.nonBilateral.length > 0 && (
+                          <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
+                            Non-bilateral: {step.nonBilateral.join(", ")}
+                          </div>
+                        )}
+                      {step.ratings && (
+                        <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
+                          Ratings (sorted): [{step.ratings.join("%, ")}%]
+                        </div>
+                      )}
+                      {step.bilateralGroupRating && (
+                        <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
+                          <div className="text-purple-700 dark:text-purple-300">
+                            <div>Combined: {step.combinedBilateral}%</div>
+                            <div>
+                              Bilateral Factor (+10%):{" "}
+                              {step.bilateralFactor}%
+                            </div>
+                            <div className="font-bold mt-1">
+                              Group Rating: {step.bilateralGroupRating}%
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {step.rawScore !== undefined && (
+                        <div className="ml-8 mt-2 p-2 bg-green-50 dark:bg-green-900/30 rounded text-sm">
+                          <div className="text-green-700 dark:text-green-300 space-y-1">
+                            <div className="font-mono">
+                              Raw Score: {step.rawScore}%
+                            </div>
+                            <div className="font-bold">
+                              Final (rounded to 10): {step.roundedTo}%
+                            </div>
+                            {step.method && (
+                              <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                ✓ {step.method}
+                              </div>
+                            )}
+                            {step.validation && (
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
+                                {step.validation.outputValid ? "✅" : "⚠️"}
+                                {step.validation.roundingRule}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                      <div className="font-semibold">
+                        ✓ {t("tacticalCalc", "calculationVerified")}
+                      </div>
+                      <div>{t("tacticalCalc", "matchesCalculators")}</div>
+                      <div>{t("tacticalCalc", "usingOfficialMethod")}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+  );
+}
+
+function CalculatorTab({
+  t,
+  conditions,
+  setConditions,
+  myRatings,
+  newCondition,
+  setNewCondition,
+  showSteps,
+  setShowSteps,
+  recordCandidates,
+  recordsAnnouncement,
+  allBodyParts,
+  canBeBilateral,
+  handleAddCondition,
+  handleRemoveCondition,
+  handleEditCondition,
+  handleLoadFromRecords,
+  handleLoadMyRatings,
+  results,
+  pyramiding,
+  tdiu,
+  ratingNeededFor90,
+  ratingNeededFor100,
+}) {
+  const props = {
+    t,
+    conditions,
+    setConditions,
+    myRatings,
+    newCondition,
+    setNewCondition,
+    showSteps,
+    setShowSteps,
+    recordCandidates,
+    recordsAnnouncement,
+    allBodyParts,
+    canBeBilateral,
+    handleAddCondition,
+    handleRemoveCondition,
+    handleEditCondition,
+    handleLoadFromRecords,
+    handleLoadMyRatings,
+    results,
+    pyramiding,
+    tdiu,
+    ratingNeededFor90,
+    ratingNeededFor100,
+  };
+  return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              <CalculatorInputSection {...props} />
+
+              <CalculatorResultsSection {...props} />
+            </div>
+  );
+}
+
+function MyRatingsTab({
+  t,
+  conditions,
+  myRatings,
+  showSaveConfirm,
+  setActiveTab,
+  setShowVAGovPaster,
+  allBodyParts,
+  handleSaveAsMyRatings,
+  handleLoadMyRatings,
+  handleRemoveFromMyRatings,
+  myRatingsResults,
+  myRatingsPyramiding,
+}) {
+  return (
+            <div className="space-y-6">
+              {/* Header Info */}
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">⭐</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                      {t("tacticalCalc", "myVARatings")}
+                    </h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                      {t("tacticalCalc", "myVARatingsDesc")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Confirmation */}
+              {showSaveConfirm && (
+                <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
+                  <span className="text-green-600 dark:text-green-400">
+                    ✓
+                  </span>
+                  <span className="text-green-700 dark:text-green-300 text-sm">
+                    {t("tacticalCalc", "ratingsSavedSuccess")}
+                  </span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* My Saved Ratings List */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                      {t("tacticalCalc", "savedRatings")}
+                    </h4>
+                    {myRatings.length > 0 && (
+                      <button
+                        onClick={handleLoadMyRatings}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {t("tacticalCalc", "loadIntoCalculator")}
+                      </button>
+                    )}
+                  </div>
+
+                  {myRatings.length === 0 ? (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
+                      <span className="text-4xl mb-3 block">📋</span>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        {t("tacticalCalc", "noRatingsSavedYet")}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                        {t("tacticalCalc", "pasteRatingsDesc")}
+                      </p>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setShowVAGovPaster(true)}
+                          className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
+                        >
+                          <span className="text-lg">📋</span>{" "}
+                          {t("tacticalCalc", "pasteFromVAGov")}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("calculator")}
+                          className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                        >
+                          {t("tacticalCalc", "orAddInCalculator")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {myRatings.map((rating, index) => (
+                        <div
+                          key={rating.id || index}
+                          className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white ${getRatingBadgeColor(rating.rating)}`}
+                            >
+                              {rating.rating}%
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                {rating.name ||
+                                  allBodyParts.find(
+                                    (bp) => bp.value === rating.bodyPart,
+                                  )?.label ||
+                                  rating.bodyPart}
+                              </p>
+                              {rating.side !== "none" && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                                  {rating.side}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleRemoveFromMyRatings(rating.id)
+                            }
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            aria-label="Remove"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    {/* Paste from VA.gov Button - Only show if no ratings exist */}
+                    {myRatings.length === 0 && (
+                      <button
+                        onClick={() => setShowVAGovPaster(true)}
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
+                      >
+                        <span>📋</span> {t("tacticalCalc", "pasteFromVAGov")}
+                      </button>
+                    )}
+
+                    {/* Save from Calculator Button */}
+                    {conditions.length > 0 && (
+                      <button
+                        onClick={handleSaveAsMyRatings}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <span>⭐</span>{" "}
+                        {t("tacticalCalc", "saveCalcConditions")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* My Ratings Summary */}
+                <div className="space-y-4">
+                  {myRatings.length > 0 ? (
+                    <>
+                      {/* Combined Rating Display */}
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-6 text-center">
+                        <p className="text-blue-100 text-sm mb-2">
+                          {t("tacticalCalc", "myCombinedRating")}
+                        </p>
+                        <div className="text-5xl font-bold mb-2">
+                          {myRatingsResults.combinedRating}%
+                        </div>
+                        {myRatingsResults.bilateralFactor > 0 && (
+                          <p className="text-blue-200 text-sm">
+                            {t("tacticalCalc", "includesBilateral")}{" "}
+                            {myRatingsResults.bilateralFactor.toFixed(1)}%
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Monthly Pay Estimate */}
+                      <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
+                        <p className="text-green-100 text-sm mb-2">
+                          {t("tacticalCalc", "estimatedMonthlyPaySolo")}
+                        </p>
+                        <div className="text-4xl font-bold">
+                          $
+                          {VA_PAY_RATES_2026.solo[
+                            myRatingsResults.combinedRating
+                          ]?.toLocaleString() || "0"}
+                        </div>
+                        <p className="text-green-200 text-sm mt-2">
+                          $
+                          {(
+                            (VA_PAY_RATES_2026.solo[
+                              myRatingsResults.combinedRating
+                            ] || 0) * 12
+                          ).toLocaleString()}
+                          /{t("tacticalCalc", "yearlyPay").toLowerCase()}
+                        </p>
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {myRatings.length}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {t("tacticalCalc", "conditions")}
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {myRatingsResults.rawScore}%
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {t("tacticalCalc", "rawScore")}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Gap Analysis */}
+                      {myRatingsResults.combinedRating < 100 && (
+                        <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                          <h5 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
+                            {t("tacticalCalc", "gapToNext")}
+                          </h5>
+                          <p className="text-sm text-purple-700 dark:text-purple-300">
+                            <strong>{myRatingsResults.gapToNextTier}%</strong>{" "}
+                            {t("tacticalCalc", "awayFromNextTier")}
+                            {myRatingsResults.combinedRating < 100 &&
+                              myRatingsResults.combinedRating >= 90 && (
+                                <span className="block mt-1">
+                                  {t("tacticalCalc", "closeToHundred")}
+                                </span>
+                              )}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Pyramiding Warnings for My Ratings */}
+                      {myRatingsPyramiding.hasPotentialPyramiding && (
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-lg p-4">
+                          <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                            <span>⚠️</span>{" "}
+                            {t("tacticalCalc", "pyramidingAlert")}
+                          </h5>
+                          <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
+                            {myRatingsPyramiding.summary}
+                          </p>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {myRatingsPyramiding.warnings.map(
+                              (warning, idx) => (
+                                <div
+                                  key={idx}
+                                  className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
+                                >
+                                  <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                                    {warning.message}
+                                  </p>
+                                  <p className="text-gray-600 dark:text-gray-400">
+                                    {warning.regulation}: {warning.guidance}
+                                  </p>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
+                      <span className="text-6xl mb-4 block opacity-30">
+                        📊
+                      </span>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        {t("tacticalCalc", "saveRatingsToSee")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Integration Note */}
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                <div className="flex gap-3">
+                  <span className="text-xl">💡</span>
+                  <div>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>{t("tacticalCalc", "proTip")}:</strong>{" "}
+                      {t("tacticalCalc", "proTipDesc")}
+                    </p>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
+                      <li>{t("tacticalCalc", "proTipItem1")}</li>
+                      <li>{t("tacticalCalc", "proTipItem2")}</li>
+                      <li>{t("tacticalCalc", "proTipItem3")}</li>
+                      <li>{t("tacticalCalc", "proTipItem4")}</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+  );
+}
+
+function CapResultsTab({
+  t,
+  conditions,
+  setConditions,
+  capResults,
+  setCapResults,
+  setActiveTab,
+  handleAddToMyRatings,
+  removeCapResult,
+}) {
+  return (
+            <div className="space-y-6">
+              {/* Header Info */}
+              <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🏥</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-teal-900 dark:text-teal-100">
+                      {t("tacticalCalc", "capSimulatorResults")}
+                    </h3>
+                    <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
+                      {t("tacticalCalc", "capSimulatorDesc")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCapResults([]);
+                      if (onClearCapResults) onClearCapResults();
+                      setActiveTab("calculator");
+                    }}
+                    className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
+                  >
+                    {t("tacticalCalc", "clearAll")}
+                  </button>
+                </div>
+              </div>
+
+              {/* Results List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {capResults.map((result, index) => (
+                  <div
+                    key={result.id || index}
+                    className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-teal-200 dark:border-teal-700 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${getRatingBadgeColor(result.rating)}`}
+                        >
+                          {result.rating}%
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {result.conditionName}
+                          </p>
+                          {result.diagnosticCode && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              DC {result.diagnosticCode}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full">
+                        C&P Sim
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          // Add to current calculator conditions
+                          const condition = {
+                            id: Date.now().toString() + index,
+                            name: result.conditionName,
+                            bodyPart: "other",
+                            rating: result.rating,
+                            side: "none",
+                            source: "C&P Simulator",
+                            diagnosticCode: result.diagnosticCode,
+                          };
+                          setConditions((prev) => [...prev, condition]);
+                          // Remove from C&P results
+                          removeCapResult(index);
+                        }}
+                        className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Add directly to My Ratings
+                          const rating = {
+                            name: result.conditionName,
+                            bodyPart: "other",
+                            rating: result.rating,
+                            side: "none",
+                            source: "C&P Simulator",
+                            diagnosticCode: result.diagnosticCode,
+                          };
+                          handleAddToMyRatings(rating);
+                          // Remove from C&P results
+                          removeCapResult(index);
+                        }}
+                        className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <span>⭐</span> {t("tacticalCalc", "saveToMyRatings")}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Calculate Combined if we add all */}
+              {capResults.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    {t("tacticalCalc", "quickPreview")}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    {t("tacticalCalc", "ifYouAddAll")}
+                  </p>
+
+                  {(() => {
+                    const previewConditions = [
+                      ...conditions,
+                      ...capResults.map((r, i) => ({
+                        id: `preview-${i}`,
+                        name: r.conditionName,
+                        bodyPart: "other",
+                        rating: r.rating,
+                        side: "none",
+                      })),
+                    ];
+                    const previewResults =
+                      calculateVARating(previewConditions);
+
+                    return (
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {conditions.length}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t("tacticalCalc", "current")}
+                          </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <div className="text-2xl font-bold text-teal-600">
+                            +{capResults.length}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t("tacticalCalc", "fromCAP")}
+                          </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <div className="text-2xl font-bold text-green-600">
+                            {previewResults.combinedRating}%
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t("tacticalCalc", "combined")}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <button
+                    onClick={() => {
+                      // Add all C&P results to conditions
+                      const newConditions = capResults.map((r, i) => ({
+                        id: Date.now().toString() + i,
+                        name: r.conditionName,
+                        bodyPart: "other",
+                        rating: r.rating,
+                        side: "none",
+                        source: "C&P Simulator",
+                        diagnosticCode: r.diagnosticCode,
+                      }));
+                      setConditions((prev) => [...prev, ...newConditions]);
+                      setCapResults([]);
+                      if (onClearCapResults) onClearCapResults();
+                      setActiveTab("calculator");
+                    }}
+                    className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                  >
+                    {t("tacticalCalc", "addAllToCalculator")}
+                  </button>
+                </div>
+              )}
+
+              {/* Educational Note */}
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                <div className="flex gap-3">
+                  <span className="text-xl">💡</span>
+                  <div>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>
+                        {t("common", "remember") || "Remember"}:
+                      </strong>{" "}
+                      {t("tacticalCalc", "capRemember")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+  );
+}
+
+function RatesTab({
+  t,
+}) {
+  return (
+            <div className="space-y-6">
+              {/* Header Info */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">📊</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-green-800 dark:text-green-200">
+                      {t("tacticalCalc", "vaDisabilityRates2026")}
+                    </h3>
+                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                      {t("tacticalCalc", "effectiveDate")} •{" "}
+                      {t("tacticalCalc", "source")}:{" "}
+                      <a
+                        href="https://www.va.gov/disability/compensation-rates/veteran-rates/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:no-underline"
+                      >
+                        VA.gov
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Basic Rates - 10% to 20% */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">
+                    💰
+                  </span>
+                  {t("tacticalCalc", "veteransWith10to20")}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  {t("tacticalCalc", "noDependentBenefits")}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      10% Rating
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      20% Rating
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Veteran Alone Rates - 30% to 100% */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">
+                    👤
+                  </span>
+                  {t("tacticalCalc", "veteranAlone")}
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b dark:border-gray-700">
+                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "rating")}
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "monthly")}
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "annual")}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
+                        <tr
+                          key={rating}
+                          className={`border-b dark:border-gray-700 ${rating === 100 ? "bg-green-50 dark:bg-green-900/20" : ""}`}
+                        >
+                          <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
+                            {rating}%
+                          </td>
+                          <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                            $
+                            {VA_PAY_RATES_2026.solo[rating]?.toLocaleString(
+                              "en-US",
+                              { minimumFractionDigits: 2 },
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
+                            $
+                            {(
+                              VA_PAY_RATES_2026.solo[rating] * 12
+                            )?.toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* With Spouse Rates */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">
+                    💑
+                  </span>
+                  {t("tacticalCalc", "withSpouse")}
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b dark:border-gray-700">
+                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "rating")}
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "monthly")}
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "spouseAdd")}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
+                        <tr
+                          key={rating}
+                          className="border-b dark:border-gray-700"
+                        >
+                          <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
+                            {rating}%
+                          </td>
+                          <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                            $
+                            {(
+                              VA_PAY_RATES_2026.solo[rating] +
+                              VA_PAY_RATES_2026.spouse[rating]
+                            )?.toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                            +$
+                            {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString(
+                              "en-US",
+                              { minimumFractionDigits: 2 },
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Added Amounts Table */}
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">
+                    ➕
+                  </span>
+                  {t("tacticalCalc", "additionalAmounts")}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  {t("tacticalCalc", "additionalAmountsNote")}
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b dark:border-gray-700">
+                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                          {t("tacticalCalc", "dependentType")}
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          30%
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          50%
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          70%
+                        </th>
+                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                          100%
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "spouse")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouse[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouse[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouse[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouse[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "spouseAA")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouseAidAttendance[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouseAidAttendance[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouseAidAttendance[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.spouseAidAttendance[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "firstChild")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.firstChild[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.firstChild[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.firstChild[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.firstChild[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "addlChildUnder18")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childUnder18[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childUnder18[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childUnder18[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childUnder18[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "childSchool")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childSchool[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childSchool[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childSchool[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.childSchool[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "oneParent")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentOne[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentOne[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentOne[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentOne[100]}
+                        </td>
+                      </tr>
+                      <tr className="border-b dark:border-gray-700">
+                        <td className="py-2 px-3 text-gray-900 dark:text-white">
+                          {t("tacticalCalc", "twoParents")}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentTwo[30]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentTwo[50]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentTwo[70]}
+                        </td>
+                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                          +${VA_PAY_RATES_2026.parentTwo[100]}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Quick Reference Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
+                  <div className="text-3xl font-bold">$3,938.58</div>
+                  <div className="text-green-100 text-sm">
+                    {t("tacticalCalc", "veteranAlone100")}
+                  </div>
+                  <div className="text-green-100 text-xs mt-1">
+                    $47,262.96/{t("tacticalCalc", "year")}
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
+                  <div className="text-3xl font-bold">$4,158.17</div>
+                  <div className="text-blue-100 text-sm">
+                    {t("tacticalCalc", "withSpouse100")}
+                  </div>
+                  <div className="text-blue-100 text-xs mt-1">
+                    $49,898.04/{t("tacticalCalc", "year")}
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
+                  <div className="text-3xl font-bold">$4,318.99</div>
+                  <div className="text-purple-100 text-sm">
+                    {t("tacticalCalc", "withSpouseChild100")}
+                  </div>
+                  <div className="text-purple-100 text-xs mt-1">
+                    $51,827.88/{t("tacticalCalc", "year")}
+                  </div>
+                </div>
+              </div>
+
+              {/* COLA Note */}
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                <div className="flex gap-3">
+                  <span className="text-xl">ℹ️</span>
+                  <div>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>{t("tacticalCalc", "colaTitle")}:</strong>{" "}
+                      {t("tacticalCalc", "colaDescription")}
+                    </p>
+                    <a
+                      href="https://www.ssa.gov/cola/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
+                    >
+                      {t("tacticalCalc", "learnMoreCola")} →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+  );
+}
+
+
+
 const TacticalCalculator = ({
   onClose,
   onReportBug,
   initialConditions = [],
   capSimulatorResults = [],
-  onClearCapResults,
 }) => {
   const state = useTacticalCalculatorState({
     initialConditions,
@@ -1219,45 +2809,18 @@ const TacticalCalculator = ({
     t,
     calculatorContentRef,
     conditions,
-    setConditions,
     capResults,
-    setCapResults,
-    myRatings,
-    showSaveConfirm,
-    newCondition,
-    setNewCondition,
     activeTab,
     setActiveTab,
-    showSteps,
-    setShowSteps,
     showVAGovPaster,
     setShowVAGovPaster,
     editingCondition,
     editForm,
     setEditForm,
-    recordCandidates,
-    recordsAnnouncement,
     allBodyParts,
-    canBeBilateral,
-    handleAddCondition,
-    handleRemoveCondition,
-    handleEditCondition,
     handleSaveEdit,
     handleCancelEdit,
-    handleLoadFromRecords,
-    handleSaveAsMyRatings,
-    handleLoadMyRatings,
-    handleAddToMyRatings,
-    removeCapResult,
-    handleRemoveFromMyRatings,
     handlePastedRatings,
-    myRatingsResults,
-    myRatingsPyramiding,
-    results,
-    pyramiding,
-    tdiu,
-    ratingNeededFor90,
-    ratingNeededFor100,
   } = state;
 
   return (
@@ -1401,1103 +2964,13 @@ const TacticalCalculator = ({
           {/* Content */}
           <div className="p-3 sm:p-4 md:p-6">
             {/* My Ratings Tab - Save and manage your actual VA ratings */}
-            {activeTab === "myratings" && (
-              <div className="space-y-6">
-                {/* Header Info */}
-                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">⭐</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-amber-800 dark:text-amber-200">
-                        {t("tacticalCalc", "myVARatings")}
-                      </h3>
-                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        {t("tacticalCalc", "myVARatingsDesc")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Save Confirmation */}
-                {showSaveConfirm && (
-                  <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
-                    <span className="text-green-600 dark:text-green-400">
-                      ✓
-                    </span>
-                    <span className="text-green-700 dark:text-green-300 text-sm">
-                      {t("tacticalCalc", "ratingsSavedSuccess")}
-                    </span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* My Saved Ratings List */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-800 dark:text-gray-200">
-                        {t("tacticalCalc", "savedRatings")}
-                      </h4>
-                      {myRatings.length > 0 && (
-                        <button
-                          onClick={handleLoadMyRatings}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {t("tacticalCalc", "loadIntoCalculator")}
-                        </button>
-                      )}
-                    </div>
-
-                    {myRatings.length === 0 ? (
-                      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
-                        <span className="text-4xl mb-3 block">📋</span>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                          {t("tacticalCalc", "noRatingsSavedYet")}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                          {t("tacticalCalc", "pasteRatingsDesc")}
-                        </p>
-                        <div className="space-y-2">
-                          <button
-                            onClick={() => setShowVAGovPaster(true)}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
-                          >
-                            <span className="text-lg">📋</span>{" "}
-                            {t("tacticalCalc", "pasteFromVAGov")}
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("calculator")}
-                            className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                          >
-                            {t("tacticalCalc", "orAddInCalculator")}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {myRatings.map((rating, index) => (
-                          <div
-                            key={rating.id || index}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white ${getRatingBadgeColor(rating.rating)}`}
-                              >
-                                {rating.rating}%
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900 dark:text-white text-sm">
-                                  {rating.name ||
-                                    allBodyParts.find(
-                                      (bp) => bp.value === rating.bodyPart,
-                                    )?.label ||
-                                    rating.bodyPart}
-                                </p>
-                                {rating.side !== "none" && (
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                                    {rating.side}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() =>
-                                handleRemoveFromMyRatings(rating.id)
-                              }
-                              className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                              aria-label="Remove"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="space-y-2">
-                      {/* Paste from VA.gov Button - Only show if no ratings exist */}
-                      {myRatings.length === 0 && (
-                        <button
-                          onClick={() => setShowVAGovPaster(true)}
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
-                        >
-                          <span>📋</span> {t("tacticalCalc", "pasteFromVAGov")}
-                        </button>
-                      )}
-
-                      {/* Save from Calculator Button */}
-                      {conditions.length > 0 && (
-                        <button
-                          onClick={handleSaveAsMyRatings}
-                          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <span>⭐</span>{" "}
-                          {t("tacticalCalc", "saveCalcConditions")}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* My Ratings Summary */}
-                  <div className="space-y-4">
-                    {myRatings.length > 0 ? (
-                      <>
-                        {/* Combined Rating Display */}
-                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-6 text-center">
-                          <p className="text-blue-100 text-sm mb-2">
-                            {t("tacticalCalc", "myCombinedRating")}
-                          </p>
-                          <div className="text-5xl font-bold mb-2">
-                            {myRatingsResults.combinedRating}%
-                          </div>
-                          {myRatingsResults.bilateralFactor > 0 && (
-                            <p className="text-blue-200 text-sm">
-                              {t("tacticalCalc", "includesBilateral")}{" "}
-                              {myRatingsResults.bilateralFactor.toFixed(1)}%
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Monthly Pay Estimate */}
-                        <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
-                          <p className="text-green-100 text-sm mb-2">
-                            {t("tacticalCalc", "estimatedMonthlyPaySolo")}
-                          </p>
-                          <div className="text-4xl font-bold">
-                            $
-                            {VA_PAY_RATES_2026.solo[
-                              myRatingsResults.combinedRating
-                            ]?.toLocaleString() || "0"}
-                          </div>
-                          <p className="text-green-200 text-sm mt-2">
-                            $
-                            {(
-                              (VA_PAY_RATES_2026.solo[
-                                myRatingsResults.combinedRating
-                              ] || 0) * 12
-                            ).toLocaleString()}
-                            /{t("tacticalCalc", "yearlyPay").toLowerCase()}
-                          </p>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                              {myRatings.length}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {t("tacticalCalc", "conditions")}
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                              {myRatingsResults.rawScore}%
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {t("tacticalCalc", "rawScore")}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Gap Analysis */}
-                        {myRatingsResults.combinedRating < 100 && (
-                          <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
-                            <h5 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
-                              {t("tacticalCalc", "gapToNext")}
-                            </h5>
-                            <p className="text-sm text-purple-700 dark:text-purple-300">
-                              <strong>{myRatingsResults.gapToNextTier}%</strong>{" "}
-                              {t("tacticalCalc", "awayFromNextTier")}
-                              {myRatingsResults.combinedRating < 100 &&
-                                myRatingsResults.combinedRating >= 90 && (
-                                  <span className="block mt-1">
-                                    {t("tacticalCalc", "closeToHundred")}
-                                  </span>
-                                )}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Pyramiding Warnings for My Ratings */}
-                        {myRatingsPyramiding.hasPotentialPyramiding && (
-                          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-lg p-4">
-                            <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                              <span>⚠️</span>{" "}
-                              {t("tacticalCalc", "pyramidingAlert")}
-                            </h5>
-                            <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
-                              {myRatingsPyramiding.summary}
-                            </p>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                              {myRatingsPyramiding.warnings.map(
-                                (warning, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
-                                  >
-                                    <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                                      {warning.message}
-                                    </p>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                      {warning.regulation}: {warning.guidance}
-                                    </p>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
-                        <span className="text-6xl mb-4 block opacity-30">
-                          📊
-                        </span>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          {t("tacticalCalc", "saveRatingsToSee")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Integration Note */}
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-                  <div className="flex gap-3">
-                    <span className="text-xl">💡</span>
-                    <div>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>{t("tacticalCalc", "proTip")}:</strong>{" "}
-                        {t("tacticalCalc", "proTipDesc")}
-                      </p>
-                      <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
-                        <li>{t("tacticalCalc", "proTipItem1")}</li>
-                        <li>{t("tacticalCalc", "proTipItem2")}</li>
-                        <li>{t("tacticalCalc", "proTipItem3")}</li>
-                        <li>{t("tacticalCalc", "proTipItem4")}</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {activeTab === "myratings" && <MyRatingsTab {...state} />}
 
             {/* C&P Simulator Results Tab */}
-            {activeTab === "capresults" && capResults.length > 0 && (
-              <div className="space-y-6">
-                {/* Header Info */}
-                <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">🏥</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-teal-900 dark:text-teal-100">
-                        {t("tacticalCalc", "capSimulatorResults")}
-                      </h3>
-                      <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
-                        {t("tacticalCalc", "capSimulatorDesc")}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setCapResults([]);
-                        if (onClearCapResults) onClearCapResults();
-                        setActiveTab("calculator");
-                      }}
-                      className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
-                    >
-                      {t("tacticalCalc", "clearAll")}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Results List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {capResults.map((result, index) => (
-                    <div
-                      key={result.id || index}
-                      className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-teal-200 dark:border-teal-700 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${getRatingBadgeColor(result.rating)}`}
-                          >
-                            {result.rating}%
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {result.conditionName}
-                            </p>
-                            {result.diagnosticCode && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                DC {result.diagnosticCode}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full">
-                          C&P Sim
-                        </span>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            // Add to current calculator conditions
-                            const condition = {
-                              id: Date.now().toString() + index,
-                              name: result.conditionName,
-                              bodyPart: "other",
-                              rating: result.rating,
-                              side: "none",
-                              source: "C&P Simulator",
-                              diagnosticCode: result.diagnosticCode,
-                            };
-                            setConditions((prev) => [...prev, condition]);
-                            // Remove from C&P results
-                            removeCapResult(index);
-                          }}
-                          className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
-                        </button>
-                        <button
-                          onClick={() => {
-                            // Add directly to My Ratings
-                            const rating = {
-                              name: result.conditionName,
-                              bodyPart: "other",
-                              rating: result.rating,
-                              side: "none",
-                              source: "C&P Simulator",
-                              diagnosticCode: result.diagnosticCode,
-                            };
-                            handleAddToMyRatings(rating);
-                            // Remove from C&P results
-                            removeCapResult(index);
-                          }}
-                          className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <span>⭐</span> {t("tacticalCalc", "saveToMyRatings")}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Calculate Combined if we add all */}
-                {capResults.length > 0 && (
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                      {t("tacticalCalc", "quickPreview")}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      {t("tacticalCalc", "ifYouAddAll")}
-                    </p>
-
-                    {(() => {
-                      const previewConditions = [
-                        ...conditions,
-                        ...capResults.map((r, i) => ({
-                          id: `preview-${i}`,
-                          name: r.conditionName,
-                          bodyPart: "other",
-                          rating: r.rating,
-                          side: "none",
-                        })),
-                      ];
-                      const previewResults =
-                        calculateVARating(previewConditions);
-
-                      return (
-                        <div className="grid grid-cols-3 gap-3 text-center">
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-blue-600">
-                              {conditions.length}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {t("tacticalCalc", "current")}
-                            </div>
-                          </div>
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-teal-600">
-                              +{capResults.length}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {t("tacticalCalc", "fromCAP")}
-                            </div>
-                          </div>
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-green-600">
-                              {previewResults.combinedRating}%
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {t("tacticalCalc", "combined")}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    <button
-                      onClick={() => {
-                        // Add all C&P results to conditions
-                        const newConditions = capResults.map((r, i) => ({
-                          id: Date.now().toString() + i,
-                          name: r.conditionName,
-                          bodyPart: "other",
-                          rating: r.rating,
-                          side: "none",
-                          source: "C&P Simulator",
-                          diagnosticCode: r.diagnosticCode,
-                        }));
-                        setConditions((prev) => [...prev, ...newConditions]);
-                        setCapResults([]);
-                        if (onClearCapResults) onClearCapResults();
-                        setActiveTab("calculator");
-                      }}
-                      className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
-                    >
-                      {t("tacticalCalc", "addAllToCalculator")}
-                    </button>
-                  </div>
-                )}
-
-                {/* Educational Note */}
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-                  <div className="flex gap-3">
-                    <span className="text-xl">💡</span>
-                    <div>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>
-                          {t("common", "remember") || "Remember"}:
-                        </strong>{" "}
-                        {t("tacticalCalc", "capRemember")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {activeTab === "capresults" && capResults.length > 0 && <CapResultsTab {...state} />}
 
             {/* Calculator Tab */}
-            {activeTab === "calculator" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                {/* Input Section */}
-                <div className="space-y-6 flex flex-col h-full">
-                  {/* Quick Load from My Ratings */}
-                  {myRatings.length > 0 && conditions.length === 0 && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
-                      <span className="text-sm text-amber-700 dark:text-amber-300">
-                        ⭐ {t("tacticalCalc", "youHaveSavedRatings")} (
-                        {myRatings.length})
-                      </span>
-                      <button
-                        onClick={handleLoadMyRatings}
-                        className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
-                      >
-                        {t("tacticalCalc", "loadNow")}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Add Condition Form */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                      <span>➕</span> {t("tacticalCalc", "addRatedCondition")}
-                    </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Body Part */}
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          {t("tacticalCalc", "bodyPartConditionType")}
-                        </label>
-                        <select
-                          aria-label={t(
-                            "tacticalCalc",
-                            "bodyPartConditionType",
-                          )}
-                          value={newCondition.bodyPart}
-                          onChange={(e) => {
-                            const bp = e.target.value;
-                            const info = allBodyParts.find(
-                              (p) => p.value === bp,
-                            );
-                            setNewCondition((prev) => ({
-                              ...prev,
-                              bodyPart: bp,
-                              side: info?.canBeBilateral ? prev.side : "none",
-                            }));
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        >
-                          <option value="">
-                            {t("tacticalCalc", "select")}
-                          </option>
-                          <optgroup
-                            label={t("tacticalCalc", "extremitiesBilateral")}
-                          >
-                            {BODY_PARTS.extremities.map((bp) => (
-                              <option key={bp.value} value={bp.value}>
-                                {bp.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                          <optgroup
-                            label={t("tacticalCalc", "otherBodySystems")}
-                          >
-                            {BODY_PARTS.other.map((bp) => (
-                              <option key={bp.value} value={bp.value}>
-                                {bp.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        </select>
-                      </div>
-
-                      {/* Side (if bilateral capable) */}
-                      {canBeBilateral && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("tacticalCalc", "side")}
-                          </label>
-                          <select
-                            aria-label={t("tacticalCalc", "side")}
-                            value={newCondition.side}
-                            onChange={(e) =>
-                              setNewCondition((prev) => ({
-                                ...prev,
-                                side: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="none">
-                              {t("tacticalCalc", "notBilateral")}
-                            </option>
-                            <option value="left">
-                              {t("tacticalCalc", "left")}
-                            </option>
-                            <option value="right">
-                              {t("tacticalCalc", "right")}
-                            </option>
-                            <option value="bilateral">
-                              {t("tacticalCalc", "bothBilateral")}
-                            </option>
-                          </select>
-                        </div>
-                      )}
-
-                      {/* Rating */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          {t("tacticalCalc", "ratingPercent")}
-                        </label>
-                        <select
-                          aria-label={t("tacticalCalc", "ratingPercent")}
-                          value={newCondition.rating}
-                          onChange={(e) =>
-                            setNewCondition((prev) => ({
-                              ...prev,
-                              rating: parseInt(e.target.value),
-                            }))
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        >
-                          {ratingOptions.map((r) => (
-                            <option key={r} value={r}>
-                              {r}%
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Custom Name (optional) */}
-                      <div className={canBeBilateral ? "sm:col-span-2" : ""}>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          {t("tacticalCalc", "customLabelOptional")}
-                        </label>
-                        <input
-                          type="text"
-                          value={newCondition.name}
-                          onChange={(e) =>
-                            setNewCondition((prev) => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                          placeholder={t(
-                            "tacticalCalc",
-                            "customLabelPlaceholder",
-                          )}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handleAddCondition}
-                      disabled={!newCondition.bodyPart}
-                      className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {t("tacticalCalc", "addToCalculatorBtn")}
-                    </button>
-                  </div>
-
-                  <div aria-live="polite" className="sr-only">
-                    {recordsAnnouncement}
-                  </div>
-                  {recordCandidates.length > 0 && (
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
-                      <p className="text-sm text-blue-900 dark:text-blue-200">
-                        📂 {recordCandidates.length} rated condition
-                        {recordCandidates.length === 1 ? "" : "s"} found in your
-                        records (saved claims &amp; analyzed documents).
-                      </p>
-                      <button
-                        onClick={handleLoadFromRecords}
-                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                      >
-                        Load into calculator
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Conditions List - Expands to fill remaining space */}
-                  <div className="flex flex-col flex-1 min-h-0">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
-                      <span>
-                        📋 {t("tacticalCalc", "yourRatedConditions")} (
-                        {conditions.length})
-                      </span>
-                      {conditions.length > 0 && (
-                        <button
-                          onClick={() => setConditions([])}
-                          className="text-xs text-red-600 hover:text-red-700"
-                        >
-                          {t("tacticalCalc", "clearAll")}
-                        </button>
-                      )}
-                    </h3>
-
-                    {conditions.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                        <div className="text-4xl mb-2">📝</div>
-                        <p>{t("tacticalCalc", "noConditionsYet")}</p>
-                        <p className="text-sm mt-1">
-                          {t("tacticalCalc", "noConditionsAddYours")}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 overflow-y-auto flex-1 pr-2">
-                        {/*  Removed max-h-64, added flex-1 */}
-                        {conditions.map((condition) => (
-                          <div
-                            key={condition.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border ${
-                              condition.side !== "none"
-                                ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
-                                : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
-                                {condition.rating}%
-                              </span>
-                              <div>
-                                <p className="font-medium text-gray-800 dark:text-gray-200">
-                                  {condition.name}
-                                </p>
-                                {condition.side !== "none" && (
-                                  <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
-                                    🔄 Bilateral ({condition.side})
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditCondition(condition)}
-                                className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-                                aria-label="Edit"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleRemoveCondition(condition.id)
-                                }
-                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                aria-label="Remove"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Results Section */}
-                <div className="space-y-6">
-                  {/* Validation Badge */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
-                    <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
-                      <span className="text-lg">✓</span>
-                      <span className="font-medium">
-                        {t("tacticalCalc", "verifiedPer")}
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
-                        {t("tacticalCalc", "matchesVAGov")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Main Rating Display */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-center gap-6">
-                      {/* Progress Ring */}
-                      <div className="relative">
-                        <ProgressRing
-                          percentage={results.combinedRating}
-                          size={160}
-                          strokeWidth={14}
-                        />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
-                            {results.combinedRating}%
-                          </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {t("tacticalCalc", "combined")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-2">
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {t("tacticalCalc", "rawScore")}
-                          </p>
-                          <p className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
-                            {results.rawScore}%
-                          </p>
-                        </div>
-                        {results.bilateralFactor > 0 && (
-                          <div className="text-center px-3 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                            <p className="text-xs text-purple-600 dark:text-purple-400">
-                              {t("tacticalCalc", "bilateralFactor")}
-                            </p>
-                            <p className="font-semibold text-purple-700 dark:text-purple-300">
-                              +{results.bilateralFactor}%
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pyramiding Warnings - NEW */}
-                  {pyramiding.hasPotentialPyramiding && (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-xl p-4">
-                      <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-3 flex items-center gap-2">
-                        <span>⚠️</span> {t("tacticalCalc", "pyramidingAlert")}
-                      </h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
-                        {pyramiding.summary}
-                      </p>
-                      <div className="space-y-2">
-                        {pyramiding.warnings.map((warning, idx) => (
-                          <div
-                            key={idx}
-                            className={`p-3 rounded-lg border-l-4 ${
-                              warning.severity === "high"
-                                ? "bg-red-50 dark:bg-red-900/30 border-red-500"
-                                : "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between mb-1">
-                              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                {warning.message}
-                              </p>
-                              <span
-                                className={`text-xs px-2 py-1 rounded ${
-                                  warning.severity === "high"
-                                    ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200"
-                                    : "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
-                                }`}
-                              >
-                                {warning.severity.toUpperCase()}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                              <strong>{warning.regulation}:</strong>{" "}
-                              {warning.guidance}
-                            </p>
-                            {warning.conditions && (
-                              <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
-                                <strong>
-                                  {t("tacticalCalc", "affectedConditions")}:
-                                </strong>{" "}
-                                {warning.conditions.join(", ")}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
-                        {t("tacticalCalc", "automatedCheck")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* TDIU Advisory (38 CFR § 4.16(a)) */}
-                  {tdiu.eligible && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-400 dark:border-indigo-600 rounded-xl p-4">
-                      <h4 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
-                        <span>💼</span> You may qualify for TDIU
-                      </h4>
-                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                        {tdiu.basis === "single60"
-                          ? "One of these conditions is rated 60% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."
-                          : "These ratings combine to 70% or higher with at least one condition rated 40% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."}{" "}
-                        If your service-connected conditions prevent you from
-                        maintaining substantially gainful employment, TDIU pays
-                        at the 100% rate even below a 100% schedular rating. The
-                        TDIU Work Impact Builder tool can help you prepare VA
-                        Form 21-8940 — and speak with a VSO before filing.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Gap Analysis */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                      <span>🎯</span> {t("tacticalCalc", "gapAnalysis")}
-                    </h4>
-
-                    {results.combinedRating >= 100 ? (
-                      <div className="text-center py-4">
-                        <span className="text-4xl">🎉</span>
-                        <p className="text-green-600 dark:text-green-400 font-bold text-lg mt-2">
-                          {t("tacticalCalc", "youveReached100")}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {/* Gap to next tier */}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "gapTo")} {results.nextTier}%:
-                          </span>
-                          <span className="font-semibold text-orange-600 dark:text-orange-400">
-                            {results.gapToNext10}% {t("tacticalCalc", "away")}
-                          </span>
-                        </div>
-
-                        {/* Progress bar to next tier */}
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${((10 - results.gapToNext10) / 10) * 100}%`,
-                            }}
-                          />
-                        </div>
-
-                        {/* What you need */}
-                        {results.combinedRating < 90 && (
-                          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
-                            <p className="text-sm text-amber-700 dark:text-amber-300">
-                              <strong>{t("tacticalCalc", "toReach90")}</strong>{" "}
-                              {t("tacticalCalc", "needApprox")}{" "}
-                              <strong>{ratingNeededFor90}%</strong>{" "}
-                              {t("tacticalCalc", "moreInNewRatings")}.
-                            </p>
-                          </div>
-                        )}
-
-                        {results.combinedRating < 100 && (
-                          <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-                            <p className="text-sm text-green-700 dark:text-green-300">
-                              <strong>{t("tacticalCalc", "toReach100")}</strong>{" "}
-                              {t("tacticalCalc", "needApprox")}{" "}
-                              <strong>{ratingNeededFor100}%</strong>{" "}
-                              {t("tacticalCalc", "moreInNewRatings")}.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quick Pay Preview */}
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-green-600 dark:text-green-400">
-                          {t("tacticalCalc", "monthlyPaySolo")}
-                        </p>
-                        <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                          $
-                          {VA_PAY_RATES_2026.solo[
-                            results.combinedRating
-                          ]?.toLocaleString() || "0"}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("paycheck")}
-                        className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
-                      >
-                        {t("tacticalCalc", "addDependents")}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Show Calculation Steps */}
-                  <button
-                    onClick={() => setShowSteps(!showSteps)}
-                    className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
-                  >
-                    <span>{showSteps ? "▼" : "▶"}</span>
-                    {showSteps
-                      ? t("tacticalCalc", "hideCalculationSteps")
-                      : t("tacticalCalc", "showCalculationSteps")}
-                  </button>
-
-                  {showSteps && results.calculationSteps.length > 0 && (
-                    <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 space-y-3">
-                      <div className="text-xs text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
-                        <span>📋</span>
-                        <span>{t("tacticalCalc", "officialVAMethod")}</span>
-                      </div>
-                      {results.calculationSteps.map((step, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-blue-500"
-                        >
-                          <div className="font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
-                            <span className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                              {step.step}
-                            </span>
-                            {step.description}
-                          </div>
-                          {step.bilateral && step.bilateral.length > 0 && (
-                            <div className="ml-8 text-sm space-y-1">
-                              <div className="text-purple-600 dark:text-purple-400 font-medium">
-                                🔄 Bilateral: {step.bilateral.join(", ")}
-                              </div>
-                            </div>
-                          )}
-                          {step.nonBilateral &&
-                            step.nonBilateral.length > 0 && (
-                              <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
-                                Non-bilateral: {step.nonBilateral.join(", ")}
-                              </div>
-                            )}
-                          {step.ratings && (
-                            <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
-                              Ratings (sorted): [{step.ratings.join("%, ")}%]
-                            </div>
-                          )}
-                          {step.bilateralGroupRating && (
-                            <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
-                              <div className="text-purple-700 dark:text-purple-300">
-                                <div>Combined: {step.combinedBilateral}%</div>
-                                <div>
-                                  Bilateral Factor (+10%):{" "}
-                                  {step.bilateralFactor}%
-                                </div>
-                                <div className="font-bold mt-1">
-                                  Group Rating: {step.bilateralGroupRating}%
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {step.rawScore !== undefined && (
-                            <div className="ml-8 mt-2 p-2 bg-green-50 dark:bg-green-900/30 rounded text-sm">
-                              <div className="text-green-700 dark:text-green-300 space-y-1">
-                                <div className="font-mono">
-                                  Raw Score: {step.rawScore}%
-                                </div>
-                                <div className="font-bold">
-                                  Final (rounded to 10): {step.roundedTo}%
-                                </div>
-                                {step.method && (
-                                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    ✓ {step.method}
-                                  </div>
-                                )}
-                                {step.validation && (
-                                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
-                                    {step.validation.outputValid ? "✅" : "⚠️"}
-                                    {step.validation.roundingRule}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
-                        <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                          <div className="font-semibold">
-                            ✓ {t("tacticalCalc", "calculationVerified")}
-                          </div>
-                          <div>{t("tacticalCalc", "matchesCalculators")}</div>
-                          <div>{t("tacticalCalc", "usingOfficialMethod")}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {activeTab === "calculator" && <CalculatorTab {...state} />}
 
             {/* Paycheck Tab */}
             {activeTab === "paycheck" && <PaycheckTab {...state} />}
@@ -2506,384 +2979,7 @@ const TacticalCalculator = ({
             {activeTab === "whatif" && <WhatIfTab {...state} />}
 
             {/* Rates Tab - 2026 VA Compensation Rates */}
-            {activeTab === "rates" && (
-              <div className="space-y-6">
-                {/* Header Info */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">📊</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-green-800 dark:text-green-200">
-                        {t("tacticalCalc", "vaDisabilityRates2026")}
-                      </h3>
-                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                        {t("tacticalCalc", "effectiveDate")} •{" "}
-                        {t("tacticalCalc", "source")}:{" "}
-                        <a
-                          href="https://www.va.gov/disability/compensation-rates/veteran-rates/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline hover:no-underline"
-                        >
-                          VA.gov
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Basic Rates - 10% to 20% */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">
-                      💰
-                    </span>
-                    {t("tacticalCalc", "veteransWith10to20")}
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    {t("tacticalCalc", "noDependentBenefits")}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        10% Rating
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        20% Rating
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Veteran Alone Rates - 30% to 100% */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">
-                      👤
-                    </span>
-                    {t("tacticalCalc", "veteranAlone")}
-                  </h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "rating")}
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "monthly")}
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "annual")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
-                          <tr
-                            key={rating}
-                            className={`border-b dark:border-gray-700 ${rating === 100 ? "bg-green-50 dark:bg-green-900/20" : ""}`}
-                          >
-                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
-                              {rating}%
-                            </td>
-                            <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
-                              $
-                              {VA_PAY_RATES_2026.solo[rating]?.toLocaleString(
-                                "en-US",
-                                { minimumFractionDigits: 2 },
-                              )}
-                            </td>
-                            <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
-                              $
-                              {(
-                                VA_PAY_RATES_2026.solo[rating] * 12
-                              )?.toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                              })}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* With Spouse Rates */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">
-                      💑
-                    </span>
-                    {t("tacticalCalc", "withSpouse")}
-                  </h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "rating")}
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "monthly")}
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "spouseAdd")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
-                          <tr
-                            key={rating}
-                            className="border-b dark:border-gray-700"
-                          >
-                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
-                              {rating}%
-                            </td>
-                            <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
-                              $
-                              {(
-                                VA_PAY_RATES_2026.solo[rating] +
-                                VA_PAY_RATES_2026.spouse[rating]
-                              )?.toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                              })}
-                            </td>
-                            <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                              +$
-                              {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString(
-                                "en-US",
-                                { minimumFractionDigits: 2 },
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Added Amounts Table */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">
-                      ➕
-                    </span>
-                    {t("tacticalCalc", "additionalAmounts")}
-                  </h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    {t("tacticalCalc", "additionalAmountsNote")}
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                            {t("tacticalCalc", "dependentType")}
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            30%
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            50%
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            70%
-                          </th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                            100%
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "spouse")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouse[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouse[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouse[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouse[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "spouseAA")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouseAidAttendance[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouseAidAttendance[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouseAidAttendance[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.spouseAidAttendance[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "firstChild")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.firstChild[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.firstChild[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.firstChild[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.firstChild[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "addlChildUnder18")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childUnder18[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childUnder18[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childUnder18[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childUnder18[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "childSchool")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childSchool[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childSchool[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childSchool[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.childSchool[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "oneParent")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentOne[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentOne[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentOne[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentOne[100]}
-                          </td>
-                        </tr>
-                        <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">
-                            {t("tacticalCalc", "twoParents")}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentTwo[30]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentTwo[50]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentTwo[70]}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +${VA_PAY_RATES_2026.parentTwo[100]}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Quick Reference Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
-                    <div className="text-3xl font-bold">$3,938.58</div>
-                    <div className="text-green-100 text-sm">
-                      {t("tacticalCalc", "veteranAlone100")}
-                    </div>
-                    <div className="text-green-100 text-xs mt-1">
-                      $47,262.96/{t("tacticalCalc", "year")}
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
-                    <div className="text-3xl font-bold">$4,158.17</div>
-                    <div className="text-blue-100 text-sm">
-                      {t("tacticalCalc", "withSpouse100")}
-                    </div>
-                    <div className="text-blue-100 text-xs mt-1">
-                      $49,898.04/{t("tacticalCalc", "year")}
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
-                    <div className="text-3xl font-bold">$4,318.99</div>
-                    <div className="text-purple-100 text-sm">
-                      {t("tacticalCalc", "withSpouseChild100")}
-                    </div>
-                    <div className="text-purple-100 text-xs mt-1">
-                      $51,827.88/{t("tacticalCalc", "year")}
-                    </div>
-                  </div>
-                </div>
-
-                {/* COLA Note */}
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-                  <div className="flex gap-3">
-                    <span className="text-xl">ℹ️</span>
-                    <div>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>{t("tacticalCalc", "colaTitle")}:</strong>{" "}
-                        {t("tacticalCalc", "colaDescription")}
-                      </p>
-                      <a
-                        href="https://www.ssa.gov/cola/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                      >
-                        {t("tacticalCalc", "learnMoreCola")} →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {activeTab === "rates" && <RatesTab {...state} />}
           </div>
 
           {/* Footer */}
