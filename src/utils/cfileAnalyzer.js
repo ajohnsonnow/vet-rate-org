@@ -301,24 +301,11 @@ Focus on extracting findings from THIS chunk only. Findings will be merged with 
  * @param {string} jsonStr - Potentially truncated JSON string
  * @returns {Object|null} - Parsed object or null if repair failed
  */
-function attemptJSONRepair(jsonStr) {
-  if (!jsonStr || typeof jsonStr !== "string") return null;
+function _repairNormalizeControlChars(content) {
+  return JSON.parse(content.replace(/\r\n|\r|\n/g, " "));
+}
 
-  const content = jsonStr.trim();
-
-  // Remove any trailing incomplete values
-  // Find the last complete property-value pair
-  const strategies = [
-    // Strategy 0: Normalize control characters (literal newlines inside JSON string
-    // values are invalid and cause V8 parse failures at the embedded newline position).
-    // Replacing all \r/\n with space is safe: JSON ignores whitespace between tokens,
-    // and we never want literal newlines in our field values.
-    () => JSON.parse(content.replace(/\r\n|\r|\n/g, " ")),
-    // Strategy 0b: Fix missing OPENING quote on string values.
-    // Model sometimes writes  "key": The text here."  instead of  "key": "The text here."
-    // Match: colon, not-a-quote (not already quoted / not null/true/false/number),
-    // any non-quote non-newline chars, then a closing quote before a JSON separator.
-    () => {
+function _repairMissingOpeningQuote(content) {
       const fixed = content.replace(
         // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
         /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
@@ -326,9 +313,9 @@ function attemptJSONRepair(jsonStr) {
           `${colon}"${value.trim()}${closingPart}`,
       );
       return JSON.parse(fixed);
-    },
-    // Strategy 1: Close all open brackets/braces
-    () => {
+}
+
+function _repairCloseOpenBrackets(content) {
       let repaired = content;
       // Count open brackets
       const openBraces = (repaired.match(/{/g) || []).length;
@@ -351,21 +338,15 @@ function attemptJSONRepair(jsonStr) {
       }
 
       return JSON.parse(repaired);
-    },
-    // Strategy 1b: Insert missing commas between consecutive array elements.
-    // Model sometimes emits [{...} {...}] without the separating comma.
-    // The pattern only appears at array-element boundaries in our schema output;
-    // it does not occur inside quoted string values (which never contain bare `}{`).
-    () => {
+}
+
+function _repairInsertMissingCommas(content) {
       // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
       const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
       return JSON.parse(fixed);
-    },
-    // Strategy 1c: Strip text preamble before the first '{', then close brackets.
-    // Model sometimes outputs explanatory prose before the JSON object, e.g.
-    // "Based on the records: {..." — all prior strategies fail because the
-    // non-JSON prefix makes the string unparseable from position 0.
-    () => {
+}
+
+function _repairStripPreamble(content) {
       const jsonStart = content.indexOf("{");
       if (jsonStart <= 0) return null;
       let extracted = content.substring(jsonStart);
@@ -380,9 +361,9 @@ function attemptJSONRepair(jsonStr) {
       for (let i = 0; i < oB - cB; i++) extracted += "]";
       for (let i = 0; i < ob - cb; i++) extracted += "}";
       return JSON.parse(extracted);
-    },
-    // Strategy 2: Find last complete object at top level
-    () => {
+}
+
+function _repairFindLastCompleteObject(content) {
       let depth = 0;
       let lastCompleteIndex = -1;
       let inString = false;
@@ -419,28 +400,21 @@ function attemptJSONRepair(jsonStr) {
         return JSON.parse(content.substring(0, lastCompleteIndex + 1));
       }
       return null;
-    },
-    // Strategy 2b: Single-quote normalization.
-    // Local models occasionally emit valid-JS but invalid-JSON single-quoted output:
-    // {'condition': 'PTSD', 'likelihood': 'high'}. Simple global replace works when
-    // field values contain no apostrophes; the try/catch discards it otherwise.
-    () => JSON.parse(content.replace(/'/g, '"')),
-    // Strategy 3: Fix unquoted property names (JSON5-style output from the model)
-    // e.g.  {summary: "...", timeline: [...]} → {"summary": "...", "timeline": [...]}
-    // Applies the substitution only at structural positions ({, or ,) to avoid
-    // touching identifier-like text inside string values.
-    () => {
+}
+
+function _repairSingleQuotes(content) {
+  return JSON.parse(content.replace(/'/g, '"'));
+}
+
+function _repairUnquotedPropertyNames(content) {
       const fixed = content.replace(
         /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
         '$1 "$2":',
       );
       return JSON.parse(fixed);
-    },
-    // Strategy 4: Regex field extraction — last-resort for badly truncated output.
-    // Extracts individual condition names and servicePeriod fields even when the
-    // surrounding JSON structure is unrecoverable. Works with the slim 3-field
-    // schema (no summary field) unlike the previous summary-only fallback.
-    () => {
+}
+
+function _repairRegexFieldExtraction(content) {
       const result = {
         summary: "",
         servicePeriod: {},
@@ -494,12 +468,60 @@ function attemptJSONRepair(jsonStr) {
         return result;
       }
       return null;
-    },
+}
+
+function attemptJSONRepair(jsonStr) {
+  if (!jsonStr || typeof jsonStr !== "string") return null;
+
+  const content = jsonStr.trim();
+
+  // Remove any trailing incomplete values
+  // Find the last complete property-value pair
+  const strategies = [
+    // Strategy 0: Normalize control characters (literal newlines inside JSON string
+    // values are invalid and cause V8 parse failures at the embedded newline position).
+    // Replacing all \r/\n with space is safe: JSON ignores whitespace between tokens,
+    // and we never want literal newlines in our field values.
+    _repairNormalizeControlChars,
+    // Strategy 0b: Fix missing OPENING quote on string values.
+    // Model sometimes writes  "key": The text here."  instead of  "key": "The text here."
+    // Match: colon, not-a-quote (not already quoted / not null/true/false/number),
+    // any non-quote non-newline chars, then a closing quote before a JSON separator.
+    _repairMissingOpeningQuote,
+    // Strategy 1: Close all open brackets/braces
+    _repairCloseOpenBrackets,
+    // Strategy 1b: Insert missing commas between consecutive array elements.
+    // Model sometimes emits [{...} {...}] without the separating comma.
+    // The pattern only appears at array-element boundaries in our schema output;
+    // it does not occur inside quoted string values (which never contain bare `}{`).
+    _repairInsertMissingCommas,
+    // Strategy 1c: Strip text preamble before the first '{', then close brackets.
+    // Model sometimes outputs explanatory prose before the JSON object, e.g.
+    // "Based on the records: {..." — all prior strategies fail because the
+    // non-JSON prefix makes the string unparseable from position 0.
+    _repairStripPreamble,
+    // Strategy 2: Find last complete object at top level
+    _repairFindLastCompleteObject,
+    // Strategy 2b: Single-quote normalization.
+    // Local models occasionally emit valid-JS but invalid-JSON single-quoted output:
+    // {'condition': 'PTSD', 'likelihood': 'high'}. Simple global replace works when
+    // field values contain no apostrophes; the try/catch discards it otherwise.
+    _repairSingleQuotes,
+    // Strategy 3: Fix unquoted property names (JSON5-style output from the model)
+    // e.g.  {summary: "...", timeline: [...]} → {"summary": "...", "timeline": [...]}
+    // Applies the substitution only at structural positions ({, or ,) to avoid
+    // touching identifier-like text inside string values.
+    _repairUnquotedPropertyNames,
+    // Strategy 4: Regex field extraction — last-resort for badly truncated output.
+    // Extracts individual condition names and servicePeriod fields even when the
+    // surrounding JSON structure is unrecoverable. Works with the slim 3-field
+    // schema (no summary field) unlike the previous summary-only fallback.
+    _repairRegexFieldExtraction,
   ];
 
   for (const strategy of strategies) {
     try {
-      const result = strategy();
+      const result = strategy(content);
       if (result && typeof result === "object") {
         return result;
       }
