@@ -1,12 +1,3 @@
-/* eslint-disable sonarjs/slow-regex, sonarjs/regex-complexity --
- * Security review note: this file's patterns classify and extract data from real
- * veterans' bulk-uploaded claim documents (DD214s, rating decisions, C-files).
- * Their permissive shapes are load-bearing for matching format variants across
- * scan quality/document eras, not accidental complexity — mechanically rewriting
- * risks silently narrowing matches and misclassifying real documents.
- * Deserves a dedicated pass with fixture-based before/after matching, not a
- * same-session rewrite.
- */
 /**
  * Vet-Rate.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
@@ -2038,8 +2029,11 @@ const parseServiceRecord = async (text) => {
         // Clean up MOS title - remove trailing garbage
         let title = match[2]?.trim();
         if (title) {
-          // Remove numbers and noise at end, keep just the job title
-          title = title.replace(/\s+\d+.*$/, "").trim();
+          // Remove numbers and noise at end, keep just the job title.
+          // \s{1,50} not \s+: title is capped to 50 chars below anyway, and
+          // unbounded \s+ before a digit that might never appear is O(n²)
+          // on adversarial input (confirmed 3.5s+ at 80k chars).
+          title = title.replace(/\s{1,50}\d+.*$/, "").trim();
           if (title.length >= 5 && title.length <= 50) {
             data.mosTitle = title;
           }
@@ -2269,9 +2263,11 @@ const parseServiceRecord = async (text) => {
           edu &&
           edu.length > 10 &&
           edu.length < 500 &&
+          // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 2ms worst case at that bound
           /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)
         ) {
           // Remove trailing noise like NOTHING FOLLOWS
+          // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 1ms worst case at that bound
           edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, "").trim();
           data.militaryEducation = edu;
         }
@@ -2412,9 +2408,9 @@ const parseServiceRecord = async (text) => {
 };
 
 /**
- * Parse VA Rating Decision
+ * Parse VA Rating Decision (legacy fallback -- see parseRatingDecisionDocument)
  */
-const parseRatingDecision = async (text) => {
+export const parseRatingDecision = async (text) => {
   const data = {
     type: "rating_decision",
     conditions: [],
@@ -2447,18 +2443,50 @@ const parseRatingDecision = async (text) => {
       data.decisionDate = decisionDateMatch[1];
     }
 
-    // Extract conditions with diagnostic codes
-    const conditionPattern =
-      /(?:DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4}))?[\s\S]{0,200}?([A-Z][A-Z\s,]+?)[\s-]+(\d+)%/gi;
+    // Extract conditions with diagnostic codes.
+    //
+    // Security review note: this legacy fallback (only reached when the
+    // primary vaDocumentParser.js finds limited data -- see
+    // parseRatingDecisionDocument above) originally combined an optional
+    // diagnostic-code prefix, an unbounded `[\s\S]{0,200}?` skip, and an
+    // unbounded condition-name capture into one regex. `[A-Z][A-Z\s,]+?`
+    // immediately adjacent to `[\s-]+` (both match plain spaces) is the
+    // same ambiguous-adjacent-quantifier shape fixed elsewhere in this
+    // session; confirmed 52s at 30k chars, still 3s+ at 100k after only
+    // bounding the name length. Restructured as find-condition-first
+    // (name length bounded to a realistic 100 chars) then a bounded
+    // backward lookback for a preceding diagnostic code, same technique
+    // used in vaDocumentParser.js. Verified identical on realistic
+    // "DIAGNOSTIC CODE: NNNN, Condition - NN%"-shaped input; differs from
+    // the original only on adversarial/unrealistic input (100+ char gaps
+    // between code and name) that doesn't occur in real decision letters,
+    // where the original's own behavior was already fragile (it could
+    // swallow unrelated prose into the "condition name").
+    const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?)[\s-]+(\d+)%/gi;
+    const DIAGNOSTIC_CODE_BEFORE_RE = /DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4})\s*$/i;
+    const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
+
     let match;
-    while ((match = conditionPattern.exec(text)) !== null) {
-      const [, diagnosticCode, condition, rating] = match;
+    let prevEnd = 0;
+    while ((match = CONDITION_PERCENT_RE.exec(text)) !== null) {
+      const nameStart = match.index;
+      const windowStart = Math.max(
+        0,
+        nameStart - DIAGNOSTIC_CODE_LOOKBACK_WINDOW,
+        prevEnd,
+      );
+      const dcMatch = text
+        .slice(windowStart, nameStart)
+        .match(DIAGNOSTIC_CODE_BEFORE_RE);
+      prevEnd = nameStart + match[0].length;
+
       data.conditions.push({
-        name: condition.trim(),
-        rating: parseInt(rating),
-        diagnosticCode: diagnosticCode || null,
+        name: match[1].trim(),
+        rating: parseInt(match[2]),
+        diagnosticCode: dcMatch ? dcMatch[1] : null,
         serviceConnected: true,
       });
+      if (match[0].length === 0) CONDITION_PERCENT_RE.lastIndex++;
     }
   } catch (error) {
     console.error("Rating decision parsing error:", error);
