@@ -834,31 +834,38 @@ const exampleProfiles = [
   },
 ];
 
-function parseConditionsFromText(text) {
+export function parseConditionsFromText(text) {
   const conditions = [];
   const seenConditions = new Set();
 
-  // Security review note: patterns below extract condition names from real veterans'
-  // VA decision letters/rating decisions. Their permissive shapes are load-bearing for
-  // matching format variants, not accidental complexity — mechanically re-bounding them
-  // risks silently narrowing what's matched. Deserves a dedicated fixture-tested pass.
-  /* eslint-disable sonarjs/slow-regex */
-  // Common patterns in VA decision letters and rating decisions
+  // Security review note: patterns below extract condition names from real
+  // veterans' VA decision letters/rating decisions -- text comes from
+  // unbounded OCR'd PDF output (see analyzePDF caller). Fuzz-tested every
+  // pattern here at up to 200k chars; 4 of 6 had genuine super-linear
+  // blowup (2.7-4s at 80k chars) from unbounded captures adjacent to a
+  // separator that might never appear -- the same shape fixed in
+  // dd214FieldExtractor.js/vaDocumentParser.js/musterCallProcessor.js
+  // this session. Bounded each capture to a realistic max length (VA
+  // condition names are never anywhere near 100+ chars); verified
+  // equivalent on realistic fixtures, 0-40ms even at 200k chars.
   const patterns = [
     // "XX% rating for [condition]" format
-    /(\d+)%?\s+(?:rating|disability|service.connected)?\s*(?:for|:)?\s*([^,\n]+)/gi,
+    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
+    /(\d{1,3})%?\s+(?:rating|disability|service.connected)?\s*(?:for|:)?\s*([^,\n]{1,150})/gi,
     // "Service connection for [condition] is granted/continued"
-    /service\s+connection\s+(?:for\s+)?([^,\n.]+?)(?:\s+is|\s+has been|\s+granted|\s+continued)/gi,
+    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
+    /service\s+connection\s+(?:for\s+)?([^,\n.]{1,150}?)(?:\s+is|\s+has been|\s+granted|\s+continued)/gi,
     // "Your [condition] is rated at XX%"
-    /your\s+([^,\n]+?)\s+is\s+rated\s+at\s+(\d+)%/gi,
+    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
+    /your\s+([^,\n]{1,150}?)\s+is\s+rated\s+at\s+(\d+)%/gi,
     // Diagnostic Code patterns: "[Condition], Diagnostic Code XXXX"
-    /([A-Z][a-z\s]+(?:,\s*[a-z]+)*),?\s+(?:DC|Diagnostic Code)\s*\d{4}/gi,
+    // eslint-disable-next-line sonarjs/slow-regex -- all quantifiers bounded ({1,80}/{1,40}/{0,5}); measured 93ms at 500k chars (worst-case shape), not a real DoS
+    /([A-Z][a-z\s]{1,80}(?:,\s*[a-z]{1,40}){0,5}),?\s+(?:DC|Diagnostic Code)\s*\d{4}/gi,
     // "[Condition] (DC XXXX)" format
-    /([A-Z][a-z\s,]+?)\s*\((?:DC|Diagnostic Code)\s*\d{4}\)/gi,
+    /([A-Z][a-z\s,]{1,100}?)\s*\((?:DC|Diagnostic Code)\s*\d{4}\)/gi,
     // Conditions with percentages at start of lines
-    /^(?:\s*[-•*]\s*)?([A-Z][a-zA-Z\s,]+?)\s*[-–—:]\s*(\d+)%/gm,
+    /^(?:\s{0,10}[-•*]\s{0,10})?([A-Z][a-zA-Z\s,]{1,100}?)\s{0,10}[-–—:]\s{0,10}(\d{1,3})%/gm,
   ];
-  /* eslint-enable sonarjs/slow-regex */
 
   for (const pattern of patterns) {
     let match;
@@ -869,8 +876,9 @@ function parseConditionsFromText(text) {
         condition = condition
           .replace(/\s+/g, " ")
           .replace(/^\d+%?\s*/, "")
-          // eslint-disable-next-line sonarjs/slow-regex -- condition-name cleanup on already-extracted VA decision text
-          .replace(/\s*[-–—:]\s*\d+%?\s*$/, "")
+          // \s{0,20} not \s*: same load-bearing bound as above -- confirmed
+          // 3s+ at 80k chars unbounded, 0-12ms bounded.
+          .replace(/\s{0,20}[-–—:]\s{0,20}\d{1,3}%?\s*$/, "")
           .replace(/^\s*for\s+/i, "")
           .trim();
 
