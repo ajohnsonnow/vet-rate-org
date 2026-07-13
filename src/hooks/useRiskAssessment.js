@@ -143,6 +143,174 @@ const calculateAge = (birthYear) => {
 };
 
 /**
+ * Calculate potential financial gain (rough estimate) and push the
+ * corresponding "info" factor when the veteran is already at 100%.
+ */
+function applyFinancialGainFactor(rating, factors) {
+  // If at 100%, there's essentially no gain from additional ratings
+  if (rating >= 100) {
+    factors.push({
+      type: "info",
+      text: "You are already at 100%. Additional claims provide $0 in additional monthly compensation.",
+    });
+    return 0;
+  }
+
+  // Very rough estimate - actual depends on dependents
+  const baseRates = {
+    90: 2241,
+    80: 1995,
+    70: 1716,
+    60: 1361,
+    50: 1075,
+    40: 773,
+    30: 524,
+    20: 338,
+    10: 175,
+  };
+  const currentPay = baseRates[rating] || 0;
+  const nextPay = baseRates[Math.min(100, rating + 10)] || 0;
+  return nextPay - currentPay;
+}
+
+/**
+ * Rule 1: P&T Check (HIGHEST PRIORITY). Returns the new risk level, or
+ * null if this rule doesn't apply.
+ */
+function applyPermanentTotalRule(isPermanentTotal, rating, warnings, factors) {
+  if (!isPermanentTotal) return null;
+
+  warnings.push({
+    severity: "critical",
+    rule: PROTECTION_RULES.PERMANENT_TOTAL,
+    message: `You are Permanent & Total (P&T). Filing new claims can trigger a REVIEW OF ALL YOUR CONDITIONS. Unless you have a severe new condition, the risk far outweighs any potential benefit.`,
+    action:
+      "Only file if you have a new serious condition that significantly impacts your quality of life.",
+  });
+
+  if (rating >= 100) {
+    factors.push({
+      type: "critical",
+      text: `Financial gain: $0/month. Risk: Total loss of P&T status and potential reduction in ratings.`,
+    });
+  }
+
+  return RISK_LEVELS.CRITICAL;
+}
+
+/**
+ * Rules 2-4: 20/10/5-Year Rules. Returns the new risk level, or null if
+ * isPermanentTotal means the existing risk level should be left alone.
+ */
+function applyYearsRule(yearsRated, isPermanentTotal, protections, warnings, factors) {
+  // Rule 2: 20-Year Rule (Full Protection)
+  if (yearsRated >= 20) {
+    protections.push({
+      rule: PROTECTION_RULES.TWENTY_YEAR,
+      message: `Your rating has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.951(b), your rating CANNOT be reduced to any lower level.`,
+      status: "PROTECTED",
+    });
+
+    // If not P&T, 20-year protection makes filing safer
+    return !isPermanentTotal ? RISK_LEVELS.SAFE : null;
+  }
+
+  // Rule 3: 10-Year Rule (Service Connection Protected)
+  if (yearsRated >= 10) {
+    protections.push({
+      rule: PROTECTION_RULES.TEN_YEAR,
+      message: `Your service connection has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.957, service connection cannot be severed unless fraud is proven.`,
+      status: "PROTECTED",
+    });
+
+    const nextRiskLevel = yearsRated >= 5 ? RISK_LEVELS.MODERATE : RISK_LEVELS.HIGH;
+
+    factors.push({
+      type: "info",
+      text: "Your service connection is protected, but the rating percentage can still be reduced.",
+    });
+
+    return !isPermanentTotal ? nextRiskLevel : null;
+  }
+
+  // Rule 4: 5-Year Rule
+  if (yearsRated >= 5) {
+    protections.push({
+      rule: PROTECTION_RULES.FIVE_YEAR,
+      message: `Your rating has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.344(c), reduction requires sustained improvement shown under ordinary conditions of life.`,
+      status: "PARTIAL",
+    });
+
+    return !isPermanentTotal ? RISK_LEVELS.MODERATE : null;
+  }
+
+  // Under 5 years - highest reduction risk
+  warnings.push({
+    severity: "high",
+    rule: PROTECTION_RULES.FIVE_YEAR,
+    message: `Your rating has only been in effect for ${yearsRated.toFixed(1)} years. Ratings under 5 years are NOT stabilized and can be reduced with a single C&P exam showing improvement.`,
+    action: `Wait ${(5 - yearsRated).toFixed(1)} more years for 5-year protection if possible.`,
+  });
+
+  return !isPermanentTotal ? RISK_LEVELS.HIGH : null;
+}
+
+/**
+ * Rule 5: Age 55+ Protection. Returns the (possibly adjusted) risk level.
+ */
+function applyAgeRule(age, riskLevel, isPermanentTotal, protections, factors) {
+  if (age >= 55) {
+    protections.push({
+      rule: PROTECTION_RULES.AGE_55,
+      message: `At ${age} years old, you are generally exempt from routine future examinations under VA policy.`,
+      status: "PROTECTED",
+    });
+
+    // Age 55+ reduces risk somewhat
+    if (riskLevel === RISK_LEVELS.HIGH && !isPermanentTotal) {
+      return RISK_LEVELS.MODERATE;
+    }
+    return riskLevel;
+  }
+
+  if (age > 0 && age < 55) {
+    factors.push({
+      type: "info",
+      text: `At ${age} years old, you are ${55 - age} years from age-based exam exemption.`,
+    });
+  }
+
+  return riskLevel;
+}
+
+/**
+ * High rating specific warning: filing while unstabilized triggers review.
+ */
+function applyHighRatingWarning(rating, isPermanentTotal, yearsRated, warnings) {
+  if (rating >= 70 && !isPermanentTotal && yearsRated < 5) {
+    warnings.push({
+      severity: "high",
+      rule: null,
+      message: `Your ${rating}% rating is significant but not stabilized. Filing a new claim triggers a review that could result in reduction.`,
+      action:
+        "Ensure any new claim is well-documented with strong medical evidence.",
+    });
+  }
+}
+
+/**
+ * TDIU tip for veterans rated 70-99% who cannot work.
+ */
+function applyTdiuFactor(rating, factors) {
+  if (rating >= 70 && rating < 100) {
+    factors.push({
+      type: "tip",
+      text: "If you cannot work due to your disabilities, consider TDIU (Total Disability Individual Unemployability) instead of filing for more conditions.",
+    });
+  }
+}
+
+/**
  * Calculate risk assessment based on inputs
  */
 export function useRiskAssessment(
@@ -160,145 +328,30 @@ export function useRiskAssessment(
     const warnings = [];
     const factors = [];
     let riskLevel = RISK_LEVELS.LOW;
-    let financialGain = 0;
 
-    // Calculate potential financial gain (rough estimate)
-    // If at 100%, there's essentially no gain from additional ratings
-    if (rating >= 100) {
-      factors.push({
-        type: "info",
-        text: "You are already at 100%. Additional claims provide $0 in additional monthly compensation.",
-      });
-    } else {
-      // Very rough estimate - actual depends on dependents
-      const baseRates = {
-        90: 2241,
-        80: 1995,
-        70: 1716,
-        60: 1361,
-        50: 1075,
-        40: 773,
-        30: 524,
-        20: 338,
-        10: 175,
-      };
-      const currentPay = baseRates[rating] || 0;
-      const nextPay = baseRates[Math.min(100, rating + 10)] || 0;
-      financialGain = nextPay - currentPay;
-    }
+    const financialGain = applyFinancialGainFactor(rating, factors);
 
-    // Rule 1: P&T Check (HIGHEST PRIORITY)
-    if (isPermanentTotal) {
-      warnings.push({
-        severity: "critical",
-        rule: PROTECTION_RULES.PERMANENT_TOTAL,
-        message: `You are Permanent & Total (P&T). Filing new claims can trigger a REVIEW OF ALL YOUR CONDITIONS. Unless you have a severe new condition, the risk far outweighs any potential benefit.`,
-        action:
-          "Only file if you have a new serious condition that significantly impacts your quality of life.",
-      });
-      riskLevel = RISK_LEVELS.CRITICAL;
+    const ptRiskLevel = applyPermanentTotalRule(
+      isPermanentTotal,
+      rating,
+      warnings,
+      factors,
+    );
+    if (ptRiskLevel) riskLevel = ptRiskLevel;
 
-      if (rating >= 100) {
-        factors.push({
-          type: "critical",
-          text: `Financial gain: $0/month. Risk: Total loss of P&T status and potential reduction in ratings.`,
-        });
-      }
-    }
+    const yearsRiskLevel = applyYearsRule(
+      yearsRated,
+      isPermanentTotal,
+      protections,
+      warnings,
+      factors,
+    );
+    if (yearsRiskLevel) riskLevel = yearsRiskLevel;
 
-    // Rule 2: 20-Year Rule (Full Protection)
-    if (yearsRated >= 20) {
-      protections.push({
-        rule: PROTECTION_RULES.TWENTY_YEAR,
-        message: `Your rating has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.951(b), your rating CANNOT be reduced to any lower level.`,
-        status: "PROTECTED",
-      });
+    riskLevel = applyAgeRule(age, riskLevel, isPermanentTotal, protections, factors);
 
-      // If not P&T, 20-year protection makes filing safer
-      if (!isPermanentTotal) {
-        riskLevel = RISK_LEVELS.SAFE;
-      }
-    }
-    // Rule 3: 10-Year Rule (Service Connection Protected)
-    else if (yearsRated >= 10) {
-      protections.push({
-        rule: PROTECTION_RULES.TEN_YEAR,
-        message: `Your service connection has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.957, service connection cannot be severed unless fraud is proven.`,
-        status: "PROTECTED",
-      });
-
-      if (!isPermanentTotal) {
-        riskLevel = yearsRated >= 5 ? RISK_LEVELS.MODERATE : RISK_LEVELS.HIGH;
-      }
-
-      factors.push({
-        type: "info",
-        text: "Your service connection is protected, but the rating percentage can still be reduced.",
-      });
-    }
-    // Rule 4: 5-Year Rule
-    else if (yearsRated >= 5) {
-      protections.push({
-        rule: PROTECTION_RULES.FIVE_YEAR,
-        message: `Your rating has been in effect for ${yearsRated.toFixed(1)} years. Under 38 CFR § 3.344(c), reduction requires sustained improvement shown under ordinary conditions of life.`,
-        status: "PARTIAL",
-      });
-
-      if (!isPermanentTotal) {
-        riskLevel = RISK_LEVELS.MODERATE;
-      }
-    }
-    // Under 5 years - highest reduction risk
-    else {
-      warnings.push({
-        severity: "high",
-        rule: PROTECTION_RULES.FIVE_YEAR,
-        message: `Your rating has only been in effect for ${yearsRated.toFixed(1)} years. Ratings under 5 years are NOT stabilized and can be reduced with a single C&P exam showing improvement.`,
-        action: `Wait ${(5 - yearsRated).toFixed(1)} more years for 5-year protection if possible.`,
-      });
-
-      if (!isPermanentTotal) {
-        riskLevel = RISK_LEVELS.HIGH;
-      }
-    }
-
-    // Rule 5: Age 55+ Protection
-    if (age >= 55) {
-      protections.push({
-        rule: PROTECTION_RULES.AGE_55,
-        message: `At ${age} years old, you are generally exempt from routine future examinations under VA policy.`,
-        status: "PROTECTED",
-      });
-
-      // Age 55+ reduces risk somewhat
-      if (riskLevel === RISK_LEVELS.HIGH && !isPermanentTotal) {
-        riskLevel = RISK_LEVELS.MODERATE;
-      }
-    } else if (age > 0 && age < 55) {
-      factors.push({
-        type: "info",
-        text: `At ${age} years old, you are ${55 - age} years from age-based exam exemption.`,
-      });
-    }
-
-    // High rating specific warnings
-    if (rating >= 70 && !isPermanentTotal && yearsRated < 5) {
-      warnings.push({
-        severity: "high",
-        rule: null,
-        message: `Your ${rating}% rating is significant but not stabilized. Filing a new claim triggers a review that could result in reduction.`,
-        action:
-          "Ensure any new claim is well-documented with strong medical evidence.",
-      });
-    }
-
-    // TDIU warning
-    if (rating >= 70 && rating < 100) {
-      factors.push({
-        type: "tip",
-        text: "If you cannot work due to your disabilities, consider TDIU (Total Disability Individual Unemployability) instead of filing for more conditions.",
-      });
-    }
+    applyHighRatingWarning(rating, isPermanentTotal, yearsRated, warnings);
+    applyTdiuFactor(rating, factors);
 
     return {
       riskLevel,

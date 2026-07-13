@@ -218,6 +218,113 @@ async function clearSessionBatches(db, sessionKey) {
 }
 
 /**
+ * Update the running "scanned page" run-length tracking for a single page's
+ * character count, mutating pageState in place.
+ */
+function trackPageStats(chars, pageNum, pageState) {
+  if (chars >= 50) {
+    pageState.pagesWithText++;
+    if (pageState.currentEmptyRun) {
+      pageState.scannedRanges.push({ ...pageState.currentEmptyRun });
+      pageState.currentEmptyRun = null;
+    }
+    return;
+  }
+
+  pageState.pagesEmpty++;
+  if (!pageState.currentEmptyRun)
+    pageState.currentEmptyRun = { start: pageNum, end: pageNum };
+  else pageState.currentEmptyRun.end = pageNum;
+}
+
+/**
+ * Extract the text of a single PDF page and update pageState's running
+ * counters, returning the batch text block + stats entry for that page.
+ */
+async function extractPageAndTrack(pdf, pageNum, pageState) {
+  try {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => item.str)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const chars = pageText.length;
+    trackPageStats(chars, pageNum, pageState);
+
+    return {
+      textBlock: `--- PAGE ${pageNum} ---\n${pageText}\n\n`,
+      stat: { pageNum, chars },
+    };
+  } catch (pageErr) {
+    console.warn(`processLargePDF: page ${pageNum} error:`, pageErr.message);
+    pageState.pagesEmpty++;
+    return {
+      textBlock: `--- PAGE ${pageNum} ---\n[extraction error]\n\n`,
+      stat: { pageNum, chars: 0, error: pageErr.message },
+    };
+  }
+}
+
+/**
+ * Extract + persist one batch of pages, reporting progress along the way.
+ * Returns the updated processedCount after the batch completes.
+ */
+async function processBatch({
+  pdf,
+  db,
+  sessionKey,
+  startPage,
+  endPage,
+  batchSize,
+  numPages,
+  pageState,
+  processedCount,
+  onProgress,
+  onBatch,
+}) {
+  let batchText = "";
+  const batchStats = [];
+
+  for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+    const { textBlock, stat } = await extractPageAndTrack(
+      pdf,
+      pageNum,
+      pageState,
+    );
+    batchText += textBlock;
+    batchStats.push(stat);
+
+    processedCount++;
+    onProgress(
+      processedCount,
+      numPages,
+      Math.round((processedCount / numPages) * 100),
+    );
+  }
+
+  // Write batch to IDB, then let it be garbage-collected
+  const batchIndex = Math.floor((startPage - 1) / batchSize);
+  await writeBatchToDB(db, sessionKey, batchIndex, batchText, batchStats);
+
+  if (onBatch) {
+    onBatch({
+      batchIndex,
+      startPage,
+      endPage,
+      totalPages: numPages,
+      batchStats,
+      processedSoFar: processedCount,
+      pct: Math.round((processedCount / numPages) * 100),
+    });
+  }
+
+  return processedCount;
+}
+
+/**
  * Process ALL pages of a large PDF file in streaming batches.
  *
  * Uses URL.createObjectURL + rangeChunkSize so pdfjs fetches pages
@@ -261,10 +368,12 @@ export async function processLargePDF(file, options = {}) {
 
     const numPages = pdf.numPages;
     let processedCount = 0;
-    let pagesWithText = 0;
-    let pagesEmpty = 0;
-    const scannedRanges = [];
-    let currentEmptyRun = null;
+    const pageState = {
+      pagesWithText: 0,
+      pagesEmpty: 0,
+      scannedRanges: [],
+      currentEmptyRun: null,
+    };
 
     // Process ALL pages sequentially in batches
     for (let startPage = 1; startPage <= numPages; startPage += batchSize) {
@@ -273,40 +382,13 @@ export async function processLargePDF(file, options = {}) {
       const batchStats = [];
 
       for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
-        try {
-          const page = await pdf.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item) => item.str)
-            .join(" ")
-            .replace(/\s+/g, " ")
-            .trim();
-
-          const chars = pageText.length;
-          batchText += `--- PAGE ${pageNum} ---\n${pageText}\n\n`;
-          batchStats.push({ pageNum, chars });
-
-          if (chars >= 50) {
-            pagesWithText++;
-            if (currentEmptyRun) {
-              scannedRanges.push({ ...currentEmptyRun });
-              currentEmptyRun = null;
-            }
-          } else {
-            pagesEmpty++;
-            if (!currentEmptyRun)
-              currentEmptyRun = { start: pageNum, end: pageNum };
-            else currentEmptyRun.end = pageNum;
-          }
-        } catch (pageErr) {
-          console.warn(
-            `processLargePDF: page ${pageNum} error:`,
-            pageErr.message,
-          );
-          batchText += `--- PAGE ${pageNum} ---\n[extraction error]\n\n`;
-          batchStats.push({ pageNum, chars: 0, error: pageErr.message });
-          pagesEmpty++;
-        }
+        const { textBlock, stat } = await extractPageAndTrack(
+          pdf,
+          pageNum,
+          pageState,
+        );
+        batchText += textBlock;
+        batchStats.push(stat);
 
         processedCount++;
         onProgress(
@@ -336,7 +418,8 @@ export async function processLargePDF(file, options = {}) {
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
-    if (currentEmptyRun) scannedRanges.push({ ...currentEmptyRun });
+    if (pageState.currentEmptyRun)
+      pageState.scannedRanges.push({ ...pageState.currentEmptyRun });
 
     // Reassemble full text from IDB in page order
     const batches = await readAllBatchesFromDB(db, sessionKey);
@@ -348,10 +431,10 @@ export async function processLargePDF(file, options = {}) {
       text: fullText,
       pageCount: numPages,
       processedPages: processedCount,
-      pagesWithText,
-      pagesEmpty,
-      hasScannedSections: pagesEmpty > numPages * 0.1,
-      scannedPageRanges: scannedRanges,
+      pagesWithText: pageState.pagesWithText,
+      pagesEmpty: pageState.pagesEmpty,
+      hasScannedSections: pageState.pagesEmpty > numPages * 0.1,
+      scannedPageRanges: pageState.scannedRanges,
       method: "streaming_all_pages",
     };
   } catch (error) {

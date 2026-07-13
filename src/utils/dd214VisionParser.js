@@ -292,12 +292,15 @@ function extractName(text) {
   // Also handle Florence-2 output which may have different formatting
   const patterns = [
     // Standard DD214 format
+    // eslint-disable-next-line sonarjs/regex-complexity -- deliberately handles multiple real-world DD214 header variants (optional parens, comma/space separators); collapsing branches risks silently dropping formats without a document corpus to validate against
     /name\s*\(?last[,\s]*first[,\s]*middle\)?[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
     // Numbered block format
     /1\.\s*name[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
     // Name followed by SSN or digits
-    /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*\d|\s*ssn|\s*social)/i,
+    // eslint-disable-next-line sonarjs/slow-regex -- three chained unbounded quantifiers gated by a trailing lookahead; rewriting the backtracking shape risks changing which text is captured as last/first/middle without a DD214 sample corpus to validate against
+    /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*(?:\d|ssn|social))/i,
     // Florence-2 may output: "JOHNSON JOHN WILLIAM" or "LAST: JOHNSON FIRST: JOHN"
+    // eslint-disable-next-line sonarjs/slow-regex -- unbounded name-character quantifier followed by a literal "first" check; greedy-to-lazy or other backtracking rewrites can shift the matched name boundary and aren't safe to guess without a document corpus
     /last\s*name?\s*[:-]?\s*([A-Z][a-z\-']+)\s+first\s*name?\s*[:-]?\s*([a-z\-']+)/i,
     // Just look for LASTNAME, FIRSTNAME pattern anywhere
     /\b([A-Z][A-Z]+),\s*([A-Z][A-Za-z]+)(?:\s+([A-Z][A-Za-z]*))?(?=\s|$|\d|,)/,
@@ -793,7 +796,7 @@ function extractReentryCode(text) {
  */
 function extractNarrativeReason(text) {
   const pattern =
-    /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([a-z\s,]+)(?=\s*\d|\s*29|\s*block)/i;
+    /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([a-z\s,]+)(?=\s*(?:\d|29|block))/i;
   const match = text.match(pattern);
 
   if (match) {
@@ -938,7 +941,7 @@ function extractAwards(text) {
   }
 
   // Look for device indicators (Oak Leaf Clusters, etc.)
-  const olcPattern = /(\d+)\s*(?:oak\s*leaf|olc)/gi;
+  const olcPattern = /(\d{1,2})\s*(?:oak\s*leaf|olc)/gi;
   const olcMatches = text.match(olcPattern);
   if (olcMatches) {
     // Note: Would need to associate with specific awards

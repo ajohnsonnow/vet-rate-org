@@ -212,10 +212,278 @@ const VA_API_CATALOG = {
 };
 
 // ============================================================================
-// MAIN COMPONENT
+// PURE HELPERS
 // ============================================================================
-const VADataCenter = ({ onClose, embeddedMode = false }) => {
-  // Auth state
+function getDataCount(apiData, apiId) {
+  const data = apiData[apiId]?.formatted;
+  if (!data) return 0;
+  return Array.isArray(data) ? data.length : 1;
+}
+
+function getApiKeyConfigured(apiId, configStatus) {
+  if (apiId === "facilities") {
+    return configStatus.facilitiesConfigured;
+  }
+  if (apiId === "forms") {
+    return configStatus.formsConfigured;
+  }
+  return configStatus.benefitsConfigured;
+}
+
+function buildVaSaveSelectionPayload(selectedApis, apiData) {
+  return {
+    serviceHistory:
+      selectedApis.serviceHistory && apiData.serviceHistory?.formatted?.[0]
+        ? apiData.serviceHistory.formatted[0]
+        : null,
+    claims:
+      selectedApis.claims && apiData.claims?.formatted
+        ? apiData.claims.formatted
+        : [],
+    appeals:
+      selectedApis.appealsStatus && apiData.appealsStatus?.formatted
+        ? apiData.appealsStatus.formatted
+        : [],
+    appealableIssues:
+      selectedApis.appealableIssues && apiData.appealableIssues?.formatted
+        ? apiData.appealableIssues.formatted
+        : [],
+    rawServiceHistory: selectedApis.serviceHistory
+      ? apiData.serviceHistory?.raw
+      : null,
+    rawClaims: selectedApis.claims ? apiData.claims?.raw : null,
+    rawAppeals: selectedApis.appealsStatus
+      ? apiData.appealsStatus?.raw
+      : null,
+    rawAppealableIssues: selectedApis.appealableIssues
+      ? apiData.appealableIssues?.raw
+      : null,
+  };
+}
+
+async function fetchVaApiData(apiId, accessToken, searchInputs) {
+  switch (apiId) {
+    case "serviceHistory": {
+      const data = await getServiceHistory(accessToken);
+      return { data, formatted: formatServiceHistory(data) };
+    }
+    case "claims": {
+      const data = await getClaims(accessToken);
+      return { data, formatted: formatClaims(data) };
+    }
+    case "appealsStatus": {
+      const data = await getAppealsStatus(accessToken);
+      return { data, formatted: formatAppealsStatus(data) };
+    }
+    case "appealableIssues": {
+      const data = await getAppealableIssues(accessToken);
+      return { data, formatted: formatAppealableIssues(data) };
+    }
+    case "facilities": {
+      if (!searchInputs.facilities) {
+        throw new Error("Please enter a ZIP code or city to search");
+      }
+      const data = await getFacilities(VA_FACILITIES_API_KEY, {
+        zip: searchInputs.facilities,
+        radius: 50,
+        per_page: 10,
+      });
+      return { data, formatted: formatFacilities(data) };
+    }
+    case "forms": {
+      if (!searchInputs.forms) {
+        throw new Error("Please enter a search term");
+      }
+      const data = await searchForms(VA_FORMS_API_KEY, searchInputs.forms);
+      return { data, formatted: formatForms(data) };
+    }
+    case "disabilities": {
+      const data = await getBenefitsReferenceDisabilities(
+        VA_BENEFITS_REF_API_KEY,
+      );
+      return { data, formatted: formatBenefitsDisabilities(data) };
+    }
+    default:
+      throw new Error("Unknown API");
+  }
+}
+
+// ============================================================================
+// FORMATTED PREVIEW RENDERERS
+// ============================================================================
+function ServiceHistoryPreviewList({ data }) {
+  return data.map((service, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="font-medium text-gray-900 dark:text-white">
+        {service.branchOfService}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        {service.startDate} - {service.endDate}
+      </div>
+      <div className="text-sm text-green-600 dark:text-green-400">
+        {service.dischargeStatus}
+      </div>
+    </div>
+  ));
+}
+
+function ClaimsPreviewList({ data }) {
+  return data.slice(0, 5).map((claim, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="flex justify-between items-start">
+        <div className="font-medium text-gray-900 dark:text-white">
+          {claim.claimType}
+        </div>
+        <span
+          className={`text-xs px-2 py-0.5 rounded-full ${
+            claim.status === "COMPLETE"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
+              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300"
+          }`}
+        >
+          {claim.status}
+        </span>
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        Filed: {claim.claimDate}
+      </div>
+    </div>
+  ));
+}
+
+function AppealsStatusPreviewList({ data }) {
+  return data.slice(0, 5).map((appeal, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="font-medium text-gray-900 dark:text-white">
+        {appeal.type}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        Status: {appeal.status}
+      </div>
+      {appeal.docketNumber && (
+        <div className="text-xs text-gray-500">
+          Docket: {appeal.docketNumber}
+        </div>
+      )}
+    </div>
+  ));
+}
+
+function AppealableIssuesPreviewList({ data }) {
+  return data.slice(0, 5).map((issue, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="font-medium text-gray-900 dark:text-white">
+        {issue.description}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        Decision: {issue.decisionDate}
+      </div>
+    </div>
+  ));
+}
+
+function FacilitiesPreviewList({ data }) {
+  return data.slice(0, 5).map((facility, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="font-medium text-gray-900 dark:text-white">
+        {facility.name}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        {facility.address}
+      </div>
+      {facility.phone && (
+        <div className="text-sm text-blue-600 dark:text-blue-400">
+          {facility.phone}
+        </div>
+      )}
+    </div>
+  ));
+}
+
+function FormsPreviewList({ data }) {
+  return data.slice(0, 5).map((form, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <div className="font-semibold text-gray-900 dark:text-white">
+        {form.formName}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        {form.title}
+      </div>
+      {form.url && (
+        <a
+          href={form.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:underline"
+        >
+          Download PDF ↗
+        </a>
+      )}
+    </div>
+  ));
+}
+
+function DisabilitiesPreviewList({ data }) {
+  return data.slice(0, 10).map((disability, idx) => (
+    <div
+      key={idx}
+      className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-sm"
+    >
+      <span className="font-medium">{disability.name}</span>
+      {disability.diagnosticCode && (
+        <span className="text-gray-500 ml-2">
+          ({disability.diagnosticCode})
+        </span>
+      )}
+    </div>
+  ));
+}
+
+const PREVIEW_LIST_COMPONENTS = {
+  serviceHistory: ServiceHistoryPreviewList,
+  claims: ClaimsPreviewList,
+  appealsStatus: AppealsStatusPreviewList,
+  appealableIssues: AppealableIssuesPreviewList,
+  facilities: FacilitiesPreviewList,
+  forms: FormsPreviewList,
+  disabilities: DisabilitiesPreviewList,
+};
+
+function renderFormattedPreview(apiId, data) {
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return <p className="text-sm text-gray-500">No data available</p>;
+  }
+
+  const PreviewList = PREVIEW_LIST_COMPONENTS[apiId];
+  if (!PreviewList) {
+    return <pre className="text-xs">{JSON.stringify(data, null, 2)}</pre>;
+  }
+
+  return <PreviewList data={data} />;
+}
+
+// ============================================================================
+// STATE HOOKS
+// ============================================================================
+function useVaDataCenterAuth() {
   const {
     isAuthenticated,
     isLoading: authLoading,
@@ -226,20 +494,80 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     error: authError,
   } = useVaAuth();
 
-  // Configuration status
   const configStatus = getVaConfigStatus();
   const isConfigured = isVaIntegrationConfigured();
 
-  // Dialog focus management — only when shown as a modal (embeddedMode renders
-  // inline inside another shell, so it must not trap focus or handle ESC).
-  const dialogRef = useRef(null);
-  useFocusTrap(dialogRef, { active: !embeddedMode, onEscape: onClose });
-  useBodyScrollLock(!embeddedMode);
+  return {
+    isAuthenticated,
+    authLoading,
+    userInfo,
+    login,
+    logout,
+    accessToken,
+    authError,
+    configStatus,
+    isConfigured,
+  };
+}
 
-  // Saved data state
+function useVaSavedRecordsAndRateLimit() {
   const [savedRecords, setSavedRecords] = useState(null);
+  const [rateLimitStatus, setRateLimitStatus] = useState(null);
 
-  // API Data States
+  const loadSavedRecords = () => {
+    setSavedRecords(loadVARecords());
+  };
+
+  const updateRateLimitStatus = () => {
+    setRateLimitStatus(getApiRateLimitStatus());
+  };
+
+  useEffect(() => {
+    loadSavedRecords();
+    updateRateLimitStatus();
+  }, []);
+
+  return {
+    savedRecords,
+    rateLimitStatus,
+    loadSavedRecords,
+    updateRateLimitStatus,
+  };
+}
+
+function useVaSelectionState() {
+  const [selectedApis, setSelectedApis] = useState({
+    serviceHistory: true,
+    claims: true,
+    appealsStatus: true,
+    appealableIssues: true,
+  });
+  const [expandedPreviews, setExpandedPreviews] = useState({});
+  const [showRawJson, setShowRawJson] = useState({});
+
+  const toggleSelection = (apiId) => {
+    setSelectedApis((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
+  };
+
+  const togglePreview = (apiId) => {
+    setExpandedPreviews((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
+  };
+
+  const toggleRawJson = (apiId) => {
+    setShowRawJson((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
+  };
+
+  return {
+    selectedApis,
+    expandedPreviews,
+    showRawJson,
+    toggleSelection,
+    togglePreview,
+    toggleRawJson,
+  };
+}
+
+function useVaApiFetchState(accessToken, selectedApis, updateRateLimitStatus) {
   const [apiData, setApiData] = useState({
     serviceHistory: null,
     claims: null,
@@ -250,7 +578,6 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     disabilities: null,
   });
 
-  // Loading states per API
   const [loading, setLoading] = useState({
     serviceHistory: false,
     claims: false,
@@ -261,103 +588,24 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     disabilities: false,
   });
 
-  // Error states per API
   const [errors, setErrors] = useState({});
 
-  // Selection states for download
-  const [selectedApis, setSelectedApis] = useState({
-    serviceHistory: true,
-    claims: true,
-    appealsStatus: true,
-    appealableIssues: true,
-  });
-
-  // Preview expanded states
-  const [expandedPreviews, setExpandedPreviews] = useState({});
-
-  // Input values for search APIs
   const [searchInputs, setSearchInputs] = useState({
     facilities: "",
     forms: "",
   });
 
-  // UI States
-  const [activeTab, setActiveTab] = useState("personal"); // 'personal' | 'reference' | 'saved'
-  const [showRawJson, setShowRawJson] = useState({});
-  const [saveStatus, setSaveStatus] = useState(null);
-  const [rateLimitStatus, setRateLimitStatus] = useState(null);
-
-  // Load saved records on mount
-  useEffect(() => {
-    loadSavedRecords();
-    updateRateLimitStatus();
-  }, []);
-
-  const loadSavedRecords = () => {
-    const records = loadVARecords();
-    setSavedRecords(records);
-  };
-
-  const updateRateLimitStatus = () => {
-    setRateLimitStatus(getApiRateLimitStatus());
-  };
-
-  // =========================================================================
-  // FETCH FUNCTIONS
-  // =========================================================================
   const fetchApi = useCallback(
     async (apiId) => {
       setLoading((prev) => ({ ...prev, [apiId]: true }));
       setErrors((prev) => ({ ...prev, [apiId]: null }));
 
       try {
-        let data, formatted;
-
-        switch (apiId) {
-          case "serviceHistory":
-            data = await getServiceHistory(accessToken);
-            formatted = formatServiceHistory(data);
-            break;
-          case "claims":
-            data = await getClaims(accessToken);
-            formatted = formatClaims(data);
-            break;
-          case "appealsStatus":
-            data = await getAppealsStatus(accessToken);
-            formatted = formatAppealsStatus(data);
-            break;
-          case "appealableIssues":
-            data = await getAppealableIssues(accessToken);
-            formatted = formatAppealableIssues(data);
-            break;
-          case "facilities":
-            if (!searchInputs.facilities) {
-              throw new Error("Please enter a ZIP code or city to search");
-            }
-            data = await getFacilities(VA_FACILITIES_API_KEY, {
-              zip: searchInputs.facilities,
-              radius: 50,
-              per_page: 10,
-            });
-            formatted = formatFacilities(data);
-            break;
-          case "forms":
-            if (!searchInputs.forms) {
-              throw new Error("Please enter a search term");
-            }
-            data = await searchForms(VA_FORMS_API_KEY, searchInputs.forms);
-            formatted = formatForms(data);
-            break;
-          case "disabilities":
-            data = await getBenefitsReferenceDisabilities(
-              VA_BENEFITS_REF_API_KEY,
-            );
-            formatted = formatBenefitsDisabilities(data);
-            break;
-          default:
-            throw new Error("Unknown API");
-        }
-
+        const { data, formatted } = await fetchVaApiData(
+          apiId,
+          accessToken,
+          searchInputs,
+        );
         setApiData((prev) => ({ ...prev, [apiId]: { raw: data, formatted } }));
         updateRateLimitStatus();
       } catch (error) {
@@ -367,10 +615,9 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
         setLoading((prev) => ({ ...prev, [apiId]: false }));
       }
     },
-    [accessToken, searchInputs],
+    [accessToken, searchInputs, updateRateLimitStatus],
   );
 
-  // Fetch all selected personal data
   const fetchAllSelected = useCallback(async () => {
     const oauthApis = VA_API_CATALOG.oauth.map((a) => a.id);
     for (const apiId of oauthApis) {
@@ -380,49 +627,25 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     }
   }, [selectedApis, fetchApi]);
 
-  // Auto-fetch on authentication
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      fetchAllSelected();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, accessToken]);
+  return {
+    apiData,
+    loading,
+    errors,
+    searchInputs,
+    setSearchInputs,
+    fetchApi,
+    fetchAllSelected,
+  };
+}
 
-  // =========================================================================
-  // SAVE & MANAGE DATA
-  // =========================================================================
+function useVaSaveActions({ apiData, selectedApis, loadSavedRecords }) {
+  const [saveStatus, setSaveStatus] = useState(null);
+
   const handleSaveSelected = async () => {
     setSaveStatus({ loading: true, message: "Saving your data locally..." });
 
     try {
-      const dataToSave = {
-        serviceHistory:
-          selectedApis.serviceHistory && apiData.serviceHistory?.formatted?.[0]
-            ? apiData.serviceHistory.formatted[0]
-            : null,
-        claims:
-          selectedApis.claims && apiData.claims?.formatted
-            ? apiData.claims.formatted
-            : [],
-        appeals:
-          selectedApis.appealsStatus && apiData.appealsStatus?.formatted
-            ? apiData.appealsStatus.formatted
-            : [],
-        appealableIssues:
-          selectedApis.appealableIssues && apiData.appealableIssues?.formatted
-            ? apiData.appealableIssues.formatted
-            : [],
-        rawServiceHistory: selectedApis.serviceHistory
-          ? apiData.serviceHistory?.raw
-          : null,
-        rawClaims: selectedApis.claims ? apiData.claims?.raw : null,
-        rawAppeals: selectedApis.appealsStatus
-          ? apiData.appealsStatus?.raw
-          : null,
-        rawAppealableIssues: selectedApis.appealableIssues
-          ? apiData.appealableIssues?.raw
-          : null,
-      };
+      const dataToSave = buildVaSaveSelectionPayload(selectedApis, apiData);
 
       await saveVADataWithConsent(dataToSave, {
         saveToPacket: true,
@@ -470,99 +693,172 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
     }
   };
 
-  const handleDisconnect = () => {
-    if (
-      window.confirm(
-        "Disconnect from VA.gov? Your saved data will be preserved.",
-      )
-    ) {
-      logout();
-    }
-  };
+  return { saveStatus, handleSaveSelected, handleClearSavedData };
+}
 
-  // =========================================================================
-  // UI HELPERS
-  // =========================================================================
-  const toggleSelection = (apiId) => {
-    setSelectedApis((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
-  };
+// ============================================================================
+// CONFIG WARNING BANNER
+// ============================================================================
+function ConfigWarningBanner({ isConfigured, configStatus }) {
+  if (isConfigured) return null;
 
-  const togglePreview = (apiId) => {
-    setExpandedPreviews((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
-  };
-
-  const toggleRawJson = (apiId) => {
-    setShowRawJson((prev) => ({ ...prev, [apiId]: !prev[apiId] }));
-  };
-
-  const getDataCount = (apiId) => {
-    const data = apiData[apiId]?.formatted;
-    if (!data) return 0;
-    return Array.isArray(data) ? data.length : 1;
-  };
-
-  // =========================================================================
-  // RENDER HELPERS
-  // =========================================================================
-
-  // Configuration Warning Banner
-  const renderConfigWarning = () => {
-    if (isConfigured) return null;
-
-    return (
-      <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6">
-        <div className="flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-amber-800 dark:text-amber-200">
-              VA Integration Not Configured
-            </h3>
-            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-              API keys need to be set in environment variables. Contact your
-              administrator.
-            </p>
-            <div className="mt-2 text-xs space-y-1 text-amber-600 dark:text-amber-400">
-              <div className="flex items-center gap-2">
-                {configStatus.oauthConfigured ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <XCircle className="w-3 h-3" />
-                )}
-                <span>OAuth (VA.gov Sign-In)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {configStatus.facilitiesConfigured ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <XCircle className="w-3 h-3" />
-                )}
-                <span>Facilities API</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {configStatus.formsConfigured ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <XCircle className="w-3 h-3" />
-                )}
-                <span>Forms API</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {configStatus.benefitsConfigured ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <XCircle className="w-3 h-3" />
-                )}
-                <span>Benefits Reference API</span>
-              </div>
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6">
+      <div className="flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+            VA Integration Not Configured
+          </h3>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+            API keys need to be set in environment variables. Contact your
+            administrator.
+          </p>
+          <div className="mt-2 text-xs space-y-1 text-amber-600 dark:text-amber-400">
+            <div className="flex items-center gap-2">
+              {configStatus.oauthConfigured ? (
+                <Check className="w-3 h-3 text-green-500" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              <span>OAuth (VA.gov Sign-In)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {configStatus.facilitiesConfigured ? (
+                <Check className="w-3 h-3 text-green-500" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              <span>Facilities API</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {configStatus.formsConfigured ? (
+                <Check className="w-3 h-3 text-green-500" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              <span>Forms API</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {configStatus.benefitsConfigured ? (
+                <Check className="w-3 h-3 text-green-500" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              <span>Benefits Reference API</span>
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+}
 
-  // Connection Status Header
-  const renderConnectionStatus = () => (
+// ============================================================================
+// CONNECTION STATUS HEADER
+// ============================================================================
+function ConnectionActionButtons({
+  isAuthenticated,
+  loading,
+  onRefresh,
+  onDisconnect,
+  onLogin,
+  authLoading,
+  oauthConfigured,
+}) {
+  if (isAuthenticated) {
+    return (
+      <>
+        <button
+          onClick={onRefresh}
+          disabled={Object.values(loading).some(Boolean)}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${Object.values(loading).some(Boolean) ? "animate-spin" : ""}`}
+          />
+          Refresh Data
+        </button>
+        <button
+          onClick={onDisconnect}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Disconnect
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <button
+      onClick={onLogin}
+      disabled={authLoading || !oauthConfigured}
+      className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {authLoading ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <LogIn className="w-4 h-4" />
+      )}
+      Sign in with VA.gov
+    </button>
+  );
+}
+
+function ConnectionIdentity({ isAuthenticated, userInfo }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={`p-2 rounded-full ${
+          isAuthenticated
+            ? "bg-green-100 dark:bg-green-800"
+            : "bg-gray-200 dark:bg-gray-700"
+        }`}
+      >
+        {isAuthenticated ? (
+          <Unlock className="w-5 h-5 text-green-600 dark:text-green-400" />
+        ) : (
+          <Lock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+        )}
+      </div>
+      <div>
+        <h3
+          className={`font-semibold ${
+            isAuthenticated
+              ? "text-green-800 dark:text-green-200"
+              : "text-gray-700 dark:text-gray-300"
+          }`}
+        >
+          {isAuthenticated ? "Connected to VA.gov" : "Not Connected"}
+        </h3>
+        {isAuthenticated && userInfo && (
+          <p className="text-sm text-green-600 dark:text-green-400">
+            {userInfo.firstName} {userInfo.lastName}
+          </p>
+        )}
+        {!isAuthenticated && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Sign in to access your personal VA records
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ConnectionStatusHeader({
+  auth,
+  apiState,
+  savedRecordsState,
+  onDisconnect,
+}) {
+  const { isAuthenticated, userInfo, authLoading, authError, configStatus, login } =
+    auth;
+  const { loading, fetchAllSelected } = apiState;
+  const { rateLimitStatus } = savedRecordsState;
+
+  return (
     <div
       className={`rounded-xl p-4 mb-6 ${
         isAuthenticated
@@ -571,78 +867,18 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
       }`}
     >
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`p-2 rounded-full ${
-              isAuthenticated
-                ? "bg-green-100 dark:bg-green-800"
-                : "bg-gray-200 dark:bg-gray-700"
-            }`}
-          >
-            {isAuthenticated ? (
-              <Unlock className="w-5 h-5 text-green-600 dark:text-green-400" />
-            ) : (
-              <Lock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            )}
-          </div>
-          <div>
-            <h3
-              className={`font-semibold ${
-                isAuthenticated
-                  ? "text-green-800 dark:text-green-200"
-                  : "text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              {isAuthenticated ? "Connected to VA.gov" : "Not Connected"}
-            </h3>
-            {isAuthenticated && userInfo && (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                {userInfo.firstName} {userInfo.lastName}
-              </p>
-            )}
-            {!isAuthenticated && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Sign in to access your personal VA records
-              </p>
-            )}
-          </div>
-        </div>
+        <ConnectionIdentity isAuthenticated={isAuthenticated} userInfo={userInfo} />
 
         <div className="flex gap-2">
-          {isAuthenticated ? (
-            <>
-              <button
-                onClick={fetchAllSelected}
-                disabled={Object.values(loading).some(Boolean)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${Object.values(loading).some(Boolean) ? "animate-spin" : ""}`}
-                />
-                Refresh Data
-              </button>
-              <button
-                onClick={handleDisconnect}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Disconnect
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={login}
-              disabled={authLoading || !configStatus.oauthConfigured}
-              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {authLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <LogIn className="w-4 h-4" />
-              )}
-              Sign in with VA.gov
-            </button>
-          )}
+          <ConnectionActionButtons
+            isAuthenticated={isAuthenticated}
+            loading={loading}
+            onRefresh={fetchAllSelected}
+            onDisconnect={onDisconnect}
+            onLogin={login}
+            authLoading={authLoading}
+            oauthConfigured={configStatus.oauthConfigured}
+          />
         </div>
       </div>
 
@@ -664,12 +900,20 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
       )}
     </div>
   );
+}
 
-  // Tab Navigation
-  const renderTabs = () => (
+// ============================================================================
+// TAB NAVIGATION
+// ============================================================================
+function DataCenterTabs({ activeTab, onChangeTab, isAuthenticated, savedRecords }) {
+  const hasSavedData =
+    savedRecords &&
+    (savedRecords.claims?.length > 0 || savedRecords.serviceHistory);
+
+  return (
     <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
       <button
-        onClick={() => setActiveTab("personal")}
+        onClick={() => onChangeTab("personal")}
         className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
           activeTab === "personal"
             ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
@@ -687,7 +931,7 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
         </div>
       </button>
       <button
-        onClick={() => setActiveTab("reference")}
+        onClick={() => onChangeTab("reference")}
         className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
           activeTab === "reference"
             ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400"
@@ -703,7 +947,7 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
         </div>
       </button>
       <button
-        onClick={() => setActiveTab("saved")}
+        onClick={() => onChangeTab("saved")}
         className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
           activeTab === "saved"
             ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400"
@@ -713,592 +957,690 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4" />
           Saved Data
-          {savedRecords &&
-            (savedRecords.claims?.length > 0 ||
-              savedRecords.serviceHistory) && (
-              <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
-                ✓
-              </span>
-            )}
+          {hasSavedData && (
+            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
+              ✓
+            </span>
+          )}
         </div>
       </button>
     </div>
   );
+}
 
-  // OAuth API Card
-  const renderOAuthApiCard = (api) => {
-    const Icon = api.icon;
-    const data = apiData[api.id];
-    const isLoading = loading[api.id];
-    const error = errors[api.id];
-    const isExpanded = expandedPreviews[api.id];
-    const isSelected = selectedApis[api.id];
-    const showJson = showRawJson[api.id];
-    const count = getDataCount(api.id);
+// ============================================================================
+// SHARED API CARD PREVIEW
+// ============================================================================
+function ApiCardPreview({
+  apiId,
+  data,
+  isExpanded,
+  showJson,
+  onToggleRawJson,
+  previewLabel,
+}) {
+  if (!data || !isExpanded) {
+    return null;
+  }
 
-    return (
+  return (
+    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {previewLabel}
+        </span>
+        <button
+          onClick={onToggleRawJson}
+          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          {showJson ? (
+            <EyeOff className="w-3 h-3" />
+          ) : (
+            <Eye className="w-3 h-3" />
+          )}
+          {showJson ? "Hide JSON" : "Show JSON"}
+        </button>
+      </div>
+
+      {showJson ? (
+        <pre className="text-xs bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-64">
+          {JSON.stringify(data.raw, null, 2)}
+        </pre>
+      ) : (
+        <div className="space-y-2 max-h-64 overflow-auto">
+          {renderFormattedPreview(apiId, data.formatted)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// OAUTH API CARD
+// ============================================================================
+function ApiSelectionCheckbox({ isSelected, isAuthenticated, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      disabled={!isAuthenticated}
+      className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+        isSelected
+          ? "bg-blue-600 border-blue-600 text-white"
+          : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+      } ${!isAuthenticated ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+    >
+      {isSelected && <Check className="w-3 h-3" />}
+    </button>
+  );
+}
+
+function OAuthApiCardHeader({
+  api,
+  Icon,
+  data,
+  isLoading,
+  error,
+  isExpanded,
+  isSelected,
+  count,
+  isAuthenticated,
+  onToggleSelection,
+  onTogglePreview,
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <ApiSelectionCheckbox
+        isSelected={isSelected}
+        isAuthenticated={isAuthenticated}
+        onToggle={onToggleSelection}
+      />
+
       <div
-        key={api.id}
-        className={`border rounded-xl overflow-hidden transition-all ${
-          isSelected
-            ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10"
-            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+        className={`p-2 rounded-lg ${
+          data
+            ? "bg-green-100 dark:bg-green-900/50"
+            : "bg-gray-100 dark:bg-gray-700"
         }`}
       >
-        {/* Card Header */}
-        <div className="p-4">
-          <div className="flex items-start gap-3">
-            {/* Selection Checkbox */}
-            <button
-              onClick={() => toggleSelection(api.id)}
-              disabled={!isAuthenticated}
-              className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                isSelected
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
-              } ${!isAuthenticated ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              {isSelected && <Check className="w-3 h-3" />}
-            </button>
+        <Icon
+          className={`w-5 h-5 ${
+            data
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        />
+      </div>
 
-            <div
-              className={`p-2 rounded-lg ${
-                data
-                  ? "bg-green-100 dark:bg-green-900/50"
-                  : "bg-gray-100 dark:bg-gray-700"
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 ${
-                  data
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {api.name}
-                </h3>
-                {isLoading && (
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                )}
-                {data && (
-                  <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
-                    {count} record{count !== 1 ? "s" : ""} loaded
-                  </span>
-                )}
-                {error && (
-                  <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-2 py-0.5 rounded-full">
-                    Error
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {api.description}
-              </p>
-            </div>
-
-            {/* Expand/Collapse */}
-            {data && (
-              <button
-                onClick={() => togglePreview(api.id)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                {isExpanded ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Use Case & Data Points */}
-          <div className="mt-3 ml-8 pl-3 border-l-2 border-gray-200 dark:border-gray-700">
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-              Use Case: {api.useCase}
-            </p>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {api.dataPoints.map((point, idx) => (
-                <span
-                  key={idx}
-                  className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
-                >
-                  {point}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Error Display */}
-          {error && (
-            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
-              <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              {error}
-            </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            {api.name}
+          </h3>
+          {isLoading && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
           )}
-
-          {/* Fetch Button (when not authenticated or no data) */}
-          {isAuthenticated && !data && !isLoading && (
-            <button
-              onClick={() => fetchApi(api.id)}
-              className="mt-3 ml-8 flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-lg text-sm transition-colors"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Fetch Data
-            </button>
+          {data && (
+            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
+              {count} record{count !== 1 ? "s" : ""} loaded
+            </span>
+          )}
+          {error && (
+            <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-2 py-0.5 rounded-full">
+              Error
+            </span>
           )}
         </div>
-
-        {/* Preview Section */}
-        {data && isExpanded && (
-          <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Data Preview
-              </span>
-              <button
-                onClick={() => toggleRawJson(api.id)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {showJson ? (
-                  <EyeOff className="w-3 h-3" />
-                ) : (
-                  <Eye className="w-3 h-3" />
-                )}
-                {showJson ? "Hide JSON" : "Show JSON"}
-              </button>
-            </div>
-
-            {showJson ? (
-              <pre className="text-xs bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-64">
-                {JSON.stringify(data.raw, null, 2)}
-              </pre>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-auto">
-                {renderFormattedPreview(api.id, data.formatted)}
-              </div>
-            )}
-          </div>
-        )}
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {api.description}
+        </p>
       </div>
-    );
-  };
 
-  // API Key API Card (Reference Data)
-  const renderApiKeyCard = (api) => {
-    const Icon = api.icon;
-    const data = apiData[api.id];
-    const isLoading = loading[api.id];
-    const error = errors[api.id];
-    const isExpanded = expandedPreviews[api.id];
-    const showJson = showRawJson[api.id];
-    const count = getDataCount(api.id);
+      {/* Expand/Collapse */}
+      {data && (
+        <button
+          onClick={onTogglePreview}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
 
-    const apiKeyConfigured =
-      api.id === "facilities"
-        ? configStatus.facilitiesConfigured
-        : api.id === "forms"
-          ? configStatus.formsConfigured
-          : configStatus.benefitsConfigured;
+function OAuthApiCard({ api, apiState, selectionState, isAuthenticated }) {
+  const Icon = api.icon;
+  const data = apiState.apiData[api.id];
+  const isLoading = apiState.loading[api.id];
+  const error = apiState.errors[api.id];
+  const isExpanded = selectionState.expandedPreviews[api.id];
+  const isSelected = selectionState.selectedApis[api.id];
+  const showJson = selectionState.showRawJson[api.id];
+  const count = getDataCount(apiState.apiData, api.id);
 
-    return (
-      <div
-        key={api.id}
-        className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800"
-      >
-        {/* Card Header */}
-        <div className="p-4">
-          <div className="flex items-start gap-3">
-            <div
-              className={`p-2 rounded-lg ${
-                data
-                  ? "bg-purple-100 dark:bg-purple-900/50"
-                  : "bg-gray-100 dark:bg-gray-700"
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 ${
-                  data
-                    ? "text-purple-600 dark:text-purple-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              />
-            </div>
+  return (
+    <div
+      className={`border rounded-xl overflow-hidden transition-all ${
+        isSelected
+          ? "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10"
+          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      }`}
+    >
+      {/* Card Header */}
+      <div className="p-4">
+        <OAuthApiCardHeader
+          api={api}
+          Icon={Icon}
+          data={data}
+          isLoading={isLoading}
+          error={error}
+          isExpanded={isExpanded}
+          isSelected={isSelected}
+          count={count}
+          isAuthenticated={isAuthenticated}
+          onToggleSelection={() => selectionState.toggleSelection(api.id)}
+          onTogglePreview={() => selectionState.togglePreview(api.id)}
+        />
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {api.name}
-                </h3>
-                <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-2 py-0.5 rounded-full">
-                  Open Data
-                </span>
-                {isLoading && (
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                )}
-                {data && (
-                  <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
-                    {count} result{count !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {api.description}
-              </p>
-            </div>
-
-            {data && (
-              <button
-                onClick={() => togglePreview(api.id)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                {isExpanded ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Use Case */}
-          <div className="mt-3 ml-11 text-xs text-purple-600 dark:text-purple-400 font-medium">
+        {/* Use Case & Data Points */}
+        <div className="mt-3 ml-8 pl-3 border-l-2 border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
             Use Case: {api.useCase}
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {api.dataPoints.map((point, idx) => (
+              <span
+                key={idx}
+                className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
+              >
+                {point}
+              </span>
+            ))}
           </div>
-
-          {/* Search Input & Fetch */}
-          <div className="mt-3 ml-11 flex gap-2 flex-wrap">
-            {api.requiresInput && (
-              <input
-                type="text"
-                value={searchInputs[api.id] || ""}
-                onChange={(e) =>
-                  setSearchInputs((prev) => ({
-                    ...prev,
-                    [api.id]: e.target.value,
-                  }))
-                }
-                placeholder={api.inputPlaceholder}
-                className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
-                onKeyDown={(e) => e.key === "Enter" && fetchApi(api.id)}
-              />
-            )}
-            <button
-              onClick={() => fetchApi(api.id)}
-              disabled={isLoading || !apiKeyConfigured}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              {api.requiresInput ? "Search" : "Load Data"}
-            </button>
-          </div>
-
-          {!apiKeyConfigured && (
-            <div className="mt-2 ml-11 text-xs text-amber-600 dark:text-amber-400">
-              ⚠️ API key not configured
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
-              <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              {error}
-            </div>
-          )}
         </div>
 
-        {/* Preview Section */}
-        {data && isExpanded && (
-          <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Results
-              </span>
-              <button
-                onClick={() => toggleRawJson(api.id)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {showJson ? (
-                  <EyeOff className="w-3 h-3" />
-                ) : (
-                  <Eye className="w-3 h-3" />
-                )}
-                {showJson ? "Hide JSON" : "Show JSON"}
-              </button>
-            </div>
+        {/* Error Display */}
+        {error && (
+          <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
+            <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            {error}
+          </div>
+        )}
 
-            {showJson ? (
-              <pre className="text-xs bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-64">
-                {JSON.stringify(data.raw, null, 2)}
-              </pre>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-auto">
-                {renderFormattedPreview(api.id, data.formatted)}
-              </div>
-            )}
+        {/* Fetch Button (when not authenticated or no data) */}
+        {isAuthenticated && !data && !isLoading && (
+          <button
+            onClick={() => apiState.fetchApi(api.id)}
+            className="mt-3 ml-8 flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-lg text-sm transition-colors"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Fetch Data
+          </button>
+        )}
+      </div>
+
+      <ApiCardPreview
+        apiId={api.id}
+        data={data}
+        isExpanded={isExpanded}
+        showJson={showJson}
+        onToggleRawJson={() => selectionState.toggleRawJson(api.id)}
+        previewLabel="Data Preview"
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// API KEY CARD (Reference Data)
+// ============================================================================
+function ApiKeyCardHeader({
+  api,
+  Icon,
+  data,
+  isLoading,
+  count,
+  isExpanded,
+  onTogglePreview,
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className={`p-2 rounded-lg ${
+          data
+            ? "bg-purple-100 dark:bg-purple-900/50"
+            : "bg-gray-100 dark:bg-gray-700"
+        }`}
+      >
+        <Icon
+          className={`w-5 h-5 ${
+            data
+              ? "text-purple-600 dark:text-purple-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            {api.name}
+          </h3>
+          <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-2 py-0.5 rounded-full">
+            Open Data
+          </span>
+          {isLoading && (
+            <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+          )}
+          {data && (
+            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">
+              {count} result{count !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {api.description}
+        </p>
+      </div>
+
+      {data && (
+        <button
+          onClick={onTogglePreview}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ApiKeySearchAndFetch({
+  api,
+  searchInputs,
+  onSearchInputChange,
+  isLoading,
+  apiKeyConfigured,
+  onFetch,
+}) {
+  return (
+    <div className="mt-3 ml-11 flex gap-2 flex-wrap">
+      {api.requiresInput && (
+        <input
+          type="text"
+          value={searchInputs[api.id] || ""}
+          onChange={(e) =>
+            onSearchInputChange((prev) => ({
+              ...prev,
+              [api.id]: e.target.value,
+            }))
+          }
+          placeholder={api.inputPlaceholder}
+          className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+          onKeyDown={(e) => e.key === "Enter" && onFetch()}
+        />
+      )}
+      <button
+        onClick={onFetch}
+        disabled={isLoading || !apiKeyConfigured}
+        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <RefreshCw className="w-4 h-4" />
+        )}
+        {api.requiresInput ? "Search" : "Load Data"}
+      </button>
+    </div>
+  );
+}
+
+function ApiKeyCard({ api, apiState, selectionState, configStatus }) {
+  const Icon = api.icon;
+  const data = apiState.apiData[api.id];
+  const isLoading = apiState.loading[api.id];
+  const error = apiState.errors[api.id];
+  const isExpanded = selectionState.expandedPreviews[api.id];
+  const showJson = selectionState.showRawJson[api.id];
+  const count = getDataCount(apiState.apiData, api.id);
+  const apiKeyConfigured = getApiKeyConfigured(api.id, configStatus);
+
+  return (
+    <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+      {/* Card Header */}
+      <div className="p-4">
+        <ApiKeyCardHeader
+          api={api}
+          Icon={Icon}
+          data={data}
+          isLoading={isLoading}
+          count={count}
+          isExpanded={isExpanded}
+          onTogglePreview={() => selectionState.togglePreview(api.id)}
+        />
+
+        {/* Use Case */}
+        <div className="mt-3 ml-11 text-xs text-purple-600 dark:text-purple-400 font-medium">
+          Use Case: {api.useCase}
+        </div>
+
+        {/* Search Input & Fetch */}
+        <ApiKeySearchAndFetch
+          api={api}
+          searchInputs={apiState.searchInputs}
+          onSearchInputChange={apiState.setSearchInputs}
+          isLoading={isLoading}
+          apiKeyConfigured={apiKeyConfigured}
+          onFetch={() => apiState.fetchApi(api.id)}
+        />
+
+        {!apiKeyConfigured && (
+          <div className="mt-2 ml-11 text-xs text-amber-600 dark:text-amber-400">
+            ⚠️ API key not configured
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
+            <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            {error}
           </div>
         )}
       </div>
-    );
-  };
 
-  // Formatted Preview Renderers
-  const renderFormattedPreview = (apiId, data) => {
-    if (!data || (Array.isArray(data) && data.length === 0)) {
-      return <p className="text-sm text-gray-500">No data available</p>;
-    }
+      <ApiCardPreview
+        apiId={api.id}
+        data={data}
+        isExpanded={isExpanded}
+        showJson={showJson}
+        onToggleRawJson={() => selectionState.toggleRawJson(api.id)}
+        previewLabel="Results"
+      />
+    </div>
+  );
+}
 
-    switch (apiId) {
-      case "serviceHistory":
-        return data.map((service, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="font-medium text-gray-900 dark:text-white">
-              {service.branchOfService}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {service.startDate} - {service.endDate}
-            </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
-              {service.dischargeStatus}
-            </div>
+// ============================================================================
+// SAVED DATA TAB
+// ============================================================================
+function SavedDataSummary({ savedRecords }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
+        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          {savedRecords.serviceHistory ? "1" : "0"}
+        </div>
+        <div className="text-sm text-blue-700 dark:text-blue-300">
+          Service Record
+        </div>
+      </div>
+      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
+        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          {savedRecords.claims?.length || 0}
+        </div>
+        <div className="text-sm text-green-700 dark:text-green-300">
+          Claims
+        </div>
+      </div>
+      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
+        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          {savedRecords.appeals?.length || 0}
+        </div>
+        <div className="text-sm text-purple-700 dark:text-purple-300">
+          Appeals
+        </div>
+      </div>
+      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-center">
+        <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+          {savedRecords.appealableIssues?.length || 0}
+        </div>
+        <div className="text-sm text-amber-700 dark:text-amber-300">
+          Appealable Issues
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SavedDataDetails({ savedRecords, onClear }) {
+  return (
+    <>
+      {/* Summary Stats */}
+      <SavedDataSummary savedRecords={savedRecords} />
+
+      {/* Last Updated */}
+      {savedRecords.lastSyncTime && (
+        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          Last updated:{" "}
+          {new Date(savedRecords.lastSyncTime).toLocaleString()}
+        </div>
+      )}
+
+      {/* Privacy Notice */}
+      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Shield className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-green-800 dark:text-green-200">
+              Data Privacy
+            </h4>
+            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              Your VA data is stored locally on this device only. It is
+              never uploaded to any server. AI tools in this app can use
+              this data to provide personalized assistance.
+            </p>
           </div>
-        ));
+        </div>
+      </div>
 
-      case "claims":
-        return data.slice(0, 5).map((claim, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex justify-between items-start">
-              <div className="font-medium text-gray-900 dark:text-white">
-                {claim.claimType}
-              </div>
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full ${
-                  claim.status === "COMPLETE"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
-                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300"
-                }`}
-              >
-                {claim.status}
-              </span>
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Filed: {claim.claimDate}
-            </div>
-          </div>
-        ));
+      {/* Clear Button */}
+      <button
+        onClick={onClear}
+        className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/30 text-red-700 dark:text-red-300 rounded-lg transition-colors"
+      >
+        <Trash2 className="w-4 h-4" />
+        Clear Saved Data
+      </button>
+    </>
+  );
+}
 
-      case "appealsStatus":
-        return data.slice(0, 5).map((appeal, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="font-medium text-gray-900 dark:text-white">
-              {appeal.type}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Status: {appeal.status}
-            </div>
-            {appeal.docketNumber && (
-              <div className="text-xs text-gray-500">
-                Docket: {appeal.docketNumber}
-              </div>
-            )}
-          </div>
-        ));
+function SavedDataTab({ savedRecords, onClear }) {
+  const isEmpty =
+    !savedRecords ||
+    (!savedRecords.claims?.length &&
+      !savedRecords.serviceHistory &&
+      !savedRecords.appeals?.length);
 
-      case "appealableIssues":
-        return data.slice(0, 5).map((issue, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="font-medium text-gray-900 dark:text-white">
-              {issue.description}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Decision: {issue.decisionDate}
-            </div>
-          </div>
-        ));
-
-      case "facilities":
-        return data.slice(0, 5).map((facility, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="font-medium text-gray-900 dark:text-white">
-              {facility.name}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {facility.address}
-            </div>
-            {facility.phone && (
-              <div className="text-sm text-blue-600 dark:text-blue-400">
-                {facility.phone}
-              </div>
-            )}
-          </div>
-        ));
-
-      case "forms":
-        return data.slice(0, 5).map((form, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <div className="font-semibold text-gray-900 dark:text-white">
-              {form.formName}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {form.title}
-            </div>
-            {form.url && (
-              <a
-                href={form.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline"
-              >
-                Download PDF ↗
-              </a>
-            )}
-          </div>
-        ));
-
-      case "disabilities":
-        return data.slice(0, 10).map((disability, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-sm"
-          >
-            <span className="font-medium">{disability.name}</span>
-            {disability.diagnosticCode && (
-              <span className="text-gray-500 ml-2">
-                ({disability.diagnosticCode})
-              </span>
-            )}
-          </div>
-        ));
-
-      default:
-        return <pre className="text-xs">{JSON.stringify(data, null, 2)}</pre>;
-    }
-  };
-
-  // Saved Data Tab
-  const renderSavedTab = () => (
+  return (
     <div className="space-y-4">
-      {!savedRecords ||
-      (!savedRecords.claims?.length &&
-        !savedRecords.serviceHistory &&
-        !savedRecords.appeals?.length) ? (
+      {isEmpty ? (
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
           <Download className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
             No Saved VA Data
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
-            Connect to VA.gov and import your records. Data is saved locally on
-            your device, available to AI tools, and persists after you
+            Connect to VA.gov and import your records. Data is saved locally
+            on your device, available to AI tools, and persists after you
             disconnect.
           </p>
         </div>
       ) : (
-        <>
-          {/* Summary Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {savedRecords.serviceHistory ? "1" : "0"}
-              </div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">
-                Service Record
-              </div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {savedRecords.claims?.length || 0}
-              </div>
-              <div className="text-sm text-green-700 dark:text-green-300">
-                Claims
-              </div>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {savedRecords.appeals?.length || 0}
-              </div>
-              <div className="text-sm text-purple-700 dark:text-purple-300">
-                Appeals
-              </div>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {savedRecords.appealableIssues?.length || 0}
-              </div>
-              <div className="text-sm text-amber-700 dark:text-amber-300">
-                Appealable Issues
-              </div>
-            </div>
-          </div>
-
-          {/* Last Updated */}
-          {savedRecords.lastSyncTime && (
-            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Last updated:{" "}
-              {new Date(savedRecords.lastSyncTime).toLocaleString()}
-            </div>
-          )}
-
-          {/* Privacy Notice */}
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-green-800 dark:text-green-200">
-                  Data Privacy
-                </h4>
-                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                  Your VA data is stored locally on this device only. It is
-                  never uploaded to any server. AI tools in this app can use
-                  this data to provide personalized assistance.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Clear Button */}
-          <button
-            onClick={handleClearSavedData}
-            className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/30 text-red-700 dark:text-red-300 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear Saved Data
-          </button>
-        </>
+        <SavedDataDetails savedRecords={savedRecords} onClear={onClear} />
       )}
     </div>
   );
+}
 
-  // =========================================================================
-  // MAIN RENDER
-  // =========================================================================
+// ============================================================================
+// PERSONAL RECORDS TAB
+// ============================================================================
+function PersonalRecordsContent({ auth, apiState, selectionState, saveActions }) {
+  const { saveStatus, handleSaveSelected } = saveActions;
+  const { selectedApis } = selectionState;
+
+  return (
+    <>
+      {/* Selection Actions */}
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Select the data you want to save locally:
+        </div>
+        <button
+          onClick={handleSaveSelected}
+          disabled={
+            saveStatus?.loading || !Object.values(selectedApis).some(Boolean)
+          }
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+        >
+          {saveStatus?.loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          Save Selected to My Packet
+        </button>
+      </div>
+
+      {/* Save Status */}
+      {saveStatus && !saveStatus.loading && (
+        <div
+          className={`p-3 rounded-lg flex items-center gap-2 ${
+            saveStatus.success
+              ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+              : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+          }`}
+        >
+          {saveStatus.success ? (
+            <CheckCircle className="w-4 h-4" />
+          ) : (
+            <XCircle className="w-4 h-4" />
+          )}
+          {saveStatus.message}
+        </div>
+      )}
+
+      {/* OAuth API Cards */}
+      <div className="space-y-4">
+        {VA_API_CATALOG.oauth.map((api) => (
+          <OAuthApiCard
+            key={api.id}
+            api={api}
+            apiState={apiState}
+            selectionState={selectionState}
+            isAuthenticated={auth.isAuthenticated}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PersonalRecordsTab({ auth, apiState, selectionState, saveActions }) {
+  return (
+    <div className="space-y-4">
+      {!auth.isAuthenticated ? (
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
+          <Lock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            Sign in to Access Your Records
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
+            Connect to VA.gov to securely access your service history,
+            claims, and appeals information.
+          </p>
+        </div>
+      ) : (
+        <PersonalRecordsContent
+          auth={auth}
+          apiState={apiState}
+          selectionState={selectionState}
+          saveActions={saveActions}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// REFERENCE DATA TAB
+// ============================================================================
+function ReferenceDataTab({ auth, apiState, selectionState }) {
+  return (
+    <div className="space-y-4">
+      <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Reference data from VA.gov - no sign-in required:
+      </div>
+      {VA_API_CATALOG.apiKey.map((api) => (
+        <ApiKeyCard
+          key={api.id}
+          api={api}
+          apiState={apiState}
+          selectionState={selectionState}
+          configStatus={auth.configStatus}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// MODAL SHELL
+// ============================================================================
+function VaDataCenterModalHeader({ onClose }) {
+  return (
+    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
+          <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div>
+          <h2
+            id="va-data-center-title"
+            className="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            VA Data Center
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Access your VA.gov records securely
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onClose}
+        aria-label="Close VA Data Center"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+      >
+        <XCircle className="w-6 h-6 text-gray-500" />
+      </button>
+    </div>
+  );
+}
+
+function VaDataCenterBody({
+  onClose,
+  embeddedMode,
+  dialogRef,
+  auth,
+  savedRecordsState,
+  selectionState,
+  apiState,
+  saveActions,
+  activeTab,
+  setActiveTab,
+  onDisconnect,
+}) {
   return (
     <div
       className={
@@ -1318,119 +1660,115 @@ const VADataCenter = ({ onClose, embeddedMode = false }) => {
             : "max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
         }`}
       >
-        {/* Header */}
-        {!embeddedMode && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
-                <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h2
-                  id="va-data-center-title"
-                  className="text-xl font-bold text-gray-900 dark:text-white"
-                >
-                  VA Data Center
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Access your VA.gov records securely
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              aria-label="Close VA Data Center"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <XCircle className="w-6 h-6 text-gray-500" />
-            </button>
-          </div>
-        )}
+        {!embeddedMode && <VaDataCenterModalHeader onClose={onClose} />}
 
         {/* Content */}
         <div className={embeddedMode ? "" : "flex-1 overflow-y-auto p-6"}>
-          {renderConfigWarning()}
-          {renderConnectionStatus()}
-          {renderTabs()}
+          <ConfigWarningBanner
+            isConfigured={auth.isConfigured}
+            configStatus={auth.configStatus}
+          />
+          <ConnectionStatusHeader
+            auth={auth}
+            apiState={apiState}
+            savedRecordsState={savedRecordsState}
+            onDisconnect={onDisconnect}
+          />
+          <DataCenterTabs
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            isAuthenticated={auth.isAuthenticated}
+            savedRecords={savedRecordsState.savedRecords}
+          />
 
           {/* Tab Content */}
           {activeTab === "personal" && (
-            <div className="space-y-4">
-              {!isAuthenticated ? (
-                <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                  <Lock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                    Sign in to Access Your Records
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
-                    Connect to VA.gov to securely access your service history,
-                    claims, and appeals information.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Selection Actions */}
-                  <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Select the data you want to save locally:
-                    </div>
-                    <button
-                      onClick={handleSaveSelected}
-                      disabled={
-                        saveStatus?.loading ||
-                        !Object.values(selectedApis).some(Boolean)
-                      }
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {saveStatus?.loading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      Save Selected to My Packet
-                    </button>
-                  </div>
-
-                  {/* Save Status */}
-                  {saveStatus && !saveStatus.loading && (
-                    <div
-                      className={`p-3 rounded-lg flex items-center gap-2 ${
-                        saveStatus.success
-                          ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                          : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
-                      }`}
-                    >
-                      {saveStatus.success ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <XCircle className="w-4 h-4" />
-                      )}
-                      {saveStatus.message}
-                    </div>
-                  )}
-
-                  {/* OAuth API Cards */}
-                  <div className="space-y-4">
-                    {VA_API_CATALOG.oauth.map((api) => renderOAuthApiCard(api))}
-                  </div>
-                </>
-              )}
-            </div>
+            <PersonalRecordsTab
+              auth={auth}
+              apiState={apiState}
+              selectionState={selectionState}
+              saveActions={saveActions}
+            />
           )}
 
           {activeTab === "reference" && (
-            <div className="space-y-4">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Reference data from VA.gov - no sign-in required:
-              </div>
-              {VA_API_CATALOG.apiKey.map((api) => renderApiKeyCard(api))}
-            </div>
+            <ReferenceDataTab
+              auth={auth}
+              apiState={apiState}
+              selectionState={selectionState}
+            />
           )}
 
-          {activeTab === "saved" && renderSavedTab()}
+          {activeTab === "saved" && (
+            <SavedDataTab
+              savedRecords={savedRecordsState.savedRecords}
+              onClear={saveActions.handleClearSavedData}
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+const VADataCenter = ({ onClose, embeddedMode = false }) => {
+  const auth = useVaDataCenterAuth();
+
+  // Dialog focus management — only when shown as a modal (embeddedMode renders
+  // inline inside another shell, so it must not trap focus or handle ESC).
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, { active: !embeddedMode, onEscape: onClose });
+  useBodyScrollLock(!embeddedMode);
+
+  const savedRecordsState = useVaSavedRecordsAndRateLimit();
+  const selectionState = useVaSelectionState();
+  const [activeTab, setActiveTab] = useState("personal"); // 'personal' | 'reference' | 'saved'
+  const apiState = useVaApiFetchState(
+    auth.accessToken,
+    selectionState.selectedApis,
+    savedRecordsState.updateRateLimitStatus,
+  );
+  const saveActions = useVaSaveActions({
+    apiData: apiState.apiData,
+    selectedApis: selectionState.selectedApis,
+    loadSavedRecords: savedRecordsState.loadSavedRecords,
+  });
+
+  // Auto-fetch on authentication
+  useEffect(() => {
+    if (auth.isAuthenticated && auth.accessToken) {
+      apiState.fetchAllSelected();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.isAuthenticated, auth.accessToken]);
+
+  const handleDisconnect = () => {
+    if (
+      window.confirm(
+        "Disconnect from VA.gov? Your saved data will be preserved.",
+      )
+    ) {
+      auth.logout();
+    }
+  };
+
+  return (
+    <VaDataCenterBody
+      onClose={onClose}
+      embeddedMode={embeddedMode}
+      dialogRef={dialogRef}
+      auth={auth}
+      savedRecordsState={savedRecordsState}
+      selectionState={selectionState}
+      apiState={apiState}
+      saveActions={saveActions}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      onDisconnect={handleDisconnect}
+    />
   );
 };
 

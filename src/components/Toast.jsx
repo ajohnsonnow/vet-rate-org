@@ -27,6 +27,42 @@ export const ToastType = {
 };
 
 /**
+ * Icon based on toast type
+ */
+const getToastIcon = (type) => {
+  switch (type) {
+    case ToastType.SUCCESS:
+      return <CheckCircle className="w-5 h-5 text-green-500" />;
+    case ToastType.ERROR:
+      return <AlertCircle className="w-5 h-5 text-red-500" />;
+    case ToastType.WARNING:
+      return <AlertTriangle className="w-5 h-5 text-amber-500" />;
+    case ToastType.NETWORK:
+      return <WifiOff className="w-5 h-5 text-orange-500" />;
+    default:
+      return <AlertCircle className="w-5 h-5 text-blue-500" />;
+  }
+};
+
+/**
+ * Border color based on toast type
+ */
+const getToastBorderColor = (type) => {
+  switch (type) {
+    case ToastType.SUCCESS:
+      return "border-l-green-500";
+    case ToastType.ERROR:
+      return "border-l-red-500";
+    case ToastType.WARNING:
+      return "border-l-amber-500";
+    case ToastType.NETWORK:
+      return "border-l-orange-500";
+    default:
+      return "border-l-blue-500";
+  }
+};
+
+/**
  * Individual Toast component
  */
 const Toast = ({
@@ -74,43 +110,12 @@ const Toast = ({
     handleClose();
   };
 
-  // Icon and color based on type
-  const getIcon = () => {
-    switch (type) {
-      case ToastType.SUCCESS:
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case ToastType.ERROR:
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
-      case ToastType.WARNING:
-        return <AlertTriangle className="w-5 h-5 text-amber-500" />;
-      case ToastType.NETWORK:
-        return <WifiOff className="w-5 h-5 text-orange-500" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-blue-500" />;
-    }
-  };
-
-  const getBorderColor = () => {
-    switch (type) {
-      case ToastType.SUCCESS:
-        return "border-l-green-500";
-      case ToastType.ERROR:
-        return "border-l-red-500";
-      case ToastType.WARNING:
-        return "border-l-amber-500";
-      case ToastType.NETWORK:
-        return "border-l-orange-500";
-      default:
-        return "border-l-blue-500";
-    }
-  };
-
   return (
     <div
       className={`
-        flex items-start gap-3 p-4 mb-3 
-        bg-white dark:bg-gray-800 
-        border-l-4 ${getBorderColor()}
+        flex items-start gap-3 p-4 mb-3
+        bg-white dark:bg-gray-800
+        border-l-4 ${getToastBorderColor(type)}
         rounded-lg shadow-lg
         transform transition-all duration-300 ease-out
         ${isExiting ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"}
@@ -119,7 +124,7 @@ const Toast = ({
       role={isUrgent ? "alert" : "status"}
       aria-live={isUrgent ? "assertive" : "polite"}
     >
-      <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+      <div className="flex-shrink-0 mt-0.5">{getToastIcon(type)}</div>
 
       <div className="flex-1 min-w-0">
         {title && (

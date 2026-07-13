@@ -12,6 +12,84 @@ import { useState, useRef, useCallback } from "react";
 import { validateFilesBatch } from "../utils/musterCallProcessor";
 
 /**
+ * Validates and stores a newly-selected file batch, then routes it into
+ * Formation queue init (sequential mode) or plain selection (legacy mode).
+ * Extracted from useMusterCallFileIntake's handleFileSelect useCallback so
+ * that callback stays a thin wrapper; closes only over `ctx`.
+ */
+function runFileSelect(selectedFiles, ctx) {
+  const {
+    useSequentialMode,
+    formationQueue,
+    toast,
+    setError,
+    setValidation,
+    setFiles,
+  } = ctx;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    "🎯 handleFileSelect called with",
+    selectedFiles?.length,
+    "files",
+  );
+  const fileArray = Array.from(selectedFiles);
+  // eslint-disable-next-line no-console
+  console.log("🎯 fileArray:", fileArray.length, "files");
+
+  // Validate files
+  const validationResult = validateFilesBatch(fileArray);
+  // eslint-disable-next-line no-console
+  console.log("🎯 validationResult:", validationResult);
+  setValidation(validationResult);
+
+  if (validationResult.valid.length > 0) {
+    setFiles(fileArray);
+
+    // Initialize formation if in sequential mode
+    if (useSequentialMode) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "🎯 Calling initializeFormation with",
+        validationResult.valid.length,
+        "files",
+      );
+      const result = formationQueue.initializeFormation(
+        validationResult.valid,
+      );
+      // eslint-disable-next-line no-console
+      console.log(
+        "🎯 initializeFormation returned:",
+        result?.length,
+        "entries",
+      );
+      toast.success(
+        `${validationResult.valid.length} document${validationResult.valid.length !== 1 ? "s" : ""} added to Formation queue`,
+      );
+    } else {
+      toast.info(
+        `${validationResult.valid.length} file${validationResult.valid.length !== 1 ? "s" : ""} selected`,
+      );
+    }
+
+    if (validationResult.invalid.length > 0) {
+      toast.warning(
+        `${validationResult.invalid.length} file${validationResult.invalid.length !== 1 ? "s" : ""} skipped (unsupported format)`,
+      );
+    }
+
+    setError(null);
+  } else {
+    setError(
+      "No valid files selected. Please select PDF, DOCX, or TXT files.",
+    );
+    toast.error(
+      "No valid files selected. Only PDF, DOCX, and TXT files are supported.",
+    );
+  }
+}
+
+/**
  * @param {object} params
  * @param {boolean} params.useSequentialMode
  * @param {ReturnType<typeof import('./useFormationQueue').default>} params.formationQueue
@@ -30,68 +108,11 @@ export const useMusterCallFileIntake = ({
   const dropZoneRef = useRef(null);
 
   const handleFileSelect = useCallback(
-    (selectedFiles) => {
-      // eslint-disable-next-line no-console
-      console.log(
-        "🎯 handleFileSelect called with",
-        selectedFiles?.length,
-        "files",
-      );
-      const fileArray = Array.from(selectedFiles);
-      // eslint-disable-next-line no-console
-      console.log("🎯 fileArray:", fileArray.length, "files");
-
-      // Validate files
-      const validationResult = validateFilesBatch(fileArray);
-      // eslint-disable-next-line no-console
-      console.log("🎯 validationResult:", validationResult);
-      setValidation(validationResult);
-
-      if (validationResult.valid.length > 0) {
-        setFiles(fileArray);
-
-        // Initialize formation if in sequential mode
-        if (useSequentialMode) {
-          // eslint-disable-next-line no-console
-          console.log(
-            "🎯 Calling initializeFormation with",
-            validationResult.valid.length,
-            "files",
-          );
-          const result = formationQueue.initializeFormation(
-            validationResult.valid,
-          );
-          // eslint-disable-next-line no-console
-          console.log(
-            "🎯 initializeFormation returned:",
-            result?.length,
-            "entries",
-          );
-          toast.success(
-            `${validationResult.valid.length} document${validationResult.valid.length !== 1 ? "s" : ""} added to Formation queue`,
-          );
-        } else {
-          toast.info(
-            `${validationResult.valid.length} file${validationResult.valid.length !== 1 ? "s" : ""} selected`,
-          );
-        }
-
-        if (validationResult.invalid.length > 0) {
-          toast.warning(
-            `${validationResult.invalid.length} file${validationResult.invalid.length !== 1 ? "s" : ""} skipped (unsupported format)`,
-          );
-        }
-
-        setError(null);
-      } else {
-        setError(
-          "No valid files selected. Please select PDF, DOCX, or TXT files.",
-        );
-        toast.error(
-          "No valid files selected. Only PDF, DOCX, and TXT files are supported.",
-        );
-      }
-    },
+    (selectedFiles) =>
+      runFileSelect(selectedFiles, {
+        useSequentialMode, formationQueue, toast, setError,
+        setValidation, setFiles,
+      }),
     [useSequentialMode, formationQueue, toast, setError],
   );
 

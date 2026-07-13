@@ -12,6 +12,45 @@ const TimeMachine = lazy(() => import("../../components/TimeMachine"));
 const BDDBuilder = lazy(() => import("../../components/BDDBuilder"));
 const VSOFinder = lazy(() => import("../../components/VSOFinder"));
 
+function useClaimPrepToolEvents(
+  setShowPACT,
+  setShowMOS,
+  setShowWeb,
+  setShowTime,
+  setShowBDD,
+  setShowVSO,
+) {
+  useEffect(() => {
+    const openPACT = () => setShowPACT(true);
+    const openMOS = () => setShowMOS(true);
+    const openWeb = () => setShowWeb(true);
+    const openTime = () => setShowTime(true);
+    const openBDD = () => setShowBDD(true);
+    const openVSO = () => setShowVSO(true);
+    window.addEventListener("openPACTActNavigator", openPACT);
+    window.addEventListener("openMOSHazardMatcher", openMOS);
+    window.addEventListener("openWebOfConditions", openWeb);
+    window.addEventListener("openTimeMachine", openTime);
+    window.addEventListener("openBDDBuilder", openBDD);
+    window.addEventListener("openVSOFinder", openVSO);
+    return () => {
+      window.removeEventListener("openPACTActNavigator", openPACT);
+      window.removeEventListener("openMOSHazardMatcher", openMOS);
+      window.removeEventListener("openWebOfConditions", openWeb);
+      window.removeEventListener("openTimeMachine", openTime);
+      window.removeEventListener("openBDDBuilder", openBDD);
+      window.removeEventListener("openVSOFinder", openVSO);
+    };
+  }, [
+    setShowPACT,
+    setShowMOS,
+    setShowWeb,
+    setShowTime,
+    setShowBDD,
+    setShowVSO,
+  ]);
+}
+
 /**
  * Claim-prep surfaces — six specialized tools that help veterans
  * gather facts and route their claim before filing:
@@ -39,28 +78,14 @@ export default function ClaimPrepCluster({ onToolSelect }) {
   const [showBDD, setShowBDD] = useState(false);
   const [showVSO, setShowVSO] = useState(false);
 
-  useEffect(() => {
-    const openPACT = () => setShowPACT(true);
-    const openMOS = () => setShowMOS(true);
-    const openWeb = () => setShowWeb(true);
-    const openTime = () => setShowTime(true);
-    const openBDD = () => setShowBDD(true);
-    const openVSO = () => setShowVSO(true);
-    window.addEventListener("openPACTActNavigator", openPACT);
-    window.addEventListener("openMOSHazardMatcher", openMOS);
-    window.addEventListener("openWebOfConditions", openWeb);
-    window.addEventListener("openTimeMachine", openTime);
-    window.addEventListener("openBDDBuilder", openBDD);
-    window.addEventListener("openVSOFinder", openVSO);
-    return () => {
-      window.removeEventListener("openPACTActNavigator", openPACT);
-      window.removeEventListener("openMOSHazardMatcher", openMOS);
-      window.removeEventListener("openWebOfConditions", openWeb);
-      window.removeEventListener("openTimeMachine", openTime);
-      window.removeEventListener("openBDDBuilder", openBDD);
-      window.removeEventListener("openVSOFinder", openVSO);
-    };
-  }, []);
+  useClaimPrepToolEvents(
+    setShowPACT,
+    setShowMOS,
+    setShowWeb,
+    setShowTime,
+    setShowBDD,
+    setShowVSO,
+  );
 
   const reportBug = (closeFn) => () => {
     closeFn(false);

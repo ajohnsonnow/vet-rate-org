@@ -139,7 +139,7 @@ const useGoogleDriveInit = (setProviderStates) => {
       }
     };
     initGDrive();
-  }, []);
+  }, [setProviderStates]);
 };
 
 // Builds the "list backups for the selected provider" handler. Split out of
@@ -600,16 +600,10 @@ function useProviderConnection({ setIsLoading, setError, setStatus, setBackups }
   };
 }
 
-// Owns backup-creation/restore/delete state and the handlers that touch it.
-// Split out of the component purely to keep its function body under the
-// line-count limit.
-function useBackupOperations({
-  selectedProvider,
-  setIsLoading,
-  setError,
-  setStatus,
-  loadBackups,
-}) {
+// Owns the plain state (no handlers) for backup-creation/restore/delete.
+// Split out of useBackupOperations purely to keep its function body under
+// the line-count limit.
+function useBackupOperationsState() {
   const [encryptionEnabled, setEncryptionEnabled] = useState(true);
   const [usePassphrase, setUsePassphrase] = useState(false);
   const [passphrase, setPassphrase] = useState("");
@@ -624,62 +618,6 @@ function useBackupOperations({
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [pendingUnlock, setPendingUnlock] = useState(null);
   const [unlockPassphrase, setUnlockPassphrase] = useState("");
-
-  const handleCreateBackup = createCreateBackupHandler({
-    usePassphrase,
-    passphrase,
-    confirmPassphrase,
-    encryptionEnabled,
-    selectedProvider,
-    setError,
-    setIsLoading,
-    setStatus,
-    setPassphrase,
-    setConfirmPassphrase,
-    loadBackups,
-  });
-
-  const handleRestore = createRestoreHandler({
-    selectedProvider,
-    setIsLoading,
-    setError,
-    setStatus,
-    setPendingRestore,
-    setShowPassphraseModal,
-    setPendingUnlock,
-    setShowUnlockModal,
-  });
-
-  const handleUnlockAndRestore = createUnlockAndRestoreHandler({
-    unlockPassphrase,
-    setError,
-    setIsLoading,
-    pendingUnlock,
-    setShowUnlockModal,
-    setUnlockPassphrase,
-    setPendingUnlock,
-    handleRestore,
-  });
-
-  const handlePassphraseRestore = createPassphraseRestoreHandler({
-    restorePassphrase,
-    setError,
-    setIsLoading,
-    setShowPassphraseModal,
-    pendingRestore,
-    selectedProvider,
-    setStatus,
-    setRestorePassphrase,
-    setPendingRestore,
-  });
-
-  const handleDelete = createDeleteHandler({
-    selectedProvider,
-    setIsLoading,
-    setError,
-    setStatus,
-    loadBackups,
-  });
 
   return {
     encryptionEnabled,
@@ -702,12 +640,98 @@ function useBackupOperations({
     setPendingUnlock,
     unlockPassphrase,
     setUnlockPassphrase,
+  };
+}
+
+// Builds the backup-creation/restore/delete handlers from the state owned by
+// useBackupOperationsState. Split out of useBackupOperations purely to keep
+// its function body under the line-count limit.
+function useBackupOperationsHandlers(state, { selectedProvider, setIsLoading, setError, setStatus, loadBackups }) {
+  const handleCreateBackup = createCreateBackupHandler({
+    usePassphrase: state.usePassphrase,
+    passphrase: state.passphrase,
+    confirmPassphrase: state.confirmPassphrase,
+    encryptionEnabled: state.encryptionEnabled,
+    selectedProvider,
+    setError,
+    setIsLoading,
+    setStatus,
+    setPassphrase: state.setPassphrase,
+    setConfirmPassphrase: state.setConfirmPassphrase,
+    loadBackups,
+  });
+
+  const handleRestore = createRestoreHandler({
+    selectedProvider,
+    setIsLoading,
+    setError,
+    setStatus,
+    setPendingRestore: state.setPendingRestore,
+    setShowPassphraseModal: state.setShowPassphraseModal,
+    setPendingUnlock: state.setPendingUnlock,
+    setShowUnlockModal: state.setShowUnlockModal,
+  });
+
+  const handleUnlockAndRestore = createUnlockAndRestoreHandler({
+    unlockPassphrase: state.unlockPassphrase,
+    setError,
+    setIsLoading,
+    pendingUnlock: state.pendingUnlock,
+    setShowUnlockModal: state.setShowUnlockModal,
+    setUnlockPassphrase: state.setUnlockPassphrase,
+    setPendingUnlock: state.setPendingUnlock,
+    handleRestore,
+  });
+
+  const handlePassphraseRestore = createPassphraseRestoreHandler({
+    restorePassphrase: state.restorePassphrase,
+    setError,
+    setIsLoading,
+    setShowPassphraseModal: state.setShowPassphraseModal,
+    pendingRestore: state.pendingRestore,
+    selectedProvider,
+    setStatus,
+    setRestorePassphrase: state.setRestorePassphrase,
+    setPendingRestore: state.setPendingRestore,
+  });
+
+  const handleDelete = createDeleteHandler({
+    selectedProvider,
+    setIsLoading,
+    setError,
+    setStatus,
+    loadBackups,
+  });
+
+  return {
     handleCreateBackup,
     handleRestore,
     handleUnlockAndRestore,
     handlePassphraseRestore,
     handleDelete,
   };
+}
+
+// Owns backup-creation/restore/delete state and the handlers that touch it.
+// Split out of the component purely to keep its function body under the
+// line-count limit.
+function useBackupOperations({
+  selectedProvider,
+  setIsLoading,
+  setError,
+  setStatus,
+  loadBackups,
+}) {
+  const state = useBackupOperationsState();
+  const handlers = useBackupOperationsHandlers(state, {
+    selectedProvider,
+    setIsLoading,
+    setError,
+    setStatus,
+    loadBackups,
+  });
+
+  return { ...state, ...handlers };
 }
 
 const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
@@ -1752,6 +1776,89 @@ const KeystoreUnlockModal = ({
   </ResponsiveModal>
 );
 
+// Renders the two restore-flow modals (passphrase entry, keystore unlock).
+// Split out of MultiCloudManager purely to keep its function body under the
+// line-count limit.
+const MultiCloudRestoreModals = ({ backupOps, isLoading }) => (
+  <>
+    <PassphraseRestoreModal
+      isOpen={backupOps.showPassphraseModal}
+      restorePassphrase={backupOps.restorePassphrase}
+      setRestorePassphrase={backupOps.setRestorePassphrase}
+      setShowPassphraseModal={backupOps.setShowPassphraseModal}
+      setPendingRestore={backupOps.setPendingRestore}
+      handlePassphraseRestore={backupOps.handlePassphraseRestore}
+    />
+
+    <KeystoreUnlockModal
+      isOpen={backupOps.showUnlockModal}
+      unlockPassphrase={backupOps.unlockPassphrase}
+      setUnlockPassphrase={backupOps.setUnlockPassphrase}
+      setShowUnlockModal={backupOps.setShowUnlockModal}
+      setPendingUnlock={backupOps.setPendingUnlock}
+      handleUnlockAndRestore={backupOps.handleUnlockAndRestore}
+      isLoading={isLoading}
+    />
+  </>
+);
+
+// Renders the active tab's panel. Split out of MultiCloudManager purely to
+// keep its function body under the line-count limit.
+const MultiCloudTabContent = ({
+  activeTab,
+  selectedProvider,
+  connection,
+  providerStates,
+  isLoading,
+  backups,
+  provider,
+  backupOps,
+  setBackups,
+}) => (
+  <>
+    {activeTab === "providers" && (
+      <ProvidersTabPanel
+        selectedProvider={selectedProvider}
+        setSelectedProvider={connection.setSelectedProvider}
+        providerStates={providerStates}
+        isLoading={isLoading}
+        handleConnect={connection.handleConnect}
+        handleDisconnect={connection.handleDisconnect}
+      />
+    )}
+
+    {activeTab === "backups" && (
+      <BackupsTabPanel
+        selectedProvider={selectedProvider}
+        provider={provider}
+        providerStates={providerStates}
+        isLoading={isLoading}
+        handleConnect={connection.handleConnect}
+        backups={backups}
+        encryptionEnabled={backupOps.encryptionEnabled}
+        setEncryptionEnabled={backupOps.setEncryptionEnabled}
+        usePassphrase={backupOps.usePassphrase}
+        setUsePassphrase={backupOps.setUsePassphrase}
+        passphrase={backupOps.passphrase}
+        setPassphrase={backupOps.setPassphrase}
+        confirmPassphrase={backupOps.confirmPassphrase}
+        setConfirmPassphrase={backupOps.setConfirmPassphrase}
+        handleCreateBackup={backupOps.handleCreateBackup}
+        loadBackups={connection.loadBackups}
+        handleRestore={backupOps.handleRestore}
+        handleDelete={backupOps.handleDelete}
+      />
+    )}
+
+    {activeTab === "settings" && (
+      <SettingsTabPanel
+        setProviderStates={connection.setProviderStates}
+        setBackups={setBackups}
+      />
+    )}
+  </>
+);
+
 const MultiCloudManager = ({ onClose }) => {
   const shared = useMultiCloudSharedState();
   const { backups, isLoading, status, error, setBackups, setIsLoading, setError, setStatus } =
@@ -1796,67 +1903,21 @@ const MultiCloudManager = ({ onClose }) => {
         <div>
           <StatusBanner status={status} error={error} />
 
-          {activeTab === "providers" && (
-            <ProvidersTabPanel
-              selectedProvider={selectedProvider}
-              setSelectedProvider={connection.setSelectedProvider}
-              providerStates={providerStates}
-              isLoading={isLoading}
-              handleConnect={connection.handleConnect}
-              handleDisconnect={connection.handleDisconnect}
-            />
-          )}
-
-          {activeTab === "backups" && (
-            <BackupsTabPanel
-              selectedProvider={selectedProvider}
-              provider={provider}
-              providerStates={providerStates}
-              isLoading={isLoading}
-              handleConnect={connection.handleConnect}
-              backups={backups}
-              encryptionEnabled={backupOps.encryptionEnabled}
-              setEncryptionEnabled={backupOps.setEncryptionEnabled}
-              usePassphrase={backupOps.usePassphrase}
-              setUsePassphrase={backupOps.setUsePassphrase}
-              passphrase={backupOps.passphrase}
-              setPassphrase={backupOps.setPassphrase}
-              confirmPassphrase={backupOps.confirmPassphrase}
-              setConfirmPassphrase={backupOps.setConfirmPassphrase}
-              handleCreateBackup={backupOps.handleCreateBackup}
-              loadBackups={connection.loadBackups}
-              handleRestore={backupOps.handleRestore}
-              handleDelete={backupOps.handleDelete}
-            />
-          )}
-
-          {activeTab === "settings" && (
-            <SettingsTabPanel
-              setProviderStates={connection.setProviderStates}
-              setBackups={setBackups}
-            />
-          )}
+          <MultiCloudTabContent
+            activeTab={activeTab}
+            selectedProvider={selectedProvider}
+            connection={connection}
+            providerStates={providerStates}
+            isLoading={isLoading}
+            backups={backups}
+            provider={provider}
+            backupOps={backupOps}
+            setBackups={setBackups}
+          />
         </div>
       </ResponsiveModal>
 
-      <PassphraseRestoreModal
-        isOpen={backupOps.showPassphraseModal}
-        restorePassphrase={backupOps.restorePassphrase}
-        setRestorePassphrase={backupOps.setRestorePassphrase}
-        setShowPassphraseModal={backupOps.setShowPassphraseModal}
-        setPendingRestore={backupOps.setPendingRestore}
-        handlePassphraseRestore={backupOps.handlePassphraseRestore}
-      />
-
-      <KeystoreUnlockModal
-        isOpen={backupOps.showUnlockModal}
-        unlockPassphrase={backupOps.unlockPassphrase}
-        setUnlockPassphrase={backupOps.setUnlockPassphrase}
-        setShowUnlockModal={backupOps.setShowUnlockModal}
-        setPendingUnlock={backupOps.setPendingUnlock}
-        handleUnlockAndRestore={backupOps.handleUnlockAndRestore}
-        isLoading={isLoading}
-      />
+      <MultiCloudRestoreModals backupOps={backupOps} isLoading={isLoading} />
     </>
   );
 };

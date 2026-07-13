@@ -1400,153 +1400,278 @@ function SandboxModals({
 }
 
 /**
+ * Runs a single sandbox API fetch, threading it through the shared
+ * loading/error/raw-JSON/testResults state slices keyed by `key`.
+ */
+async function runSandboxFetch({
+  fetchFn,
+  formatFn,
+  setRaw,
+  setFormatted,
+  setLoading,
+  setErrors,
+  setTestResults,
+  key,
+  errorLabel,
+}) {
+  setLoading((prev) => ({ ...prev, [key]: true }));
+  setErrors((prev) => ({ ...prev, [key]: null }));
+  try {
+    const data = await fetchFn();
+    setRaw(data);
+    setFormatted(formatFn(data));
+    setTestResults((prev) => ({ ...prev, [key]: "pass" }));
+  } catch (err) {
+    console.error(`[Sandbox Test] ${errorLabel} error:`, err);
+    setErrors((prev) => ({ ...prev, [key]: err.message }));
+    setTestResults((prev) => ({ ...prev, [key]: "fail" }));
+  } finally {
+    setLoading((prev) => ({ ...prev, [key]: false }));
+  }
+}
+
+const SANDBOX_STATUS_KEYS = [
+  "serviceHistory",
+  "claims",
+  "appealableIssues",
+  "appealsStatus",
+  "facilities",
+  "forms",
+  "disabilities",
+];
+
+const makeStatusDefaults = (value) =>
+  Object.fromEntries(SANDBOX_STATUS_KEYS.map((key) => [key, value]));
+
+const isApiKeyConfigured = (key, placeholder) =>
+  Boolean(key && key !== placeholder);
+
+function buildUserDataFetchers({
+  accessToken,
+  setRawServiceHistory,
+  setServiceHistory,
+  setRawClaims,
+  setClaims,
+  setRawAppealableIssues,
+  setAppealableIssues,
+  setRawAppealsStatus,
+  setAppealsStatus,
+  setLoading,
+  setErrors,
+  setTestResults,
+}) {
+  const shared = { setLoading, setErrors, setTestResults };
+  return {
+    fetchServiceHistory: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () => getServiceHistory(accessToken),
+        formatFn: formatServiceHistory,
+        setRaw: setRawServiceHistory,
+        setFormatted: setServiceHistory,
+        key: "serviceHistory",
+        errorLabel: "Service history",
+      }),
+    fetchClaims: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () => getClaims(accessToken),
+        formatFn: formatClaims,
+        setRaw: setRawClaims,
+        setFormatted: setClaims,
+        key: "claims",
+        errorLabel: "Claims",
+      }),
+    fetchAppealableIssues: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () => getAppealableIssues(accessToken),
+        formatFn: formatAppealableIssues,
+        setRaw: setRawAppealableIssues,
+        setFormatted: setAppealableIssues,
+        key: "appealableIssues",
+        errorLabel: "Appealable issues",
+      }),
+    fetchAppealsStatus: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () => getAppealsStatus(accessToken),
+        formatFn: formatAppealsStatus,
+        setRaw: setRawAppealsStatus,
+        setFormatted: setAppealsStatus,
+        key: "appealsStatus",
+        errorLabel: "Appeals status",
+      }),
+  };
+}
+
+function buildOpenDataFetchers({
+  setRawFacilities,
+  setFacilities,
+  setRawForms,
+  setForms,
+  setRawDisabilities,
+  setDisabilities,
+  setLoading,
+  setErrors,
+  setTestResults,
+}) {
+  const shared = { setLoading, setErrors, setTestResults };
+  return {
+    testFacilitiesApi: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () =>
+          getFacilities(VA_FACILITIES_API_KEY, { zip: "97217", perPage: 5 }),
+        formatFn: formatFacilities,
+        setRaw: setRawFacilities,
+        setFormatted: setFacilities,
+        key: "facilities",
+        errorLabel: "Facilities",
+      }),
+    testFormsApi: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () => searchForms(VA_FACILITIES_API_KEY, "21-526EZ"),
+        formatFn: formatForms,
+        setRaw: setRawForms,
+        setFormatted: setForms,
+        key: "forms",
+        errorLabel: "Forms",
+      }),
+    testDisabilitiesApi: () =>
+      runSandboxFetch({
+        ...shared,
+        fetchFn: () =>
+          getBenefitsReferenceDisabilities(VA_FACILITIES_API_KEY),
+        formatFn: formatBenefitsDisabilities,
+        setRaw: setRawDisabilities,
+        setFormatted: setDisabilities,
+        key: "disabilities",
+        errorLabel: "Disabilities",
+      }),
+  };
+}
+
+/**
  * Encapsulates all VA Sandbox API data: OAuth-protected user data
  * (service history, claims, appealable issues, appeals status) and
  * API-key-protected open data (facilities, forms, benefits reference),
  * plus their loading/error/raw-JSON state and fetchers.
  */
-function useVaSandboxData(isAuthenticated, accessToken) {
-  // USER DATA STATES (OAuth Required)
+function useVaSandboxDataState() {
   const [serviceHistory, setServiceHistory] = useState(null);
   const [claims, setClaims] = useState(null);
   const [appealableIssues, setAppealableIssues] = useState(null);
   const [appealsStatus, setAppealsStatus] = useState(null);
-
-  // Raw JSON states for User Data
   const [rawServiceHistory, setRawServiceHistory] = useState(null);
   const [rawClaims, setRawClaims] = useState(null);
   const [rawAppealableIssues, setRawAppealableIssues] = useState(null);
   const [rawAppealsStatus, setRawAppealsStatus] = useState(null);
-
-  // OPEN DATA STATES (API Key Required)
   const [facilities, setFacilities] = useState(null);
   const [forms, setForms] = useState(null);
   const [disabilities, setDisabilities] = useState(null);
-
-  // Raw JSON states for Open Data
   const [rawFacilities, setRawFacilities] = useState(null);
   const [rawForms, setRawForms] = useState(null);
   const [rawDisabilities, setRawDisabilities] = useState(null);
-
-  // UI STATES
-  const [loading, setLoading] = useState({
-    serviceHistory: false,
-    claims: false,
-    appealableIssues: false,
-    appealsStatus: false,
-    facilities: false,
-    forms: false,
-    disabilities: false,
-  });
-  const [errors, setErrors] = useState({
-    serviceHistory: null,
-    claims: null,
-    appealableIssues: null,
-    appealsStatus: null,
-    facilities: null,
-    forms: null,
-    disabilities: null,
-  });
-  const [showRawJson, setShowRawJson] = useState({
-    serviceHistory: false,
-    claims: false,
-    appealableIssues: false,
-    appealsStatus: false,
-    facilities: false,
-    forms: false,
-    disabilities: false,
-  });
+  const [loading, setLoading] = useState(() => makeStatusDefaults(false));
+  const [errors, setErrors] = useState(() => makeStatusDefaults(null));
+  const [showRawJson, setShowRawJson] = useState(() =>
+    makeStatusDefaults(false),
+  );
   const [testResults, setTestResults] = useState({});
 
-  // API Key availability (check each individually)
-  const isFacilitiesApiKeyConfigured = Boolean(
-    VA_FACILITIES_API_KEY && VA_FACILITIES_API_KEY !== "your_va_api_key_here",
+  return {
+    serviceHistory,
+    setServiceHistory,
+    claims,
+    setClaims,
+    appealableIssues,
+    setAppealableIssues,
+    appealsStatus,
+    setAppealsStatus,
+    rawServiceHistory,
+    setRawServiceHistory,
+    rawClaims,
+    setRawClaims,
+    rawAppealableIssues,
+    setRawAppealableIssues,
+    rawAppealsStatus,
+    setRawAppealsStatus,
+    facilities,
+    setFacilities,
+    forms,
+    setForms,
+    disabilities,
+    setDisabilities,
+    rawFacilities,
+    setRawFacilities,
+    rawForms,
+    setRawForms,
+    rawDisabilities,
+    setRawDisabilities,
+    loading,
+    setLoading,
+    errors,
+    setErrors,
+    showRawJson,
+    setShowRawJson,
+    testResults,
+    setTestResults,
+  };
+}
+
+function useVaSandboxData(isAuthenticated, accessToken) {
+  const state = useVaSandboxDataState();
+  const { setLoading, setErrors, setTestResults, setShowRawJson } = state;
+
+  const isFacilitiesApiKeyConfigured = isApiKeyConfigured(
+    VA_FACILITIES_API_KEY,
+    "your_va_api_key_here",
   );
-  const isFormsApiKeyConfigured = Boolean(
-    VA_FORMS_API_KEY && VA_FORMS_API_KEY !== "your_forms_api_key_here",
+  const isFormsApiKeyConfigured = isApiKeyConfigured(
+    VA_FORMS_API_KEY,
+    "your_forms_api_key_here",
   );
-  const isBenefitsApiKeyConfigured = Boolean(
-    VA_BENEFITS_REF_API_KEY &&
-    VA_BENEFITS_REF_API_KEY !== "your_benefits_api_key_here",
+  const isBenefitsApiKeyConfigured = isApiKeyConfigured(
+    VA_BENEFITS_REF_API_KEY,
+    "your_benefits_api_key_here",
   );
 
-  // === USER DATA FETCHERS ===
+  const userDataFetchers = buildUserDataFetchers({
+    accessToken,
+    setRawServiceHistory: state.setRawServiceHistory,
+    setServiceHistory: state.setServiceHistory,
+    setRawClaims: state.setRawClaims,
+    setClaims: state.setClaims,
+    setRawAppealableIssues: state.setRawAppealableIssues,
+    setAppealableIssues: state.setAppealableIssues,
+    setRawAppealsStatus: state.setRawAppealsStatus,
+    setAppealsStatus: state.setAppealsStatus,
+    setLoading,
+    setErrors,
+    setTestResults,
+  });
 
-  const fetchServiceHistory = async () => {
-    setLoading((prev) => ({ ...prev, serviceHistory: true }));
-    setErrors((prev) => ({ ...prev, serviceHistory: null }));
-    try {
-      const data = await getServiceHistory(accessToken);
-      setRawServiceHistory(data);
-      setServiceHistory(formatServiceHistory(data));
-      setTestResults((prev) => ({ ...prev, serviceHistory: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Service history error:", err);
-      setErrors((prev) => ({ ...prev, serviceHistory: err.message }));
-      setTestResults((prev) => ({ ...prev, serviceHistory: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, serviceHistory: false }));
-    }
-  };
-
-  const fetchClaims = async () => {
-    setLoading((prev) => ({ ...prev, claims: true }));
-    setErrors((prev) => ({ ...prev, claims: null }));
-    try {
-      const data = await getClaims(accessToken);
-      setRawClaims(data);
-      setClaims(formatClaims(data));
-      setTestResults((prev) => ({ ...prev, claims: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Claims error:", err);
-      setErrors((prev) => ({ ...prev, claims: err.message }));
-      setTestResults((prev) => ({ ...prev, claims: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, claims: false }));
-    }
-  };
-
-  const fetchAppealableIssues = async () => {
-    setLoading((prev) => ({ ...prev, appealableIssues: true }));
-    setErrors((prev) => ({ ...prev, appealableIssues: null }));
-    try {
-      const data = await getAppealableIssues(accessToken);
-      setRawAppealableIssues(data);
-      setAppealableIssues(formatAppealableIssues(data));
-      setTestResults((prev) => ({ ...prev, appealableIssues: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Appealable issues error:", err);
-      setErrors((prev) => ({ ...prev, appealableIssues: err.message }));
-      setTestResults((prev) => ({ ...prev, appealableIssues: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, appealableIssues: false }));
-    }
-  };
-
-  const fetchAppealsStatus = async () => {
-    setLoading((prev) => ({ ...prev, appealsStatus: true }));
-    setErrors((prev) => ({ ...prev, appealsStatus: null }));
-    try {
-      const data = await getAppealsStatus(accessToken);
-      setRawAppealsStatus(data);
-      setAppealsStatus(formatAppealsStatus(data));
-      setTestResults((prev) => ({ ...prev, appealsStatus: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Appeals status error:", err);
-      setErrors((prev) => ({ ...prev, appealsStatus: err.message }));
-      setTestResults((prev) => ({ ...prev, appealsStatus: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, appealsStatus: false }));
-    }
-  };
+  const openDataFetchers = buildOpenDataFetchers({
+    setRawFacilities: state.setRawFacilities,
+    setFacilities: state.setFacilities,
+    setRawForms: state.setRawForms,
+    setForms: state.setForms,
+    setRawDisabilities: state.setRawDisabilities,
+    setDisabilities: state.setDisabilities,
+    setLoading,
+    setErrors,
+    setTestResults,
+  });
 
   // Fetch all user data when authenticated
   const fetchAllUserData = useCallback(async () => {
     if (!accessToken) return;
-    fetchServiceHistory();
-    fetchClaims();
-    fetchAppealableIssues();
-    fetchAppealsStatus();
+    userDataFetchers.fetchServiceHistory();
+    userDataFetchers.fetchClaims();
+    userDataFetchers.fetchAppealableIssues();
+    userDataFetchers.fetchAppealsStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
@@ -1557,122 +1682,27 @@ function useVaSandboxData(isAuthenticated, accessToken) {
     }
   }, [isAuthenticated, accessToken, fetchAllUserData]);
 
-  // === OPEN DATA FETCHERS ===
-
-  const testFacilitiesApi = async () => {
-    setLoading((prev) => ({ ...prev, facilities: true }));
-    setErrors((prev) => ({ ...prev, facilities: null }));
-    try {
-      const data = await getFacilities(VA_FACILITIES_API_KEY, {
-        zip: "97217",
-        perPage: 5,
-      });
-      setRawFacilities(data);
-      setFacilities(formatFacilities(data));
-      setTestResults((prev) => ({ ...prev, facilities: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Facilities error:", err);
-      setErrors((prev) => ({ ...prev, facilities: err.message }));
-      setTestResults((prev) => ({ ...prev, facilities: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, facilities: false }));
-    }
-  };
-
-  const testFormsApi = async () => {
-    setLoading((prev) => ({ ...prev, forms: true }));
-    setErrors((prev) => ({ ...prev, forms: null }));
-    try {
-      const data = await searchForms(VA_FACILITIES_API_KEY, "21-526EZ");
-      setRawForms(data);
-      setForms(formatForms(data));
-      setTestResults((prev) => ({ ...prev, forms: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Forms error:", err);
-      setErrors((prev) => ({ ...prev, forms: err.message }));
-      setTestResults((prev) => ({ ...prev, forms: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, forms: false }));
-    }
-  };
-
-  const testDisabilitiesApi = async () => {
-    setLoading((prev) => ({ ...prev, disabilities: true }));
-    setErrors((prev) => ({ ...prev, disabilities: null }));
-    try {
-      const data = await getBenefitsReferenceDisabilities(
-        VA_FACILITIES_API_KEY,
-      );
-      setRawDisabilities(data);
-      setDisabilities(formatBenefitsDisabilities(data));
-      setTestResults((prev) => ({ ...prev, disabilities: "pass" }));
-    } catch (err) {
-      console.error("[Sandbox Test] Disabilities error:", err);
-      setErrors((prev) => ({ ...prev, disabilities: err.message }));
-      setTestResults((prev) => ({ ...prev, disabilities: "fail" }));
-    } finally {
-      setLoading((prev) => ({ ...prev, disabilities: false }));
-    }
-  };
-
   const toggleRawJson = (key) => {
     setShowRawJson((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return {
-    serviceHistory,
-    claims,
-    appealableIssues,
-    appealsStatus,
-    rawServiceHistory,
-    rawClaims,
-    rawAppealableIssues,
-    rawAppealsStatus,
-    facilities,
-    forms,
-    disabilities,
-    rawFacilities,
-    rawForms,
-    rawDisabilities,
-    loading,
-    errors,
-    showRawJson,
-    testResults,
+    ...state,
     isFacilitiesApiKeyConfigured,
     isFormsApiKeyConfigured,
     isBenefitsApiKeyConfigured,
     fetchAllUserData,
-    fetchServiceHistory,
-    fetchClaims,
-    fetchAppealableIssues,
-    fetchAppealsStatus,
-    testFacilitiesApi,
-    testFormsApi,
-    testDisabilitiesApi,
+    ...userDataFetchers,
+    ...openDataFetchers,
     toggleRawJson,
   };
 }
 
-const VaSandboxTest = ({ onClose }) => {
-  // Power User Feature States
-  const [showDbqFinder, setShowDbqFinder] = useState(false);
-  const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
-  const [selectedClaimForUpload, setSelectedClaimForUpload] = useState(null);
-
-  // Consent & Save States
-  const [showConsentPrompt, setShowConsentPrompt] = useState(false);
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState(null);
-
-  const {
-    isAuthenticated,
-    isLoading: authLoading,
-    userInfo,
-    login,
-    logout,
-    accessToken,
-    error: authError,
-  } = useVaAuth();
-
+/**
+ * Owns the "show the VA-data consent prompt after data loads" flow: the
+ * auto-show effect, the save-with-consent handler, and the skip handler.
+ */
+function useConsentFlow(isAuthenticated, sandboxData) {
   const {
     serviceHistory,
     claims,
@@ -1682,29 +1712,10 @@ const VaSandboxTest = ({ onClose }) => {
     rawClaims,
     rawAppealableIssues,
     rawAppealsStatus,
-    facilities,
-    forms,
-    disabilities,
-    rawFacilities,
-    rawForms,
-    rawDisabilities,
-    loading,
-    errors,
-    showRawJson,
-    testResults,
-    isFacilitiesApiKeyConfigured,
-    isFormsApiKeyConfigured,
-    isBenefitsApiKeyConfigured,
-    fetchAllUserData,
-    fetchServiceHistory,
-    fetchClaims,
-    fetchAppealableIssues,
-    fetchAppealsStatus,
-    testFacilitiesApi,
-    testFormsApi,
-    testDisabilitiesApi,
-    toggleRawJson,
-  } = useVaSandboxData(isAuthenticated, accessToken);
+  } = sandboxData;
+
+  const [showConsentPrompt, setShowConsentPrompt] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState(null);
 
   // Show consent prompt after data is successfully loaded
   useEffect(() => {
@@ -1726,10 +1737,6 @@ const VaSandboxTest = ({ onClose }) => {
     appealableIssues,
     appealsStatus,
   ]);
-
-  // =========================================================================
-  // CONSENT HANDLER
-  // =========================================================================
 
   const handleConsent = async (consent) => {
     try {
@@ -1778,6 +1785,95 @@ const VaSandboxTest = ({ onClose }) => {
     setTimeout(() => setSaveSuccessMessage(null), 3000);
   };
 
+  return { showConsentPrompt, saveSuccessMessage, handleConsent, handleSkipConsent };
+}
+
+/**
+ * Renders the modal body: Open Data section, Power User features, User
+ * Data section, and the test-summary footer.
+ */
+function SandboxContent({ sandboxData, authData, powerUser }) {
+  return (
+    <div className="space-y-8">
+      <OpenDataSection
+        isFacilitiesApiKeyConfigured={sandboxData.isFacilitiesApiKeyConfigured}
+        isFormsApiKeyConfigured={sandboxData.isFormsApiKeyConfigured}
+        isBenefitsApiKeyConfigured={sandboxData.isBenefitsApiKeyConfigured}
+        loading={sandboxData.loading}
+        errors={sandboxData.errors}
+        testResults={sandboxData.testResults}
+        testFacilitiesApi={sandboxData.testFacilitiesApi}
+        testFormsApi={sandboxData.testFormsApi}
+        testDisabilitiesApi={sandboxData.testDisabilitiesApi}
+        facilities={sandboxData.facilities}
+        rawFacilities={sandboxData.rawFacilities}
+        forms={sandboxData.forms}
+        rawForms={sandboxData.rawForms}
+        disabilities={sandboxData.disabilities}
+        rawDisabilities={sandboxData.rawDisabilities}
+        showRawJson={sandboxData.showRawJson}
+        toggleRawJson={sandboxData.toggleRawJson}
+      />
+
+      <PowerUserFeatures
+        setShowDbqFinder={powerUser.setShowDbqFinder}
+        isAuthenticated={authData.isAuthenticated}
+        claims={sandboxData.claims}
+        setSelectedClaimForUpload={powerUser.setSelectedClaimForUpload}
+        setShowEvidenceUpload={powerUser.setShowEvidenceUpload}
+        login={authData.login}
+      />
+
+      <UserDataSection
+        isAuthenticated={authData.isAuthenticated}
+        authLoading={authData.authLoading}
+        login={authData.login}
+        fetchAllUserData={sandboxData.fetchAllUserData}
+        loading={sandboxData.loading}
+        testResults={sandboxData.testResults}
+        errors={sandboxData.errors}
+        serviceHistory={sandboxData.serviceHistory}
+        fetchServiceHistory={sandboxData.fetchServiceHistory}
+        claims={sandboxData.claims}
+        fetchClaims={sandboxData.fetchClaims}
+        appealableIssues={sandboxData.appealableIssues}
+        fetchAppealableIssues={sandboxData.fetchAppealableIssues}
+        appealsStatus={sandboxData.appealsStatus}
+        fetchAppealsStatus={sandboxData.fetchAppealsStatus}
+        showRawJson={sandboxData.showRawJson}
+        toggleRawJson={sandboxData.toggleRawJson}
+        rawServiceHistory={sandboxData.rawServiceHistory}
+        rawClaims={sandboxData.rawClaims}
+        rawAppealableIssues={sandboxData.rawAppealableIssues}
+        rawAppealsStatus={sandboxData.rawAppealsStatus}
+      />
+
+      <TestSummaryFooter testResults={sandboxData.testResults} />
+    </div>
+  );
+}
+
+const VaSandboxTest = ({ onClose }) => {
+  // Power User Feature States
+  const [showDbqFinder, setShowDbqFinder] = useState(false);
+  const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
+  const [selectedClaimForUpload, setSelectedClaimForUpload] = useState(null);
+
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    userInfo,
+    login,
+    logout,
+    accessToken,
+    error: authError,
+  } = useVaAuth();
+
+  const sandboxData = useVaSandboxData(isAuthenticated, accessToken);
+
+  const { showConsentPrompt, saveSuccessMessage, handleConsent, handleSkipConsent } =
+    useConsentFlow(isAuthenticated, sandboxData);
+
   // =========================================================================
   // RENDER
   // =========================================================================
@@ -1803,62 +1899,15 @@ const VaSandboxTest = ({ onClose }) => {
         labelledBy="va-sandbox-title"
         size="2xl"
       >
-        <div className="space-y-8">
-          <OpenDataSection
-            isFacilitiesApiKeyConfigured={isFacilitiesApiKeyConfigured}
-            isFormsApiKeyConfigured={isFormsApiKeyConfigured}
-            isBenefitsApiKeyConfigured={isBenefitsApiKeyConfigured}
-            loading={loading}
-            errors={errors}
-            testResults={testResults}
-            testFacilitiesApi={testFacilitiesApi}
-            testFormsApi={testFormsApi}
-            testDisabilitiesApi={testDisabilitiesApi}
-            facilities={facilities}
-            rawFacilities={rawFacilities}
-            forms={forms}
-            rawForms={rawForms}
-            disabilities={disabilities}
-            rawDisabilities={rawDisabilities}
-            showRawJson={showRawJson}
-            toggleRawJson={toggleRawJson}
-          />
-
-          <PowerUserFeatures
-            setShowDbqFinder={setShowDbqFinder}
-            isAuthenticated={isAuthenticated}
-            claims={claims}
-            setSelectedClaimForUpload={setSelectedClaimForUpload}
-            setShowEvidenceUpload={setShowEvidenceUpload}
-            login={login}
-          />
-
-          <UserDataSection
-            isAuthenticated={isAuthenticated}
-            authLoading={authLoading}
-            login={login}
-            fetchAllUserData={fetchAllUserData}
-            loading={loading}
-            testResults={testResults}
-            errors={errors}
-            serviceHistory={serviceHistory}
-            fetchServiceHistory={fetchServiceHistory}
-            claims={claims}
-            fetchClaims={fetchClaims}
-            appealableIssues={appealableIssues}
-            fetchAppealableIssues={fetchAppealableIssues}
-            appealsStatus={appealsStatus}
-            fetchAppealsStatus={fetchAppealsStatus}
-            showRawJson={showRawJson}
-            toggleRawJson={toggleRawJson}
-            rawServiceHistory={rawServiceHistory}
-            rawClaims={rawClaims}
-            rawAppealableIssues={rawAppealableIssues}
-            rawAppealsStatus={rawAppealsStatus}
-          />
-
-          <TestSummaryFooter testResults={testResults} />
-        </div>
+        <SandboxContent
+          sandboxData={sandboxData}
+          authData={{ isAuthenticated, authLoading, login }}
+          powerUser={{
+            setShowDbqFinder,
+            setSelectedClaimForUpload,
+            setShowEvidenceUpload,
+          }}
+        />
       </ResponsiveModal>
 
       <SandboxModals
@@ -1867,16 +1916,16 @@ const VaSandboxTest = ({ onClose }) => {
         showEvidenceUpload={showEvidenceUpload}
         selectedClaimForUpload={selectedClaimForUpload}
         accessToken={accessToken}
-        fetchClaims={fetchClaims}
+        fetchClaims={sandboxData.fetchClaims}
         setShowEvidenceUpload={setShowEvidenceUpload}
         setSelectedClaimForUpload={setSelectedClaimForUpload}
         showConsentPrompt={showConsentPrompt}
         handleConsent={handleConsent}
         handleSkipConsent={handleSkipConsent}
-        claims={claims}
-        serviceHistory={serviceHistory}
-        appealsStatus={appealsStatus}
-        appealableIssues={appealableIssues}
+        claims={sandboxData.claims}
+        serviceHistory={sandboxData.serviceHistory}
+        appealsStatus={sandboxData.appealsStatus}
+        appealableIssues={sandboxData.appealableIssues}
         saveSuccessMessage={saveSuccessMessage}
       />
     </>

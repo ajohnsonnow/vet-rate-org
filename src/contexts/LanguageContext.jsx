@@ -632,6 +632,56 @@ export const SUPPORTED_LANGUAGES = {
 import { APP_TRANSLATIONS } from "../i18n/translations";
 export { APP_TRANSLATIONS };
 
+// Resolve dot-notation format: t('section.key') or t('section.key', { params })
+// into { section, actualKey, interpolationParams }.
+function resolveSectionAndKey(sectionOrPath, keyOrParams, params) {
+  let section = sectionOrPath;
+  let actualKey = keyOrParams;
+  let interpolationParams = params;
+
+  if (typeof sectionOrPath === "string" && sectionOrPath.includes(".")) {
+    // Check if second param is interpolation object (not a string key)
+    if (
+      keyOrParams === undefined ||
+      (typeof keyOrParams === "object" && keyOrParams !== null)
+    ) {
+      const parts = sectionOrPath.split(".");
+      section = parts[0];
+      actualKey = parts.slice(1).join("."); // Support nested keys like 'section.sub.key'
+      interpolationParams = keyOrParams; // Second param is interpolation params
+    }
+  }
+
+  return { section, actualKey, interpolationParams };
+}
+
+// Replace {placeholder} with values from params
+function interpolateParams(text, params) {
+  if (!params || typeof params !== "object") return text;
+  let result = text;
+  for (const [paramKey, paramValue] of Object.entries(params)) {
+    result = result.replace(
+      new RegExp(`\\{${paramKey}\\}`, "g"),
+      String(paramValue),
+    );
+  }
+  return result;
+}
+
+function getInitialLanguage() {
+  // Try to get saved language, default to English
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (saved && SUPPORTED_LANGUAGES[saved]) {
+    return saved;
+  }
+  // Try to detect browser language
+  const browserLang = navigator.language?.split("-")[0];
+  if (browserLang && SUPPORTED_LANGUAGES[browserLang]) {
+    return browserLang;
+  }
+  return "en";
+}
+
 // Create context
 const LanguageContext = createContext(null);
 
@@ -651,19 +701,7 @@ export const useLanguage = () => {
  * Provides app-wide language switching
  */
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguageState] = useState(() => {
-    // Try to get saved language, default to English
-    const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (saved && SUPPORTED_LANGUAGES[saved]) {
-      return saved;
-    }
-    // Try to detect browser language
-    const browserLang = navigator.language?.split("-")[0];
-    if (browserLang && SUPPORTED_LANGUAGES[browserLang]) {
-      return browserLang;
-    }
-    return "en";
-  });
+  const [language, setLanguageState] = useState(getInitialLanguage);
 
   // Update language and save to storage
   const setLanguage = useCallback((newLang) => {
@@ -685,23 +723,8 @@ export const LanguageProvider = ({ children }) => {
   // Also supports interpolation: t('section.key', { param: value })
   const t = useCallback(
     (sectionOrPath, keyOrParams, params) => {
-      let section = sectionOrPath;
-      let actualKey = keyOrParams;
-      let interpolationParams = params;
-
-      // Handle dot-notation format: t('section.key') or t('section.key', { params })
-      if (typeof sectionOrPath === "string" && sectionOrPath.includes(".")) {
-        // Check if second param is interpolation object (not a string key)
-        if (
-          keyOrParams === undefined ||
-          (typeof keyOrParams === "object" && keyOrParams !== null)
-        ) {
-          const parts = sectionOrPath.split(".");
-          section = parts[0];
-          actualKey = parts.slice(1).join("."); // Support nested keys like 'section.sub.key'
-          interpolationParams = keyOrParams; // Second param is interpolation params
-        }
-      }
+      const { section, actualKey, interpolationParams } =
+        resolveSectionAndKey(sectionOrPath, keyOrParams, params);
 
       // Handle empty or invalid keys silently
       if (
@@ -723,21 +746,9 @@ export const LanguageProvider = ({ children }) => {
         return typeof actualKey === "string" ? actualKey : sectionOrPath;
       }
       // Get translation for current language, fallback to English
-      let result = keyData[language] || keyData.en || actualKey;
+      const result = keyData[language] || keyData.en || actualKey;
 
-      // Handle interpolation: replace {placeholder} with values from params
-      if (interpolationParams && typeof interpolationParams === "object") {
-        for (const [paramKey, paramValue] of Object.entries(
-          interpolationParams,
-        )) {
-          result = result.replace(
-            new RegExp(`\\{${paramKey}\\}`, "g"),
-            String(paramValue),
-          );
-        }
-      }
-
-      return result;
+      return interpolateParams(result, interpolationParams);
     },
     [language],
   );

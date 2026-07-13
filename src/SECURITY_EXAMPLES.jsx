@@ -15,11 +15,12 @@ function _MyTextAreaWithDictation() {
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium">Personal Statement</label>
+      <label htmlFor="personal-statement" className="block text-sm font-medium">Personal Statement</label>
 
       {/* The textarea container needs to be relative */}
       <div className="relative">
         <textarea
+          id="personal-statement"
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[200px]"
@@ -274,10 +275,11 @@ function _FormWithMultipleDictationFields() {
     <form className="space-y-6">
       {/* Field 1: Personal Statement */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">
+        <label htmlFor="ex6-personal-statement" className="block text-sm font-medium mb-2">
           Personal Statement
         </label>
         <textarea
+          id="ex6-personal-statement"
           value={personalStatement}
           onChange={(e) => setPersonalStatement(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"
@@ -294,8 +296,9 @@ function _FormWithMultipleDictationFields() {
 
       {/* Field 2: Symptoms */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">Symptoms</label>
+        <label htmlFor="ex6-symptoms" className="block text-sm font-medium mb-2">Symptoms</label>
         <textarea
+          id="ex6-symptoms"
           value={symptoms}
           onChange={(e) => setSymptoms(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"
@@ -310,10 +313,11 @@ function _FormWithMultipleDictationFields() {
 
       {/* Field 3: Daily Life Impacts */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">
+        <label htmlFor="ex6-impacts" className="block text-sm font-medium mb-2">
           How It Affects Your Daily Life
         </label>
         <textarea
+          id="ex6-impacts"
           value={impacts}
           onChange={(e) => setImpacts(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"

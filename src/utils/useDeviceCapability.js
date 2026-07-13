@@ -162,6 +162,77 @@ const determineDeviceTier = async (userAgent, webGPUResult) => {
 };
 
 /**
+ * Apply advice mutations for the HIGH_END device tier
+ */
+const applyHighEndAdvice = (advice) => {
+  advice.localAI.recommended = true;
+  advice.localAI.label = "🔒 Local AI (Privacy Focused)";
+  advice.localAI.badge = "✨ Recommended for your device";
+  advice.localAI.description =
+    "Runs entirely on your device. No data leaves your phone.";
+  advice.cloudAI.description =
+    "Fast but sends data to Google. Use Local AI for privacy.";
+};
+
+/**
+ * Apply advice mutations for the CAPABLE device tier
+ */
+const applyCapableAdvice = (advice, isMobile) => {
+  advice.localAI.recommended = false;
+  advice.localAI.label = "🔒 Local AI";
+  advice.localAI.badge = null;
+  advice.localAI.description =
+    "Private processing on your device. May use significant resources.";
+  advice.cloudAI.recommended = true;
+  advice.cloudAI.badge = "⚡ Faster on your device";
+  if (isMobile) {
+    advice.localAI.warning =
+      "⚠️ May drain battery and use significant memory.";
+  }
+};
+
+/**
+ * Apply advice mutations for the LEGACY device tier
+ */
+const applyLegacyAdvice = (advice, androidVersion, iosVersion) => {
+  advice.localAI.recommended = false;
+  advice.localAI.label = "🔒 Local AI (Experimental)";
+  advice.localAI.badge = "⚠️ May be slow";
+  if (androidVersion !== null) {
+    advice.localAI.description = `Your device (Android ${androidVersion}) may struggle with Local AI. We recommend Cloud AI for better performance.`;
+  } else if (iosVersion !== null) {
+    advice.localAI.description = `Your device (iOS ${iosVersion}) may struggle with Local AI. We recommend Cloud AI for better performance.`;
+  } else {
+    advice.localAI.description =
+      "Your device may struggle with Local AI. We recommend Cloud AI.";
+  }
+  advice.localAI.warning =
+    "⚠️ Local AI may freeze or crash on older devices.";
+  advice.cloudAI.recommended = true;
+  advice.cloudAI.badge = "✨ Recommended for your device";
+  advice.cloudAI.description =
+    "Fast and reliable on your device. Requires internet connection.";
+};
+
+/**
+ * Apply advice mutations for the UNSUPPORTED device tier
+ */
+const applyUnsupportedAdvice = (advice) => {
+  advice.localAI.available = false;
+  advice.localAI.buttonDisabled = true;
+  advice.localAI.label = "🔒 Local AI (Not Available)";
+  advice.localAI.badge = "❌ Not supported";
+  advice.localAI.description =
+    "Local AI requires WebGPU, which is not available on your device.";
+  advice.localAI.warning =
+    "Your browser does not support WebGPU. Please use Chrome 113+, Edge 113+, or a compatible browser.";
+  advice.cloudAI.recommended = true;
+  advice.cloudAI.badge = "✨ Use this option";
+  advice.cloudAI.description =
+    "Cloud AI works on all devices. Requires internet connection.";
+};
+
+/**
  * Get device-specific AI advice
  * @returns {Object} Advice object with labels, descriptions, and warnings
  */
@@ -194,62 +265,19 @@ const getDeviceAdvice = (tier, capabilities) => {
 
   switch (tier) {
     case DEVICE_TIERS.HIGH_END:
-      advice.localAI.recommended = true;
-      advice.localAI.label = "🔒 Local AI (Privacy Focused)";
-      advice.localAI.badge = "✨ Recommended for your device";
-      advice.localAI.description =
-        "Runs entirely on your device. No data leaves your phone.";
-      advice.cloudAI.description =
-        "Fast but sends data to Google. Use Local AI for privacy.";
+      applyHighEndAdvice(advice);
       break;
 
     case DEVICE_TIERS.CAPABLE:
-      advice.localAI.recommended = false;
-      advice.localAI.label = "🔒 Local AI";
-      advice.localAI.badge = null;
-      advice.localAI.description =
-        "Private processing on your device. May use significant resources.";
-      advice.cloudAI.recommended = true;
-      advice.cloudAI.badge = "⚡ Faster on your device";
-      if (isMobile) {
-        advice.localAI.warning =
-          "⚠️ May drain battery and use significant memory.";
-      }
+      applyCapableAdvice(advice, isMobile);
       break;
 
     case DEVICE_TIERS.LEGACY:
-      advice.localAI.recommended = false;
-      advice.localAI.label = "🔒 Local AI (Experimental)";
-      advice.localAI.badge = "⚠️ May be slow";
-      if (androidVersion !== null) {
-        advice.localAI.description = `Your device (Android ${androidVersion}) may struggle with Local AI. We recommend Cloud AI for better performance.`;
-      } else if (iosVersion !== null) {
-        advice.localAI.description = `Your device (iOS ${iosVersion}) may struggle with Local AI. We recommend Cloud AI for better performance.`;
-      } else {
-        advice.localAI.description =
-          "Your device may struggle with Local AI. We recommend Cloud AI.";
-      }
-      advice.localAI.warning =
-        "⚠️ Local AI may freeze or crash on older devices.";
-      advice.cloudAI.recommended = true;
-      advice.cloudAI.badge = "✨ Recommended for your device";
-      advice.cloudAI.description =
-        "Fast and reliable on your device. Requires internet connection.";
+      applyLegacyAdvice(advice, androidVersion, iosVersion);
       break;
 
     case DEVICE_TIERS.UNSUPPORTED:
-      advice.localAI.available = false;
-      advice.localAI.buttonDisabled = true;
-      advice.localAI.label = "🔒 Local AI (Not Available)";
-      advice.localAI.badge = "❌ Not supported";
-      advice.localAI.description =
-        "Local AI requires WebGPU, which is not available on your device.";
-      advice.localAI.warning =
-        "Your browser does not support WebGPU. Please use Chrome 113+, Edge 113+, or a compatible browser.";
-      advice.cloudAI.recommended = true;
-      advice.cloudAI.badge = "✨ Use this option";
-      advice.cloudAI.description =
-        "Cloud AI works on all devices. Requires internet connection.";
+      applyUnsupportedAdvice(advice);
       break;
   }
 

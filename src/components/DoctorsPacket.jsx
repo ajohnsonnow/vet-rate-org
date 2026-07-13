@@ -917,6 +917,118 @@ const ResultStep = ({
   </div>
 );
 
+const DoctorsPacketSteps = ({
+  step,
+  primaryCondition,
+  setPrimaryCondition,
+  secondaryCondition,
+  setSecondaryCondition,
+  error,
+  setError,
+  onClose,
+  handleConsent,
+  handleGenerate,
+  handleDownloadTxt,
+  apiKey,
+  showPrivacy,
+  setShowPrivacy,
+  packetData,
+  setPacketData,
+  setStep,
+}) => (
+  <>
+    {/* Step: Consent */}
+    {step === "consent" && (
+      <ConsentStep
+        onClose={onClose}
+        showPrivacy={showPrivacy}
+        setShowPrivacy={setShowPrivacy}
+        handleConsent={handleConsent}
+      />
+    )}
+
+    {/* Step: Input */}
+    {step === "input" && (
+      <InputStep
+        primaryCondition={primaryCondition}
+        setPrimaryCondition={setPrimaryCondition}
+        secondaryCondition={secondaryCondition}
+        setSecondaryCondition={setSecondaryCondition}
+        error={error}
+        onClose={onClose}
+        handleGenerate={handleGenerate}
+        apiKey={apiKey}
+      />
+    )}
+
+    {/* Step: Loading */}
+    {step === "loading" && (
+      <LoadingStep
+        primaryCondition={primaryCondition}
+        secondaryCondition={secondaryCondition}
+      />
+    )}
+
+    {/* Step: Error */}
+    {step === "error" && (
+      <ErrorStep
+        error={error}
+        onClose={onClose}
+        setError={setError}
+        setStep={setStep}
+      />
+    )}
+
+    {/* Step: Result */}
+    {step === "result" && packetData && (
+      <ResultStep
+        packetData={packetData}
+        primaryCondition={primaryCondition}
+        secondaryCondition={secondaryCondition}
+        handlePrint={printPacket}
+        handleDownloadTxt={handleDownloadTxt}
+        onClose={onClose}
+        setPacketData={setPacketData}
+        setStep={setStep}
+      />
+    )}
+  </>
+);
+
+function useDoctorsPacketInit({
+  initialPrimary,
+  initialSecondary,
+  setApiKey,
+  setStep,
+  setPrimaryCondition,
+  setSecondaryCondition,
+}) {
+  // Load API key and set initial values
+  useEffect(() => {
+    const storedKey = localStorage.getItem("vetrate_gemini_key");
+    if (storedKey) {
+      setApiKey(storedKey);
+    }
+
+    // Check for existing consent
+    const consent = localStorage.getItem("vetrate_ai_consent");
+    if (consent === "true" && initialPrimary && initialSecondary) {
+      setStep("input");
+    }
+  }, [initialPrimary, initialSecondary, setApiKey, setStep]);
+
+  // Update conditions when props change
+  useEffect(() => {
+    if (initialPrimary) setPrimaryCondition(initialPrimary);
+    if (initialSecondary) setSecondaryCondition(initialSecondary);
+  }, [
+    initialPrimary,
+    initialSecondary,
+    setPrimaryCondition,
+    setSecondaryCondition,
+  ]);
+}
+
 /**
  * Doctor's Packet Generator Modal/Component
  */
@@ -939,25 +1051,14 @@ export default function DoctorsPacket({
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [apiKey, setApiKey] = useState("");
 
-  // Load API key and set initial values
-  useEffect(() => {
-    const storedKey = localStorage.getItem("vetrate_gemini_key");
-    if (storedKey) {
-      setApiKey(storedKey);
-    }
-
-    // Check for existing consent
-    const consent = localStorage.getItem("vetrate_ai_consent");
-    if (consent === "true" && initialPrimary && initialSecondary) {
-      setStep("input");
-    }
-  }, [initialPrimary, initialSecondary]);
-
-  // Update conditions when props change
-  useEffect(() => {
-    if (initialPrimary) setPrimaryCondition(initialPrimary);
-    if (initialSecondary) setSecondaryCondition(initialSecondary);
-  }, [initialPrimary, initialSecondary]);
+  useDoctorsPacketInit({
+    initialPrimary,
+    initialSecondary,
+    setApiKey,
+    setStep,
+    setPrimaryCondition,
+    setSecondaryCondition,
+  });
 
   // Handle consent
   const handleConsent = () => {
@@ -992,61 +1093,25 @@ export default function DoctorsPacket({
       size="xl"
       className="border border-purple-500/20"
     >
-      {/* Step: Consent */}
-      {step === "consent" && (
-        <ConsentStep
-          onClose={onClose}
-          showPrivacy={showPrivacy}
-          setShowPrivacy={setShowPrivacy}
-          handleConsent={handleConsent}
-        />
-      )}
-
-      {/* Step: Input */}
-      {step === "input" && (
-        <InputStep
-          primaryCondition={primaryCondition}
-          setPrimaryCondition={setPrimaryCondition}
-          secondaryCondition={secondaryCondition}
-          setSecondaryCondition={setSecondaryCondition}
-          error={error}
-          onClose={onClose}
-          handleGenerate={handleGenerate}
-          apiKey={apiKey}
-        />
-      )}
-
-      {/* Step: Loading */}
-      {step === "loading" && (
-        <LoadingStep
-          primaryCondition={primaryCondition}
-          secondaryCondition={secondaryCondition}
-        />
-      )}
-
-      {/* Step: Error */}
-      {step === "error" && (
-        <ErrorStep
-          error={error}
-          onClose={onClose}
-          setError={setError}
-          setStep={setStep}
-        />
-      )}
-
-      {/* Step: Result */}
-      {step === "result" && packetData && (
-        <ResultStep
-          packetData={packetData}
-          primaryCondition={primaryCondition}
-          secondaryCondition={secondaryCondition}
-          handlePrint={printPacket}
-          handleDownloadTxt={handleDownloadTxt}
-          onClose={onClose}
-          setPacketData={setPacketData}
-          setStep={setStep}
-        />
-      )}
+      <DoctorsPacketSteps
+        step={step}
+        primaryCondition={primaryCondition}
+        setPrimaryCondition={setPrimaryCondition}
+        secondaryCondition={secondaryCondition}
+        setSecondaryCondition={setSecondaryCondition}
+        error={error}
+        setError={setError}
+        onClose={onClose}
+        handleConsent={handleConsent}
+        handleGenerate={handleGenerate}
+        handleDownloadTxt={handleDownloadTxt}
+        apiKey={apiKey}
+        showPrivacy={showPrivacy}
+        setShowPrivacy={setShowPrivacy}
+        packetData={packetData}
+        setPacketData={setPacketData}
+        setStep={setStep}
+      />
     </ResponsiveModal>
   );
 }

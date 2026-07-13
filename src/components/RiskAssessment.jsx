@@ -1021,26 +1021,11 @@ function RiskAssessmentBody({
   );
 }
 
-export default function RiskAssessment({
-  onClose,
-  onReportBug,
-  onOpenAISettings,
-}) {
-  // Input state
-  const [currentRating, setCurrentRating] = useState("");
-  const [ratingDate, setRatingDate] = useState("");
-  const [isPermanentTotal, setIsPermanentTotal] = useState(false);
-  const [birthYear, setBirthYear] = useState("");
-  const [proposedClaim, setProposedClaim] = useState("");
-  const [currentConditions, setCurrentConditions] = useState("");
-
-  // Result state
-  const [showResults, setShowResults] = useState(false);
-
-  // My Packet integration - load saved rated conditions
+// My Packet integration - load saved rated conditions on mount, and
+// auto-populate current conditions from them if available.
+function useSavedRatings(currentConditions, setCurrentConditions) {
   const [savedRatings, setSavedRatings] = useState([]);
 
-  // Load saved ratings from My Packet on mount
   useEffect(() => {
     const ratings = getMyRatings();
     setSavedRatings(ratings || []);
@@ -1054,6 +1039,60 @@ export default function RiskAssessment({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  return savedRatings;
+}
+
+function createFormHandlers({
+  currentRating,
+  ratingDate,
+  setCurrentRating,
+  setRatingDate,
+  setIsPermanentTotal,
+  setBirthYear,
+  setProposedClaim,
+  setCurrentConditions,
+  setShowResults,
+  setAIAnalysis,
+  setAIError,
+}) {
+  const handleAnalyze = () => {
+    if (!currentRating || !ratingDate) {
+      return;
+    }
+    setShowResults(true);
+    setAIAnalysis(null); // Reset AI analysis for new assessment
+  };
+
+  const handleReset = () => {
+    setCurrentRating("");
+    setRatingDate("");
+    setIsPermanentTotal(false);
+    setBirthYear("");
+    setProposedClaim("");
+    setCurrentConditions("");
+    setShowResults(false);
+    setAIAnalysis(null);
+    setAIError(null);
+  };
+
+  return { handleAnalyze, handleReset };
+}
+
+function useRiskAssessmentController({
+  currentRating,
+  ratingDate,
+  isPermanentTotal,
+  birthYear,
+  currentConditions,
+  proposedClaim,
+  setCurrentRating,
+  setRatingDate,
+  setIsPermanentTotal,
+  setBirthYear,
+  setProposedClaim,
+  setCurrentConditions,
+  setShowResults,
+}) {
   const riskAssessment = useRiskAssessment(
     currentRating,
     ratingDate,
@@ -1078,31 +1117,74 @@ export default function RiskAssessment({
     riskAssessment,
   });
 
-  /**
-   * Handle form submission
-   */
-  const handleAnalyze = () => {
-    if (!currentRating || !ratingDate) {
-      return;
-    }
-    setShowResults(true);
-    setAIAnalysis(null); // Reset AI analysis for new assessment
-  };
+  const { handleAnalyze, handleReset } = createFormHandlers({
+    currentRating,
+    ratingDate,
+    setCurrentRating,
+    setRatingDate,
+    setIsPermanentTotal,
+    setBirthYear,
+    setProposedClaim,
+    setCurrentConditions,
+    setShowResults,
+    setAIAnalysis,
+    setAIError,
+  });
 
-  /**
-   * Reset form
-   */
-  const handleReset = () => {
-    setCurrentRating("");
-    setRatingDate("");
-    setIsPermanentTotal(false);
-    setBirthYear("");
-    setProposedClaim("");
-    setCurrentConditions("");
-    setShowResults(false);
-    setAIAnalysis(null);
-    setAIError(null);
+  return {
+    riskAssessment,
+    aiStatus,
+    aiAnalysis,
+    isAnalyzingWithAI,
+    aiError,
+    generateAIRiskAnalysis,
+    handleAnalyze,
+    handleReset,
   };
+}
+
+export default function RiskAssessment({
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+}) {
+  // Input state
+  const [currentRating, setCurrentRating] = useState("");
+  const [ratingDate, setRatingDate] = useState("");
+  const [isPermanentTotal, setIsPermanentTotal] = useState(false);
+  const [birthYear, setBirthYear] = useState("");
+  const [proposedClaim, setProposedClaim] = useState("");
+  const [currentConditions, setCurrentConditions] = useState("");
+
+  // Result state
+  const [showResults, setShowResults] = useState(false);
+
+  const savedRatings = useSavedRatings(currentConditions, setCurrentConditions);
+
+  const {
+    riskAssessment,
+    aiStatus,
+    aiAnalysis,
+    isAnalyzingWithAI,
+    aiError,
+    generateAIRiskAnalysis,
+    handleAnalyze,
+    handleReset,
+  } = useRiskAssessmentController({
+    currentRating,
+    ratingDate,
+    isPermanentTotal,
+    birthYear,
+    currentConditions,
+    proposedClaim,
+    setCurrentRating,
+    setRatingDate,
+    setIsPermanentTotal,
+    setBirthYear,
+    setProposedClaim,
+    setCurrentConditions,
+    setShowResults,
+  });
 
   return (
     <ResponsiveModal

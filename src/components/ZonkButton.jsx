@@ -104,7 +104,7 @@ function useZonkState() {
       audio.play().catch(() => {
         // Silently fail if audio doesn't play
       });
-    } catch (_e) {
+    } catch {
       // Audio not supported, no problem
     }
   };

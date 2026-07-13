@@ -24,6 +24,198 @@ import {
   FORMATION_STATUS,
 } from "../utils/formationQueue";
 
+function logFormationInitialized(count) {
+  // eslint-disable-next-line no-console
+  console.log(`🚩 Formation initialized with ${count} documents`);
+}
+
+function logFormationStatsUpdated(newStats, current) {
+  // eslint-disable-next-line no-console
+  console.log("📊 Formation stats updated:", {
+    total: newStats.total,
+    waiting: newStats.waiting,
+    inProgress: newStats.inProgress,
+    currentEntry: current ? current.filename : "none",
+    isProcessing: current !== null,
+  });
+}
+
+function logInitializeFormationStart(files) {
+  // eslint-disable-next-line no-console
+  console.log("🚩 initializeFormation called with:", files?.length, "files");
+  // eslint-disable-next-line no-console
+  console.log("🚩 Files are:", files);
+}
+
+function logInitializeFormationBuilt(newFormation) {
+  // eslint-disable-next-line no-console
+  console.log("🚩 buildFormation returned:", newFormation?.length, "entries");
+  // eslint-disable-next-line no-console
+  console.log("🚩 First entry:", newFormation?.[0]);
+}
+
+function logInitializeFormationSaved(count) {
+  // eslint-disable-next-line no-console
+  console.log(`🚩 Formation state updated with ${count} documents`);
+}
+
+/**
+ * Mark the current entry with the given update, then call the next
+ * entry in formation forward. Shared by completeCurrentAndNext,
+ * skipCurrentAndNext, and errorCurrentAndNext.
+ */
+function advanceToNext(currentEntry, formation, updateEntry, currentEntryUpdate) {
+  if (!currentEntry) return null;
+
+  updateEntry(currentEntry.id, currentEntryUpdate);
+
+  const next = getNextInFormation(formation);
+  if (next) {
+    updateEntry(next.id, {
+      status: FORMATION_STATUS.CALLED,
+    });
+    // eslint-disable-next-line no-console
+    console.log(`📞 Called to inspection: ${next.filename}`);
+  }
+
+  return next;
+}
+
+function buildStatusUpdate(status, extra) {
+  return {
+    status,
+    ...extra,
+    processedAt: new Date().toISOString(),
+  };
+}
+
+function completeCurrentAndNextImpl(currentEntry, formation, updateEntry, result) {
+  return advanceToNext(
+    currentEntry,
+    formation,
+    updateEntry,
+    buildStatusUpdate(FORMATION_STATUS.SAVED, { result }),
+  );
+}
+
+function skipCurrentAndNextImpl(currentEntry, formation, updateEntry, reason) {
+  return advanceToNext(
+    currentEntry,
+    formation,
+    updateEntry,
+    buildStatusUpdate(FORMATION_STATUS.SKIPPED, { error: reason }),
+  );
+}
+
+function errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error) {
+  return advanceToNext(
+    currentEntry,
+    formation,
+    updateEntry,
+    buildStatusUpdate(FORMATION_STATUS.ERROR, { error: error.message || error }),
+  );
+}
+
+function loadInitialFormation(setFormation) {
+  const savedFormation = loadFormationState();
+  if (savedFormation && savedFormation.length > 0) {
+    setFormation(savedFormation);
+    logFormationInitialized(savedFormation.length);
+  }
+}
+
+function syncFormationStats(formation, setStats, setCurrentEntry) {
+  if (formation.length > 0) {
+    const newStats = getFormationStats(formation);
+    const current = getCurrentDocument(formation);
+    setStats(newStats);
+    setCurrentEntry(current);
+
+    // Debug logging
+    logFormationStatsUpdated(newStats, current);
+
+    // Auto-save state
+    saveFormationState(formation);
+  } else {
+    setStats(null);
+    setCurrentEntry(null);
+  }
+}
+
+function initializeFormationImpl(files, setFormation) {
+  logInitializeFormationStart(files);
+
+  if (!files || files.length === 0) {
+    console.error("🚩 ERROR: No files provided to initializeFormation!");
+    return [];
+  }
+
+  const newFormation = buildFormation(files);
+  logInitializeFormationBuilt(newFormation);
+
+  setFormation(newFormation);
+  logInitializeFormationSaved(newFormation.length);
+  return newFormation;
+}
+
+function addFilesToFormation(formation, setFormation, files) {
+  const newEntries = buildFormation(files);
+  const combined = [...formation, ...newEntries];
+  const sorted = sortFormation(combined);
+  setFormation(sorted);
+  // eslint-disable-next-line no-console
+  console.log(`🚩 Added ${newEntries.length} documents to formation`);
+  return sorted;
+}
+
+function applyCurrentStatusUpdate(currentEntry, updateEntry, status, additionalData) {
+  if (!currentEntry) {
+    console.warn("No current entry to update");
+    return;
+  }
+
+  updateEntry(currentEntry.id, {
+    status,
+    ...additionalData,
+  });
+}
+
+function startFormationImpl(formation, updateEntry) {
+  const first = getNextInFormation(formation);
+  if (first) {
+    updateEntry(first.id, {
+      status: FORMATION_STATUS.CALLED,
+    });
+    // eslint-disable-next-line no-console
+    console.log(`🚩 Formation begun - First call: ${first.filename}`);
+    return first;
+  }
+  return null;
+}
+
+function reorderFormationDocuments(formation, setFormation, fromIndex, toIndex) {
+  const reordered = reorderFormation(formation, fromIndex, toIndex);
+  setFormation(reordered);
+  // eslint-disable-next-line no-console
+  console.log(`🔄 Formation reordered: ${fromIndex} → ${toIndex}`);
+}
+
+function removeFormationDocument(formation, setFormation, entryId) {
+  const filtered = removeFromFormation(formation, entryId);
+  setFormation(filtered);
+  // eslint-disable-next-line no-console
+  console.log(`❌ Removed document from formation`);
+}
+
+function clearFormationImpl(setFormation, setCurrentEntry, setStats) {
+  setFormation([]);
+  setCurrentEntry(null);
+  setStats(null);
+  clearFormationState();
+  // eslint-disable-next-line no-console
+  console.log("🚩 Formation dismissed");
+}
+
 /**
  * Hook for managing formation queue
  */
@@ -34,108 +226,41 @@ export const useFormationQueue = () => {
 
   // Load saved formation on mount
   useEffect(() => {
-    const savedFormation = loadFormationState();
-    if (savedFormation && savedFormation.length > 0) {
-      setFormation(savedFormation);
-      // eslint-disable-next-line no-console
-      console.log(
-        `🚩 Formation initialized with ${savedFormation.length} documents`,
-      );
-    }
+    loadInitialFormation(setFormation);
   }, []);
 
   // Update stats whenever formation changes
   useEffect(() => {
-    if (formation.length > 0) {
-      const newStats = getFormationStats(formation);
-      const current = getCurrentDocument(formation);
-      setStats(newStats);
-      setCurrentEntry(current);
-
-      // Debug logging
-      // eslint-disable-next-line no-console
-      console.log("📊 Formation stats updated:", {
-        total: newStats.total,
-        waiting: newStats.waiting,
-        inProgress: newStats.inProgress,
-        currentEntry: current ? current.filename : "none",
-        isProcessing: current !== null,
-      });
-
-      // Auto-save state
-      saveFormationState(formation);
-    } else {
-      setStats(null);
-      setCurrentEntry(null);
-    }
+    syncFormationStats(formation, setStats, setCurrentEntry);
   }, [formation]);
 
   /**
    * Initialize formation from files
    */
-  const initializeFormation = useCallback((files) => {
-    // eslint-disable-next-line no-console
-    console.log("🚩 initializeFormation called with:", files?.length, "files");
-    // eslint-disable-next-line no-console
-    console.log("🚩 Files are:", files);
-
-    if (!files || files.length === 0) {
-      console.error("🚩 ERROR: No files provided to initializeFormation!");
-      return [];
-    }
-
-    const newFormation = buildFormation(files);
-    // eslint-disable-next-line no-console
-    console.log("🚩 buildFormation returned:", newFormation?.length, "entries");
-    // eslint-disable-next-line no-console
-    console.log("🚩 First entry:", newFormation?.[0]);
-
-    setFormation(newFormation);
-    // eslint-disable-next-line no-console
-    console.log(
-      `🚩 Formation state updated with ${newFormation.length} documents`,
-    );
-    return newFormation;
-  }, []);
+  const initializeFormation = useCallback(
+    (files) => initializeFormationImpl(files, setFormation),
+    [],
+  );
 
   /**
    * Add files to existing formation
    */
   const addToFormation = useCallback(
-    (files) => {
-      const newEntries = buildFormation(files);
-      const combined = [...formation, ...newEntries];
-      const sorted = sortFormation(combined);
-      setFormation(sorted);
-      // eslint-disable-next-line no-console
-      console.log(`🚩 Added ${newEntries.length} documents to formation`);
-      return sorted;
-    },
+    (files) => addFilesToFormation(formation, setFormation, files),
     [formation],
   );
 
   /**
    * Update a document entry
    */
-  const updateEntry = useCallback((entryId, updates) => {
-    setFormation((prev) => updateFormationEntry(prev, entryId, updates));
-  }, []);
+  const updateEntry = useCallback((entryId, updates) => setFormation((prev) => updateFormationEntry(prev, entryId, updates)), []);
 
   /**
    * Update current entry status
    */
   const updateCurrentStatus = useCallback(
-    (status, additionalData = {}) => {
-      if (!currentEntry) {
-        console.warn("No current entry to update");
-        return;
-      }
-
-      updateEntry(currentEntry.id, {
-        status,
-        ...additionalData,
-      });
-    },
+    (status, additionalData = {}) =>
+      applyCurrentStatusUpdate(currentEntry, updateEntry, status, additionalData),
     [currentEntry, updateEntry],
   );
 
@@ -143,28 +268,8 @@ export const useFormationQueue = () => {
    * Mark current document as complete and move to next
    */
   const completeCurrentAndNext = useCallback(
-    (result) => {
-      if (!currentEntry) return null;
-
-      // Mark current as saved
-      updateEntry(currentEntry.id, {
-        status: FORMATION_STATUS.SAVED,
-        result,
-        processedAt: new Date().toISOString(),
-      });
-
-      // Get next in formation
-      const next = getNextInFormation(formation);
-      if (next) {
-        updateEntry(next.id, {
-          status: FORMATION_STATUS.CALLED,
-        });
-        // eslint-disable-next-line no-console
-        console.log(`📞 Called to inspection: ${next.filename}`);
-      }
-
-      return next;
-    },
+    (result) =>
+      completeCurrentAndNextImpl(currentEntry, formation, updateEntry, result),
     [currentEntry, formation, updateEntry],
   );
 
@@ -172,28 +277,8 @@ export const useFormationQueue = () => {
    * Skip current document and move to next
    */
   const skipCurrentAndNext = useCallback(
-    (reason = "User skipped") => {
-      if (!currentEntry) return null;
-
-      // Mark current as skipped
-      updateEntry(currentEntry.id, {
-        status: FORMATION_STATUS.SKIPPED,
-        error: reason,
-        processedAt: new Date().toISOString(),
-      });
-
-      // Get next in formation
-      const next = getNextInFormation(formation);
-      if (next) {
-        updateEntry(next.id, {
-          status: FORMATION_STATUS.CALLED,
-        });
-        // eslint-disable-next-line no-console
-        console.log(`📞 Called to inspection: ${next.filename}`);
-      }
-
-      return next;
-    },
+    (reason = "User skipped") =>
+      skipCurrentAndNextImpl(currentEntry, formation, updateEntry, reason),
     [currentEntry, formation, updateEntry],
   );
 
@@ -201,57 +286,25 @@ export const useFormationQueue = () => {
    * Mark current as error and move to next
    */
   const errorCurrentAndNext = useCallback(
-    (error) => {
-      if (!currentEntry) return null;
-
-      // Mark current as error
-      updateEntry(currentEntry.id, {
-        status: FORMATION_STATUS.ERROR,
-        error: error.message || error,
-        processedAt: new Date().toISOString(),
-      });
-
-      // Get next in formation
-      const next = getNextInFormation(formation);
-      if (next) {
-        updateEntry(next.id, {
-          status: FORMATION_STATUS.CALLED,
-        });
-        // eslint-disable-next-line no-console
-        console.log(`📞 Called to inspection: ${next.filename}`);
-      }
-
-      return next;
-    },
+    (error) =>
+      errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error),
     [currentEntry, formation, updateEntry],
   );
 
   /**
    * Start processing formation
    */
-  const startFormation = useCallback(() => {
-    const first = getNextInFormation(formation);
-    if (first) {
-      updateEntry(first.id, {
-        status: FORMATION_STATUS.CALLED,
-      });
-      // eslint-disable-next-line no-console
-      console.log(`🚩 Formation begun - First call: ${first.filename}`);
-      return first;
-    }
-    return null;
-  }, [formation, updateEntry]);
+  const startFormation = useCallback(
+    () => startFormationImpl(formation, updateEntry),
+    [formation, updateEntry],
+  );
 
   /**
    * Reorder documents (drag and drop)
    */
   const reorderDocuments = useCallback(
-    (fromIndex, toIndex) => {
-      const reordered = reorderFormation(formation, fromIndex, toIndex);
-      setFormation(reordered);
-      // eslint-disable-next-line no-console
-      console.log(`🔄 Formation reordered: ${fromIndex} → ${toIndex}`);
-    },
+    (fromIndex, toIndex) =>
+      reorderFormationDocuments(formation, setFormation, fromIndex, toIndex),
     [formation],
   );
 
@@ -259,40 +312,27 @@ export const useFormationQueue = () => {
    * Remove document from formation
    */
   const removeDocument = useCallback(
-    (entryId) => {
-      const filtered = removeFromFormation(formation, entryId);
-      setFormation(filtered);
-      // eslint-disable-next-line no-console
-      console.log(`❌ Removed document from formation`);
-    },
+    (entryId) => removeFormationDocument(formation, setFormation, entryId),
     [formation],
   );
 
   /**
    * Clear entire formation
    */
-  const clearFormation = useCallback(() => {
-    setFormation([]);
-    setCurrentEntry(null);
-    setStats(null);
-    clearFormationState();
-    // eslint-disable-next-line no-console
-    console.log("🚩 Formation dismissed");
-  }, []);
+  const clearFormation = useCallback(
+    () => clearFormationImpl(setFormation, setCurrentEntry, setStats),
+    [],
+  );
 
   /**
    * Check if formation is complete
    */
-  const isComplete = useCallback(() => {
-    return isFormationComplete(formation);
-  }, [formation]);
+  const isComplete = useCallback(() => isFormationComplete(formation), [formation]);
 
   /**
    * Get progress percentage
    */
-  const getProgress = useCallback(() => {
-    return getFormationProgress(formation);
-  }, [formation]);
+  const getProgress = useCallback(() => getFormationProgress(formation), [formation]);
 
   return {
     // State

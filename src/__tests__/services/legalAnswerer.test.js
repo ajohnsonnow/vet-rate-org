@@ -303,106 +303,124 @@ const expansionWiringFamilies = {
 const getExpansionWiringSiblings = (citation) =>
   expansionWiringFamilies[citation] || [];
 
-describe("legalAnswerer — expansion wiring + security invariant", () => {
+async function expansionWiringExpandsSiblingTextTest() {
   const retrieved = expansionWiringRetrieved;
   const getSiblings = getExpansionWiringSiblings;
+  const generateAI = vi
+    .fn()
+    // extractor → one applicable fact per block; quotes are PARAPHRASES
+    // (not raw text) so we can prove no raw/expanded text leaks to synth.
+    .mockResolvedValueOnce(
+      JSON.stringify([
+        {
+          applicable: true,
+          rule_summary: "rule from A block",
+          supporting_quote: "quote-A",
+        },
+        {
+          applicable: true,
+          rule_summary: "rule from B block",
+          supporting_quote: "quote-B",
+        },
+      ]),
+    )
+    .mockResolvedValueOnce("Synthesized answer.");
 
-  it("expands sibling text into the extractor only; attributes facts to the right citation", async () => {
-    const generateAI = vi
-      .fn()
-      // extractor → one applicable fact per block; quotes are PARAPHRASES
-      // (not raw text) so we can prove no raw/expanded text leaks to synth.
-      .mockResolvedValueOnce(
-        JSON.stringify([
-          {
-            applicable: true,
-            rule_summary: "rule from A block",
-            supporting_quote: "quote-A",
-          },
-          {
-            applicable: true,
-            rule_summary: "rule from B block",
-            supporting_quote: "quote-B",
-          },
-        ]),
-      )
-      .mockResolvedValueOnce("Synthesized answer.");
-
-    const r = await answer("some question", {
-      generateAI,
-      retrieve: async () => ({ chunks: retrieved }),
-      getSiblings,
-    });
-
-    const extractorPrompt = generateAI.mock.calls[0][0];
-    const synthPrompt = generateAI.mock.calls[1][0];
-
-    // Expanded sibling text DID reach the extractor's untrusted blob.
-    expect(extractorPrompt).toContain("SIBLING-A-DETAIL");
-    expect(extractorPrompt).toContain("SIBLING-B-DETAIL");
-    expect(extractorPrompt).toContain("[#0]");
-    expect(extractorPrompt).toContain("primary A");
-
-    // Synthesizer saw ONLY structured facts — no raw blob, no expanded text.
-    expect(synthPrompt).not.toContain("SIBLING-A-DETAIL");
-    expect(synthPrompt).not.toContain("SIBLING-B-DETAIL");
-    expect(synthPrompt).not.toContain("primary A");
-    expect(synthPrompt).not.toContain("[#0]");
-    expect(synthPrompt).toContain("quote-A"); // extractor-selected fact only
-
-    // Citation attribution survives expansion (Ab-H03 guard): each fact maps
-    // back to its own retrieved chunk's citation/source_url, not the other's.
-    expect(r.refusal).toBe(false);
-    expect(r.citations).toHaveLength(2);
-    expect(r.citations[0].citation).toBe("38 CFR § 4.14");
-    expect(r.citations[0].source_url).toBe("urlA");
-    expect(r.citations[1].citation).toBe("38 CFR § 4.22");
-    expect(r.citations[1].source_url).toBe("urlB");
+  const r = await answer("some question", {
+    generateAI,
+    retrieve: async () => ({ chunks: retrieved }),
+    getSiblings,
   });
 
-  it("does not expand when opts.expandContext is false", async () => {
-    const generateAI = vi
-      .fn()
-      .mockResolvedValueOnce(
-        JSON.stringify([{ applicable: false }, { applicable: false }]),
-      );
-    await answer(
-      "q",
-      {
-        generateAI,
-        retrieve: async () => ({ chunks: retrieved }),
-        getSiblings,
-      },
-      { expandContext: false },
+  const extractorPrompt = generateAI.mock.calls[0][0];
+  const synthPrompt = generateAI.mock.calls[1][0];
+
+  // Expanded sibling text DID reach the extractor's untrusted blob.
+  expect(extractorPrompt).toContain("SIBLING-A-DETAIL");
+  expect(extractorPrompt).toContain("SIBLING-B-DETAIL");
+  expect(extractorPrompt).toContain("[#0]");
+  expect(extractorPrompt).toContain("primary A");
+
+  // Synthesizer saw ONLY structured facts — no raw blob, no expanded text.
+  expect(synthPrompt).not.toContain("SIBLING-A-DETAIL");
+  expect(synthPrompt).not.toContain("SIBLING-B-DETAIL");
+  expect(synthPrompt).not.toContain("primary A");
+  expect(synthPrompt).not.toContain("[#0]");
+  expect(synthPrompt).toContain("quote-A"); // extractor-selected fact only
+
+  // Citation attribution survives expansion (Ab-H03 guard): each fact maps
+  // back to its own retrieved chunk's citation/source_url, not the other's.
+  expect(r.refusal).toBe(false);
+  expect(r.citations).toHaveLength(2);
+  expect(r.citations[0].citation).toBe("38 CFR § 4.14");
+  expect(r.citations[0].source_url).toBe("urlA");
+  expect(r.citations[1].citation).toBe("38 CFR § 4.22");
+  expect(r.citations[1].source_url).toBe("urlB");
+}
+
+async function expansionWiringNoExpandWhenDisabledTest() {
+  const retrieved = expansionWiringRetrieved;
+  const getSiblings = getExpansionWiringSiblings;
+  const generateAI = vi
+    .fn()
+    .mockResolvedValueOnce(
+      JSON.stringify([{ applicable: false }, { applicable: false }]),
     );
-    const extractorPrompt = generateAI.mock.calls[0][0];
-    expect(extractorPrompt).not.toContain("SIBLING-A-DETAIL");
-    expect(extractorPrompt).toContain("primary A");
-  });
-
-  it("still attributes correctly when only a non-adjacent block's fact is applicable (Ab-H03 under expansion)", async () => {
-    // block #0 not applicable, block #1 IS — the fact must attribute to b0's
-    // citation, not a0's, even though both blocks were sibling-expanded.
-    const generateAI = vi
-      .fn()
-      .mockResolvedValueOnce(
-        JSON.stringify([
-          { applicable: false, rule_summary: "n/a", supporting_quote: "n/a" },
-          {
-            applicable: true,
-            rule_summary: "B applies",
-            supporting_quote: "quote-B",
-          },
-        ]),
-      )
-      .mockResolvedValueOnce("Answer B.");
-    const r = await answer("q", {
+  await answer(
+    "q",
+    {
       generateAI,
       retrieve: async () => ({ chunks: retrieved }),
       getSiblings,
-    });
-    expect(r.citations).toHaveLength(1);
-    expect(r.citations[0].citation).toBe("38 CFR § 4.22");
-    expect(r.citations[0].source_url).toBe("urlB");
+    },
+    { expandContext: false },
+  );
+  const extractorPrompt = generateAI.mock.calls[0][0];
+  expect(extractorPrompt).not.toContain("SIBLING-A-DETAIL");
+  expect(extractorPrompt).toContain("primary A");
+}
+
+async function expansionWiringNonAdjacentAttributionTest() {
+  const retrieved = expansionWiringRetrieved;
+  const getSiblings = getExpansionWiringSiblings;
+  // block #0 not applicable, block #1 IS — the fact must attribute to b0's
+  // citation, not a0's, even though both blocks were sibling-expanded.
+  const generateAI = vi
+    .fn()
+    .mockResolvedValueOnce(
+      JSON.stringify([
+        { applicable: false, rule_summary: "n/a", supporting_quote: "n/a" },
+        {
+          applicable: true,
+          rule_summary: "B applies",
+          supporting_quote: "quote-B",
+        },
+      ]),
+    )
+    .mockResolvedValueOnce("Answer B.");
+  const r = await answer("q", {
+    generateAI,
+    retrieve: async () => ({ chunks: retrieved }),
+    getSiblings,
   });
+  expect(r.citations).toHaveLength(1);
+  expect(r.citations[0].citation).toBe("38 CFR § 4.22");
+  expect(r.citations[0].source_url).toBe("urlB");
+}
+
+describe("legalAnswerer — expansion wiring + security invariant", () => {
+  it(
+    "expands sibling text into the extractor only; attributes facts to the right citation",
+    expansionWiringExpandsSiblingTextTest,
+  );
+
+  it(
+    "does not expand when opts.expandContext is false",
+    expansionWiringNoExpandWhenDisabledTest,
+  );
+
+  it(
+    "still attributes correctly when only a non-adjacent block's fact is applicable (Ab-H03 under expansion)",
+    expansionWiringNonAdjacentAttributionTest,
+  );
 });
