@@ -764,8 +764,8 @@ export function parseDD214Text(rawText, branch = "Army") {
   let cleanedText = rawText;
 
   // STEP 1: Remove ALL parenthetical content (instructions/examples)
-  // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
-  cleanedText = cleanedText.replace(/\([^)]*\)/g, " ");
+  // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 9.1s -> 55ms at 100k unmatched "(" (the "linear-time" claim this replaced was wrong -- unanchored /g matching retries the full backtrack at every start position when ")" never appears)
+  cleanedText = cleanedText.replace(/\([^)]{0,300}\)/g, " ");
 
   // STEP 2: Remove instructional patterns
   const INSTRUCTIONAL_PATTERNS = [
