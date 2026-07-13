@@ -1,3 +1,13 @@
+/* eslint-disable sonarjs/slow-regex, sonarjs/regex-complexity --
+ * Security review note: this file is ~50 OCR-tolerant regex patterns that extract
+ * PII (name, SSN, service dates) from real veterans' DD214 documents across four
+ * discharge-form eras. Their permissive alternation/whitespace shapes are load-bearing
+ * for OCR-noise tolerance, not accidental complexity — mechanically "simplifying" or
+ * re-bounding them in a lint pass risks silently narrowing what each field matches,
+ * which would corrupt extracted data feeding actual VA disability determinations.
+ * Deserves a dedicated pass with fixture-based before/after matching across real
+ * DD214 samples per era, not a same-session rewrite.
+ */
 /**
  * Vet-Rate.org - DD214 Field Extractor (Regex-Based)
  * Copyright (c) 2024-2026 Anthony Johnson

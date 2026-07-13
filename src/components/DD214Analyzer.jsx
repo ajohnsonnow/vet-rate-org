@@ -367,6 +367,28 @@ const OCRProgressBar = ({ progress }) => {
   );
 };
 
+function _formatNetActiveService(analysisResult, t) {
+  const nas = analysisResult.netActiveService;
+  if (nas) return `${nas.years || 0}y ${nas.months || 0}m ${nas.days || 0}d`;
+  if (analysisResult.yearsService) {
+    return `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m ${analysisResult.daysService || 0}d`;
+  }
+  return t("dd214Analyzer", "na");
+}
+
+function _extractionMethodLabel(method, t) {
+  if (method === "ocr") return `🔍 ${t("dd214Analyzer", "ocr")}`;
+  if (method === "hybrid") return `🔍 ${t("dd214Analyzer", "hybrid")}`;
+  return `📝 ${t("dd214Analyzer", "text")}`;
+}
+
+function _mapMusterCallStateToOcrState(state) {
+  if (state === PROCESSING_STATES.EXTRACTING) return OCR_STATES.OCR_IN_PROGRESS;
+  if (state === PROCESSING_STATES.COMPLETE) return OCR_STATES.COMPLETE;
+  if (state === PROCESSING_STATES.ERROR) return OCR_STATES.ERROR;
+  return OCR_STATES.LOADING;
+}
+
 /**
  * Main DD214 Analyzer Component
  */
@@ -544,14 +566,7 @@ const DD214Analyzer = ({
             (progress) => {
               // Map MusterCall progress → OCR progress bar state
               const mapped = {
-                state:
-                  progress.state === PROCESSING_STATES.EXTRACTING
-                    ? OCR_STATES.OCR_IN_PROGRESS
-                    : progress.state === PROCESSING_STATES.COMPLETE
-                      ? OCR_STATES.COMPLETE
-                      : progress.state === PROCESSING_STATES.ERROR
-                        ? OCR_STATES.ERROR
-                        : OCR_STATES.LOADING,
+                state: _mapMusterCallStateToOcrState(progress.state),
                 progress: progress.progress || 0,
                 message: progress.message || `Processing ${file.name}...`,
                 currentPage: progress.currentPage,
@@ -944,6 +959,7 @@ const DD214Analyzer = ({
           cleanContent = cleanContent.slice(0, -3);
 
         // Try to find JSON object in the response if it's mixed with other text
+        // eslint-disable-next-line sonarjs/slow-regex -- runs on our own AI's response text, not adversarial input
         const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           cleanContent = jsonMatch[0];
@@ -1843,11 +1859,7 @@ const DD214Analyzer = ({
                               <span className="ml-2 text-green-600 dark:text-green-400">
                                 • {processedData.pageCount}{" "}
                                 {t("dd214Analyzer", "pages")} •{" "}
-                                {processedData.method === "ocr"
-                                  ? `🔍 ${t("dd214Analyzer", "ocr")}`
-                                  : processedData.method === "hybrid"
-                                    ? `🔍 ${t("dd214Analyzer", "hybrid")}`
-                                    : `📝 ${t("dd214Analyzer", "text")}`}
+                                {_extractionMethodLabel(processedData.method, t)}
                               </span>
                             )}
                             {!isProcessed && (
@@ -2080,11 +2092,7 @@ const DD214Analyzer = ({
                     Net Active Service
                   </p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">
-                    {analysisResult.netActiveService
-                      ? `${analysisResult.netActiveService.years || 0}y ${analysisResult.netActiveService.months || 0}m ${analysisResult.netActiveService.days || 0}d`
-                      : analysisResult.yearsService
-                        ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m ${analysisResult.daysService || 0}d`
-                        : t("dd214Analyzer", "na")}
+                    {_formatNetActiveService(analysisResult, t)}
                   </p>
                 </div>
                 {analysisResult.totalPriorActiveService &&

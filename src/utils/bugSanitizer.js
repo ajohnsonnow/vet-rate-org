@@ -47,8 +47,8 @@ const REDACTION_PATTERNS = [
   {
     name: "DOB",
     // Matches: 01/15/1990, 01-15-1990, 1990-01-15
-    // eslint-disable-next-line sonarjs/regex-complexity -- validates real calendar month/day ranges in both MM/DD/YYYY and YYYY/MM/DD orders; splitting the alternation would change the "DOB" pattern name/count that createSanitizedReport and detectPII expose, so a mechanical rewrite isn't confidently behavior-preserving
     pattern:
+      // eslint-disable-next-line sonarjs/regex-complexity -- validates real calendar month/day ranges in both MM/DD/YYYY and YYYY/MM/DD orders; splitting the alternation would change the "DOB" pattern name/count that createSanitizedReport and detectPII expose, so a mechanical rewrite isn't confidently behavior-preserving
       /\b(0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])[/-](19|20)\d{2}\b|\b(19|20)\d{2}[/-](0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])\b/g,
     replacement: "[DOB-REDACTED]",
   },

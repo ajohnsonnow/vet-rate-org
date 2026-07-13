@@ -52,6 +52,7 @@ function getWebGLGPUInfo() {
 
     // Parse VRAM from renderer string (common patterns)
     let vram = null;
+    // eslint-disable-next-line sonarjs/slow-regex -- renderer is a short browser-provided GPU description string, not attacker-controlled
     const vramMatch = renderer.match(/(\d+)\s*(GB|MB)/i);
     if (vramMatch) {
       const amount = parseInt(vramMatch[1]);

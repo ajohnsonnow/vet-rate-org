@@ -163,12 +163,7 @@ function getBrowserRecommendation() {
   return "Please update to the latest version of Chrome, Firefox, or Microsoft Edge.";
 }
 
-/**
- * CSS styles for the browser upgrade warning page
- * @returns {string} CSS text
- */
-function getBrowserWarningStyles() {
-  return `
+const BROWSER_WARNING_STYLES = `
     * {
       margin: 0;
       padding: 0;
@@ -346,6 +341,13 @@ function getBrowserWarningStyles() {
       }
     }
   `;
+
+/**
+ * CSS styles for the browser upgrade warning page
+ * @returns {string} CSS text
+ */
+function getBrowserWarningStyles() {
+  return BROWSER_WARNING_STYLES;
 }
 
 /**

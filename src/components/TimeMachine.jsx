@@ -27,6 +27,17 @@ const ESTIMATED_RATING_KEY = "vet_rate_estimated_rating";
 // Current-year solo compensation rates from the single source of truth
 // (vaPayRatesHistorical.js). 0% is excluded — it pays nothing and would
 // add a useless option to the rating dropdown.
+function _urgencyTier(countdown) {
+  if (countdown?.isExpired) return "expired";
+  if (countdown?.isCritical) return "critical";
+  if (countdown?.isUrgent) return "urgent";
+  return "normal";
+}
+
+function _urgencyClass(countdown, classesByTier) {
+  return classesByTier[_urgencyTier(countdown)];
+}
+
 const VA_MONTHLY_RATES = Object.fromEntries(
   Object.entries(getCurrentYearRates().rates.solo).filter(
     ([rating]) => Number(rating) >= 10,
@@ -139,15 +150,12 @@ export default function TimeMachine({
     return (
       <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
         onClick={() => setIsEditing(true)}
-        className={`cursor-pointer transition-all ${
-          countdown.isExpired
-            ? "bg-red-600 text-white"
-            : countdown.isCritical
-              ? "bg-red-500 text-white animate-pulse"
-              : countdown.isUrgent
-                ? "bg-yellow-500 text-white"
-                : "bg-blue-600 text-white"
-        } rounded-lg p-4 shadow-lg hover:shadow-xl`}
+        className={`cursor-pointer transition-all ${_urgencyClass(countdown, {
+          expired: "bg-red-600 text-white",
+          critical: "bg-red-500 text-white animate-pulse",
+          urgent: "bg-yellow-500 text-white",
+          normal: "bg-blue-600 text-white",
+        })} rounded-lg p-4 shadow-lg hover:shadow-xl`}
       >
         <div className="flex items-center justify-between">
           <div>
@@ -178,15 +186,12 @@ export default function TimeMachine({
   // inputs in the body rather than a sticky footer.
   const headerBar = (
     <div
-      className={`text-white p-6 ${
-        countdown?.isExpired
-          ? "bg-gradient-to-r from-red-700 to-red-900"
-          : countdown?.isCritical
-            ? "bg-gradient-to-r from-red-600 to-orange-600"
-            : countdown?.isUrgent
-              ? "bg-gradient-to-r from-yellow-600 to-orange-600"
-              : "bg-gradient-to-r from-blue-600 to-blue-800"
-      }`}
+      className={`text-white p-6 ${_urgencyClass(countdown, {
+        expired: "bg-gradient-to-r from-red-700 to-red-900",
+        critical: "bg-gradient-to-r from-red-600 to-orange-600",
+        urgent: "bg-gradient-to-r from-yellow-600 to-orange-600",
+        normal: "bg-gradient-to-r from-blue-600 to-blue-800",
+      })}`}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -300,15 +305,12 @@ export default function TimeMachine({
           <>
             {/* Main Countdown */}
             <div
-              className={`rounded-lg p-8 text-center ${
-                countdown.isExpired
-                  ? "bg-red-100 dark:bg-red-900/30 border-4 border-red-600"
-                  : countdown.isCritical
-                    ? "bg-red-50 dark:bg-red-900/20 border-4 border-red-500 animate-pulse"
-                    : countdown.isUrgent
-                      ? "bg-yellow-50 dark:bg-yellow-900/20 border-4 border-yellow-500"
-                      : "bg-blue-50 dark:bg-blue-900/20 border-4 border-blue-500"
-              }`}
+              className={`rounded-lg p-8 text-center ${_urgencyClass(countdown, {
+                expired: "bg-red-100 dark:bg-red-900/30 border-4 border-red-600",
+                critical: "bg-red-50 dark:bg-red-900/20 border-4 border-red-500 animate-pulse",
+                urgent: "bg-yellow-50 dark:bg-yellow-900/20 border-4 border-yellow-500",
+                normal: "bg-blue-50 dark:bg-blue-900/20 border-4 border-blue-500",
+              })}`}
             >
               {countdown.isExpired ? (
                 <>
@@ -458,13 +460,12 @@ export default function TimeMachine({
                     Days Remaining:
                   </span>
                   <span
-                    className={`font-semibold ${
-                      countdown.isCritical
-                        ? "text-red-600"
-                        : countdown.isUrgent
-                          ? "text-yellow-600"
-                          : "text-green-600"
-                    }`}
+                    className={`font-semibold ${_urgencyClass(countdown, {
+                      expired: "text-red-600",
+                      critical: "text-red-600",
+                      urgent: "text-yellow-600",
+                      normal: "text-green-600",
+                    })}`}
                   >
                     {countdown.daysRemaining} days
                   </span>
@@ -483,13 +484,12 @@ export default function TimeMachine({
               <div className="mt-4">
                 <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4">
                   <div
-                    className={`h-4 rounded-full transition-all ${
-                      countdown.isCritical
-                        ? "bg-red-600"
-                        : countdown.isUrgent
-                          ? "bg-yellow-500"
-                          : "bg-blue-600"
-                    }`}
+                    className={`h-4 rounded-full transition-all ${_urgencyClass(countdown, {
+                      expired: "bg-red-600",
+                      critical: "bg-red-600",
+                      urgent: "bg-yellow-500",
+                      normal: "bg-blue-600",
+                    })}`}
                     style={{
                       width: `${Math.max(0, (countdown.daysRemaining / 365) * 100)}%`,
                     }}

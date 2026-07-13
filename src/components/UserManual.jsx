@@ -3846,11 +3846,9 @@ const renderContent = (content, onClose) => {
 
   const lines = resolved.trim().split("\n");
   const elements = [];
-  let inTable = false;
   let tableRows = [];
   let inList = false;
   let listItems = [];
-  let inBlockquote = false;
   let blockquoteContent = [];
 
   const flushList = () => {
@@ -3887,7 +3885,6 @@ const renderContent = (content, onClose) => {
         </blockquote>,
       );
       blockquoteContent = [];
-      inBlockquote = false;
     }
   };
 
@@ -3928,7 +3925,6 @@ const renderContent = (content, onClose) => {
         </div>,
       );
       tableRows = [];
-      inTable = false;
     }
   };
 
@@ -3951,6 +3947,7 @@ const renderContent = (content, onClose) => {
     // Handle links — sanitize the href so a future contributor cannot land a
     // javascript: URL in the static manual content. sanitizeUrl returns '#'
     // for any non-http(s)/mailto/tel protocol.
+    // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
     text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
       const safeUrl = sanitizeUrl(url);
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
@@ -4009,8 +4006,6 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("> ")) {
       flushList();
       flushTable();
-      // eslint-disable-next-line no-unused-vars
-      inBlockquote = true;
       blockquoteContent.push(line.slice(2));
       continue;
     }
@@ -4019,8 +4014,6 @@ const renderContent = (content, onClose) => {
     if (line.startsWith("|")) {
       flushList();
       flushBlockquote();
-      // eslint-disable-next-line no-unused-vars
-      inTable = true;
       const cells = line.split("|").filter((cell) => cell.trim() !== "");
       tableRows.push(cells);
       continue;
@@ -4408,14 +4401,16 @@ const UserManual = ({ onClose, onReportBug }) => {
 
             {/* Navigation */}
             <nav className="p-3">
-              {navigationStructure.map((section) => (
-                <div key={section.id} className="mb-1">
-                  {/* Category Headers */}
-                  {section.isCategory ? (
+              {navigationStructure.map((section) => {
+                let sectionContent;
+                if (section.isCategory) {
+                  sectionContent = (
                     <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
                       {getCategoryTitle(section.title)}
                     </div>
-                  ) : section.children ? (
+                  );
+                } else if (section.children) {
+                  sectionContent = (
                     <>
                       <button
                         onClick={() => toggleSection(section.id)}
@@ -4473,7 +4468,9 @@ const UserManual = ({ onClose, onReportBug }) => {
                         </div>
                       )}
                     </>
-                  ) : (
+                  );
+                } else {
+                  sectionContent = (
                     <button
                       onClick={() => {
                         setCurrentSection(section.id);
@@ -4488,9 +4485,14 @@ const UserManual = ({ onClose, onReportBug }) => {
                       <span>{section.icon}</span>
                       <span>{getNavTitle(section.id, section.title)}</span>
                     </button>
-                  )}
-                </div>
-              ))}
+                  );
+                }
+                return (
+                  <div key={section.id} className="mb-1">
+                    {sectionContent}
+                  </div>
+                );
+              })}
             </nav>
 
             {/* Start Tour button */}

@@ -792,6 +792,7 @@ const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
     });
 
     scrubbed = scrubbedText;
+    // eslint-disable-next-line no-console
     console.info(`🛡️ PII Scrubbed:`, details);
   }
 
@@ -1005,6 +1006,7 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
     aggressive: true,
     preservePartial: false,
   });
+  // eslint-disable-next-line no-console
   console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
   return scrubbedText;
 };
@@ -1143,6 +1145,7 @@ const generateWithWllama = async (prompt, options = {}) => {
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
+      // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Wllama):`, details);
     }
   }
@@ -1216,6 +1219,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
+      // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Local Server):`, details);
     }
   }
@@ -1366,6 +1370,7 @@ const scrubPromptForLocalAI = (prompt, scrubPIIEnabled) => {
     aggressive: true,
     preservePartial: false,
   });
+  // eslint-disable-next-line no-console
   console.info(`🛡️ PII Scrubbed (Local AI):`, details);
   return scrubbedText;
 };
@@ -2060,6 +2065,8 @@ const generateAIInternal = async (prompt, options = {}) => {
       // Legacy local AI (fallback)
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
+      // eslint-disable-next-line no-console
+      console.log("💻 Generated with legacy local AI");
     } else if (useCloud || isCloudAIAvailable()) {
       // Cloud AI (Gemini - fallback)
       text = await generateWithCloudAI(fullPrompt, enhancedOptions);
@@ -2107,6 +2114,7 @@ const generateAIInternal = async (prompt, options = {}) => {
             // For JSON responses, we can return the filtered version
             if (options.expectJSON) {
               text = JSON.stringify(validation.safeData, null, 2);
+              // eslint-disable-next-line no-console
               console.info(
                 "✅ Reconstructed AI response with valid codes only",
               );
@@ -2338,6 +2346,7 @@ export const getLocalModelName = () => {
   // Fallback: try to extract a readable name from the model ID
   // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
   const cleanName = modelId
+    // eslint-disable-next-line sonarjs/slow-regex -- runs on short, internal model-ID strings, not user input
     .replace(/-q\d+f\d+.*$/, "") // Remove quantization suffix
     .replace(/-MLC$/, "") // Remove MLC suffix
     .replace(/-Instruct$/, "") // Remove Instruct suffix

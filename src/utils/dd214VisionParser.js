@@ -796,6 +796,7 @@ function extractReentryCode(text) {
  */
 function extractNarrativeReason(text) {
   const pattern =
+    // eslint-disable-next-line sonarjs/slow-regex -- input is OCR text from a user's own DD214, bounded to a few KB, not attacker-controlled; a mechanical rewrite of the [:\s]+/[a-z\s,]+ overlap risks changing which narrative text gets captured
     /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([a-z\s,]+)(?=\s*(?:\d|29|block))/i;
   const match = text.match(pattern);
 

@@ -320,6 +320,7 @@ function attemptJSONRepair(jsonStr) {
     // any non-quote non-newline chars, then a closing quote before a JSON separator.
     () => {
       const fixed = content.replace(
+        // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
         /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
         (_, colon, value, closingPart) =>
           `${colon}"${value.trim()}${closingPart}`,
@@ -356,6 +357,7 @@ function attemptJSONRepair(jsonStr) {
     // The pattern only appears at array-element boundaries in our schema output;
     // it does not occur inside quoted string values (which never contain bare `}{`).
     () => {
+      // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
       const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
       return JSON.parse(fixed);
     },
@@ -671,6 +673,7 @@ const PAGE_RELEVANCE_PATTERN = new RegExp(
  * filter would discard nearly everything, the original text is returned.
  */
 export function screenRelevantPages(fullText) {
+  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
   const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
   const markers = [...fullText.matchAll(pageRegex)];
   if (markers.length < 10) {
@@ -1676,6 +1679,12 @@ export const createEmptyChunkResult = () => ({
 // Patterns indicating the chunk has meaningful medical/claims content.
 // ANY single match → send to LLM. Zero matches → administrative page, skip.
 // Conservative: single patterns cover dates, clinical terms, VA language, body parts.
+// Security review note: these are relevance-filtering word lists (skip vs. send-to-LLM),
+// not PII extraction — a false negative just means a page gets sent to the LLM anyway
+// (conservative fallback), so mechanical complexity-reduction is lower-risk here than in
+// the field-extraction parsers, but splitting ~20-word alternations into equivalent
+// smaller regexes still deserves fixture testing rather than a same-session rewrite.
+/* eslint-disable sonarjs/regex-complexity */
 const MEDICAL_SIGNAL_PATTERNS = [
   // Date-only patterns removed for the same reason as PAGE_RELEVANCE_PATTERN:
   // every page in a VA C-File has dates, so date patterns provided zero filtering.
@@ -1686,6 +1695,7 @@ const MEDICAL_SIGNAL_PATTERNS = [
   // Body parts and specific conditions
   /\b(knee|shoulder|hip|ankle|wrist|elbow|lumbar|cervical|thoracic|tinnitus|hearing loss|vision|anxiety|depression|headache|migraine|diabetes|hypertension|blood pressure|cardiac|pulmonary|respirat\w+)\b/i,
 ];
+/* eslint-enable sonarjs/regex-complexity */
 
 function chunkHasMedicalContent(text) {
   return MEDICAL_SIGNAL_PATTERNS.some((p) => p.test(text));
@@ -2004,6 +2014,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
  * No overlap, no size limits — each page is its own entry.
  */
 function parseAllPages(fullText) {
+  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
   const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
   const pages = [];
   let prev = null;
@@ -2050,7 +2061,8 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
   ].includes(effectiveMode);
 
   // PI-02: spotlight the untrusted page text (treat-as-data delimiters).
-  const userPrompt = `${untrustedSection(`C-FILE PAGE ${pageNum}`, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
+  const pageLabel = `C-FILE PAGE ${pageNum}`;
+  const userPrompt = `${untrustedSection(pageLabel, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
 
   // 256 output tokens per page is generous — a single VA record page rarely has
   // more than 5-6 conditions + a few timeline entries.

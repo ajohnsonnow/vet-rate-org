@@ -773,6 +773,101 @@ async function _runNonStreamGeneration(engine, generationConfig) {
   return result.choices[0]?.message?.content || "";
 }
 
+async function _runSwarmInference(
+  agent,
+  finalSystemPrompt,
+  prompt,
+  maxTokens,
+  temperature,
+  responseFormat,
+  onStream,
+) {
+  const messages = [
+    { role: "system", content: finalSystemPrompt },
+    { role: "user", content: prompt },
+  ];
+
+  const generationConfig = {
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    stream: !!onStream,
+    // Penalize repeated tokens to break repetition loops in small quantized
+    // models. XGrammar masks EOS while grammar expects more tokens, which
+    // amplifies loops — frequency_penalty 1.15 breaks them while keeping
+    // factual field values intact (vLLM issue #40080). top_k/top_p narrow
+    // the token distribution for deterministic extraction (Qwen2.5 docs).
+    frequency_penalty: responseFormat ? 1.15 : 0,
+    top_p: responseFormat ? 0.8 : 1,
+    top_k: responseFormat ? 20 : -1,
+    // XGrammar per-token constrained decoding — guarantees valid JSON,
+    // eliminates repair retries. Keep one constant schema per engine
+    // instance (WebLLM issue #560: changing schemas disposes the matcher).
+    ...(responseFormat
+      ? {
+          response_format: {
+            type: "json_object",
+            schema: JSON.stringify(responseFormat),
+          },
+        }
+      : {}),
+  };
+
+  let responseText;
+
+  if (responseFormat) {
+    responseText = await _runJSONStreamGeneration(
+      webllmEngine,
+      generationConfig,
+      onStream,
+    );
+  } else if (onStream) {
+    responseText = await _runPlainStreamGeneration(
+      webllmEngine,
+      generationConfig,
+      onStream,
+    );
+  } else {
+    responseText = await _runNonStreamGeneration(
+      webllmEngine,
+      generationConfig,
+    );
+  }
+
+  return {
+    text: responseText,
+    agent: agent.id,
+    agentName: agent.name,
+    model: loadedModelId || "diamond-swarm",
+    tokens: {
+      prompt: prompt.length,
+      completion: responseText.length,
+      total: prompt.length + responseText.length,
+    },
+  };
+}
+
+function _buildLoadingPlaceholderResponse(agent, prompt, onStream) {
+  const placeholderText = `[Warrant Council - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join("\n• ")}\n\nYour question: "${prompt.slice(0, 150)}..."`;
+
+  // Call onStream so the UI shows the placeholder immediately
+  if (onStream) {
+    onStream(placeholderText, placeholderText);
+  }
+
+  return {
+    text: placeholderText,
+    agent: agent.id,
+    agentName: agent.name,
+    model: "loading",
+    tokens: {
+      prompt: prompt.length,
+      completion: 0,
+      total: prompt.length,
+    },
+  };
+}
+
 /**
  * Generate response using Warrant Council
  * Uses WebLLM engine with agent-specific system prompts
@@ -821,69 +916,15 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   // If WebLLM engine is loaded, use it for real inference
   if (webllmEngine) {
     try {
-      const messages = [
-        { role: "system", content: finalSystemPrompt },
-        { role: "user", content: prompt },
-      ];
-
-      const generationConfig = {
-        messages,
-        max_tokens: maxTokens,
+      return await _runSwarmInference(
+        agent,
+        finalSystemPrompt,
+        prompt,
+        maxTokens,
         temperature,
-        stream: !!onStream,
-        // Penalize repeated tokens to break repetition loops in small quantized
-        // models. XGrammar masks EOS while grammar expects more tokens, which
-        // amplifies loops — frequency_penalty 1.15 breaks them while keeping
-        // factual field values intact (vLLM issue #40080). top_k/top_p narrow
-        // the token distribution for deterministic extraction (Qwen2.5 docs).
-        frequency_penalty: responseFormat ? 1.15 : 0,
-        top_p: responseFormat ? 0.8 : 1,
-        top_k: responseFormat ? 20 : -1,
-        // XGrammar per-token constrained decoding — guarantees valid JSON,
-        // eliminates repair retries. Keep one constant schema per engine
-        // instance (WebLLM issue #560: changing schemas disposes the matcher).
-        ...(responseFormat
-          ? {
-              response_format: {
-                type: "json_object",
-                schema: JSON.stringify(responseFormat),
-              },
-            }
-          : {}),
-      };
-
-      let responseText;
-
-      if (responseFormat) {
-        responseText = await _runJSONStreamGeneration(
-          webllmEngine,
-          generationConfig,
-          onStream,
-        );
-      } else if (onStream) {
-        responseText = await _runPlainStreamGeneration(
-          webllmEngine,
-          generationConfig,
-          onStream,
-        );
-      } else {
-        responseText = await _runNonStreamGeneration(
-          webllmEngine,
-          generationConfig,
-        );
-      }
-
-      return {
-        text: responseText,
-        agent: agent.id,
-        agentName: agent.name,
-        model: loadedModelId || "diamond-swarm",
-        tokens: {
-          prompt: prompt.length,
-          completion: responseText.length,
-          total: prompt.length + responseText.length,
-        },
-      };
+        responseFormat,
+        onStream,
+      );
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
       // The engine exists and genuinely failed — rethrow so callers see the
@@ -895,26 +936,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   }
 
   // Fallback: placeholder response when no engine available
-  const placeholderText = `[Warrant Council - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join("\n• ")}\n\nYour question: "${prompt.slice(0, 150)}..."`;
-
-  // Call onStream so the UI shows the placeholder immediately
-  if (onStream) {
-    onStream(placeholderText, placeholderText);
-  }
-
-  const response = {
-    text: placeholderText,
-    agent: agent.id,
-    agentName: agent.name,
-    model: "loading",
-    tokens: {
-      prompt: prompt.length,
-      completion: 0,
-      total: prompt.length,
-    },
-  };
-
-  return response;
+  return _buildLoadingPlaceholderResponse(agent, prompt, onStream);
 };
 
 /**

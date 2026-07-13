@@ -2014,9 +2014,134 @@ const PainPainterMapTab = ({
   </>
 );
 
-const PainPainter = ({ onClose, _onExport, onReportBug }) => {
-  const { _t } = useLanguage();
+const PainPainterSaveSuccessView = () => (
+  <div className="text-center py-6">
+    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg
+        className="w-8 h-8 text-green-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 13l4 4L19 7"
+        />
+      </svg>
+    </div>
+    <h3 id="pain-save-title" className="text-xl font-bold text-white mb-2">
+      Saved!
+    </h3>
+    <p className="text-gray-400">
+      Your pain map has been saved to My Packet
+    </p>
+  </div>
+);
 
+const PainPainterSaveForm = ({
+  setShowSaveModal,
+  saveName,
+  setSaveName,
+  painPoints,
+  view,
+  detectedNexus,
+  handleSaveToPacket,
+}) => (
+  <>
+    <h3
+      id="pain-save-title"
+      className="text-xl font-bold text-white mb-4 flex items-center gap-2"
+    >
+      <span>💾</span> Save Pain Map
+    </h3>
+
+    <div className="mb-4">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-300 mb-2">
+        Name this pain map (optional)
+      </label>
+      <input
+        type="text"
+        value={saveName}
+        onChange={(e) => setSaveName(e.target.value)}
+        placeholder={`Pain Map - ${new Date().toLocaleDateString()}`}
+        className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+    </div>
+
+    <div className="bg-gray-800/50 rounded-lg p-3 mb-4">
+      <p className="text-sm text-gray-400 mb-2">This will save:</p>
+      <ul className="text-sm text-gray-300 space-y-1">
+        <li>
+          • {Object.keys(painPoints).length} pain point
+          {Object.keys(painPoints).length !== 1 ? "s" : ""}
+        </li>
+        <li>• View: {view === "front" ? "Front" : "Back"}</li>
+        {detectedNexus.length > 0 && (
+          <li>
+            • {detectedNexus.length} nexus pattern
+            {detectedNexus.length !== 1 ? "s" : ""} detected
+          </li>
+        )}
+      </ul>
+    </div>
+
+    <div className="flex gap-3">
+      <button
+        onClick={() => setShowSaveModal(false)}
+        className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSaveToPacket}
+        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+      >
+        Save to My Packet
+      </button>
+    </div>
+  </>
+);
+
+const PainPainterSaveModal = ({
+  showSaveModal,
+  setShowSaveModal,
+  saveSuccess,
+  saveName,
+  setSaveName,
+  painPoints,
+  view,
+  detectedNexus,
+  handleSaveToPacket,
+}) =>
+  showSaveModal && (
+    <ResponsiveModal
+      isOpen
+      onClose={() => setShowSaveModal(false)}
+      size="sm"
+      zIndex={70}
+      className="!bg-gray-900 border border-gray-700"
+      labelledBy="pain-save-title"
+    >
+      {saveSuccess ? (
+        <PainPainterSaveSuccessView />
+      ) : (
+        <PainPainterSaveForm
+          setShowSaveModal={setShowSaveModal}
+          saveName={saveName}
+          setSaveName={setSaveName}
+          painPoints={painPoints}
+          view={view}
+          detectedNexus={detectedNexus}
+          handleSaveToPacket={handleSaveToPacket}
+        />
+      )}
+    </ResponsiveModal>
+  );
+
+function usePainPainterOrchestration() {
   const {
     view, setView,
     mode, setMode,
@@ -2067,6 +2192,145 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     downloadScreenshot,
   });
 
+  return {
+    view, setView,
+    mode, setMode,
+    selectedPainType, setSelectedPainType,
+    activeTab, setActiveTab,
+    painPoints, setPainPoints,
+    selectedRegion, setSelectedRegion,
+    hoveredRegion, setHoveredRegion,
+    bodyType, setBodyType,
+    bodyScale, setBodyScale,
+    zoom, setZoom,
+    showPhantomLimbs, setShowPhantomLimbs,
+    showSaveModal, setShowSaveModal,
+    saveName, setSaveName,
+    saveSuccess, setSaveSuccess,
+    detectedNexus,
+    bodyMapRef,
+    applyBodyPreset,
+    handleRegionClick,
+    getRegionStyle,
+    handleExport,
+    handleSaveToPacket,
+  };
+}
+
+const PainPainterTabContent = ({
+  activeTab,
+  bodyType,
+  applyBodyPreset,
+  bodyScale,
+  setBodyScale,
+  showPhantomLimbs,
+  setShowPhantomLimbs,
+  zoom,
+  setZoom,
+  view,
+  setView,
+  mode,
+  setMode,
+  selectedPainType,
+  setSelectedPainType,
+  painPoints,
+  setPainPoints,
+  hoveredRegion,
+  setHoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  handleRegionClick,
+  bodyMapRef,
+  detectedNexus,
+  setShowSaveModal,
+  handleExport,
+}) => (
+  <>
+    {activeTab === "config" && (
+      <PainPainterConfigTab
+        bodyType={bodyType}
+        applyBodyPreset={applyBodyPreset}
+        bodyScale={bodyScale}
+        setBodyScale={setBodyScale}
+        showPhantomLimbs={showPhantomLimbs}
+        setShowPhantomLimbs={setShowPhantomLimbs}
+        zoom={zoom}
+        setZoom={setZoom}
+        view={view}
+        setView={setView}
+        painPoints={painPoints}
+        hoveredRegion={hoveredRegion}
+        selectedRegion={selectedRegion}
+        getRegionStyle={getRegionStyle}
+        handleRegionClick={handleRegionClick}
+        setHoveredRegion={setHoveredRegion}
+      />
+    )}
+
+    {activeTab === "map" && (
+      <PainPainterMapTab
+        view={view}
+        setView={setView}
+        mode={mode}
+        setMode={setMode}
+        zoom={zoom}
+        setZoom={setZoom}
+        selectedPainType={selectedPainType}
+        setSelectedPainType={setSelectedPainType}
+        bodyMapRef={bodyMapRef}
+        bodyScale={bodyScale}
+        showPhantomLimbs={showPhantomLimbs}
+        painPoints={painPoints}
+        setPainPoints={setPainPoints}
+        hoveredRegion={hoveredRegion}
+        setHoveredRegion={setHoveredRegion}
+        selectedRegion={selectedRegion}
+        getRegionStyle={getRegionStyle}
+        handleRegionClick={handleRegionClick}
+        detectedNexus={detectedNexus}
+        setShowSaveModal={setShowSaveModal}
+        handleExport={handleExport}
+      />
+    )}
+  </>
+);
+
+const PainPainterProTip = () => (
+  <div className="mt-6 rounded-xl border border-gray-700 bg-gray-800/50 px-6 py-4">
+    <p className="text-xs text-gray-500 text-center">
+      💡 Pro Tip: Use this map during C&P exams to clearly communicate all
+      affected areas
+    </p>
+  </div>
+);
+
+const PainPainter = ({ onClose, _onExport, onReportBug }) => {
+  const { _t } = useLanguage();
+
+  const {
+    view, setView,
+    mode, setMode,
+    selectedPainType, setSelectedPainType,
+    activeTab, setActiveTab,
+    painPoints, setPainPoints,
+    selectedRegion,
+    hoveredRegion, setHoveredRegion,
+    bodyType,
+    bodyScale, setBodyScale,
+    zoom, setZoom,
+    showPhantomLimbs, setShowPhantomLimbs,
+    showSaveModal, setShowSaveModal,
+    saveName, setSaveName,
+    saveSuccess,
+    detectedNexus,
+    bodyMapRef,
+    applyBodyPreset,
+    handleRegionClick,
+    getRegionStyle,
+    handleExport,
+    handleSaveToPacket,
+  } = usePainPainterOrchestration();
+
   return (
     <>
       <ResponsiveModal
@@ -2079,159 +2343,49 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
       >
         <PainPainterTabNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* CONFIGURATION TAB */}
-        {activeTab === "config" && (
-          <PainPainterConfigTab
-            bodyType={bodyType}
-            applyBodyPreset={applyBodyPreset}
-            bodyScale={bodyScale}
-            setBodyScale={setBodyScale}
-            showPhantomLimbs={showPhantomLimbs}
-            setShowPhantomLimbs={setShowPhantomLimbs}
-            zoom={zoom}
-            setZoom={setZoom}
-            view={view}
-            setView={setView}
-            painPoints={painPoints}
-            hoveredRegion={hoveredRegion}
-            selectedRegion={selectedRegion}
-            getRegionStyle={getRegionStyle}
-            handleRegionClick={handleRegionClick}
-            setHoveredRegion={setHoveredRegion}
-          />
-        )}
+        <PainPainterTabContent
+          activeTab={activeTab}
+          bodyType={bodyType}
+          applyBodyPreset={applyBodyPreset}
+          bodyScale={bodyScale}
+          setBodyScale={setBodyScale}
+          showPhantomLimbs={showPhantomLimbs}
+          setShowPhantomLimbs={setShowPhantomLimbs}
+          zoom={zoom}
+          setZoom={setZoom}
+          view={view}
+          setView={setView}
+          mode={mode}
+          setMode={setMode}
+          selectedPainType={selectedPainType}
+          setSelectedPainType={setSelectedPainType}
+          painPoints={painPoints}
+          setPainPoints={setPainPoints}
+          hoveredRegion={hoveredRegion}
+          setHoveredRegion={setHoveredRegion}
+          selectedRegion={selectedRegion}
+          getRegionStyle={getRegionStyle}
+          handleRegionClick={handleRegionClick}
+          bodyMapRef={bodyMapRef}
+          detectedNexus={detectedNexus}
+          setShowSaveModal={setShowSaveModal}
+          handleExport={handleExport}
+        />
 
-        {/* PAIN MAP TAB */}
-        {activeTab === "map" && (
-          <PainPainterMapTab
-            view={view}
-            setView={setView}
-            mode={mode}
-            setMode={setMode}
-            zoom={zoom}
-            setZoom={setZoom}
-            selectedPainType={selectedPainType}
-            setSelectedPainType={setSelectedPainType}
-            bodyMapRef={bodyMapRef}
-            bodyScale={bodyScale}
-            showPhantomLimbs={showPhantomLimbs}
-            painPoints={painPoints}
-            setPainPoints={setPainPoints}
-            hoveredRegion={hoveredRegion}
-            setHoveredRegion={setHoveredRegion}
-            selectedRegion={selectedRegion}
-            getRegionStyle={getRegionStyle}
-            handleRegionClick={handleRegionClick}
-            detectedNexus={detectedNexus}
-            setShowSaveModal={setShowSaveModal}
-            handleExport={handleExport}
-          />
-        )}
-
-        {/* Pro Tip */}
-        <div className="mt-6 rounded-xl border border-gray-700 bg-gray-800/50 px-6 py-4">
-          <p className="text-xs text-gray-500 text-center">
-            💡 Pro Tip: Use this map during C&P exams to clearly communicate all
-            affected areas
-          </p>
-        </div>
+        <PainPainterProTip />
       </ResponsiveModal>
 
-      {/* Save Modal */}
-      {showSaveModal && (
-        <ResponsiveModal
-          isOpen
-          onClose={() => setShowSaveModal(false)}
-          size="sm"
-          zIndex={70}
-          className="!bg-gray-900 border border-gray-700"
-          labelledBy="pain-save-title"
-        >
-          {saveSuccess ? (
-            <div className="text-center py-6">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-green-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3
-                id="pain-save-title"
-                className="text-xl font-bold text-white mb-2"
-              >
-                Saved!
-              </h3>
-              <p className="text-gray-400">
-                Your pain map has been saved to My Packet
-              </p>
-            </div>
-          ) : (
-            <>
-              <h3
-                id="pain-save-title"
-                className="text-xl font-bold text-white mb-4 flex items-center gap-2"
-              >
-                <span>💾</span> Save Pain Map
-              </h3>
-
-              <div className="mb-4">
-                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Name this pain map (optional)
-                </label>
-                <input
-                  type="text"
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  placeholder={`Pain Map - ${new Date().toLocaleDateString()}`}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-gray-400 mb-2">This will save:</p>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>
-                    • {Object.keys(painPoints).length} pain point
-                    {Object.keys(painPoints).length !== 1 ? "s" : ""}
-                  </li>
-                  <li>• View: {view === "front" ? "Front" : "Back"}</li>
-                  {detectedNexus.length > 0 && (
-                    <li>
-                      • {detectedNexus.length} nexus pattern
-                      {detectedNexus.length !== 1 ? "s" : ""} detected
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowSaveModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveToPacket}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                >
-                  Save to My Packet
-                </button>
-              </div>
-            </>
-          )}
-        </ResponsiveModal>
-      )}
+      <PainPainterSaveModal
+        showSaveModal={showSaveModal}
+        setShowSaveModal={setShowSaveModal}
+        saveSuccess={saveSuccess}
+        saveName={saveName}
+        setSaveName={setSaveName}
+        painPoints={painPoints}
+        view={view}
+        detectedNexus={detectedNexus}
+        handleSaveToPacket={handleSaveToPacket}
+      />
     </>
   );
 };

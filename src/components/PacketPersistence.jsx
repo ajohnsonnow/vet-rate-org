@@ -100,21 +100,37 @@ function getTimeAgo(timestamp) {
 // MAIN COMPONENT
 // ============================================================================
 
+function _storageStrategyTitle(storageInfo) {
+  if (storageInfo?.supportsFileSystem && !storageInfo?.isPhone) {
+    return "💾 File System Storage";
+  }
+  if (storageInfo?.isTablet) return "📱💻 Tablet Storage + Easy Backups";
+  return "📱 Browser Storage + Downloads";
+}
+
+function _storageStrategyDescription(storageInfo) {
+  if (storageInfo?.supportsFileSystem && !storageInfo?.isPhone) {
+    return 'Click "Save My Packet" to create a file on your device. Your data will auto-save to this file as you work - even if you clear your browser cache or crash, your file is safe!';
+  }
+  if (storageInfo?.isTablet) {
+    return "Great choice using a tablet! Your data saves automatically in your browser. For extra protection, download backups to your Files app or cloud storage (iCloud, Google Drive, Dropbox).";
+  }
+  return 'Your data is saved in your browser. Use "Download Backup" before closing to ensure your data is safe from cache clears.';
+}
+
 export default function PacketPersistence({
   onPacketLoaded,
   onSaveComplete,
   // eslint-disable-next-line no-unused-vars
-  showFloatingIndicator = true,
+  showFloatingIndicator: _showFloatingIndicator = true,
   compact = false,
 }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
   const [initialized, setInitialized] = useState(false);
   const [saveStatus, setSaveStatus] = useState("ready");
   const [lastSaved, setLastSaved] = useState(null);
   const [storageInfo, setStorageInfo] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [showMobilePrompt, setShowMobilePrompt] = useState(false);
+  const [_showMobilePrompt, setShowMobilePrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -391,18 +407,10 @@ export default function PacketPersistence({
       {/* Storage Strategy Info */}
       <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
         <h3 className="font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2 mb-2">
-          {storageInfo?.supportsFileSystem && !storageInfo?.isPhone
-            ? "💾 File System Storage"
-            : storageInfo?.isTablet
-              ? "📱💻 Tablet Storage + Easy Backups"
-              : "📱 Browser Storage + Downloads"}
+          {_storageStrategyTitle(storageInfo)}
         </h3>
         <p className="text-sm text-blue-800 dark:text-blue-300">
-          {storageInfo?.supportsFileSystem && !storageInfo?.isPhone
-            ? 'Click "Save My Packet" to create a file on your device. Your data will auto-save to this file as you work - even if you clear your browser cache or crash, your file is safe!'
-            : storageInfo?.isTablet
-              ? "Great choice using a tablet! Your data saves automatically in your browser. For extra protection, download backups to your Files app or cloud storage (iCloud, Google Drive, Dropbox)."
-              : 'Your data is saved in your browser. Use "Download Backup" before closing to ensure your data is safe from cache clears.'}
+          {_storageStrategyDescription(storageInfo)}
         </p>
         {storageInfo?.isTablet && (
           <div className="mt-3 text-xs text-blue-700 dark:text-blue-400 flex items-center gap-2">
@@ -685,8 +693,7 @@ export function FloatingSaveButton({ onSave }) {
 
 export function MobileSaveReminder({ onDismiss }) {
   const [visible, setVisible] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [_hasUnsaved, setHasUnsaved] = useState(false);
 
   useEffect(() => {
     // Only show on mobile with unsaved changes

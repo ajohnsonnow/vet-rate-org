@@ -540,16 +540,16 @@ export async function manualSave(forceDownload = false) {
  * This is the "hook" that saves before screen transitions
  */
 export async function saveOnStepComplete() {
-  if (!hasUnsavedChanges && !packetData) return true;
+  if (hasUnsavedChanges || packetData) {
+    const data = await gatherPacketData();
 
-  const data = await gatherPacketData();
+    // Always save to IndexedDB as backup
+    await saveToIndexedDB(data);
 
-  // Always save to IndexedDB as backup
-  await saveToIndexedDB(data);
-
-  // Desktop: Also save to file if handle exists
-  if (supportsFileSystemAccess() && activeFileHandle) {
-    await writeToFileHandle(data);
+    // Desktop: Also save to file if handle exists
+    if (supportsFileSystemAccess() && activeFileHandle) {
+      await writeToFileHandle(data);
+    }
   }
 
   return true;

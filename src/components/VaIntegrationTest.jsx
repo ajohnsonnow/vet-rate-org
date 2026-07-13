@@ -50,9 +50,13 @@ import {
   Medal,
 } from "lucide-react";
 
+function _authStatusLabel(authLoading, isAuthenticated) {
+  if (authLoading) return "Checking authentication...";
+  return isAuthenticated ? "Connected to VA.gov" : "Not Connected";
+}
+
 const VaIntegrationTest = ({ onClose }) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
 
   // State for sandbox test modal
   const [showSandboxTest, setShowSandboxTest] = useState(false);
@@ -383,11 +387,7 @@ const VaIntegrationTest = ({ onClose }) => {
             className={`w-3 h-3 rounded-full ${isAuthenticated ? "bg-green-400" : "bg-yellow-400"} animate-pulse`}
           />
           <span className="font-medium">
-            {authLoading
-              ? "Checking authentication..."
-              : isAuthenticated
-                ? "Connected to VA.gov"
-                : "Not Connected"}
+            {_authStatusLabel(authLoading, isAuthenticated)}
           </span>
           {isAuthenticated && userInfo && (
             <span className="text-blue-200 text-sm ml-2">
@@ -545,14 +545,19 @@ const VaIntegrationTest = ({ onClose }) => {
                   </button>
                 </div>
 
-                {loading.serviceHistory ? (
-                  <LoadingSpinner text="Fetching service history..." />
-                ) : errors.serviceHistory ? (
-                  <ErrorMessage
-                    message={errors.serviceHistory}
-                    onRetry={fetchServiceHistory}
-                  />
-                ) : serviceHistory && serviceHistory.length > 0 ? (
+                {(() => {
+                  if (loading.serviceHistory) {
+                    return <LoadingSpinner text="Fetching service history..." />;
+                  }
+                  if (errors.serviceHistory) {
+                    return (
+                      <ErrorMessage
+                        message={errors.serviceHistory}
+                        onRetry={fetchServiceHistory}
+                      />
+                    );
+                  }
+                  return serviceHistory && serviceHistory.length > 0 ? (
                   <div className="space-y-4">
                     {serviceHistory.map((service, idx) => (
                       <div
@@ -606,12 +611,13 @@ const VaIntegrationTest = ({ onClose }) => {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <Award className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No service history found</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <Award className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No service history found</p>
+                    </div>
+                  );
+                })()}
 
                 <RawJsonToggle
                   isOpen={showRawJson.serviceHistory}
@@ -648,11 +654,19 @@ const VaIntegrationTest = ({ onClose }) => {
                   </button>
                 </div>
 
-                {loading.claims ? (
-                  <LoadingSpinner text="Fetching claims..." />
-                ) : errors.claims ? (
-                  <ErrorMessage message={errors.claims} onRetry={fetchClaims} />
-                ) : claims && claims.length > 0 ? (
+                {(() => {
+                  if (loading.claims) {
+                    return <LoadingSpinner text="Fetching claims..." />;
+                  }
+                  if (errors.claims) {
+                    return (
+                      <ErrorMessage
+                        message={errors.claims}
+                        onRetry={fetchClaims}
+                      />
+                    );
+                  }
+                  return claims && claims.length > 0 ? (
                   <div className="space-y-3">
                     {claims.map((claim, idx) => {
                       const statusBadge = getClaimStatusBadge(claim.phase);
@@ -751,12 +765,13 @@ const VaIntegrationTest = ({ onClose }) => {
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No claims found</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No claims found</p>
+                    </div>
+                  );
+                })()}
 
                 <RawJsonToggle
                   isOpen={showRawJson.claims}
@@ -793,14 +808,19 @@ const VaIntegrationTest = ({ onClose }) => {
                   </button>
                 </div>
 
-                {loading.appealableIssues ? (
-                  <LoadingSpinner text="Fetching appealable issues..." />
-                ) : errors.appealableIssues ? (
-                  <ErrorMessage
-                    message={errors.appealableIssues}
-                    onRetry={fetchAppealableIssues}
-                  />
-                ) : appealableIssues && appealableIssues.length > 0 ? (
+                {(() => {
+                  if (loading.appealableIssues) {
+                    return <LoadingSpinner text="Fetching appealable issues..." />;
+                  }
+                  if (errors.appealableIssues) {
+                    return (
+                      <ErrorMessage
+                        message={errors.appealableIssues}
+                        onRetry={fetchAppealableIssues}
+                      />
+                    );
+                  }
+                  return appealableIssues && appealableIssues.length > 0 ? (
                   <div className="space-y-3">
                     {appealableIssues.map((issue, idx) => (
                       <div
@@ -838,13 +858,14 @@ const VaIntegrationTest = ({ onClose }) => {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <AlertTriangle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No appealable issues found</p>
-                    <p className="text-xs mt-1">This is good news! 🎉</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <AlertTriangle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No appealable issues found</p>
+                      <p className="text-xs mt-1">This is good news! 🎉</p>
+                    </div>
+                  );
+                })()}
 
                 <RawJsonToggle
                   isOpen={showRawJson.appealableIssues}

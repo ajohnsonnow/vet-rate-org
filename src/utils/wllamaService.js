@@ -322,14 +322,18 @@ export const checkWasmSupport = () => {
   const hasWasm = typeof WebAssembly === "object";
   const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
 
+  let reason = null;
+  if (!hasWasm) {
+    reason = "WebAssembly not supported";
+  } else if (!hasSharedArrayBuffer) {
+    reason =
+      "SharedArrayBuffer not available (COOP/COEP headers needed for multi-threading)";
+  }
+
   return {
     supported: hasWasm,
     multiThread: hasWasm && hasSharedArrayBuffer,
-    reason: !hasWasm
-      ? "WebAssembly not supported"
-      : !hasSharedArrayBuffer
-        ? "SharedArrayBuffer not available (COOP/COEP headers needed for multi-threading)"
-        : null,
+    reason,
   };
 };
 

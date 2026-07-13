@@ -1,3 +1,12 @@
+/* eslint-disable sonarjs/slow-regex, sonarjs/regex-complexity --
+ * Security review note: this file's patterns classify and extract data from real
+ * veterans' bulk-uploaded claim documents (DD214s, rating decisions, C-files).
+ * Their permissive shapes are load-bearing for matching format variants across
+ * scan quality/document eras, not accidental complexity — mechanically rewriting
+ * risks silently narrowing matches and misclassifying real documents.
+ * Deserves a dedicated pass with fixture-based before/after matching, not a
+ * same-session rewrite.
+ */
 /**
  * Vet-Rate.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
@@ -1065,15 +1074,8 @@ const selectBestDD214Segment = (segments, filename) => {
   return best;
 };
 
-const buildVisionParsedServiceRecord = (text, visionParsedData) => {
-  // eslint-disable-next-line no-console
-  console.log("👁️ Using pre-parsed Vision data for DD214");
-  const vf = visionParsedData.fields;
-
-  // Convert vision parser format to parseServiceRecord format
-  const visionData = {
-    type: "service_record",
-    // Name
+function _visionIdentityFields(vf) {
+  return {
     veteranName:
       vf.name ||
       `${vf.lastName || ""}, ${vf.firstName || ""} ${vf.middleName || ""}`
@@ -1083,32 +1085,41 @@ const buildVisionParsedServiceRecord = (text, visionParsedData) => {
     lastName: vf.lastName || null,
     firstName: vf.firstName || null,
     middleName: vf.middleName || null,
-    // Branch
     branch: vf.branch || null,
     component: vf.component || null,
-    // Rank/Grade
     rank: vf.rank || null,
     payGrade: vf.payGrade || null,
-    // MOS
     mos: vf.mos || null,
     mosTitle: vf.mosTitle || null,
-    // Dates
+  };
+}
+
+function _visionServiceFields(vf) {
+  return {
     serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
     serviceEndDate: vf.separationDateFormatted || vf.separationDate || null,
     dateOfBirth: vf.dateOfBirth || null,
-    // Awards
     awards: vf.awards || [],
-    // Discharge info
     dischargeType: vf.characterOfService || null,
     separationCode: vf.separationCode || null,
     spdCode: vf.separationCode || null,
     reentryCode: vf.reentryCode || null,
     narrativeReason: vf.narrativeReason || null,
-    // Combat indicators
     combatService: vf.combatService || null,
     foreignService: vf.foreignService || null,
     foreignServiceLocations: vf.foreignServiceLocations || [],
-    // Metadata
+  };
+}
+
+const buildVisionParsedServiceRecord = (text, visionParsedData) => {
+  // eslint-disable-next-line no-console
+  console.log("👁️ Using pre-parsed Vision data for DD214");
+  const vf = visionParsedData.fields;
+
+  const visionData = {
+    type: "service_record",
+    ..._visionIdentityFields(vf),
+    ..._visionServiceFields(vf),
     method: "vision_florence",
     visionConfidence: vf.overallConfidence || 0,
     raw: text.substring(0, 1000),

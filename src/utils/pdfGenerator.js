@@ -313,8 +313,8 @@ export const generatePDF = (result, searchTerm) => {
       logoImg.src = "/images/Vet-Rate-org-logo-official.png";
       // Logo: 15x15mm square, centered, at top of header
       doc.addImage(logoImg, "PNG", (pageWidth - 15) / 2, 8, 15, 15);
-    } catch (e) {
-      // Logo failed to load - continue with text-only header
+    } catch {
+      // eslint-disable-next-line sonarjs/no-ignored-exceptions -- non-critical: continue with text-only header if logo fails to load
     }
 
     doc.setTextColor(255, 255, 255);

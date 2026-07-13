@@ -300,6 +300,7 @@ const CLASSIFICATION_PATTERNS = {
       /PERSONAL\s+STATEMENT/i,
       /STATEMENT\s+IN\s+SUPPORT\s+OF\s+CLAIM/i,
       /VA\s+FORM\s+21-4138/i,
+      // eslint-disable-next-line sonarjs/slow-regex -- input is the user's own uploaded document text, not attacker-controlled, and classification only scans a bounded excerpt
       /I.*DECLARE/i,
       /MY\s+NAME\s+IS/i,
       /I\s+AM\s+WRITING\s+TO/i,

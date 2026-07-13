@@ -740,6 +740,7 @@ function applyAdvancedPreprocessing(canvas, strategy) {
  */
 function ensembleVote(results) {
   // For now, use the highest confidence result
+  // eslint-disable-next-line sonarjs/todo-tag -- tracked follow-up, not a lint-pass-sized change
   // TODO: Implement character-level voting
   results.sort((a, b) => b.confidence - a.confidence);
   return results[0].text;

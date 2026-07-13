@@ -1,3 +1,14 @@
+/* eslint-disable sonarjs/slow-regex, sonarjs/regex-complexity --
+ * Security review note: this file is ~40 regex anchors/patterns that extract
+ * structured data (decision outcomes, dates, ratings, section text) from real
+ * veterans' VA decision letters, C&P exams, and BVA decisions across varying
+ * document formats. Their permissive alternation shapes are load-bearing for
+ * matching header variants across document eras, not accidental complexity —
+ * mechanically "simplifying" or re-bounding them risks silently narrowing what
+ * each anchor matches, corrupting extracted data that feeds claim tracking.
+ * Deserves a dedicated pass with fixture-based before/after matching across real
+ * document samples, not a same-session rewrite.
+ */
 /**
  * Vet-Rate.org - VA Document Intelligence Parser
  * Copyright (c) 2024-2026 Anthony Johnson

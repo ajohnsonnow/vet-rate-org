@@ -321,6 +321,9 @@ async function processBatch({
     });
   }
 
+  // Yield to browser to keep UI responsive
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
   return processedCount;
 }
 
@@ -378,44 +381,19 @@ export async function processLargePDF(file, options = {}) {
     // Process ALL pages sequentially in batches
     for (let startPage = 1; startPage <= numPages; startPage += batchSize) {
       const endPage = Math.min(startPage + batchSize - 1, numPages);
-      let batchText = "";
-      const batchStats = [];
-
-      for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
-        const { textBlock, stat } = await extractPageAndTrack(
-          pdf,
-          pageNum,
-          pageState,
-        );
-        batchText += textBlock;
-        batchStats.push(stat);
-
-        processedCount++;
-        onProgress(
-          processedCount,
-          numPages,
-          Math.round((processedCount / numPages) * 100),
-        );
-      }
-
-      // Write batch to IDB, then let it be garbage-collected
-      const batchIndex = Math.floor((startPage - 1) / batchSize);
-      await writeBatchToDB(db, sessionKey, batchIndex, batchText, batchStats);
-
-      if (onBatch) {
-        onBatch({
-          batchIndex,
-          startPage,
-          endPage,
-          totalPages: numPages,
-          batchStats,
-          processedSoFar: processedCount,
-          pct: Math.round((processedCount / numPages) * 100),
-        });
-      }
-
-      // Yield to browser to keep UI responsive
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      processedCount = await processBatch({
+        pdf,
+        db,
+        sessionKey,
+        startPage,
+        endPage,
+        batchSize,
+        numPages,
+        pageState,
+        processedCount,
+        onProgress,
+        onBatch,
+      });
     }
 
     if (pageState.currentEmptyRun)
