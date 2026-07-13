@@ -1303,13 +1303,7 @@ export function enforceValidDiagnosticCodes(analysis) {
  * @param {AbortController} abortController - Optional abort controller to cancel analysis
  * @returns {Promise<Object>} - Structured analysis results
  */
-export async function analyzeCFile(
-  apiKey,
-  fullText,
-  onProgress = () => {},
-  abortController = null,
-  options = {},
-) {
+function _buildSemanticOpts(onProgress, abortController, options) {
   // S24 semantic-index options. `buildSemanticIndex` defaults ON in the app;
   // tests disable it (or inject `semanticEmbed`/`semanticStore`) to avoid the
   // real embedder + IndexedDB. `semanticSessionKey` namespaces this document's
@@ -1322,7 +1316,7 @@ export async function analyzeCFile(
     semanticEmbed,
     semanticStore,
   } = options;
-  const semanticOpts = {
+  return {
     sessionKey: semanticSessionKey,
     onProgress,
     signal: abortController?.signal,
@@ -1330,18 +1324,9 @@ export async function analyzeCFile(
     store: semanticStore,
     enabled: buildSemanticIndex,
   };
+}
 
-  // Check if ANY AI is available (Cloud or Local)
-  if (!isAnyAIAvailable()) {
-    throw new Error(
-      "No AI available. Please set up an API key or enable Local AI.",
-    );
-  }
-
-  if (!fullText || fullText.trim().length < 100) {
-    throw new Error("Insufficient text content to analyze");
-  }
-
+async function _determineAiModeAndChunks(fullText, onProgress) {
   const aiStatus = getAIStatus();
   const aiMode = aiStatus.effectiveMode;
 
@@ -1388,46 +1373,58 @@ export async function analyzeCFile(
   } else {
     chunks = splitIntoChunks(analysisText, aiMode);
   }
-  const totalChunks = chunks.length;
 
   // eslint-disable-next-line no-console
-  console.log(`📊 Analysis plan: ${totalChunks} chunk(s), AI mode: ${aiMode}`);
+  console.log(
+    `📊 Analysis plan: ${chunks.length} chunk(s), AI mode: ${aiMode}`,
+  );
 
-  if (totalChunks === 1) {
-    // Single chunk - process normally
-    onProgress("Sending to AI for analysis...", {
-      phase: "analyze",
-      current: 1,
-      total: 1,
-    });
-    const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
-    const rejectedCodes = enforceValidDiagnosticCodes(result);
-    result.failedChunks = [];
+  return { aiMode, isLocalAIMode, chunks, skippedPages };
+}
 
-    // Semantic index over the whole document (a single chunk excludes nothing
-    // from the AI pass, but the searchable index is still built).
-    const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
+async function _analyzeSingleChunkPath(
+  chunks,
+  aiMode,
+  fullText,
+  skippedPages,
+  semanticOpts,
+  onProgress,
+) {
+  // Single chunk - process normally
+  onProgress("Sending to AI for analysis...", {
+    phase: "analyze",
+    current: 1,
+    total: 1,
+  });
+  const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  result.failedChunks = [];
 
-    onProgress("Analysis complete!", { phase: "complete" });
+  // Semantic index over the whole document (a single chunk excludes nothing
+  // from the AI pass, but the searchable index is still built).
+  const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
 
-    return {
-      success: true,
-      analysis: result,
-      metadata: {
-        analyzedAt: new Date().toISOString(),
-        textLength: fullText.length,
-        aiMode: aiMode,
-        chunksProcessed: 1,
-        boilerplatePagesSkipped: skippedPages,
-        pagesExcludedFromAI: 0,
-        chunksExcludedFromAI: 0,
-        semanticIndex,
-        rejectedDiagnosticCodes: rejectedCodes,
-      },
-    };
-  }
+  onProgress("Analysis complete!", { phase: "complete" });
 
-  // Multi-chunk processing
+  return {
+    success: true,
+    analysis: result,
+    metadata: {
+      analyzedAt: new Date().toISOString(),
+      textLength: fullText.length,
+      aiMode: aiMode,
+      chunksProcessed: 1,
+      boilerplatePagesSkipped: skippedPages,
+      pagesExcludedFromAI: 0,
+      chunksExcludedFromAI: 0,
+      semanticIndex,
+      rejectedDiagnosticCodes: rejectedCodes,
+    },
+  };
+}
+
+function _buildMultiChunkState(chunks, fullText, aiMode, isLocalAIMode, onProgress) {
+  const totalChunks = chunks.length;
   const estimatedTime = estimateProcessingTime(
     fullText.length,
     totalChunks,
@@ -1438,9 +1435,6 @@ export async function analyzeCFile(
     current: 0,
     total: totalChunks,
   });
-
-  const chunkResults = [];
-  const failedChunks = [];
 
   // Pre-flight: score every chunk before the loop so the cap selects the
   // highest-value chunks rather than the first N by page order.
@@ -1463,234 +1457,270 @@ export async function analyzeCFile(
       `📊 Chunk cap: top ${MAX_WEBGPU_AI_CHUNKS}/${chunkScores.length} chunks by score run the AI pass; ${capIndices.size} excluded (still indexed for semantic search)`,
     );
   }
-  let skippedLowScore = 0;
-  // S24: which real pages the AI actually read vs. were excluded by the score
-  // cap/floor, so the results UI can surface how much of the document the slow
-  // AI pass skipped — while the semantic index (below) still covers all of it.
-  const aiAnalyzedPages = new Set();
-  const aiExcludedPages = new Set();
-  let chunksExcludedFromAI = 0;
-  const recordPages = (set, chunk) => {
-    const from = chunk.startPage || 0;
-    const to = chunk.endPage || from;
-    for (let p = from; p <= to; p++) set.add(p);
-  };
 
-  for (let i = 0; i < chunks.length; i++) {
-    // Check if aborted
+  return {
+    totalChunks,
+    isLocalAIMode,
+    chunkScores,
+    floorIndices,
+    capIndices,
+    chunkResults: [],
+    failedChunks: [],
+    skippedLowScore: 0,
+    // S24: which real pages the AI actually read vs. were excluded by the score
+    // cap/floor, so the results UI can surface how much of the document the slow
+    // AI pass skipped — while the semantic index (below) still covers all of it.
+    aiAnalyzedPages: new Set(),
+    aiExcludedPages: new Set(),
+    chunksExcludedFromAI: 0,
+    recordPages: (set, chunk) => {
+      const from = chunk.startPage || 0;
+      const to = chunk.endPage || from;
+      for (let p = from; p <= to; p++) set.add(p);
+    },
+    onProgress,
+  };
+}
+
+function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
+  // --- Gate 1: low-content skip ---
+  // Near-blank pages: cover sheets, index separators, blank pages.
+  // Conservative thresholds — both conditions must hold.
+  const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
+  if (chunk.text.trim().length < 250 || alphaCount < 120) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 2: medical content pre-filter ---
+  // Text-heavy but purely administrative pages (routing slips, consent forms,
+  // SF authorization sheets, index pages) have none of: dates, medical terms,
+  // VA/claims language, or body-part references. Any ONE signal → send to LLM.
+  if (!chunkHasMedicalContent(chunk.text)) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 3: pre-flight relevance score ---
+  // Coarser than Gate 2 (which fires on any medical term); this gate requires
+  // at least MIN_CLAIMS_SCORE condition/claims keywords. Catches admin-heavy
+  // chunks that passed Gate 2 on a single generic medical term (e.g. "clinic").
+  if (ctx.isLocalAIMode && ctx.floorIndices.has(i)) {
+    ctx.skippedLowScore++;
+    ctx.chunksExcludedFromAI++;
+    ctx.recordPages(ctx.aiExcludedPages, chunk);
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (relevance score ${ctx.chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 4: priority-ordered chunk cap ---
+  // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
+  // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
+  // banner fires — these are intentional skips, not errors. The excluded pages
+  // are still fully covered by the semantic index built below.
+  if (ctx.isLocalAIMode && ctx.capIndices.has(i)) {
+    ctx.chunksExcludedFromAI++;
+    ctx.recordPages(ctx.aiExcludedPages, chunk);
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // This chunk clears every gate — the AI actually reads these pages.
+  ctx.recordPages(ctx.aiAnalyzedPages, chunk);
+  return false;
+}
+
+async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
+  let result = null;
+  let lastError = null;
+  // The circuit breaker protects interactive callers, but this batch loop
+  // is the legitimate retry owner: when the circuit opens mid-batch, wait
+  // out the cooldown and resume instead of letting every remaining chunk
+  // fail instantly. Bounded so a genuinely dead engine still aborts.
+  let circuitWaits = 0;
+
+  for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
     if (abortController?.signal.aborted) {
       throw new Error("Analysis cancelled by user");
     }
 
-    const chunk = chunks[i];
-    const chunkNum = i + 1;
+    try {
+      if (attempt > 0) {
+        ctx.onProgress(
+          `Retrying chunk ${chunkNum}/${ctx.totalChunks} (attempt ${attempt + 1} of ${MAX_CHUNK_RETRIES + 1})...`,
+          {
+            phase: "chunk-retry",
+            current: chunkNum,
+            total: ctx.totalChunks,
+            attempt: attempt + 1,
+          },
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, CHUNK_RETRY_BACKOFF_MS * attempt),
+        );
+      }
 
-    // --- Gate 1: low-content skip ---
-    // Near-blank pages: cover sheets, index separators, blank pages.
-    // Conservative thresholds — both conditions must hold.
-    const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
-    if (chunk.text.trim().length < 250 || alphaCount < 120) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
+      result = await analyzeChunk(chunk, chunkNum, ctx.totalChunks, ctx.onProgress);
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      // Message inlined in the string: the console capture wrapper only
+      // records the first argument, so a bare error object logs as blank
+      console.error(
+        `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
       );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
+
+      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+        circuitWaits++;
+        ctx.onProgress(
+          `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
+          { phase: "circuit-wait", current: chunkNum, total: ctx.totalChunks },
+        );
+        await new Promise((resolve) => setTimeout(resolve, 31000));
+        resetAICircuitBreaker();
+        attempt--; // circuit downtime doesn't consume a retry
+        continue;
+      }
+
+      // Context window errors are deterministic — retrying cannot help.
+      // unifiedAIService transforms the raw ContextWindowSizeExceededError into
+      // "📏 Document is too large for Local AI" before it reaches this catch, so
+      // the check covers both forms. Use an empty result (not a failedChunks
+      // entry) so the Partial Analysis banner does not fire for this skip, and
+      // the circuit breaker does not open on a single overflowing chunk.
+      if (
+        error.message?.includes("context window") ||
+        error.message?.includes("ContextWindowSizeExceededError") ||
+        error.message?.includes("too large for Local AI")
+      ) {
+        result = createEmptyChunkResult();
+        break;
+      }
+
+      if (error.message === "Analysis cancelled by user") {
+        throw error;
+      }
     }
+  }
 
-    // --- Gate 2: medical content pre-filter ---
-    // Text-heavy but purely administrative pages (routing slips, consent forms,
-    // SF authorization sheets, index pages) have none of: dates, medical terms,
-    // VA/claims language, or body-part references. Any ONE signal → send to LLM.
-    if (!chunkHasMedicalContent(chunk.text)) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
-      );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
+  return { result, lastError };
+}
 
-    // --- Gate 3: pre-flight relevance score ---
-    // Coarser than Gate 2 (which fires on any medical term); this gate requires
-    // at least MIN_CLAIMS_SCORE condition/claims keywords. Catches admin-heavy
-    // chunks that passed Gate 2 on a single generic medical term (e.g. "clinic").
-    if (isLocalAIMode && floorIndices.has(i)) {
-      skippedLowScore++;
-      chunksExcludedFromAI++;
-      recordPages(aiExcludedPages, chunk);
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (relevance score ${chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
-      );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
+async function _processOneChunk(chunk, i, ctx, abortController) {
+  if (abortController?.signal.aborted) {
+    throw new Error("Analysis cancelled by user");
+  }
 
-    // --- Gate 4: priority-ordered chunk cap ---
-    // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
-    // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
-    // banner fires — these are intentional skips, not errors. The excluded pages
-    // are still fully covered by the semantic index built below.
-    if (isLocalAIMode && capIndices.has(i)) {
-      chunksExcludedFromAI++;
-      recordPages(aiExcludedPages, chunk);
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
+  const chunkNum = i + 1;
 
-    // This chunk clears every gate — the AI actually reads these pages.
-    recordPages(aiAnalyzedPages, chunk);
+  if (_evaluatePreflightGates(chunk, i, chunkNum, ctx)) {
+    return;
+  }
 
-    onProgress(
-      `Analyzing chunk ${chunkNum} of ${totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
+  ctx.onProgress(
+    `Analyzing chunk ${chunkNum} of ${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
+    {
+      phase: "analyze",
+      current: chunkNum,
+      total: ctx.totalChunks,
+      startPage: chunk.startPage,
+      endPage: chunk.endPage,
+    },
+  );
+
+  const { result, lastError } = await _runChunkWithRetries(
+    chunk,
+    chunkNum,
+    ctx,
+    abortController,
+  );
+
+  if (result) {
+    ctx.chunkResults.push(result);
+
+    ctx.onProgress(`Chunk ${chunkNum}/${ctx.totalChunks} complete`, {
+      phase: "chunk-complete",
+      current: chunkNum,
+      total: ctx.totalChunks,
+    });
+  } else {
+    // Record the failure so the final result can show what's missing,
+    // then continue — one bad chunk must not abort the run
+    ctx.failedChunks.push({
+      chunkIndex: i,
+      startPage: chunk.startPage,
+      endPage: chunk.endPage,
+      error: lastError?.message || "Unknown error",
+    });
+
+    ctx.onProgress(
+      `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
       {
-        phase: "analyze",
+        phase: "chunk-error",
         current: chunkNum,
-        total: totalChunks,
-        startPage: chunk.startPage,
-        endPage: chunk.endPage,
+        total: ctx.totalChunks,
+        error: lastError?.message,
       },
     );
-
-    let result = null;
-    let lastError = null;
-    // The circuit breaker protects interactive callers, but this batch loop
-    // is the legitimate retry owner: when the circuit opens mid-batch, wait
-    // out the cooldown and resume instead of letting every remaining chunk
-    // fail instantly. Bounded so a genuinely dead engine still aborts.
-    let circuitWaits = 0;
-
-    for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
-      if (abortController?.signal.aborted) {
-        throw new Error("Analysis cancelled by user");
-      }
-
-      try {
-        if (attempt > 0) {
-          onProgress(
-            `Retrying chunk ${chunkNum}/${totalChunks} (attempt ${attempt + 1} of ${MAX_CHUNK_RETRIES + 1})...`,
-            {
-              phase: "chunk-retry",
-              current: chunkNum,
-              total: totalChunks,
-              attempt: attempt + 1,
-            },
-          );
-          await new Promise((resolve) =>
-            setTimeout(resolve, CHUNK_RETRY_BACKOFF_MS * attempt),
-          );
-        }
-
-        result = await analyzeChunk(chunk, chunkNum, totalChunks, onProgress);
-        lastError = null;
-        break;
-      } catch (error) {
-        lastError = error;
-        // Message inlined in the string: the console capture wrapper only
-        // records the first argument, so a bare error object logs as blank
-        console.error(
-          `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
-        );
-
-        if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
-          circuitWaits++;
-          onProgress(
-            `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${totalChunks}...`,
-            { phase: "circuit-wait", current: chunkNum, total: totalChunks },
-          );
-          await new Promise((resolve) => setTimeout(resolve, 31000));
-          resetAICircuitBreaker();
-          attempt--; // circuit downtime doesn't consume a retry
-          continue;
-        }
-
-        // Context window errors are deterministic — retrying cannot help.
-        // unifiedAIService transforms the raw ContextWindowSizeExceededError into
-        // "📏 Document is too large for Local AI" before it reaches this catch, so
-        // the check covers both forms. Use an empty result (not a failedChunks
-        // entry) so the Partial Analysis banner does not fire for this skip, and
-        // the circuit breaker does not open on a single overflowing chunk.
-        if (
-          error.message?.includes("context window") ||
-          error.message?.includes("ContextWindowSizeExceededError") ||
-          error.message?.includes("too large for Local AI")
-        ) {
-          result = createEmptyChunkResult();
-          break;
-        }
-
-        if (error.message === "Analysis cancelled by user") {
-          throw error;
-        }
-      }
-    }
-
-    if (result) {
-      chunkResults.push(result);
-
-      onProgress(`Chunk ${chunkNum}/${totalChunks} complete`, {
-        phase: "chunk-complete",
-        current: chunkNum,
-        total: totalChunks,
-      });
-    } else {
-      // Record the failure so the final result can show what's missing,
-      // then continue — one bad chunk must not abort the run
-      failedChunks.push({
-        chunkIndex: i,
-        startPage: chunk.startPage,
-        endPage: chunk.endPage,
-        error: lastError?.message || "Unknown error",
-      });
-
-      onProgress(
-        `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
-        {
-          phase: "chunk-error",
-          current: chunkNum,
-          total: totalChunks,
-          error: lastError?.message,
-        },
-      );
-    }
-
-    // No inter-chunk sleep: local WebGPU AI has no rate limiting.
   }
 
-  if (skippedLowScore > 0) {
+  // No inter-chunk sleep: local WebGPU AI has no rate limiting.
+}
+
+
+async function _finalizeMultiChunkResult(
+  ctx,
+  fullText,
+  aiMode,
+  skippedPages,
+  semanticOpts,
+) {
+  if (ctx.skippedLowScore > 0) {
     // eslint-disable-next-line no-console
     console.log(
-      `📊 Pre-flight skipped ${skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`,
+      `📊 Pre-flight skipped ${ctx.skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`,
     );
   }
 
-  if (chunkResults.length === 0) {
+  if (ctx.chunkResults.length === 0) {
     throw new Error(
       "All chunks failed to process. Please try again or use a smaller file.",
     );
   }
 
   // Merge all results
-  onProgress("Merging analysis results...", { phase: "merge" });
-  const mergedResult = mergeChunkResults(chunkResults);
+  ctx.onProgress("Merging analysis results...", { phase: "merge" });
+  const mergedResult = mergeChunkResults(ctx.chunkResults);
 
   // Anti-hallucination gate on the MERGED result: any diagnostic code not in
   // the 38 CFR Part 4 database is stripped before the veteran ever sees it
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
-  mergedResult.failedChunks = failedChunks;
+  mergedResult.failedChunks = ctx.failedChunks;
 
   // S24: distinct real pages the AI never read because of the score cap/floor
   // (pages that appear in an analyzed chunk via overlap don't count as excluded).
-  const pagesExcludedFromAI = [...aiExcludedPages].filter(
-    (p) => !aiAnalyzedPages.has(p),
+  const pagesExcludedFromAI = [...ctx.aiExcludedPages].filter(
+    (p) => !ctx.aiAnalyzedPages.has(p),
   ).length;
 
   // Semantic index over the WHOLE document — built regardless of the AI cap so
   // the excluded pages remain searchable ("search the full document").
   const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
 
-  onProgress("Analysis complete!", { phase: "complete" });
+  ctx.onProgress("Analysis complete!", { phase: "complete" });
 
   return {
     success: true,
@@ -1699,17 +1729,75 @@ export async function analyzeCFile(
       analyzedAt: new Date().toISOString(),
       textLength: fullText.length,
       aiMode: aiMode,
-      chunksProcessed: chunkResults.length,
-      totalChunks: totalChunks,
-      failedChunkCount: failedChunks.length,
+      chunksProcessed: ctx.chunkResults.length,
+      totalChunks: ctx.totalChunks,
+      failedChunkCount: ctx.failedChunks.length,
       boilerplatePagesSkipped: skippedPages,
       pagesExcludedFromAI,
-      chunksExcludedFromAI,
+      chunksExcludedFromAI: ctx.chunksExcludedFromAI,
       semanticIndex,
       rejectedDiagnosticCodes: rejectedCodes,
     },
   };
 }
+
+export async function analyzeCFile(
+  apiKey,
+  fullText,
+  onProgress = () => {},
+  abortController = null,
+  options = {},
+) {
+  const semanticOpts = _buildSemanticOpts(onProgress, abortController, options);
+
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error(
+      "No AI available. Please set up an API key or enable Local AI.",
+    );
+  }
+
+  if (!fullText || fullText.trim().length < 100) {
+    throw new Error("Insufficient text content to analyze");
+  }
+
+  const { aiMode, isLocalAIMode, chunks, skippedPages } =
+    await _determineAiModeAndChunks(fullText, onProgress);
+  const totalChunks = chunks.length;
+
+  if (totalChunks === 1) {
+    return await _analyzeSingleChunkPath(
+      chunks,
+      aiMode,
+      fullText,
+      skippedPages,
+      semanticOpts,
+      onProgress,
+    );
+  }
+
+  // Multi-chunk processing
+  const ctx = _buildMultiChunkState(
+    chunks,
+    fullText,
+    aiMode,
+    isLocalAIMode,
+    onProgress,
+  );
+
+  for (let i = 0; i < chunks.length; i++) {
+    await _processOneChunk(chunks[i], i, ctx, abortController);
+  }
+
+  return await _finalizeMultiChunkResult(
+    ctx,
+    fullText,
+    aiMode,
+    skippedPages,
+    semanticOpts,
+  );
+}
+
 
 // Slim system prompt for local AI (3 fields: servicePeriod, potential_claims, timeline).
 // Secondary fields (summary, exposures, combatIndicators, mentalHealth, redFlags,
@@ -1770,6 +1858,93 @@ function chunkHasMedicalContent(text) {
 
 // Returns a claims-relevance score for a chunk of text (0–N, higher = more relevant).
 // Runs in <1 ms per chunk; used for priority-ordering before the AI cap is applied.
+const CHUNK_SCORE_HIGH_TERMS = [
+  "ptsd",
+  "post-traumatic",
+  "tinnitus",
+  "radiculopathy",
+  "pes planus",
+  "plantar fasci",
+  "sleep apnea",
+  "migraine",
+  "nexus",
+  "service connection",
+  "service-connected",
+  "in-service",
+  "dbq",
+  "disability benefits questionnaire",
+  "c&p exam",
+  "rating decision",
+  "service treatment record",
+  "traumatic brain",
+  "tbi",
+  "burn pit",
+  "agent orange",
+  "pact act",
+];
+
+const CHUNK_SCORE_MED_TERMS = [
+  "diagnosis",
+  "diagnosed",
+  "chronic",
+  "bilateral",
+  "aggravated",
+  "secondary to",
+  "hypertension",
+  "diabetes",
+  "depression",
+  "anxiety",
+  "neuropathy",
+  "degenerative",
+  "lumbar",
+  "cervical",
+  "sciatica",
+  "carpal tunnel",
+  "hearing loss",
+  "knee",
+  "shoulder",
+  "hip",
+  "ankle",
+  "back pain",
+  "deployed",
+  "combat",
+  "active duty",
+  "discharge",
+  "dd-214",
+  "dd214",
+  "va medical",
+  "vamc",
+  "progress note",
+  "treatment",
+  "prescribed",
+  "etiology",
+  "prognosis",
+  "pathology",
+  "biopsy",
+  "specimen",
+  "laboratory",
+  "radiology",
+  "consultation",
+  "referred to",
+  "presented with",
+  "complaints of",
+  "history of",
+  "chronic condition",
+];
+
+const CHUNK_SCORE_ADMIN_TERMS = [
+  "please deliver to",
+  "fax transmittal",
+  "routing slip",
+  "authorization to release",
+  "cover sheet",
+  "sign here",
+  "signature required",
+  "this form is",
+  "table of contents",
+  "page intentionally left blank",
+];
+
 function scoreChunkRelevance(text) {
   const t = text.toLowerCase();
   let score = 0;
@@ -1783,109 +1958,23 @@ function scoreChunkRelevance(text) {
   if (/\b(assessment|impression|findings|diagnosis|plan)\s*:/i.test(text))
     score += 2;
 
-  const HIGH = [
-    "ptsd",
-    "post-traumatic",
-    "tinnitus",
-    "radiculopathy",
-    "pes planus",
-    "plantar fasci",
-    "sleep apnea",
-    "migraine",
-    "nexus",
-    "service connection",
-    "service-connected",
-    "in-service",
-    "dbq",
-    "disability benefits questionnaire",
-    "c&p exam",
-    "rating decision",
-    "service treatment record",
-    "traumatic brain",
-    "tbi",
-    "burn pit",
-    "agent orange",
-    "pact act",
-  ];
-  for (const s of HIGH) {
+  for (const s of CHUNK_SCORE_HIGH_TERMS) {
     if (t.includes(s)) score += 2;
   }
 
-  const MED = [
-    "diagnosis",
-    "diagnosed",
-    "chronic",
-    "bilateral",
-    "aggravated",
-    "secondary to",
-    "hypertension",
-    "diabetes",
-    "depression",
-    "anxiety",
-    "neuropathy",
-    "degenerative",
-    "lumbar",
-    "cervical",
-    "sciatica",
-    "carpal tunnel",
-    "hearing loss",
-    "knee",
-    "shoulder",
-    "hip",
-    "ankle",
-    "back pain",
-    "deployed",
-    "combat",
-    "active duty",
-    "discharge",
-    "dd-214",
-    "dd214",
-    "va medical",
-    "vamc",
-    "progress note",
-    "treatment",
-    "prescribed",
-    "etiology",
-    "prognosis",
-    "pathology",
-    "biopsy",
-    "specimen",
-    "laboratory",
-    "radiology",
-    "consultation",
-    "referred to",
-    "presented with",
-    "complaints of",
-    "history of",
-    "chronic condition",
-  ];
-  for (const s of MED) {
+  for (const s of CHUNK_SCORE_MED_TERMS) {
     if (t.includes(s)) score += 1;
   }
 
-  const ADMIN = [
-    "please deliver to",
-    "fax transmittal",
-    "routing slip",
-    "authorization to release",
-    "cover sheet",
-    "sign here",
-    "signature required",
-    "this form is",
-    "table of contents",
-    "page intentionally left blank",
-  ];
-  for (const s of ADMIN) {
+  for (const s of CHUNK_SCORE_ADMIN_TERMS) {
     if (t.includes(s)) score -= 2;
   }
 
   return Math.max(0, score);
 }
 
-/**
- * Analyze a single chunk of text
- */
-async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
+
+async function _requestChunkAnalysis(chunk, chunkNum, totalChunks, onProgress) {
   // Detect if we're using local AI (smaller context). effectiveMode is the
   // resolved routing target — the raw stored mode can disagree with it
   // (e.g. "auto"), which silently gave local generations the short cloud
@@ -1977,9 +2066,10 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     throw new Error("No analysis content received from AI");
   }
 
-  const contentStr =
-    typeof content === "string" ? content : JSON.stringify(content);
+  return typeof content === "string" ? content : JSON.stringify(content);
+}
 
+function _parseChunkAiResponse(contentStr) {
   // Parse JSON response
   let cleanContent = contentStr.trim();
   if (cleanContent.startsWith("```json")) {
@@ -2003,9 +2093,8 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     );
   }
 
-  let analysisResult;
   try {
-    analysisResult = JSON.parse(cleanContent);
+    return JSON.parse(cleanContent);
   } catch (parseError) {
     console.error("JSON Parse Error:", parseError);
     console.error("Content to parse:", cleanContent.substring(0, 500));
@@ -2015,22 +2104,37 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     if (repaired) {
       // eslint-disable-next-line no-console
       console.log("✅ Successfully repaired truncated JSON response");
-      analysisResult = repaired;
-    } else if (!cleanContent.includes("{")) {
+      return repaired;
+    }
+    if (!cleanContent.includes("{")) {
       // Model returned plain text with no JSON structure at all — it found nothing
       // to report (e.g. "This page contains administrative records."). Treat as an
-      // empty-but-successful chunk so it never lands in failedChunks.
+      // empty-but-successful chunk so it never lands in failedChunks. Returning {}
+      // here is equivalent to createEmptyChunkResult(): every field below defaults
+      // the same way whether analysisResult is {} or genuinely absent.
       // eslint-disable-next-line no-console
       console.warn(
         `⚠️ Non-JSON model response (no '{' found) — treating as empty chunk: "${cleanContent.substring(0, 80)}"`,
       );
-      return createEmptyChunkResult();
-    } else {
-      throw new Error(
-        `Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`,
-      );
+      return {};
     }
+    throw new Error(
+      `Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`,
+    );
   }
+}
+
+/**
+ * Analyze a single chunk of text
+ */
+async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
+  const contentStr = await _requestChunkAnalysis(
+    chunk,
+    chunkNum,
+    totalChunks,
+    onProgress,
+  );
+  const analysisResult = _parseChunkAiResponse(contentStr);
 
   // Sanitize result — use Array.isArray for array fields so a repaired object
   // (e.g. timeline:{} instead of timeline:[]) doesn't slip through as truthy.
@@ -2071,6 +2175,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     },
   };
 }
+
 
 // ============================================================================
 // PAGE-BY-PAGE PIPELINE (local AI — replaces chunk-based for SWARM/LOCAL/WLLAMA)
@@ -2117,7 +2222,7 @@ function classifyPage(text) {
  * Analyze a single page with the short PAGE_SYSTEM_PROMPT.
  * Returns a chunk-schema-compatible object so mergeChunkResults works unchanged.
  */
-async function analyzePage(pageText, pageNum, totalPages, onProgress) {
+async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   const status = getAIStatus();
   const effectiveMode = status.effectiveMode || status.mode;
   const isLocalAI = [
@@ -2176,25 +2281,29 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
     clearInterval(heartbeat);
   }
 
-  const raw =
-    typeof response?.text === "string" ? response.text : String(response || "");
+  return typeof response?.text === "string"
+    ? response.text
+    : String(response || "");
+}
+
+function _parsePageAiResponse(raw, pageNum) {
   let clean = raw.trim();
   if (clean.startsWith("```json")) clean = clean.slice(7);
   if (clean.startsWith("```")) clean = clean.slice(3);
   if (clean.endsWith("```")) clean = clean.slice(0, -3);
   clean = clean.trim();
 
-  let pr;
   try {
-    pr = JSON.parse(clean);
+    return JSON.parse(clean);
   } catch {
     const repaired = attemptJSONRepair(clean);
-    if (repaired) pr = repaired;
-    else
-      throw new Error(`Page ${pageNum}: failed to parse AI response as JSON`);
+    if (repaired) return repaired;
+    throw new Error(`Page ${pageNum}: failed to parse AI response as JSON`);
   }
+}
 
-  // Map page-level schema → chunk-compatible schema expected by mergeChunkResults
+// Map page-level schema → chunk-compatible schema expected by mergeChunkResults
+function _mapPageResultToChunkSchema(pr, pageNum) {
   return {
     summary: "",
     servicePeriod: {
@@ -2246,17 +2355,19 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
   };
 }
 
-/**
- * Page-by-page orchestrator for local AI modes.
- * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
- * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
- */
-async function _analyzePageByPage(
-  fullText,
-  aiMode,
-  onProgress,
-  abortController,
-) {
+async function analyzePage(pageText, pageNum, totalPages, onProgress) {
+  const raw = await _requestPageAnalysis(
+    pageText,
+    pageNum,
+    totalPages,
+    onProgress,
+  );
+  const pr = _parsePageAiResponse(raw, pageNum);
+  return _mapPageResultToChunkSchema(pr, pageNum);
+}
+
+
+function _prepareMedicalPages(fullText, onProgress) {
   const allPages = parseAllPages(fullText);
   if (allPages.length === 0) {
     throw new Error("No page markers found in document text");
@@ -2281,106 +2392,119 @@ async function _analyzePageByPage(
     { phase: "multi-chunk", current: 0, total: totalPages },
   );
 
-  const pageResults = [];
-  const failedPages = [];
+  return { medicalPages, skippedPages };
+}
 
-  for (let i = 0; i < medicalPages.length; i++) {
+async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
+  let result = null;
+  let lastError = null;
+  let circuitWaits = 0;
+
+  for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
     if (abortController?.signal.aborted) {
       throw new Error("Analysis cancelled by user");
     }
-
-    const { pageNum, text } = medicalPages[i];
-
-    // Gate: near-blank pages (should be rare after classifyPage, but defensive)
-    const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
-    if (text.trim().length < 100 || alphaCount < 50) {
-      pageResults.push(createEmptyChunkResult());
-      continue;
-    }
-
-    onProgress(`Analyzing page ${pageNum} (${i + 1} of ${totalPages})…`, {
-      phase: "analyze",
-      current: i + 1,
-      total: totalPages,
-      startPage: pageNum,
-      endPage: pageNum,
-    });
-
-    let result = null;
-    let lastError = null;
-    let circuitWaits = 0;
-
-    for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
-      if (abortController?.signal.aborted) {
-        throw new Error("Analysis cancelled by user");
-      }
-      try {
-        if (attempt > 0) {
-          await new Promise((r) =>
-            setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
-          );
-        }
-        result = await analyzePage(text, pageNum, totalPages, onProgress);
-        lastError = null;
-        break;
-      } catch (error) {
-        lastError = error;
-        console.error(
-          `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
+    try {
+      if (attempt > 0) {
+        await new Promise((r) =>
+          setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
         );
-
-        if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
-          circuitWaits++;
-          onProgress(`AI engine paused — waiting 30s before page ${pageNum}…`, {
-            phase: "circuit-wait",
-            current: i + 1,
-            total: totalPages,
-          });
-          await new Promise((r) => setTimeout(r, 31000));
-          resetAICircuitBreaker();
-          attempt--;
-          continue;
-        }
-
-        if (
-          error.message?.includes("context window") ||
-          error.message?.includes("too large for Local AI")
-        ) {
-          result = createEmptyChunkResult();
-          break;
-        }
-
-        if (error.message === "Analysis cancelled by user") throw error;
       }
-    }
+      result = await analyzePage(text, pageNum, ctx.totalPages, ctx.onProgress);
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
+      );
 
-    if (result) {
-      pageResults.push(result);
-      onProgress(`Page ${pageNum} complete (${i + 1}/${totalPages})`, {
-        phase: "chunk-complete",
-        current: i + 1,
-        total: totalPages,
-      });
-    } else {
-      failedPages.push({
-        pageNum,
-        error: lastError?.message || "Unknown error",
-      });
+      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+        circuitWaits++;
+        ctx.onProgress(`AI engine paused — waiting 30s before page ${pageNum}…`, {
+          phase: "circuit-wait",
+          current: i + 1,
+          total: ctx.totalPages,
+        });
+        await new Promise((r) => setTimeout(r, 31000));
+        resetAICircuitBreaker();
+        attempt--;
+        continue;
+      }
+
+      if (
+        error.message?.includes("context window") ||
+        error.message?.includes("too large for Local AI")
+      ) {
+        result = createEmptyChunkResult();
+        break;
+      }
+
+      if (error.message === "Analysis cancelled by user") throw error;
     }
   }
 
-  if (pageResults.length === 0) {
+  return { result, lastError };
+}
+
+async function _processOnePage(pageEntry, i, ctx, abortController) {
+  if (abortController?.signal.aborted) {
+    throw new Error("Analysis cancelled by user");
+  }
+
+  const { pageNum, text } = pageEntry;
+
+  // Gate: near-blank pages (should be rare after classifyPage, but defensive)
+  const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
+  if (text.trim().length < 100 || alphaCount < 50) {
+    ctx.pageResults.push(createEmptyChunkResult());
+    return;
+  }
+
+  ctx.onProgress(`Analyzing page ${pageNum} (${i + 1} of ${ctx.totalPages})…`, {
+    phase: "analyze",
+    current: i + 1,
+    total: ctx.totalPages,
+    startPage: pageNum,
+    endPage: pageNum,
+  });
+
+  const { result, lastError } = await _runPageWithRetries(
+    text,
+    pageNum,
+    i,
+    ctx,
+    abortController,
+  );
+
+  if (result) {
+    ctx.pageResults.push(result);
+    ctx.onProgress(`Page ${pageNum} complete (${i + 1}/${ctx.totalPages})`, {
+      phase: "chunk-complete",
+      current: i + 1,
+      total: ctx.totalPages,
+    });
+  } else {
+    ctx.failedPages.push({
+      pageNum,
+      error: lastError?.message || "Unknown error",
+    });
+  }
+}
+
+function _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages) {
+  if (ctx.pageResults.length === 0) {
     throw new Error(
       "All pages failed to process. Please try again or check AI model status.",
     );
   }
 
-  onProgress("Merging analysis results…", { phase: "merge" });
-  const mergedResult = mergeChunkResults(pageResults);
+  ctx.onProgress("Merging analysis results…", { phase: "merge" });
+  const mergedResult = mergeChunkResults(ctx.pageResults);
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
-  mergedResult.failedChunks = failedPages;
+  mergedResult.failedChunks = ctx.failedPages;
 
-  onProgress("Analysis complete!", { phase: "complete" });
+  ctx.onProgress("Analysis complete!", { phase: "complete" });
 
   return {
     success: true,
@@ -2389,15 +2513,41 @@ async function _analyzePageByPage(
       analyzedAt: new Date().toISOString(),
       textLength: fullText.length,
       aiMode,
-      chunksProcessed: pageResults.length,
-      totalChunks: totalPages,
-      failedChunkCount: failedPages.length,
+      chunksProcessed: ctx.pageResults.length,
+      totalChunks: ctx.totalPages,
+      failedChunkCount: ctx.failedPages.length,
       boilerplatePagesSkipped: skippedPages,
       rejectedDiagnosticCodes: rejectedCodes,
       processingMode: "page-by-page",
     },
   };
 }
+
+/**
+ * Page-by-page orchestrator for local AI modes.
+ * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
+ * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
+ */
+async function _analyzePageByPage(fullText, aiMode, onProgress, abortController) {
+  const { medicalPages, skippedPages } = _prepareMedicalPages(
+    fullText,
+    onProgress,
+  );
+
+  const ctx = {
+    pageResults: [],
+    failedPages: [],
+    totalPages: medicalPages.length,
+    onProgress,
+  };
+
+  for (let i = 0; i < medicalPages.length; i++) {
+    await _processOnePage(medicalPages[i], i, ctx, abortController);
+  }
+
+  return _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages);
+}
+
 
 // ============================================================================
 // UTILITY EXPORTS
