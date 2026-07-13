@@ -1007,6 +1007,30 @@ export const ALL_BADGES = [
 // BADGE PARSING FROM DD214 TEXT
 // ============================================================================
 
+// Checks the badge's main name, then falls back to its aliases.
+function badgeMatchesText(cleanedText, badge) {
+  if (cleanedText.includes(badge.name.toUpperCase())) {
+    return true;
+  }
+  if (!badge.aliases) {
+    return false;
+  }
+  return badge.aliases.some((alias) => cleanedText.includes(alias));
+}
+
+// Records a matched badge into the appropriate group/indicator buckets.
+function recordMatchedBadge(badge, { foundBadges, foundTabs, combatIndicators }) {
+  if (badge.group === BADGE_GROUPS.TAB) {
+    foundTabs.push(badge);
+  } else {
+    foundBadges.push(badge);
+  }
+
+  if (badge.combatIndicator) {
+    combatIndicators.push(badge.name);
+  }
+}
+
 export function parseDD214Badges(rawText, branch = "Army") {
   if (!rawText || typeof rawText !== "string") {
     return { badges: [], tabs: [], combatIndicators: [] };
@@ -1014,6 +1038,7 @@ export function parseDD214Badges(rawText, branch = "Army") {
 
   // Clean the text
   const cleanedText = rawText
+    // eslint-disable-next-line sonarjs/slow-regex -- single non-nested [^)]* quantifier; linear-time match, not vulnerable to catastrophic backtracking. Rewriting to string ops risks altering DD214 parsing behavior for nested-paren edge cases.
     .replace(/\([^)]*\)/g, " ") // Remove parenthetical
     .replace(/[a-z]{3,}/g, " ") // Remove lowercase words
     .toUpperCase()
@@ -1030,36 +1055,12 @@ export function parseDD214Badges(rawText, branch = "Army") {
     // Check if badge applies to this branch
     if (!badge.branch.includes(branch)) continue;
 
-    let matched = false;
-
-    // Check main name
-    if (cleanedText.includes(badge.name.toUpperCase())) {
-      matched = true;
+    if (!badgeMatchesText(cleanedText, badge) || processedIds.has(badge.id)) {
+      continue;
     }
 
-    // Check aliases
-    if (!matched && badge.aliases) {
-      for (const alias of badge.aliases) {
-        if (cleanedText.includes(alias)) {
-          matched = true;
-          break;
-        }
-      }
-    }
-
-    if (matched && !processedIds.has(badge.id)) {
-      processedIds.add(badge.id);
-
-      if (badge.group === BADGE_GROUPS.TAB) {
-        foundTabs.push(badge);
-      } else {
-        foundBadges.push(badge);
-      }
-
-      if (badge.combatIndicator) {
-        combatIndicators.push(badge.name);
-      }
-    }
+    processedIds.add(badge.id);
+    recordMatchedBadge(badge, { foundBadges, foundTabs, combatIndicators });
   }
 
   // Sort by precedence within each group

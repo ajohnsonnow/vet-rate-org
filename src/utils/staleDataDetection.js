@@ -27,7 +27,7 @@ export function isStaleData(disability) {
 
     // Consider stale if more than 365 days old
     return daysDifference > 365;
-  } catch (error) {
+  } catch (_error) {
     // If date parsing fails, consider it stale
     return true;
   }
@@ -47,7 +47,7 @@ export function getDataAgeDays(disability) {
     const verifiedDate = new Date(disability.lastVerifiedDate);
     const currentDate = new Date();
     return Math.floor((currentDate - verifiedDate) / (1000 * 60 * 60 * 24));
-  } catch (error) {
+  } catch (_error) {
     return Infinity;
   }
 }

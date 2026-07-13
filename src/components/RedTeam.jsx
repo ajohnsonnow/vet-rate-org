@@ -369,6 +369,7 @@ const PdfDropZone = ({
 }) => {
   if (pdfFile || pdfOcrProgress) return null;
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- drag-and-drop zone only; keyboard-accessible file selection is provided via the "browse to select" button and hidden file input below
     <div
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}

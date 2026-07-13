@@ -385,6 +385,25 @@ function MobileShareTabContent({
   );
 }
 
+async function checkNativeShareSupport(setCanNativeShare) {
+  if (!navigator.share) return;
+  // Create a test file to check if file sharing is supported
+  const testBlob = new Blob(["test"], { type: "application/pdf" });
+  const testFile = new File([testBlob], "test.pdf", {
+    type: "application/pdf",
+  });
+
+  if (navigator.canShare && navigator.canShare({ files: [testFile] })) {
+    setCanNativeShare(true);
+  }
+}
+
+const SHARE_TABS = [
+  { id: "download", label: "📥 Download", icon: "📥" },
+  { id: "encrypt", label: "📧 Email Zip", icon: "📧" },
+  { id: "share", label: "📲 Share", icon: "📲" },
+];
+
 function ShareMenuFooter() {
   return (
     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
@@ -413,20 +432,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
 
   // Check for native share support on mount
   useEffect(() => {
-    const checkShareSupport = async () => {
-      if (navigator.share) {
-        // Create a test file to check if file sharing is supported
-        const testBlob = new Blob(["test"], { type: "application/pdf" });
-        const testFile = new File([testBlob], "test.pdf", {
-          type: "application/pdf",
-        });
-
-        if (navigator.canShare && navigator.canShare({ files: [testFile] })) {
-          setCanNativeShare(true);
-        }
-      }
-    };
-    checkShareSupport();
+    checkNativeShareSupport(setCanNativeShare);
   }, []);
 
   const genDeps = { setIsGenerating, setStatus };
@@ -436,12 +442,6 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   const handleNativeShare = () =>
     shareNativeDbq(formId, formData, formTitle, genDeps);
   const handleCopyToClipboard = () => copyDbqSummary(formData, genDeps);
-
-  const tabs = [
-    { id: "download", label: "📥 Download", icon: "📥" },
-    { id: "encrypt", label: "📧 Email Zip", icon: "📧" },
-    { id: "share", label: "📲 Share", icon: "📲" },
-  ];
 
   return (
     <ResponsiveModal
@@ -457,7 +457,11 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
         <DbqInfoBanner formTitle={formTitle} formId={formId} />
 
         {/* Tab Navigation */}
-        <TabNav tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabNav
+          tabs={SHARE_TABS}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         {/* Tab Content */}
         <div className="p-4">

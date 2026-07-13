@@ -242,7 +242,7 @@ export const decryptFromCloud = async (
     const decoder = new TextDecoder();
     const jsonString = decoder.decode(decryptedBuffer);
     return JSON.parse(jsonString);
-  } catch (err) {
+  } catch {
     throw new Error("Decryption failed. Wrong passphrase or corrupted data.");
   }
 };
@@ -296,7 +296,7 @@ export const isEncryptedBackup = (data) => {
 const KEY_STORAGE_PREFIX = "vet_rate_backup_key_"; // legacy plaintext DEK (base64 raw)
 const WRAPPED_KEY_PREFIX = "vet_rate_wrapped_key_"; // AES-KW wrapped DEK (base64)
 const ROTATING_KEY_PREFIX = "vet_rate_rotating_key_"; // temp wrapped DEK mid-rotation
-const KEK_META_KEY = "vet_rate_kek_meta"; // { v, salt, iterations, createdAt }
+const KEK_META_KEY = "vet_rate_kek_meta"; // stores v, salt, iterations, createdAt
 const KEK_VERIFIER_KEY = "vet_rate_kek_verifier"; // AES-KW wrap of a throwaway key
 const KEK_VERIFIER_TAG_KEY = "vet_rate_kek_verifier_tag"; // SHA-256 of the verifier bytes (corruption check)
 const KEK_ROTATING_KEY = "vet_rate_kek_rotating"; // rotation commit marker (new meta + verifier)

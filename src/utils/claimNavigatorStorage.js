@@ -288,10 +288,11 @@ export const recordDecision = (claimId, decisionData) => {
   };
 
   // Add decision note
+  const ratingSuffix = ratingPercentage ? ` at ${ratingPercentage}%` : "";
   const note = {
     id: `note_${Date.now()}`,
     date: new Date().toISOString(),
-    text: `Decision received: ${outcome}${ratingPercentage ? ` at ${ratingPercentage}%` : ""}`,
+    text: `Decision received: ${outcome}${ratingSuffix}`,
     type: "milestone",
   };
 

@@ -304,6 +304,161 @@ const clearCorruptedCache = async () => {
 };
 
 /**
+ * Resolve the agent ID and callbacks from either calling convention:
+ * 1. initializeSwarm('auditor', { onProgress, onComplete, onError })
+ * 2. initializeSwarm({ modelId: 'vetrate-auditor-7b-v2', onProgress })
+ */
+function _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks) {
+  if (typeof agentIdOrConfig === "object" && agentIdOrConfig !== null) {
+    // Object form - extract modelId and derive agentId
+    const {
+      modelId,
+      onProgress: _onProgress,
+      onComplete: _onComplete,
+      onError: _onError,
+    } = agentIdOrConfig;
+
+    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer')
+    let agentId;
+    if (modelId) {
+      if (modelId.includes("writer")) agentId = "writer";
+      else if (modelId.includes("rater")) agentId = "rater";
+      else agentId = "auditor"; // default
+    } else {
+      agentId = "auditor";
+    }
+
+    return {
+      agentId,
+      onProgress: _onProgress,
+      onComplete: _onComplete,
+      onError: _onError,
+    };
+  }
+
+  // String form - use directly
+  return {
+    agentId: String(agentIdOrConfig || "auditor"),
+    onProgress: callbacks.onProgress,
+    onComplete: callbacks.onComplete,
+    onError: callbacks.onError,
+  };
+}
+
+/**
+ * Shared with LocalAIPanel.jsx: patch navigator.gpu.requestAdapter so that
+ * when WebLLM internally calls requestDevice it gets the adapter's true max
+ * limits (required for Blackwell / RTX 5060 Ti and similar high-end GPUs).
+ */
+function _ensureMLCGPUPatch() {
+  if (window._mlc_gpu_patched || !navigator.gpu) return;
+
+  const _origRequestAdapter = navigator.gpu.requestAdapter.bind(
+    navigator.gpu,
+  );
+  navigator.gpu.requestAdapter = async function (options) {
+    const a = await _origRequestAdapter(options);
+    if (!a) return a;
+    const aLimits = a.limits;
+    const aFeatures = a.features;
+    const _origRequestDevice = a.requestDevice.bind(a);
+    a.requestDevice = async function (descriptor = {}) {
+      const requiredLimits = {
+        ...descriptor.requiredLimits,
+        maxComputeInvocationsPerWorkgroup:
+          aLimits.maxComputeInvocationsPerWorkgroup || 1024,
+        maxStorageBufferBindingSize: aLimits.maxStorageBufferBindingSize,
+        maxBufferSize: aLimits.maxBufferSize,
+        maxComputeWorkgroupSizeX: aLimits.maxComputeWorkgroupSizeX,
+        maxComputeWorkgroupSizeY: aLimits.maxComputeWorkgroupSizeY,
+        maxComputeWorkgroupSizeZ: aLimits.maxComputeWorkgroupSizeZ,
+        maxComputeWorkgroupStorageSize:
+          aLimits.maxComputeWorkgroupStorageSize,
+        maxBindGroups: aLimits.maxBindGroups,
+        maxBindingsPerBindGroup: aLimits.maxBindingsPerBindGroup,
+        maxDynamicStorageBuffersPerPipelineLayout:
+          aLimits.maxDynamicStorageBuffersPerPipelineLayout,
+        maxStorageBuffersPerShaderStage:
+          aLimits.maxStorageBuffersPerShaderStage,
+      };
+      const requiredFeatures = [...(descriptor.requiredFeatures || [])];
+      if (
+        aFeatures.has("shader-f16") &&
+        !requiredFeatures.includes("shader-f16")
+      ) {
+        requiredFeatures.push("shader-f16");
+      }
+      return await _origRequestDevice({
+        ...descriptor,
+        requiredLimits,
+        requiredFeatures,
+      });
+    };
+    return a;
+  };
+  window._mlc_gpu_patched = true;
+}
+
+/**
+ * Try to load a WebLLM model from a device-optimal list, in order.
+ * Returns { modelId, engine } on success, or null if every model failed.
+ */
+async function _loadModelFromList(
+  modelList,
+  agentInfo,
+  contextWindowSize,
+  tier,
+  onProgress,
+) {
+  for (const modelId of modelList) {
+    try {
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+
+      onProgress?.({
+        stage: "download",
+        message: `Downloading ${agentInfo?.name} (${modelId.split("-")[0]})...`,
+        progress: 10,
+      });
+
+      const engine = await CreateMLCEngine(
+        modelId,
+        {
+          initProgressCallback: (report) => {
+            const progress = Math.round(report.progress * 80) + 10; // 10-90%
+            onProgress?.({
+              stage: "loading",
+              message: report.text || `Loading ${agentInfo?.name}...`,
+              progress,
+            });
+          },
+          logLevel: "SILENT",
+        },
+        // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
+        // desktop-mid/laptop/mobile fall back to 8192 or 4096.
+        { context_window_size: contextWindowSize },
+      );
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `🎖️ WebLLM loaded: ${modelId} | context: ${contextWindowSize} | tier: ${tier}`,
+      );
+      return { modelId, engine }; // Success!
+    } catch (modelError) {
+      console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
+
+      // If cache error, try to clear and retry once
+      if (modelError.message?.includes("Cache") && modelId === modelList[0]) {
+        // eslint-disable-next-line no-console
+        console.log("💎 Attempting to clear corrupted cache...");
+        await clearCorruptedCache();
+        // Continue to next model
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Initialize Warrant Council with WebLLM model loading
  * Uses a real WebLLM model with Warrant Council specialized prompts
  *
@@ -315,39 +470,8 @@ export const initializeSwarm = async (
   agentIdOrConfig = "auditor",
   callbacks = {},
 ) => {
-  // Handle both calling conventions:
-  // 1. initializeSwarm('auditor', { onProgress, onComplete, onError })
-  // 2. initializeSwarm({ modelId: 'vetrate-auditor-7b-v2', onProgress })
-  let agentId;
-  let onProgress, onComplete, onError;
-
-  if (typeof agentIdOrConfig === "object" && agentIdOrConfig !== null) {
-    // Object form - extract modelId and derive agentId
-    const {
-      modelId,
-      onProgress: _onProgress,
-      onComplete: _onComplete,
-      onError: _onError,
-    } = agentIdOrConfig;
-    onProgress = _onProgress;
-    onComplete = _onComplete;
-    onError = _onError;
-
-    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer')
-    if (modelId) {
-      if (modelId.includes("writer")) agentId = "writer";
-      else if (modelId.includes("rater")) agentId = "rater";
-      else agentId = "auditor"; // default
-    } else {
-      agentId = "auditor";
-    }
-  } else {
-    // String form - use directly
-    agentId = String(agentIdOrConfig || "auditor");
-    onProgress = callbacks.onProgress;
-    onComplete = callbacks.onComplete;
-    onError = callbacks.onError;
-  }
+  const { agentId, onProgress, onComplete, onError } =
+    _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks);
 
   try {
     swarmInitializing = true;
@@ -364,55 +488,7 @@ export const initializeSwarm = async (
       throw new Error("No compatible GPU found for Warrant Council.");
     }
 
-    // Shared with LocalAIPanel.jsx: patch navigator.gpu.requestAdapter so that
-    // when WebLLM internally calls requestDevice it gets the adapter's true max
-    // limits (required for Blackwell / RTX 5060 Ti and similar high-end GPUs).
-    if (!window._mlc_gpu_patched && navigator.gpu) {
-      const _origRequestAdapter = navigator.gpu.requestAdapter.bind(
-        navigator.gpu,
-      );
-      navigator.gpu.requestAdapter = async function (options) {
-        const a = await _origRequestAdapter(options);
-        if (!a) return a;
-        const aLimits = a.limits;
-        const aFeatures = a.features;
-        const _origRequestDevice = a.requestDevice.bind(a);
-        a.requestDevice = async function (descriptor = {}) {
-          const requiredLimits = {
-            ...descriptor.requiredLimits,
-            maxComputeInvocationsPerWorkgroup:
-              aLimits.maxComputeInvocationsPerWorkgroup || 1024,
-            maxStorageBufferBindingSize: aLimits.maxStorageBufferBindingSize,
-            maxBufferSize: aLimits.maxBufferSize,
-            maxComputeWorkgroupSizeX: aLimits.maxComputeWorkgroupSizeX,
-            maxComputeWorkgroupSizeY: aLimits.maxComputeWorkgroupSizeY,
-            maxComputeWorkgroupSizeZ: aLimits.maxComputeWorkgroupSizeZ,
-            maxComputeWorkgroupStorageSize:
-              aLimits.maxComputeWorkgroupStorageSize,
-            maxBindGroups: aLimits.maxBindGroups,
-            maxBindingsPerBindGroup: aLimits.maxBindingsPerBindGroup,
-            maxDynamicStorageBuffersPerPipelineLayout:
-              aLimits.maxDynamicStorageBuffersPerPipelineLayout,
-            maxStorageBuffersPerShaderStage:
-              aLimits.maxStorageBuffersPerShaderStage,
-          };
-          const requiredFeatures = [...(descriptor.requiredFeatures || [])];
-          if (
-            aFeatures.has("shader-f16") &&
-            !requiredFeatures.includes("shader-f16")
-          ) {
-            requiredFeatures.push("shader-f16");
-          }
-          return await _origRequestDevice({
-            ...descriptor,
-            requiredLimits,
-            requiredFeatures,
-          });
-        };
-        return a;
-      };
-      window._mlc_gpu_patched = true;
-    }
+    _ensureMLCGPUPatch();
 
     const agentInfo =
       SWARM_AGENTS[agentId?.toUpperCase?.()] || SWARM_AGENTS["AUDITOR"];
@@ -444,56 +520,15 @@ export const initializeSwarm = async (
     }
 
     // Load real WebLLM model for inference - try models in device-optimal order
-    let loadedModel = null;
-    for (const modelId of modelList) {
-      try {
-        const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+    const loadResult = await _loadModelFromList(
+      modelList,
+      agentInfo,
+      contextWindowSize,
+      deviceProfile.tier,
+      onProgress,
+    );
 
-        onProgress?.({
-          stage: "download",
-          message: `Downloading ${agentInfo?.name} (${modelId.split("-")[0]})...`,
-          progress: 10,
-        });
-
-        webllmEngine = await CreateMLCEngine(
-          modelId,
-          {
-            initProgressCallback: (report) => {
-              const progress = Math.round(report.progress * 80) + 10; // 10-90%
-              onProgress?.({
-                stage: "loading",
-                message: report.text || `Loading ${agentInfo?.name}...`,
-                progress,
-              });
-            },
-            logLevel: "SILENT",
-          },
-          // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
-          // desktop-mid/laptop/mobile fall back to 8192 or 4096.
-          { context_window_size: contextWindowSize },
-        );
-
-        loadedModel = modelId;
-        loadedModelId = modelId; // Store globally for status reporting
-        // eslint-disable-next-line no-console
-        console.log(
-          `🎖️ WebLLM loaded: ${modelId} | context: ${contextWindowSize} | tier: ${deviceProfile.tier}`,
-        );
-        break; // Success!
-      } catch (modelError) {
-        console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
-
-        // If cache error, try to clear and retry once
-        if (modelError.message?.includes("Cache") && modelId === modelList[0]) {
-          // eslint-disable-next-line no-console
-          console.log("💎 Attempting to clear corrupted cache...");
-          await clearCorruptedCache();
-          // Continue to next model
-        }
-      }
-    }
-
-    if (!loadedModel) {
+    if (!loadResult) {
       swarmInitializing = false;
       const loadErr = new Error(
         "All WebLLM models failed to load. Check the browser console for details (GPU limits, network, or cache errors).",
@@ -501,6 +536,9 @@ export const initializeSwarm = async (
       onError?.(loadErr);
       return false;
     }
+
+    webllmEngine = loadResult.engine;
+    loadedModelId = loadResult.modelId; // Store globally for status reporting
 
     // Mark as ready only when a model actually loaded
     loadedAgents.add(agentId);
@@ -550,6 +588,192 @@ export const switchAgent = async (agentId, callbacks = {}) => {
 };
 
 /**
+ * Truncate the user prompt (keeping the system prompt intact) so the total
+ * estimated tokens stay within the device's context window. Returns the
+ * prompt unchanged if it already fits.
+ */
+function _truncatePromptForContext(prompt, finalSystemPrompt, maxTokens) {
+  // OCR'd military/medical text tokenizes at ~3 chars/token (not the generic
+  // 4 chars/token); using / 3 is deliberately conservative so the truncation
+  // guard fires with enough margin that WebLLM never sees a prompt that exceeds
+  // context_window_size even on dense chunks.
+  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 3);
+  const estimatedPromptTokens = Math.ceil(prompt.length / 3);
+  const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
+  // Match the context_window_size the engine was initialized with.
+  // Reading from the cached device profile keeps this in sync with the value
+  // passed to CreateMLCEngine; defaults to 8192 (Qwen2.5-3B model max).
+  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 8192;
+  const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
+  const availableForInput = contextLimit - reservedForOutput;
+
+  // Not too large — nothing to do
+  if (estimatedTotalTokens <= availableForInput) {
+    return prompt;
+  }
+
+  console.warn(
+    `💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${availableForInput})`,
+  );
+  // Notify UI so tools can surface a visible warning to the user
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("diamondSwarm:tokenWarning", {
+        detail: {
+          estimatedTokens: estimatedTotalTokens,
+          limit: availableForInput,
+        },
+      }),
+    );
+  }
+
+  // Calculate max chars for prompt (keep system prompt, truncate user prompt)
+  const maxPromptChars = Math.max(
+    1000,
+    (availableForInput - estimatedSystemTokens) * 3,
+  );
+  if (prompt.length <= maxPromptChars) {
+    return prompt;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`,
+  );
+  // Keep beginning (context) and end (question) of prompt
+  const keepStart = Math.floor(maxPromptChars * 0.3);
+  const keepEnd = maxPromptChars - keepStart;
+  return (
+    prompt.slice(0, keepStart) +
+    "\n\n[... middle content truncated for context window ...]\n\n" +
+    prompt.slice(-keepEnd)
+  );
+}
+
+// interruptGenerate is best-effort and may throw if no generation is in
+// progress; continue silently either way.
+function _interruptGenerate(engine) {
+  try {
+    engine.interruptGenerate()?.catch(() => {});
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Track bracket depth across one streamed delta to detect JSON root
+ * completion. Handles escaped chars and string literals so inner braces
+ * (e.g. in "description" values) don't trigger a false close. Mutates
+ * `state` in place; interrupts `engine` generation once the root object
+ * (bracketDepth back to 0) closes.
+ */
+function _scanDeltaForJSONClose(delta, state, responseText, engine) {
+  for (const ch of delta) {
+    if (state.escape) {
+      state.escape = false;
+      continue;
+    }
+    if (ch === "\\" && state.inString) {
+      state.escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      state.inString = !state.inString;
+      continue;
+    }
+    if (state.inString) continue;
+    if (ch === "{") {
+      state.bracketDepth++;
+    } else if (ch === "}") {
+      state.bracketDepth--;
+      if (
+        state.bracketDepth === 0 &&
+        responseText.trimStart().startsWith("{")
+      ) {
+        // Root JSON object closed — stop generation immediately.
+        _interruptGenerate(engine);
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * JSON mode: always stream internally so we can interrupt the moment
+ * the root closing "}" is emitted. This saves all remaining tokens
+ * once the JSON object is structurally complete — common on simple/
+ * sparse chunks where the schema fills in well under max_tokens.
+ * Caller's onStream callback still fires on each delta if provided.
+ */
+async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
+  const jsonStream = await engine.chat.completions.create({
+    ...generationConfig,
+    stream: true,
+  });
+
+  let responseText = "";
+  const bracketState = { bracketDepth: 0, inString: false, escape: false };
+
+  for await (const piece of jsonStream) {
+    const delta = piece.choices[0]?.delta?.content || "";
+    if (delta) {
+      responseText += delta;
+      onStream?.(delta, responseText);
+      _scanDeltaForJSONClose(delta, bracketState, responseText, engine);
+    }
+
+    if (
+      bracketState.bracketDepth === 0 &&
+      responseText.trimStart().startsWith("{")
+    )
+      break;
+    if (piece.choices[0]?.finish_reason) break;
+    // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
+    // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
+    if (responseText.length > 4500) {
+      try {
+        engine.interruptGenerate()?.catch(() => {});
+      } catch {
+        /* interruptGenerate may throw if no generation is in progress */
+      }
+      break;
+    }
+  }
+
+  return responseText;
+}
+
+/** Non-JSON caller-driven streaming. */
+async function _runPlainStreamGeneration(engine, generationConfig, onStream) {
+  const chunks = await engine.chat.completions.create({
+    ...generationConfig,
+    stream: true,
+  });
+
+  let responseText = "";
+  for await (const chunk of chunks) {
+    const delta = chunk.choices[0]?.delta?.content || "";
+    responseText += delta;
+    onStream(delta, responseText);
+  }
+  return responseText;
+}
+
+/**
+ * stream:true has ~700 ms/token GPU-CPU sync latency on Ada (SM 8.9),
+ * turning 1024-token decodes into 12-minute timeouts. stream:false issues
+ * one batch readback; the stress harness PROGRESS_STALL_LIMIT_MS (300 s)
+ * is set high enough for the decode to complete before the stall fires.
+ */
+async function _runNonStreamGeneration(engine, generationConfig) {
+  const result = await engine.chat.completions.create({
+    ...generationConfig,
+    stream: false,
+  });
+  return result.choices[0]?.message?.content || "";
+}
+
+/**
  * Generate response using Warrant Council
  * Uses WebLLM engine with agent-specific system prompts
  */
@@ -589,56 +813,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   // Use custom system prompt or agent's default
   const finalSystemPrompt = systemPrompt || agent.systemPrompt;
 
-  // OCR'd military/medical text tokenizes at ~3 chars/token (not the generic
-  // 4 chars/token); using / 3 is deliberately conservative so the truncation
-  // guard fires with enough margin that WebLLM never sees a prompt that exceeds
-  // context_window_size even on dense chunks.
-  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 3);
-  const estimatedPromptTokens = Math.ceil(prompt.length / 3);
-  const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
-  // Match the context_window_size the engine was initialized with.
-  // Reading from the cached device profile keeps this in sync with the value
-  // passed to CreateMLCEngine; defaults to 8192 (Qwen2.5-3B model max).
-  const contextLimit = getCachedDeviceProfile()?.contextWindowSize ?? 8192;
-  const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
-  const availableForInput = contextLimit - reservedForOutput;
-
-  // Warn and truncate if prompt is too large
-  if (estimatedTotalTokens > availableForInput) {
-    console.warn(
-      `💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${availableForInput})`,
-    );
-    // Notify UI so tools can surface a visible warning to the user
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("diamondSwarm:tokenWarning", {
-          detail: {
-            estimatedTokens: estimatedTotalTokens,
-            limit: availableForInput,
-          },
-        }),
-      );
-    }
-
-    // Calculate max chars for prompt (keep system prompt, truncate user prompt)
-    const maxPromptChars = Math.max(
-      1000,
-      (availableForInput - estimatedSystemTokens) * 3,
-    );
-    if (prompt.length > maxPromptChars) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`,
-      );
-      // Keep beginning (context) and end (question) of prompt
-      const keepStart = Math.floor(maxPromptChars * 0.3);
-      const keepEnd = maxPromptChars - keepStart;
-      prompt =
-        prompt.slice(0, keepStart) +
-        "\n\n[... middle content truncated for context window ...]\n\n" +
-        prompt.slice(-keepEnd);
-    }
-  }
+  prompt = _truncatePromptForContext(prompt, finalSystemPrompt, maxTokens);
 
   // eslint-disable-next-line no-console
   console.log(`💎 Generating with ${agent.name} (${agent.icon})`);
@@ -677,102 +852,25 @@ export const generateWithSwarm = async (prompt, options = {}) => {
           : {}),
       };
 
-      let responseText = "";
+      let responseText;
 
       if (responseFormat) {
-        // JSON mode: always stream internally so we can interrupt the moment
-        // the root closing "}" is emitted. This saves all remaining tokens
-        // once the JSON object is structurally complete — common on simple/
-        // sparse chunks where the schema fills in well under max_tokens.
-        // Caller's onStream callback still fires on each delta if provided.
-        const jsonStream = await webllmEngine.chat.completions.create({
-          ...generationConfig,
-          stream: true,
-        });
-
-        let bracketDepth = 0;
-        let inString = false;
-        let escape = false;
-
-        for await (const piece of jsonStream) {
-          const delta = piece.choices[0]?.delta?.content || "";
-          if (delta) {
-            responseText += delta;
-            onStream?.(delta, responseText);
-
-            // Track bracket depth to detect JSON root completion.
-            // Handles escaped chars and string literals so inner braces
-            // (e.g. in "description" values) don't trigger a false close.
-            for (const ch of delta) {
-              if (escape) {
-                escape = false;
-                continue;
-              }
-              if (ch === "\\" && inString) {
-                escape = true;
-                continue;
-              }
-              if (ch === '"') {
-                inString = !inString;
-                continue;
-              }
-              if (inString) continue;
-              if (ch === "{") {
-                bracketDepth++;
-              } else if (ch === "}") {
-                bracketDepth--;
-                if (
-                  bracketDepth === 0 &&
-                  responseText.trimStart().startsWith("{")
-                ) {
-                  // Root JSON object closed — stop generation immediately.
-                  try {
-                    webllmEngine.interruptGenerate()?.catch(() => {});
-                  } catch {
-                    // interruptGenerate is best-effort; continue if unavailable
-                  }
-                  break;
-                }
-              }
-            }
-          }
-
-          if (bracketDepth === 0 && responseText.trimStart().startsWith("{"))
-            break;
-          if (piece.choices[0]?.finish_reason) break;
-          // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
-          // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
-          if (responseText.length > 4500) {
-            try {
-              webllmEngine.interruptGenerate()?.catch(() => {});
-            } catch {
-              /* interruptGenerate may throw if no generation is in progress */
-            }
-            break;
-          }
-        }
+        responseText = await _runJSONStreamGeneration(
+          webllmEngine,
+          generationConfig,
+          onStream,
+        );
       } else if (onStream) {
-        // Non-JSON caller-driven streaming
-        const chunks = await webllmEngine.chat.completions.create({
-          ...generationConfig,
-          stream: true,
-        });
-
-        for await (const chunk of chunks) {
-          const delta = chunk.choices[0]?.delta?.content || "";
-          responseText += delta;
-          onStream(delta, responseText);
-        }
+        responseText = await _runPlainStreamGeneration(
+          webllmEngine,
+          generationConfig,
+          onStream,
+        );
       } else {
-        // stream:true has ~700 ms/token GPU-CPU sync latency on Ada (SM 8.9),
-        // turning 1024-token decodes into 12-minute timeouts. stream:false issues
-        // one batch readback; the stress harness PROGRESS_STALL_LIMIT_MS (300 s)
-        // is set high enough for the decode to complete before the stall fires.
-        const result = await webllmEngine.chat.completions.create({
-          ...generationConfig,
-          stream: false,
-        });
-        responseText = result.choices[0]?.message?.content || "";
+        responseText = await _runNonStreamGeneration(
+          webllmEngine,
+          generationConfig,
+        );
       }
 
       return {
@@ -873,8 +971,11 @@ export const processClaimWithSwarm = async (claimData, callbacks = {}) => {
       message: "Rater calculating combined rating...",
     });
 
+    const conditionRatingLines = claimData.conditions
+      ?.map((c) => `- ${c.name}: ${c.rating || "TBD"}%`)
+      .join("\n");
     const ratingResult = await generateWithSwarm(
-      `Calculate the combined VA disability rating for:\n\n${claimData.conditions?.map((c) => `- ${c.name}: ${c.rating || "TBD"}%`).join("\n")}`,
+      `Calculate the combined VA disability rating for:\n\n${conditionRatingLines}`,
       { agentId: "rater" },
     );
     results.rating = ratingResult.text;

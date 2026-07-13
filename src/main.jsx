@@ -31,6 +31,27 @@ import "./index.css";
 // via a CSS @import — a mid-file @import is invalid and the bundler drops it.
 import "./generated/palette-themes.css";
 
+// Handles the service worker's "updatefound" event. Extracted to module scope
+// (rather than nested inline) to keep function nesting within lint limits.
+function handleServiceWorkerUpdateFound(reg) {
+  const installing = reg.installing;
+  if (!installing) return;
+  installing.addEventListener("statechange", () => {
+    if (
+      installing.state === "installed" &&
+      navigator.serviceWorker.controller
+    ) {
+      window.dispatchEvent(
+        new CustomEvent("sw-update-available", {
+          detail: {
+            accept: () => installing.postMessage({ type: "SKIP_WAITING" }),
+          },
+        }),
+      );
+    }
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Suppress Browser Extension Errors
 // Filter out common extension-related console errors that don't affect the app
@@ -120,25 +141,9 @@ if (!capabilityResults.passed) {
           // The SW intentionally does NOT auto-skipWaiting, so the page must
           // accept the update by posting { type: "SKIP_WAITING" }. We dispatch
           // a CustomEvent any component (e.g. a toast) can subscribe to.
-          reg.addEventListener("updatefound", () => {
-            const installing = reg.installing;
-            if (!installing) return;
-            installing.addEventListener("statechange", () => {
-              if (
-                installing.state === "installed" &&
-                navigator.serviceWorker.controller
-              ) {
-                window.dispatchEvent(
-                  new CustomEvent("sw-update-available", {
-                    detail: {
-                      accept: () =>
-                        installing.postMessage({ type: "SKIP_WAITING" }),
-                    },
-                  }),
-                );
-              }
-            });
-          });
+          reg.addEventListener("updatefound", () =>
+            handleServiceWorkerUpdateFound(reg),
+          );
         })
         .catch((err) => {
           console.warn("[SW] registration failed:", err.message);

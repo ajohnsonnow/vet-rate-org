@@ -164,36 +164,17 @@ function getBrowserRecommendation() {
 }
 
 /**
- * Render the browser upgrade warning page
- * This replaces the entire app with a friendly warning
+ * CSS styles for the browser upgrade warning page
+ * @returns {string} CSS text
  */
-export function renderBrowserWarning(results) {
-  const failedList = results.failedTests
-    .map(
-      (test) => `
-      <li class="failed-item">
-        <span class="icon">${test.icon}</span>
-        <span class="name">${test.name}</span>
-        <span class="desc">- ${test.description}</span>
-      </li>
-    `,
-    )
-    .join("");
-
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browser Update Required - Vet-Rate.org</title>
-  <style>
+function getBrowserWarningStyles() {
+  return `
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
@@ -204,7 +185,7 @@ export function renderBrowserWarning(results) {
       padding: 20px;
       color: #f7fafc;
     }
-    
+
     .container {
       max-width: 600px;
       background: #2d3748;
@@ -214,24 +195,24 @@ export function renderBrowserWarning(results) {
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       border: 1px solid #4a5568;
     }
-    
+
     .icon-shield {
       font-size: 64px;
       margin-bottom: 20px;
     }
-    
+
     h1 {
       font-size: 28px;
       margin-bottom: 12px;
       color: #f6ad55;
     }
-    
+
     .subtitle {
       font-size: 18px;
       color: #a0aec0;
       margin-bottom: 30px;
     }
-    
+
     .message-box {
       background: #1a365d;
       border-radius: 12px;
@@ -239,22 +220,22 @@ export function renderBrowserWarning(results) {
       margin-bottom: 30px;
       text-align: left;
     }
-    
+
     .message-box p {
       line-height: 1.6;
       margin-bottom: 16px;
     }
-    
+
     .message-box p:last-child {
       margin-bottom: 0;
     }
-    
+
     .failed-list {
       list-style: none;
       text-align: left;
       margin: 20px 0;
     }
-    
+
     .failed-item {
       background: rgba(245, 101, 101, 0.1);
       border: 1px solid rgba(245, 101, 101, 0.3);
@@ -266,21 +247,21 @@ export function renderBrowserWarning(results) {
       gap: 12px;
       flex-wrap: wrap;
     }
-    
+
     .failed-item .icon {
       font-size: 20px;
     }
-    
+
     .failed-item .name {
       font-weight: 600;
       color: #fc8181;
     }
-    
+
     .failed-item .desc {
       color: #a0aec0;
       font-size: 14px;
     }
-    
+
     .browsers {
       display: flex;
       justify-content: center;
@@ -288,7 +269,7 @@ export function renderBrowserWarning(results) {
       margin: 30px 0;
       flex-wrap: wrap;
     }
-    
+
     .browser-link {
       display: flex;
       flex-direction: column;
@@ -300,23 +281,23 @@ export function renderBrowserWarning(results) {
       border-radius: 12px;
       transition: all 0.2s;
     }
-    
+
     .browser-link:hover {
       background: #718096;
       transform: translateY(-2px);
     }
-    
+
     .browser-link img {
       width: 48px;
       height: 48px;
       margin-bottom: 8px;
     }
-    
+
     .browser-link span {
       font-size: 14px;
       font-weight: 500;
     }
-    
+
     .recommendation {
       background: #2f855a;
       color: white;
@@ -324,46 +305,84 @@ export function renderBrowserWarning(results) {
       border-radius: 8px;
       margin-top: 20px;
     }
-    
+
     .footer {
       margin-top: 30px;
       font-size: 14px;
       color: #718096;
     }
-    
+
     .footer a {
       color: #68d391;
       text-decoration: none;
     }
-    
+
     .footer a:hover {
       text-decoration: underline;
     }
-    
+
     @media (max-width: 480px) {
       .container {
         padding: 24px;
       }
-      
+
       h1 {
         font-size: 22px;
       }
-      
+
       .browsers {
         flex-direction: column;
         align-items: center;
       }
-      
+
       .browser-link {
         width: 100%;
         flex-direction: row;
         gap: 16px;
       }
-      
+
       .browser-link img {
         margin-bottom: 0;
       }
     }
+  `;
+}
+
+/**
+ * HTML markup for the failed capability list items
+ * @param {Array} failedTests - List of failed capability test entries
+ * @returns {string} HTML string
+ */
+function getFailedTestsMarkup(failedTests) {
+  return failedTests
+    .map(
+      (test) => `
+      <li class="failed-item">
+        <span class="icon">${test.icon}</span>
+        <span class="name">${test.name}</span>
+        <span class="desc">- ${test.description}</span>
+      </li>
+    `,
+    )
+    .join("");
+}
+
+/**
+ * Render the browser upgrade warning page
+ * This replaces the entire app with a friendly warning
+ */
+export function renderBrowserWarning(results) {
+  const failedList = getFailedTestsMarkup(results.failedTests);
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Update Required - Vet-Rate.org</title>
+  <style>
+    ${getBrowserWarningStyles()}
   </style>
 </head>
 <body>

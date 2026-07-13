@@ -75,29 +75,16 @@ export const PREPROCESS_STRATEGIES = {
 };
 
 /**
- * Main Advanced OCR Function
- * Analyzes PDF with multiple engines and preprocessing strategies
+ * RT8-4: advancedPDFAnalysis loads the whole file into one ArrayBuffer, then
+ * renders each page to a high-res canvas for Tesseract. A 300MB+ PDF can
+ * easily consume 2–4 GB of JS heap on the render path. Gate before we start.
  *
- * @param {File} file - PDF file to analyze
- * @param {Object} options - Configuration options
- * @param {Function} onProgress - Progress callback
- * @returns {Promise<OCRResult>}
+ * Thresholds are deliberately conservative:
+ *   - 200 MB + low-memory device  → abort (recommend C-File Analyzer which streams)
+ *   - 100 MB + mobile tier         → cap OCR pages to avoid OOM
+ *   - >200 MB on any device        → cap pages (OCR beyond ~20 pp is rarely useful anyway)
  */
-export async function advancedPDFAnalysis(
-  file,
-  options = {},
-  onProgress = () => {},
-) {
-  const config = { ...ADVANCED_OCR_CONFIG, ...options };
-
-  // RT8-4: advancedPDFAnalysis loads the whole file into one ArrayBuffer, then
-  // renders each page to a high-res canvas for Tesseract. A 300MB+ PDF can
-  // easily consume 2–4 GB of JS heap on the render path. Gate before we start.
-  //
-  // Thresholds are deliberately conservative:
-  //   - 200 MB + low-memory device  → abort (recommend C-File Analyzer which streams)
-  //   - 100 MB + mobile tier         → cap OCR pages to avoid OOM
-  //   - >200 MB on any device        → cap pages (OCR beyond ~20 pp is rarely useful anyway)
+function enforceOCRSizeLimits(file, config) {
   const OCR_HARD_LIMIT_BYTES = 200 * 1024 * 1024; // 200 MB compressed
   const OCR_WARN_LIMIT_BYTES = 100 * 1024 * 1024; // 100 MB
   const deviceProfile = getCachedDeviceProfile();
@@ -119,6 +106,24 @@ export async function advancedPDFAnalysis(
       `[advancedOCR] Large file (${Math.round(file.size / (1024 * 1024))} MB) — capping OCR at ${config.MAX_OCR_PAGES} pages to prevent OOM.`,
     );
   }
+}
+
+/**
+ * Main Advanced OCR Function
+ * Analyzes PDF with multiple engines and preprocessing strategies
+ *
+ * @param {File} file - PDF file to analyze
+ * @param {Object} options - Configuration options
+ * @param {Function} onProgress - Progress callback
+ * @returns {Promise<OCRResult>}
+ */
+export async function advancedPDFAnalysis(
+  file,
+  options = {},
+  onProgress = () => {},
+) {
+  const config = { ...ADVANCED_OCR_CONFIG, ...options };
+  enforceOCRSizeLimits(file, config);
 
   try {
     // Load PDF
@@ -337,15 +342,15 @@ function analyzeImageQuality(imageData) {
 }
 
 /**
- * Run advanced multi-pass OCR with ensemble voting
- * Enhanced with retry logic for degraded documents
+ * Determine ensemble scale set and worker pool size for a run.
+ *
+ * Worker pool: a single Tesseract worker processed pages strictly
+ * sequentially while the rest of the CPU sat idle — the dominant cost on
+ * multi-page scans. Pool size adapts to device tier (deviceCapabilityDetector):
+ * desktop-high→8, desktop-mid→6, laptop→4, tablet→2, mobile→1.
+ * Falls back to hardwareConcurrency - 2 when the device profile is not yet cached.
  */
-async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
-  const startTime = Date.now();
-  const pagesToProcess = Math.min(numPages, config.MAX_OCR_PAGES);
-  const results = [];
-
-  // Use higher scales for degraded documents
+function computeOCRPoolConfig(strategy, config, pagesToProcess) {
   const isDegraded =
     strategy === PREPROCESS_STRATEGIES.SEVERELY_AGED ||
     strategy === PREPROCESS_STRATEGIES.POOR ||
@@ -355,22 +360,19 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     ? config.CANVAS_SCALES_DEGRADED
     : config.CANVAS_SCALES;
 
-  // Worker pool: a single Tesseract worker processed pages strictly
-  // sequentially while the rest of the CPU sat idle — the dominant cost on
-  // multi-page scans. Pool size adapts to device tier (deviceCapabilityDetector):
-  // desktop-high→8, desktop-mid→6, laptop→4, tablet→2, mobile→1.
-  // Falls back to hardwareConcurrency - 2 when the device profile is not yet cached.
   const deviceOCRWorkers =
     (typeof getCachedDeviceProfile !== "undefined" &&
       getCachedDeviceProfile?.()?.ocrWorkers) ||
     Math.max(2, (navigator.hardwareConcurrency || 4) - 2);
   const poolSize = Math.min(deviceOCRWorkers, 8, pagesToProcess);
 
-  // eslint-disable-next-line no-console
-  console.log(
-    `🔬 OCR: ${poolSize} workers, ${isDegraded ? "HIGH" : "standard"} scales [${baseScales.join(", ")}], strategy: ${strategy}`,
-  );
+  return { isDegraded, baseScales, poolSize };
+}
 
+/**
+ * Create a Tesseract scheduler with `poolSize` workers attached.
+ */
+async function createOCRScheduler(poolSize, config) {
   const scheduler = Tesseract.createScheduler();
   await Promise.all(
     Array.from({ length: poolSize }, async () => {
@@ -382,8 +384,14 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       scheduler.addWorker(worker);
     }),
   );
+  return scheduler;
+}
 
-  const recognize = async (page, scale, preprocessStrategy) => {
+/**
+ * Build the page recognizer closure bound to a scheduler.
+ */
+function createPageRecognizer(scheduler) {
+  return async (page, scale, preprocessStrategy) => {
     const canvas = await renderPageToCanvas(page, scale);
     const processedCanvas = applyAdvancedPreprocessing(
       canvas,
@@ -399,80 +407,202 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       scale,
     };
   };
+}
 
+/**
+ * Text-layer fast path: digitally-generated pages (VA forms, typed medical
+ * records, decision letters) already have a UTF-8 text layer embedded in
+ * the PDF — reusing it is both faster and more accurate than rendering to
+ * a canvas and running Tesseract. We consider the layer "sufficient" when
+ * it has > 20 text items AND > 100 characters (blank/stamp pages have few
+ * items; cover sheets may have 1-5 lines). Scanned pages return items=0.
+ * Returns the layer text, or null if OCR is required.
+ */
+async function tryTextLayerText(page) {
+  try {
+    const textContent = await page.getTextContent();
+    const layerText = textContent.items
+      .map((item) => item.str)
+      .join(" ")
+      .trim();
+    if (textContent.items.length > 20 && layerText.length > 100) {
+      return layerText;
+    }
+  } catch {
+    // getTextContent can fail on corrupt pages — fall through to OCR
+  }
+  return null;
+}
+
+/**
+ * OCR a single image-only page with ensemble voting and a high-scale retry
+ * for pages that still extract very little text.
+ */
+async function recognizePageWithEnsemble(
+  page,
+  recognize,
+  baseScales,
+  strategy,
+  config,
+) {
+  // Image-only page: one pass at the highest base scale. The full multi-scale
+  // ensemble only runs when that pass reads poorly — most pages of a
+  // typical scan are legible and don't need 3x the OCR work.
+  const primary = await recognize(
+    page,
+    baseScales[baseScales.length - 1],
+    strategy,
+  );
+
+  const pageResults = [primary];
+  const needsEnsemble =
+    config.ENABLE_ENSEMBLE &&
+    (primary.confidence < config.MIN_CONFIDENCE ||
+      primary.text.trim().length < config.MIN_USEFUL_TEXT_LENGTH);
+
+  if (needsEnsemble) {
+    for (const scale of baseScales.slice(0, -1)) {
+      pageResults.push(await recognize(page, scale, strategy));
+    }
+  }
+
+  let pageText =
+    pageResults.length > 1 ? ensembleVote(pageResults) : primary.text;
+  const avgConfidence =
+    pageResults.reduce((sum, r) => sum + r.confidence, 0) /
+    pageResults.length;
+
+  // RETRY LOGIC: If OCR extracted very little text, try maximum scale
+  // with the most aggressive preprocessing
+  const textLength = pageText.trim().length;
+  if (
+    textLength < config.MIN_USEFUL_TEXT_LENGTH &&
+    config.ENABLE_RETRY_WITH_HIGHER_SCALE
+  ) {
+    const retry = await recognize(
+      page,
+      8.0,
+      PREPROCESS_STRATEGIES.SEVERELY_AGED,
+    );
+    if (retry.text.trim().length > textLength) {
+      pageText = retry.text;
+    }
+  }
+
+  return { text: pageText, confidence: avgConfidence };
+}
+
+/**
+ * Run `processPage` across all pages with bounded (poolSize) concurrency,
+ * returning results sorted by page number.
+ */
+async function runPagesWithBoundedConcurrency(
+  pagesToProcess,
+  poolSize,
+  processPage,
+) {
+  const pageNumbers = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
+  const inFlight = pageNumbers.splice(0, poolSize).map((n) => processPage(n));
+  const settled = [];
+  while (inFlight.length > 0) {
+    const done = await Promise.race(
+      inFlight.map((p, idx) => p.then((r) => ({ r, idx }))),
+    );
+    settled.push(done.r);
+    inFlight.splice(done.idx, 1);
+    if (pageNumbers.length > 0) {
+      inFlight.push(processPage(pageNumbers.shift()));
+    }
+  }
+  settled.sort((a, b) => a.pageNum - b.pageNum);
+  return settled;
+}
+
+/**
+ * Combine per-page OCR results into the final corrected text + metadata.
+ */
+function buildOCRResult(results, numPages, strategy, pagesToProcess, startTime) {
+  // Combine all pages
+  const fullText = results
+    .map(
+      (r) =>
+        `--- PAGE ${r.pageNum} (OCR ${r.confidence.toFixed(0)}%) ---\n${r.text.trim()}\n\n`,
+    )
+    .join("");
+
+  // Post-process: VA terminology correction
+  const correctedText = applyVATerminologyCorrection(fullText);
+
+  const avgConfidence =
+    results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
+
+  // Log summary
+  const totalChars = correctedText
+    .replace(/---\s*PAGE.*?---\n/g, "")
+    .replace(/\s+/g, " ")
+    .trim().length;
+  // eslint-disable-next-line no-console
+  console.log(
+    `📊 OCR Summary: ${totalChars} chars extracted from ${pagesToProcess} pages (avg confidence: ${avgConfidence.toFixed(0)}%)`,
+  );
+
+  return {
+    text: correctedText,
+    pageCount: numPages,
+    method: "advanced_ocr",
+    strategy: strategy,
+    confidence: avgConfidence,
+    processingTime: Date.now() - startTime,
+    pagesProcessed: pagesToProcess,
+    totalCharsExtracted: totalChars,
+  };
+}
+
+/**
+ * Run advanced multi-pass OCR with ensemble voting
+ * Enhanced with retry logic for degraded documents
+ */
+async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
+  const startTime = Date.now();
+  const pagesToProcess = Math.min(numPages, config.MAX_OCR_PAGES);
+
+  const { isDegraded, baseScales, poolSize } = computeOCRPoolConfig(
+    strategy,
+    config,
+    pagesToProcess,
+  );
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `🔬 OCR: ${poolSize} workers, ${isDegraded ? "HIGH" : "standard"} scales [${baseScales.join(", ")}], strategy: ${strategy}`,
+  );
+
+  const scheduler = await createOCRScheduler(poolSize, config);
+  const recognize = createPageRecognizer(scheduler);
   let completedPages = 0;
 
   const processPage = async (pageNum) => {
     const page = await pdf.getPage(pageNum);
 
-    // Text-layer fast path: digitally-generated pages (VA forms, typed medical
-    // records, decision letters) already have a UTF-8 text layer embedded in
-    // the PDF — reusing it is both faster and more accurate than rendering to
-    // a canvas and running Tesseract. We consider the layer "sufficient" when
-    // it has > 20 text items AND > 100 characters (blank/stamp pages have few
-    // items; cover sheets may have 1-5 lines). Scanned pages return items=0.
-    try {
-      const textContent = await page.getTextContent();
-      const layerText = textContent.items
-        .map((item) => item.str)
-        .join(" ")
-        .trim();
-      if (textContent.items.length > 20 && layerText.length > 100) {
-        completedPages++;
-        onProgress({
-          stage: "ocr",
-          progress: 10 + (completedPages / pagesToProcess) * 85,
-          message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
-        });
-        return { text: layerText, confidence: 100, usedTextLayer: true };
-      }
-    } catch {
-      // getTextContent can fail on corrupt pages — fall through to OCR
+    const layerText = await tryTextLayerText(page);
+    if (layerText !== null) {
+      completedPages++;
+      onProgress({
+        stage: "ocr",
+        progress: 10 + (completedPages / pagesToProcess) * 85,
+        message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
+      });
+      return { text: layerText, confidence: 100, usedTextLayer: true };
     }
 
-    // Image-only page: one pass at the highest base scale. The full multi-scale
-    // ensemble only runs when that pass reads poorly — most pages of a
-    // typical scan are legible and don't need 3x the OCR work.
-    const primary = await recognize(
-      page,
-      baseScales[baseScales.length - 1],
-      strategy,
-    );
-
-    const pageResults = [primary];
-    const needsEnsemble =
-      config.ENABLE_ENSEMBLE &&
-      (primary.confidence < config.MIN_CONFIDENCE ||
-        primary.text.trim().length < config.MIN_USEFUL_TEXT_LENGTH);
-
-    if (needsEnsemble) {
-      for (const scale of baseScales.slice(0, -1)) {
-        pageResults.push(await recognize(page, scale, strategy));
-      }
-    }
-
-    let pageText =
-      pageResults.length > 1 ? ensembleVote(pageResults) : primary.text;
-    const avgConfidence =
-      pageResults.reduce((sum, r) => sum + r.confidence, 0) /
-      pageResults.length;
-
-    // RETRY LOGIC: If OCR extracted very little text, try maximum scale
-    // with the most aggressive preprocessing
-    const textLength = pageText.trim().length;
-    if (
-      textLength < config.MIN_USEFUL_TEXT_LENGTH &&
-      config.ENABLE_RETRY_WITH_HIGHER_SCALE
-    ) {
-      const retry = await recognize(
+    const { text: pageText, confidence: avgConfidence } =
+      await recognizePageWithEnsemble(
         page,
-        8.0,
-        PREPROCESS_STRATEGIES.SEVERELY_AGED,
+        recognize,
+        baseScales,
+        strategy,
+        config,
       );
-      if (retry.text.trim().length > textLength) {
-        pageText = retry.text;
-      }
-    }
 
     completedPages++;
     onProgress({
@@ -488,56 +618,19 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
 
   try {
     // Bounded page-level concurrency: poolSize pages in flight at once
-    const pageNumbers = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
-    const inFlight = pageNumbers.splice(0, poolSize).map((n) => processPage(n));
-    const settled = [];
-    while (inFlight.length > 0) {
-      const done = await Promise.race(
-        inFlight.map((p, idx) => p.then((r) => ({ r, idx }))),
-      );
-      settled.push(done.r);
-      inFlight.splice(done.idx, 1);
-      if (pageNumbers.length > 0) {
-        inFlight.push(processPage(pageNumbers.shift()));
-      }
-    }
-    settled.sort((a, b) => a.pageNum - b.pageNum);
-    results.push(...settled);
-
-    // Combine all pages
-    const fullText = results
-      .map(
-        (r) =>
-          `--- PAGE ${r.pageNum} (OCR ${r.confidence.toFixed(0)}%) ---\n${r.text.trim()}\n\n`,
-      )
-      .join("");
-
-    // Post-process: VA terminology correction
-    const correctedText = applyVATerminologyCorrection(fullText);
-
-    const avgConfidence =
-      results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
-
-    // Log summary
-    const totalChars = correctedText
-      .replace(/---\s*PAGE.*?---\n/g, "")
-      .replace(/\s+/g, " ")
-      .trim().length;
-    // eslint-disable-next-line no-console
-    console.log(
-      `📊 OCR Summary: ${totalChars} chars extracted from ${pagesToProcess} pages (avg confidence: ${avgConfidence.toFixed(0)}%)`,
+    const results = await runPagesWithBoundedConcurrency(
+      pagesToProcess,
+      poolSize,
+      processPage,
     );
 
-    return {
-      text: correctedText,
-      pageCount: numPages,
-      method: "advanced_ocr",
-      strategy: strategy,
-      confidence: avgConfidence,
-      processingTime: Date.now() - startTime,
-      pagesProcessed: pagesToProcess,
-      totalCharsExtracted: totalChars,
-    };
+    return buildOCRResult(
+      results,
+      numPages,
+      strategy,
+      pagesToProcess,
+      startTime,
+    );
   } finally {
     await scheduler.terminate();
   }
@@ -653,114 +746,126 @@ function ensembleVote(results) {
 }
 
 /**
+ * VA terminology correction lookup table - EXPANDED for DD214 documents
+ */
+const VA_TERMINOLOGY_CORRECTIONS = {
+  // Common OCR errors for DD-214 form number
+  "OO-214": "DD-214",
+  "DD-Z14": "DD-214",
+  "OD-214": "DD-214",
+  "D0-214": "DD-214",
+  "00-214": "DD-214",
+  "DO-214": "DD-214",
+  "DD 214": "DD-214",
+  DD2I4: "DD-214",
+  DD21A: "DD-214",
+
+  // Character of service
+  HONORABIE: "HONORABLE",
+  HONORAB1E: "HONORABLE",
+  HONORARLE: "HONORABLE",
+  GENERAI: "GENERAL",
+  GENERA1: "GENERAL",
+  "GEN ERAL": "GENERAL",
+
+  // Common DD214 fields
+  SERV1CE: "SERVICE",
+  "SERVI CE": "SERVICE",
+  "SERV ICE": "SERVICE",
+  "DATE OF SEPARAT1ON": "DATE OF SEPARATION",
+  "SEPARATI ON": "SEPARATION",
+  SEPARAT1ON: "SEPARATION",
+  MIUTARY: "MILITARY",
+  "MILIT ARY": "MILITARY",
+  MIL1TARY: "MILITARY",
+  M1LITARY: "MILITARY",
+  "DEPARTM ENT": "DEPARTMENT",
+  "DEPART MENT": "DEPARTMENT",
+  DEPARTMEHT: "DEPARTMENT",
+
+  // VA terms
+  "VET ERAN": "VETERAN",
+  "VETER AN": "VETERAN",
+  VETERAH: "VETERAN",
+  "RATIN G": "RATING",
+  RAT1NG: "RATING",
+  DISAB1LITY: "DISABILITY",
+  DISABIL1TY: "DISABILITY",
+  "DISABILI TY": "DISABILITY",
+  COMPENSAT1ON: "COMPENSATION",
+  "COMPENSA TION": "COMPENSATION",
+
+  // Military branches
+  ARHY: "ARMY",
+  ARNY: "ARMY",
+  "ARM Y": "ARMY",
+  NAVY: "NAVY", // Already correct but include for completeness
+  "AIR FORCE": "AIR FORCE",
+  AIRFORCE: "AIR FORCE",
+  "A1R FORCE": "AIR FORCE",
+  MAR1NE: "MARINE",
+  "MARI NE": "MARINE",
+  "COAST GUARD": "COAST GUARD",
+  COASTGUARD: "COAST GUARD",
+
+  // Ranks (enlisted)
+  SPEC1ALIST: "SPECIALIST",
+  "SPECIA LIST": "SPECIALIST",
+  "SERGEA NT": "SERGEANT",
+  "SERGE ANT": "SERGEANT",
+  "SERGEAN T": "SERGEANT",
+  "SERGEA HT": "SERGEANT",
+  "CORPOR AL": "CORPORAL",
+  "CORPO RAL": "CORPORAL",
+  PR1VATE: "PRIVATE",
+  "PRIV ATE": "PRIVATE",
+
+  // Common DD214 box labels
+  CERT1FICATE: "CERTIFICATE",
+  "CERTIFICA TE": "CERTIFICATE",
+  D1SCHARGE: "DISCHARGE",
+  "DISCH ARGE": "DISCHARGE",
+  "DISCHAR GE": "DISCHARGE",
+  ACT1VE: "ACTIVE",
+  "ACTIV E": "ACTIVE",
+  "DU TY": "DUTY",
+  RELEASE: "RELEASE",
+  "RELE ASE": "RELEASE",
+  "DECORA TIONS": "DECORATIONS",
+  "DECORATI ONS": "DECORATIONS",
+  "MED ALS": "MEDALS",
+  "MEDA LS": "MEDALS",
+  "BADG ES": "BADGES",
+  "BAD GES": "BADGES",
+
+  // Date-related
+  "SEPTEMB ER": "SEPTEMBER",
+  "NOVEMB ER": "NOVEMBER",
+  "DECEMB ER": "DECEMBER",
+  "FEBRUAR Y": "FEBRUARY",
+  "JANU ARY": "JANUARY",
+
+  // Numbers commonly misread
+  l9: "19", // lowercase L to 1
+  O: "0", // Will be applied only in specific number contexts
+  "|": "1", // Pipe to 1
+};
+
+/**
+ * Resolve a single OCR-confused digit character (used when fixing
+ * 4-digit years like 19B5 -> 1985, 200I -> 2001).
+ */
+function resolveDigitConfusion(char) {
+  const DIGIT_CONFUSIONS = { B: "8", O: "0", I: "1" };
+  return DIGIT_CONFUSIONS[char] ?? char;
+}
+
+/**
  * VA terminology correction - EXPANDED for DD214 documents
  */
 function applyVATerminologyCorrection(text) {
-  const corrections = {
-    // Common OCR errors for DD-214 form number
-    "OO-214": "DD-214",
-    "DD-Z14": "DD-214",
-    "OD-214": "DD-214",
-    "D0-214": "DD-214",
-    "00-214": "DD-214",
-    "DO-214": "DD-214",
-    "DD 214": "DD-214",
-    DD2I4: "DD-214",
-    DD21A: "DD-214",
-
-    // Character of service
-    HONORABIE: "HONORABLE",
-    HONORAB1E: "HONORABLE",
-    HONORARLE: "HONORABLE",
-    GENERAI: "GENERAL",
-    GENERA1: "GENERAL",
-    "GEN ERAL": "GENERAL",
-
-    // Common DD214 fields
-    SERV1CE: "SERVICE",
-    "SERVI CE": "SERVICE",
-    "SERV ICE": "SERVICE",
-    "DATE OF SEPARAT1ON": "DATE OF SEPARATION",
-    "SEPARATI ON": "SEPARATION",
-    SEPARAT1ON: "SEPARATION",
-    MIUTARY: "MILITARY",
-    "MILIT ARY": "MILITARY",
-    MIL1TARY: "MILITARY",
-    M1LITARY: "MILITARY",
-    "DEPARTM ENT": "DEPARTMENT",
-    "DEPART MENT": "DEPARTMENT",
-    DEPARTMEHT: "DEPARTMENT",
-
-    // VA terms
-    "VET ERAN": "VETERAN",
-    "VETER AN": "VETERAN",
-    VETERAH: "VETERAN",
-    "RATIN G": "RATING",
-    RAT1NG: "RATING",
-    DISAB1LITY: "DISABILITY",
-    DISABIL1TY: "DISABILITY",
-    "DISABILI TY": "DISABILITY",
-    COMPENSAT1ON: "COMPENSATION",
-    "COMPENSA TION": "COMPENSATION",
-
-    // Military branches
-    ARHY: "ARMY",
-    ARNY: "ARMY",
-    "ARM Y": "ARMY",
-    NAVY: "NAVY", // Already correct but include for completeness
-    "AIR FORCE": "AIR FORCE",
-    AIRFORCE: "AIR FORCE",
-    "A1R FORCE": "AIR FORCE",
-    MAR1NE: "MARINE",
-    "MARI NE": "MARINE",
-    "COAST GUARD": "COAST GUARD",
-    COASTGUARD: "COAST GUARD",
-
-    // Ranks (enlisted)
-    SPEC1ALIST: "SPECIALIST",
-    "SPECIA LIST": "SPECIALIST",
-    "SERGEA NT": "SERGEANT",
-    "SERGE ANT": "SERGEANT",
-    "SERGEAN T": "SERGEANT",
-    "SERGEA HT": "SERGEANT",
-    "CORPOR AL": "CORPORAL",
-    "CORPO RAL": "CORPORAL",
-    PR1VATE: "PRIVATE",
-    "PRIV ATE": "PRIVATE",
-
-    // Common DD214 box labels
-    CERT1FICATE: "CERTIFICATE",
-    "CERTIFICA TE": "CERTIFICATE",
-    D1SCHARGE: "DISCHARGE",
-    "DISCH ARGE": "DISCHARGE",
-    "DISCHAR GE": "DISCHARGE",
-    ACT1VE: "ACTIVE",
-    "ACTIV E": "ACTIVE",
-    "DU TY": "DUTY",
-    RELEASE: "RELEASE",
-    "RELE ASE": "RELEASE",
-    "DECORA TIONS": "DECORATIONS",
-    "DECORATI ONS": "DECORATIONS",
-    "MED ALS": "MEDALS",
-    "MEDA LS": "MEDALS",
-    "BADG ES": "BADGES",
-    "BAD GES": "BADGES",
-
-    // Date-related
-    "SEPTEMB ER": "SEPTEMBER",
-    "NOVEMB ER": "NOVEMBER",
-    "DECEMB ER": "DECEMBER",
-    "FEBRUAR Y": "FEBRUARY",
-    "JANU ARY": "JANUARY",
-
-    // Numbers commonly misread
-    l9: "19", // lowercase L to 1
-    O: "0", // Will be applied only in specific number contexts
-    "|": "1", // Pipe to 1
-  };
-
   let corrected = text;
-  for (const [wrong, right] of Object.entries(corrections)) {
+  for (const [wrong, right] of Object.entries(VA_TERMINOLOGY_CORRECTIONS)) {
     corrected = corrected.replace(
       new RegExp(wrong.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
       right,
@@ -771,11 +876,8 @@ function applyVATerminologyCorrection(text) {
   // Match patterns like 19B5 -> 1985, 200I -> 2001
   corrected = corrected.replace(
     /\b(19|20)([0-9BOI])([0-9BOI])\b/g,
-    (match, century, d1, d2) => {
-      const fixChar = (c) =>
-        c === "B" ? "8" : c === "O" ? "0" : c === "I" ? "1" : c;
-      return century + fixChar(d1) + fixChar(d2);
-    },
+    (match, century, d1, d2) =>
+      century + resolveDigitConfusion(d1) + resolveDigitConfusion(d2),
   );
 
   return corrected;

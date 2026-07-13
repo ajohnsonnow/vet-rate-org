@@ -1298,6 +1298,7 @@ export function validateAIResponse(response, context = {}) {
   }
 
   // Check for invented statistics
+  // eslint-disable-next-line sonarjs/slow-regex -- single \d+ followed by a fixed literal suffix has no nested/overlapping quantifiers and cannot backtrack super-linearly
   if (response.match(/\d+% of veterans/i) && !context.hasStatistics) {
     warnings.push("AI cited statistics that may not be from loaded data");
   }

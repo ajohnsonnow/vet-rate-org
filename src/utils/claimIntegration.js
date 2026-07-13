@@ -299,6 +299,17 @@ export const getVeteranProfile = () => {
  * Get overall progress from useClaimProgress milestones
  * @returns {Object} { percentage, completedCount, totalCount, milestones }
  */
+/**
+ * Determine whether a parsed localStorage value counts as "has content" for
+ * milestone-progress purposes. Extracted from getOverallMilestoneProgress to
+ * avoid a nested ternary.
+ */
+function parsedMilestoneHasContent(parsed) {
+  if (Array.isArray(parsed)) return parsed.length > 0;
+  if (typeof parsed === "object") return Object.keys(parsed).length > 0;
+  return parsed;
+}
+
 export const getOverallMilestoneProgress = () => {
   const milestoneChecks = [
     { id: "itf_filed", key: MILESTONE_KEYS.ITF_FILED, weight: 10 },
@@ -325,13 +336,7 @@ export const getOverallMilestoneProgress = () => {
       try {
         const parsed = JSON.parse(data);
         // Check if actually has content
-        if (
-          Array.isArray(parsed)
-            ? parsed.length > 0
-            : typeof parsed === "object"
-              ? Object.keys(parsed).length > 0
-              : parsed
-        ) {
+        if (parsedMilestoneHasContent(parsed)) {
           completedWeight += m.weight;
           completed.push(m.id);
         }

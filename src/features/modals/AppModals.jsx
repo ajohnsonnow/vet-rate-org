@@ -47,32 +47,12 @@ function Cluster({ name, children }) {
 }
 
 /**
- * AppModals — all lazy modal clusters mounted under a single
- * <Suspense> boundary (audit #28, B21). Each child either has its
- * own `open*` window-event listener or takes a callback prop; first
- * open triggers its chunk fetch with <LoadingBunker /> as fallback.
- * Each cluster is additionally isolated behind its own ErrorBoundary
- * (audit S11) so a single tool's crash can't blank the rest.
- *
- * Props:
- *   - userConditions / setUserConditions: passed to DiscoverCluster
- *     for the My Packet ↔ Discover round-trip
- *   - getAppState: passed to SystemToolsCluster (bug reports) and
- *     FeedbackHub (feature requests)
- *   - updateBanner / whatsNewModal: rendered nodes from
- *     useUpdateOrchestrator
- *
- * Extracted from App.jsx (audit #35, B76).
+ * First third of the modal cluster list — split out of AppModals to keep
+ * that component under the max-lines-per-function budget (audit, wave 4).
  */
-export default function AppModals({
-  userConditions,
-  setUserConditions,
-  getAppState,
-  updateBanner,
-  whatsNewModal,
-}) {
+function PrimaryModalClusters({ userConditions, setUserConditions }) {
   return (
-    <Suspense fallback={<LoadingBunker />}>
+    <>
       {/* Legal/info modals — Privacy, About, Contact, Terms */}
       <Cluster name="Legal & Info">
         <LegalPages />
@@ -124,7 +104,17 @@ export default function AppModals({
       <Cluster name="Claim Navigator">
         <ClaimNavigatorModal />
       </Cluster>
+    </>
+  );
+}
 
+/**
+ * Second third of the modal cluster list — split out of AppModals to keep
+ * that component under the max-lines-per-function budget (audit, wave 4).
+ */
+function SecondaryModalClusters({ getAppState }) {
+  return (
+    <>
       <Cluster name="Ask the Regs">
         <AskTheRegsModal />
       </Cluster>
@@ -168,7 +158,17 @@ export default function AppModals({
       <Cluster name="Specialized Tools">
         <SpecializedToolsCluster />
       </Cluster>
+    </>
+  );
+}
 
+/**
+ * Final third of the modal cluster list — split out of AppModals to keep
+ * that component under the max-lines-per-function budget (audit, wave 4).
+ */
+function TertiaryModalClusters({ updateBanner, whatsNewModal }) {
+  return (
+    <>
       <Cluster name="Maximize Rating">
         <MaximizeRatingCluster />
       </Cluster>
@@ -215,6 +215,46 @@ export default function AppModals({
       <Cluster name="Workflow Guides">
         <WorkflowGuidesCluster onToolSelect={dispatchToolById} />
       </Cluster>
+    </>
+  );
+}
+
+/**
+ * AppModals — all lazy modal clusters mounted under a single
+ * <Suspense> boundary (audit #28, B21). Each child either has its
+ * own `open*` window-event listener or takes a callback prop; first
+ * open triggers its chunk fetch with <LoadingBunker /> as fallback.
+ * Each cluster is additionally isolated behind its own ErrorBoundary
+ * (audit S11) so a single tool's crash can't blank the rest.
+ *
+ * Props:
+ *   - userConditions / setUserConditions: passed to DiscoverCluster
+ *     for the My Packet ↔ Discover round-trip
+ *   - getAppState: passed to SystemToolsCluster (bug reports) and
+ *     FeedbackHub (feature requests)
+ *   - updateBanner / whatsNewModal: rendered nodes from
+ *     useUpdateOrchestrator
+ *
+ * Extracted from App.jsx (audit #35, B76).
+ */
+export default function AppModals({
+  userConditions,
+  setUserConditions,
+  getAppState,
+  updateBanner,
+  whatsNewModal,
+}) {
+  return (
+    <Suspense fallback={<LoadingBunker />}>
+      <PrimaryModalClusters
+        userConditions={userConditions}
+        setUserConditions={setUserConditions}
+      />
+      <SecondaryModalClusters getAppState={getAppState} />
+      <TertiaryModalClusters
+        updateBanner={updateBanner}
+        whatsNewModal={whatsNewModal}
+      />
     </Suspense>
   );
 }

@@ -83,15 +83,15 @@ function applyPersecRedaction(text) {
       )
 
       // Redact VA File Numbers (usually 9 digits)
-      // eslint-disable-next-line sonarjs/slow-regex -- bounded by \d{7,10}\b; false positive on anchored/bounded quantifier chain
       .replace(
+        // eslint-disable-next-line sonarjs/slow-regex -- bounded by \d{7,10}\b; false positive on anchored/bounded quantifier chain
         /(?:File\s*#?\s*|VA\s*File\s*(?:Number\s*)?)\d{7,10}\b/gi,
         "File #[REDACTED]",
       )
 
       // Redact claim numbers
-      // eslint-disable-next-line sonarjs/slow-regex -- PERSEC redaction pattern; rewrite risk of altering PII-matching behavior outweighs the (bounded, low-volume, non-attacker-controlled) perf concern
       .replace(
+        // eslint-disable-next-line sonarjs/slow-regex -- PERSEC redaction pattern; rewrite risk of altering PII-matching behavior outweighs the (bounded, low-volume, non-attacker-controlled) perf concern
         /(?:Claim\s*(?:Number|#|ID)\s*:?\s*)\d+/gi,
         "Claim #[REDACTED]",
       )

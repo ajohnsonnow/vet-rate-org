@@ -1101,396 +1101,421 @@ const runLegacyEngineCompletion = async (
 };
 
 /**
- * useLocalAIProviderState - all Local AI provider state and actions.
- * Extracted verbatim from LocalAIProvider's component body so that
- * component stays a thin `useLocalAIProviderState() -> <Context.Provider>`
- * wrapper (see LocalAIProvider in src/components/LocalAIPanel.jsx).
+ * Runs the mount-time WebGPU support check and installed-model cache scan.
+ * Extracted from useLocalAIProviderState's mount effect so that effect stays
+ * a thin wrapper; closes only over the setters passed in `ctx`.
  */
-export const useLocalAIProviderState = () => {
-  // WebGPU state
-  const [webGPUStatus, setWebGPUStatus] = useState({
-    checked: false,
-    supported: false,
-  });
-  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[1]); // Default to balanced
-  const [installedModels, setInstalledModels] = useState(new Set());
-  const [gpuPreference, setGpuPreferenceState] = useState(getGPUPreference());
+const checkWebGPUAndModelsOnMount = async (ctx) => {
+  const { setWebGPUStatus, setInstalledModels } = ctx;
+  const result = await checkWebGPUSupport();
+  setWebGPUStatus({ checked: true, ...result });
 
-  // Engine state
-  const [engine, setEngine] = useState(null);
-  const [loadedModelId, setLoadedModelId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadProgress, setLoadProgress] = useState({ progress: 0, text: "" });
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState(null);
+  // Check which models are already cached
+  try {
+    const { hasModelInCache } = await import("@mlc-ai/web-llm");
+    const installed = new Set();
 
-  // Chat state
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  // Experimental features state
-  const [experimentalMode, setExperimentalMode] = useState(() => {
-    return localStorage.getItem("vet_rate_experimental_webgpu") === "true";
-  });
-  const [showExperimentalWarning, setShowExperimentalWarning] = useState(false);
-
-  // Update GPU preference and re-check WebGPU
-  const updateGPUPreference = useCallback(async (newPreference) => {
-    setGPUPreference(newPreference);
-    setGpuPreferenceState(newPreference);
-
-    // Rescan for GPUs with the new preference
-    // eslint-disable-next-line no-console
-    console.log(`🎮 GPU preference updated to: ${newPreference}`);
-    const result = await checkWebGPUSupport(newPreference);
-    setWebGPUStatus({ checked: true, ...result });
-
-    // eslint-disable-next-line no-console
-    console.log(`🎮 Now using: ${result.device} (${result.vendor})`);
-
-    return result;
-  }, []);
-
-  // Check WebGPU support and installed models on mount
-  useEffect(() => {
-    const check = async () => {
-      const result = await checkWebGPUSupport();
-      setWebGPUStatus({ checked: true, ...result });
-
-      // Check which models are already cached
-      try {
-        const { hasModelInCache } = await import("@mlc-ai/web-llm");
-        const installed = new Set();
-
-        // Check each model individually (skip custom models - they're not in prebuiltAppConfig)
-        await Promise.all(
-          AVAILABLE_MODELS.map(async (model) => {
-            // Skip cache check for custom models & Diamond Swarm - WebLLM's hasModelInCache doesn't know about them
-            if (model.isCustomModel || model.isDiamond) {
-              return;
-            }
-            try {
-              const isCached = await hasModelInCache(model.id);
-              if (isCached) {
-                // eslint-disable-next-line no-console
-                console.log(`✅ Model ${model.id} is cached`);
-                installed.add(model.id);
-              } else {
-                // eslint-disable-next-line no-console
-                console.log(`❌ Model ${model.id} is not cached`);
-              }
-            } catch (err) {
-              console.warn(`Could not check cache for ${model.id}:`, err);
-            }
-          }),
-        );
-
-        setInstalledModels(installed);
-      } catch (err) {
-        console.warn("Could not check cached models:", err);
-      }
-    };
-    check();
-  }, []);
-
-  // Reinitialize WebGPU device when experimental mode changes
-  useEffect(() => {
-    const reinitializeDevice = async () => {
-      if (!webGPUStatus.supported) return;
-
-      try {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🎮 Experimental mode ${experimentalMode ? "ENABLED" : "DISABLED"} - reinitializing WebGPU device...`,
-        );
-
-        // Get current adapter and reinitialize with new options
-        const selectedAdapter = gpuManager.getSelectedAdapter();
-        if (selectedAdapter) {
-          const adapters = gpuManager.getAdapters();
-          const currentGPU = adapters.find(
-            (a) => a.adapter === selectedAdapter,
-          );
-
-          if (currentGPU) {
-            // Force reinitialization with a fresh adapter
-            await gpuManager.selectAdapter(currentGPU.id, {
-              experimental: experimentalMode,
-              forceReinit: true,
-            });
-            // eslint-disable-next-line no-console
-            console.log(
-              `✅ WebGPU device reinitialized with experimental=${experimentalMode}`,
-            );
-
-            // Check if experimental mode was disabled due to missing features
-            const actualExperimentalMode =
-              localStorage.getItem("vet_rate_experimental_webgpu") === "true";
-            if (experimentalMode && !actualExperimentalMode) {
-              console.warn(
-                "⚠️ Experimental mode was automatically disabled due to missing GPU features",
-              );
-              setExperimentalMode(false);
-              setError(
-                "Your GPU/browser combination does not support the required experimental features (chromium-experimental-subgroup-matrix) for MLC-AI models. Experimental mode has been disabled.",
-              );
-            }
-          }
+    // Check each model individually (skip custom models - they're not in prebuiltAppConfig)
+    await Promise.all(
+      AVAILABLE_MODELS.map(async (model) => {
+        // Skip cache check for custom models & Diamond Swarm - WebLLM's hasModelInCache doesn't know about them
+        if (model.isCustomModel || model.isDiamond) {
+          return;
         }
-      } catch (err) {
-        console.error("Failed to reinitialize WebGPU device:", err);
-        setError(`Failed to reinitialize WebGPU device: ${err.message}`);
-      }
-    };
-
-    // Only reinitialize if we've already initialized once (not on mount)
-    if (webGPUStatus.checked) {
-      reinitializeDevice();
-    }
-  }, [experimentalMode, webGPUStatus.supported, webGPUStatus.checked]);
-
-  // Initialize the LLM engine (supports Diamond Swarm and legacy WebLLM)
-  const initializeEngine = useCallback(
-    async (modelId = selectedModel.id) => {
-      setIsLoading(true);
-      setError(null);
-
-      // 💎 Check if this is a Diamond Swarm agent
-      if (modelId.startsWith("diamond-")) {
-        return await initializeDiamondSwarmAgent(modelId, {
-          setLoadProgress,
-          setIsReady,
-          setIsLoading,
-          setError,
-        });
-      }
-
-      // Check if the selected model is disabled (legacy WebLLM check)
-      if (selectedModel.disabled) {
-        setError(getDisabledModelMessage(selectedModel));
-        setIsLoading(false);
-        return null;
-      }
-
-      // Check if this is a vision model that requires experimental features
-      const { isVisionModel, isCustomVisionModel, isBlocked } =
-        getVisionModelGateStatus(modelId, selectedModel);
-      if (isBlocked) {
-        setError(getVisionModelBlockedMessage(selectedModel));
-        setIsLoading(false);
-        return null;
-      }
-
-      // Check if model is cached to determine the initial message
-      const isCached = await checkIfModelIsCached(modelId);
-      const isDownloading = !isCached;
-
-      setLoadProgress({
-        progress: 0,
-        text: isDownloading
-          ? "Downloading model from HuggingFace..."
-          : "Loading model into GPU...",
-      });
-
-      try {
-        // Dynamically import WebLLM (heavy dependency)
-        const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-
-        patchWebGPUAdapterForMLC();
-
-        const initProgressCallback = createEngineInitProgressCallback(
-          isDownloading,
-          setLoadProgress,
-        );
-        const engineOptions = await buildMLCEngineOptions(
-          selectedModel,
-          initProgressCallback,
-          { setError, setIsReady, setEngine },
-        );
-
-        const mlcEngine = await CreateMLCEngine(modelId, engineOptions);
-
-        setEngine(mlcEngine);
-        setLoadedModelId(modelId);
-        setIsReady(true);
-        setIsLoading(false);
-        setLoadProgress({ progress: 100, text: "✅ Neural Engine Ready!" });
-
-        // Verify and mark model as installed (double-check it's actually cached now)
-        await markModelInstalledAfterLoad(modelId, setInstalledModels);
-
-        // Save preference FIRST before registering
-        localStorage.setItem("vet_rate_local_ai_model", modelId);
-
-        // Determine if this is a vision model
-        const isVision =
-          isVisionModel || isCustomVisionModel || selectedModel.hasVision;
-        // eslint-disable-next-line no-console
-        console.log(
-          `🔍 Model type: ${isVision ? "Vision (VLM)" : "Text-only (LLM)"}`,
-        );
-
-        // Register with unified AI service for seamless integration
-        registerLocalAIEngine(mlcEngine, true, false, modelId, isVision);
-
-        // Reset generating state when model loads (prevents stale state from previous session)
-        setIsGenerating(false);
-
-        return mlcEngine;
-      } catch (err) {
-        console.error("Failed to initialize local AI:", err);
-
-        const { message: errorMessage, isShaderFailure } =
-          getEngineInitErrorDetails(err);
-        setError(errorMessage);
-        setIsLoading(false);
-
-        if (isShaderFailure) {
-          setLoadProgress({ progress: 0, text: "" });
-          return null;
-        }
-
-        setIsReady(false);
-        // Unregister from unified service on failure
-        registerLocalAIEngine(null, false);
-        return null;
-      }
-    },
-    [selectedModel],
-  );
-
-  // Generate completion
-  const generate = useCallback(
-    async (prompt, options = {}) => {
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔧 Generate: Called with isDiamond =",
-        selectedModel?.isDiamond,
-        "loadedModelId =",
-        loadedModelId,
-      );
-
-      // 💎 Diamond Swarm models route through diamondSwarm service
-      if (selectedModel?.isDiamond || loadedModelId?.startsWith("diamond-")) {
-        return await generateViaDiamondSwarm(prompt, options);
-      }
-
-      // Legacy WebLLM path - requires engine
-      if (!engine || !isReady) {
-        throw new Error("Local AI not initialized");
-      }
-
-      // Import the buildSystemPrompt function for comprehensive context
-      const { buildSystemPrompt } = await import("../utils/aiSystemPrompts");
-
-      const {
-        systemPrompt = buildSystemPrompt({
-          task: options.task || "general",
-          toolContext: options.toolContext || "Faraday Cage Test Console",
-          includeAppContext: true,
-          includeRegulations: true,
-          includeVeteranData: true, // Auto-load veteran's My Packet data
-        }),
-        maxTokens = getUserTokenLimit(), // Use user-configured limit or default
-        temperature = 0.7,
-        onStream,
-      } = options;
-
-      setIsGenerating(true);
-
-      try {
-        const messages = [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ];
-
-        // Generation config with repetition penalty to prevent degenerate output
-        const generationConfig = {
-          messages,
-          max_tokens: maxTokens,
-          temperature,
-          // Repetition penalty to prevent loops (1.0 = no penalty, >1.0 = penalize repetition)
-          repetition_penalty: 1.1,
-          // Frequency penalty (penalize tokens that appear frequently)
-          frequency_penalty: 0.3,
-          // Presence penalty (penalize tokens that have appeared at all)
-          presence_penalty: 0.1,
-        };
-
-        const result = await runLegacyEngineCompletion(
-          engine,
-          generationConfig,
-          onStream,
-        );
-        setIsGenerating(false);
-        return result;
-      } catch (err) {
-        setIsGenerating(false);
-        throw err;
-      }
-    },
-    [engine, isReady, selectedModel, loadedModelId],
-  );
-
-  // Interrupt generation - only interrupts if there's actually a global generation in progress
-  const interruptGeneration = useCallback(async () => {
-    // Check the global unified state - this is the source of truth for whether generation is happening
-    const { getAIStatus } = await import("../utils/unifiedAIService.js");
-    const aiStatus = getAIStatus();
-
-    // ONLY interrupt if the unified service says generation is in progress
-    // LocalAIPanel's isGenerating state can get stale during React re-renders
-    if (!aiStatus.localGenerating) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "⏭️ interruptGeneration called but no global generation in progress - ignoring",
-      );
-      setIsGenerating(false); // Sync local state with global
-      return;
-    }
-
-    if (engine) {
-      console.warn("🛑 Interrupting active generation");
-      try {
-        await engine.interruptGenerate?.();
-      } catch (err) {
-        console.warn("Error interrupting generation:", err);
-      }
-      setIsGenerating(false);
-    }
-  }, [engine]);
-
-  // Switch to a different model
-  const switchModel = useCallback(
-    async (newModelId) => {
-      // Unload current model
-      if (engine) {
         try {
-          await engine.unload?.();
+          const isCached = await hasModelInCache(model.id);
+          if (isCached) {
+            // eslint-disable-next-line no-console
+            console.log(`✅ Model ${model.id} is cached`);
+            installed.add(model.id);
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(`❌ Model ${model.id} is not cached`);
+          }
         } catch (err) {
-          console.warn("Error unloading model:", err);
+          console.warn(`Could not check cache for ${model.id}:`, err);
+        }
+      }),
+    );
+
+    setInstalledModels(installed);
+  } catch (err) {
+    console.warn("Could not check cached models:", err);
+  }
+};
+
+/**
+ * Reinitializes the WebGPU device when experimental mode changes.
+ * Extracted from useLocalAIProviderState's experimental-mode effect so that
+ * effect stays a thin wrapper; closes only over the setters passed in `ctx`.
+ */
+const reinitializeWebGPUDeviceForExperimentalMode = async (
+  experimentalMode,
+  webGPUSupported,
+  ctx,
+) => {
+  const { setExperimentalMode, setError } = ctx;
+  if (!webGPUSupported) return;
+
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🎮 Experimental mode ${experimentalMode ? "ENABLED" : "DISABLED"} - reinitializing WebGPU device...`,
+    );
+
+    // Get current adapter and reinitialize with new options
+    const selectedAdapter = gpuManager.getSelectedAdapter();
+    if (selectedAdapter) {
+      const adapters = gpuManager.getAdapters();
+      const currentGPU = adapters.find((a) => a.adapter === selectedAdapter);
+
+      if (currentGPU) {
+        // Force reinitialization with a fresh adapter
+        await gpuManager.selectAdapter(currentGPU.id, {
+          experimental: experimentalMode,
+          forceReinit: true,
+        });
+        // eslint-disable-next-line no-console
+        console.log(
+          `✅ WebGPU device reinitialized with experimental=${experimentalMode}`,
+        );
+
+        // Check if experimental mode was disabled due to missing features
+        const actualExperimentalMode =
+          localStorage.getItem("vet_rate_experimental_webgpu") === "true";
+        if (experimentalMode && !actualExperimentalMode) {
+          console.warn(
+            "⚠️ Experimental mode was automatically disabled due to missing GPU features",
+          );
+          setExperimentalMode(false);
+          setError(
+            "Your GPU/browser combination does not support the required experimental features (chromium-experimental-subgroup-matrix) for MLC-AI models. Experimental mode has been disabled.",
+          );
         }
       }
+    }
+  } catch (err) {
+    console.error("Failed to reinitialize WebGPU device:", err);
+    setError(`Failed to reinitialize WebGPU device: ${err.message}`);
+  }
+};
 
-      // Reset state
-      setEngine(null);
-      setLoadedModelId(null);
-      setIsReady(false);
-      registerLocalAIEngine(null, false);
+/**
+ * Initializes the LLM engine (Diamond Swarm or legacy WebLLM) for the given
+ * model id. Extracted from useLocalAIProviderState's initializeEngine
+ * useCallback so that callback stays a thin wrapper; closes only over the
+ * state/setters passed in `ctx`.
+ */
+const runInitializeEngine = async (modelId, ctx) => {
+  const { selectedModel, setIsLoading, setError, setLoadProgress, setIsReady } =
+    ctx;
 
-      // Load new model
-      await initializeEngine(newModelId);
-    },
-    [engine, initializeEngine],
+  setIsLoading(true);
+  setError(null);
+
+  // 💎 Check if this is a Diamond Swarm agent
+  if (modelId.startsWith("diamond-")) {
+    return await initializeDiamondSwarmAgent(modelId, {
+      setLoadProgress,
+      setIsReady,
+      setIsLoading,
+      setError,
+    });
+  }
+
+  // Check if the selected model is disabled (legacy WebLLM check)
+  if (selectedModel.disabled) {
+    setError(getDisabledModelMessage(selectedModel));
+    setIsLoading(false);
+    return null;
+  }
+
+  // Check if this is a vision model that requires experimental features
+  const { isVisionModel, isCustomVisionModel, isBlocked } =
+    getVisionModelGateStatus(modelId, selectedModel);
+  if (isBlocked) {
+    setError(getVisionModelBlockedMessage(selectedModel));
+    setIsLoading(false);
+    return null;
+  }
+
+  return loadLegacyWebLLMEngine(modelId, { isVisionModel, isCustomVisionModel }, ctx);
+};
+
+/**
+ * Loads the legacy WebLLM engine for a non-Diamond model id: checks cache
+ * status, drives CreateMLCEngine, and registers the result. Extracted from
+ * runInitializeEngine so that function stays under the line budget.
+ */
+const loadLegacyWebLLMEngine = async (modelId, visionFlags, ctx) => {
+  const { isVisionModel, isCustomVisionModel } = visionFlags;
+  const {
+    selectedModel,
+    setError,
+    setLoadProgress,
+    setIsReady,
+    setEngine,
+    setLoadedModelId,
+    setInstalledModels,
+    setIsGenerating,
+    setIsLoading,
+  } = ctx;
+
+  // Check if model is cached to determine the initial message
+  const isCached = await checkIfModelIsCached(modelId);
+  const isDownloading = !isCached;
+
+  setLoadProgress({
+    progress: 0,
+    text: isDownloading
+      ? "Downloading model from HuggingFace..."
+      : "Loading model into GPU...",
+  });
+
+  try {
+    // Dynamically import WebLLM (heavy dependency)
+    const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+
+    patchWebGPUAdapterForMLC();
+
+    const initProgressCallback = createEngineInitProgressCallback(
+      isDownloading,
+      setLoadProgress,
+    );
+    const engineOptions = await buildMLCEngineOptions(
+      selectedModel,
+      initProgressCallback,
+      { setError, setIsReady, setEngine },
+    );
+
+    const mlcEngine = await CreateMLCEngine(modelId, engineOptions);
+
+    setEngine(mlcEngine);
+    setLoadedModelId(modelId);
+    setIsReady(true);
+    setIsLoading(false);
+    setLoadProgress({ progress: 100, text: "✅ Neural Engine Ready!" });
+
+    // Verify and mark model as installed (double-check it's actually cached now)
+    await markModelInstalledAfterLoad(modelId, setInstalledModels);
+
+    // Save preference FIRST before registering
+    localStorage.setItem("vet_rate_local_ai_model", modelId);
+
+    // Determine if this is a vision model
+    const isVision =
+      isVisionModel || isCustomVisionModel || selectedModel.hasVision;
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔍 Model type: ${isVision ? "Vision (VLM)" : "Text-only (LLM)"}`,
+    );
+
+    // Register with unified AI service for seamless integration
+    registerLocalAIEngine(mlcEngine, true, false, modelId, isVision);
+
+    // Reset generating state when model loads (prevents stale state from previous session)
+    setIsGenerating(false);
+
+    return mlcEngine;
+  } catch (err) {
+    console.error("Failed to initialize local AI:", err);
+
+    const { message: errorMessage, isShaderFailure } =
+      getEngineInitErrorDetails(err);
+    setError(errorMessage);
+    setIsLoading(false);
+
+    if (isShaderFailure) {
+      setLoadProgress({ progress: 0, text: "" });
+      return null;
+    }
+
+    setIsReady(false);
+    // Unregister from unified service on failure
+    registerLocalAIEngine(null, false);
+    return null;
+  }
+};
+
+/**
+ * Runs a generate() call: routes Diamond Swarm models through the swarm
+ * service, otherwise runs the legacy WebLLM chat-completion path. Extracted
+ * from useLocalAIProviderState's generate useCallback so that callback stays
+ * a thin wrapper; closes only over the state/setters passed in `ctx`.
+ */
+const runGenerateCompletion = async (prompt, options, ctx) => {
+  const { selectedModel, loadedModelId, engine, isReady, setIsGenerating } =
+    ctx;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    "🔧 Generate: Called with isDiamond =",
+    selectedModel?.isDiamond,
+    "loadedModelId =",
+    loadedModelId,
   );
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (engine) {
-        engine.unload?.();
-      }
+  // 💎 Diamond Swarm models route through diamondSwarm service
+  if (selectedModel?.isDiamond || loadedModelId?.startsWith("diamond-")) {
+    return await generateViaDiamondSwarm(prompt, options);
+  }
+
+  // Legacy WebLLM path - requires engine
+  if (!engine || !isReady) {
+    throw new Error("Local AI not initialized");
+  }
+
+  // Import the buildSystemPrompt function for comprehensive context
+  const { buildSystemPrompt } = await import("../utils/aiSystemPrompts");
+
+  const {
+    systemPrompt = buildSystemPrompt({
+      task: options.task || "general",
+      toolContext: options.toolContext || "Faraday Cage Test Console",
+      includeAppContext: true,
+      includeRegulations: true,
+      includeVeteranData: true, // Auto-load veteran's My Packet data
+    }),
+    maxTokens = getUserTokenLimit(), // Use user-configured limit or default
+    temperature = 0.7,
+    onStream,
+  } = options;
+
+  setIsGenerating(true);
+
+  try {
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ];
+
+    // Generation config with repetition penalty to prevent degenerate output
+    const generationConfig = {
+      messages,
+      max_tokens: maxTokens,
+      temperature,
+      // Repetition penalty to prevent loops (1.0 = no penalty, >1.0 = penalize repetition)
+      repetition_penalty: 1.1,
+      // Frequency penalty (penalize tokens that appear frequently)
+      frequency_penalty: 0.3,
+      // Presence penalty (penalize tokens that have appeared at all)
+      presence_penalty: 0.1,
     };
-  }, [engine]);
+
+    const result = await runLegacyEngineCompletion(
+      engine,
+      generationConfig,
+      onStream,
+    );
+    setIsGenerating(false);
+    return result;
+  } catch (err) {
+    setIsGenerating(false);
+    throw err;
+  }
+};
+
+/**
+ * Interrupts an active generation, but only if the unified AI service says
+ * one is actually in progress. Extracted from useLocalAIProviderState's
+ * interruptGeneration useCallback; closes only over `ctx`.
+ */
+const runInterruptGeneration = async (ctx) => {
+  const { engine, setIsGenerating } = ctx;
+
+  // Check the global unified state - this is the source of truth for whether generation is happening
+  const { getAIStatus } = await import("../utils/unifiedAIService.js");
+  const aiStatus = getAIStatus();
+
+  // ONLY interrupt if the unified service says generation is in progress
+  // LocalAIPanel's isGenerating state can get stale during React re-renders
+  if (!aiStatus.localGenerating) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "⏭️ interruptGeneration called but no global generation in progress - ignoring",
+    );
+    setIsGenerating(false); // Sync local state with global
+    return;
+  }
+
+  if (engine) {
+    console.warn("🛑 Interrupting active generation");
+    try {
+      await engine.interruptGenerate?.();
+    } catch (err) {
+      console.warn("Error interrupting generation:", err);
+    }
+    setIsGenerating(false);
+  }
+};
+
+/**
+ * Unloads the current engine (if any) and loads a new model. Extracted from
+ * useLocalAIProviderState's switchModel useCallback; closes only over the
+ * state/setters passed in `ctx`.
+ */
+const runSwitchModel = async (newModelId, ctx) => {
+  const {
+    engine,
+    setEngine,
+    setLoadedModelId,
+    setIsReady,
+    initializeEngine,
+  } = ctx;
+
+  // Unload current model
+  if (engine) {
+    try {
+      await engine.unload?.();
+    } catch (err) {
+      console.warn("Error unloading model:", err);
+    }
+  }
+
+  // Reset state
+  setEngine(null);
+  setLoadedModelId(null);
+  setIsReady(false);
+  registerLocalAIEngine(null, false);
+
+  // Load new model
+  await initializeEngine(newModelId);
+};
+
+/**
+ * Persists a new GPU preference and re-checks WebGPU support with it.
+ * Extracted from useLocalAIProviderState's updateGPUPreference useCallback
+ * so that callback stays a thin wrapper; closes only over `ctx`.
+ */
+const runUpdateGPUPreference = async (newPreference, ctx) => {
+  const { setGpuPreferenceState, setWebGPUStatus } = ctx;
+  setGPUPreference(newPreference);
+  setGpuPreferenceState(newPreference);
+
+  // Rescan for GPUs with the new preference
+  // eslint-disable-next-line no-console
+  console.log(`🎮 GPU preference updated to: ${newPreference}`);
+  const result = await checkWebGPUSupport(newPreference);
+  setWebGPUStatus({ checked: true, ...result });
+
+  // eslint-disable-next-line no-console
+  console.log(`🎮 Now using: ${result.device} (${result.vendor})`);
+
+  return result;
+};
+
+/**
+ * Builds the object returned by useLocalAIProviderState. Extracted so the
+ * hook body itself stays under the line budget; pure data plumbing.
+ */
+function buildLocalAIProviderApi(deps) {
+  const {
+    webGPUStatus, setWebGPUStatus, isLoading, loadProgress, isReady, error, setError, isGenerating,
+    selectedModel, setSelectedModel, installedModels, loadedModelId,
+    gpuPreference, updateGPUPreference,
+    experimentalMode, setExperimentalMode, showExperimentalWarning, setShowExperimentalWarning,
+    initializeEngine, generate, interruptGeneration, switchModel,
+  } = deps;
 
   return {
     // Status
@@ -1526,4 +1551,113 @@ export const useLocalAIProviderState = () => {
     interruptGeneration,
     switchModel,
   };
+}
+
+/**
+ * useLocalAIProviderState - all Local AI provider state and actions.
+ * Extracted verbatim from LocalAIProvider's component body so that
+ * component stays a thin `useLocalAIProviderState() -> <Context.Provider>`
+ * wrapper (see LocalAIProvider in src/components/LocalAIPanel.jsx).
+ */
+export const useLocalAIProviderState = () => {
+  // WebGPU state
+  const [webGPUStatus, setWebGPUStatus] = useState({
+    checked: false,
+    supported: false,
+  });
+  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[1]); // Default to balanced
+  const [installedModels, setInstalledModels] = useState(new Set());
+  const [gpuPreference, setGpuPreferenceState] = useState(getGPUPreference());
+
+  // Engine state
+  const [engine, setEngine] = useState(null);
+  const [loadedModelId, setLoadedModelId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState({ progress: 0, text: "" });
+  const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Chat state
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Experimental features state
+  const [experimentalMode, setExperimentalMode] = useState(() => {
+    return localStorage.getItem("vet_rate_experimental_webgpu") === "true";
+  });
+  const [showExperimentalWarning, setShowExperimentalWarning] = useState(false);
+
+  // Update GPU preference and re-check WebGPU
+  const updateGPUPreference = useCallback(
+    (newPreference) =>
+      runUpdateGPUPreference(newPreference, { setGpuPreferenceState, setWebGPUStatus }),
+    [],
+  );
+
+  // Check WebGPU support and installed models on mount
+  useEffect(() => {
+    checkWebGPUAndModelsOnMount({ setWebGPUStatus, setInstalledModels });
+  }, []);
+
+  // Reinitialize WebGPU device when experimental mode changes
+  useEffect(() => {
+    // Only reinitialize if we've already initialized once (not on mount)
+    if (webGPUStatus.checked) {
+      reinitializeWebGPUDeviceForExperimentalMode(
+        experimentalMode,
+        webGPUStatus.supported,
+        { setExperimentalMode, setError },
+      );
+    }
+  }, [experimentalMode, webGPUStatus.supported, webGPUStatus.checked]);
+
+  // Initialize the LLM engine (supports Diamond Swarm and legacy WebLLM)
+  const initializeEngine = useCallback(
+    (modelId = selectedModel.id) =>
+      runInitializeEngine(modelId, {
+        selectedModel, setIsLoading, setError, setLoadProgress, setIsReady,
+        setEngine, setLoadedModelId, setInstalledModels, setIsGenerating,
+      }),
+    [selectedModel],
+  );
+
+  // Generate completion
+  const generate = useCallback(
+    (prompt, options = {}) =>
+      runGenerateCompletion(prompt, options, {
+        selectedModel, loadedModelId, engine, isReady, setIsGenerating,
+      }),
+    [engine, isReady, selectedModel, loadedModelId],
+  );
+
+  // Interrupt generation - only interrupts if there's actually a global generation in progress
+  const interruptGeneration = useCallback(
+    () => runInterruptGeneration({ engine, setIsGenerating }),
+    [engine],
+  );
+
+  // Switch to a different model
+  const switchModel = useCallback(
+    (newModelId) =>
+      runSwitchModel(newModelId, {
+        engine, setEngine, setLoadedModelId, setIsReady, initializeEngine,
+      }),
+    [engine, initializeEngine],
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (engine) {
+        engine.unload?.();
+      }
+    };
+  }, [engine]);
+
+  return buildLocalAIProviderApi({
+    webGPUStatus, setWebGPUStatus, isLoading, loadProgress, isReady, error, setError, isGenerating,
+    selectedModel, setSelectedModel, installedModels, loadedModelId,
+    gpuPreference, updateGPUPreference,
+    experimentalMode, setExperimentalMode, showExperimentalWarning, setShowExperimentalWarning,
+    initializeEngine, generate, interruptGeneration, switchModel,
+  });
 };

@@ -125,6 +125,63 @@ function expandChunksWithSiblings(chunks, getSiblings, budgetChars) {
 }
 
 /**
+ * Normalize the extractor's raw output into a flat facts array, then filter to
+ * only entries the extractor marked applicable=true. Pairs each fact with its
+ * ORIGINAL chunk index before filtering, so an applicable fact is attributed
+ * to the chunk it was extracted from — not the Nth chunk (guards Ab-H03; see
+ * answer() below for the full history of that bug).
+ */
+function extractApplicableFacts(extractedRaw) {
+  // Normalize extractor output. The schema asks for a single object, but the
+  // model may emit an array (one entry per chunk) or wrap with a key like
+  // "results". Accept any shape that yields a list of {applicable, ...}.
+  let facts = [];
+  if (Array.isArray(extractedRaw)) facts = extractedRaw;
+  else if (Array.isArray(extractedRaw?.results)) facts = extractedRaw.results;
+  else if (extractedRaw && typeof extractedRaw === "object")
+    facts = [extractedRaw];
+
+  return facts
+    .map((f, idx) => (f ? { ...f, _chunkIndex: idx } : f))
+    .filter((f) => f && f.applicable);
+}
+
+/**
+ * Build the synthesizer's structured facts payload, synthesize the answer
+ * text, and build the citation list — all from the same applicable facts so
+ * citations stay attributed to the chunk each fact was extracted from.
+ */
+async function synthesizeAnswer(dual, cleanQuery, applicable, chunks) {
+  const synthesizerFacts = {
+    user_question: cleanQuery,
+    facts: applicable.map((f) => ({
+      rule_summary: f.rule_summary,
+      supporting_quote: f.supporting_quote,
+      citation: chunks[f._chunkIndex]?.citation || f.citation,
+    })),
+  };
+
+  const answerText = await dual.synthesize(
+    synthesizerFacts,
+    SYNTHESIZER_INSTRUCTIONS,
+    { temperature: 0.2 },
+  );
+
+  const citations = applicable
+    .map((f) => chunks[f._chunkIndex])
+    .filter(Boolean)
+    .map((c) => ({
+      citation: c.citation,
+      title: c.title,
+      source_url: c.source_url,
+      fetched_at: c.fetched_at,
+      score: c.score,
+    }));
+
+  return { answerText, citations };
+}
+
+/**
  * Answer a user legal question, grounded in the retrieved index.
  *
  * @param {string} question
@@ -204,22 +261,11 @@ export async function answer(question, deps, opts = {}) {
     };
   }
 
-  // Normalize extractor output. The schema asks for a single object, but the
-  // model may emit an array (one entry per chunk) or wrap with a key like
-  // "results". Accept any shape that yields a list of {applicable, ...}.
-  let facts = [];
-  if (Array.isArray(extractedRaw)) facts = extractedRaw;
-  else if (Array.isArray(extractedRaw?.results)) facts = extractedRaw.results;
-  else if (extractedRaw && typeof extractedRaw === "object")
-    facts = [extractedRaw];
-
-  // Pair each fact with its ORIGINAL chunk index before filtering, so an
+  // Pairs each fact with its ORIGINAL chunk index before filtering, so an
   // applicable fact is attributed to the chunk it was extracted from — not the
   // Nth chunk. Previously a filtered index read the unfiltered chunks array, so a
   // non-applicable chunk #0 mis-attributed its citation to the first hit (Ab-H03).
-  const applicable = facts
-    .map((f, idx) => (f ? { ...f, _chunkIndex: idx } : f))
-    .filter((f) => f && f.applicable);
+  const applicable = extractApplicableFacts(extractedRaw);
 
   if (applicable.length === 0) {
     return {
@@ -233,31 +279,12 @@ export async function answer(question, deps, opts = {}) {
     };
   }
 
-  const synthesizerFacts = {
-    user_question: cleanQuery,
-    facts: applicable.map((f) => ({
-      rule_summary: f.rule_summary,
-      supporting_quote: f.supporting_quote,
-      citation: chunks[f._chunkIndex]?.citation || f.citation,
-    })),
-  };
-
-  const answerText = await dual.synthesize(
-    synthesizerFacts,
-    SYNTHESIZER_INSTRUCTIONS,
-    { temperature: 0.2 },
+  const { answerText, citations } = await synthesizeAnswer(
+    dual,
+    cleanQuery,
+    applicable,
+    chunks,
   );
-
-  const citations = applicable
-    .map((f) => chunks[f._chunkIndex])
-    .filter(Boolean)
-    .map((c) => ({
-      citation: c.citation,
-      title: c.title,
-      source_url: c.source_url,
-      fetched_at: c.fetched_at,
-      score: c.score,
-    }));
 
   return {
     answer: String(answerText).trim(),

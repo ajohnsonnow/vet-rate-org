@@ -41,6 +41,10 @@ function unitVecQ8(seed) {
   return { f32: Float32Array.from(q, (x) => x / 127), q8: q };
 }
 
+function toUnitFloat32(q8) {
+  return Float32Array.from(q8, (v) => v / 127);
+}
+
 describe("legalRag — cosineQ8", () => {
   it("identical normalized vectors score ~1.0", () => {
     const { f32, q8 } = unitVecQ8(1);
@@ -518,6 +522,187 @@ function blend(qA, qB, wA, wB) {
   return q;
 }
 
+async function hybridRescueLexicalMatchTest() {
+  const a = unitVecQ8(30); // query + chunk0 vector
+  const b = unitVecQ8(31); // chunk1 vector
+  const negA = Int8Array.from(a.q8, (v) => -v); // chunk2 vector ≈ -query
+  const chunksJsonl = [
+    {
+      id: "c0",
+      source: "ecfr",
+      citation: "38 CFR § 4.1",
+      title: "t0",
+      text: "musculoskeletal essentials",
+      source_url: "u0",
+      fetched_at: "f",
+    },
+    {
+      id: "c1",
+      source: "ecfr",
+      citation: "38 CFR § 4.2",
+      title: "t1",
+      text: "interpretation reports",
+      source_url: "u1",
+      fetched_at: "f",
+    },
+    {
+      id: "c2",
+      source: "ecfr",
+      citation: "38 CFR § 4.14",
+      title: "t2",
+      text: "zebra pyramiding avoidance",
+      source_url: "u2",
+      fetched_at: "f",
+    },
+  ]
+    .map((r) => JSON.stringify(r))
+    .join("\n");
+  const bin = mkBin([Array.from(a.q8), Array.from(b.q8), Array.from(negA)]);
+  const manifest = {
+    version: "v0.1.0",
+    embedding_dim: EMBED_DIM,
+    sources: { ecfr: 3 },
+  };
+
+  globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
+  // Embedder always returns chunk0's vector, so dense ranks c2 (negA) last,
+  // below threshold. But the query TEXT "zebra" only matches c2 lexically.
+  vi.doMock("@huggingface/transformers", () => ({
+    pipeline: async () => async () => ({
+      data: toUnitFloat32(a.q8),
+    }),
+  }));
+  const { query } = await import("../../services/legalRag.js");
+  const res = await query("zebra", { topK: 3, threshold: 0.35 });
+
+  // c2 was dense-excluded (negative cosine) yet BM25 rescued it to the top.
+  expect(res.chunks[0].id).toBe("c2");
+  expect(res.chunks[0].citation).toBe("38 CFR § 4.14");
+  expect(res.chunks[0].bm25Rank).toBe(1);
+  expect(res.chunks[0].score).toBeLessThan(0.35); // its raw cosine stayed low
+}
+
+async function hybridRescueDenseOnlyModeTest() {
+  const a = unitVecQ8(40);
+  const b = unitVecQ8(41);
+  const negA = Int8Array.from(a.q8, (v) => -v);
+  const chunksJsonl = [
+    {
+      id: "d0",
+      source: "ecfr",
+      citation: "38 CFR § 4.1",
+      title: "t0",
+      text: "alpha",
+      source_url: "u",
+      fetched_at: "f",
+    },
+    {
+      id: "d1",
+      source: "ecfr",
+      citation: "38 CFR § 4.2",
+      title: "t1",
+      text: "beta",
+      source_url: "u",
+      fetched_at: "f",
+    },
+    {
+      id: "d2",
+      source: "ecfr",
+      citation: "38 CFR § 4.14",
+      title: "t2",
+      text: "zebra",
+      source_url: "u",
+      fetched_at: "f",
+    },
+  ]
+    .map((r) => JSON.stringify(r))
+    .join("\n");
+  const bin = mkBin([Array.from(a.q8), Array.from(b.q8), Array.from(negA)]);
+  const manifest = {
+    version: "v0.1.0",
+    embedding_dim: EMBED_DIM,
+    sources: { ecfr: 3 },
+  };
+  globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
+  vi.doMock("@huggingface/transformers", () => ({
+    pipeline: async () => async () => ({
+      data: toUnitFloat32(a.q8),
+    }),
+  }));
+  const { query } = await import("../../services/legalRag.js");
+  const res = await query("zebra", {
+    topK: 3,
+    threshold: 0.35,
+    hybrid: false,
+  });
+  // Without hybrid, the dense-excluded c2 never surfaces.
+  expect(res.chunks.map((c) => c.id)).not.toContain("d2");
+}
+
+async function hybridRescueMmrDiversityTest() {
+  const u = halfVec(true); // first-half direction
+  const w = halfVec(false); // second-half direction — exactly orthogonal to u
+  const query = blend(u, w, 0.8, 0.6); // query leans toward u but has some w
+  const e0 = u; // top relevance to query (cosine ≈ 0.8), pure u
+  const e1 = blend(u, w, 0.99, 0.02); // near-duplicate of e0 (still ~pure u), similar relevance
+  const e2 = w; // distinct from e0/e1 (orthogonal), still meaningfully relevant (cosine ≈ 0.6)
+
+  const chunksJsonl = [
+    {
+      id: "e0",
+      source: "ecfr",
+      citation: "38 CFR § 4.1",
+      title: "t0",
+      text: "one",
+      source_url: "u",
+      fetched_at: "f",
+    },
+    {
+      id: "e1",
+      source: "ecfr",
+      citation: "38 CFR § 4.2",
+      title: "t1",
+      text: "two",
+      source_url: "u",
+      fetched_at: "f",
+    },
+    {
+      id: "e2",
+      source: "ecfr",
+      citation: "38 CFR § 4.3",
+      title: "t2",
+      text: "three",
+      source_url: "u",
+      fetched_at: "f",
+    },
+  ]
+    .map((r) => JSON.stringify(r))
+    .join("\n");
+  const bin = mkBin([Array.from(e0), Array.from(e1), Array.from(e2)]);
+  const manifest = {
+    version: "v0.1.0",
+    embedding_dim: EMBED_DIM,
+    sources: { ecfr: 3 },
+  };
+  globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
+  vi.doMock("@huggingface/transformers", () => ({
+    pipeline: async () => async () => ({
+      data: toUnitFloat32(query),
+    }),
+  }));
+  const { query: runQuery } = await import("../../services/legalRag.js");
+
+  const withMmr = await runQuery("query text", { topK: 2, threshold: 0 });
+  expect(withMmr.chunks.map((c) => c.id)).toEqual(["e0", "e2"]);
+
+  const withoutMmr = await runQuery("query text", {
+    topK: 2,
+    threshold: 0,
+    mmr: false,
+  });
+  expect(withoutMmr.chunks.map((c) => c.id)).toEqual(["e0", "e1"]);
+}
+
 describe("legalRag — query() hybrid rescue path", () => {
   let originalFetch;
   beforeEach(() => {
@@ -530,184 +715,18 @@ describe("legalRag — query() hybrid rescue path", () => {
     vi.resetModules();
   });
 
-  it("surfaces a lexically-matched chunk the dense score put below threshold", async () => {
-    const a = unitVecQ8(30); // query + chunk0 vector
-    const b = unitVecQ8(31); // chunk1 vector
-    const negA = Int8Array.from(a.q8, (v) => -v); // chunk2 vector ≈ -query
-    const chunksJsonl = [
-      {
-        id: "c0",
-        source: "ecfr",
-        citation: "38 CFR § 4.1",
-        title: "t0",
-        text: "musculoskeletal essentials",
-        source_url: "u0",
-        fetched_at: "f",
-      },
-      {
-        id: "c1",
-        source: "ecfr",
-        citation: "38 CFR § 4.2",
-        title: "t1",
-        text: "interpretation reports",
-        source_url: "u1",
-        fetched_at: "f",
-      },
-      {
-        id: "c2",
-        source: "ecfr",
-        citation: "38 CFR § 4.14",
-        title: "t2",
-        text: "zebra pyramiding avoidance",
-        source_url: "u2",
-        fetched_at: "f",
-      },
-    ]
-      .map((r) => JSON.stringify(r))
-      .join("\n");
-    const bin = mkBin([Array.from(a.q8), Array.from(b.q8), Array.from(negA)]);
-    const manifest = {
-      version: "v0.1.0",
-      embedding_dim: EMBED_DIM,
-      sources: { ecfr: 3 },
-    };
+  it(
+    "surfaces a lexically-matched chunk the dense score put below threshold",
+    hybridRescueLexicalMatchTest,
+  );
 
-    globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
-    // Embedder always returns chunk0's vector, so dense ranks c2 (negA) last,
-    // below threshold. But the query TEXT "zebra" only matches c2 lexically.
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({
-        data: Float32Array.from(a.q8, (v) => v / 127),
-      }),
-    }));
-    const { query } = await import("../../services/legalRag.js");
-    const res = await query("zebra", { topK: 3, threshold: 0.35 });
+  it(
+    "dense-only mode ignores BM25 (opts.hybrid=false)",
+    hybridRescueDenseOnlyModeTest,
+  );
 
-    // c2 was dense-excluded (negative cosine) yet BM25 rescued it to the top.
-    expect(res.chunks[0].id).toBe("c2");
-    expect(res.chunks[0].citation).toBe("38 CFR § 4.14");
-    expect(res.chunks[0].bm25Rank).toBe(1);
-    expect(res.chunks[0].score).toBeLessThan(0.35); // its raw cosine stayed low
-  });
-
-  it("dense-only mode ignores BM25 (opts.hybrid=false)", async () => {
-    const a = unitVecQ8(40);
-    const b = unitVecQ8(41);
-    const negA = Int8Array.from(a.q8, (v) => -v);
-    const chunksJsonl = [
-      {
-        id: "d0",
-        source: "ecfr",
-        citation: "38 CFR § 4.1",
-        title: "t0",
-        text: "alpha",
-        source_url: "u",
-        fetched_at: "f",
-      },
-      {
-        id: "d1",
-        source: "ecfr",
-        citation: "38 CFR § 4.2",
-        title: "t1",
-        text: "beta",
-        source_url: "u",
-        fetched_at: "f",
-      },
-      {
-        id: "d2",
-        source: "ecfr",
-        citation: "38 CFR § 4.14",
-        title: "t2",
-        text: "zebra",
-        source_url: "u",
-        fetched_at: "f",
-      },
-    ]
-      .map((r) => JSON.stringify(r))
-      .join("\n");
-    const bin = mkBin([Array.from(a.q8), Array.from(b.q8), Array.from(negA)]);
-    const manifest = {
-      version: "v0.1.0",
-      embedding_dim: EMBED_DIM,
-      sources: { ecfr: 3 },
-    };
-    globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({
-        data: Float32Array.from(a.q8, (v) => v / 127),
-      }),
-    }));
-    const { query } = await import("../../services/legalRag.js");
-    const res = await query("zebra", {
-      topK: 3,
-      threshold: 0.35,
-      hybrid: false,
-    });
-    // Without hybrid, the dense-excluded c2 never surfaces.
-    expect(res.chunks.map((c) => c.id)).not.toContain("d2");
-  });
-
-  it("MMR (default on, real lambda=0.7) prefers a distinct 2nd result over a near-duplicate; opts.mmr=false reverts to raw relevance order", async () => {
-    const u = halfVec(true); // first-half direction
-    const w = halfVec(false); // second-half direction — exactly orthogonal to u
-    const query = blend(u, w, 0.8, 0.6); // query leans toward u but has some w
-    const e0 = u; // top relevance to query (cosine ≈ 0.8), pure u
-    const e1 = blend(u, w, 0.99, 0.02); // near-duplicate of e0 (still ~pure u), similar relevance
-    const e2 = w; // distinct from e0/e1 (orthogonal), still meaningfully relevant (cosine ≈ 0.6)
-
-    const chunksJsonl = [
-      {
-        id: "e0",
-        source: "ecfr",
-        citation: "38 CFR § 4.1",
-        title: "t0",
-        text: "one",
-        source_url: "u",
-        fetched_at: "f",
-      },
-      {
-        id: "e1",
-        source: "ecfr",
-        citation: "38 CFR § 4.2",
-        title: "t1",
-        text: "two",
-        source_url: "u",
-        fetched_at: "f",
-      },
-      {
-        id: "e2",
-        source: "ecfr",
-        citation: "38 CFR § 4.3",
-        title: "t2",
-        text: "three",
-        source_url: "u",
-        fetched_at: "f",
-      },
-    ]
-      .map((r) => JSON.stringify(r))
-      .join("\n");
-    const bin = mkBin([Array.from(e0), Array.from(e1), Array.from(e2)]);
-    const manifest = {
-      version: "v0.1.0",
-      embedding_dim: EMBED_DIM,
-      sources: { ecfr: 3 },
-    };
-    globalThis.fetch = mockEcfrFetch({ manifest, chunksJsonl, bin });
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({
-        data: Float32Array.from(query, (v) => v / 127),
-      }),
-    }));
-    const { query: runQuery } = await import("../../services/legalRag.js");
-
-    const withMmr = await runQuery("query text", { topK: 2, threshold: 0 });
-    expect(withMmr.chunks.map((c) => c.id)).toEqual(["e0", "e2"]);
-
-    const withoutMmr = await runQuery("query text", {
-      topK: 2,
-      threshold: 0,
-      mmr: false,
-    });
-    expect(withoutMmr.chunks.map((c) => c.id)).toEqual(["e0", "e1"]);
-  });
+  it(
+    "MMR (default on, real lambda=0.7) prefers a distinct 2nd result over a near-duplicate; opts.mmr=false reverts to raw relevance order",
+    hybridRescueMmrDiversityTest,
+  );
 });

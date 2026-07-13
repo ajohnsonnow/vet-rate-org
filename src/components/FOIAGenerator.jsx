@@ -265,34 +265,1131 @@ const generateRequestText = (formData, selectedRecords) => {
   return text;
 };
 
+const INITIAL_FORM_DATA = {
+  firstName: "",
+  lastName: "",
+  ssn: "",
+  dob: "",
+  vaFileNumber: "",
+  address: "",
+  city: "",
+  state: "",
+  zip: "",
+  phone: "",
+  email: "",
+  dateRange: "all",
+  startDate: "",
+  endDate: "",
+  deliveryFormat: "Electronic",
+};
+
+const INITIAL_SELECTED_RECORDS = ["cfile", "rating_decisions", "cp_exams"];
+
+// Owns the selected-record-types state plus the selection helpers, so the
+// component body only has to wire the result into props.
+function useRecordSelection(initialRecords) {
+  const [selectedRecords, setSelectedRecords] = useState(initialRecords);
+
+  const toggleRecord = (id) => {
+    setSelectedRecords((prev) =>
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
+    );
+  };
+
+  const selectEssential = () => {
+    const essentialIds = RECORD_TYPES.filter(
+      (r) => r.category === "Essential",
+    ).map((r) => r.id);
+    setSelectedRecords((prev) => [...new Set([...prev, ...essentialIds])]);
+  };
+
+  const selectAll = () => {
+    setSelectedRecords(RECORD_TYPES.map((r) => r.id));
+  };
+
+  const clearAll = () => {
+    setSelectedRecords([]);
+  };
+
+  return {
+    selectedRecords,
+    setSelectedRecords,
+    toggleRecord,
+    selectEssential,
+    selectAll,
+    clearAll,
+  };
+}
+
+/**
+ * Download as PDF
+ */
+const downloadPDF = (formData, selectedRecords) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const maxWidth = pageWidth - margin * 2;
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("FOIA/Privacy Act Request", pageWidth / 2, 20, {
+    align: "center",
+  });
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const text = generateRequestText(formData, selectedRecords);
+  const lines = doc.splitTextToSize(text, maxWidth);
+  let yPosition = 35;
+
+  lines.forEach((line) => {
+    if (yPosition > 280) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(line, margin, yPosition);
+    yPosition += 5;
+  });
+
+  doc.save("FOIA_Request_VA_Form_20-10206.pdf");
+};
+
+/**
+ * Download as DOCX
+ */
+const downloadDOCX = async (formData, selectedRecords) => {
+  const text = generateRequestText(formData, selectedRecords);
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "FOIA/Privacy Act Request",
+                bold: true,
+                size: 28,
+              }),
+            ],
+            heading: HeadingLevel.HEADING_1,
+            alignment: AlignmentType.CENTER,
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "VA Form 20-10206 Companion Document",
+                size: 22,
+                italics: true,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+          }),
+          new Paragraph({ text: "" }),
+          ...text.split("\n").map(
+            (line) =>
+              new Paragraph({
+                children: [new TextRun({ text: line, size: 22 })],
+                spacing: { after: 100 },
+              }),
+          ),
+        ],
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "FOIA_Request_VA_Form_20-10206.docx";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Copy to clipboard
+ */
+const copyToClipboard = async (formData, selectedRecords) => {
+  try {
+    const text = generateRequestText(formData, selectedRecords);
+    await navigator.clipboard.writeText(text);
+    alert("Request copied to clipboard!");
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Step 1: Personal Information
+// ---------------------------------------------------------------------------
+
+const DataPrivacyNotice = () => (
+  <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-r-lg">
+    <div className="flex items-start gap-3">
+      <span className="text-2xl">🔐</span>
+      <div>
+        <h3 className="font-bold text-amber-800 dark:text-amber-200">
+          Your Data Stays Local
+        </h3>
+        <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+          None of your personal information leaves your device. Everything
+          is processed locally and goes directly into your downloadable
+          document.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const NameFields = ({ formData, updateField }) => (
+  <div className="grid grid-cols-2 gap-4">
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        First Name *
+      </label>
+      <input
+        type="text"
+        aria-label="First Name"
+        value={formData.firstName}
+        onChange={(e) => updateField("firstName", e.target.value)}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Last Name *
+      </label>
+      <input
+        type="text"
+        aria-label="Last Name"
+        value={formData.lastName}
+        onChange={(e) => updateField("lastName", e.target.value)}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+  </div>
+);
+
+const SsnDobFields = ({ formData, updateField }) => (
+  <div className="grid grid-cols-2 gap-4 mt-4">
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Last 4 of SSN *
+      </label>
+      <input
+        type="text"
+        aria-label="Last 4 of SSN"
+        value={formData.ssn}
+        onChange={(e) =>
+          updateField("ssn", e.target.value.replace(/\D/g, "").slice(0, 4))
+        }
+        placeholder="XXXX"
+        maxLength={4}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Date of Birth *
+      </label>
+      <input
+        type="date"
+        aria-label="Date of Birth"
+        value={formData.dob}
+        onChange={(e) => updateField("dob", e.target.value)}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+  </div>
+);
+
+const VaFileNumberField = ({ formData, updateField }) => (
+  <div className="mt-4">
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      VA File Number (if different from SSN)
+    </label>
+    <input
+      type="text"
+      aria-label="VA File Number"
+      value={formData.vaFileNumber}
+      onChange={(e) => updateField("vaFileNumber", e.target.value)}
+      placeholder="Leave blank if same as SSN"
+      className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+    />
+  </div>
+);
+
+const PersonalDetailsCard = ({ formData, updateField }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      👤 Your Information
+    </h3>
+
+    <NameFields formData={formData} updateField={updateField} />
+    <SsnDobFields formData={formData} updateField={updateField} />
+    <VaFileNumberField formData={formData} updateField={updateField} />
+  </div>
+);
+
+const AddressFields = ({ formData, updateField }) => (
+  <div>
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Street Address *
+    </label>
+    <input
+      type="text"
+      aria-label="Street Address"
+      value={formData.address}
+      onChange={(e) => updateField("address", e.target.value)}
+      className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+      required
+    />
+  </div>
+);
+
+const CityStateZipFields = ({ formData, updateField }) => (
+  <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4">
+    <div className="col-span-2 sm:col-span-3">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        City *
+      </label>
+      <input
+        type="text"
+        aria-label="City"
+        value={formData.city}
+        onChange={(e) => updateField("city", e.target.value)}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+    <div className="col-span-1">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        State *
+      </label>
+      <input
+        type="text"
+        aria-label="State"
+        value={formData.state}
+        onChange={(e) =>
+          updateField("state", e.target.value.toUpperCase().slice(0, 2))
+        }
+        placeholder="XX"
+        maxLength={2}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+    <div className="col-span-1 sm:col-span-2">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        ZIP Code *
+      </label>
+      <input
+        type="text"
+        aria-label="ZIP Code"
+        value={formData.zip}
+        onChange={(e) =>
+          updateField("zip", e.target.value.replace(/\D/g, "").slice(0, 5))
+        }
+        maxLength={5}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+  </div>
+);
+
+const PhoneEmailFields = ({ formData, updateField }) => (
+  <div className="grid grid-cols-2 gap-4 mt-4">
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Phone Number *
+      </label>
+      <input
+        type="tel"
+        aria-label="Phone Number"
+        value={formData.phone}
+        onChange={(e) => updateField("phone", e.target.value)}
+        placeholder="(XXX) XXX-XXXX"
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Email Address *
+      </label>
+      <input
+        type="email"
+        aria-label="Email Address"
+        value={formData.email}
+        onChange={(e) => updateField("email", e.target.value)}
+        className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        required
+      />
+    </div>
+  </div>
+);
+
+const ContactInfoCard = ({ formData, updateField }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      📬 Contact Information
+    </h3>
+
+    <AddressFields formData={formData} updateField={updateField} />
+    <CityStateZipFields formData={formData} updateField={updateField} />
+    <PhoneEmailFields formData={formData} updateField={updateField} />
+  </div>
+);
+
+const PersonalInfoStep = ({ formData, updateField, onContinue }) => (
+  <div className="max-w-2xl mx-auto space-y-6">
+    <DataPrivacyNotice />
+
+    <PersonalDetailsCard formData={formData} updateField={updateField} />
+
+    <ContactInfoCard formData={formData} updateField={updateField} />
+
+    <button
+      onClick={onContinue}
+      disabled={
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.ssn ||
+        !formData.email
+      }
+      className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
+    >
+      Continue to Record Selection →
+    </button>
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Step 2: Record Selection
+// ---------------------------------------------------------------------------
+
+const RecordSelectionTip = () => (
+  <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
+    <div className="flex items-start gap-3">
+      <span className="text-2xl">💡</span>
+      <div>
+        <h3 className="font-bold text-blue-800 dark:text-blue-200">
+          Pro Tip
+        </h3>
+        <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+          Request your <strong>complete C-File</strong> - it contains
+          everything and reveals what VA actually considered when making
+          their decisions. You&apos;re entitled to{" "}
+          <strong>one free copy</strong> under 38 CFR § 1.555.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const QuickSelectButtons = ({ selectEssential, selectAll, clearAll }) => (
+  <div className="flex flex-wrap gap-2">
+    <button
+      onClick={selectEssential}
+      className="px-4 py-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-lg font-medium hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
+    >
+      ✓ Select Essential
+    </button>
+    <button
+      onClick={selectAll}
+      className="px-4 py-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
+    >
+      ✓ Select All
+    </button>
+    <button
+      onClick={clearAll}
+      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+    >
+      ✗ Clear All
+    </button>
+  </div>
+);
+
+const RecordRow = ({ record, isSelected, onToggle }) => (
+  <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+    className={`p-4 transition-colors cursor-pointer ${
+      isSelected
+        ? "bg-green-50 dark:bg-green-900/20"
+        : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+    }`}
+    onClick={onToggle}
+  >
+    <div className="flex items-start gap-4">
+      <div
+        className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+          isSelected
+            ? "bg-green-500 border-green-500 text-white"
+            : "border-gray-300 dark:border-gray-600"
+        }`}
+      >
+        {isSelected && "✓"}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span>{record.icon}</span>
+          <p className="font-semibold text-gray-800 dark:text-gray-100">
+            {record.name}
+          </p>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+          {record.description}
+        </p>
+        {isSelected && (
+          <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+            <p className="text-xs font-semibold text-green-800 dark:text-green-200 mb-1">
+              Why this matters:
+            </p>
+            <ul className="text-xs text-green-700 dark:text-green-300 space-y-0.5">
+              {record.tips.slice(0, 2).map((tip, i) => (
+                <li key={i}>• {tip}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const RecordCategorySection = ({ category, selectedRecords, toggleRecord }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+      <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+        {category === "Essential" && "⭐"} {category} Records
+      </h3>
+    </div>
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      {RECORD_TYPES.filter((r) => r.category === category).map((record) => (
+        <RecordRow
+          key={record.id}
+          record={record}
+          isSelected={selectedRecords.includes(record.id)}
+          onToggle={() => toggleRecord(record.id)}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const RecordCategoriesList = ({ selectedRecords, toggleRecord }) => (
+  <>
+    {["Essential", "Medical", "Administrative"].map((category) => (
+      <RecordCategorySection
+        key={category}
+        category={category}
+        selectedRecords={selectedRecords}
+        toggleRecord={toggleRecord}
+      />
+    ))}
+  </>
+);
+
+const DateRangeSection = ({ formData, updateField }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      📅 Time Period
+    </h3>
+
+    <div className="space-y-3">
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="radio"
+          name="dateRange"
+          value="all"
+          checked={formData.dateRange === "all"}
+          onChange={() => updateField("dateRange", "all")}
+          className="w-5 h-5 text-amber-500"
+        />
+        <span className="text-gray-800 dark:text-gray-100">
+          All records (recommended)
+        </span>
+      </label>
+
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="radio"
+          name="dateRange"
+          value="custom"
+          checked={formData.dateRange === "custom"}
+          onChange={() => updateField("dateRange", "custom")}
+          className="w-5 h-5 text-amber-500"
+        />
+        <span className="text-gray-800 dark:text-gray-100">
+          Specific date range
+        </span>
+      </label>
+
+      {formData.dateRange === "custom" && (
+        <div className="ml-8 flex gap-4">
+          <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
+              From
+            </label>
+            <input
+              type="month"
+              aria-label="Date range start (month and year)"
+              value={formData.startDate}
+              onChange={(e) => updateField("startDate", e.target.value)}
+              className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+            />
+          </div>
+          <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
+              To
+            </label>
+            <input
+              type="month"
+              aria-label="Date range end (month and year)"
+              value={formData.endDate}
+              onChange={(e) => updateField("endDate", e.target.value)}
+              className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const DeliveryPreferenceSection = ({ formData, updateField }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      📬 How would you like to receive your records?
+    </h3>
+
+    <div className="space-y-3">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="radio"
+          name="deliveryFormat"
+          value="Electronic"
+          checked={formData.deliveryFormat === "Electronic"}
+          onChange={() => updateField("deliveryFormat", "Electronic")}
+          className="w-5 h-5 text-amber-500"
+        />
+        <div>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">
+            Electronic (Recommended)
+          </span>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Faster and easier to search through
+          </p>
+        </div>
+      </label>
+
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="radio"
+          name="deliveryFormat"
+          value="Physical"
+          checked={formData.deliveryFormat === "Physical"}
+          onChange={() => updateField("deliveryFormat", "Physical")}
+          className="w-5 h-5 text-amber-500"
+        />
+        <div>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">
+            Physical Copies
+          </span>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Mailed to your address
+          </p>
+        </div>
+      </label>
+    </div>
+  </div>
+);
+
+const SelectedRecordsSummary = ({ selectedRecords }) => {
+  if (selectedRecords.length === 0) return null;
+
+  return (
+    <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
+      <p className="font-semibold text-green-800 dark:text-green-200">
+        {selectedRecords.length} record type
+        {selectedRecords.length > 1 ? "s" : ""} selected
+      </p>
+    </div>
+  );
+};
+
+const RecordSelectionStep = ({
+  formData,
+  selectedRecords,
+  updateField,
+  toggleRecord,
+  selectEssential,
+  selectAll,
+  clearAll,
+  onBack,
+  onNext,
+}) => (
+  <div className="max-w-3xl mx-auto space-y-6">
+    <RecordSelectionTip />
+
+    <QuickSelectButtons
+      selectEssential={selectEssential}
+      selectAll={selectAll}
+      clearAll={clearAll}
+    />
+
+    <RecordCategoriesList
+      selectedRecords={selectedRecords}
+      toggleRecord={toggleRecord}
+    />
+
+    <DateRangeSection formData={formData} updateField={updateField} />
+
+    <DeliveryPreferenceSection formData={formData} updateField={updateField} />
+
+    <SelectedRecordsSummary selectedRecords={selectedRecords} />
+
+    <div className="flex gap-4">
+      <button
+        onClick={onBack}
+        className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        ← Back
+      </button>
+      <button
+        onClick={onNext}
+        disabled={selectedRecords.length === 0}
+        className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+      >
+        Generate Request →
+      </button>
+    </div>
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Step 3: Review & Download
+// ---------------------------------------------------------------------------
+
+const SuccessBanner = () => (
+  <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 text-white shadow-lg">
+    <div className="flex items-center gap-4">
+      <div className="bg-white/20 rounded-full p-3">
+        <span className="text-4xl">🔑</span>
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold">Your FOIA Request is Ready!</h3>
+        <p className="text-amber-100">
+          Download and submit to unlock your VA records
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const RequestSummaryCard = ({ formData, selectedRecords }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      📋 Request Summary
+    </h3>
+    <div className="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p className="text-gray-500 dark:text-gray-400">Requester</p>
+        <p className="font-medium text-gray-800 dark:text-gray-100">
+          {formData.firstName} {formData.lastName}
+        </p>
+      </div>
+      <div>
+        <p className="text-gray-500 dark:text-gray-400">
+          Records Requested
+        </p>
+        <p className="font-medium text-gray-800 dark:text-gray-100">
+          {selectedRecords.length} types
+        </p>
+      </div>
+      <div>
+        <p className="text-gray-500 dark:text-gray-400">Time Period</p>
+        <p className="font-medium text-gray-800 dark:text-gray-100">
+          {formData.dateRange === "all"
+            ? "All records"
+            : `${formData.startDate} to ${formData.endDate}`}
+        </p>
+      </div>
+      <div>
+        <p className="text-gray-500 dark:text-gray-400">Delivery</p>
+        <p className="font-medium text-gray-800 dark:text-gray-100">
+          {formData.deliveryFormat}
+        </p>
+      </div>
+    </div>
+
+    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
+        Records being requested:
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {selectedRecords.map((id) => {
+          const record = RECORD_TYPES.find((r) => r.id === id);
+          return (
+            <span
+              key={id}
+              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded"
+            >
+              {record?.icon} {record?.name}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+);
+
+const DownloadOptionsCard = ({ formData, selectedRecords }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+      📥 Download Your Request
+    </h3>
+
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <button
+        onClick={() => downloadPDF(formData, selectedRecords)}
+        className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
+      >
+        <span className="text-3xl block mb-2">📑</span>
+        <p className="font-semibold text-gray-800 dark:text-gray-100">
+          Download PDF
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          For printing or submitting
+        </p>
+      </button>
+
+      <button
+        onClick={() => downloadDOCX(formData, selectedRecords)}
+        className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
+      >
+        <span className="text-3xl block mb-2">📝</span>
+        <p className="font-semibold text-gray-800 dark:text-gray-100">
+          Download DOCX
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          For editing if needed
+        </p>
+      </button>
+
+      <button
+        onClick={() => copyToClipboard(formData, selectedRecords)}
+        className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
+      >
+        <span className="text-3xl block mb-2">📋</span>
+        <p className="font-semibold text-gray-800 dark:text-gray-100">
+          Copy Text
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          To clipboard
+        </p>
+      </button>
+    </div>
+  </div>
+);
+
+const RequestPreviewPanel = ({
+  showPreview,
+  setShowPreview,
+  formData,
+  selectedRecords,
+}) => (
+  <>
+    <button
+      onClick={() => setShowPreview(!showPreview)}
+      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+    >
+      {showPreview ? "🔼 Hide Preview" : "🔽 Show Full Preview"}
+    </button>
+
+    {showPreview && (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+          <h4 className="font-bold text-gray-800 dark:text-gray-100">
+            Request Preview
+          </h4>
+        </div>
+        <div className="p-4 max-h-96 overflow-y-auto">
+          <pre className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono">
+            {generateRequestText(formData, selectedRecords)}
+          </pre>
+        </div>
+      </div>
+    )}
+  </>
+);
+
+const SubmissionInstructions = () => (
+  <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
+    <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3">
+      📤 How to Submit
+    </h4>
+    <div className="text-blue-700 dark:text-blue-300 text-sm space-y-3">
+      <div>
+        <p className="font-semibold">Option 1: VA QuickSubmit (Fastest)</p>
+        <p>
+          Upload at{" "}
+          <a
+            href="https://www.va.gov/documentation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            va.gov/documentation
+          </a>
+        </p>
+      </div>
+      <div>
+        <p className="font-semibold">
+          Option 2: Submit with VA Form 20-10206
+        </p>
+        <p>
+          Download official form from{" "}
+          <a
+            href="https://www.va.gov/find-forms/about-form-20-10206/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            VA.gov
+          </a>{" "}
+          and attach this document
+        </p>
+      </div>
+      <div>
+        <p className="font-semibold">
+          Option 3: eVetRecs (for Service Records)
+        </p>
+        <p>
+          Submit at{" "}
+          <a
+            href="https://www.archives.gov/veterans/military-service-records"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            archives.gov/veterans
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const TimelineInfo = () => (
+  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+    <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">
+      ⏱️ Expected Timeline
+    </h4>
+    <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+      <li>
+        • <strong>VA Regional Office:</strong> 20-30 business days (can take
+        longer)
+      </li>
+      <li>
+        • <strong>NPRC (Service Records):</strong> 2-6 months (backlog
+        varies)
+      </li>
+      <li>
+        • <strong>Expedited requests:</strong> If you have a pending claim
+        or appeal, mention it!
+      </li>
+    </ul>
+  </div>
+);
+
+const ReviewDownloadStep = ({
+  formData,
+  selectedRecords,
+  showPreview,
+  setShowPreview,
+  onStartOver,
+}) => (
+  <div className="max-w-3xl mx-auto space-y-6">
+    <SuccessBanner />
+
+    <RequestSummaryCard formData={formData} selectedRecords={selectedRecords} />
+
+    <DownloadOptionsCard formData={formData} selectedRecords={selectedRecords} />
+
+    <RequestPreviewPanel
+      showPreview={showPreview}
+      setShowPreview={setShowPreview}
+      formData={formData}
+      selectedRecords={selectedRecords}
+    />
+
+    <SubmissionInstructions />
+
+    <TimelineInfo />
+
+    <button
+      onClick={onStartOver}
+      className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      🔄 Start New Request
+    </button>
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Shared modal chrome
+// ---------------------------------------------------------------------------
+
+const FOIAModalHeader = ({ onClose, onReportBug }) => (
+  <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">🔑</span>
+        <div>
+          <h2
+            id="foia-generator-title"
+            className="text-xl font-bold text-white"
+          >
+            The Keysmith{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-sm text-amber-100">
+            FOIA / C-File Request Generator
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="FOIA Keysmith"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProgressSteps = ({ step }) => (
+  <div className="px-6 pt-6">
+    <div className="flex items-center justify-center gap-4 mb-6">
+      {[1, 2, 3].map((s) => (
+        <div key={s} className="flex items-center">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+              step >= s
+                ? "bg-amber-500 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+            }`}
+          >
+            {step > s ? "✓" : s}
+          </div>
+          {s < 3 && (
+            <div
+              className={`w-16 h-1 ${step > s ? "bg-amber-500" : "bg-gray-200 dark:bg-gray-700"}`}
+            ></div>
+          )}
+        </div>
+      ))}
+    </div>
+    <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <span className={step === 1 ? "font-bold text-amber-500" : ""}>
+        Your Info
+      </span>
+      <span className={step === 2 ? "font-bold text-amber-500" : ""}>
+        Select Records
+      </span>
+      <span className={step === 3 ? "font-bold text-amber-500" : ""}>
+        Download
+      </span>
+    </div>
+  </div>
+);
+
+const DownloadSupportCTA = () => (
+  <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
+    <div className="flex items-center gap-4">
+      <img
+        src="/images/Anth.jpg"
+        alt="Anthony - Vet-Rate Developer"
+        className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
+      />
+      <div className="flex-1">
+        <p className="text-amber-200 font-semibold mb-1">
+          🔐 Knowledge is power - now you&apos;re unlocking yours
+        </p>
+        <p className="text-amber-300/70 text-sm">
+          Your C-File contains everything VA used to decide your
+          claim - and everything they may have
+          &quot;overlooked.&quot; This tool helps every veteran see
+          their own file. Transparency tools like this take time to
+          build. Help keep them free.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 export default function FOIAGenerator({ onClose, onReportBug }) {
   useLanguage();
 
   // Form state
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    ssn: "",
-    dob: "",
-    vaFileNumber: "",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    phone: "",
-    email: "",
-    dateRange: "all",
-    startDate: "",
-    endDate: "",
-    deliveryFormat: "Electronic",
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   // Record selection
-  const [selectedRecords, setSelectedRecords] = useState([
-    "cfile",
-    "rating_decisions",
-    "cp_exams",
-  ]);
+  const {
+    selectedRecords,
+    setSelectedRecords,
+    toggleRecord,
+    selectEssential,
+    selectAll,
+    clearAll,
+  } = useRecordSelection(INITIAL_SELECTED_RECORDS);
 
   // Wizard state
   const [step, setStep] = useState(1);
@@ -303,873 +1400,12 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Toggle record selection
-  const toggleRecord = (id) => {
-    setSelectedRecords((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
-    );
+  // Reset the wizard back to a blank request
+  const startOver = () => {
+    setStep(1);
+    setFormData(INITIAL_FORM_DATA);
+    setSelectedRecords(INITIAL_SELECTED_RECORDS);
   };
-
-  // Select all essential records
-  const selectEssential = () => {
-    const essentialIds = RECORD_TYPES.filter(
-      (r) => r.category === "Essential",
-    ).map((r) => r.id);
-    setSelectedRecords((prev) => [...new Set([...prev, ...essentialIds])]);
-  };
-
-  // Select all records
-  const selectAll = () => {
-    setSelectedRecords(RECORD_TYPES.map((r) => r.id));
-  };
-
-  // Clear all records
-  const clearAll = () => {
-    setSelectedRecords([]);
-  };
-
-  /**
-   * Download as PDF
-   */
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("FOIA/Privacy Act Request", pageWidth / 2, 20, {
-      align: "center",
-    });
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-
-    const text = generateRequestText(formData, selectedRecords);
-    const lines = doc.splitTextToSize(text, maxWidth);
-    let yPosition = 35;
-
-    lines.forEach((line) => {
-      if (yPosition > 280) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      doc.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    doc.save("FOIA_Request_VA_Form_20-10206.pdf");
-  };
-
-  /**
-   * Download as DOCX
-   */
-  const downloadDOCX = async () => {
-    const text = generateRequestText(formData, selectedRecords);
-
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "FOIA/Privacy Act Request",
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "VA Form 20-10206 Companion Document",
-                  size: 22,
-                  italics: true,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({ text: "" }),
-            ...text.split("\n").map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun({ text: line, size: 22 })],
-                  spacing: { after: 100 },
-                }),
-            ),
-          ],
-        },
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "FOIA_Request_VA_Form_20-10206.docx";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  /**
-   * Copy to clipboard
-   */
-  const copyToClipboard = async () => {
-    try {
-      const text = generateRequestText(formData, selectedRecords);
-      await navigator.clipboard.writeText(text);
-      alert("Request copied to clipboard!");
-    } catch (err) {
-      console.error("Copy failed:", err);
-    }
-  };
-
-  /**
-   * Render Step 1: Personal Information
-   */
-  const renderPersonalInfo = () => (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-r-lg">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">🔐</span>
-          <div>
-            <h3 className="font-bold text-amber-800 dark:text-amber-200">
-              Your Data Stays Local
-            </h3>
-            <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-              None of your personal information leaves your device. Everything
-              is processed locally and goes directly into your downloadable
-              document.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          👤 Your Information
-        </h3>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              First Name *
-            </label>
-            <input
-              type="text"
-              aria-label="First Name"
-              value={formData.firstName}
-              onChange={(e) => updateField("firstName", e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              aria-label="Last Name"
-              value={formData.lastName}
-              onChange={(e) => updateField("lastName", e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Last 4 of SSN *
-            </label>
-            <input
-              type="text"
-              aria-label="Last 4 of SSN"
-              value={formData.ssn}
-              onChange={(e) =>
-                updateField(
-                  "ssn",
-                  e.target.value.replace(/\D/g, "").slice(0, 4),
-                )
-              }
-              placeholder="XXXX"
-              maxLength={4}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Date of Birth *
-            </label>
-            <input
-              type="date"
-              aria-label="Date of Birth"
-              value={formData.dob}
-              onChange={(e) => updateField("dob", e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            VA File Number (if different from SSN)
-          </label>
-          <input
-            type="text"
-            aria-label="VA File Number"
-            value={formData.vaFileNumber}
-            onChange={(e) => updateField("vaFileNumber", e.target.value)}
-            placeholder="Leave blank if same as SSN"
-            className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-          />
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          📬 Contact Information
-        </h3>
-
-        <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Street Address *
-          </label>
-          <input
-            type="text"
-            aria-label="Street Address"
-            value={formData.address}
-            onChange={(e) => updateField("address", e.target.value)}
-            className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mt-4">
-          <div className="col-span-2 sm:col-span-3">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              City *
-            </label>
-            <input
-              type="text"
-              aria-label="City"
-              value={formData.city}
-              onChange={(e) => updateField("city", e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-          <div className="col-span-1">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              State *
-            </label>
-            <input
-              type="text"
-              aria-label="State"
-              value={formData.state}
-              onChange={(e) =>
-                updateField("state", e.target.value.toUpperCase().slice(0, 2))
-              }
-              placeholder="XX"
-              maxLength={2}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-          <div className="col-span-1 sm:col-span-2">
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              ZIP Code *
-            </label>
-            <input
-              type="text"
-              aria-label="ZIP Code"
-              value={formData.zip}
-              onChange={(e) =>
-                updateField(
-                  "zip",
-                  e.target.value.replace(/\D/g, "").slice(0, 5),
-                )
-              }
-              maxLength={5}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Phone Number *
-            </label>
-            <input
-              type="tel"
-              aria-label="Phone Number"
-              value={formData.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-              placeholder="(XXX) XXX-XXXX"
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-          <div>
-            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email Address *
-            </label>
-            <input
-              type="email"
-              aria-label="Email Address"
-              value={formData.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => setStep(2)}
-        disabled={
-          !formData.firstName ||
-          !formData.lastName ||
-          !formData.ssn ||
-          !formData.email
-        }
-        className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
-      >
-        Continue to Record Selection →
-      </button>
-    </div>
-  );
-
-  /**
-   * Render Step 2: Record Selection
-   */
-  const renderRecordSelection = () => (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">💡</span>
-          <div>
-            <h3 className="font-bold text-blue-800 dark:text-blue-200">
-              Pro Tip
-            </h3>
-            <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-              Request your <strong>complete C-File</strong> - it contains
-              everything and reveals what VA actually considered when making
-              their decisions. You&apos;re entitled to{" "}
-              <strong>one free copy</strong> under 38 CFR § 1.555.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Select Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={selectEssential}
-          className="px-4 py-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-lg font-medium hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
-        >
-          ✓ Select Essential
-        </button>
-        <button
-          onClick={selectAll}
-          className="px-4 py-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
-        >
-          ✓ Select All
-        </button>
-        <button
-          onClick={clearAll}
-          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-        >
-          ✗ Clear All
-        </button>
-      </div>
-
-      {/* Record Types by Category */}
-      {["Essential", "Medical", "Administrative"].map((category) => (
-        <div
-          key={category}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
-        >
-          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-            <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-              {category === "Essential" && "⭐"} {category} Records
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {RECORD_TYPES.filter((r) => r.category === category).map(
-              (record) => (
-                <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-                  key={record.id}
-                  className={`p-4 transition-colors cursor-pointer ${
-                    selectedRecords.includes(record.id)
-                      ? "bg-green-50 dark:bg-green-900/20"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }`}
-                  onClick={() => toggleRecord(record.id)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                        selectedRecords.includes(record.id)
-                          ? "bg-green-500 border-green-500 text-white"
-                          : "border-gray-300 dark:border-gray-600"
-                      }`}
-                    >
-                      {selectedRecords.includes(record.id) && "✓"}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span>{record.icon}</span>
-                        <p className="font-semibold text-gray-800 dark:text-gray-100">
-                          {record.name}
-                        </p>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                        {record.description}
-                      </p>
-                      {selectedRecords.includes(record.id) && (
-                        <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                          <p className="text-xs font-semibold text-green-800 dark:text-green-200 mb-1">
-                            Why this matters:
-                          </p>
-                          <ul className="text-xs text-green-700 dark:text-green-300 space-y-0.5">
-                            {record.tips.slice(0, 2).map((tip, i) => (
-                              <li key={i}>• {tip}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-        </div>
-      ))}
-
-      {/* Date Range Selection */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          📅 Time Period
-        </h3>
-
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="dateRange"
-              value="all"
-              checked={formData.dateRange === "all"}
-              onChange={() => updateField("dateRange", "all")}
-              className="w-5 h-5 text-amber-500"
-            />
-            <span className="text-gray-800 dark:text-gray-100">
-              All records (recommended)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="dateRange"
-              value="custom"
-              checked={formData.dateRange === "custom"}
-              onChange={() => updateField("dateRange", "custom")}
-              className="w-5 h-5 text-amber-500"
-            />
-            <span className="text-gray-800 dark:text-gray-100">
-              Specific date range
-            </span>
-          </label>
-
-          {formData.dateRange === "custom" && (
-            <div className="ml-8 flex gap-4">
-              <div>
-                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  From
-                </label>
-                <input
-                  type="month"
-                  aria-label="Date range start (month and year)"
-                  value={formData.startDate}
-                  onChange={(e) => updateField("startDate", e.target.value)}
-                  className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                />
-              </div>
-              <div>
-                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  To
-                </label>
-                <input
-                  type="month"
-                  aria-label="Date range end (month and year)"
-                  value={formData.endDate}
-                  onChange={(e) => updateField("endDate", e.target.value)}
-                  className="p-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Delivery Preference */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          📬 How would you like to receive your records?
-        </h3>
-
-        <div className="space-y-3">
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="deliveryFormat"
-              value="Electronic"
-              checked={formData.deliveryFormat === "Electronic"}
-              onChange={() => updateField("deliveryFormat", "Electronic")}
-              className="w-5 h-5 text-amber-500"
-            />
-            <div>
-              <span className="text-gray-800 dark:text-gray-100 font-medium">
-                Electronic (Recommended)
-              </span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Faster and easier to search through
-              </p>
-            </div>
-          </label>
-
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="deliveryFormat"
-              value="Physical"
-              checked={formData.deliveryFormat === "Physical"}
-              onChange={() => updateField("deliveryFormat", "Physical")}
-              className="w-5 h-5 text-amber-500"
-            />
-            <div>
-              <span className="text-gray-800 dark:text-gray-100 font-medium">
-                Physical Copies
-              </span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Mailed to your address
-              </p>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      {/* Selected Summary */}
-      {selectedRecords.length > 0 && (
-        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
-          <p className="font-semibold text-green-800 dark:text-green-200">
-            {selectedRecords.length} record type
-            {selectedRecords.length > 1 ? "s" : ""} selected
-          </p>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex gap-4">
-        <button
-          onClick={() => setStep(1)}
-          className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          ← Back
-        </button>
-        <button
-          onClick={() => setStep(3)}
-          disabled={selectedRecords.length === 0}
-          className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
-        >
-          Generate Request →
-        </button>
-      </div>
-    </div>
-  );
-
-  /**
-   * Render Step 3: Review & Download
-   */
-  const renderReviewDownload = () => (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Success Banner */}
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 text-white shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className="bg-white/20 rounded-full p-3">
-            <span className="text-4xl">🔑</span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold">Your FOIA Request is Ready!</h3>
-            <p className="text-amber-100">
-              Download and submit to unlock your VA records
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Request Summary */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          📋 Request Summary
-        </h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">Requester</p>
-            <p className="font-medium text-gray-800 dark:text-gray-100">
-              {formData.firstName} {formData.lastName}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">
-              Records Requested
-            </p>
-            <p className="font-medium text-gray-800 dark:text-gray-100">
-              {selectedRecords.length} types
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">Time Period</p>
-            <p className="font-medium text-gray-800 dark:text-gray-100">
-              {formData.dateRange === "all"
-                ? "All records"
-                : `${formData.startDate} to ${formData.endDate}`}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">Delivery</p>
-            <p className="font-medium text-gray-800 dark:text-gray-100">
-              {formData.deliveryFormat}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-            Records being requested:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {selectedRecords.map((id) => {
-              const record = RECORD_TYPES.find((r) => r.id === id);
-              return (
-                <span
-                  key={id}
-                  className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded"
-                >
-                  {record?.icon} {record?.name}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Download Options */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          📥 Download Your Request
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <button
-            onClick={downloadPDF}
-            className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
-          >
-            <span className="text-3xl block mb-2">📑</span>
-            <p className="font-semibold text-gray-800 dark:text-gray-100">
-              Download PDF
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              For printing or submitting
-            </p>
-          </button>
-
-          <button
-            onClick={downloadDOCX}
-            className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
-          >
-            <span className="text-3xl block mb-2">📝</span>
-            <p className="font-semibold text-gray-800 dark:text-gray-100">
-              Download DOCX
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              For editing if needed
-            </p>
-          </button>
-
-          <button
-            onClick={copyToClipboard}
-            className="p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all"
-          >
-            <span className="text-3xl block mb-2">📋</span>
-            <p className="font-semibold text-gray-800 dark:text-gray-100">
-              Copy Text
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              To clipboard
-            </p>
-          </button>
-        </div>
-      </div>
-
-      {/* Preview Toggle */}
-      <button
-        onClick={() => setShowPreview(!showPreview)}
-        className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
-      >
-        {showPreview ? "🔼 Hide Preview" : "🔽 Show Full Preview"}
-      </button>
-
-      {showPreview && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-            <h4 className="font-bold text-gray-800 dark:text-gray-100">
-              Request Preview
-            </h4>
-          </div>
-          <div className="p-4 max-h-96 overflow-y-auto">
-            <pre className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono">
-              {generateRequestText(formData, selectedRecords)}
-            </pre>
-          </div>
-        </div>
-      )}
-
-      {/* Submission Instructions */}
-      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 rounded-r-lg">
-        <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3">
-          📤 How to Submit
-        </h4>
-        <div className="text-blue-700 dark:text-blue-300 text-sm space-y-3">
-          <div>
-            <p className="font-semibold">Option 1: VA QuickSubmit (Fastest)</p>
-            <p>
-              Upload at{" "}
-              <a
-                href="https://www.va.gov/documentation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                va.gov/documentation
-              </a>
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold">
-              Option 2: Submit with VA Form 20-10206
-            </p>
-            <p>
-              Download official form from{" "}
-              <a
-                href="https://www.va.gov/find-forms/about-form-20-10206/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                VA.gov
-              </a>{" "}
-              and attach this document
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold">
-              Option 3: eVetRecs (for Service Records)
-            </p>
-            <p>
-              Submit at{" "}
-              <a
-                href="https://www.archives.gov/veterans/military-service-records"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                archives.gov/veterans
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline Info */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">
-          ⏱️ Expected Timeline
-        </h4>
-        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-          <li>
-            • <strong>VA Regional Office:</strong> 20-30 business days (can take
-            longer)
-          </li>
-          <li>
-            • <strong>NPRC (Service Records):</strong> 2-6 months (backlog
-            varies)
-          </li>
-          <li>
-            • <strong>Expedited requests:</strong> If you have a pending claim
-            or appeal, mention it!
-          </li>
-        </ul>
-      </div>
-
-      {/* Start Over */}
-      <button
-        onClick={() => {
-          setStep(1);
-          setFormData({
-            firstName: "",
-            lastName: "",
-            ssn: "",
-            dob: "",
-            vaFileNumber: "",
-            address: "",
-            city: "",
-            state: "",
-            zip: "",
-            phone: "",
-            email: "",
-            dateRange: "all",
-            startDate: "",
-            endDate: "",
-            deliveryFormat: "Electronic",
-          });
-          setSelectedRecords(["cfile", "rating_decisions", "cp_exams"]);
-        }}
-        className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-      >
-        🔄 Start New Request
-      </button>
-    </div>
-  );
 
   return (
     <>
@@ -1178,124 +1414,44 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
         onClose={onClose}
         size="2xl"
         labelledBy="foia-generator-title"
-        header={
-          <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🔑</span>
-                <div>
-                  <h2
-                    id="foia-generator-title"
-                    className="text-xl font-bold text-white"
-                  >
-                    The Keysmith{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-sm text-amber-100">
-                    FOIA / C-File Request Generator
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="FOIA Keysmith"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
+        header={<FOIAModalHeader onClose={onClose} onReportBug={onReportBug} />}
       >
         <div>
-          {/* Progress Steps */}
-          <div className="px-6 pt-6">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              {[1, 2, 3].map((s) => (
-                <div key={s} className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      step >= s
-                        ? "bg-amber-500 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    {step > s ? "✓" : s}
-                  </div>
-                  {s < 3 && (
-                    <div
-                      className={`w-16 h-1 ${step > s ? "bg-amber-500" : "bg-gray-200 dark:bg-gray-700"}`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
-              <span className={step === 1 ? "font-bold text-amber-500" : ""}>
-                Your Info
-              </span>
-              <span className={step === 2 ? "font-bold text-amber-500" : ""}>
-                Select Records
-              </span>
-              <span className={step === 3 ? "font-bold text-amber-500" : ""}>
-                Download
-              </span>
-            </div>
-          </div>
+          <ProgressSteps step={step} />
 
-          {/* Main Content */}
           <div className="p-6 pt-0">
-            {step === 1 && renderPersonalInfo()}
-            {step === 2 && renderRecordSelection()}
-            {step === 3 && renderReviewDownload()}
+            {step === 1 && (
+              <PersonalInfoStep
+                formData={formData}
+                updateField={updateField}
+                onContinue={() => setStep(2)}
+              />
+            )}
+            {step === 2 && (
+              <RecordSelectionStep
+                formData={formData}
+                selectedRecords={selectedRecords}
+                updateField={updateField}
+                toggleRecord={toggleRecord}
+                selectEssential={selectEssential}
+                selectAll={selectAll}
+                clearAll={clearAll}
+                onBack={() => setStep(1)}
+                onNext={() => setStep(3)}
+              />
+            )}
+            {step === 3 && (
+              <ReviewDownloadStep
+                formData={formData}
+                selectedRecords={selectedRecords}
+                showPreview={showPreview}
+                setShowPreview={setShowPreview}
+                onStartOver={startOver}
+              />
+            )}
 
             {/* Support CTA on download page */}
-            {step === 3 && (
-              <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    src="/images/Anth.jpg"
-                    alt="Anthony - Vet-Rate Developer"
-                    className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-amber-200 font-semibold mb-1">
-                      🔐 Knowledge is power - now you&apos;re unlocking yours
-                    </p>
-                    <p className="text-amber-300/70 text-sm">
-                      Your C-File contains everything VA used to decide your
-                      claim - and everything they may have
-                      &quot;overlooked.&quot; This tool helps every veteran see
-                      their own file. Transparency tools like this take time to
-                      build. Help keep them free.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {step === 3 && <DownloadSupportCTA />}
           </div>
         </div>
       </ResponsiveModal>

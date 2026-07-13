@@ -98,6 +98,88 @@ async function runBatchOnComplete(completeData, ctx) {
 }
 
 /**
+ * Runs a single legacy batch-processing pass: creates an abort controller,
+ * drives processMusterCallBatch, and wires up progress/error/completion
+ * handling. Not a hook itself — only closes over the ref and setters passed
+ * in `ctx`, same as runBatchOnComplete above.
+ */
+async function startBatchProcessing(files, ctx) {
+  const {
+    abortControllerRef,
+    setProcessing,
+    setProcessingState,
+    setResults,
+    setReport,
+    setShowReport,
+    setFileProgress,
+    setProgress,
+    setError,
+    onProcessComplete,
+  } = ctx;
+
+  // Create new abort controller for this processing run
+  abortControllerRef.current = new AbortController();
+
+  setProcessing(true);
+  setProcessingState(PROCESSING_STATES.VALIDATING);
+  setResults(null);
+  setReport(null);
+  setError(null);
+  setShowReport(false);
+
+  try {
+    const result = await processMusterCallBatch(files, {
+      signal: abortControllerRef.current.signal,
+      onProgress: (progressData) => {
+        if (progressData.state) {
+          setProcessingState(progressData.state);
+        }
+        if (progressData.filename) {
+          setFileProgress((prev) => ({
+            ...prev,
+            [progressData.filename]: {
+              state: progressData.state,
+              progress: progressData.progress || 0,
+              error: progressData.error,
+            },
+          }));
+        }
+        if (progressData.total !== undefined) {
+          setProgress({
+            total: progressData.total,
+            completed: progressData.completed,
+            processing: progressData.processing,
+          });
+        }
+      },
+      onComplete: (completeData) =>
+        runBatchOnComplete(completeData, {
+          setResults,
+          setProcessingState,
+          setReport,
+          setError,
+          onProcessComplete,
+        }),
+    });
+
+    if (!result.success) {
+      throw new Error(result.validation.errors[0] || "Processing failed");
+    }
+  } catch (err) {
+    console.error("Muster Call processing error:", err);
+    if (err.name === "AbortError") {
+      setError("Processing stopped by user");
+    } else {
+      setError(err.message);
+    }
+    setProcessingState(PROCESSING_STATES.ERROR);
+  } finally {
+    setProcessing(false);
+    abortControllerRef.current = null;
+  }
+}
+
+/**
  * @param {object} params
  * @param {File[]} params.files
  * @param {(msg: string|null) => void} params.setError
@@ -132,68 +214,19 @@ export const useLegacyBatchProcessing = ({
     }
   };
 
-  const handleStartBatchProcessing = async () => {
-    // Create new abort controller for this processing run
-    abortControllerRef.current = new AbortController();
-
-    setProcessing(true);
-    setProcessingState(PROCESSING_STATES.VALIDATING);
-    setResults(null);
-    setReport(null);
-    setError(null);
-    setShowReport(false);
-
-    try {
-      const result = await processMusterCallBatch(files, {
-        signal: abortControllerRef.current.signal,
-        onProgress: (progressData) => {
-          if (progressData.state) {
-            setProcessingState(progressData.state);
-          }
-          if (progressData.filename) {
-            setFileProgress((prev) => ({
-              ...prev,
-              [progressData.filename]: {
-                state: progressData.state,
-                progress: progressData.progress || 0,
-                error: progressData.error,
-              },
-            }));
-          }
-          if (progressData.total !== undefined) {
-            setProgress({
-              total: progressData.total,
-              completed: progressData.completed,
-              processing: progressData.processing,
-            });
-          }
-        },
-        onComplete: (completeData) =>
-          runBatchOnComplete(completeData, {
-            setResults,
-            setProcessingState,
-            setReport,
-            setError,
-            onProcessComplete,
-          }),
-      });
-
-      if (!result.success) {
-        throw new Error(result.validation.errors[0] || "Processing failed");
-      }
-    } catch (err) {
-      console.error("Muster Call processing error:", err);
-      if (err.name === "AbortError") {
-        setError("Processing stopped by user");
-      } else {
-        setError(err.message);
-      }
-      setProcessingState(PROCESSING_STATES.ERROR);
-    } finally {
-      setProcessing(false);
-      abortControllerRef.current = null;
-    }
-  };
+  const handleStartBatchProcessing = () =>
+    startBatchProcessing(files, {
+      abortControllerRef,
+      setProcessing,
+      setProcessingState,
+      setResults,
+      setReport,
+      setShowReport,
+      setFileProgress,
+      setProgress,
+      setError,
+      onProcessComplete,
+    });
 
   const resetBatchState = () => {
     setProcessing(false);

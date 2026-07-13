@@ -61,13 +61,56 @@ const getTabButtonClasses = (activeTab, tabId) => {
     : "bg-blue-600 text-white";
 };
 
-const TacticalCalculator = ({
-  onClose,
-  onReportBug,
-  initialConditions = [],
-  capSimulatorResults = [],
-  onClearCapResults,
-}) => {
+// Rating percentage options
+const ratingOptions = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+// Progress ring component
+const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const getColor = () => {
+    if (percentage >= 100) return "#22c55e"; // green
+    if (percentage >= 70) return "#3b82f6"; // blue
+    if (percentage >= 50) return "#f59e0b"; // amber
+    return "#ef4444"; // red
+  };
+
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      {/* Background circle */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="text-gray-200 dark:text-gray-700"
+      />
+      {/* Progress circle */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={getColor()}
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-500"
+      />
+    </svg>
+  );
+};
+
+/**
+ * All TacticalCalculator useState/useRef/useEffect declarations, grouped
+ * into a single hook so the component body stays under the line budget.
+ */
+function useTacticalCalculatorFormState(initialConditions, capSimulatorResults) {
   const { t } = useLanguage();
 
   // Ref for screenshot capture
@@ -111,6 +154,46 @@ const TacticalCalculator = ({
   const [showSteps, setShowSteps] = useState(false);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
+  // Handle incoming C&P Simulator results
+  useEffect(() => {
+    if (capSimulatorResults.length > 0) {
+      setCapResults(capSimulatorResults);
+      setActiveTab("capresults");
+    }
+  }, [capSimulatorResults]);
+
+  return {
+    t,
+    calculatorContentRef,
+    conditions,
+    setConditions,
+    capResults,
+    setCapResults,
+    myRatings,
+    setMyRatings,
+    showSaveConfirm,
+    setShowSaveConfirm,
+    newCondition,
+    setNewCondition,
+    dependents,
+    setDependents,
+    whatIfRating,
+    setWhatIfRating,
+    whatIfBilateral,
+    setWhatIfBilateral,
+    activeTab,
+    setActiveTab,
+    showSteps,
+    setShowSteps,
+    showVAGovPaster,
+    setShowVAGovPaster,
+  };
+}
+
+/**
+ * Edit-condition modal state + the "load from records" candidate banner state
+ */
+function useEditModalAndRecordsState() {
   // Edit condition modal
   const [editingCondition, setEditingCondition] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -119,14 +202,6 @@ const TacticalCalculator = ({
     rating: 10,
     side: "none",
   });
-
-  // Handle incoming C&P Simulator results
-  useEffect(() => {
-    if (capSimulatorResults.length > 0) {
-      setCapResults(capSimulatorResults);
-      setActiveTab("capresults");
-    }
-  }, [capSimulatorResults]);
 
   // Rated conditions found in the veteran's records (saved claims + C-File
   // analyzer output in the VKB) that aren't in My Ratings yet — offered via
@@ -147,6 +222,171 @@ const TacticalCalculator = ({
     };
   }, []);
 
+  return {
+    editingCondition,
+    setEditingCondition,
+    editForm,
+    setEditForm,
+    recordCandidates,
+    setRecordCandidates,
+    recordsAnnouncement,
+    setRecordsAnnouncement,
+  };
+}
+
+/**
+ * Handlers for adding/removing a condition in the calculator tab
+ */
+function useAddRemoveConditionHandlers({ setConditions, newCondition, setNewCondition, t }) {
+  // Get all body parts as flat array
+  const allBodyParts = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+
+  // Check if selected body part can be bilateral
+  const selectedBodyPartInfo = allBodyParts.find(
+    (bp) => bp.value === newCondition.bodyPart,
+  );
+  const canBeBilateral = selectedBodyPartInfo?.canBeBilateral || false;
+
+  // Handle adding a condition
+  const handleAddCondition = () => {
+    if (!newCondition.bodyPart) {
+      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
+      return;
+    }
+
+    const bodyPartLabel =
+      allBodyParts.find((bp) => bp.value === newCondition.bodyPart)?.label ||
+      newCondition.bodyPart;
+    const sideSuffix =
+      newCondition.side !== "none"
+        ? ` (${newCondition.side.charAt(0).toUpperCase() + newCondition.side.slice(1)})`
+        : "";
+
+    const condition = {
+      id: Date.now().toString(),
+      name: newCondition.name || `${bodyPartLabel}${sideSuffix}`,
+      bodyPart: newCondition.bodyPart,
+      rating: newCondition.rating,
+      side: canBeBilateral ? newCondition.side : "none",
+    };
+
+    setConditions((prev) => [...prev, condition]);
+
+    // Reset form
+    setNewCondition({
+      name: "",
+      bodyPart: "",
+      rating: 10,
+      side: "none",
+    });
+  };
+
+  // Handle removing a condition
+  const handleRemoveCondition = (id) => {
+    setConditions((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  return {
+    allBodyParts,
+    selectedBodyPartInfo,
+    canBeBilateral,
+    handleAddCondition,
+    handleRemoveCondition,
+  };
+}
+
+/**
+ * Handlers for editing an existing condition (the Edit Condition modal)
+ */
+function useEditConditionHandlers({
+  setConditions,
+  editingCondition,
+  setEditingCondition,
+  editForm,
+  setEditForm,
+  allBodyParts,
+  t,
+}) {
+  // Handle editing a condition
+  const handleEditCondition = (condition) => {
+    setEditingCondition(condition);
+    setEditForm({
+      name: condition.name,
+      bodyPart: condition.bodyPart,
+      rating: condition.rating,
+      side: condition.side || "none",
+    });
+  };
+
+  // Handle saving edited condition
+  const handleSaveEdit = () => {
+    if (!editForm.bodyPart) {
+      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
+      return;
+    }
+
+    const bodyPartInfo = allBodyParts.find(
+      (bp) => bp.value === editForm.bodyPart,
+    );
+    const canBeBilateral = bodyPartInfo?.canBeBilateral || false;
+
+    setConditions((prev) =>
+      prev.map((c) =>
+        c.id === editingCondition.id
+          ? {
+              ...c,
+              name: editForm.name || c.name,
+              bodyPart: editForm.bodyPart,
+              rating: editForm.rating,
+              side: canBeBilateral ? editForm.side : "none",
+            }
+          : c,
+      ),
+    );
+
+    setEditingCondition(null);
+  };
+
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setEditingCondition(null);
+    setEditForm({
+      name: "",
+      bodyPart: "",
+      rating: 10,
+      side: "none",
+    });
+  };
+
+  return {
+    allBodyParts,
+    selectedBodyPartInfo,
+    canBeBilateral,
+    handleAddCondition,
+    handleRemoveCondition,
+    handleEditCondition,
+    handleSaveEdit,
+    handleCancelEdit,
+  };
+}
+
+/**
+ * Handlers for My Ratings, C&P results, and the records-import banner
+ */
+function useMyRatingsHandlers({
+  conditions,
+  setConditions,
+  myRatings,
+  setMyRatings,
+  setShowSaveConfirm,
+  setShowVAGovPaster,
+  setActiveTab,
+  setCapResults,
+  recordCandidates,
+  setRecordCandidates,
+  setRecordsAnnouncement,
+  t,
+}) {
   const handleLoadFromRecords = () => {
     let added = 0;
     setConditions((prev) => {
@@ -228,16 +468,33 @@ const TacticalCalculator = ({
     setShowVAGovPaster(false);
   };
 
-  // Calculate results from My Ratings
+  return {
+    handleLoadFromRecords,
+    loadMyRatings,
+    handleSaveAsMyRatings,
+    handleLoadMyRatings,
+    handleAddToMyRatings,
+    removeCapResult,
+    handleRemoveFromMyRatings,
+    handlePastedRatings,
+  };
+}
+
+/**
+ * Pure derived-results computation (ratings, pay, pyramiding, TDIU, what-if)
+ */
+function computeDerivedResults({
+  conditions,
+  myRatings,
+  dependents,
+  whatIfRating,
+  whatIfBilateral,
+}) {
   const myRatingsResults = calculateVARating(myRatings);
   const myRatingsPyramiding = detectPyramiding(myRatings);
 
-  // Calculate results
   const results = calculateVARating(conditions);
-  const compensation = calculateCompensation(
-    results.combinedRating,
-    dependents,
-  );
+  const compensation = calculateCompensation(results.combinedRating, dependents);
   const pyramiding = detectPyramiding(conditions);
   const tdiu = checkTDIUEligibility(conditions);
   const whatIfResults = calculateWhatIf(
@@ -248,149 +505,658 @@ const TacticalCalculator = ({
   const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
   const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
 
-  // Get all body parts as flat array
-  const allBodyParts = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+  return {
+    myRatingsResults,
+    myRatingsPyramiding,
+    results,
+    compensation,
+    pyramiding,
+    tdiu,
+    whatIfResults,
+    ratingNeededFor90,
+    ratingNeededFor100,
+  };
+}
 
-  // Check if selected body part can be bilateral
-  const selectedBodyPartInfo = allBodyParts.find(
-    (bp) => bp.value === newCondition.bodyPart,
+/**
+ * Assembles all TacticalCalculator state, handlers, and derived results
+ */
+function useTacticalCalculatorState({ initialConditions, capSimulatorResults }) {
+  const formState = useTacticalCalculatorFormState(
+    initialConditions,
+    capSimulatorResults,
   );
-  const canBeBilateral = selectedBodyPartInfo?.canBeBilateral || false;
+  const conditionHandlers = useConditionHandlers(formState);
+  const myRatingsHandlers = useMyRatingsHandlers(formState);
+  const derivedResults = computeDerivedResults(formState);
 
-  // Handle adding a condition
-  const handleAddCondition = () => {
-    if (!newCondition.bodyPart) {
-      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
-      return;
-    }
-
-    const bodyPartLabel =
-      allBodyParts.find((bp) => bp.value === newCondition.bodyPart)?.label ||
-      newCondition.bodyPart;
-    const sideSuffix =
-      newCondition.side !== "none"
-        ? ` (${newCondition.side.charAt(0).toUpperCase() + newCondition.side.slice(1)})`
-        : "";
-
-    const condition = {
-      id: Date.now().toString(),
-      name: newCondition.name || `${bodyPartLabel}${sideSuffix}`,
-      bodyPart: newCondition.bodyPart,
-      rating: newCondition.rating,
-      side: canBeBilateral ? newCondition.side : "none",
-    };
-
-    setConditions((prev) => [...prev, condition]);
-
-    // Reset form
-    setNewCondition({
-      name: "",
-      bodyPart: "",
-      rating: 10,
-      side: "none",
-    });
+  return {
+    ...formState,
+    ...conditionHandlers,
+    ...myRatingsHandlers,
+    ...derivedResults,
   };
+}
 
-  // Handle removing a condition
-  const handleRemoveCondition = (id) => {
-    setConditions((prev) => prev.filter((c) => c.id !== id));
-  };
+function SpouseFields({ t, dependents, setDependents, results }) {
+  return (
+    <>
+      {/* Spouse */}
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
+        <input
+          type="checkbox"
+          checked={dependents.married}
+          onChange={(e) =>
+            setDependents((prev) => ({
+              ...prev,
+              married: e.target.checked,
+              spouseAidAttendance: e.target.checked
+                ? prev.spouseAidAttendance
+                : false,
+            }))
+          }
+          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <div>
+          <span className="font-medium text-gray-800 dark:text-gray-200">
+            💑 {t("tacticalCalc", "married")}
+          </span>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            +$
+            {VA_PAY_RATES_2026.spouse[results.combinedRating] || 0}
+            /mo {t("tacticalCalc", "atYourRating")}
+          </p>
+        </div>
+      </label>
 
-  // Handle editing a condition
-  const handleEditCondition = (condition) => {
-    setEditingCondition(condition);
-    setEditForm({
-      name: condition.name,
-      bodyPart: condition.bodyPart,
-      rating: condition.rating,
-      side: condition.side || "none",
-    });
-  };
-
-  // Handle saving edited condition
-  const handleSaveEdit = () => {
-    if (!editForm.bodyPart) {
-      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
-      return;
-    }
-
-    const bodyPartInfo = allBodyParts.find(
-      (bp) => bp.value === editForm.bodyPart,
-    );
-    const canBeBilateral = bodyPartInfo?.canBeBilateral || false;
-
-    setConditions((prev) =>
-      prev.map((c) =>
-        c.id === editingCondition.id
-          ? {
-              ...c,
-              name: editForm.name || c.name,
-              bodyPart: editForm.bodyPart,
-              rating: editForm.rating,
-              side: canBeBilateral ? editForm.side : "none",
+      {/* Spouse A&A */}
+      {dependents.married && (
+        // eslint-disable-next-line jsx-a11y/label-has-associated-control
+        <label className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
+          <input
+            type="checkbox"
+            checked={dependents.spouseAidAttendance}
+            onChange={(e) =>
+              setDependents((prev) => ({
+                ...prev,
+                spouseAidAttendance: e.target.checked,
+              }))
             }
-          : c,
-      ),
-    );
+            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div>
+            <span className="font-medium text-gray-800 dark:text-gray-200">
+              🏥 {t("tacticalCalc", "spouseAidAttendance")}
+            </span>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("common", "additional") || "Additional"} +$
+              {VA_PAY_RATES_2026.spouseAidAttendance[results.combinedRating] ||
+                0}
+              /mo
+            </p>
+          </div>
+        </label>
+      )}
+    </>
+  );
+}
 
-    setEditingCondition(null);
-  };
+function ChildrenUnder18Field({ t, dependents, setDependents, results }) {
+  return (
+    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="font-medium text-gray-800 dark:text-gray-200">
+            👶 {t("tacticalCalc", "childrenUnder18")}
+          </span>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            +${VA_PAY_RATES_2026.childUnder18[results.combinedRating] || 0}
+            /mo each
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                childrenUnder18: Math.max(0, prev.childrenUnder18 - 1),
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            -
+          </button>
+          <span className="w-8 text-center font-bold">
+            {dependents.childrenUnder18}
+          </span>
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                childrenUnder18: prev.childrenUnder18 + 1,
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  // Handle canceling edit
-  const handleCancelEdit = () => {
-    setEditingCondition(null);
-    setEditForm({
-      name: "",
-      bodyPart: "",
-      rating: 10,
-      side: "none",
-    });
-  };
+function ChildrenInSchoolField({ t, dependents, setDependents, results }) {
+  return (
+    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="font-medium text-gray-800 dark:text-gray-200">
+            🎓 {t("tacticalCalc", "childrenInSchool")}
+          </span>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            +${VA_PAY_RATES_2026.childSchool[results.combinedRating] || 0}
+            /mo each
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                childrenSchool: Math.max(0, prev.childrenSchool - 1),
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            -
+          </button>
+          <span className="w-8 text-center font-bold">
+            {dependents.childrenSchool}
+          </span>
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                childrenSchool: prev.childrenSchool + 1,
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  // Rating percentage options
-  const ratingOptions = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+function ChildrenFields({ t, dependents, setDependents, results }) {
+  return (
+    <>
+      <ChildrenUnder18Field
+        t={t}
+        dependents={dependents}
+        setDependents={setDependents}
+        results={results}
+      />
+      <ChildrenInSchoolField
+        t={t}
+        dependents={dependents}
+        setDependents={setDependents}
+        results={results}
+      />
+    </>
+  );
+}
 
-  // Progress ring component
-  const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
-    const radius = (size - strokeWidth) / 2;
-    const circumference = radius * 2 * Math.PI;
-    const offset = circumference - (percentage / 100) * circumference;
+function ParentsField({ t, dependents, setDependents, results }) {
+  return (
+    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="font-medium text-gray-800 dark:text-gray-200">
+            👴 {t("tacticalCalc", "dependentParents")}
+          </span>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            1: +${VA_PAY_RATES_2026.parentOne[results.combinedRating] || 0}
+            /mo | 2: +$
+            {VA_PAY_RATES_2026.parentTwo[results.combinedRating] || 0}
+            /mo
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                dependentParents: Math.max(0, prev.dependentParents - 1),
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            -
+          </button>
+          <span className="w-8 text-center font-bold">
+            {dependents.dependentParents}
+          </span>
+          <button
+            onClick={() =>
+              setDependents((prev) => ({
+                ...prev,
+                dependentParents: Math.min(2, prev.dependentParents + 1),
+              }))
+            }
+            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    const getColor = () => {
-      if (percentage >= 100) return "#22c55e"; // green
-      if (percentage >= 70) return "#3b82f6"; // blue
-      if (percentage >= 50) return "#f59e0b"; // amber
-      return "#ef4444"; // red
-    };
+function DependentsInput({ t, dependents, setDependents, results }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <span>👨‍👩‍👧‍👦</span> {t("tacticalCalc", "yourDependents")}
+      </h3>
 
-    return (
-      <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className="text-gray-200 dark:text-gray-700"
+      <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+          <strong>{t("common", "note") || "Note"}:</strong>{" "}
+          {t("tacticalCalc", "dependentNote")}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <SpouseFields
+          t={t}
+          dependents={dependents}
+          setDependents={setDependents}
+          results={results}
         />
-        {/* Progress circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={getColor()}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-500"
+        <ChildrenFields
+          t={t}
+          dependents={dependents}
+          setDependents={setDependents}
+          results={results}
         />
-      </svg>
-    );
-  };
+        <ParentsField
+          t={t}
+          dependents={dependents}
+          setDependents={setDependents}
+          results={results}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PayResultsBreakdown({ t, results, compensation }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
+        💵 {t("tacticalCalc", "breakdown")}
+      </h4>
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-600 dark:text-gray-400">
+            {t("tacticalCalc", "baseRate")} ({results.combinedRating}%)
+          </span>
+          <span className="font-medium">
+            ${compensation.breakdown.baseRate.toLocaleString()}
+          </span>
+        </div>
+        {compensation.breakdown.spouseAddition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "spouse")}</span>
+            <span>
+              +${compensation.breakdown.spouseAddition.toLocaleString()}
+            </span>
+          </div>
+        )}
+        {compensation.breakdown.spouseAidAttendanceAddition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "spouseAA")}</span>
+            <span>
+              +$
+              {compensation.breakdown.spouseAidAttendanceAddition.toLocaleString()}
+            </span>
+          </div>
+        )}
+        {compensation.breakdown.childrenUnder18Addition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "childrenUnder18")}</span>
+            <span>
+              +$
+              {compensation.breakdown.childrenUnder18Addition.toLocaleString()}
+            </span>
+          </div>
+        )}
+        {compensation.breakdown.childrenSchoolAddition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "childrenInSchool")}</span>
+            <span>
+              +$
+              {compensation.breakdown.childrenSchoolAddition.toLocaleString()}
+            </span>
+          </div>
+        )}
+        {compensation.breakdown.parentsAddition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "dependentParents")}</span>
+            <span>
+              +${compensation.breakdown.parentsAddition.toLocaleString()}
+            </span>
+          </div>
+        )}
+        <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
+          <span>{t("tacticalCalc", "total")}</span>
+          <span>
+            $
+            {compensation.monthlyTotal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PayResults({ t, results, compensation }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <span>💰</span> {t("tacticalCalc", "yourEstimatedPay")}
+      </h3>
+
+      {/* Big Pay Display */}
+      <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white text-center">
+        <p className="text-green-100 text-sm">
+          {t("tacticalCalc", "monthlyCompensation")}
+        </p>
+        <p className="text-5xl font-bold my-2">
+          $
+          {compensation.monthlyTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
+        </p>
+        <p className="text-green-100">
+          $
+          {compensation.annualTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
+          /{t("tacticalCalc", "yearlyPay").toLowerCase()}
+        </p>
+      </div>
+
+      <PayResultsBreakdown t={t} results={results} compensation={compensation} />
+
+      {/* SMC Note */}
+      {results.combinedRating === 100 && (
+        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <strong>💡 {t("tacticalCalc", "smcNote")}</strong>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaycheckTab({ t, dependents, setDependents, results, compensation }) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <DependentsInput
+        t={t}
+        dependents={dependents}
+        setDependents={setDependents}
+        results={results}
+      />
+      <PayResults t={t} results={results} compensation={compensation} />
+    </div>
+  );
+}
+
+function WhatIfScenarioInput({
+  t,
+  whatIfRating,
+  setWhatIfRating,
+  whatIfBilateral,
+  setWhatIfBilateral,
+}) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <span>🎯</span> {t("tacticalCalc", "whatIfQuestion")}
+      </h3>
+
+      <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          {t("tacticalCalc", "whatIfDesc")}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("tacticalCalc", "newRatingPercentage")}
+          </label>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {ratingOptions
+              .filter((r) => r > 0)
+              .map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setWhatIfRating(r)}
+                  className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                    whatIfRating === r
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {r}%
+                </button>
+              ))}
+          </div>
+        </div>
+
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
+          <input
+            type="checkbox"
+            checked={whatIfBilateral}
+            onChange={(e) => setWhatIfBilateral(e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+          />
+          <div>
+            <span className="font-medium text-purple-800 dark:text-purple-200">
+              🔄 {t("tacticalCalc", "wouldBeBilateral")}
+            </span>
+            <p className="text-xs text-purple-600 dark:text-purple-400">
+              {t("tacticalCalc", "addsBilateralBoost")}
+            </p>
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function WhatIfPayComparison({ t, whatIfResults }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
+        💰 {t("tacticalCalc", "payComparisonSolo")}
+      </h4>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600 dark:text-gray-400">
+            {t("tacticalCalc", "current")} ({whatIfResults.currentRating}
+            %)
+          </span>
+          <span>
+            $
+            {VA_PAY_RATES_2026.solo[
+              whatIfResults.currentRating
+            ]?.toLocaleString() || 0}
+            /mo
+          </span>
+        </div>
+        <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+          <span>
+            {t("tacticalCalc", "projected")} ({whatIfResults.newRating}%)
+          </span>
+          <span>
+            $
+            {VA_PAY_RATES_2026.solo[
+              whatIfResults.newRating
+            ]?.toLocaleString() || 0}
+            /mo
+          </span>
+        </div>
+        <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
+          <span>{t("tacticalCalc", "monthlyIncrease")}</span>
+          <span className="text-green-600 dark:text-green-400">
+            +$
+            {(
+              (VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) -
+              (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)
+            ).toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+          <span>{t("tacticalCalc", "annualIncrease")}</span>
+          <span>
+            +$
+            {(
+              ((VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) -
+                (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)) *
+              12
+            ).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WhatIfResultsPanel({ t, whatIfRating, whatIfResults }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <span>📊</span> {t("tacticalCalc", "projectedImpact")}
+      </h3>
+
+      {/* Before/After Comparison */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            {t("tacticalCalc", "current")}
+          </p>
+          <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">
+            {whatIfResults.currentRating}%
+          </p>
+          <p className="text-xs text-gray-500">
+            {t("tacticalCalc", "rawScore")}: {whatIfResults.currentRaw}%
+          </p>
+        </div>
+        <div className="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 rounded-xl p-4 text-center border-2 border-green-300 dark:border-green-700">
+          <p className="text-sm text-green-600 dark:text-green-400 mb-1">
+            {t("common", "with") || "With"} +{whatIfRating}%
+          </p>
+          <p className="text-3xl font-bold text-green-700 dark:text-green-300">
+            {whatIfResults.newRating}%
+          </p>
+          <p className="text-xs text-green-600">
+            {t("tacticalCalc", "rawScore")}: {whatIfResults.newRaw}%
+          </p>
+        </div>
+      </div>
+
+      {/* Change Summary */}
+      <div
+        className={`p-4 rounded-xl ${
+          whatIfResults.ratingIncrease > 0
+            ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700"
+            : "bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-gray-700 dark:text-gray-300">
+            {t("tacticalCalc", "ratingChange")}:
+          </span>
+          <span
+            className={`font-bold text-xl ${
+              whatIfResults.ratingIncrease > 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-gray-600 dark:text-gray-400"
+            }`}
+          >
+            {whatIfResults.ratingIncrease > 0 ? "+" : ""}
+            {whatIfResults.ratingIncrease}%
+          </span>
+        </div>
+      </div>
+
+      <WhatIfPayComparison t={t} whatIfResults={whatIfResults} />
+
+      {/* Pathfinder Hook */}
+      <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
+        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+          <strong>💡 {t("tacticalCalc", "proTip")}:</strong>{" "}
+          {t("tacticalCalc", "pathfinderTip")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WhatIfTab({
+  t,
+  whatIfRating,
+  setWhatIfRating,
+  whatIfBilateral,
+  setWhatIfBilateral,
+  whatIfResults,
+}) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <WhatIfScenarioInput
+        t={t}
+        whatIfRating={whatIfRating}
+        setWhatIfRating={setWhatIfRating}
+        whatIfBilateral={whatIfBilateral}
+        setWhatIfBilateral={setWhatIfBilateral}
+      />
+      <WhatIfResultsPanel
+        t={t}
+        whatIfRating={whatIfRating}
+        whatIfResults={whatIfResults}
+      />
+    </div>
+  );
+}
+
+const TacticalCalculator = ({
+  onClose,
+  onReportBug,
+  initialConditions = [],
+  capSimulatorResults = [],
+  onClearCapResults,
+}) => {
+  const state = useTacticalCalculatorState({
+    initialConditions,
+    capSimulatorResults,
+  });
+  const { t, calculatorContentRef, activeTab, editingCondition, showVAGovPaster, capResults } =
+    state;
 
   return (
     <>
@@ -1632,536 +2398,10 @@ const TacticalCalculator = ({
             )}
 
             {/* Paycheck Tab */}
-            {activeTab === "paycheck" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Dependents Input */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>👨‍👩‍👧‍👦</span> {t("tacticalCalc", "yourDependents")}
-                  </h3>
-
-                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      <strong>{t("common", "note") || "Note"}:</strong>{" "}
-                      {t("tacticalCalc", "dependentNote")}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Spouse */}
-                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                    <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
-                      <input
-                        type="checkbox"
-                        checked={dependents.married}
-                        onChange={(e) =>
-                          setDependents((prev) => ({
-                            ...prev,
-                            married: e.target.checked,
-                            spouseAidAttendance: e.target.checked
-                              ? prev.spouseAidAttendance
-                              : false,
-                          }))
-                        }
-                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
-                          💑 {t("tacticalCalc", "married")}
-                        </span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          +$
-                          {VA_PAY_RATES_2026.spouse[results.combinedRating] ||
-                            0}
-                          /mo {t("tacticalCalc", "atYourRating")}
-                        </p>
-                      </div>
-                    </label>
-
-                    {/* Spouse A&A */}
-                    {dependents.married && (
-                      // eslint-disable-next-line jsx-a11y/label-has-associated-control
-                      <label className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
-                        <input
-                          type="checkbox"
-                          checked={dependents.spouseAidAttendance}
-                          onChange={(e) =>
-                            setDependents((prev) => ({
-                              ...prev,
-                              spouseAidAttendance: e.target.checked,
-                            }))
-                          }
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            🏥 {t("tacticalCalc", "spouseAidAttendance")}
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("common", "additional") || "Additional"} +$
-                            {VA_PAY_RATES_2026.spouseAidAttendance[
-                              results.combinedRating
-                            ] || 0}
-                            /mo
-                          </p>
-                        </div>
-                      </label>
-                    )}
-
-                    {/* Children Under 18 */}
-                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            👶 {t("tacticalCalc", "childrenUnder18")}
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            +$
-                            {VA_PAY_RATES_2026.childUnder18[
-                              results.combinedRating
-                            ] || 0}
-                            /mo each
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                childrenUnder18: Math.max(
-                                  0,
-                                  prev.childrenUnder18 - 1,
-                                ),
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-bold">
-                            {dependents.childrenUnder18}
-                          </span>
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                childrenUnder18: prev.childrenUnder18 + 1,
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Children in School */}
-                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            🎓 {t("tacticalCalc", "childrenInSchool")}
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            +$
-                            {VA_PAY_RATES_2026.childSchool[
-                              results.combinedRating
-                            ] || 0}
-                            /mo each
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                childrenSchool: Math.max(
-                                  0,
-                                  prev.childrenSchool - 1,
-                                ),
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-bold">
-                            {dependents.childrenSchool}
-                          </span>
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                childrenSchool: prev.childrenSchool + 1,
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dependent Parents */}
-                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            👴 {t("tacticalCalc", "dependentParents")}
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            1: +$
-                            {VA_PAY_RATES_2026.parentOne[
-                              results.combinedRating
-                            ] || 0}
-                            /mo | 2: +$
-                            {VA_PAY_RATES_2026.parentTwo[
-                              results.combinedRating
-                            ] || 0}
-                            /mo
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                dependentParents: Math.max(
-                                  0,
-                                  prev.dependentParents - 1,
-                                ),
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-bold">
-                            {dependents.dependentParents}
-                          </span>
-                          <button
-                            onClick={() =>
-                              setDependents((prev) => ({
-                                ...prev,
-                                dependentParents: Math.min(
-                                  2,
-                                  prev.dependentParents + 1,
-                                ),
-                              }))
-                            }
-                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pay Results */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>💰</span> {t("tacticalCalc", "yourEstimatedPay")}
-                  </h3>
-
-                  {/* Big Pay Display */}
-                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white text-center">
-                    <p className="text-green-100 text-sm">
-                      {t("tacticalCalc", "monthlyCompensation")}
-                    </p>
-                    <p className="text-5xl font-bold my-2">
-                      $
-                      {compensation.monthlyTotal.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </p>
-                    <p className="text-green-100">
-                      $
-                      {compensation.annualTotal.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                      /{t("tacticalCalc", "yearlyPay").toLowerCase()}
-                    </p>
-                  </div>
-
-                  {/* Breakdown */}
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-                      💵 {t("tacticalCalc", "breakdown")}
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "baseRate")} (
-                          {results.combinedRating}%)
-                        </span>
-                        <span className="font-medium">
-                          ${compensation.breakdown.baseRate.toLocaleString()}
-                        </span>
-                      </div>
-                      {compensation.breakdown.spouseAddition > 0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ {t("tacticalCalc", "spouse")}</span>
-                          <span>
-                            +$
-                            {compensation.breakdown.spouseAddition.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {compensation.breakdown.spouseAidAttendanceAddition >
-                        0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ {t("tacticalCalc", "spouseAA")}</span>
-                          <span>
-                            +$
-                            {compensation.breakdown.spouseAidAttendanceAddition.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {compensation.breakdown.childrenUnder18Addition > 0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ {t("tacticalCalc", "childrenUnder18")}</span>
-                          <span>
-                            +$
-                            {compensation.breakdown.childrenUnder18Addition.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {compensation.breakdown.childrenSchoolAddition > 0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ {t("tacticalCalc", "childrenInSchool")}</span>
-                          <span>
-                            +$
-                            {compensation.breakdown.childrenSchoolAddition.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {compensation.breakdown.parentsAddition > 0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ {t("tacticalCalc", "dependentParents")}</span>
-                          <span>
-                            +$
-                            {compensation.breakdown.parentsAddition.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
-                        <span>{t("tacticalCalc", "total")}</span>
-                        <span>
-                          $
-                          {compensation.monthlyTotal.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SMC Note */}
-                  {results.combinedRating === 100 && (
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>💡 {t("tacticalCalc", "smcNote")}</strong>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {activeTab === "paycheck" && <PaycheckTab {...state} />}
 
             {/* What-If Tab */}
-            {activeTab === "whatif" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Scenario Input */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>🎯</span> {t("tacticalCalc", "whatIfQuestion")}
-                  </h3>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {t("tacticalCalc", "whatIfDesc")}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("tacticalCalc", "newRatingPercentage")}
-                      </label>
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                        {ratingOptions
-                          .filter((r) => r > 0)
-                          .map((r) => (
-                            <button
-                              key={r}
-                              onClick={() => setWhatIfRating(r)}
-                              className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                                whatIfRating === r
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                              }`}
-                            >
-                              {r}%
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                    <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={whatIfBilateral}
-                        onChange={(e) => setWhatIfBilateral(e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                      />
-                      <div>
-                        <span className="font-medium text-purple-800 dark:text-purple-200">
-                          🔄 {t("tacticalCalc", "wouldBeBilateral")}
-                        </span>
-                        <p className="text-xs text-purple-600 dark:text-purple-400">
-                          {t("tacticalCalc", "addsBilateralBoost")}
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                {/* What-If Results */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>📊</span> {t("tacticalCalc", "projectedImpact")}
-                  </h3>
-
-                  {/* Before/After Comparison */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-4 text-center">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                        {t("tacticalCalc", "current")}
-                      </p>
-                      <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">
-                        {whatIfResults.currentRating}%
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {t("tacticalCalc", "rawScore")}:{" "}
-                        {whatIfResults.currentRaw}%
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 rounded-xl p-4 text-center border-2 border-green-300 dark:border-green-700">
-                      <p className="text-sm text-green-600 dark:text-green-400 mb-1">
-                        {t("common", "with") || "With"} +{whatIfRating}%
-                      </p>
-                      <p className="text-3xl font-bold text-green-700 dark:text-green-300">
-                        {whatIfResults.newRating}%
-                      </p>
-                      <p className="text-xs text-green-600">
-                        {t("tacticalCalc", "rawScore")}: {whatIfResults.newRaw}%
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Change Summary */}
-                  <div
-                    className={`p-4 rounded-xl ${
-                      whatIfResults.ratingIncrease > 0
-                        ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700"
-                        : "bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        {t("tacticalCalc", "ratingChange")}:
-                      </span>
-                      <span
-                        className={`font-bold text-xl ${
-                          whatIfResults.ratingIncrease > 0
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-600 dark:text-gray-400"
-                        }`}
-                      >
-                        {whatIfResults.ratingIncrease > 0 ? "+" : ""}
-                        {whatIfResults.ratingIncrease}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Pay Comparison */}
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-                      💰 {t("tacticalCalc", "payComparisonSolo")}
-                    </h4>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "current")} (
-                          {whatIfResults.currentRating}%)
-                        </span>
-                        <span>
-                          $
-                          {VA_PAY_RATES_2026.solo[
-                            whatIfResults.currentRating
-                          ]?.toLocaleString() || 0}
-                          /mo
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>
-                          {t("tacticalCalc", "projected")} (
-                          {whatIfResults.newRating}%)
-                        </span>
-                        <span>
-                          $
-                          {VA_PAY_RATES_2026.solo[
-                            whatIfResults.newRating
-                          ]?.toLocaleString() || 0}
-                          /mo
-                        </span>
-                      </div>
-                      <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
-                        <span>{t("tacticalCalc", "monthlyIncrease")}</span>
-                        <span className="text-green-600 dark:text-green-400">
-                          +$
-                          {(
-                            (VA_PAY_RATES_2026.solo[whatIfResults.newRating] ||
-                              0) -
-                            (VA_PAY_RATES_2026.solo[
-                              whatIfResults.currentRating
-                            ] || 0)
-                          ).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>{t("tacticalCalc", "annualIncrease")}</span>
-                        <span>
-                          +$
-                          {(
-                            ((VA_PAY_RATES_2026.solo[whatIfResults.newRating] ||
-                              0) -
-                              (VA_PAY_RATES_2026.solo[
-                                whatIfResults.currentRating
-                              ] || 0)) *
-                            12
-                          ).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pathfinder Hook */}
-                  <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
-                    <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                      <strong>💡 {t("tacticalCalc", "proTip")}:</strong>{" "}
-                      {t("tacticalCalc", "pathfinderTip")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {activeTab === "whatif" && <WhatIfTab {...state} />}
 
             {/* Rates Tab - 2026 VA Compensation Rates */}
             {activeTab === "rates" && (

@@ -324,10 +324,112 @@ const translateText = async (text, fromLang, toLang) => {
   };
 };
 
-const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
-  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+// Build a conversation entry (with both original and translated text)
+function buildConversationEntry(
+  originalText,
+  translatedText,
+  fromLang,
+  toLang,
+  isMe,
+  myLanguage,
+  theirLanguage,
+  SUPPORTED_LANGUAGES,
+) {
+  const myLangObj = SUPPORTED_LANGUAGES[myLanguage];
+  const theirLangObj = SUPPORTED_LANGUAGES[theirLanguage];
 
-  // State
+  return {
+    id: Date.now(),
+    originalText,
+    translatedText,
+    fromLang,
+    toLang,
+    isMe,
+    timestamp: new Date(),
+    // Store language codes for FlagIcon rendering
+    fromLangCode: isMe ? myLanguage : theirLanguage,
+    toLangCode: isMe ? theirLanguage : myLanguage,
+    fromFlag: isMe ? myLangObj?.flag : theirLangObj?.flag,
+    toFlag: isMe ? theirLangObj?.flag : myLangObj?.flag,
+  };
+}
+
+// Text-to-speech
+function createSpeak(synthRef, setIsSpeaking, SUPPORTED_LANGUAGES) {
+  return (text, langCode) => {
+    if (synthRef.current.speaking) {
+      synthRef.current.cancel();
+    }
+
+    const lang = SUPPORTED_LANGUAGES[langCode];
+    const voiceCode = lang?.voiceCode || langCode;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = voiceCode;
+    utterance.rate = 0.9;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    synthRef.current.speak(utterance);
+  };
+}
+
+// Apply quick phrase - get the translated version and speak it
+function createApplyQuickPhrase(
+  myLanguage,
+  theirLanguage,
+  setMyText,
+  addToConversation,
+  speak,
+) {
+  return (phrase) => {
+    // Get the phrase in my language (what I'm saying)
+    const myPhrase = phrase.translations[myLanguage] || phrase.translations.en;
+    // Get the phrase translated to their language
+    const theirPhrase =
+      phrase.translations[theirLanguage] || phrase.translations.en;
+
+    // Show what I'm saying in my language
+    setMyText(myPhrase);
+
+    // Auto-send after a brief moment
+    setTimeout(() => {
+      addToConversation(myPhrase, theirPhrase, myLanguage, theirLanguage, true);
+      // Speak the TRANSLATED phrase in their language
+      speak(theirPhrase, theirLanguage);
+      setMyText("");
+    }, 100);
+  };
+}
+
+// Add message to conversation (with both original and translated text)
+function createAddToConversation(
+  setConversation,
+  myLanguage,
+  theirLanguage,
+  SUPPORTED_LANGUAGES,
+) {
+  return (originalText, translatedText, fromLang, toLang, isMe) => {
+    setConversation((prev) => [
+      ...prev,
+      buildConversationEntry(
+        originalText,
+        translatedText,
+        fromLang,
+        toLang,
+        isMe,
+        myLanguage,
+        theirLanguage,
+        SUPPORTED_LANGUAGES,
+      ),
+    ]);
+  };
+}
+
+// Manages all translator state, refs, and message-handling logic
+function useTranslatorConversation(appLanguage, SUPPORTED_LANGUAGES) {
   const [myLanguage, setMyLanguage] = useState(appLanguage || "en");
   const [theirLanguage, setTheirLanguage] = useState("es");
   const [myText, setMyText] = useState("");
@@ -355,115 +457,45 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     setTheirText(myText);
   };
 
-  // Text-to-speech
-  const speak = (text, langCode) => {
-    if (synthRef.current.speaking) {
-      synthRef.current.cancel();
-    }
+  const speak = createSpeak(synthRef, setIsSpeaking, SUPPORTED_LANGUAGES);
 
-    const lang = SUPPORTED_LANGUAGES[langCode];
-    const voiceCode = lang?.voiceCode || langCode;
+  const addToConversation = createAddToConversation(
+    setConversation,
+    myLanguage,
+    theirLanguage,
+    SUPPORTED_LANGUAGES,
+  );
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = voiceCode;
-    utterance.rate = 0.9;
+  // Translate, record, and speak a message from either side of the conversation
+  const sendMessage = async (text, setText, fromLang, toLang, isMe) => {
+    if (!text.trim()) return;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    const trimmed = text.trim();
+    setText(""); // Clear input immediately for better UX
 
-    synthRef.current.speak(utterance);
-  };
+    const result = await translateText(trimmed, fromLang, toLang);
 
-  // Add message to conversation (with both original and translated text)
-  const addToConversation = (
-    originalText,
-    translatedText,
-    fromLang,
-    toLang,
-    isMe,
-  ) => {
-    const myLangObj = SUPPORTED_LANGUAGES[myLanguage];
-    const theirLangObj = SUPPORTED_LANGUAGES[theirLanguage];
+    addToConversation(trimmed, result.translated, fromLang, toLang, isMe);
 
-    setConversation((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        originalText,
-        translatedText,
-        fromLang,
-        toLang,
-        isMe,
-        timestamp: new Date(),
-        // Store language codes for FlagIcon rendering
-        fromLangCode: isMe ? myLanguage : theirLanguage,
-        toLangCode: isMe ? theirLanguage : myLanguage,
-        fromFlag: isMe ? myLangObj?.flag : theirLangObj?.flag,
-        toFlag: isMe ? theirLangObj?.flag : myLangObj?.flag,
-      },
-    ]);
+    // Speak the TRANSLATED text in the target language's voice
+    speak(result.translated, toLang);
   };
 
   // Send my message - translate then speak in target language
-  const sendMyMessage = async () => {
-    if (!myText.trim()) return;
-
-    const text = myText.trim();
-    setMyText(""); // Clear input immediately for better UX
-
-    // Translate the text
-    const result = await translateText(text, myLanguage, theirLanguage);
-
-    // Add to conversation with both original and translated
-    addToConversation(text, result.translated, myLanguage, theirLanguage, true);
-
-    // Speak the TRANSLATED text in the target language's voice
-    speak(result.translated, theirLanguage);
-  };
+  const sendMyMessage = () =>
+    sendMessage(myText, setMyText, myLanguage, theirLanguage, true);
 
   // Send their message - translate then speak in my language
-  const sendTheirMessage = async () => {
-    if (!theirText.trim()) return;
+  const sendTheirMessage = () =>
+    sendMessage(theirText, setTheirText, theirLanguage, myLanguage, false);
 
-    const text = theirText.trim();
-    setTheirText(""); // Clear input immediately
-
-    // Translate the text
-    const result = await translateText(text, theirLanguage, myLanguage);
-
-    // Add to conversation
-    addToConversation(
-      text,
-      result.translated,
-      theirLanguage,
-      myLanguage,
-      false,
-    );
-
-    // Speak the TRANSLATED text in my language's voice
-    speak(result.translated, myLanguage);
-  };
-
-  // Apply quick phrase - get the translated version and speak it
-  const applyQuickPhrase = (phrase) => {
-    // Get the phrase in my language (what I'm saying)
-    const myPhrase = phrase.translations[myLanguage] || phrase.translations.en;
-    // Get the phrase translated to their language
-    const theirPhrase =
-      phrase.translations[theirLanguage] || phrase.translations.en;
-
-    // Show what I'm saying in my language
-    setMyText(myPhrase);
-
-    // Auto-send after a brief moment
-    setTimeout(() => {
-      addToConversation(myPhrase, theirPhrase, myLanguage, theirLanguage, true);
-      // Speak the TRANSLATED phrase in their language
-      speak(theirPhrase, theirLanguage);
-      setMyText("");
-    }, 100);
-  };
+  const applyQuickPhrase = createApplyQuickPhrase(
+    myLanguage,
+    theirLanguage,
+    setMyText,
+    addToConversation,
+    speak,
+  );
 
   // Get branch greeting
   const _getBranchGreeting = (branch, langCode) => {
@@ -474,67 +506,459 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
   const myLangObj = SUPPORTED_LANGUAGES[myLanguage];
   const theirLangObj = SUPPORTED_LANGUAGES[theirLanguage];
 
-  const header = (
-    <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-4 text-white sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="hidden text-3xl sm:inline">🤝</span>
-        <div className="min-w-0">
-          <h2
-            id="veteran-translator-title"
-            className="truncate text-lg font-bold sm:text-xl"
-          >
-            Veteran Translator
-          </h2>
-          <p className="truncate text-xs text-amber-100 sm:text-sm">
-            Connect across language barriers
-          </p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Veteran Translator"
-          />
-        )}
-        <button
-          onClick={onClose}
-          aria-label="Close dialog"
-          className="grid h-11 w-11 place-items-center rounded-lg transition-colors hover:bg-white/20"
+  return {
+    myLanguage,
+    setMyLanguage,
+    theirLanguage,
+    setTheirLanguage,
+    myText,
+    setMyText,
+    theirText,
+    setTheirText,
+    conversation,
+    isSpeaking,
+    activeQuickCategory,
+    setActiveQuickCategory,
+    conversationEndRef,
+    availableLanguages,
+    swapLanguages,
+    speak,
+    sendMyMessage,
+    sendTheirMessage,
+    applyQuickPhrase,
+    _getBranchGreeting,
+    myLangObj,
+    theirLangObj,
+  };
+}
+
+const TranslatorHeader = ({ onClose, onReportBug }) => (
+  <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-4 text-white sm:px-6">
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="hidden text-3xl sm:inline">🤝</span>
+      <div className="min-w-0">
+        <h2
+          id="veteran-translator-title"
+          className="truncate text-lg font-bold sm:text-xl"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+          Veteran Translator
+        </h2>
+        <p className="truncate text-xs text-amber-100 sm:text-sm">
+          Connect across language barriers
+        </p>
       </div>
     </div>
+    <div className="flex shrink-0 items-center gap-2">
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Veteran Translator"
+        />
+      )}
+      <button
+        onClick={onClose}
+        aria-label="Close dialog"
+        className="grid h-11 w-11 place-items-center rounded-lg transition-colors hover:bg-white/20"
+      >
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+);
+
+const TranslatorFooter = ({ isSpeaking }) => (
+  <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+    <p>🎖️ Building veteran camaraderie across 40+ languages</p>
+    <div className="flex items-center gap-2">
+      {isSpeaking && (
+        <span className="flex items-center gap-1 text-amber-500">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
+          Speaking...
+        </span>
+      )}
+      <span>🔒 100% on-device • No data sent</span>
+    </div>
+  </div>
+);
+
+const LanguageSelectorBar = ({
+  myLanguage,
+  setMyLanguage,
+  theirLanguage,
+  setTheirLanguage,
+  availableLanguages,
+  swapLanguages,
+}) => (
+  <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-900/50 sm:px-6">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+      {/* My Language */}
+      <div className="flex-1">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          I speak:
+        </label>
+        <select
+          value={myLanguage}
+          onChange={(e) => setMyLanguage(e.target.value)}
+          className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        >
+          {availableLanguages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.flag} {lang.nativeName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Swap Button */}
+      <button
+        onClick={swapLanguages}
+        className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-full bg-amber-100 transition-colors hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-800/30 sm:mt-5 sm:self-auto"
+        aria-label="Swap languages"
+      >
+        <svg
+          className="h-6 w-6 rotate-90 text-amber-600 dark:text-amber-400 sm:rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
+        </svg>
+      </button>
+
+      {/* Their Language */}
+      <div className="flex-1">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          They speak:
+        </label>
+        <select
+          value={theirLanguage}
+          onChange={(e) => setTheirLanguage(e.target.value)}
+          className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        >
+          {availableLanguages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.flag} {lang.nativeName}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+);
+
+const QuickPhrasesSection = ({
+  activeQuickCategory,
+  setActiveQuickCategory,
+  applyQuickPhrase,
+  myLanguage,
+}) => (
+  <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+      {Object.entries(QUICK_PHRASES).map(([category, _phrases]) => (
+        <button
+          key={category}
+          onClick={() => setActiveQuickCategory(category)}
+          className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors
+            ${
+              activeQuickCategory === category
+                ? "bg-amber-500 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+        >
+          {category.charAt(0).toUpperCase() +
+            category.slice(1).replace("_", " ")}
+        </button>
+      ))}
+    </div>
+    <div className="grid grid-cols-2 gap-2">
+      {QUICK_PHRASES[activeQuickCategory].map((phrase) => (
+        <button
+          key={phrase.key}
+          onClick={() => applyQuickPhrase(phrase)}
+          className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
+        >
+          <span className="mr-2">{phrase.emoji}</span>
+          <span className="text-gray-700 dark:text-gray-300">
+            {/* Show phrase in user's selected language */}
+            {phrase.translations[myLanguage] || phrase.translations.en}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+const MyInputSection = ({
+  myLangObj,
+  theirLangObj,
+  myLanguage,
+  myText,
+  setMyText,
+  sendMyMessage,
+}) => (
+  <div className="p-4 flex-1 flex flex-col">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">{myLangObj?.flag}</span>
+      <span className="font-medium text-gray-900 dark:text-white">
+        You ({myLangObj?.nativeName})
+      </span>
+    </div>
+    <div className="relative h-32 md:h-auto md:flex-1">
+      <textarea
+        value={myText}
+        onChange={(e) => setMyText(e.target.value)}
+        placeholder={`Type or speak in ${myLangObj?.name}...`}
+        className="w-full h-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMyMessage();
+          }
+        }}
+      />
+      <div className="absolute right-2 top-2">
+        <VoiceInputButton
+          onTranscript={(text) =>
+            setMyText((prev) => (prev ? `${prev} ${text}` : text))
+          }
+          language={myLangObj?.voiceCode || myLanguage}
+        />
+      </div>
+    </div>
+    <button
+      onClick={sendMyMessage}
+      disabled={!myText.trim()}
+      className="mt-3 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+    >
+      <span>🔊</span>
+      <span>Say It (They&apos;ll Hear in {theirLangObj?.name})</span>
+    </button>
+  </div>
+);
+
+const ConversationHistory = ({ conversation, conversationEndRef, speak }) => (
+  <div className="min-h-[12rem] flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-900/30">
+    {conversation.length === 0 ? (
+      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+        <span className="text-4xl block mb-2">💬</span>
+        <p>Start a conversation!</p>
+        <p className="text-sm mt-1">
+          Use quick phrases or type your own message
+        </p>
+      </div>
+    ) : (
+      conversation.map((msg) => (
+        <div
+          key={msg.id}
+          className={`flex ${msg.isMe ? "justify-start" : "justify-end"}`}
+        >
+          <div
+            className={`max-w-[85%] rounded-xl p-3 ${
+              msg.isMe
+                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100"
+                : "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FlagIcon
+                langCode={msg.fromLangCode}
+                size="xs"
+                fallbackEmoji={msg.fromFlag}
+              />
+              <span className="text-xs opacity-70">→</span>
+              <FlagIcon
+                langCode={msg.toLangCode}
+                size="xs"
+                fallbackEmoji={msg.toFlag}
+              />
+            </div>
+            {/* Show original text */}
+            <p className="text-sm opacity-75 italic">{msg.originalText}</p>
+            {/* Show translated text (larger, emphasized) */}
+            {msg.translatedText !== msg.originalText && (
+              <p className="text-sm font-medium mt-1 pt-1 border-t border-current/20">
+                ➜ {msg.translatedText}
+              </p>
+            )}
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs opacity-60">
+                {msg.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+              <button
+                onClick={() => speak(msg.translatedText, msg.toLangCode)}
+                className="p-1 hover:bg-white/50 rounded transition-colors"
+                aria-label="Play translated text"
+              >
+                🔊
+              </button>
+            </div>
+          </div>
+        </div>
+      ))
+    )}
+    <div ref={conversationEndRef} />
+  </div>
+);
+
+const TheirInputSection = ({
+  theirLangObj,
+  myLangObj,
+  theirLanguage,
+  theirText,
+  setTheirText,
+  sendTheirMessage,
+}) => (
+  <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">{theirLangObj?.flag}</span>
+      <span className="font-medium text-gray-900 dark:text-white">
+        Them ({theirLangObj?.nativeName})
+      </span>
+    </div>
+    <div className="relative">
+      <textarea
+        value={theirText}
+        onChange={(e) => setTheirText(e.target.value)}
+        placeholder={`They type in ${theirLangObj?.name}...`}
+        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        rows={2}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendTheirMessage();
+          }
+        }}
+      />
+      <div className="absolute right-2 top-2">
+        <VoiceInputButton
+          onTranscript={(text) =>
+            setTheirText((prev) => (prev ? `${prev} ${text}` : text))
+          }
+          language={theirLangObj?.voiceCode || theirLanguage}
+        />
+      </div>
+    </div>
+    <button
+      onClick={sendTheirMessage}
+      disabled={!theirText.trim()}
+      className="mt-3 w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+    >
+      <span>🔊</span>
+      <span>Say It (You&apos;ll Hear in {myLangObj?.name})</span>
+    </button>
+  </div>
+);
+
+const TranslatorPanels = ({
+  activeQuickCategory,
+  setActiveQuickCategory,
+  applyQuickPhrase,
+  myLanguage,
+  myLangObj,
+  theirLangObj,
+  myText,
+  setMyText,
+  sendMyMessage,
+  conversation,
+  conversationEndRef,
+  speak,
+  theirLanguage,
+  theirText,
+  setTheirText,
+  sendTheirMessage,
+}) => (
+  <div className="flex flex-col md:flex-row">
+    {/* Left Panel - Quick Phrases & My Input */}
+    <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 md:h-[60vh] md:w-1/2 md:border-b-0 md:border-r">
+      <QuickPhrasesSection
+        activeQuickCategory={activeQuickCategory}
+        setActiveQuickCategory={setActiveQuickCategory}
+        applyQuickPhrase={applyQuickPhrase}
+        myLanguage={myLanguage}
+      />
+      <MyInputSection
+        myLangObj={myLangObj}
+        theirLangObj={theirLangObj}
+        myLanguage={myLanguage}
+        myText={myText}
+        setMyText={setMyText}
+        sendMyMessage={sendMyMessage}
+      />
+    </div>
+
+    {/* Right Panel - Conversation & Their Input */}
+    <div className="flex flex-col md:h-[60vh] md:w-1/2">
+      <ConversationHistory
+        conversation={conversation}
+        conversationEndRef={conversationEndRef}
+        speak={speak}
+      />
+      <TheirInputSection
+        theirLangObj={theirLangObj}
+        myLangObj={myLangObj}
+        theirLanguage={theirLanguage}
+        theirText={theirText}
+        setTheirText={setTheirText}
+        sendTheirMessage={sendTheirMessage}
+      />
+    </div>
+  </div>
+);
+
+const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
+  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const {
+    myLanguage,
+    setMyLanguage,
+    theirLanguage,
+    setTheirLanguage,
+    myText,
+    setMyText,
+    theirText,
+    setTheirText,
+    conversation,
+    isSpeaking,
+    activeQuickCategory,
+    setActiveQuickCategory,
+    conversationEndRef,
+    availableLanguages,
+    swapLanguages,
+    speak,
+    sendMyMessage,
+    sendTheirMessage,
+    applyQuickPhrase,
+    myLangObj,
+    theirLangObj,
+  } = useTranslatorConversation(appLanguage, SUPPORTED_LANGUAGES);
+
+  const header = (
+    <TranslatorHeader onClose={onClose} onReportBug={onReportBug} />
   );
 
-  const footer = (
-    <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-      <p>🎖️ Building veteran camaraderie across 40+ languages</p>
-      <div className="flex items-center gap-2">
-        {isSpeaking && (
-          <span className="flex items-center gap-1 text-amber-500">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
-            Speaking...
-          </span>
-        )}
-        <span>🔒 100% on-device • No data sent</span>
-      </div>
-    </div>
-  );
+  const footer = <TranslatorFooter isSpeaking={isSpeaking} />;
 
   return (
     <ResponsiveModal
@@ -547,265 +971,34 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     >
       <div className="-m-4 flex flex-col">
         {/* Language Selectors */}
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-900/50 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            {/* My Language */}
-            <div className="flex-1">
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                I speak:
-              </label>
-              <select
-                value={myLanguage}
-                onChange={(e) => setMyLanguage(e.target.value)}
-                className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              >
-                {availableLanguages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.nativeName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Swap Button */}
-            <button
-              onClick={swapLanguages}
-              className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-full bg-amber-100 transition-colors hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-800/30 sm:mt-5 sm:self-auto"
-              aria-label="Swap languages"
-            >
-              <svg
-                className="h-6 w-6 rotate-90 text-amber-600 dark:text-amber-400 sm:rotate-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                />
-              </svg>
-            </button>
-
-            {/* Their Language */}
-            <div className="flex-1">
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                They speak:
-              </label>
-              <select
-                value={theirLanguage}
-                onChange={(e) => setTheirLanguage(e.target.value)}
-                className="min-h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              >
-                {availableLanguages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.nativeName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        <LanguageSelectorBar
+          myLanguage={myLanguage}
+          setMyLanguage={setMyLanguage}
+          theirLanguage={theirLanguage}
+          setTheirLanguage={setTheirLanguage}
+          availableLanguages={availableLanguages}
+          swapLanguages={swapLanguages}
+        />
 
         {/* Main Content - Split View */}
-        <div className="flex flex-col md:flex-row">
-          {/* Left Panel - Quick Phrases & My Input */}
-          <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 md:h-[60vh] md:w-1/2 md:border-b-0 md:border-r">
-            {/* Quick Phrases */}
-            <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                {Object.entries(QUICK_PHRASES).map(([category, _phrases]) => (
-                  <button
-                    key={category}
-                    onClick={() => setActiveQuickCategory(category)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors
-                      ${
-                        activeQuickCategory === category
-                          ? "bg-amber-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                      }`}
-                  >
-                    {category.charAt(0).toUpperCase() +
-                      category.slice(1).replace("_", " ")}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {QUICK_PHRASES[activeQuickCategory].map((phrase) => (
-                  <button
-                    key={phrase.key}
-                    onClick={() => applyQuickPhrase(phrase)}
-                    className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
-                  >
-                    <span className="mr-2">{phrase.emoji}</span>
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {/* Show phrase in user's selected language */}
-                      {phrase.translations[myLanguage] ||
-                        phrase.translations.en}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* My Input */}
-            <div className="p-4 flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{myLangObj?.flag}</span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  You ({myLangObj?.nativeName})
-                </span>
-              </div>
-              <div className="relative h-32 md:h-auto md:flex-1">
-                <textarea
-                  value={myText}
-                  onChange={(e) => setMyText(e.target.value)}
-                  placeholder={`Type or speak in ${myLangObj?.name}...`}
-                  className="w-full h-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMyMessage();
-                    }
-                  }}
-                />
-                <div className="absolute right-2 top-2">
-                  <VoiceInputButton
-                    onTranscript={(text) =>
-                      setMyText((prev) => (prev ? `${prev} ${text}` : text))
-                    }
-                    language={myLangObj?.voiceCode || myLanguage}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={sendMyMessage}
-                disabled={!myText.trim()}
-                className="mt-3 w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <span>🔊</span>
-                <span>Say It (They&apos;ll Hear in {theirLangObj?.name})</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Panel - Conversation & Their Input */}
-          <div className="flex flex-col md:h-[60vh] md:w-1/2">
-            {/* Conversation History */}
-            <div className="min-h-[12rem] flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-900/30">
-              {conversation.length === 0 ? (
-                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                  <span className="text-4xl block mb-2">💬</span>
-                  <p>Start a conversation!</p>
-                  <p className="text-sm mt-1">
-                    Use quick phrases or type your own message
-                  </p>
-                </div>
-              ) : (
-                conversation.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.isMe ? "justify-start" : "justify-end"}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-xl p-3 ${
-                        msg.isMe
-                          ? "bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100"
-                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <FlagIcon
-                          langCode={msg.fromLangCode}
-                          size="xs"
-                          fallbackEmoji={msg.fromFlag}
-                        />
-                        <span className="text-xs opacity-70">→</span>
-                        <FlagIcon
-                          langCode={msg.toLangCode}
-                          size="xs"
-                          fallbackEmoji={msg.toFlag}
-                        />
-                      </div>
-                      {/* Show original text */}
-                      <p className="text-sm opacity-75 italic">
-                        {msg.originalText}
-                      </p>
-                      {/* Show translated text (larger, emphasized) */}
-                      {msg.translatedText !== msg.originalText && (
-                        <p className="text-sm font-medium mt-1 pt-1 border-t border-current/20">
-                          ➜ {msg.translatedText}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs opacity-60">
-                          {msg.timestamp.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <button
-                          onClick={() =>
-                            speak(msg.translatedText, msg.toLangCode)
-                          }
-                          className="p-1 hover:bg-white/50 rounded transition-colors"
-                          aria-label="Play translated text"
-                        >
-                          🔊
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={conversationEndRef} />
-            </div>
-
-            {/* Their Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{theirLangObj?.flag}</span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  Them ({theirLangObj?.nativeName})
-                </span>
-              </div>
-              <div className="relative">
-                <textarea
-                  value={theirText}
-                  onChange={(e) => setTheirText(e.target.value)}
-                  placeholder={`They type in ${theirLangObj?.name}...`}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={2}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendTheirMessage();
-                    }
-                  }}
-                />
-                <div className="absolute right-2 top-2">
-                  <VoiceInputButton
-                    onTranscript={(text) =>
-                      setTheirText((prev) => (prev ? `${prev} ${text}` : text))
-                    }
-                    language={theirLangObj?.voiceCode || theirLanguage}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={sendTheirMessage}
-                disabled={!theirText.trim()}
-                className="mt-3 w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <span>🔊</span>
-                <span>Say It (You&apos;ll Hear in {myLangObj?.name})</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <TranslatorPanels
+          activeQuickCategory={activeQuickCategory}
+          setActiveQuickCategory={setActiveQuickCategory}
+          applyQuickPhrase={applyQuickPhrase}
+          myLanguage={myLanguage}
+          myLangObj={myLangObj}
+          theirLangObj={theirLangObj}
+          myText={myText}
+          setMyText={setMyText}
+          sendMyMessage={sendMyMessage}
+          conversation={conversation}
+          conversationEndRef={conversationEndRef}
+          speak={speak}
+          theirLanguage={theirLanguage}
+          theirText={theirText}
+          setTheirText={setTheirText}
+          sendTheirMessage={sendTheirMessage}
+        />
       </div>
     </ResponsiveModal>
   );

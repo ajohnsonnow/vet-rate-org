@@ -22,6 +22,68 @@ const GPU_MID_THRESHOLD = 200_000_000; // ~200 MB maxBufferSize
 
 let _cachedProfile = null;
 
+// --- WebGPU probe ---
+async function _probeWebGPU() {
+  let hasWebGPU = false;
+  let gpuMaxBufferSize = 0;
+  let gpuDescription = "";
+
+  if (typeof navigator !== "undefined" && navigator.gpu) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter({
+        powerPreference: "high-performance",
+      });
+      if (adapter) {
+        hasWebGPU = true;
+        gpuMaxBufferSize = adapter.limits.maxBufferSize ?? 0;
+        gpuDescription = adapter.info?.description || "";
+      }
+    } catch {
+      // requestAdapter can throw on unsupported platforms
+    }
+  }
+
+  return { hasWebGPU, gpuMaxBufferSize, gpuDescription };
+}
+
+// --- GPU tier ---
+function _gpuTierFor(hasWebGPU, gpuMaxBufferSize) {
+  if (!hasWebGPU) {
+    return "none";
+  } else if (gpuMaxBufferSize >= GPU_HIGH_THRESHOLD) {
+    return "high"; // RTX 3000+, RX 6000+, M1 Pro/Max
+  } else if (gpuMaxBufferSize >= GPU_MID_THRESHOLD) {
+    return "mid"; // integrated Intel/AMD, low-end discrete, M1 base
+  }
+  return "low"; // minimal WebGPU (e.g. mobile WebGPU)
+}
+
+// --- Device tier ---
+function _deviceTierFor({
+  isMobileUA,
+  isTabletUA,
+  gpuTier,
+  systemRAM,
+  screenW,
+  isAppleSilicon,
+  hasWebGPU,
+  cpuCores,
+}) {
+  if (isMobileUA && !isTabletUA) {
+    return "mobile";
+  } else if (isTabletUA || (isMobileUA && gpuTier !== "none")) {
+    return "tablet";
+  } else if (gpuTier === "high" && systemRAM >= 8) {
+    // Desktop-high: large GPU buffer + plenty of RAM.
+    // MacBook Air M1/M2 13" reports screenW 1280 CSS px (2× HiDPI) but has full
+    // Metal PSO caching — treat as desktop-high regardless of screen width.
+    return screenW < 1400 && !isAppleSilicon ? "desktop-mid" : "desktop-high";
+  } else if (gpuTier === "mid" || (hasWebGPU && cpuCores >= 8)) {
+    return "laptop";
+  }
+  return "mobile"; // no GPU, unknown — fallback to the most conservative path
+}
+
 /**
  * Returns a device capability profile. Caches after first call.
  * @returns {Promise<DeviceProfile>}
@@ -43,59 +105,26 @@ export async function detectDeviceCapabilities() {
   const systemRAM = navigator.deviceMemory || (isMobileUA ? 2 : 4); // GB
   const cpuCores = navigator.hardwareConcurrency || 4;
 
-  // --- WebGPU probe ---
-  let hasWebGPU = false;
-  let gpuMaxBufferSize = 0;
-  let gpuDescription = "";
+  const { hasWebGPU, gpuMaxBufferSize, gpuDescription } =
+    await _probeWebGPU();
 
-  if (typeof navigator !== "undefined" && navigator.gpu) {
-    try {
-      const adapter = await navigator.gpu.requestAdapter({
-        powerPreference: "high-performance",
-      });
-      if (adapter) {
-        hasWebGPU = true;
-        gpuMaxBufferSize = adapter.limits.maxBufferSize ?? 0;
-        gpuDescription = adapter.info?.description || "";
-      }
-    } catch {
-      // requestAdapter can throw on unsupported platforms
-    }
-  }
-
-  // --- GPU tier ---
-  let gpuTier;
-  if (!hasWebGPU) {
-    gpuTier = "none";
-  } else if (gpuMaxBufferSize >= GPU_HIGH_THRESHOLD) {
-    gpuTier = "high"; // RTX 3000+, RX 6000+, M1 Pro/Max
-  } else if (gpuMaxBufferSize >= GPU_MID_THRESHOLD) {
-    gpuTier = "mid"; // integrated Intel/AMD, low-end discrete, M1 base
-  } else {
-    gpuTier = "low"; // minimal WebGPU (e.g. mobile WebGPU)
-  }
+  const gpuTier = _gpuTierFor(hasWebGPU, gpuMaxBufferSize);
 
   // Apple Silicon M-series GPU description is bare "Apple M1" / "Apple M2 Pro" —
   // no ANGLE wrapper. Detected here so the profile can expose it and the tier
   // logic can use it without a second regex pass.
   const isAppleSilicon = /Apple M\d/i.test(gpuDescription || "");
 
-  // --- Device tier ---
-  let tier;
-  if (isMobileUA && !isTabletUA) {
-    tier = "mobile";
-  } else if (isTabletUA || (isMobileUA && gpuTier !== "none")) {
-    tier = "tablet";
-  } else if (gpuTier === "high" && systemRAM >= 8) {
-    // Desktop-high: large GPU buffer + plenty of RAM.
-    // MacBook Air M1/M2 13" reports screenW 1280 CSS px (2× HiDPI) but has full
-    // Metal PSO caching — treat as desktop-high regardless of screen width.
-    tier = screenW < 1400 && !isAppleSilicon ? "desktop-mid" : "desktop-high";
-  } else if (gpuTier === "mid" || (hasWebGPU && cpuCores >= 8)) {
-    tier = "laptop";
-  } else {
-    tier = "mobile"; // no GPU, unknown — fallback to the most conservative path
-  }
+  const tier = _deviceTierFor({
+    isMobileUA,
+    isTabletUA,
+    gpuTier,
+    systemRAM,
+    screenW,
+    isAppleSilicon,
+    hasWebGPU,
+    cpuCores,
+  });
 
   // --- AI config per tier ---
   // Models listed most-preferred first; diamondSwarm.js tries them in order.

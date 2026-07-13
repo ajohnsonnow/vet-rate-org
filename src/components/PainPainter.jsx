@@ -1075,21 +1075,19 @@ function NexusSuggestions({ detectedNexus }) {
     );
 }
 
-const PainPainter = ({ onClose, _onExport, onReportBug }) => {
-  const { _t } = useLanguage();
-
-  // View state - Standard Views matching VA DBQ diagrams
+// Owns all the plain (non-derived) PainPainter state. Split out of
+// PainPainter purely to keep its function body under the
+// line-count/complexity limits. Same state, same initial values.
+function usePainPainterState() {
   const [view, setView] = useState("front"); // 'front' | 'back' | 'left' | 'right'
   const [mode, setMode] = useState("select"); // 'select' | 'paint'
   const [selectedPainType, setSelectedPainType] = useState("sharp");
   const [activeTab, setActiveTab] = useState("map"); // 'map' | 'config'
 
-  // Pain data
   const [painPoints, setPainPoints] = useState({});
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
-  // Body configuration
   const [bodyType, setBodyType] = useState("average"); // 'masculine' | 'feminine' | 'average' | 'trans-ftm' | 'trans-mtf' | 'nonbinary'
   const [bodyScale, setBodyScale] = useState({
     head: 1,
@@ -1100,7 +1098,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     hips: 1,
   });
   const [zoom, setZoom] = useState(1);
-  // Removed rotation - using standard views instead for WCAG compliance
   const [showPhantomLimbs, setShowPhantomLimbs] = useState({
     leftArm: true,
     rightArm: true,
@@ -1108,6 +1105,35 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     rightLeg: true,
   });
 
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const [detectedNexus, setDetectedNexus] = useState([]);
+
+  return {
+    view, setView,
+    mode, setMode,
+    selectedPainType, setSelectedPainType,
+    activeTab, setActiveTab,
+    painPoints, setPainPoints,
+    selectedRegion, setSelectedRegion,
+    hoveredRegion, setHoveredRegion,
+    bodyType, setBodyType,
+    bodyScale, setBodyScale,
+    zoom, setZoom,
+    showPhantomLimbs, setShowPhantomLimbs,
+    showSaveModal, setShowSaveModal,
+    saveName, setSaveName,
+    saveSuccess, setSaveSuccess,
+    detectedNexus, setDetectedNexus,
+  };
+}
+
+// Owns the keyboard-shortcut and nexus-pattern-detection side effects. Split
+// out of PainPainter purely to keep its function body under the
+// line-count/complexity limits. Same logic, same dependency arrays.
+function usePainPainterEffects({ setView, painPoints, setDetectedNexus }) {
   // Keyboard shortcuts for view switching (WCAG 2.1 keyboard navigation)
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1135,22 +1161,35 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [setView]);
 
-  // Save state
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveName, setSaveName] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  // Detect nexus patterns when pain points change
+  useEffect(() => {
+    const paintedRegions = Object.keys(painPoints);
+    const detected = NEXUS_PATTERNS.filter((pattern) => {
+      const matchingRegions = pattern.regions.filter((r) =>
+        paintedRegions.includes(r),
+      );
+      return matchingRegions.length >= 2;
+    });
+    setDetectedNexus(detected);
+  }, [painPoints, setDetectedNexus]);
+}
 
-  // Nexus detection
-  const [detectedNexus, setDetectedNexus] = useState([]);
-
-  // Export ref
-  const bodyMapRef = useRef(null);
-  const { captureScreenshot, downloadScreenshot } = useScreenshot();
-
-
-  // Apply body preset
+// Owns the region-click/hover/style and body-preset interaction handlers.
+// Split out of PainPainter purely to keep its function body under the
+// line-count/complexity limits. Same logic, same dependency arrays.
+function usePainPainterInteractions({
+  mode,
+  selectedPainType,
+  setPainPoints,
+  setSelectedRegion,
+  painPoints,
+  hoveredRegion,
+  selectedRegion,
+  setBodyType,
+  setBodyScale,
+}) {
   const applyBodyPreset = (preset) => {
     setBodyType(preset);
     const config = BODY_PRESETS[preset];
@@ -1164,19 +1203,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     });
   };
 
-  // Detect nexus patterns when pain points change
-  useEffect(() => {
-    const paintedRegions = Object.keys(painPoints);
-    const detected = NEXUS_PATTERNS.filter((pattern) => {
-      const matchingRegions = pattern.regions.filter((r) =>
-        paintedRegions.includes(r),
-      );
-      return matchingRegions.length >= 2;
-    });
-    setDetectedNexus(detected);
-  }, [painPoints]);
-
-  // Handle region click
   const handleRegionClick = useCallback(
     (regionId) => {
       if (mode === "paint") {
@@ -1194,10 +1220,9 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
         setSelectedRegion(regionId);
       }
     },
-    [mode, selectedPainType],
+    [mode, selectedPainType, setPainPoints, setSelectedRegion],
   );
 
-  // Get region style
   const getRegionStyle = useCallback(
     (regionId) => {
       const pain = painPoints[regionId];
@@ -1230,7 +1255,24 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     [painPoints, hoveredRegion, selectedRegion],
   );
 
-  // Handle export
+  return { applyBodyPreset, handleRegionClick, getRegionStyle };
+}
+
+// Owns the export/save-to-packet handlers. Split out of PainPainter purely
+// to keep its function body under the line-count/complexity limits. Same
+// logic, same order of operations.
+function usePainPainterExport({
+  bodyMapRef,
+  painPoints,
+  view,
+  detectedNexus,
+  saveName,
+  setSaveSuccess,
+  setShowSaveModal,
+  setSaveName,
+  captureScreenshot,
+  downloadScreenshot,
+}) {
   const handleExport = async () => {
     if (bodyMapRef.current) {
       await downloadScreenshot(
@@ -1240,7 +1282,6 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     }
   };
 
-  // Handle save to My Packet
   const handleSaveToPacket = async () => {
     if (Object.keys(painPoints).length === 0) {
       alert("Please mark at least one pain point before saving.");
@@ -1307,6 +1348,725 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
     }, 2000);
   };
 
+  return { handleExport, handleSaveToPacket };
+}
+
+// Modal header, split out of PainPainter purely to keep its function body
+// under the line-count/complexity limits. Same markup, same behavior.
+const PainPainterHeader = ({ onClose, onReportBug }) => (
+  <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white px-6 py-6 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
+
+    <div className="relative flex items-start justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-4xl">🎨</span>
+        </div>
+        <div>
+          <h2 id="pain-painter-title" className="text-2xl sm:text-3xl font-bold">
+            Pain Painter{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-pink-200 mt-1">
+            &quot;Translate Grunt to Doctor&quot; • Visual Pain Mapping
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Pain Painter"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Tab navigation (Pain Map / Body Configuration), split out of PainPainter
+// purely to keep its function body under the line-count limit. Same markup,
+// same behavior.
+const PainPainterTabNav = ({ activeTab, setActiveTab }) => (
+  <div className="flex bg-gray-800 rounded-lg p-1 mb-6">
+    <button
+      onClick={() => setActiveTab("map")}
+      className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+        activeTab === "map"
+          ? "bg-pink-600 text-white"
+          : "text-gray-400 hover:text-white"
+      }`}
+    >
+      <span>🎨</span> Pain Map
+    </button>
+    <button
+      onClick={() => setActiveTab("config")}
+      className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+        activeTab === "config"
+          ? "bg-purple-600 text-white"
+          : "text-gray-400 hover:text-white"
+      }`}
+    >
+      <span>⚙️</span> Body Configuration
+    </button>
+  </div>
+);
+
+// Config tab: body-type preset picker. Split out of PainPainterConfigTab
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterBodyPresets = ({ bodyType, applyBodyPreset }) => (
+  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+      <span>🧍</span> Body Type Preset
+    </h3>
+    <p className="text-sm text-gray-400 mb-4">
+      Select a body type that best represents your physique. This helps
+      create accurate pain documentation.
+    </p>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {Object.entries(BODY_PRESETS).map(([key, preset]) => (
+        <button
+          key={key}
+          onClick={() => applyBodyPreset(key)}
+          className={`p-4 rounded-lg border-2 transition-all text-center ${
+            bodyType === key
+              ? "border-purple-500 bg-purple-900/30"
+              : "border-gray-600 hover:border-gray-500 bg-gray-800/30"
+          }`}
+        >
+          <span className="text-3xl block mb-2">{preset.icon}</span>
+          <span className="text-white font-medium">{preset.name}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+// Config tab: per-body-part scale sliders. Split out of PainPainterConfigTab
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterBodyScaling = ({ bodyScale, setBodyScale }) => (
+  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+      <span>📐</span> Fine-Tune Body Proportions
+    </h3>
+    <p className="text-sm text-gray-400 mb-4">
+      Adjust individual body part sizes for more accurate representation.
+    </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Object.entries(bodyScale).map(([part, value]) => (
+        <div key={part} className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-300 capitalize">{part}</span>
+            <span className="text-purple-400">{(value * 100).toFixed(0)}%</span>
+          </div>
+          <input
+            type="range"
+            min="0.5"
+            max="1.5"
+            step="0.05"
+            value={value}
+            onChange={(e) =>
+              setBodyScale((prev) => ({
+                ...prev,
+                [part]: parseFloat(e.target.value),
+              }))
+            }
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Config tab: amputee/phantom-limb visibility toggles. Split out of
+// PainPainterConfigTab purely to keep its function body under the
+// line-count limit. Same markup, same behavior.
+const PainPainterLimbVisibility = ({ showPhantomLimbs, setShowPhantomLimbs }) => (
+  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+      <span>👻</span> Limb Visibility (for Amputees)
+    </h3>
+    <p className="text-sm text-gray-400 mb-4">
+      Toggle off limbs that have been amputated. You can still document
+      phantom pain sensations in these areas.
+    </p>
+    <div className="grid grid-cols-2 gap-3">
+      {Object.entries(showPhantomLimbs).map(([limb, visible]) => (
+        <label
+          key={limb}
+          className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900/70 transition-colors"
+        >
+          <span className="text-gray-300 capitalize">
+            {limb.replace(/([A-Z])/g, " $1").trim()}
+          </span>
+          <button
+            onClick={() =>
+              setShowPhantomLimbs((prev) => ({
+                ...prev,
+                [limb]: !prev[limb],
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              visible ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                visible ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </label>
+      ))}
+    </div>
+  </div>
+);
+
+// Config tab: standard-view picker (front/back/left/right), split out of
+// PainPainterViewControls purely to keep its function body under the
+// line-count limit. Same markup, same behavior.
+const PainPainterStandardViews = ({ view, setView, setZoom }) => (
+  <div>
+    <div className="flex justify-between text-sm mb-2">
+      <span className="text-gray-300">Standard Views</span>
+      <span className="text-purple-400 text-xs">(matches VA DBQ diagrams)</span>
+    </div>
+    <div
+      className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+      role="group"
+      aria-label="Body view selector"
+    >
+      {Object.entries(STANDARD_VIEWS).map(([key, viewData]) => (
+        <button
+          key={key}
+          onClick={() => setView(key)}
+          className={`p-2 rounded-lg text-center transition-all border-2 ${
+            view === key
+              ? "bg-purple-600 border-purple-400 text-white"
+              : "bg-gray-700 border-gray-600 text-gray-300 hover:border-purple-500"
+          }`}
+          aria-pressed={view === key}
+          aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
+        >
+          <span className="text-lg block">{viewData.icon}</span>
+          <span className="text-xs">{viewData.name.split(" ")[0]}</span>
+        </button>
+      ))}
+    </div>
+    <p className="text-xs text-gray-500 mt-2">
+      ⌨️ Keyboard: <kbd className="px-1 bg-gray-700 rounded">F</kbd>ront,{" "}
+      <kbd className="px-1 bg-gray-700 rounded">B</kbd>ack,{" "}
+      <kbd className="px-1 bg-gray-700 rounded">L</kbd>eft,{" "}
+      <kbd className="px-1 bg-gray-700 rounded">R</kbd>ight
+    </p>
+    <button
+      onClick={() => {
+        setZoom(1);
+        setView("front");
+      }}
+      className="mt-2 text-xs text-purple-400 hover:text-purple-300"
+    >
+      Reset View
+    </button>
+  </div>
+);
+
+// Config tab: zoom slider + standard-view picker. Split out of
+// PainPainterConfigTab purely to keep its function body under the
+// line-count limit. Same markup, same behavior.
+const PainPainterViewControls = ({ zoom, setZoom, view, setView }) => (
+  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+      <span>🔍</span> View Controls
+    </h3>
+    <div className="space-y-4">
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span className="text-gray-300">Zoom</span>
+          <span className="text-purple-400">{(zoom * 100).toFixed(0)}%</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.1))}
+            className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+          >
+            −
+          </button>
+          <input
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+          />
+          <button
+            onClick={() => setZoom((prev) => Math.min(2, prev + 0.1))}
+            className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      {/* Standard Views Section - Replaces rotation */}
+      <PainPainterStandardViews view={view} setView={setView} setZoom={setZoom} />
+    </div>
+  </div>
+);
+
+// Config tab: full JSX, composed from the pieces above plus a live SVG
+// preview. Split out of PainPainter purely to keep its function body under
+// the line-count/complexity limits. Same markup, same behavior.
+const PainPainterConfigTab = ({
+  bodyType,
+  applyBodyPreset,
+  bodyScale,
+  setBodyScale,
+  showPhantomLimbs,
+  setShowPhantomLimbs,
+  zoom,
+  setZoom,
+  view,
+  setView,
+  painPoints,
+  hoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  handleRegionClick,
+  setHoveredRegion,
+}) => (
+  <div className="space-y-6">
+    <PainPainterBodyPresets bodyType={bodyType} applyBodyPreset={applyBodyPreset} />
+    <PainPainterBodyScaling bodyScale={bodyScale} setBodyScale={setBodyScale} />
+    <PainPainterLimbVisibility
+      showPhantomLimbs={showPhantomLimbs}
+      setShowPhantomLimbs={setShowPhantomLimbs}
+    />
+    <PainPainterViewControls zoom={zoom} setZoom={setZoom} view={view} setView={setView} />
+
+    {/* Preview */}
+    <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+      <h3 className="text-lg font-bold text-white mb-3">Preview</h3>
+      <div className="max-h-64 overflow-hidden">
+        <BodySVG
+          view={view}
+          zoom={zoom}
+          bodyScale={bodyScale}
+          showPhantomLimbs={showPhantomLimbs}
+          painPoints={painPoints}
+          hoveredRegion={hoveredRegion}
+          selectedRegion={selectedRegion}
+          getRegionStyle={getRegionStyle}
+          onRegionClick={handleRegionClick}
+          onRegionHover={setHoveredRegion}
+        />
+      </div>
+    </div>
+  </div>
+);
+
+// Map tab: quick zoom in/out control, split out of PainPainterMapControls
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterQuickZoom = ({ zoom, setZoom }) => (
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.1))}
+      className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+      aria-label="Zoom Out"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
+        />
+      </svg>
+    </button>
+    <span className="text-xs text-gray-400 w-10 text-center">
+      {(zoom * 100).toFixed(0)}%
+    </span>
+    <button
+      onClick={() => setZoom((prev) => Math.min(2, prev + 0.1))}
+      className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+      aria-label="Zoom In"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+        />
+      </svg>
+    </button>
+  </div>
+);
+
+// Map tab: view/mode/zoom control bar. Split out of PainPainterMapTab
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterMapControls = ({ view, setView, mode, setMode, zoom, setZoom }) => (
+  <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
+    {/* Standard Views Toggle - WCAG Compliant */}
+    <div
+      className="flex bg-gray-800 rounded-lg p-1"
+      role="tablist"
+      aria-label="Body view selector"
+    >
+      {Object.entries(STANDARD_VIEWS).map(([key, viewData]) => (
+        <button
+          key={key}
+          role="tab"
+          onClick={() => setView(key)}
+          aria-selected={view === key}
+          aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
+          tabIndex={view === key ? 0 : -1}
+          className={`px-2 sm:px-3 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-1.5 min-w-[60px] justify-center ${
+            view === key
+              ? "bg-blue-600 text-white"
+              : "text-gray-400 hover:text-white hover:bg-gray-700"
+          }`}
+        >
+          <span className="text-base">{viewData.icon}</span>
+          <span className="hidden sm:inline text-xs sm:text-sm">
+            {viewData.name.split(" ")[0]}
+          </span>
+        </button>
+      ))}
+    </div>
+
+    {/* Mode Toggle */}
+    <div className="flex bg-gray-800 rounded-lg p-1">
+      <button
+        onClick={() => setMode("select")}
+        className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
+          mode === "select"
+            ? "bg-green-600 text-white"
+            : "text-gray-400 hover:text-white"
+        }`}
+      >
+        <span>👆</span> <span className="hidden xs:inline">Select</span>
+      </button>
+      <button
+        onClick={() => setMode("paint")}
+        className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
+          mode === "paint"
+            ? "bg-pink-600 text-white"
+            : "text-gray-400 hover:text-white"
+        }`}
+      >
+        <span>🎨</span> <span className="hidden xs:inline">Paint</span>
+      </button>
+    </div>
+
+    <PainPainterQuickZoom zoom={zoom} setZoom={setZoom} />
+  </div>
+);
+
+// Map tab: pain-type selector shown in paint mode. Split out of
+// PainPainterMapTab purely to keep its function body under the line-count
+// limit. Same markup, same behavior.
+const PainPainterPaintTypeSelector = ({ selectedPainType, setSelectedPainType }) => (
+  <div className="mb-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+    <p className="text-sm text-gray-400 mb-3">Select pain type to paint:</p>
+    <div className="flex flex-wrap gap-2">
+      {Object.entries(PAIN_TYPES).map(([type, { color, name, emoji }]) => (
+        <button
+          key={type}
+          onClick={() => setSelectedPainType(type)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+            selectedPainType === type
+              ? "border-white bg-gray-700"
+              : "border-gray-600 hover:border-gray-500"
+          }`}
+          style={{ borderColor: selectedPainType === type ? color : undefined }}
+        >
+          <span>{emoji}</span>
+          <span className="text-white">{name}</span>
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+// Map tab: active-pain-points legend. Split out of PainPainterBodyMapPanel
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterPainLegend = ({ painPoints }) => (
+  <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
+    <p className="text-xs text-gray-500 mb-2">Active pain points:</p>
+    <div className="flex flex-wrap gap-2">
+      {Object.entries(painPoints).map(([region, pain]) => (
+        <span
+          key={region}
+          className="text-xs px-2 py-1 rounded"
+          style={{
+            backgroundColor: PAIN_TYPES[pain.type].color + "30",
+            color: PAIN_TYPES[pain.type].color,
+          }}
+        >
+          {PAIN_TYPES[pain.type].emoji} {region.replace(/_/g, " ")}
+        </span>
+      ))}
+    </div>
+  </div>
+);
+
+// Map tab: the interactive body SVG plus its "Tactical Reset" button and
+// pain legend. Split out of PainPainterMapTab purely to keep its function
+// body under the line-count limit. Same markup, same behavior.
+const PainPainterBodyMapPanel = ({
+  bodyMapRef,
+  view,
+  zoom,
+  bodyScale,
+  showPhantomLimbs,
+  painPoints,
+  setPainPoints,
+  hoveredRegion,
+  setHoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  handleRegionClick,
+}) => (
+  <div ref={bodyMapRef} className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-bold text-white">
+        {view === "front" ? "🧍 Front View" : "🧍 Back View"}
+      </h3>
+      <button
+        onClick={() => setPainPoints({})}
+        className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg border border-red-500/40 flex items-center gap-2 transition-colors"
+        aria-label="Clear all pain points from the map"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+        <span className="font-semibold">🧹 Tactical Reset</span>
+      </button>
+    </div>
+
+    <BodySVG
+      view={view}
+      zoom={zoom}
+      bodyScale={bodyScale}
+      showPhantomLimbs={showPhantomLimbs}
+      painPoints={painPoints}
+      hoveredRegion={hoveredRegion}
+      selectedRegion={selectedRegion}
+      getRegionStyle={getRegionStyle}
+      onRegionClick={handleRegionClick}
+      onRegionHover={setHoveredRegion}
+    />
+
+    {Object.keys(painPoints).length > 0 && (
+      <PainPainterPainLegend painPoints={painPoints} />
+    )}
+  </div>
+);
+
+// Map tab: diagnostic codes + nexus suggestions side panel. Split out of
+// PainPainterMapTab purely to keep its function body under the line-count
+// limit. Same markup, same behavior.
+const PainPainterInfoPanel = ({ selectedRegion, detectedNexus }) => (
+  <div className="space-y-4">
+    <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+      <DiagnosticCodesPanel selectedRegion={selectedRegion} />
+    </div>
+    <NexusSuggestions detectedNexus={detectedNexus} />
+  </div>
+);
+
+// Map tab: save/export action buttons. Split out of PainPainterMapTab
+// purely to keep its function body under the line-count limit. Same
+// markup, same behavior.
+const PainPainterActionButtons = ({ painPoints, setShowSaveModal, handleExport }) => (
+  <div className="mt-6 flex justify-center gap-4">
+    <button
+      onClick={() => setShowSaveModal(true)}
+      disabled={Object.keys(painPoints).length === 0}
+      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+        />
+      </svg>
+      Save to My Packet
+    </button>
+    <button
+      onClick={handleExport}
+      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold rounded-xl transition-all"
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+        />
+      </svg>
+      Export Pain Map for Doctor
+    </button>
+  </div>
+);
+
+// Map tab: full JSX, composed from the pieces above. Split out of
+// PainPainter purely to keep its function body under the
+// line-count/complexity limits. Same markup, same behavior.
+const PainPainterMapTab = ({
+  view,
+  setView,
+  mode,
+  setMode,
+  zoom,
+  setZoom,
+  selectedPainType,
+  setSelectedPainType,
+  bodyMapRef,
+  bodyScale,
+  showPhantomLimbs,
+  painPoints,
+  setPainPoints,
+  hoveredRegion,
+  setHoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  handleRegionClick,
+  detectedNexus,
+  setShowSaveModal,
+  handleExport,
+}) => (
+  <>
+    <PainPainterMapControls
+      view={view}
+      setView={setView}
+      mode={mode}
+      setMode={setMode}
+      zoom={zoom}
+      setZoom={setZoom}
+    />
+
+    {mode === "paint" && (
+      <PainPainterPaintTypeSelector
+        selectedPainType={selectedPainType}
+        setSelectedPainType={setSelectedPainType}
+      />
+    )}
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <PainPainterBodyMapPanel
+        bodyMapRef={bodyMapRef}
+        view={view}
+        zoom={zoom}
+        bodyScale={bodyScale}
+        showPhantomLimbs={showPhantomLimbs}
+        painPoints={painPoints}
+        setPainPoints={setPainPoints}
+        hoveredRegion={hoveredRegion}
+        setHoveredRegion={setHoveredRegion}
+        selectedRegion={selectedRegion}
+        getRegionStyle={getRegionStyle}
+        handleRegionClick={handleRegionClick}
+      />
+
+      <PainPainterInfoPanel selectedRegion={selectedRegion} detectedNexus={detectedNexus} />
+    </div>
+
+    <PainPainterActionButtons
+      painPoints={painPoints}
+      setShowSaveModal={setShowSaveModal}
+      handleExport={handleExport}
+    />
+  </>
+);
+
+const PainPainter = ({ onClose, _onExport, onReportBug }) => {
+  const { _t } = useLanguage();
+
+  const {
+    view, setView,
+    mode, setMode,
+    selectedPainType, setSelectedPainType,
+    activeTab, setActiveTab,
+    painPoints, setPainPoints,
+    selectedRegion, setSelectedRegion,
+    hoveredRegion, setHoveredRegion,
+    bodyType, setBodyType,
+    bodyScale, setBodyScale,
+    zoom, setZoom,
+    showPhantomLimbs, setShowPhantomLimbs,
+    showSaveModal, setShowSaveModal,
+    saveName, setSaveName,
+    saveSuccess, setSaveSuccess,
+    detectedNexus, setDetectedNexus,
+  } = usePainPainterState();
+
+  // Export ref
+  const bodyMapRef = useRef(null);
+  const { captureScreenshot, downloadScreenshot } = useScreenshot();
+
+  usePainPainterEffects({ setView, painPoints, setDetectedNexus });
+
+  const { applyBodyPreset, handleRegionClick, getRegionStyle } =
+    usePainPainterInteractions({
+      mode,
+      selectedPainType,
+      setPainPoints,
+      setSelectedRegion,
+      painPoints,
+      hoveredRegion,
+      selectedRegion,
+      setBodyType,
+      setBodyScale,
+    });
+
+  const { handleExport, handleSaveToPacket } = usePainPainterExport({
+    bodyMapRef,
+    painPoints,
+    view,
+    detectedNexus,
+    saveName,
+    setSaveSuccess,
+    setShowSaveModal,
+    setSaveName,
+    captureScreenshot,
+    downloadScreenshot,
+  });
+
   return (
     <>
       <ResponsiveModal
@@ -1315,574 +2075,57 @@ const PainPainter = ({ onClose, _onExport, onReportBug }) => {
         size="2xl"
         className="border border-gray-700 bg-gradient-to-b from-gray-900 to-gray-950"
         labelledBy="pain-painter-title"
-        header={
-          <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white px-6 py-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
-
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-4xl">🎨</span>
-                </div>
-                <div>
-                  <h2
-                    id="pain-painter-title"
-                    className="text-2xl sm:text-3xl font-bold"
-                  >
-                    Pain Painter{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-pink-200 mt-1">
-                    &quot;Translate Grunt to Doctor&quot; • Visual Pain Mapping
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="Pain Painter"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
+        header={<PainPainterHeader onClose={onClose} onReportBug={onReportBug} />}
       >
-        {/* Tab Navigation */}
-        <div className="flex bg-gray-800 rounded-lg p-1 mb-6">
-          <button
-            onClick={() => setActiveTab("map")}
-            className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "map"
-                ? "bg-pink-600 text-white"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <span>🎨</span> Pain Map
-          </button>
-          <button
-            onClick={() => setActiveTab("config")}
-            className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "config"
-                ? "bg-purple-600 text-white"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <span>⚙️</span> Body Configuration
-          </button>
-        </div>
+        <PainPainterTabNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* CONFIGURATION TAB */}
         {activeTab === "config" && (
-          <div className="space-y-6">
-            {/* Body Type Presets */}
-            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>🧍</span> Body Type Preset
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Select a body type that best represents your physique. This
-                helps create accurate pain documentation.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {Object.entries(BODY_PRESETS).map(([key, preset]) => (
-                  <button
-                    key={key}
-                    onClick={() => applyBodyPreset(key)}
-                    className={`p-4 rounded-lg border-2 transition-all text-center ${
-                      bodyType === key
-                        ? "border-purple-500 bg-purple-900/30"
-                        : "border-gray-600 hover:border-gray-500 bg-gray-800/30"
-                    }`}
-                  >
-                    <span className="text-3xl block mb-2">{preset.icon}</span>
-                    <span className="text-white font-medium">
-                      {preset.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Body Part Scaling */}
-            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>📐</span> Fine-Tune Body Proportions
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Adjust individual body part sizes for more accurate
-                representation.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(bodyScale).map(([part, value]) => (
-                  <div key={part} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300 capitalize">{part}</span>
-                      <span className="text-purple-400">
-                        {(value * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="1.5"
-                      step="0.05"
-                      value={value}
-                      onChange={(e) =>
-                        setBodyScale((prev) => ({
-                          ...prev,
-                          [part]: parseFloat(e.target.value),
-                        }))
-                      }
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Limb Visibility (Amputees/Phantom Pain) */}
-            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>👻</span> Limb Visibility (for Amputees)
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Toggle off limbs that have been amputated. You can still
-                document phantom pain sensations in these areas.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(showPhantomLimbs).map(([limb, visible]) => (
-                  <label
-                    key={limb}
-                    className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900/70 transition-colors"
-                  >
-                    <span className="text-gray-300 capitalize">
-                      {limb.replace(/([A-Z])/g, " $1").trim()}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setShowPhantomLimbs((prev) => ({
-                          ...prev,
-                          [limb]: !prev[limb],
-                        }))
-                      }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        visible ? "bg-green-600" : "bg-red-600"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          visible ? "translate-x-6" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Zoom & Rotation */}
-            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <span>🔍</span> View Controls
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-300">Zoom</span>
-                    <span className="text-purple-400">
-                      {(zoom * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setZoom((prev) => Math.max(0.5, prev - 0.1))
-                      }
-                      className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="2"
-                      step="0.1"
-                      value={zoom}
-                      onChange={(e) => setZoom(parseFloat(e.target.value))}
-                      className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                    />
-                    <button
-                      onClick={() => setZoom((prev) => Math.min(2, prev + 0.1))}
-                      className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* Standard Views Section - Replaces rotation */}
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-300">Standard Views</span>
-                    <span className="text-purple-400 text-xs">
-                      (matches VA DBQ diagrams)
-                    </span>
-                  </div>
-                  <div
-                    className="grid grid-cols-2 sm:grid-cols-4 gap-2"
-                    role="group"
-                    aria-label="Body view selector"
-                  >
-                    {Object.entries(STANDARD_VIEWS).map(([key, viewData]) => (
-                      <button
-                        key={key}
-                        onClick={() => setView(key)}
-                        className={`p-2 rounded-lg text-center transition-all border-2 ${
-                          view === key
-                            ? "bg-purple-600 border-purple-400 text-white"
-                            : "bg-gray-700 border-gray-600 text-gray-300 hover:border-purple-500"
-                        }`}
-                        aria-pressed={view === key}
-                        aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
-                      >
-                        <span className="text-lg block">{viewData.icon}</span>
-                        <span className="text-xs">
-                          {viewData.name.split(" ")[0]}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    ⌨️ Keyboard:{" "}
-                    <kbd className="px-1 bg-gray-700 rounded">F</kbd>ront,{" "}
-                    <kbd className="px-1 bg-gray-700 rounded">B</kbd>ack,{" "}
-                    <kbd className="px-1 bg-gray-700 rounded">L</kbd>eft,{" "}
-                    <kbd className="px-1 bg-gray-700 rounded">R</kbd>ight
-                  </p>
-                  <button
-                    onClick={() => {
-                      setZoom(1);
-                      setView("front");
-                    }}
-                    className="mt-2 text-xs text-purple-400 hover:text-purple-300"
-                  >
-                    Reset View
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-3">Preview</h3>
-              <div className="max-h-64 overflow-hidden">
-                <BodySVG
-                  view={view}
-                  zoom={zoom}
-                  bodyScale={bodyScale}
-                  showPhantomLimbs={showPhantomLimbs}
-                  painPoints={painPoints}
-                  hoveredRegion={hoveredRegion}
-                  selectedRegion={selectedRegion}
-                  getRegionStyle={getRegionStyle}
-                  onRegionClick={handleRegionClick}
-                  onRegionHover={setHoveredRegion}
-                />
-              </div>
-            </div>
-          </div>
+          <PainPainterConfigTab
+            bodyType={bodyType}
+            applyBodyPreset={applyBodyPreset}
+            bodyScale={bodyScale}
+            setBodyScale={setBodyScale}
+            showPhantomLimbs={showPhantomLimbs}
+            setShowPhantomLimbs={setShowPhantomLimbs}
+            zoom={zoom}
+            setZoom={setZoom}
+            view={view}
+            setView={setView}
+            painPoints={painPoints}
+            hoveredRegion={hoveredRegion}
+            selectedRegion={selectedRegion}
+            getRegionStyle={getRegionStyle}
+            handleRegionClick={handleRegionClick}
+            setHoveredRegion={setHoveredRegion}
+          />
         )}
 
         {/* PAIN MAP TAB */}
         {activeTab === "map" && (
-          <>
-            {/* Mode Toggle & Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-              {/* Standard Views Toggle - WCAG Compliant */}
-              <div
-                className="flex bg-gray-800 rounded-lg p-1"
-                role="tablist"
-                aria-label="Body view selector"
-              >
-                {Object.entries(STANDARD_VIEWS).map(([key, viewData]) => (
-                  <button
-                    key={key}
-                    role="tab"
-                    onClick={() => setView(key)}
-                    aria-selected={view === key}
-                    aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
-                    tabIndex={view === key ? 0 : -1}
-                    className={`px-2 sm:px-3 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-1.5 min-w-[60px] justify-center ${
-                      view === key
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-400 hover:text-white hover:bg-gray-700"
-                    }`}
-                  >
-                    <span className="text-base">{viewData.icon}</span>
-                    <span className="hidden sm:inline text-xs sm:text-sm">
-                      {viewData.name.split(" ")[0]}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Mode Toggle */}
-              <div className="flex bg-gray-800 rounded-lg p-1">
-                <button
-                  onClick={() => setMode("select")}
-                  className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
-                    mode === "select"
-                      ? "bg-green-600 text-white"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  <span>👆</span>{" "}
-                  <span className="hidden xs:inline">Select</span>
-                </button>
-                <button
-                  onClick={() => setMode("paint")}
-                  className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
-                    mode === "paint"
-                      ? "bg-pink-600 text-white"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  <span>🎨</span>{" "}
-                  <span className="hidden xs:inline">Paint</span>
-                </button>
-              </div>
-
-              {/* Quick Zoom Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.1))}
-                  className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                  aria-label="Zoom Out"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
-                    />
-                  </svg>
-                </button>
-                <span className="text-xs text-gray-400 w-10 text-center">
-                  {(zoom * 100).toFixed(0)}%
-                </span>
-                <button
-                  onClick={() => setZoom((prev) => Math.min(2, prev + 0.1))}
-                  className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                  aria-label="Zoom In"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Pain Type Selector (Paint Mode) */}
-            {mode === "paint" && (
-              <div className="mb-6 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-                <p className="text-sm text-gray-400 mb-3">
-                  Select pain type to paint:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(PAIN_TYPES).map(
-                    ([type, { color, name, emoji }]) => (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedPainType(type)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
-                          selectedPainType === type
-                            ? "border-white bg-gray-700"
-                            : "border-gray-600 hover:border-gray-500"
-                        }`}
-                        style={{
-                          borderColor:
-                            selectedPainType === type ? color : undefined,
-                        }}
-                      >
-                        <span>{emoji}</span>
-                        <span className="text-white">{name}</span>
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: color }}
-                        />
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Body Map */}
-              <div
-                ref={bodyMapRef}
-                className="bg-gray-800/30 rounded-xl p-6 border border-gray-700"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">
-                    {view === "front" ? "🧍 Front View" : "🧍 Back View"}
-                  </h3>
-                  <button
-                    onClick={() => setPainPoints({})}
-                    className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg border border-red-500/40 flex items-center gap-2 transition-colors"
-                    aria-label="Clear all pain points from the map"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    <span className="font-semibold">🧹 Tactical Reset</span>
-                  </button>
-                </div>
-
-                <BodySVG
-                  view={view}
-                  zoom={zoom}
-                  bodyScale={bodyScale}
-                  showPhantomLimbs={showPhantomLimbs}
-                  painPoints={painPoints}
-                  hoveredRegion={hoveredRegion}
-                  selectedRegion={selectedRegion}
-                  getRegionStyle={getRegionStyle}
-                  onRegionClick={handleRegionClick}
-                  onRegionHover={setHoveredRegion}
-                />
-
-                {/* Pain Legend */}
-                {Object.keys(painPoints).length > 0 && (
-                  <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-2">
-                      Active pain points:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(painPoints).map(([region, pain]) => (
-                        <span
-                          key={region}
-                          className="text-xs px-2 py-1 rounded"
-                          style={{
-                            backgroundColor: PAIN_TYPES[pain.type].color + "30",
-                            color: PAIN_TYPES[pain.type].color,
-                          }}
-                        >
-                          {PAIN_TYPES[pain.type].emoji}{" "}
-                          {region.replace(/_/g, " ")}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Info Panel */}
-              <div className="space-y-4">
-                {/* Diagnostic Codes */}
-                <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
-                  <DiagnosticCodesPanel selectedRegion={selectedRegion} />
-                </div>
-
-                {/* Nexus Suggestions */}
-                <NexusSuggestions detectedNexus={detectedNexus} />
-              </div>
-            </div>
-
-            {/* Export & Save Buttons */}
-            <div className="mt-6 flex justify-center gap-4">
-              <button
-                onClick={() => setShowSaveModal(true)}
-                disabled={Object.keys(painPoints).length === 0}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                  />
-                </svg>
-                Save to My Packet
-              </button>
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold rounded-xl transition-all"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                Export Pain Map for Doctor
-              </button>
-            </div>
-          </>
+          <PainPainterMapTab
+            view={view}
+            setView={setView}
+            mode={mode}
+            setMode={setMode}
+            zoom={zoom}
+            setZoom={setZoom}
+            selectedPainType={selectedPainType}
+            setSelectedPainType={setSelectedPainType}
+            bodyMapRef={bodyMapRef}
+            bodyScale={bodyScale}
+            showPhantomLimbs={showPhantomLimbs}
+            painPoints={painPoints}
+            setPainPoints={setPainPoints}
+            hoveredRegion={hoveredRegion}
+            setHoveredRegion={setHoveredRegion}
+            selectedRegion={selectedRegion}
+            getRegionStyle={getRegionStyle}
+            handleRegionClick={handleRegionClick}
+            detectedNexus={detectedNexus}
+            setShowSaveModal={setShowSaveModal}
+            handleExport={handleExport}
+          />
         )}
 
         {/* Pro Tip */}

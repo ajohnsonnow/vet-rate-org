@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
   ChevronRight,
@@ -830,12 +829,324 @@ const saveWorkflowProgress = (progress) => {
   }
 };
 
+const getWorkflowCompletion = (progress, workflowId) => {
+  const workflow = WORKFLOWS[workflowId];
+  const workflowProgress = progress[workflowId] || {};
+  const completed = workflow.steps.filter(
+    (step) => workflowProgress[step.id],
+  ).length;
+  return Math.round((completed / workflow.steps.length) * 100);
+};
+
+const getStepCardClasses = (isComplete, critical) => {
+  if (isComplete) {
+    return "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700";
+  }
+  if (critical) {
+    return "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700";
+  }
+  return "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700";
+};
+
+// ============================================
+// WORKFLOW SELECTION GRID
+// ============================================
+const WorkflowGrid = ({ progress, onSelectWorkflow }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {Object.values(WORKFLOWS).map((workflow) => {
+      const Icon = workflow.icon;
+      const completion = getWorkflowCompletion(progress, workflow.id);
+      const hasStarted = completion > 0;
+
+      return (
+        <button
+          key={workflow.id}
+          onClick={() => onSelectWorkflow(workflow.id)}
+          className={`relative p-5 rounded-xl border-2 ${workflow.borderColor} bg-gradient-to-br ${workflow.bgGradient}
+              hover:scale-[1.02] transition-all duration-200 text-left group overflow-hidden`}
+        >
+          {/* Progress bar background */}
+          <div
+            className="absolute inset-0 bg-white/10 transition-all duration-500"
+            style={{ width: `${completion}%` }}
+          />
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-3">
+              <div className={`p-2 rounded-lg bg-white/20`}>
+                <Icon className="w-6 h-6 text-white" />
+              </div>
+              {hasStarted && (
+                <span className="text-xs font-bold text-white/90 bg-white/20 px-2 py-1 rounded-full">
+                  {completion}% Complete
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-lg font-bold text-white mb-1">
+              {workflow.title}
+            </h3>
+            <p className="text-white/80 text-sm mb-3">{workflow.subtitle}</p>
+
+            <div className="flex items-center justify-between text-xs text-white/70">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {workflow.estimatedTime}
+              </span>
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Steps <ChevronRight className="w-4 h-4" />
+              </span>
+            </div>
+          </div>
+        </button>
+      );
+    })}
+  </div>
+);
+
+// ============================================
+// WORKFLOW STEP CARD
+// ============================================
+const WorkflowStepCard = ({
+  step,
+  index,
+  isComplete,
+  workflowId,
+  onToggleStep,
+  onToolClick,
+}) => (
+  <div
+    className={`p-4 rounded-xl border-2 transition-all duration-200 ${getStepCardClasses(isComplete, step.critical)}`}
+  >
+    <div className="flex items-start gap-4">
+      {/* Step number / checkbox */}
+      <button
+        onClick={() => onToggleStep(workflowId, step.id)}
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+          isComplete
+            ? "bg-green-500 text-white"
+            : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+        }`}
+      >
+        {isComplete ? (
+          <CheckCircle className="w-6 h-6" />
+        ) : (
+          <span className="font-bold">{index + 1}</span>
+        )}
+      </button>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4
+            className={`font-bold ${isComplete ? "text-green-700 dark:text-green-300 line-through" : "text-gray-900 dark:text-white"}`}
+          >
+            {step.critical && !isComplete && (
+              <span className="text-red-500 mr-1">⚠️</span>
+            )}
+            {step.title}
+          </h4>
+          {step.form && (
+            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
+              {step.form}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          {step.description}
+        </p>
+
+        {/* Tip */}
+        {step.tip && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-2 mb-3">
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              <strong>💡 Pro Tip:</strong> {step.tip}
+            </p>
+          </div>
+        )}
+
+        {/* Tool link */}
+        {step.tool && step.toolName && (
+          <button
+            onClick={() => onToolClick(step.tool)}
+            className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+              isComplete
+                ? "text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+            }`}
+          >
+            <Play className="w-4 h-4" />
+            Open {step.toolName}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// ============================================
+// WORKFLOW DETAIL HEADER
+// ============================================
+const WorkflowDetailHeader = ({ workflow, completion, onBack }) => {
+  const Icon = workflow.icon;
+
+  return (
+    <div
+      className={`p-6 rounded-xl bg-gradient-to-br ${workflow.bgGradient} border-2 ${workflow.borderColor}`}
+    >
+      <button
+        onClick={onBack}
+        className="text-white/80 hover:text-white text-sm flex items-center gap-1 mb-4"
+      >
+        <ChevronRight className="w-4 h-4 rotate-180" /> Back to All
+        Workflows
+      </button>
+
+      <div className="flex items-start gap-4">
+        <div className="p-3 rounded-xl bg-white/20">
+          <Icon className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-white mb-1">
+            {workflow.title}
+          </h2>
+          <p className="text-white/80 mb-3">{workflow.description}</p>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full flex items-center gap-1">
+              <Clock className="w-3 h-3" /> {workflow.estimatedTime}
+            </span>
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full">
+              {workflow.difficulty}
+            </span>
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full">
+              {workflow.steps.length} Steps
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mt-4">
+        <div className="flex justify-between text-sm text-white/80 mb-1">
+          <span>Progress</span>
+          <span>{completion}%</span>
+        </div>
+        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-white transition-all duration-500"
+            style={{ width: `${completion}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// WORKFLOW DETAIL VIEW
+// ============================================
+const WorkflowDetail = ({
+  workflowId,
+  progress,
+  onBack,
+  onToggleStep,
+  onToolClick,
+  onResetProgress,
+}) => {
+  const workflow = WORKFLOWS[workflowId];
+  const workflowProgress = progress[workflowId] || {};
+  const completion = getWorkflowCompletion(progress, workflowId);
+
+  return (
+    <div className="space-y-6">
+      <WorkflowDetailHeader
+        workflow={workflow}
+        completion={completion}
+        onBack={onBack}
+      />
+
+      {/* Steps */}
+      <div className="space-y-3">
+        {workflow.steps.map((step, index) => (
+          <WorkflowStepCard
+            key={step.id}
+            step={step}
+            index={index}
+            isComplete={workflowProgress[step.id]}
+            workflowId={workflowId}
+            onToggleStep={onToggleStep}
+            onToolClick={onToolClick}
+          />
+        ))}
+      </div>
+
+      {/* Reset button */}
+      {completion > 0 && (
+        <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => onResetProgress(workflowId)}
+            className="text-sm text-gray-500 hover:text-red-500 transition-colors"
+          >
+            Reset Progress for This Workflow
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================
+// MODAL HEADER / FOOTER
+// ============================================
+const WorkflowGuideHeader = ({ onClose }) => (
+  <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-center justify-between flex-shrink-0">
+    <div className="flex items-center gap-3">
+      <div className="p-2 bg-va-gold/20 rounded-lg">
+        <Map className="w-6 h-6 text-va-gold" />
+      </div>
+      <div>
+        <h2 id="workflow-guide-title" className="text-xl font-bold text-white">
+          🗺️ Mission Briefings{" "}
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+            BETA
+          </span>
+        </h2>
+        <p className="text-gray-400 text-sm">
+          Step-by-step workflows for every VA process
+        </p>
+      </div>
+    </div>
+    {/* mr-20 keeps the close button clear of the fixed Quick Exit
+        panic button on phones (WCAG 2.5.8 target collision) */}
+    <button
+      onClick={onClose}
+      className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-gray-700 sm:mr-0"
+      aria-label="Close"
+    >
+      <X className="w-6 h-6 text-gray-400 hover:text-white" />
+    </button>
+  </div>
+);
+
+const WorkflowGuideFooter = ({ onClose }) => (
+  <div className="flex items-center justify-between">
+    <p className="text-sm text-gray-500 dark:text-gray-400">
+      💾 Progress auto-saved locally
+    </p>
+    <button
+      onClick={onClose}
+      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+    >
+      Close
+    </button>
+  </div>
+);
+
 // ============================================
 // MAIN COMPONENT
 // ============================================
 export default function WorkflowGuide({ onClose, onToolSelect }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [progress, setProgress] = useState(loadWorkflowProgress);
 
@@ -857,15 +1168,6 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
     });
   };
 
-  const getWorkflowCompletion = (workflowId) => {
-    const workflow = WORKFLOWS[workflowId];
-    const workflowProgress = progress[workflowId] || {};
-    const completed = workflow.steps.filter(
-      (step) => workflowProgress[step.id],
-    ).length;
-    return Math.round((completed / workflow.steps.length) * 100);
-  };
-
   const handleToolClick = (toolId) => {
     if (onToolSelect) {
       onToolSelect(toolId);
@@ -881,276 +1183,25 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
     });
   };
 
-  // Workflow Selection Grid
-  const WorkflowGrid = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {Object.values(WORKFLOWS).map((workflow) => {
-        const Icon = workflow.icon;
-        const completion = getWorkflowCompletion(workflow.id);
-        const hasStarted = completion > 0;
-
-        return (
-          <button
-            key={workflow.id}
-            onClick={() => setSelectedWorkflow(workflow.id)}
-            className={`relative p-5 rounded-xl border-2 ${workflow.borderColor} bg-gradient-to-br ${workflow.bgGradient} 
-              hover:scale-[1.02] transition-all duration-200 text-left group overflow-hidden`}
-          >
-            {/* Progress bar background */}
-            <div
-              className="absolute inset-0 bg-white/10 transition-all duration-500"
-              style={{ width: `${completion}%` }}
-            />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`p-2 rounded-lg bg-white/20`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                {hasStarted && (
-                  <span className="text-xs font-bold text-white/90 bg-white/20 px-2 py-1 rounded-full">
-                    {completion}% Complete
-                  </span>
-                )}
-              </div>
-
-              <h3 className="text-lg font-bold text-white mb-1">
-                {workflow.title}
-              </h3>
-              <p className="text-white/80 text-sm mb-3">{workflow.subtitle}</p>
-
-              <div className="flex items-center justify-between text-xs text-white/70">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {workflow.estimatedTime}
-                </span>
-                <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  View Steps <ChevronRight className="w-4 h-4" />
-                </span>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  // Workflow Detail View
-  const WorkflowDetail = ({ workflowId }) => {
-    const workflow = WORKFLOWS[workflowId];
-    const Icon = workflow.icon;
-    const workflowProgress = progress[workflowId] || {};
-    const completion = getWorkflowCompletion(workflowId);
-
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div
-          className={`p-6 rounded-xl bg-gradient-to-br ${workflow.bgGradient} border-2 ${workflow.borderColor}`}
-        >
-          <button
-            onClick={() => setSelectedWorkflow(null)}
-            className="text-white/80 hover:text-white text-sm flex items-center gap-1 mb-4"
-          >
-            <ChevronRight className="w-4 h-4 rotate-180" /> Back to All
-            Workflows
-          </button>
-
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-white/20">
-              <Icon className="w-8 h-8 text-white" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-white mb-1">
-                {workflow.title}
-              </h2>
-              <p className="text-white/80 mb-3">{workflow.description}</p>
-              <div className="flex flex-wrap gap-3 text-sm">
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {workflow.estimatedTime}
-                </span>
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full">
-                  {workflow.difficulty}
-                </span>
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full">
-                  {workflow.steps.length} Steps
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-white/80 mb-1">
-              <span>Progress</span>
-              <span>{completion}%</span>
-            </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-white transition-all duration-500"
-                style={{ width: `${completion}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Steps */}
-        <div className="space-y-3">
-          {workflow.steps.map((step, index) => {
-            const isComplete = workflowProgress[step.id];
-
-            return (
-              <div
-                key={step.id}
-                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                  isComplete
-                    ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
-                    : step.critical
-                      ? "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
-                      : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Step number / checkbox */}
-                  <button
-                    onClick={() => toggleStepComplete(workflowId, step.id)}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                      isComplete
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {isComplete ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <span className="font-bold">{index + 1}</span>
-                    )}
-                  </button>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4
-                        className={`font-bold ${isComplete ? "text-green-700 dark:text-green-300 line-through" : "text-gray-900 dark:text-white"}`}
-                      >
-                        {step.critical && !isComplete && (
-                          <span className="text-red-500 mr-1">⚠️</span>
-                        )}
-                        {step.title}
-                      </h4>
-                      {step.form && (
-                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
-                          {step.form}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {step.description}
-                    </p>
-
-                    {/* Tip */}
-                    {step.tip && (
-                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-2 mb-3">
-                        <p className="text-xs text-amber-800 dark:text-amber-300">
-                          <strong>💡 Pro Tip:</strong> {step.tip}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Tool link */}
-                    {step.tool && step.toolName && (
-                      <button
-                        onClick={() => handleToolClick(step.tool)}
-                        className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                          isComplete
-                            ? "text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
-                            : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                        }`}
-                      >
-                        <Play className="w-4 h-4" />
-                        Open {step.toolName}
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Reset button */}
-        {completion > 0 && (
-          <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => resetWorkflowProgress(workflowId)}
-              className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-            >
-              Reset Progress for This Workflow
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const footer = (
-    <div className="flex items-center justify-between">
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        💾 Progress auto-saved locally
-      </p>
-      <button
-        onClick={onClose}
-        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-      >
-        Close
-      </button>
-    </div>
-  );
-
   return (
     <ResponsiveModal
       isOpen
       onClose={onClose}
       size="xl"
       labelledBy="workflow-guide-title"
-      header={
-        <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-va-gold/20 rounded-lg">
-              <Map className="w-6 h-6 text-va-gold" />
-            </div>
-            <div>
-              <h2
-                id="workflow-guide-title"
-                className="text-xl font-bold text-white"
-              >
-                🗺️ Mission Briefings{" "}
-                <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                  BETA
-                </span>
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Step-by-step workflows for every VA process
-              </p>
-            </div>
-          </div>
-          {/* mr-20 keeps the close button clear of the fixed Quick Exit
-              panic button on phones (WCAG 2.5.8 target collision) */}
-          <button
-            onClick={onClose}
-            className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-gray-700 sm:mr-0"
-            aria-label="Close"
-          >
-            <X className="w-6 h-6 text-gray-400 hover:text-white" />
-          </button>
-        </div>
-      }
-      footer={footer}
+      header={<WorkflowGuideHeader onClose={onClose} />}
+      footer={<WorkflowGuideFooter onClose={onClose} />}
     >
       <div>
         {selectedWorkflow ? (
-          <WorkflowDetail workflowId={selectedWorkflow} />
+          <WorkflowDetail
+            workflowId={selectedWorkflow}
+            progress={progress}
+            onBack={() => setSelectedWorkflow(null)}
+            onToggleStep={toggleStepComplete}
+            onToolClick={handleToolClick}
+            onResetProgress={resetWorkflowProgress}
+          />
         ) : (
           <>
             <div className="text-center mb-6">
@@ -1162,7 +1213,10 @@ export default function WorkflowGuide({ onClose, onToolSelect }) {
                 claims process. Each step links directly to the right tool.
               </p>
             </div>
-            <WorkflowGrid />
+            <WorkflowGrid
+              progress={progress}
+              onSelectWorkflow={setSelectedWorkflow}
+            />
           </>
         )}
       </div>

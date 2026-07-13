@@ -29,7 +29,7 @@ const REDACTION_PATTERNS = [
   {
     name: "EMAIL",
     // Standard email pattern
-    pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi,
+    pattern: /\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[|a-z]{2,}\b/gi,
     replacement: "[EMAIL-REDACTED]",
   },
   {
@@ -47,6 +47,7 @@ const REDACTION_PATTERNS = [
   {
     name: "DOB",
     // Matches: 01/15/1990, 01-15-1990, 1990-01-15
+    // eslint-disable-next-line sonarjs/regex-complexity -- validates real calendar month/day ranges in both MM/DD/YYYY and YYYY/MM/DD orders; splitting the alternation would change the "DOB" pattern name/count that createSanitizedReport and detectPII expose, so a mechanical rewrite isn't confidently behavior-preserving
     pattern:
       /\b(0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])[/-](19|20)\d{2}\b|\b(19|20)\d{2}[/-](0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])\b/g,
     replacement: "[DOB-REDACTED]",
@@ -72,7 +73,7 @@ const REDACTION_PATTERNS = [
   {
     name: "BEARER_TOKEN",
     // Bearer authorization headers
-    pattern: /Bearer\s+[A-Za-z0-9._~+/=-]+/gi,
+    pattern: /Bearer\s+[a-z0-9._~+/=-]+/gi,
     replacement: "Bearer [TOKEN-REDACTED]",
   },
   {
@@ -185,11 +186,7 @@ const sanitizeString = (value) => {
   let sanitized = value;
 
   for (const { pattern, replacement } of REDACTION_PATTERNS) {
-    if (typeof replacement === "function") {
-      sanitized = sanitized.replace(pattern, replacement);
-    } else {
-      sanitized = sanitized.replace(pattern, replacement);
-    }
+    sanitized = sanitized.replace(pattern, replacement);
   }
 
   return sanitized;

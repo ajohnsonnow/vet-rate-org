@@ -69,7 +69,7 @@ export const DOCUMENT_SIGNATURES = {
   DBQ: {
     patterns: [
       /DISABILITY\s*BENEFITS\s*QUESTIONNAIRE/i,
-      /DBQ\s*[-–]\s*[A-Za-z]/i,
+      /DBQ\s*[-–]\s*[A-Z]/i,
       /(?:C&P|COMPENSATION\s*(?:AND|&)\s*PENSION)\s*EXAM/i,
     ],
     priority: 95,
@@ -101,7 +101,7 @@ export const DOCUMENT_SIGNATURES = {
   // BVA Decisions
   BVA_DECISION: {
     patterns: [
-      /BOARD\s*OF\s*VETERANS['']?\s*APPEALS/i,
+      /BOARD\s*OF\s*VETERANS[']?\s*APPEALS/i,
       /BVA\s*DECISION/i,
       /DOCKET\s*NO/i,
     ],

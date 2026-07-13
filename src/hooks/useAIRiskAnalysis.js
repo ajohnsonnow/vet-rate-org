@@ -17,6 +17,63 @@ import {
 } from "../utils/unifiedAIService";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
+function buildRiskAnalysisPrompt({
+  contextBlock,
+  currentRating,
+  ratingDate,
+  riskAssessment,
+  isPermanentTotal,
+  currentConditions,
+  proposedClaim,
+}) {
+  return `You are a VA disability claims expert analyzing the risk of a veteran filing a new claim. Analyze this situation and provide strategic advice.
+${contextBlock}
+
+VETERAN'S SITUATION:
+- Current Combined Rating: ${currentRating}%
+- Rating Effective Date: ${ratingDate}
+- Years Rated: ${riskAssessment.yearsRated.toFixed(1)} years
+- Permanent & Total (P&T): ${isPermanentTotal ? "Yes" : "No"}
+- Age: ${riskAssessment.age || "Not provided"}
+- Current Rated Conditions: ${currentConditions || "Not specified"}
+- Proposed New Claim: ${proposedClaim || "Not specified"}
+
+LEGAL PROTECTIONS IDENTIFIED:
+${riskAssessment.protections.map((p) => `- ${p.rule.name}: ${p.message}`).join("\n") || "None identified"}
+
+WARNINGS:
+${riskAssessment.warnings.map((w) => `- ${w.severity}: ${w.message}`).join("\n") || "None"}
+
+RULES TO CONSIDER:
+- 5-Year Rule (38 CFR § 3.344(c)): Ratings under 5 years not stabilized
+- 10-Year Rule (38 CFR § 3.957): Service connection protected after 10 years
+- 20-Year Rule (38 CFR § 3.951(b)): Ratings cannot be reduced after 20 years
+- P&T: Filing can trigger review of ALL conditions
+- 55+ Age: Generally exempt from routine exams
+
+Please provide:
+1. A risk summary (2-3 sentences)
+2. Specific strategic recommendations (3-5 bullet points)
+3. If a new claim is proposed, potential secondary conditions or angles to strengthen it
+4. Any timing considerations (should they wait?)
+
+Respond in this JSON format:
+{
+  "riskSummary": "Your summary here",
+  "recommendations": ["Rec 1", "Rec 2", "Rec 3"],
+  "strengthenClaim": ["Angle 1", "Angle 2"],
+  "timingAdvice": "Advice about timing",
+  "overallVerdict": "PROCEED" | "CAUTION" | "WAIT" | "DO NOT FILE"
+}`;
+}
+
+function extractJSONBlock(textStr) {
+  const firstBrace = textStr.indexOf("{");
+  const lastBrace = textStr.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace <= firstBrace) return null;
+  return textStr.slice(firstBrace, lastBrace + 1);
+}
+
 export function useAIRiskAnalysis({
   currentRating,
   ratingDate,
@@ -60,45 +117,15 @@ export function useAIRiskAnalysis({
       ? `\nVETERAN CASE DATA (use for comprehensive risk assessment):\n${veteranContext}\n`
       : "";
 
-    const prompt = `You are a VA disability claims expert analyzing the risk of a veteran filing a new claim. Analyze this situation and provide strategic advice.
-${contextBlock}
-
-VETERAN'S SITUATION:
-- Current Combined Rating: ${currentRating}%
-- Rating Effective Date: ${ratingDate}
-- Years Rated: ${riskAssessment.yearsRated.toFixed(1)} years
-- Permanent & Total (P&T): ${isPermanentTotal ? "Yes" : "No"}
-- Age: ${riskAssessment.age || "Not provided"}
-- Current Rated Conditions: ${currentConditions || "Not specified"}
-- Proposed New Claim: ${proposedClaim || "Not specified"}
-
-LEGAL PROTECTIONS IDENTIFIED:
-${riskAssessment.protections.map((p) => `- ${p.rule.name}: ${p.message}`).join("\n") || "None identified"}
-
-WARNINGS:
-${riskAssessment.warnings.map((w) => `- ${w.severity}: ${w.message}`).join("\n") || "None"}
-
-RULES TO CONSIDER:
-- 5-Year Rule (38 CFR § 3.344(c)): Ratings under 5 years not stabilized
-- 10-Year Rule (38 CFR § 3.957): Service connection protected after 10 years
-- 20-Year Rule (38 CFR § 3.951(b)): Ratings cannot be reduced after 20 years
-- P&T: Filing can trigger review of ALL conditions
-- 55+ Age: Generally exempt from routine exams
-
-Please provide:
-1. A risk summary (2-3 sentences)
-2. Specific strategic recommendations (3-5 bullet points)
-3. If a new claim is proposed, potential secondary conditions or angles to strengthen it
-4. Any timing considerations (should they wait?)
-
-Respond in this JSON format:
-{
-  "riskSummary": "Your summary here",
-  "recommendations": ["Rec 1", "Rec 2", "Rec 3"],
-  "strengthenClaim": ["Angle 1", "Angle 2"],
-  "timingAdvice": "Advice about timing",
-  "overallVerdict": "PROCEED" | "CAUTION" | "WAIT" | "DO NOT FILE"
-}`;
+    const prompt = buildRiskAnalysisPrompt({
+      contextBlock,
+      currentRating,
+      ratingDate,
+      riskAssessment,
+      isPermanentTotal,
+      currentConditions,
+      proposedClaim,
+    });
 
     try {
       const response = await generateAI(prompt, {
@@ -113,9 +140,9 @@ Respond in this JSON format:
         typeof aiText === "string" ? aiText : JSON.stringify(aiText);
 
       // Extract JSON from response
-      const jsonMatch = textStr.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const analysis = JSON.parse(jsonMatch[0]);
+      const jsonBlock = extractJSONBlock(textStr);
+      if (jsonBlock) {
+        const analysis = JSON.parse(jsonBlock);
         setAIAnalysis(analysis);
       } else {
         throw new Error("Could not parse AI response");

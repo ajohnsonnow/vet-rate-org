@@ -221,7 +221,7 @@ export const connectDropbox = async () => {
             exchangeDropboxCode(code).then(resolve).catch(reject);
           }
         }
-      } catch (e) {
+      } catch (_e) {
         // Cross-origin access denied - popup still on Dropbox
       }
     }, 500);
@@ -533,7 +533,7 @@ export const connectOneDrive = async () => {
             exchangeOneDriveCode(code).then(resolve).catch(reject);
           }
         }
-      } catch (e) {
+      } catch (_e) {
         // Cross-origin
       }
     }, 500);

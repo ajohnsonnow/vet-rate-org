@@ -76,6 +76,7 @@ export function parseReadmeForChangelog(readmeContent) {
       const sectionContent = match[1];
 
       // Extract bullet points with ** bold titles **
+      // eslint-disable-next-line sonarjs/slow-regex -- [:\s]* partially overlaps the following .+? (both can match space/tab), which is the classic slow-regex shape; a string-op rewrite would require re-deriving this multi-match while-loop's extraction logic, risking behavior drift, and the input is this repo's own static README.md, not attacker-controlled
       const featureRegex = /-\s*\*\*([^*]+)\*\*[:\s]*(.+?)(?=\n-|\n\n|$)/g;
       let featureMatch;
 
@@ -126,16 +127,13 @@ export function getHighlightedChangelog(allChangelog, limit = 10) {
 }
 
 /**
- * Generate a curated What's New changelog
- * This is the main function to call for the modal
- * @returns {Object} - Object with version and changelog array
+ * Recently shipped feature highlights (v1.6.1 Diamond Swarm squadron +
+ * v1.4.0 crash-proof storage / GPU selection) for the What's New modal.
+ * Split out of generateWhatsNewChangelog to keep it under the
+ * max-lines-per-function budget.
  */
-export function generateWhatsNewChangelog() {
-  // Curated changelog highlighting the most important features
-  // This is manually curated for the best user experience
-  // Update this array when deploying new features
-
-  const curatedChangelog = [
+function buildRecentChangelogHighlights() {
+  return [
     // v1.6.1 - DIAMOND SWARM - ELITE AI SQUADRON
     {
       type: "feature",
@@ -187,8 +185,16 @@ export function generateWhatsNewChangelog() {
         'Laptops with dual GPUs (integrated + discrete) can now choose which GPU runs Local AI! Force "High Performance" for speed or "Power Saver" for battery life.',
       isNew: false,
     },
+  ];
+}
 
-    // EXISTING HIGHLIGHTS
+/**
+ * Long-standing feature highlights always shown in the What's New modal.
+ * Split out of generateWhatsNewChangelog to keep it under the
+ * max-lines-per-function budget.
+ */
+function buildExistingChangelogHighlights() {
+  return [
     {
       type: "feature",
       title: `${getTotalToolCount()} Professional Tools`,
@@ -225,6 +231,21 @@ export function generateWhatsNewChangelog() {
       description:
         "Calculate lifetime benefit value and retirement projections with 2026 pay rates",
     },
+  ];
+}
+
+/**
+ * Generate a curated What's New changelog
+ * This is the main function to call for the modal
+ * @returns {Object} - Object with version and changelog array
+ */
+export function generateWhatsNewChangelog() {
+  // Curated changelog highlighting the most important features
+  // This is manually curated for the best user experience
+  // Update this array when deploying new features
+  const curatedChangelog = [
+    ...buildRecentChangelogHighlights(),
+    ...buildExistingChangelogHighlights(),
   ];
 
   // Add recent squashed bugs to changelog

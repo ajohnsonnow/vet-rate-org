@@ -114,6 +114,7 @@ export async function addWatermark(pdfDoc, watermarkText = null) {
  * @param {string} bannerText - Text for the banner
  * @returns {Promise<PDFDocument>}
  */
+// eslint-disable-next-line sonarjs/no-invariant-returns -- always returns pdfDoc (mutated on success, unchanged on early-exit/error) so callers can safely chain regardless of outcome
 export async function addHeaderBanner(
   pdfDoc,
   bannerText = "DRAFT COPY - FOR PHYSICIAN REVIEW ONLY",
@@ -195,6 +196,8 @@ export async function fillFormFields(pdfDoc, formData) {
           results.skipped++;
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
+        console.debug(`Skipping field "${fieldName}":`, e.message);
         results.skipped++;
       }
     }
@@ -449,6 +452,129 @@ export async function copyDbqSummaryToClipboard(veteranInput) {
 // CONDITION-SPECIFIC QUESTION MAPPINGS
 // ============================================================================
 
+// Default questions applicable to most DBQs
+const DEFAULT_SUBJECTIVE_QUESTIONS = [
+  {
+    id: "symptomOnset",
+    label: "When did your symptoms first begin?",
+    type: "text",
+    hint: 'Example: "Symptoms began during deployment in 2015"',
+  },
+  {
+    id: "symptomFrequency",
+    label: "How often do you experience symptoms?",
+    type: "text",
+    hint: 'Example: "Daily pain, worse in the morning"',
+  },
+  {
+    id: "flareUps",
+    label: "Describe any flare-ups (when symptoms get worse)",
+    type: "textarea",
+    hint: "Include how often, how long they last, and what causes them",
+  },
+  {
+    id: "dailyImpact",
+    label: "How does this condition affect your daily life?",
+    type: "textarea",
+    hint: "Work, household chores, sleep, hobbies, etc.",
+  },
+  {
+    id: "treatments",
+    label: "What treatments have you tried?",
+    type: "textarea",
+    hint: "Medications, physical therapy, surgeries, etc.",
+  },
+  {
+    id: "additionalNotes",
+    label: "Anything else your doctor should know?",
+    type: "textarea",
+    hint: "Service connection details, specific incidents, etc.",
+  },
+];
+
+// Condition-specific questions based on form type
+const CONDITION_SPECIFIC_SUBJECTIVE_QUESTIONS = {
+  "Knee-Lower-Leg": [
+    {
+      id: "givingWay",
+      label: 'Does your knee ever "give way" or buckle?',
+      type: "text",
+      hint: "How often and in what situations?",
+    },
+    {
+      id: "instability",
+      label: "Do you use a brace, cane, or other assistive device?",
+      type: "text",
+    },
+  ],
+  "Back-Thoracolumbar": [
+    {
+      id: "radiatingPain",
+      label: "Does pain radiate to your legs?",
+      type: "text",
+      hint: "Describe the pattern and which leg(s)",
+    },
+    {
+      id: "incapacitatingEpisodes",
+      label: "Have you had bed rest prescribed by a doctor?",
+      type: "text",
+      hint: "How many times in the past 12 months and for how long?",
+    },
+  ],
+  "PTSD-Review": [
+    {
+      id: "stressorEvents",
+      label: "Briefly describe the traumatic event(s)",
+      type: "textarea",
+      hint: "Do not include classified details - general description only",
+    },
+    {
+      id: "currentSymptoms",
+      label: "What symptoms do you currently experience?",
+      type: "textarea",
+      hint: "Nightmares, flashbacks, avoidance, hypervigilance, etc.",
+    },
+  ],
+  "Mental-Disorders": [
+    {
+      id: "socialFunctioning",
+      label: "How does this affect your relationships?",
+      type: "textarea",
+    },
+    {
+      id: "occupationalFunctioning",
+      label: "How does this affect your ability to work?",
+      type: "textarea",
+    },
+  ],
+  "Sleep-Apnea": [
+    {
+      id: "cpapUsage",
+      label: "Do you use a CPAP machine?",
+      type: "text",
+      hint: "How often and for how long each night?",
+    },
+    {
+      id: "daytimeSleepiness",
+      label: "Describe your daytime sleepiness",
+      type: "textarea",
+    },
+  ],
+  Headaches: [
+    {
+      id: "frequency",
+      label: "How many headaches do you have per month?",
+      type: "text",
+    },
+    {
+      id: "prostrating",
+      label: "Do headaches force you to lie down or miss work?",
+      type: "textarea",
+      hint: "How often and for how long?",
+    },
+  ],
+};
+
 /**
  * Get relevant questions for a specific DBQ type
  * These are SUBJECTIVE questions that veterans can safely answer
@@ -456,131 +582,8 @@ export async function copyDbqSummaryToClipboard(veteranInput) {
  * @returns {Array<{id: string, label: string, type: string, hint?: string}>}
  */
 export function getSubjectiveQuestions(formId) {
-  // Default questions applicable to most DBQs
-  const defaultQuestions = [
-    {
-      id: "symptomOnset",
-      label: "When did your symptoms first begin?",
-      type: "text",
-      hint: 'Example: "Symptoms began during deployment in 2015"',
-    },
-    {
-      id: "symptomFrequency",
-      label: "How often do you experience symptoms?",
-      type: "text",
-      hint: 'Example: "Daily pain, worse in the morning"',
-    },
-    {
-      id: "flareUps",
-      label: "Describe any flare-ups (when symptoms get worse)",
-      type: "textarea",
-      hint: "Include how often, how long they last, and what causes them",
-    },
-    {
-      id: "dailyImpact",
-      label: "How does this condition affect your daily life?",
-      type: "textarea",
-      hint: "Work, household chores, sleep, hobbies, etc.",
-    },
-    {
-      id: "treatments",
-      label: "What treatments have you tried?",
-      type: "textarea",
-      hint: "Medications, physical therapy, surgeries, etc.",
-    },
-    {
-      id: "additionalNotes",
-      label: "Anything else your doctor should know?",
-      type: "textarea",
-      hint: "Service connection details, specific incidents, etc.",
-    },
-  ];
-
-  // Add condition-specific questions based on form type
-  const conditionSpecific = {
-    "Knee-Lower-Leg": [
-      {
-        id: "givingWay",
-        label: 'Does your knee ever "give way" or buckle?',
-        type: "text",
-        hint: "How often and in what situations?",
-      },
-      {
-        id: "instability",
-        label: "Do you use a brace, cane, or other assistive device?",
-        type: "text",
-      },
-    ],
-    "Back-Thoracolumbar": [
-      {
-        id: "radiatingPain",
-        label: "Does pain radiate to your legs?",
-        type: "text",
-        hint: "Describe the pattern and which leg(s)",
-      },
-      {
-        id: "incapacitatingEpisodes",
-        label: "Have you had bed rest prescribed by a doctor?",
-        type: "text",
-        hint: "How many times in the past 12 months and for how long?",
-      },
-    ],
-    "PTSD-Review": [
-      {
-        id: "stressorEvents",
-        label: "Briefly describe the traumatic event(s)",
-        type: "textarea",
-        hint: "Do not include classified details - general description only",
-      },
-      {
-        id: "currentSymptoms",
-        label: "What symptoms do you currently experience?",
-        type: "textarea",
-        hint: "Nightmares, flashbacks, avoidance, hypervigilance, etc.",
-      },
-    ],
-    "Mental-Disorders": [
-      {
-        id: "socialFunctioning",
-        label: "How does this affect your relationships?",
-        type: "textarea",
-      },
-      {
-        id: "occupationalFunctioning",
-        label: "How does this affect your ability to work?",
-        type: "textarea",
-      },
-    ],
-    "Sleep-Apnea": [
-      {
-        id: "cpapUsage",
-        label: "Do you use a CPAP machine?",
-        type: "text",
-        hint: "How often and for how long each night?",
-      },
-      {
-        id: "daytimeSleepiness",
-        label: "Describe your daytime sleepiness",
-        type: "textarea",
-      },
-    ],
-    Headaches: [
-      {
-        id: "frequency",
-        label: "How many headaches do you have per month?",
-        type: "text",
-      },
-      {
-        id: "prostrating",
-        label: "Do headaches force you to lie down or miss work?",
-        type: "textarea",
-        hint: "How often and for how long?",
-      },
-    ],
-  };
-
-  const specific = conditionSpecific[formId] || [];
-  return [...defaultQuestions, ...specific];
+  const specific = CONDITION_SPECIFIC_SUBJECTIVE_QUESTIONS[formId] || [];
+  return [...DEFAULT_SUBJECTIVE_QUESTIONS, ...specific];
 }
 
 export default {
