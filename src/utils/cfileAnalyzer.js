@@ -545,10 +545,7 @@ function attemptJSONRepair(jsonStr) {
  * @param {string} aiMode - Current AI mode (cloud/local/swarm)
  * @returns {Array<{text: string, startPage: number, endPage: number, chunkIndex: number}>}
  */
-function splitIntoChunks(fullText, aiMode) {
-  const maxCharsPerChunk = getMaxCharsPerChunk(aiMode);
-
-  // Parse page markers to get page boundaries
+function _parsePageMarkers(fullText) {
   const pageMarkerRegex = /--- PAGE (\d+) ---/g;
   const pages = [];
   let match;
@@ -564,44 +561,13 @@ function splitIntoChunks(fullText, aiMode) {
     });
   }
 
-  // If no page markers found, treat as single chunk
-  if (pages.length === 0) {
-    console.warn("No page markers found in text, treating as single chunk");
-    return [
-      {
-        text: fullText,
-        startPage: 1,
-        endPage: 1,
-        chunkIndex: 0,
-      },
-    ];
-  }
+  return pages;
+}
 
-  // eslint-disable-next-line no-console
-  console.log(`📄 Found ${pages.length} pages in document`);
-
-  // If total text fits in one chunk, return as-is
-  if (fullText.length <= maxCharsPerChunk) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `✅ Document fits in single chunk (${fullText.length} chars <= ${maxCharsPerChunk} max)`,
-    );
-    return [
-      {
-        text: fullText,
-        startPage: pages[0].pageNum,
-        endPage: pages[pages.length - 1].pageNum,
-        chunkIndex: 0,
-      },
-    ];
-  }
-
-  // Need to split into multiple chunks
-  // eslint-disable-next-line no-console
-  console.log(
-    `📦 Document too large (${fullText.length} chars > ${maxCharsPerChunk} max), splitting into chunks...`,
-  );
-
+// Greedily packs pages into chunks under maxCharsPerChunk, starting a new
+// chunk once the current one would overflow (and has enough pages to be
+// worth splitting), carrying CHUNK_OVERLAP_PAGES of context into the next.
+function _buildTextChunks(fullText, pages, maxCharsPerChunk) {
   const chunks = [];
   let currentChunkStart = 0;
   let currentChunkPages = [];
@@ -654,6 +620,53 @@ function splitIntoChunks(fullText, aiMode) {
       chunkIndex: chunks.length,
     });
   }
+
+  return chunks;
+}
+
+function splitIntoChunks(fullText, aiMode) {
+  const maxCharsPerChunk = getMaxCharsPerChunk(aiMode);
+  const pages = _parsePageMarkers(fullText);
+
+  // If no page markers found, treat as single chunk
+  if (pages.length === 0) {
+    console.warn("No page markers found in text, treating as single chunk");
+    return [
+      {
+        text: fullText,
+        startPage: 1,
+        endPage: 1,
+        chunkIndex: 0,
+      },
+    ];
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`📄 Found ${pages.length} pages in document`);
+
+  // If total text fits in one chunk, return as-is
+  if (fullText.length <= maxCharsPerChunk) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Document fits in single chunk (${fullText.length} chars <= ${maxCharsPerChunk} max)`,
+    );
+    return [
+      {
+        text: fullText,
+        startPage: pages[0].pageNum,
+        endPage: pages[pages.length - 1].pageNum,
+        chunkIndex: 0,
+      },
+    ];
+  }
+
+  // Need to split into multiple chunks
+  // eslint-disable-next-line no-console
+  console.log(
+    `📦 Document too large (${fullText.length} chars > ${maxCharsPerChunk} max), splitting into chunks...`,
+  );
+
+  const chunks = _buildTextChunks(fullText, pages, maxCharsPerChunk);
 
   // eslint-disable-next-line no-console
   console.log(`📦 Split into ${chunks.length} chunks`);
@@ -790,6 +803,121 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
  * @param {Array<Object>} chunkResults - Array of analysis results from each chunk
  * @returns {Object} - Merged analysis result
  */
+function _mergeServicePeriod(merged, chunkResults) {
+  // Merge service period (take non-empty values from any chunk)
+  for (const result of chunkResults) {
+    if (result.servicePeriod) {
+      if (!merged.servicePeriod.branch && result.servicePeriod.branch) {
+        merged.servicePeriod.branch = result.servicePeriod.branch;
+      }
+      if (!merged.servicePeriod.entryDate && result.servicePeriod.entryDate) {
+        merged.servicePeriod.entryDate = result.servicePeriod.entryDate;
+      }
+      if (
+        !merged.servicePeriod.separationDate &&
+        result.servicePeriod.separationDate
+      ) {
+        merged.servicePeriod.separationDate =
+          result.servicePeriod.separationDate;
+      }
+      if (!merged.servicePeriod.mos && result.servicePeriod.mos) {
+        merged.servicePeriod.mos = result.servicePeriod.mos;
+      }
+    }
+  }
+}
+
+function _mergeTimeline(merged, chunkResults) {
+  // Merge timelines and sort chronologically
+  for (const result of chunkResults) {
+    if (result.timeline && Array.isArray(result.timeline)) {
+      merged.timeline.push(...result.timeline);
+    }
+  }
+  merged.timeline = deduplicateTimeline(merged.timeline);
+  merged.timeline.sort(compareDates);
+}
+
+function _mergePotentialClaims(merged, chunkResults) {
+  // Merge potential claims with deduplication by condition name
+  for (const result of chunkResults) {
+    if (result.potential_claims && Array.isArray(result.potential_claims)) {
+      merged.potential_claims.push(...result.potential_claims);
+    }
+  }
+  merged.potential_claims = deduplicateClaims(merged.potential_claims);
+}
+
+function _mergeExposures(merged, chunkResults) {
+  // Merge exposures with deduplication
+  for (const result of chunkResults) {
+    if (result.exposures && Array.isArray(result.exposures)) {
+      merged.exposures.push(...result.exposures);
+    }
+  }
+  merged.exposures = deduplicateByField(merged.exposures, "type");
+}
+
+function _mergeCombatIndicators(merged, chunkResults) {
+  // Merge combat indicators
+  for (const result of chunkResults) {
+    if (result.combatIndicators && Array.isArray(result.combatIndicators)) {
+      merged.combatIndicators.push(...result.combatIndicators);
+    }
+  }
+  merged.combatIndicators = deduplicateByField(
+    merged.combatIndicators,
+    "indicator",
+  );
+}
+
+function _mergeMentalHealth(merged, chunkResults) {
+  // Merge mental health data
+  for (const result of chunkResults) {
+    if (result.mentalHealth) {
+      if (result.mentalHealth.indicators) {
+        merged.mentalHealth.indicators.push(...result.mentalHealth.indicators);
+      }
+      if (result.mentalHealth.diagnoses) {
+        merged.mentalHealth.diagnoses.push(...result.mentalHealth.diagnoses);
+      }
+      if (result.mentalHealth.stressors) {
+        merged.mentalHealth.stressors.push(...result.mentalHealth.stressors);
+      }
+      if (result.mentalHealth.pages) {
+        merged.mentalHealth.pages.push(...result.mentalHealth.pages);
+      }
+    }
+  }
+  merged.mentalHealth.indicators = [...new Set(merged.mentalHealth.indicators)];
+  merged.mentalHealth.diagnoses = [...new Set(merged.mentalHealth.diagnoses)];
+  merged.mentalHealth.stressors = [...new Set(merged.mentalHealth.stressors)];
+  merged.mentalHealth.pages = [...new Set(merged.mentalHealth.pages)].sort(
+    (a, b) => a - b,
+  );
+}
+
+function _mergeRedFlags(merged, chunkResults) {
+  // Merge red flags
+  for (const result of chunkResults) {
+    if (result.redFlags && Array.isArray(result.redFlags)) {
+      merged.redFlags.push(...result.redFlags);
+    }
+  }
+  merged.redFlags = deduplicateByField(merged.redFlags, "issue");
+}
+
+function _mergeActionItems(merged, chunkResults) {
+  // Merge action items (deduplicate similar items)
+  const allActions = [];
+  for (const result of chunkResults) {
+    if (result.actionItems && Array.isArray(result.actionItems)) {
+      allActions.push(...result.actionItems);
+    }
+  }
+  merged.actionItems = deduplicateActionItems(allActions);
+}
+
 function mergeChunkResults(chunkResults) {
   if (chunkResults.length === 0) {
     throw new Error("No chunk results to merge");
@@ -824,104 +952,21 @@ function mergeChunkResults(chunkResults) {
   const summaries = chunkResults.filter((r) => r.summary).map((r) => r.summary);
   merged.summary = createMetaSummary(summaries);
 
-  // Merge service period (take non-empty values from any chunk)
-  for (const result of chunkResults) {
-    if (result.servicePeriod) {
-      if (!merged.servicePeriod.branch && result.servicePeriod.branch) {
-        merged.servicePeriod.branch = result.servicePeriod.branch;
-      }
-      if (!merged.servicePeriod.entryDate && result.servicePeriod.entryDate) {
-        merged.servicePeriod.entryDate = result.servicePeriod.entryDate;
-      }
-      if (
-        !merged.servicePeriod.separationDate &&
-        result.servicePeriod.separationDate
-      ) {
-        merged.servicePeriod.separationDate =
-          result.servicePeriod.separationDate;
-      }
-      if (!merged.servicePeriod.mos && result.servicePeriod.mos) {
-        merged.servicePeriod.mos = result.servicePeriod.mos;
-      }
-    }
-  }
+  _mergeServicePeriod(merged, chunkResults);
 
-  // Merge timelines and sort chronologically
-  for (const result of chunkResults) {
-    if (result.timeline && Array.isArray(result.timeline)) {
-      merged.timeline.push(...result.timeline);
-    }
-  }
-  merged.timeline = deduplicateTimeline(merged.timeline);
-  merged.timeline.sort(compareDates);
+  _mergeTimeline(merged, chunkResults);
 
-  // Merge potential claims with deduplication by condition name
-  for (const result of chunkResults) {
-    if (result.potential_claims && Array.isArray(result.potential_claims)) {
-      merged.potential_claims.push(...result.potential_claims);
-    }
-  }
-  merged.potential_claims = deduplicateClaims(merged.potential_claims);
+  _mergePotentialClaims(merged, chunkResults);
 
-  // Merge exposures with deduplication
-  for (const result of chunkResults) {
-    if (result.exposures && Array.isArray(result.exposures)) {
-      merged.exposures.push(...result.exposures);
-    }
-  }
-  merged.exposures = deduplicateByField(merged.exposures, "type");
+  _mergeExposures(merged, chunkResults);
 
-  // Merge combat indicators
-  for (const result of chunkResults) {
-    if (result.combatIndicators && Array.isArray(result.combatIndicators)) {
-      merged.combatIndicators.push(...result.combatIndicators);
-    }
-  }
-  merged.combatIndicators = deduplicateByField(
-    merged.combatIndicators,
-    "indicator",
-  );
+  _mergeCombatIndicators(merged, chunkResults);
 
-  // Merge mental health data
-  for (const result of chunkResults) {
-    if (result.mentalHealth) {
-      if (result.mentalHealth.indicators) {
-        merged.mentalHealth.indicators.push(...result.mentalHealth.indicators);
-      }
-      if (result.mentalHealth.diagnoses) {
-        merged.mentalHealth.diagnoses.push(...result.mentalHealth.diagnoses);
-      }
-      if (result.mentalHealth.stressors) {
-        merged.mentalHealth.stressors.push(...result.mentalHealth.stressors);
-      }
-      if (result.mentalHealth.pages) {
-        merged.mentalHealth.pages.push(...result.mentalHealth.pages);
-      }
-    }
-  }
-  merged.mentalHealth.indicators = [...new Set(merged.mentalHealth.indicators)];
-  merged.mentalHealth.diagnoses = [...new Set(merged.mentalHealth.diagnoses)];
-  merged.mentalHealth.stressors = [...new Set(merged.mentalHealth.stressors)];
-  merged.mentalHealth.pages = [...new Set(merged.mentalHealth.pages)].sort(
-    (a, b) => a - b,
-  );
+  _mergeMentalHealth(merged, chunkResults);
 
-  // Merge red flags
-  for (const result of chunkResults) {
-    if (result.redFlags && Array.isArray(result.redFlags)) {
-      merged.redFlags.push(...result.redFlags);
-    }
-  }
-  merged.redFlags = deduplicateByField(merged.redFlags, "issue");
+  _mergeRedFlags(merged, chunkResults);
 
-  // Merge action items (deduplicate similar items)
-  const allActions = [];
-  for (const result of chunkResults) {
-    if (result.actionItems && Array.isArray(result.actionItems)) {
-      allActions.push(...result.actionItems);
-    }
-  }
-  merged.actionItems = deduplicateActionItems(allActions);
+  _mergeActionItems(merged, chunkResults);
 
   // eslint-disable-next-line no-console
   console.log(
