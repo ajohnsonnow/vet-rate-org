@@ -22,7 +22,10 @@ import {
   removeRating,
   hasMyRatings,
 } from "../utils/veteranProfile";
-import { normalizeConditionName } from "../utils/veteranContextProvider";
+import {
+  normalizeConditionName,
+  getLoadableConditions,
+} from "../utils/veteranContextProvider";
 
 /**
  * TacticalCalculator - "The Rate You Deserve"
@@ -184,6 +187,215 @@ function useTacticalCalculatorFormState(initialConditions, capSimulatorResults) 
     setShowSteps,
     showVAGovPaster,
     setShowVAGovPaster,
+  };
+}
+
+/**
+ * Edit-condition modal state + the "load from records" candidate banner state
+ */
+function useEditModalAndRecordsState() {
+  // Edit condition modal
+  const [editingCondition, setEditingCondition] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    bodyPart: "",
+    rating: 10,
+    side: "none",
+  });
+
+  // Rated conditions found in the veteran's records (saved claims + C-File
+  // analyzer output in the VKB) that aren't in My Ratings yet — offered via
+  // a one-click load banner instead of silent auto-import.
+  const [recordCandidates, setRecordCandidates] = useState([]);
+  const [recordsAnnouncement, setRecordsAnnouncement] = useState("");
+  useEffect(() => {
+    let alive = true;
+    getLoadableConditions()
+      .then((found) => {
+        if (alive) setRecordCandidates(found);
+      })
+      .catch((err) => {
+        console.warn("Could not load conditions from records:", err);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return {
+    editingCondition,
+    setEditingCondition,
+    editForm,
+    setEditForm,
+    recordCandidates,
+    setRecordCandidates,
+    recordsAnnouncement,
+    setRecordsAnnouncement,
+  };
+}
+
+/**
+ * Handlers for adding/removing a condition in the calculator tab
+ */
+function useAddRemoveConditionHandlers({
+  setConditions,
+  newCondition,
+  setNewCondition,
+  t,
+}) {
+  // Get all body parts as flat array
+  const allBodyParts = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+
+  // Check if selected body part can be bilateral
+  const selectedBodyPartInfo = allBodyParts.find(
+    (bp) => bp.value === newCondition.bodyPart,
+  );
+  const canBeBilateral = selectedBodyPartInfo?.canBeBilateral || false;
+
+  // Handle adding a condition
+  const handleAddCondition = () => {
+    if (!newCondition.bodyPart) {
+      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
+      return;
+    }
+
+    const bodyPartLabel =
+      allBodyParts.find((bp) => bp.value === newCondition.bodyPart)?.label ||
+      newCondition.bodyPart;
+    const sideSuffix =
+      newCondition.side !== "none"
+        ? ` (${newCondition.side.charAt(0).toUpperCase() + newCondition.side.slice(1)})`
+        : "";
+
+    const condition = {
+      id: Date.now().toString(),
+      name: newCondition.name || `${bodyPartLabel}${sideSuffix}`,
+      bodyPart: newCondition.bodyPart,
+      rating: newCondition.rating,
+      side: canBeBilateral ? newCondition.side : "none",
+    };
+
+    setConditions((prev) => [...prev, condition]);
+
+    // Reset form
+    setNewCondition({
+      name: "",
+      bodyPart: "",
+      rating: 10,
+      side: "none",
+    });
+  };
+
+  // Handle removing a condition
+  const handleRemoveCondition = (id) => {
+    setConditions((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  return {
+    allBodyParts,
+    selectedBodyPartInfo,
+    canBeBilateral,
+    handleAddCondition,
+    handleRemoveCondition,
+  };
+}
+
+/**
+ * Handlers for editing an existing condition (the Edit Condition modal)
+ */
+function useEditConditionHandlers({
+  setConditions,
+  editingCondition,
+  setEditingCondition,
+  editForm,
+  setEditForm,
+  allBodyParts,
+  t,
+}) {
+  // Handle editing a condition
+  const handleEditCondition = (condition) => {
+    setEditingCondition(condition);
+    setEditForm({
+      name: condition.name,
+      bodyPart: condition.bodyPart,
+      rating: condition.rating,
+      side: condition.side || "none",
+    });
+  };
+
+  // Handle saving edited condition
+  const handleSaveEdit = () => {
+    if (!editForm.bodyPart) {
+      alert(t("tacticalCalc", "pleaseSelectBodyPart"));
+      return;
+    }
+
+    const bodyPartInfo = allBodyParts.find(
+      (bp) => bp.value === editForm.bodyPart,
+    );
+    const canBeBilateral = bodyPartInfo?.canBeBilateral || false;
+
+    setConditions((prev) =>
+      prev.map((c) =>
+        c.id === editingCondition.id
+          ? {
+              ...c,
+              name: editForm.name || c.name,
+              bodyPart: editForm.bodyPart,
+              rating: editForm.rating,
+              side: canBeBilateral ? editForm.side : "none",
+            }
+          : c,
+      ),
+    );
+
+    setEditingCondition(null);
+  };
+
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setEditingCondition(null);
+    setEditForm({
+      name: "",
+      bodyPart: "",
+      rating: 10,
+      side: "none",
+    });
+  };
+
+  return {
+    handleEditCondition,
+    handleSaveEdit,
+    handleCancelEdit,
+  };
+}
+
+/**
+ * Combines the edit-modal/records state and the add/remove/edit condition
+ * handlers into the single shape useTacticalCalculatorState expects.
+ */
+function useConditionHandlers(formState) {
+  const editModalState = useEditModalAndRecordsState();
+  const addRemoveHandlers = useAddRemoveConditionHandlers({
+    setConditions: formState.setConditions,
+    newCondition: formState.newCondition,
+    setNewCondition: formState.setNewCondition,
+    t: formState.t,
+  });
+  const editHandlers = useEditConditionHandlers({
+    setConditions: formState.setConditions,
+    editingCondition: editModalState.editingCondition,
+    setEditingCondition: editModalState.setEditingCondition,
+    editForm: editModalState.editForm,
+    setEditForm: editModalState.setEditForm,
+    allBodyParts: addRemoveHandlers.allBodyParts,
+    t: formState.t,
+  });
+
+  return {
+    ...editModalState,
+    ...addRemoveHandlers,
+    ...editHandlers,
   };
 }
 
@@ -372,7 +584,10 @@ function useTacticalCalculatorState({ initialConditions, capSimulatorResults }) 
     capSimulatorResults,
   );
   const conditionHandlers = useConditionHandlers(formState);
-  const myRatingsHandlers = useMyRatingsHandlers(formState);
+  const myRatingsHandlers = useMyRatingsHandlers({
+    ...formState,
+    ...conditionHandlers,
+  });
   const derivedResults = computeDerivedResults(formState);
 
   return {
@@ -1000,8 +1215,50 @@ const TacticalCalculator = ({
     initialConditions,
     capSimulatorResults,
   });
-  const { t, calculatorContentRef, activeTab, editingCondition, showVAGovPaster, capResults } =
-    state;
+  const {
+    t,
+    calculatorContentRef,
+    conditions,
+    setConditions,
+    capResults,
+    setCapResults,
+    myRatings,
+    showSaveConfirm,
+    newCondition,
+    setNewCondition,
+    activeTab,
+    setActiveTab,
+    showSteps,
+    setShowSteps,
+    showVAGovPaster,
+    setShowVAGovPaster,
+    editingCondition,
+    editForm,
+    setEditForm,
+    recordCandidates,
+    recordsAnnouncement,
+    allBodyParts,
+    canBeBilateral,
+    handleAddCondition,
+    handleRemoveCondition,
+    handleEditCondition,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleLoadFromRecords,
+    handleSaveAsMyRatings,
+    handleLoadMyRatings,
+    handleAddToMyRatings,
+    removeCapResult,
+    handleRemoveFromMyRatings,
+    handlePastedRatings,
+    myRatingsResults,
+    myRatingsPyramiding,
+    results,
+    pyramiding,
+    tdiu,
+    ratingNeededFor90,
+    ratingNeededFor100,
+  } = state;
 
   return (
     <>
