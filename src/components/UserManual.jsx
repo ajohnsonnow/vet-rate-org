@@ -4097,25 +4097,7 @@ const renderContent = (content, onClose) => {
   return state.elements;
 };
 
-const UserManual = ({ onClose, onReportBug }) => {
-  const { t } = useLanguage();
-  const panelRef = useRef(null);
-
-  // Lock background scroll when modal is open
-  useBodyScrollLock(true);
-
-  const [currentSection, setCurrentSection] = useState("home");
-  const [expandedSections, setExpandedSections] = useState(["getting-started"]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Get current content
-  const currentContent =
-    documentationContent[currentSection] || documentationContent.home;
-
-  // Helper to get translated navigation title
-  const getNavTitle = (id, fallbackTitle) => {
-    const navKeyMap = {
+const NAV_KEY_MAP = {
       home: "navHome",
       "getting-started": "navGettingStarted",
       "first-visit": "navFirstVisit",
@@ -4214,8 +4196,27 @@ const UserManual = ({ onClose, onReportBug }) => {
       "local-ai-overview": "navLocalAIOverview",
       "model-selection": "navModelSelection",
       "cloud-vs-local": "navCloudVsLocal",
-    };
-    const key = navKeyMap[id];
+};
+
+const UserManual = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
+  const panelRef = useRef(null);
+
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+
+  const [currentSection, setCurrentSection] = useState("home");
+  const [expandedSections, setExpandedSections] = useState(["getting-started"]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Get current content
+  const currentContent =
+    documentationContent[currentSection] || documentationContent.home;
+
+  // Helper to get translated navigation title
+  const getNavTitle = (id, fallbackTitle) => {
+    const key = NAV_KEY_MAP[id];
     if (key) {
       const translated = t("userManual", key);
       if (translated !== key) return translated;
