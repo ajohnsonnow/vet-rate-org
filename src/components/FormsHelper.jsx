@@ -4073,6 +4073,60 @@ ${formData.additionalInfo}
 }`;
 }
 
+function _vsoAppointmentVeteranSection(formData) {
+  return `Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
+
+Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
+
+Date of Birth: ${formData.dob || "________________________________________"}
+
+VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+
+Insurance File Number: ${formData.insuranceNumber || "N/A"}`;
+}
+
+function _vsoAppointmentContactSection(formData) {
+  return `Telephone: ${formData.phone || "________________________________________"}
+
+Email: ${formData.email || "________________________________________"}
+
+Address:
+${formData.street || "________________________________________"}
+${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
+${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}
+${formData.country || "United States"}`;
+}
+
+function _vsoAppointmentOrgSection(formData, vsoName) {
+  return `Organization Name: ${vsoName || "________________________________________"}
+
+${formData.vsoAddress ? `VSO Office Address: ${formData.vsoAddress}` : ""}`;
+}
+
+function _vsoAppointmentAuthorizationSection(formData) {
+  const scopeText =
+    Array.isArray(formData.authorizationScope) &&
+    formData.authorizationScope.length > 0
+      ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
+      : `[X] Access my VA records
+[X] Represent me in all VA claims matters
+[X] Submit evidence and documentation on my behalf
+[X] Appeal decisions on my behalf`;
+  const recordAccess =
+    formData.limitAccess === "yes"
+      ? "LIMITED (see restrictions below)"
+      : "FULL ACCESS TO ALL RECORDS";
+  const limitationsText =
+    formData.limitAccess === "yes" && formData.accessLimitations
+      ? `\nAccess Limitations:\n${formData.accessLimitations}`
+      : "";
+  return `${scopeText}
+
+Record Access: ${recordAccess}
+
+${limitationsText}`;
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -5237,37 +5291,19 @@ Find a VSO: https://www.va.gov/vso/
 
 SECTION I - VETERAN/CLAIMANT INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-
-Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
-
-Date of Birth: ${formData.dob || "________________________________________"}
-
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-
-Insurance File Number: ${formData.insuranceNumber || "N/A"}
+${_vsoAppointmentVeteranSection(formData)}
 
 ================================================================================
 
 SECTION II - CONTACT INFORMATION
 
-Telephone: ${formData.phone || "________________________________________"}
-
-Email: ${formData.email || "________________________________________"}
-
-Address:
-${formData.street || "________________________________________"}
-${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
-${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}
-${formData.country || "United States"}
+${_vsoAppointmentContactSection(formData)}
 
 ================================================================================
 
 SECTION III - VETERANS SERVICE ORGANIZATION
 
-Organization Name: ${vsoName || "________________________________________"}
-
-${formData.vsoAddress ? `VSO Office Address: ${formData.vsoAddress}` : ""}
+${_vsoAppointmentOrgSection(formData, vsoName)}
 
 ================================================================================
 
@@ -5278,23 +5314,7 @@ preparation, presentation, and prosecution of claims for benefits from
 the Department of Veterans Affairs.
 
 Authorization Scope:
-${
-  Array.isArray(formData.authorizationScope) &&
-  formData.authorizationScope.length > 0
-    ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-    : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence and documentation on my behalf
-[X] Appeal decisions on my behalf`
-}
-
-Record Access: ${formData.limitAccess === "yes" ? "LIMITED (see restrictions below)" : "FULL ACCESS TO ALL RECORDS"}
-
-${
-  formData.limitAccess === "yes" && formData.accessLimitations
-    ? `\nAccess Limitations:\n${formData.accessLimitations}`
-    : ""
-}
+${_vsoAppointmentAuthorizationSection(formData)}
 
 ================================================================================
 
