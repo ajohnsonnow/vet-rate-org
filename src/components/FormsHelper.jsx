@@ -3634,6 +3634,364 @@ ${formData.additionalInstructions}
     : ""
 }`;
 
+function _thirdPartyAuthVeteranFields(formData) {
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    ssn: formData.ssn || "____",
+    dob: formData.dob || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+    phone: formData.phone || "____",
+    email: formData.email || "____",
+    street: formData.street || "____",
+    city: formData.city || "____",
+    state: formData.state || "__",
+    zip: formData.zip || "_____",
+  };
+}
+
+function _thirdPartyAuthPartyFields(formData) {
+  const relationshipLabels = {
+    spouse: "Spouse",
+    child: "Adult Child",
+    parent: "Parent",
+    sibling: "Sibling",
+    caregiver: "Caregiver",
+    friend: "Friend",
+    other: "Other",
+  };
+  return {
+    thirdPartyName: formData.thirdPartyName || "____",
+    thirdPartyRelationship:
+      relationshipLabels[formData.thirdPartyRelationship] ||
+      formData.thirdPartyRelationship ||
+      "____",
+    thirdPartyPhone: formData.thirdPartyPhone || "____",
+    thirdPartyEmail: formData.thirdPartyEmail || "____",
+    thirdPartyAddress: formData.thirdPartyAddress || "____",
+  };
+}
+
+function _thirdPartyAuthAuthorizationFields(formData) {
+  const durationLabels = {
+    "6-months": "6 Months",
+    "1-year": "1 Year",
+    "2-years": "2 Years",
+    "until-revoked": "Until Revoked",
+  };
+  return {
+    authorizationDuration:
+      durationLabels[formData.authorizationDuration] || "____",
+    authorizationScopeText: Array.isArray(formData.authorizationScope)
+      ? formData.authorizationScope.map((s) => `[X] ${s}`).join("\n")
+      : "[  ] See form for authorizations",
+    limitToSpecificClaim:
+      formData.limitToSpecificClaim === "yes" ? "YES" : "NO",
+    specificClaimDetailsLine: formData.specificClaimDetails
+      ? `Claim Details: ${formData.specificClaimDetails}`
+      : "",
+  };
+}
+
+function _nursingHomeVeteranFields(formData) {
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    ssn: formData.ssn || "____",
+    dob: formData.dob || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+  };
+}
+
+function _nursingHomeFacilityFields(formData) {
+  const facilityTypes = {
+    "skilled-nursing": "Skilled Nursing Facility",
+    "nursing-home": "Nursing Home",
+    "assisted-living": "Assisted Living",
+    "va-clc": "VA Community Living Center",
+    "state-veterans-home": "State Veterans Home",
+  };
+  return {
+    facilityName: formData.facilityName || "____",
+    facilityType: facilityTypes[formData.facilityType] || "____",
+    facilityAddress: formData.facilityAddress || "____",
+    facilityCity: formData.facilityCity || "____",
+    facilityState: formData.facilityState || "__",
+    facilityZip: formData.facilityZip || "_____",
+    facilityPhone: formData.facilityPhone || "____",
+  };
+}
+
+function _nursingHomeAdmissionFields(formData) {
+  const stayLabels = {
+    "short-term": "Short-term (< 90 days)",
+    "long-term": "Long-term (90+ days)",
+    permanent: "Permanent",
+    unknown: "Unknown",
+  };
+  const medicaidStatusLabels = {
+    receiving: "Currently Receiving",
+    pending: "Application Pending",
+  };
+  return {
+    admissionDate: formData.admissionDate || "____",
+    expectedStay: stayLabels[formData.expectedStay] || "____",
+    levelOfCareText: Array.isArray(formData.levelOfCare)
+      ? formData.levelOfCare.map((l) => `[X] ${l}`).join("\n")
+      : "[  ] See form for care details",
+    medicaidStatus:
+      medicaidStatusLabels[formData.medicaidStatus] || "Not Receiving",
+  };
+}
+
+function _nursingHomeBenefitFields(formData) {
+  const benefitRequestedLabels = {
+    "aid-attendance": "Aid & Attendance",
+    housebound: "Housebound",
+    pension: "VA Pension",
+    dic: "DIC",
+  };
+  return {
+    benefitType: benefitRequestedLabels[formData.benefitRequested] || "____",
+    currentlyReceivingText:
+      formData.currentlyReceiving !== "no"
+        ? "YES - " + formData.currentlyReceiving
+        : "NO",
+    additionalInfoLine: formData.additionalInfo
+      ? `Additional Info: ${formData.additionalInfo}`
+      : "",
+  };
+}
+
+function _substitutionRequestVeteranFields(formData) {
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    veteranSSN: formData.veteranSSN || "____",
+    veteranDOB: formData.veteranDOB || "____",
+    dateOfDeath: formData.dateOfDeath || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+  };
+}
+
+function _substitutionRequestClaimantFields(formData) {
+  const relationLabels = {
+    spouse: "Surviving Spouse",
+    child: "Child",
+    parent: "Dependent Parent",
+  };
+  return {
+    substituteFirstName: formData.substituteFirstName || "",
+    substituteMiddleInitial: formData.substituteMiddleInitial || "",
+    substituteLastName: formData.substituteLastName || "",
+    substituteSSN: formData.substituteSSN || "____",
+    substituteDOB: formData.substituteDOB || "____",
+    relationshipToVeteran:
+      relationLabels[formData.relationshipToVeteran] || "____",
+    phone: formData.phone || "____",
+    email: formData.email || "____",
+    street: formData.street || "____",
+    city: formData.city || "____",
+    state: formData.state || "__",
+    zip: formData.zip || "_____",
+  };
+}
+
+function _substitutionRequestClaimFields(formData) {
+  return {
+    pendingClaimTypeText: Array.isArray(formData.pendingClaimType)
+      ? formData.pendingClaimType.map((t) => `[X] ${t}`).join("\n")
+      : "[  ] See form for claim types",
+    claimDetails: formData.claimDetails || "____",
+    claimFiledDate: formData.claimFiledDate || "Unknown",
+    acknowledgmentsText: Array.isArray(formData.acknowledgments)
+      ? formData.acknowledgments.map((a) => `[X] ${a}`).join("\n")
+      : "[  ] See form for acknowledgments",
+  };
+}
+
+function _incomeAssetClaimantFields(formData) {
+  const maritalLabels = {
+    single: "Single",
+    married: "Married",
+    divorced: "Divorced",
+    widowed: "Widowed",
+  };
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    ssn: formData.ssn || "____",
+    dob: formData.dob || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+    maritalStatus: maritalLabels[formData.maritalStatus] || "____",
+  };
+}
+
+function _incomeAssetMonthlyIncomeFields(formData) {
+  return {
+    socialSecurityIncome: formData.socialSecurityIncome || "$0",
+    militaryRetirement: formData.militaryRetirement || "$0",
+    civilServiceRetirement: formData.civilServiceRetirement || "$0",
+    otherRetirement: formData.otherRetirement || "$0",
+    wages: formData.wages || "$0",
+    interestDividends: formData.interestDividends || "$0",
+    rentalIncome: formData.rentalIncome || "$0",
+    otherIncome: formData.otherIncome || "$0",
+    otherIncomeSourceLine: formData.otherIncomeSource
+      ? `  Source: ${formData.otherIncomeSource}`
+      : "",
+  };
+}
+
+function _incomeAssetAssetFields(formData) {
+  return {
+    bankAccounts: formData.bankAccounts || "$0",
+    stocks: formData.stocks || "$0",
+    ira401k: formData.ira401k || "$0",
+    realEstate: formData.realEstate || "$0",
+    vehicles: formData.vehicles || "$0",
+    otherAssets: formData.otherAssets || "$0",
+    primaryHomeValue: formData.primaryHomeValue || "N/A - typically excluded",
+  };
+}
+
+function _incomeAssetMedicalExpenseFields(formData) {
+  return {
+    healthInsurancePremiums: formData.healthInsurancePremiums || "$0",
+    medicarePartB: formData.medicarePartB || "$0",
+    prescriptions: formData.prescriptions || "$0",
+    doctorVisits: formData.doctorVisits || "$0",
+    nursingHomeCost: formData.nursingHomeCost || "$0",
+    inHomeCare: formData.inHomeCare || "$0",
+    medicalEquipment: formData.medicalEquipment || "$0",
+    otherMedical: formData.otherMedical || "$0",
+    medicalExpenseNoteLine: formData.medicalExpenseNote
+      ? `Note: ${formData.medicalExpenseNote}`
+      : "",
+  };
+}
+
+function _medicalExpenseReportClaimantFields(formData) {
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    ssn: formData.ssn || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+    phone: formData.phone || "____",
+  };
+}
+
+function _medicalExpenseReportPeriodFields(formData) {
+  const reportTypes = {
+    annual: "Annual Report",
+    initial: "Initial Claim",
+    update: "Update/Correction",
+  };
+  return {
+    reportingYear: formData.reportingYear || "____",
+    reportPeriodStart: formData.reportPeriodStart || "____",
+    reportPeriodEnd: formData.reportPeriodEnd || "____",
+    reportType: reportTypes[formData.reportType] || "____",
+  };
+}
+
+function _medicalExpenseReportInsuranceFields(formData) {
+  return {
+    healthInsurance: formData.healthInsurance || "$0",
+    medicarePartB: formData.medicarePartB || "$0",
+    medicareSupplement: formData.medicareSupplement || "$0",
+    prescriptionPlan: formData.prescriptionPlan || "$0",
+    nursingHome: formData.nursingHome || "$0",
+    adultDayCare: formData.adultDayCare || "$0",
+    homeHealthAide: formData.homeHealthAide || "$0",
+  };
+}
+
+function _medicalExpenseReportOutOfPocketFields(formData) {
+  return {
+    prescriptions: formData.prescriptions || "$0",
+    doctorCopays: formData.doctorCopays || "$0",
+    hospitalCopays: formData.hospitalCopays || "$0",
+    dentalExpenses: formData.dentalExpenses || "$0",
+    visionExpenses: formData.visionExpenses || "$0",
+    hearingAids: formData.hearingAids || "$0",
+    medicalEquipment: formData.medicalEquipment || "$0",
+    transportation: formData.transportation || "$0",
+    otherMedical: formData.otherMedical || "$0",
+    otherDescriptionLine: formData.otherDescription
+      ? `Other Description: ${formData.otherDescription}`
+      : "",
+  };
+}
+
+function _employmentInfoVeteranFields(formData) {
+  return {
+    veteranFirstName: formData.veteranFirstName || "",
+    veteranMiddleInitial: formData.veteranMiddleInitial || "",
+    veteranLastName: formData.veteranLastName || "",
+    ssn: formData.ssn || "____",
+    dob: formData.dob || "____",
+    vaFileNumber: formData.vaFileNumber || "Same as SSN",
+    phone: formData.phone || "____",
+  };
+}
+
+function _employmentInfoEmployerFields(formData) {
+  return {
+    employerName: formData.employerName || "____",
+    employerAddress: formData.employerAddress || "____",
+    employerCity: formData.employerCity || "____",
+    employerState: formData.employerState || "__",
+    employerZip: formData.employerZip || "_____",
+    employerPhone: formData.employerPhone || "____",
+    supervisorName: formData.supervisorName || "____",
+  };
+}
+
+function _employmentInfoDetailsFields(formData) {
+  return {
+    jobTitle: formData.jobTitle || "____",
+    startDate: formData.startDate || "____",
+    endDate: formData.endDate || "N/A - Still Employed",
+    stillEmployedText: formData.stillEmployed === "yes" ? "YES" : "NO",
+    hoursPerWeek: formData.hoursPerWeek || "____",
+    earnings: formData.earnings || "____",
+  };
+}
+
+function _employmentInfoImpactFields(formData) {
+  const leaveReasons = {
+    disability: "Left Due to Disability",
+    "laid-off": "Laid Off/Position Eliminated",
+    terminated: "Terminated",
+    resigned: "Resigned",
+    retired: "Retired",
+  };
+  const missedLabels = {
+    none: "Rarely Missed",
+    occasional: "1-5 days/month",
+    frequent: "6-10 days/month",
+    "very-frequent": "10+ days/month",
+    "unable-to-work": "Unable to Work",
+  };
+  return {
+    reasonForLeavingLine:
+      formData.stillEmployed !== "yes" && formData.reasonForLeaving
+        ? `Reason for Leaving: ${leaveReasons[formData.reasonForLeaving] || formData.reasonForLeaving}`
+        : "",
+    accommodationsText: Array.isArray(formData.accommodations)
+      ? formData.accommodations.map((a) => `[X] ${a}`).join("\n")
+      : "[  ] See form for accommodations",
+    missedWork: missedLabels[formData.missedWork] || "____",
+    impactDescription: formData.impactDescription || "____",
+  };
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -5098,20 +5456,10 @@ Phone: 1-202-461-7699
       month: "long",
       day: "numeric",
     });
-    const relationshipLabels = {
-      spouse: "Spouse",
-      child: "Adult Child",
-      parent: "Parent",
-      sibling: "Sibling",
-      caregiver: "Caregiver",
-      friend: "Friend",
-      other: "Other",
-    };
-    const durationLabels = {
-      "6-months": "6 Months",
-      "1-year": "1 Year",
-      "2-years": "2 Years",
-      "until-revoked": "Until Revoked",
+    const f = {
+      ..._thirdPartyAuthVeteranFields(formData),
+      ..._thirdPartyAuthPartyFields(formData),
+      ..._thirdPartyAuthAuthorizationFields(formData),
     };
 
     return `THIRD PARTY AUTHORIZATION INFORMATION
@@ -5121,37 +5469,37 @@ VA Form 21-0845
 
 VETERAN/CLAIMANT INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+Last 4 of SSN: XXX-XX-${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
 
 Contact:
-Phone: ${formData.phone || "____"}
-Email: ${formData.email || "____"}
-Address: ${formData.street || "____"}, ${formData.city || "____"}, ${formData.state || "__"} ${formData.zip || "_____"}
+Phone: ${f.phone}
+Email: ${f.email}
+Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
 
 ================================================================================
 
 AUTHORIZED THIRD PARTY
 
-Name: ${formData.thirdPartyName || "____"}
-Relationship: ${relationshipLabels[formData.thirdPartyRelationship] || formData.thirdPartyRelationship || "____"}
-Phone: ${formData.thirdPartyPhone || "____"}
-Email: ${formData.thirdPartyEmail || "____"}
-Address: ${formData.thirdPartyAddress || "____"}
+Name: ${f.thirdPartyName}
+Relationship: ${f.thirdPartyRelationship}
+Phone: ${f.thirdPartyPhone}
+Email: ${f.thirdPartyEmail}
+Address: ${f.thirdPartyAddress}
 
 ================================================================================
 
 AUTHORIZATION DETAILS
 
-Duration: ${durationLabels[formData.authorizationDuration] || "____"}
+Duration: ${f.authorizationDuration}
 
 This person is authorized to:
-${Array.isArray(formData.authorizationScope) ? formData.authorizationScope.map((s) => `[X] ${s}`).join("\n") : "[  ] See form for authorizations"}
+${f.authorizationScopeText}
 
-Limited to specific claim: ${formData.limitToSpecificClaim === "yes" ? "YES" : "NO"}
-${formData.specificClaimDetails ? `Claim Details: ${formData.specificClaimDetails}` : ""}
+Limited to specific claim: ${f.limitToSpecificClaim}
+${f.specificClaimDetailsLine}
 
 ================================================================================
 
@@ -5317,28 +5665,11 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
       month: "long",
       day: "numeric",
     });
-    const facilityTypes = {
-      "skilled-nursing": "Skilled Nursing Facility",
-      "nursing-home": "Nursing Home",
-      "assisted-living": "Assisted Living",
-      "va-clc": "VA Community Living Center",
-      "state-veterans-home": "State Veterans Home",
-    };
-    const stayLabels = {
-      "short-term": "Short-term (< 90 days)",
-      "long-term": "Long-term (90+ days)",
-      permanent: "Permanent",
-      unknown: "Unknown",
-    };
-    const medicaidStatusLabels = {
-      receiving: "Currently Receiving",
-      pending: "Application Pending",
-    };
-    const benefitRequestedLabels = {
-      "aid-attendance": "Aid & Attendance",
-      housebound: "Housebound",
-      pension: "VA Pension",
-      dic: "DIC",
+    const f = {
+      ..._nursingHomeVeteranFields(formData),
+      ..._nursingHomeFacilityFields(formData),
+      ..._nursingHomeAdmissionFields(formData),
+      ..._nursingHomeBenefitFields(formData),
     };
 
     return `NURSING HOME INFORMATION
@@ -5348,40 +5679,40 @@ VA Form 21-0779
 
 VETERAN INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
 
 ================================================================================
 
 NURSING HOME FACILITY
 
-Name: ${formData.facilityName || "____"}
-Type: ${facilityTypes[formData.facilityType] || "____"}
-Address: ${formData.facilityAddress || "____"}, ${formData.facilityCity || "____"}, ${formData.facilityState || "__"} ${formData.facilityZip || "_____"}
-Phone: ${formData.facilityPhone || "____"}
+Name: ${f.facilityName}
+Type: ${f.facilityType}
+Address: ${f.facilityAddress}, ${f.facilityCity}, ${f.facilityState} ${f.facilityZip}
+Phone: ${f.facilityPhone}
 
 ================================================================================
 
 ADMISSION DETAILS
 
-Admission Date: ${formData.admissionDate || "____"}
-Expected Stay: ${stayLabels[formData.expectedStay] || "____"}
+Admission Date: ${f.admissionDate}
+Expected Stay: ${f.expectedStay}
 
 Level of Care:
-${Array.isArray(formData.levelOfCare) ? formData.levelOfCare.map((l) => `[X] ${l}`).join("\n") : "[  ] See form for care details"}
+${f.levelOfCareText}
 
-Medicaid Status: ${medicaidStatusLabels[formData.medicaidStatus] || "Not Receiving"}
+Medicaid Status: ${f.medicaidStatus}
 
 ================================================================================
 
 BENEFIT REQUESTED
 
-Benefit Type: ${benefitRequestedLabels[formData.benefitRequested] || "____"}
-Currently Receiving VA Benefits: ${formData.currentlyReceiving !== "no" ? "YES - " + formData.currentlyReceiving : "NO"}
+Benefit Type: ${f.benefitType}
+Currently Receiving VA Benefits: ${f.currentlyReceivingText}
 
-${formData.additionalInfo ? `Additional Info: ${formData.additionalInfo}` : ""}
+${f.additionalInfoLine}
 
 ================================================================================
 
@@ -5400,10 +5731,10 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
       month: "long",
       day: "numeric",
     });
-    const relationLabels = {
-      spouse: "Surviving Spouse",
-      child: "Child",
-      parent: "Dependent Parent",
+    const f = {
+      ..._substitutionRequestVeteranFields(formData),
+      ..._substitutionRequestClaimantFields(formData),
+      ..._substitutionRequestClaimFields(formData),
     };
 
     return `REQUEST FOR SUBSTITUTION OF CLAIMANT
@@ -5413,41 +5744,41 @@ VA Form 21P-0847
 
 DECEASED VETERAN INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.veteranSSN || "____"}
-Date of Birth: ${formData.veteranDOB || "____"}
-Date of Death: ${formData.dateOfDeath || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.veteranSSN}
+Date of Birth: ${f.veteranDOB}
+Date of Death: ${f.dateOfDeath}
+VA File Number: ${f.vaFileNumber}
 
 ================================================================================
 
 SUBSTITUTE CLAIMANT INFORMATION (YOU)
 
-Name: ${formData.substituteFirstName || ""} ${formData.substituteMiddleInitial || ""} ${formData.substituteLastName || ""}
-SSN: ${formData.substituteSSN || "____"}
-Date of Birth: ${formData.substituteDOB || "____"}
-Relationship to Veteran: ${relationLabels[formData.relationshipToVeteran] || "____"}
+Name: ${f.substituteFirstName} ${f.substituteMiddleInitial} ${f.substituteLastName}
+SSN: ${f.substituteSSN}
+Date of Birth: ${f.substituteDOB}
+Relationship to Veteran: ${f.relationshipToVeteran}
 
 Contact:
-Phone: ${formData.phone || "____"}
-Email: ${formData.email || "____"}
-Address: ${formData.street || "____"}, ${formData.city || "____"}, ${formData.state || "__"} ${formData.zip || "_____"}
+Phone: ${f.phone}
+Email: ${f.email}
+Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
 
 ================================================================================
 
 PENDING CLAIM INFORMATION
 
 Type of Pending Claim:
-${Array.isArray(formData.pendingClaimType) ? formData.pendingClaimType.map((t) => `[X] ${t}`).join("\n") : "[  ] See form for claim types"}
+${f.pendingClaimTypeText}
 
-Claim Details: ${formData.claimDetails || "____"}
-Approximate Filing Date: ${formData.claimFiledDate || "Unknown"}
+Claim Details: ${f.claimDetails}
+Approximate Filing Date: ${f.claimFiledDate}
 
 ================================================================================
 
 ACKNOWLEDGMENTS
 
-${Array.isArray(formData.acknowledgments) ? formData.acknowledgments.map((a) => `[X] ${a}`).join("\n") : "[  ] See form for acknowledgments"}
+${f.acknowledgmentsText}
 
 ================================================================================
 
@@ -5468,11 +5799,11 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
       month: "long",
       day: "numeric",
     });
-    const maritalLabels = {
-      single: "Single",
-      married: "Married",
-      divorced: "Divorced",
-      widowed: "Widowed",
+    const f = {
+      ..._incomeAssetClaimantFields(formData),
+      ..._incomeAssetMonthlyIncomeFields(formData),
+      ..._incomeAssetAssetFields(formData),
+      ..._incomeAssetMedicalExpenseFields(formData),
     };
 
     return `INCOME AND ASSET STATEMENT
@@ -5482,53 +5813,53 @@ VA Form 21P-0969
 
 CLAIMANT INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-Marital Status: ${maritalLabels[formData.maritalStatus] || "____"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+Marital Status: ${f.maritalStatus}
 
 ================================================================================
 
 MONTHLY INCOME
 
-Social Security:                    ${formData.socialSecurityIncome || "$0"}
-Military Retirement:                ${formData.militaryRetirement || "$0"}
-Civil Service/Federal Retirement:   ${formData.civilServiceRetirement || "$0"}
-Other Pension/Retirement:           ${formData.otherRetirement || "$0"}
-Wages/Salary:                       ${formData.wages || "$0"}
-Interest & Dividends:               ${formData.interestDividends || "$0"}
-Rental Income:                      ${formData.rentalIncome || "$0"}
-Other Income:                       ${formData.otherIncome || "$0"}
-${formData.otherIncomeSource ? `  Source: ${formData.otherIncomeSource}` : ""}
+Social Security:                    ${f.socialSecurityIncome}
+Military Retirement:                ${f.militaryRetirement}
+Civil Service/Federal Retirement:   ${f.civilServiceRetirement}
+Other Pension/Retirement:           ${f.otherRetirement}
+Wages/Salary:                       ${f.wages}
+Interest & Dividends:               ${f.interestDividends}
+Rental Income:                      ${f.rentalIncome}
+Other Income:                       ${f.otherIncome}
+${f.otherIncomeSourceLine}
 
 ================================================================================
 
 ASSETS
 
-Bank Accounts (total):              ${formData.bankAccounts || "$0"}
-Stocks/Bonds/Mutual Funds:          ${formData.stocks || "$0"}
-IRA/401k/Retirement:                ${formData.ira401k || "$0"}
-Real Estate (not primary home):     ${formData.realEstate || "$0"}
-Vehicles:                           ${formData.vehicles || "$0"}
-Other Assets:                       ${formData.otherAssets || "$0"}
+Bank Accounts (total):              ${f.bankAccounts}
+Stocks/Bonds/Mutual Funds:          ${f.stocks}
+IRA/401k/Retirement:                ${f.ira401k}
+Real Estate (not primary home):     ${f.realEstate}
+Vehicles:                           ${f.vehicles}
+Other Assets:                       ${f.otherAssets}
 
-Primary Home (reference):           ${formData.primaryHomeValue || "N/A - typically excluded"}
+Primary Home (reference):           ${f.primaryHomeValue}
 
 ================================================================================
 
 DEDUCTIBLE MEDICAL EXPENSES (MONTHLY)
 
-Health Insurance Premiums:          ${formData.healthInsurancePremiums || "$0"}
-Medicare Part B:                    ${formData.medicarePartB || "$0"}
-Prescriptions:                      ${formData.prescriptions || "$0"}
-Doctor Visits:                      ${formData.doctorVisits || "$0"}
-Nursing Home/Assisted Living:       ${formData.nursingHomeCost || "$0"}
-In-Home Care:                       ${formData.inHomeCare || "$0"}
-Medical Equipment:                  ${formData.medicalEquipment || "$0"}
-Other Medical:                      ${formData.otherMedical || "$0"}
+Health Insurance Premiums:          ${f.healthInsurancePremiums}
+Medicare Part B:                    ${f.medicarePartB}
+Prescriptions:                      ${f.prescriptions}
+Doctor Visits:                      ${f.doctorVisits}
+Nursing Home/Assisted Living:       ${f.nursingHomeCost}
+In-Home Care:                       ${f.inHomeCare}
+Medical Equipment:                  ${f.medicalEquipment}
+Other Medical:                      ${f.otherMedical}
 
-${formData.medicalExpenseNote ? `Note: ${formData.medicalExpenseNote}` : ""}
+${f.medicalExpenseNoteLine}
 
 ================================================================================
 
@@ -5547,10 +5878,11 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
       month: "long",
       day: "numeric",
     });
-    const reportTypes = {
-      annual: "Annual Report",
-      initial: "Initial Claim",
-      update: "Update/Correction",
+    const f = {
+      ..._medicalExpenseReportClaimantFields(formData),
+      ..._medicalExpenseReportPeriodFields(formData),
+      ..._medicalExpenseReportInsuranceFields(formData),
+      ..._medicalExpenseReportOutOfPocketFields(formData),
     };
 
     return `MEDICAL EXPENSE REPORT
@@ -5560,46 +5892,46 @@ VA Form 21P-8416
 
 CLAIMANT INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.ssn || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-Phone: ${formData.phone || "____"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+VA File Number: ${f.vaFileNumber}
+Phone: ${f.phone}
 
 ================================================================================
 
 REPORTING PERIOD
 
-Year: ${formData.reportingYear || "____"}
-Period: ${formData.reportPeriodStart || "____"} to ${formData.reportPeriodEnd || "____"}
-Report Type: ${reportTypes[formData.reportType] || "____"}
+Year: ${f.reportingYear}
+Period: ${f.reportPeriodStart} to ${f.reportPeriodEnd}
+Report Type: ${f.reportType}
 
 ================================================================================
 
 INSURANCE & CARE COSTS (FOR PERIOD)
 
-Health Insurance Premiums:          ${formData.healthInsurance || "$0"}
-Medicare Part B:                    ${formData.medicarePartB || "$0"}
-Medicare Supplement/Medigap:        ${formData.medicareSupplement || "$0"}
-Prescription Drug Plan Premium:     ${formData.prescriptionPlan || "$0"}
-Nursing Home/Assisted Living:       ${formData.nursingHome || "$0"}
-Adult Day Care:                     ${formData.adultDayCare || "$0"}
-Home Health Aide/In-Home Care:      ${formData.homeHealthAide || "$0"}
+Health Insurance Premiums:          ${f.healthInsurance}
+Medicare Part B:                    ${f.medicarePartB}
+Medicare Supplement/Medigap:        ${f.medicareSupplement}
+Prescription Drug Plan Premium:     ${f.prescriptionPlan}
+Nursing Home/Assisted Living:       ${f.nursingHome}
+Adult Day Care:                     ${f.adultDayCare}
+Home Health Aide/In-Home Care:      ${f.homeHealthAide}
 
 ================================================================================
 
 OUT-OF-POCKET MEDICAL COSTS (FOR PERIOD)
 
-Prescriptions:                      ${formData.prescriptions || "$0"}
-Doctor Visit Copays:                ${formData.doctorCopays || "$0"}
-Hospital/ER Copays:                 ${formData.hospitalCopays || "$0"}
-Dental Expenses:                    ${formData.dentalExpenses || "$0"}
-Vision/Eye Care:                    ${formData.visionExpenses || "$0"}
-Hearing Aids/Care:                  ${formData.hearingAids || "$0"}
-Medical Equipment/Supplies:         ${formData.medicalEquipment || "$0"}
-Medical Transportation:             ${formData.transportation || "$0"}
-Other Medical:                      ${formData.otherMedical || "$0"}
+Prescriptions:                      ${f.prescriptions}
+Doctor Visit Copays:                ${f.doctorCopays}
+Hospital/ER Copays:                 ${f.hospitalCopays}
+Dental Expenses:                    ${f.dentalExpenses}
+Vision/Eye Care:                    ${f.visionExpenses}
+Hearing Aids/Care:                  ${f.hearingAids}
+Medical Equipment/Supplies:         ${f.medicalEquipment}
+Medical Transportation:             ${f.transportation}
+Other Medical:                      ${f.otherMedical}
 
-${formData.otherDescription ? `Other Description: ${formData.otherDescription}` : ""}
+${f.otherDescriptionLine}
 
 ================================================================================
 
@@ -5620,19 +5952,11 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
       month: "long",
       day: "numeric",
     });
-    const leaveReasons = {
-      disability: "Left Due to Disability",
-      "laid-off": "Laid Off/Position Eliminated",
-      terminated: "Terminated",
-      resigned: "Resigned",
-      retired: "Retired",
-    };
-    const missedLabels = {
-      none: "Rarely Missed",
-      occasional: "1-5 days/month",
-      frequent: "6-10 days/month",
-      "very-frequent": "10+ days/month",
-      "unable-to-work": "Unable to Work",
+    const f = {
+      ..._employmentInfoVeteranFields(formData),
+      ..._employmentInfoEmployerFields(formData),
+      ..._employmentInfoDetailsFields(formData),
+      ..._employmentInfoImpactFields(formData),
     };
 
     return `REQUEST FOR EMPLOYMENT INFORMATION
@@ -5647,45 +5971,45 @@ Send this to your employer(s) for completion.
 
 VETERAN INFORMATION
 
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-Phone: ${formData.phone || "____"}
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+Phone: ${f.phone}
 
 ================================================================================
 
 EMPLOYER INFORMATION
 
-Company Name: ${formData.employerName || "____"}
-Address: ${formData.employerAddress || "____"}, ${formData.employerCity || "____"}, ${formData.employerState || "__"} ${formData.employerZip || "_____"}
-Phone: ${formData.employerPhone || "____"}
-Supervisor/HR Contact: ${formData.supervisorName || "____"}
+Company Name: ${f.employerName}
+Address: ${f.employerAddress}, ${f.employerCity}, ${f.employerState} ${f.employerZip}
+Phone: ${f.employerPhone}
+Supervisor/HR Contact: ${f.supervisorName}
 
 ================================================================================
 
 EMPLOYMENT DETAILS
 
-Job Title: ${formData.jobTitle || "____"}
-Start Date: ${formData.startDate || "____"}
-End Date: ${formData.endDate || "N/A - Still Employed"}
-Still Employed: ${formData.stillEmployed === "yes" ? "YES" : "NO"}
-Hours Per Week: ${formData.hoursPerWeek || "____"}
-Earnings: ${formData.earnings || "____"}
+Job Title: ${f.jobTitle}
+Start Date: ${f.startDate}
+End Date: ${f.endDate}
+Still Employed: ${f.stillEmployedText}
+Hours Per Week: ${f.hoursPerWeek}
+Earnings: ${f.earnings}
 
 ================================================================================
 
 DISABILITY IMPACT ON EMPLOYMENT
 
-${formData.stillEmployed !== "yes" && formData.reasonForLeaving ? `Reason for Leaving: ${leaveReasons[formData.reasonForLeaving] || formData.reasonForLeaving}` : ""}
+${f.reasonForLeavingLine}
 
 Accommodations Made:
-${Array.isArray(formData.accommodations) ? formData.accommodations.map((a) => `[X] ${a}`).join("\n") : "[  ] See form for accommodations"}
+${f.accommodationsText}
 
-Time Missed Due to Disability: ${missedLabels[formData.missedWork] || "____"}
+Time Missed Due to Disability: ${f.missedWork}
 
 Impact Description:
-${formData.impactDescription || "____"}
+${f.impactDescription}
 
 ================================================================================
 
