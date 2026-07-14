@@ -2759,386 +2759,342 @@ function CapResultsTab({
   );
 }
 
-function RatesTab({
-  t,
-}) {
+function RatesHeaderInfo({ t }) {
   return (
-            <div className="space-y-6">
-              {/* Header Info */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">📊</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-green-800 dark:text-green-200">
-                      {t("tacticalCalc", "vaDisabilityRates2026")}
-                    </h3>
-                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                      {t("tacticalCalc", "effectiveDate")} •{" "}
-                      {t("tacticalCalc", "source")}:{" "}
-                      <a
-                        href="https://www.va.gov/disability/compensation-rates/veteran-rates/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:no-underline"
-                      >
-                        VA.gov
-                      </a>
-                    </p>
-                  </div>
-                </div>
-              </div>
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-xl">📊</span>
+        </div>
+        <div>
+          <h3 className="font-bold text-green-800 dark:text-green-200">
+            {t("tacticalCalc", "vaDisabilityRates2026")}
+          </h3>
+          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+            {t("tacticalCalc", "effectiveDate")} •{" "}
+            {t("tacticalCalc", "source")}:{" "}
+            <a
+              href="https://www.va.gov/disability/compensation-rates/veteran-rates/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:no-underline"
+            >
+              VA.gov
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-              {/* Basic Rates - 10% to 20% */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">
-                    💰
-                  </span>
-                  {t("tacticalCalc", "veteransWith10to20")}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  {t("tacticalCalc", "noDependentBenefits")}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      10% Rating
-                    </div>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      20% Rating
-                    </div>
-                  </div>
-                </div>
-              </div>
+function BasicRatesCards({ t }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+        <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">
+          💰
+        </span>
+        {t("tacticalCalc", "veteransWith10to20")}
+      </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        {t("tacticalCalc", "noDependentBenefits")}
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            10% Rating
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            ${VA_PAY_RATES_2026.solo[20].toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            20% Rating
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-              {/* Veteran Alone Rates - 30% to 100% */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">
-                    👤
-                  </span>
-                  {t("tacticalCalc", "veteranAlone")}
-                </h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b dark:border-gray-700">
-                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "rating")}
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "monthly")}
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "annual")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
-                        <tr
-                          key={rating}
-                          className={`border-b dark:border-gray-700 ${rating === 100 ? "bg-green-50 dark:bg-green-900/20" : ""}`}
-                        >
-                          <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
-                            {rating}%
-                          </td>
-                          <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
-                            $
-                            {VA_PAY_RATES_2026.solo[rating]?.toLocaleString(
-                              "en-US",
-                              { minimumFractionDigits: 2 },
-                            )}
-                          </td>
-                          <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
-                            $
-                            {(
-                              VA_PAY_RATES_2026.solo[rating] * 12
-                            )?.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                            })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+function VeteranAloneRatesTable({ t }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+        <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">
+          👤
+        </span>
+        {t("tacticalCalc", "veteranAlone")}
+      </h4>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b dark:border-gray-700">
+              <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "rating")}
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "monthly")}
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "annual")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
+              <tr
+                key={rating}
+                className={`border-b dark:border-gray-700 ${rating === 100 ? "bg-green-50 dark:bg-green-900/20" : ""}`}
+              >
+                <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
+                  {rating}%
+                </td>
+                <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                  $
+                  {VA_PAY_RATES_2026.solo[rating]?.toLocaleString(
+                    "en-US",
+                    { minimumFractionDigits: 2 },
+                  )}
+                </td>
+                <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
+                  $
+                  {(
+                    VA_PAY_RATES_2026.solo[rating] * 12
+                  )?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
-              {/* With Spouse Rates */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">
-                    💑
-                  </span>
-                  {t("tacticalCalc", "withSpouse")}
-                </h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b dark:border-gray-700">
-                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "rating")}
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "monthly")}
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "spouseAdd")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
-                        <tr
-                          key={rating}
-                          className="border-b dark:border-gray-700"
-                        >
-                          <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
-                            {rating}%
-                          </td>
-                          <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
-                            $
-                            {(
-                              VA_PAY_RATES_2026.solo[rating] +
-                              VA_PAY_RATES_2026.spouse[rating]
-                            )?.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                            })}
-                          </td>
-                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                            +$
-                            {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString(
-                              "en-US",
-                              { minimumFractionDigits: 2 },
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+function WithSpouseRatesTable({ t }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+        <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">
+          💑
+        </span>
+        {t("tacticalCalc", "withSpouse")}
+      </h4>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b dark:border-gray-700">
+              <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "rating")}
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "monthly")}
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "spouseAdd")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
+              <tr
+                key={rating}
+                className="border-b dark:border-gray-700"
+              >
+                <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
+                  {rating}%
+                </td>
+                <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                  $
+                  {(
+                    VA_PAY_RATES_2026.solo[rating] +
+                    VA_PAY_RATES_2026.spouse[rating]
+                  )?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
+                </td>
+                <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                  +$
+                  {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString(
+                    "en-US",
+                    { minimumFractionDigits: 2 },
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
-              {/* Added Amounts Table */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">
-                    ➕
-                  </span>
-                  {t("tacticalCalc", "additionalAmounts")}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  {t("tacticalCalc", "additionalAmountsNote")}
-                </p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b dark:border-gray-700">
-                        <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
-                          {t("tacticalCalc", "dependentType")}
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          30%
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          50%
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          70%
-                        </th>
-                        <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                          100%
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "spouse")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouse[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouse[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouse[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouse[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "spouseAA")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouseAidAttendance[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouseAidAttendance[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouseAidAttendance[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.spouseAidAttendance[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "firstChild")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.firstChild[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.firstChild[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.firstChild[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.firstChild[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "addlChildUnder18")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childUnder18[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childUnder18[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childUnder18[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childUnder18[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "childSchool")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childSchool[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childSchool[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childSchool[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.childSchool[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "oneParent")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentOne[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentOne[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentOne[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentOne[100]}
-                        </td>
-                      </tr>
-                      <tr className="border-b dark:border-gray-700">
-                        <td className="py-2 px-3 text-gray-900 dark:text-white">
-                          {t("tacticalCalc", "twoParents")}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentTwo[30]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentTwo[50]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentTwo[70]}
-                        </td>
-                        <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
-                          +${VA_PAY_RATES_2026.parentTwo[100]}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+const ADDED_AMOUNT_ROWS = [
+  { labelKey: "spouse", rateKey: "spouse" },
+  { labelKey: "spouseAA", rateKey: "spouseAidAttendance" },
+  { labelKey: "firstChild", rateKey: "firstChild" },
+  { labelKey: "addlChildUnder18", rateKey: "childUnder18" },
+  { labelKey: "childSchool", rateKey: "childSchool" },
+  { labelKey: "oneParent", rateKey: "parentOne" },
+  { labelKey: "twoParents", rateKey: "parentTwo" },
+];
 
-              {/* Quick Reference Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
-                  <div className="text-3xl font-bold">$3,938.58</div>
-                  <div className="text-green-100 text-sm">
-                    {t("tacticalCalc", "veteranAlone100")}
-                  </div>
-                  <div className="text-green-100 text-xs mt-1">
-                    $47,262.96/{t("tacticalCalc", "year")}
-                  </div>
-                </div>
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
-                  <div className="text-3xl font-bold">$4,158.17</div>
-                  <div className="text-blue-100 text-sm">
-                    {t("tacticalCalc", "withSpouse100")}
-                  </div>
-                  <div className="text-blue-100 text-xs mt-1">
-                    $49,898.04/{t("tacticalCalc", "year")}
-                  </div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
-                  <div className="text-3xl font-bold">$4,318.99</div>
-                  <div className="text-purple-100 text-sm">
-                    {t("tacticalCalc", "withSpouseChild100")}
-                  </div>
-                  <div className="text-purple-100 text-xs mt-1">
-                    $51,827.88/{t("tacticalCalc", "year")}
-                  </div>
-                </div>
-              </div>
+function AddedAmountRow({ t, labelKey, rateKey }) {
+  return (
+    <tr className="border-b dark:border-gray-700">
+      <td className="py-2 px-3 text-gray-900 dark:text-white">
+        {t("tacticalCalc", labelKey)}
+      </td>
+      {[30, 50, 70, 100].map((tier) => (
+        <td
+          key={tier}
+          className="py-2 px-3 text-right text-green-600 dark:text-green-400"
+        >
+          +${VA_PAY_RATES_2026[rateKey][tier]}
+        </td>
+      ))}
+    </tr>
+  );
+}
 
-              {/* COLA Note */}
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-                <div className="flex gap-3">
-                  <span className="text-xl">ℹ️</span>
-                  <div>
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                      <strong>{t("tacticalCalc", "colaTitle")}:</strong>{" "}
-                      {t("tacticalCalc", "colaDescription")}
-                    </p>
-                    <a
-                      href="https://www.ssa.gov/cola/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
-                    >
-                      {t("tacticalCalc", "learnMoreCola")} →
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+function AddedAmountsTable({ t }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+        <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">
+          ➕
+        </span>
+        {t("tacticalCalc", "additionalAmounts")}
+      </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        {t("tacticalCalc", "additionalAmountsNote")}
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b dark:border-gray-700">
+              <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
+                {t("tacticalCalc", "dependentType")}
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                30%
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                50%
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                70%
+              </th>
+              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
+                100%
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {ADDED_AMOUNT_ROWS.map((row) => (
+              <AddedAmountRow
+                key={row.rateKey}
+                t={t}
+                labelKey={row.labelKey}
+                rateKey={row.rateKey}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function RatesQuickReferenceCards({ t }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
+        <div className="text-3xl font-bold">$3,938.58</div>
+        <div className="text-green-100 text-sm">
+          {t("tacticalCalc", "veteranAlone100")}
+        </div>
+        <div className="text-green-100 text-xs mt-1">
+          $47,262.96/{t("tacticalCalc", "year")}
+        </div>
+      </div>
+      <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
+        <div className="text-3xl font-bold">$4,158.17</div>
+        <div className="text-blue-100 text-sm">
+          {t("tacticalCalc", "withSpouse100")}
+        </div>
+        <div className="text-blue-100 text-xs mt-1">
+          $49,898.04/{t("tacticalCalc", "year")}
+        </div>
+      </div>
+      <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
+        <div className="text-3xl font-bold">$4,318.99</div>
+        <div className="text-purple-100 text-sm">
+          {t("tacticalCalc", "withSpouseChild100")}
+        </div>
+        <div className="text-purple-100 text-xs mt-1">
+          $51,827.88/{t("tacticalCalc", "year")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ColaNote({ t }) {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+      <div className="flex gap-3">
+        <span className="text-xl">ℹ️</span>
+        <div>
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>{t("tacticalCalc", "colaTitle")}:</strong>{" "}
+            {t("tacticalCalc", "colaDescription")}
+          </p>
+          <a
+            href="https://www.ssa.gov/cola/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
+          >
+            {t("tacticalCalc", "learnMoreCola")} →
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RatesTab({ t }) {
+  return (
+    <div className="space-y-6">
+      <RatesHeaderInfo t={t} />
+
+      {/* Basic Rates - 10% to 20% */}
+      <BasicRatesCards t={t} />
+
+      {/* Veteran Alone Rates - 30% to 100% */}
+      <VeteranAloneRatesTable t={t} />
+
+      {/* With Spouse Rates */}
+      <WithSpouseRatesTable t={t} />
+
+      {/* Added Amounts Table */}
+      <AddedAmountsTable t={t} />
+
+      {/* Quick Reference Cards */}
+      <RatesQuickReferenceCards t={t} />
+
+      {/* COLA Note */}
+      <ColaNote t={t} />
+    </div>
   );
 }
 
