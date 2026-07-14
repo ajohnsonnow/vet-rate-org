@@ -507,7 +507,7 @@ function _drawRatingCriteriaSection(ctx) {
   }
 }
 
-function _drawDocumentationAndSecondarySection(ctx) {
+function _drawDocumentationRequirementsSection(ctx) {
   const {
     doc,
     pos,
@@ -517,10 +517,8 @@ function _drawDocumentationAndSecondarySection(ctx) {
     checkPageBreak,
     addHeading,
     addText,
-    addInfoBox,
     result,
   } = ctx;
-  // Documentation Requirements
   checkPageBreak(50);
   addHeading("Medical Documentation Requirements", 2);
   addText(
@@ -553,8 +551,20 @@ function _drawDocumentationAndSecondarySection(ctx) {
   });
 
   pos.y += 5;
+}
 
-  // Related Secondary Conditions
+function _drawRelatedSecondaryConditionsSection(ctx) {
+  const {
+    doc,
+    pos,
+    colors,
+    margin,
+    contentWidth,
+    checkPageBreak,
+    addHeading,
+    addInfoBox,
+    result,
+  } = ctx;
   if (
     result.relatedSecondaryConditions &&
     result.relatedSecondaryConditions.length > 0
@@ -610,6 +620,11 @@ function _drawDocumentationAndSecondarySection(ctx) {
     doc.setFontSize(10);
     pos.y += 5;
   }
+}
+
+function _drawDocumentationAndSecondarySection(ctx) {
+  _drawDocumentationRequirementsSection(ctx);
+  _drawRelatedSecondaryConditionsSection(ctx);
 }
 
 function _drawEmergencySupportSection(ctx) {
