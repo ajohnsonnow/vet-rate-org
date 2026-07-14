@@ -1698,6 +1698,990 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
   );
 }
 
+function SavedFormEntry({ form, setViewingForm, handleRemoveForm, t }) {
+  return (
+    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-purple-300 dark:hover:border-purple-500 transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
+              {form.title || form.formName || "Untitled Form"}
+            </h3>
+            <span className="px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-100 border-purple-300 dark:border-purple-700 whitespace-nowrap">
+              {form.formNumber || form.formType || "Form"}
+            </span>
+          </div>
+
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            {form.formName}
+          </p>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.saved")}:{" "}
+            {new Date(form.dateSaved).toLocaleDateString()}
+            {form.dateUpdated &&
+              ` • ${t("myPacketSection.updated")}: ${new Date(form.dateUpdated).toLocaleDateString()}`}
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewingForm(form)}
+            className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+          >
+            {t("myPacketSection.view")}
+          </button>
+          <button
+            onClick={() => handleRemoveForm(form.id)}
+            className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+          >
+            {t("myPacketSection.remove")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormsTab({ savedForms, setViewingForm, handleRemoveForm, t }) {
+  if (savedForms.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <svg
+          className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          📄 {t("myPacketSection.noSavedForms")}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          {t("myPacketSection.formsDescription")}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {savedForms.map((form) => (
+        <SavedFormEntry
+          key={form.id}
+          form={form}
+          setViewingForm={setViewingForm}
+          handleRemoveForm={handleRemoveForm}
+          t={t}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DD214DropZone({
+  dd214FileInputRef,
+  handleDD214DragOver,
+  handleDD214DragLeave,
+  handleDD214Drop,
+  handleDD214FileSelect,
+  isDraggingDD214,
+  t,
+}) {
+  return (
+    <div className="space-y-4">
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div
+        onClick={() => dd214FileInputRef.current?.click()}
+        onDragOver={handleDD214DragOver}
+        onDragLeave={handleDD214DragLeave}
+        onDrop={handleDD214Drop}
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+          isDraggingDD214
+            ? "border-blue-500 bg-blue-100 dark:bg-blue-900/40 scale-[1.02]"
+            : "border-blue-300 dark:border-blue-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+        }`}
+      >
+        <input
+          ref={dd214FileInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          onChange={handleDD214FileSelect}
+          className="hidden"
+        />
+        <svg
+          className="w-12 h-12 text-blue-400 mx-auto mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+        <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">
+          {isDraggingDD214
+            ? `📥 ${t("myPacketSection.dropDD214Here")}`
+            : `📄 ${t("myPacketSection.dragDropDD214")}`}
+        </p>
+        <p className="text-sm text-blue-600 dark:text-blue-400">
+          {t("myPacketSection.orClickToBrowse")}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
+          🔒 {t("myPacketSection.dd214PrivacyNote")}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
+        <span className="text-sm text-blue-600 dark:text-blue-400">
+          {t("myPacketSection.or")}
+        </span>
+        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
+      </div>
+
+      <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
+        {t("myPacketSection.dd214UseButtonsAbove")}
+      </p>
+    </div>
+  );
+}
+
+function DD214PasteProcessor({
+  dd214Text,
+  setDD214Text,
+  handleProcessDD214,
+  isProcessingDD214,
+  aiStatus,
+  onOpenAISettings,
+  setShowDD214Processor,
+  setDD214Text2,
+  t,
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-blue-700 dark:text-blue-300">
+        {t("myPacketSection.dd214PasteInstructions")}
+        <br />
+        <span className="text-xs text-blue-600 dark:text-blue-400">
+          ⚠️ {t("myPacketSection.dd214SensitiveWarning")}
+        </span>
+      </p>
+      <textarea
+        value={dd214Text}
+        onChange={(e) => setDD214Text(e.target.value)}
+        placeholder={t("myPacketSection.dd214TextareaPlaceholder")}
+        rows={6}
+        className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
+      />
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={handleProcessDD214}
+          disabled={isProcessingDD214 || !aiStatus.available}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+        >
+          {isProcessingDD214 ? (
+            <>
+              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              {t("myPacketSection.processing")}
+            </>
+          ) : (
+            <>🤖 {t("myPacketSection.extractWithAI")}</>
+          )}
+        </button>
+        <button
+          disabled
+          className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
+          aria-label="DD214 Analyzer - Coming Soon"
+        >
+          📄 {t("myPacketSection.fullAnalyzerComingSoon")}
+        </button>
+        <button
+          onClick={onOpenAISettings}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          aria-label="Open Faraday Cage - AI Settings"
+        >
+          ⚙️ {t("myPacketSection.aiSettings")}
+        </button>
+        <button
+          onClick={() => {
+            setShowDD214Processor(false);
+            setDD214Text2("");
+          }}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          {t("myPacketSection.cancel")}
+        </button>
+      </div>
+      {!aiStatus.available && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          ⚠️ {t("myPacketSection.configureAIWarning")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DD214DataGridA({ d, t }) {
+  return (
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.branch")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.branch || "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.mos")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.mos || "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.mosTitle")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+          {d.mosTitle || "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.entryDate")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.entryDate || "N/A"}
+        </p>
+      </div>
+    </>
+  );
+}
+
+function DD214DataGridB({ d, t }) {
+  return (
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.separationDate")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.separationDate || "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.timeInService")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.yearsService ? `${d.yearsService}y ${d.monthsService || 0}m` : "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.characterOfService")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.characterOfService || "N/A"}
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.foreignService")}
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {d.foreignService ? t("myPacketSection.yes") : t("myPacketSection.no")}
+        </p>
+      </div>
+    </>
+  );
+}
+
+function DD214DataActions({ setShowDD214Processor, handleClearDD214, t }) {
+  return (
+    <div className="flex flex-wrap gap-2 pt-2">
+      <button
+        onClick={() => setShowDD214Processor(true)}
+        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+      >
+        🔄 {t("myPacketSection.reprocessDD214")}
+      </button>
+      <button
+        disabled
+        className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
+        aria-label="Coming Soon"
+      >
+        📄 {t("myPacketSection.fullAnalyzerComingSoon")}
+      </button>
+      <button
+        onClick={handleClearDD214}
+        className="text-sm text-red-600 dark:text-red-400 hover:underline"
+      >
+        🗑️ {t("myPacketSection.clearDD214Data")}
+      </button>
+    </div>
+  );
+}
+
+function DD214ExtractedDataDisplay({
+  serviceHistory,
+  setShowDD214Processor,
+  handleClearDD214,
+  t,
+}) {
+  const d = serviceHistory.dd214Data;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <DD214DataGridA d={d} t={t} />
+        <DD214DataGridB d={d} t={t} />
+      </div>
+      <DD214DataActions
+        setShowDD214Processor={setShowDD214Processor}
+        handleClearDD214={handleClearDD214}
+        t={t}
+      />
+    </div>
+  );
+}
+
+function DD214SectionHeader({
+  aiStatus,
+  showDD214Processor,
+  setShowDD214Processor,
+  serviceHistory,
+  t,
+}) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+        📜 {t("myPacketSection.dd214Information")}
+        {aiStatus.available && (
+          <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+            {t("myPacketSection.aiReady")}
+          </span>
+        )}
+      </h3>
+      {!showDD214Processor && !serviceHistory.dd214Data && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowDD214Processor(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            📝 {t("myPacketSection.pasteText")}
+          </button>
+          <button
+            disabled
+            className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
+            aria-label="DD214 Analyzer - Coming Soon"
+          >
+            📄 {t("myPacketSection.fullAnalyzerComingSoon")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DD214Section({
+  aiStatus,
+  showDD214Processor,
+  setShowDD214Processor,
+  serviceHistory,
+  dd214FileInputRef,
+  handleDD214DragOver,
+  handleDD214DragLeave,
+  handleDD214Drop,
+  handleDD214FileSelect,
+  isDraggingDD214,
+  dd214Text,
+  setDD214Text,
+  handleProcessDD214,
+  isProcessingDD214,
+  onOpenAISettings,
+  handleClearDD214,
+  t,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+      <DD214SectionHeader
+        aiStatus={aiStatus}
+        showDD214Processor={showDD214Processor}
+        setShowDD214Processor={setShowDD214Processor}
+        serviceHistory={serviceHistory}
+        t={t}
+      />
+
+      {!serviceHistory.dd214Data && !showDD214Processor && (
+        <DD214DropZone
+          dd214FileInputRef={dd214FileInputRef}
+          handleDD214DragOver={handleDD214DragOver}
+          handleDD214DragLeave={handleDD214DragLeave}
+          handleDD214Drop={handleDD214Drop}
+          handleDD214FileSelect={handleDD214FileSelect}
+          isDraggingDD214={isDraggingDD214}
+          t={t}
+        />
+      )}
+
+      {showDD214Processor && (
+        <DD214PasteProcessor
+          dd214Text={dd214Text}
+          setDD214Text={setDD214Text}
+          handleProcessDD214={handleProcessDD214}
+          isProcessingDD214={isProcessingDD214}
+          aiStatus={aiStatus}
+          onOpenAISettings={onOpenAISettings}
+          setShowDD214Processor={setShowDD214Processor}
+          setDD214Text2={setDD214Text}
+          t={t}
+        />
+      )}
+
+      {serviceHistory.dd214Data && !showDD214Processor && (
+        <DD214ExtractedDataDisplay
+          serviceHistory={serviceHistory}
+          setShowDD214Processor={setShowDD214Processor}
+          handleClearDD214={handleClearDD214}
+          t={t}
+        />
+      )}
+    </div>
+  );
+}
+
+function DeploymentTheaterField({ newDeployment, setNewDeployment, t }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("myPacketSection.theaterOperation")} *
+      </label>
+      <select
+        value={newDeployment.theater}
+        onChange={(e) =>
+          setNewDeployment((prev) => ({ ...prev, theater: e.target.value }))
+        }
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      >
+        <option value="">{t("myPacketSection.selectEllipsis")}</option>
+        <option value="OIF">OIF - Operation Iraqi Freedom</option>
+        <option value="OEF">OEF - Operation Enduring Freedom</option>
+        <option value="OND">OND - Operation New Dawn</option>
+        <option value="OIR">OIR - Operation Inherent Resolve</option>
+        <option value="OFS">OFS - Operation Freedom&apos;s Sentinel</option>
+        <option value="Gulf War">Gulf War</option>
+        <option value="Vietnam">Vietnam</option>
+        <option value="Korea">Korea</option>
+        <option value="Somalia">Somalia</option>
+        <option value="Bosnia">Bosnia</option>
+        <option value="Kosovo">Kosovo</option>
+        <option value="Europe">Europe (Other)</option>
+        <option value="Pacific">Pacific</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+  );
+}
+
+function DeploymentFormFields({ newDeployment, setNewDeployment, t }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <DeploymentTheaterField
+        newDeployment={newDeployment}
+        setNewDeployment={setNewDeployment}
+        t={t}
+      />
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.location")} *
+        </label>
+        <input
+          type="text"
+          value={newDeployment.location}
+          onChange={(e) =>
+            setNewDeployment((prev) => ({ ...prev, location: e.target.value }))
+          }
+          placeholder={t("myPacketSection.locationPlaceholder")}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.startDate")}
+        </label>
+        <input
+          type="date"
+          value={newDeployment.startDate}
+          onChange={(e) =>
+            setNewDeployment((prev) => ({ ...prev, startDate: e.target.value }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.endDate")}
+        </label>
+        <input
+          type="date"
+          value={newDeployment.endDate}
+          onChange={(e) =>
+            setNewDeployment((prev) => ({ ...prev, endDate: e.target.value }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.unit")}
+        </label>
+        <input
+          type="text"
+          value={newDeployment.unit}
+          onChange={(e) =>
+            setNewDeployment((prev) => ({ ...prev, unit: e.target.value }))
+          }
+          placeholder={t("myPacketSection.unitPlaceholder")}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+    </div>
+  );
+}
+
+function DeploymentFormActions({
+  newDeployment,
+  setNewDeployment,
+  handleAddDeployment,
+  setShowDeploymentForm,
+  t,
+}) {
+  return (
+    <>
+      <div className="flex gap-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={newDeployment.combat}
+            onChange={(e) =>
+              setNewDeployment((prev) => ({ ...prev, combat: e.target.checked }))
+            }
+            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {t("myPacketSection.combatZone")}
+          </span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={newDeployment.hazardous}
+            onChange={(e) =>
+              setNewDeployment((prev) => ({
+                ...prev,
+                hazardous: e.target.checked,
+              }))
+            }
+            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {t("myPacketSection.hazardousDuty")}
+          </span>
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleAddDeployment}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+        >
+          {t("myPacketSection.saveDeployment")}
+        </button>
+        <button
+          onClick={() => {
+            setShowDeploymentForm(false);
+            setNewDeployment({
+              theater: "",
+              location: "",
+              startDate: "",
+              endDate: "",
+              unit: "",
+              notes: "",
+              hazardous: false,
+              combat: false,
+            });
+          }}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          {t("myPacketSection.cancel")}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function DeploymentAddForm({
+  newDeployment,
+  setNewDeployment,
+  handleAddDeployment,
+  setShowDeploymentForm,
+  t,
+}) {
+  return (
+    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-4 space-y-4">
+      <DeploymentFormFields
+        newDeployment={newDeployment}
+        setNewDeployment={setNewDeployment}
+        t={t}
+      />
+      <DeploymentFormActions
+        newDeployment={newDeployment}
+        setNewDeployment={setNewDeployment}
+        handleAddDeployment={handleAddDeployment}
+        setShowDeploymentForm={setShowDeploymentForm}
+        t={t}
+      />
+    </div>
+  );
+}
+
+function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
+  return (
+    <div className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {dep.theater}
+          </span>
+          {dep.combat && (
+            <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
+              {t("myPacketSection.combat")}
+            </span>
+          )}
+          {dep.hazardous && (
+            <span className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+              {t("myPacketSection.hazardous")}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{dep.location}</p>
+        {(dep.startDate || dep.endDate) && (
+          <p className="text-xs text-gray-500 dark:text-gray-500">
+            {dep.startDate || "?"} -{" "}
+            {dep.endDate || t("myPacketSection.present")}
+          </p>
+        )}
+        {dep.unit && (
+          <p className="text-xs text-gray-500 dark:text-gray-500">{dep.unit}</p>
+        )}
+      </div>
+      <button
+        onClick={() => handleRemoveDeployment(dep.id)}
+        className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+      >
+        🗑️
+      </button>
+    </div>
+  );
+}
+
+function DeploymentsSection({
+  serviceHistory,
+  showDeploymentForm,
+  setShowDeploymentForm,
+  newDeployment,
+  setNewDeployment,
+  handleAddDeployment,
+  handleRemoveDeployment,
+  t,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          🌍 {t("myPacketSection.deployments")}
+        </h3>
+        {!showDeploymentForm && (
+          <button
+            onClick={() => setShowDeploymentForm(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            ➕ {t("myPacketSection.addDeployment")}
+          </button>
+        )}
+      </div>
+
+      {showDeploymentForm && (
+        <DeploymentAddForm
+          newDeployment={newDeployment}
+          setNewDeployment={setNewDeployment}
+          handleAddDeployment={handleAddDeployment}
+          setShowDeploymentForm={setShowDeploymentForm}
+          t={t}
+        />
+      )}
+
+      {serviceHistory.deployments.length === 0 && !showDeploymentForm ? (
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          {t("myPacketSection.noDeploymentsYet")}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {serviceHistory.deployments.map((dep) => (
+            <DeploymentEntry
+              key={dep.id}
+              dep={dep}
+              handleRemoveDeployment={handleRemoveDeployment}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AwardFormFields({ newAward, setNewAward, t }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.awardName")} *
+        </label>
+        <input
+          type="text"
+          value={newAward.name}
+          onChange={(e) =>
+            setNewAward((prev) => ({ ...prev, name: e.target.value }))
+          }
+          placeholder={t("myPacketSection.awardNamePlaceholder")}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.abbreviation")}
+        </label>
+        <input
+          type="text"
+          value={newAward.abbreviation}
+          onChange={(e) =>
+            setNewAward((prev) => ({ ...prev, abbreviation: e.target.value }))
+          }
+          placeholder={t("myPacketSection.abbreviationPlaceholder")}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.dateReceived")}
+        </label>
+        <input
+          type="date"
+          value={newAward.dateReceived}
+          onChange={(e) =>
+            setNewAward((prev) => ({ ...prev, dateReceived: e.target.value }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+      </div>
+      <div className="flex items-end pb-2">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={newAward.isCombat}
+            onChange={(e) =>
+              setNewAward((prev) => ({ ...prev, isCombat: e.target.checked }))
+            }
+            className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {t("myPacketSection.combatRelatedAward")}
+          </span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function AwardFormActions({ setNewAward, handleAddAward, setShowAwardForm, t }) {
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={handleAddAward}
+        className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+      >
+        {t("myPacketSection.saveAward")}
+      </button>
+      <button
+        onClick={() => {
+          setShowAwardForm(false);
+          setNewAward({
+            name: "",
+            abbreviation: "",
+            dateReceived: "",
+            notes: "",
+            isCombat: false,
+          });
+        }}
+        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        {t("myPacketSection.cancel")}
+      </button>
+    </div>
+  );
+}
+
+function AwardAddForm({ newAward, setNewAward, handleAddAward, setShowAwardForm, t }) {
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 mb-4 space-y-4">
+      <AwardFormFields newAward={newAward} setNewAward={setNewAward} t={t} />
+      <AwardFormActions
+        setNewAward={setNewAward}
+        handleAddAward={handleAddAward}
+        setShowAwardForm={setShowAwardForm}
+        t={t}
+      />
+    </div>
+  );
+}
+
+function AwardChip({ award, handleRemoveAward, t }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+      <span className="text-amber-700 dark:text-amber-300 font-medium">
+        🎖️ {award.abbreviation || award.name}
+      </span>
+      {award.isCombat && (
+        <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">
+          {t("myPacketSection.combat")}
+        </span>
+      )}
+      <button
+        onClick={() => handleRemoveAward(award.id)}
+        className="text-red-400 hover:text-red-600 text-sm"
+        aria-label={`Remove ${award.name}`}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function AwardsSection({
+  serviceHistory,
+  showAwardForm,
+  setShowAwardForm,
+  newAward,
+  setNewAward,
+  handleAddAward,
+  handleRemoveAward,
+  t,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          🎖️ {t("myPacketSection.awardsDecorations")}
+        </h3>
+        {!showAwardForm && (
+          <button
+            onClick={() => setShowAwardForm(true)}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+          >
+            ➕ {t("myPacketSection.addAward")}
+          </button>
+        )}
+      </div>
+
+      {showAwardForm && (
+        <AwardAddForm
+          newAward={newAward}
+          setNewAward={setNewAward}
+          handleAddAward={handleAddAward}
+          setShowAwardForm={setShowAwardForm}
+          t={t}
+        />
+      )}
+
+      {serviceHistory.awards.length === 0 && !showAwardForm ? (
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          {t("myPacketSection.noAwardsYet")}
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {serviceHistory.awards.map((award) => (
+            <AwardChip
+              key={award.id}
+              award={award}
+              handleRemoveAward={handleRemoveAward}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RibbonRackSection({ serviceHistory, showRibbonRack, setShowRibbonRack }) {
+  if (serviceHistory.awards.length === 0) return null;
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          🎗️ Ribbon Rack
+        </h3>
+        <button
+          onClick={() => setShowRibbonRack(!showRibbonRack)}
+          className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
+          {showRibbonRack ? "Hide" : "View Ribbon Rack"}
+        </button>
+      </div>
+      {showRibbonRack && (
+        <div className="flex justify-center p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+          <RibbonRackDisplay
+            awards={serviceHistory.awards}
+            ribbonsPerRow={3}
+            size="md"
+            showNames={true}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ServiceTab(props) {
+  const { t } = props;
+  return (
+    <div className="space-y-6">
+      <DD214Section {...props} />
+      <DeploymentsSection {...props} />
+      <AwardsSection {...props} />
+      <RibbonRackSection {...props} />
+
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
+          {t("myPacketSection.serviceHistoryBannerText")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -2620,79 +3604,12 @@ Return ONLY the JSON object, no explanation.`,
 
             {/* FORMS TAB */}
             {activeTab === "forms" && (
-              <>
-                {savedForms.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      📄 {t("myPacketSection.noSavedForms")}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {t("myPacketSection.formsDescription")}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {savedForms.map((form) => (
-                      <div
-                        key={form.id}
-                        className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-purple-300 dark:hover:border-purple-500 transition-all"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
-                                {form.title || form.formName || "Untitled Form"}
-                              </h3>
-                              <span className="px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-100 border-purple-300 dark:border-purple-700 whitespace-nowrap">
-                                {form.formNumber || form.formType || "Form"}
-                              </span>
-                            </div>
-
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                              {form.formName}
-                            </p>
-
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {t("myPacketSection.saved")}:{" "}
-                              {new Date(form.dateSaved).toLocaleDateString()}
-                              {form.dateUpdated &&
-                                ` • ${t("myPacketSection.updated")}: ${new Date(form.dateUpdated).toLocaleDateString()}`}
-                            </p>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setViewingForm(form)}
-                              className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-                            >
-                              {t("myPacketSection.view")}
-                            </button>
-                            <button
-                              onClick={() => handleRemoveForm(form.id)}
-                              className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                            >
-                              {t("myPacketSection.remove")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
+              <FormsTab
+                savedForms={savedForms}
+                setViewingForm={setViewingForm}
+                handleRemoveForm={handleRemoveForm}
+                t={t}
+              />
             )}
 
             {/* VA RECORDS TAB - Full VA Data Center */}
@@ -2700,697 +3617,39 @@ Return ONLY the JSON object, no explanation.`,
 
             {/* SERVICE HISTORY TAB */}
             {activeTab === "service" && (
-              <div className="space-y-6">
-                {/* DD214 Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                      📜 {t("myPacketSection.dd214Information")}
-                      {aiStatus.available && (
-                        <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
-                          {t("myPacketSection.aiReady")}
-                        </span>
-                      )}
-                    </h3>
-                    {!showDD214Processor && !serviceHistory.dd214Data && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setShowDD214Processor(true)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                        >
-                          📝 {t("myPacketSection.pasteText")}
-                        </button>
-                        <button
-                          disabled
-                          className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          aria-label="DD214 Analyzer - Coming Soon"
-                        >
-                          📄 {t("myPacketSection.fullAnalyzerComingSoon")}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Drop Zone for DD214 - when no data and not processing */}
-                  {!serviceHistory.dd214Data && !showDD214Processor && (
-                    <div className="space-y-4">
-                      {/* Drag & Drop Zone */}
-                      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                      <div
-                        onClick={() => dd214FileInputRef.current?.click()}
-                        onDragOver={handleDD214DragOver}
-                        onDragLeave={handleDD214DragLeave}
-                        onDrop={handleDD214Drop}
-                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
-                          isDraggingDD214
-                            ? "border-blue-500 bg-blue-100 dark:bg-blue-900/40 scale-[1.02]"
-                            : "border-blue-300 dark:border-blue-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                        }`}
-                      >
-                        <input
-                          ref={dd214FileInputRef}
-                          type="file"
-                          accept="application/pdf,.pdf"
-                          onChange={handleDD214FileSelect}
-                          className="hidden"
-                        />
-                        <svg
-                          className="w-12 h-12 text-blue-400 mx-auto mb-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                        <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">
-                          {isDraggingDD214
-                            ? `📥 ${t("myPacketSection.dropDD214Here")}`
-                            : `📄 ${t("myPacketSection.dragDropDD214")}`}
-                        </p>
-                        <p className="text-sm text-blue-600 dark:text-blue-400">
-                          {t("myPacketSection.orClickToBrowse")}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
-                          🔒 {t("myPacketSection.dd214PrivacyNote")}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
-                        <span className="text-sm text-blue-600 dark:text-blue-400">
-                          {t("myPacketSection.or")}
-                        </span>
-                        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
-                      </div>
-
-                      <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
-                        {t("myPacketSection.dd214UseButtonsAbove")}
-                      </p>
-                    </div>
-                  )}
-
-                  {showDD214Processor && (
-                    <div className="space-y-4">
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        {t("myPacketSection.dd214PasteInstructions")}
-                        <br />
-                        <span className="text-xs text-blue-600 dark:text-blue-400">
-                          ⚠️ {t("myPacketSection.dd214SensitiveWarning")}
-                        </span>
-                      </p>
-                      <textarea
-                        value={dd214Text}
-                        onChange={(e) => setDD214Text(e.target.value)}
-                        placeholder={t(
-                          "myPacketSection.dd214TextareaPlaceholder",
-                        )}
-                        rows={6}
-                        className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
-                      />
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={handleProcessDD214}
-                          disabled={isProcessingDD214 || !aiStatus.available}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                        >
-                          {isProcessingDD214 ? (
-                            <>
-                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                              {t("myPacketSection.processing")}
-                            </>
-                          ) : (
-                            <>🤖 {t("myPacketSection.extractWithAI")}</>
-                          )}
-                        </button>
-                        <button
-                          disabled
-                          className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
-                          aria-label="DD214 Analyzer - Coming Soon"
-                        >
-                          📄 {t("myPacketSection.fullAnalyzerComingSoon")}
-                        </button>
-                        <button
-                          onClick={onOpenAISettings}
-                          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                          aria-label="Open Faraday Cage - AI Settings"
-                        >
-                          ⚙️ {t("myPacketSection.aiSettings")}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowDD214Processor(false);
-                            setDD214Text("");
-                          }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {t("myPacketSection.cancel")}
-                        </button>
-                      </div>
-                      {!aiStatus.available && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          ⚠️ {t("myPacketSection.configureAIWarning")}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {serviceHistory.dd214Data && !showDD214Processor && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.branch")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.branch || "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.mos")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.mos || "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.mosTitle")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                            {serviceHistory.dd214Data.mosTitle || "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.entryDate")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.entryDate || "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.separationDate")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.separationDate || "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.timeInService")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.yearsService
-                              ? `${serviceHistory.dd214Data.yearsService}y ${serviceHistory.dd214Data.monthsService || 0}m`
-                              : "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.characterOfService")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.characterOfService ||
-                              "N/A"}
-                          </p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t("myPacketSection.foreignService")}
-                          </p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">
-                            {serviceHistory.dd214Data.foreignService
-                              ? t("myPacketSection.yes")
-                              : t("myPacketSection.no")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        <button
-                          onClick={() => setShowDD214Processor(true)}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          🔄 {t("myPacketSection.reprocessDD214")}
-                        </button>
-                        <button
-                          disabled
-                          className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                          aria-label="Coming Soon"
-                        >
-                          📄 {t("myPacketSection.fullAnalyzerComingSoon")}
-                        </button>
-                        <button
-                          onClick={handleClearDD214}
-                          className="text-sm text-red-600 dark:text-red-400 hover:underline"
-                        >
-                          🗑️ {t("myPacketSection.clearDD214Data")}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Deployments Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      🌍 {t("myPacketSection.deployments")}
-                    </h3>
-                    {!showDeploymentForm && (
-                      <button
-                        onClick={() => setShowDeploymentForm(true)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                      >
-                        ➕ {t("myPacketSection.addDeployment")}
-                      </button>
-                    )}
-                  </div>
-
-                  {showDeploymentForm && (
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.theaterOperation")} *
-                          </label>
-                          <select
-                            value={newDeployment.theater}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                theater: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">
-                              {t("myPacketSection.selectEllipsis")}
-                            </option>
-                            <option value="OIF">
-                              OIF - Operation Iraqi Freedom
-                            </option>
-                            <option value="OEF">
-                              OEF - Operation Enduring Freedom
-                            </option>
-                            <option value="OND">
-                              OND - Operation New Dawn
-                            </option>
-                            <option value="OIR">
-                              OIR - Operation Inherent Resolve
-                            </option>
-                            <option value="OFS">
-                              OFS - Operation Freedom&apos;s Sentinel
-                            </option>
-                            <option value="Gulf War">Gulf War</option>
-                            <option value="Vietnam">Vietnam</option>
-                            <option value="Korea">Korea</option>
-                            <option value="Somalia">Somalia</option>
-                            <option value="Bosnia">Bosnia</option>
-                            <option value="Kosovo">Kosovo</option>
-                            <option value="Europe">Europe (Other)</option>
-                            <option value="Pacific">Pacific</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.location")} *
-                          </label>
-                          <input
-                            type="text"
-                            value={newDeployment.location}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                location: e.target.value,
-                              }))
-                            }
-                            placeholder={t(
-                              "myPacketSection.locationPlaceholder",
-                            )}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.startDate")}
-                          </label>
-                          <input
-                            type="date"
-                            value={newDeployment.startDate}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                startDate: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.endDate")}
-                          </label>
-                          <input
-                            type="date"
-                            value={newDeployment.endDate}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                endDate: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.unit")}
-                          </label>
-                          <input
-                            type="text"
-                            value={newDeployment.unit}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                unit: e.target.value,
-                              }))
-                            }
-                            placeholder={t("myPacketSection.unitPlaceholder")}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={newDeployment.combat}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                combat: e.target.checked,
-                              }))
-                            }
-                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {t("myPacketSection.combatZone")}
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={newDeployment.hazardous}
-                            onChange={(e) =>
-                              setNewDeployment((prev) => ({
-                                ...prev,
-                                hazardous: e.target.checked,
-                              }))
-                            }
-                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {t("myPacketSection.hazardousDuty")}
-                          </span>
-                        </label>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleAddDeployment}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-                        >
-                          {t("myPacketSection.saveDeployment")}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowDeploymentForm(false);
-                            setNewDeployment({
-                              theater: "",
-                              location: "",
-                              startDate: "",
-                              endDate: "",
-                              unit: "",
-                              notes: "",
-                              hazardous: false,
-                              combat: false,
-                            });
-                          }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {t("myPacketSection.cancel")}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {serviceHistory.deployments.length === 0 &&
-                  !showDeploymentForm ? (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      {t("myPacketSection.noDeploymentsYet")}
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {serviceHistory.deployments.map((dep) => (
-                        <div
-                          key={dep.id}
-                          className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                {dep.theater}
-                              </span>
-                              {dep.combat && (
-                                <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
-                                  {t("myPacketSection.combat")}
-                                </span>
-                              )}
-                              {dep.hazardous && (
-                                <span className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
-                                  {t("myPacketSection.hazardous")}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {dep.location}
-                            </p>
-                            {(dep.startDate || dep.endDate) && (
-                              <p className="text-xs text-gray-500 dark:text-gray-500">
-                                {dep.startDate || "?"} -{" "}
-                                {dep.endDate || t("myPacketSection.present")}
-                              </p>
-                            )}
-                            {dep.unit && (
-                              <p className="text-xs text-gray-500 dark:text-gray-500">
-                                {dep.unit}
-                              </p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleRemoveDeployment(dep.id)}
-                            className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Awards Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      🎖️ {t("myPacketSection.awardsDecorations")}
-                    </h3>
-                    {!showAwardForm && (
-                      <button
-                        onClick={() => setShowAwardForm(true)}
-                        className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
-                      >
-                        ➕ {t("myPacketSection.addAward")}
-                      </button>
-                    )}
-                  </div>
-
-                  {showAwardForm && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 mb-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.awardName")} *
-                          </label>
-                          <input
-                            type="text"
-                            value={newAward.name}
-                            onChange={(e) =>
-                              setNewAward((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            placeholder={t(
-                              "myPacketSection.awardNamePlaceholder",
-                            )}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.abbreviation")}
-                          </label>
-                          <input
-                            type="text"
-                            value={newAward.abbreviation}
-                            onChange={(e) =>
-                              setNewAward((prev) => ({
-                                ...prev,
-                                abbreviation: e.target.value,
-                              }))
-                            }
-                            placeholder={t(
-                              "myPacketSection.abbreviationPlaceholder",
-                            )}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t("myPacketSection.dateReceived")}
-                          </label>
-                          <input
-                            type="date"
-                            value={newAward.dateReceived}
-                            onChange={(e) =>
-                              setNewAward((prev) => ({
-                                ...prev,
-                                dateReceived: e.target.value,
-                              }))
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div className="flex items-end pb-2">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={newAward.isCombat}
-                              onChange={(e) =>
-                                setNewAward((prev) => ({
-                                  ...prev,
-                                  isCombat: e.target.checked,
-                                }))
-                              }
-                              className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-                            />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {t("myPacketSection.combatRelatedAward")}
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleAddAward}
-                          className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
-                        >
-                          {t("myPacketSection.saveAward")}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowAwardForm(false);
-                            setNewAward({
-                              name: "",
-                              abbreviation: "",
-                              dateReceived: "",
-                              notes: "",
-                              isCombat: false,
-                            });
-                          }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {t("myPacketSection.cancel")}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {serviceHistory.awards.length === 0 && !showAwardForm ? (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      {t("myPacketSection.noAwardsYet")}
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {serviceHistory.awards.map((award) => (
-                        <div
-                          key={award.id}
-                          className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg"
-                        >
-                          <span className="text-amber-700 dark:text-amber-300 font-medium">
-                            🎖️ {award.abbreviation || award.name}
-                          </span>
-                          {award.isCombat && (
-                            <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">
-                              {t("myPacketSection.combat")}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleRemoveAward(award.id)}
-                            className="text-red-400 hover:text-red-600 text-sm"
-                            aria-label={`Remove ${award.name}`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Ribbon Rack */}
-                {serviceHistory.awards.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        🎗️ Ribbon Rack
-                      </h3>
-                      <button
-                        onClick={() => setShowRibbonRack(!showRibbonRack)}
-                        className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                      >
-                        {showRibbonRack ? "Hide" : "View Ribbon Rack"}
-                      </button>
-                    </div>
-                    {showRibbonRack && (
-                      <div className="flex justify-center p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                        <RibbonRackDisplay
-                          awards={serviceHistory.awards}
-                          ribbonsPerRow={3}
-                          size="md"
-                          showNames={true}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Info Banner */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
-                    {t("myPacketSection.serviceHistoryBannerText")}
-                  </p>
-                </div>
-              </div>
+              <ServiceTab
+                aiStatus={aiStatus}
+                showDD214Processor={showDD214Processor}
+                setShowDD214Processor={setShowDD214Processor}
+                serviceHistory={serviceHistory}
+                dd214FileInputRef={dd214FileInputRef}
+                handleDD214DragOver={handleDD214DragOver}
+                handleDD214DragLeave={handleDD214DragLeave}
+                handleDD214Drop={handleDD214Drop}
+                handleDD214FileSelect={handleDD214FileSelect}
+                isDraggingDD214={isDraggingDD214}
+                dd214Text={dd214Text}
+                setDD214Text={setDD214Text}
+                handleProcessDD214={handleProcessDD214}
+                isProcessingDD214={isProcessingDD214}
+                onOpenAISettings={onOpenAISettings}
+                handleClearDD214={handleClearDD214}
+                showDeploymentForm={showDeploymentForm}
+                setShowDeploymentForm={setShowDeploymentForm}
+                newDeployment={newDeployment}
+                setNewDeployment={setNewDeployment}
+                handleAddDeployment={handleAddDeployment}
+                handleRemoveDeployment={handleRemoveDeployment}
+                showAwardForm={showAwardForm}
+                setShowAwardForm={setShowAwardForm}
+                newAward={newAward}
+                setNewAward={setNewAward}
+                handleAddAward={handleAddAward}
+                handleRemoveAward={handleRemoveAward}
+                showRibbonRack={showRibbonRack}
+                setShowRibbonRack={setShowRibbonRack}
+                t={t}
+              />
             )}
 
             {/* CLAIMS TAB */}
