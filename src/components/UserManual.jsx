@@ -3836,6 +3836,246 @@ Available 24/7
 };
 
 // Simple markdown-like renderer
+function _createManualParserState() {
+  return {
+    elements: [],
+    tableRows: [],
+    inList: false,
+    listItems: [],
+    blockquoteContent: [],
+  };
+}
+
+function _renderInline(text) {
+  if (!text) return text;
+
+  // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
+  // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
+  // edit to the manual strings is inert. The CSP is NOT a backstop here
+  // (script-src 'unsafe-inline' is set).
+  text = escapeHtml(text);
+
+  // Handle bold
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Handle inline code
+  text = text.replace(
+    /`(.+?)`/g,
+    '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
+  );
+  // Handle links — sanitize the href so a future contributor cannot land a
+  // javascript: URL in the static manual content. sanitizeUrl returns '#'
+  // for any non-http(s)/mailto/tel protocol.
+  // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
+  text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
+    const safeUrl = sanitizeUrl(url);
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+  });
+
+  // Safe-by-construction: input is escapeHtml()'d first (above), then only a
+  // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
+  // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
+  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
+  return <span dangerouslySetInnerHTML={{ __html: text }} />;
+}
+
+function _flushList(state) {
+  if (state.listItems.length > 0) {
+    state.elements.push(
+      <ul
+        key={`list-${state.elements.length}`}
+        className="list-disc pl-6 mb-4 space-y-1"
+      >
+        {state.listItems.map((item, i) => (
+          <li key={i} className="text-gray-700 dark:text-gray-300">
+            {_renderInline(item)}
+          </li>
+        ))}
+      </ul>,
+    );
+    state.listItems = [];
+    state.inList = false;
+  }
+}
+
+function _flushBlockquote(state) {
+  if (state.blockquoteContent.length > 0) {
+    state.elements.push(
+      <blockquote
+        key={`bq-${state.elements.length}`}
+        className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
+      >
+        {state.blockquoteContent.map((line, i) => (
+          <p key={i} className="text-gray-700 dark:text-gray-300">
+            {_renderInline(line)}
+          </p>
+        ))}
+      </blockquote>,
+    );
+    state.blockquoteContent = [];
+  }
+}
+
+function _flushTable(state) {
+  if (state.tableRows.length > 0) {
+    const headers = state.tableRows[0];
+    const dataRows = state.tableRows.slice(2); // Skip header separator
+    state.elements.push(
+      <div
+        key={`table-${state.elements.length}`}
+        className="overflow-x-auto mb-4"
+      >
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              {headers.map((cell, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  {_renderInline(cell.trim())}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {dataRows.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {row.map((cell, cellIdx) => (
+                  <td
+                    key={cellIdx}
+                    className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    {_renderInline(cell.trim())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>,
+    );
+    state.tableRows = [];
+  }
+}
+
+function _flushAllPending(state) {
+  _flushList(state);
+  _flushBlockquote(state);
+  _flushTable(state);
+}
+
+function TourRestartButton({ onClose }) {
+  return (
+    <button
+      onClick={() => {
+        // Close the User Manual first
+        if (onClose) onClose();
+        // Trigger tour restart after a brief delay
+        setTimeout(() => {
+          triggerTourRestart();
+        }, 300);
+      }}
+      className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+    >
+      🎓 Restart Interactive Tour
+    </button>
+  );
+}
+
+function _processManualContentLine(line, i, state, onClose) {
+  // Empty line - flush lists/blockquotes
+  if (line.trim() === "") {
+    _flushAllPending(state);
+    return;
+  }
+
+  // Headers
+  if (line.startsWith("## ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h2
+        key={`h2-${i}`}
+        className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
+      >
+        {line.slice(3)}
+      </h2>,
+    );
+    return;
+  }
+
+  if (line.startsWith("### ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h3
+        key={`h3-${i}`}
+        className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
+      >
+        {line.slice(4)}
+      </h3>,
+    );
+    return;
+  }
+
+  // Blockquote
+  if (line.startsWith("> ")) {
+    _flushList(state);
+    _flushTable(state);
+    state.blockquoteContent.push(line.slice(2));
+    return;
+  }
+
+  // Table
+  if (line.startsWith("|")) {
+    _flushList(state);
+    _flushBlockquote(state);
+    const cells = line.split("|").filter((cell) => cell.trim() !== "");
+    state.tableRows.push(cells);
+    return;
+  }
+
+  // List item
+  if (line.startsWith("- ")) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    state.inList = true;
+    state.listItems.push(line.slice(2));
+    return;
+  }
+
+  // Numbered list
+  if (/^\d+\.\s/.test(line)) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    const match = line.match(/^\d+\.\s(.+)/);
+    if (match) {
+      if (!state.inList) {
+        state.inList = true;
+      }
+      state.listItems.push(match[1]);
+    }
+    return;
+  }
+
+  // Special: Tour restart button
+  if (line.includes("<tour-restart-button>")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <div key={`tour-btn-${i}`} className="my-4">
+        <TourRestartButton onClose={onClose} />
+      </div>,
+    );
+    return;
+  }
+
+  // Regular paragraph
+  _flushAllPending(state);
+  state.elements.push(
+    <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
+      {_renderInline(line)}
+    </p>,
+  );
+}
+
 const renderContent = (content, onClose) => {
   if (!content) return null;
 
@@ -3845,245 +4085,16 @@ const renderContent = (content, onClose) => {
     .replace(/\{getDisabilityCount\(\)\}/g, String(getDisabilityCount()));
 
   const lines = resolved.trim().split("\n");
-  const elements = [];
-  let tableRows = [];
-  let inList = false;
-  let listItems = [];
-  let blockquoteContent = [];
-
-  const flushList = () => {
-    if (listItems.length > 0) {
-      elements.push(
-        <ul
-          key={`list-${elements.length}`}
-          className="list-disc pl-6 mb-4 space-y-1"
-        >
-          {listItems.map((item, i) => (
-            <li key={i} className="text-gray-700 dark:text-gray-300">
-              {renderInline(item)}
-            </li>
-          ))}
-        </ul>,
-      );
-      listItems = [];
-      inList = false;
-    }
-  };
-
-  const flushBlockquote = () => {
-    if (blockquoteContent.length > 0) {
-      elements.push(
-        <blockquote
-          key={`bq-${elements.length}`}
-          className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
-        >
-          {blockquoteContent.map((line, i) => (
-            <p key={i} className="text-gray-700 dark:text-gray-300">
-              {renderInline(line)}
-            </p>
-          ))}
-        </blockquote>,
-      );
-      blockquoteContent = [];
-    }
-  };
-
-  const flushTable = () => {
-    if (tableRows.length > 0) {
-      const headers = tableRows[0];
-      const dataRows = tableRows.slice(2); // Skip header separator
-      elements.push(
-        <div key={`table-${elements.length}`} className="overflow-x-auto mb-4">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                {headers.map((cell, i) => (
-                  <th
-                    key={i}
-                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    {renderInline(cell.trim())}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {dataRows.map((row, rowIdx) => (
-                <tr key={rowIdx}>
-                  {row.map((cell, cellIdx) => (
-                    <td
-                      key={cellIdx}
-                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
-                    >
-                      {renderInline(cell.trim())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>,
-      );
-      tableRows = [];
-    }
-  };
-
-  const renderInline = (text) => {
-    if (!text) return text;
-
-    // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
-    // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
-    // edit to the manual strings is inert. The CSP is NOT a backstop here
-    // (script-src 'unsafe-inline' is set).
-    text = escapeHtml(text);
-
-    // Handle bold
-    text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    // Handle inline code
-    text = text.replace(
-      /`(.+?)`/g,
-      '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
-    );
-    // Handle links — sanitize the href so a future contributor cannot land a
-    // javascript: URL in the static manual content. sanitizeUrl returns '#'
-    // for any non-http(s)/mailto/tel protocol.
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
-    text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
-      const safeUrl = sanitizeUrl(url);
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
-    });
-
-    // Safe-by-construction: input is escapeHtml()'d first (above), then only a
-    // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
-    // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
-    // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-    return <span dangerouslySetInnerHTML={{ __html: text }} />;
-  };
+  const state = _createManualParserState();
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Empty line - flush lists/blockquotes
-    if (line.trim() === "") {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      continue;
-    }
-
-    // Headers
-    if (line.startsWith("## ")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <h2
-          key={`h2-${i}`}
-          className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
-        >
-          {line.slice(3)}
-        </h2>,
-      );
-      continue;
-    }
-
-    if (line.startsWith("### ")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <h3
-          key={`h3-${i}`}
-          className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
-        >
-          {line.slice(4)}
-        </h3>,
-      );
-      continue;
-    }
-
-    // Blockquote
-    if (line.startsWith("> ")) {
-      flushList();
-      flushTable();
-      blockquoteContent.push(line.slice(2));
-      continue;
-    }
-
-    // Table
-    if (line.startsWith("|")) {
-      flushList();
-      flushBlockquote();
-      const cells = line.split("|").filter((cell) => cell.trim() !== "");
-      tableRows.push(cells);
-      continue;
-    }
-
-    // List item
-    if (line.startsWith("- ")) {
-      flushBlockquote();
-      flushTable();
-      inList = true;
-      listItems.push(line.slice(2));
-      continue;
-    }
-
-    // Numbered list
-    if (/^\d+\.\s/.test(line)) {
-      flushBlockquote();
-      flushTable();
-      const match = line.match(/^\d+\.\s(.+)/);
-      if (match) {
-        if (!inList) {
-          inList = true;
-        }
-        listItems.push(match[1]);
-      }
-      continue;
-    }
-
-    // Special: Tour restart button
-    if (line.includes("<tour-restart-button>")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <div key={`tour-btn-${i}`} className="my-4">
-          <button
-            onClick={() => {
-              // Close the User Manual first
-              if (onClose) onClose();
-              // Trigger tour restart after a brief delay
-              setTimeout(() => {
-                triggerTourRestart();
-              }, 300);
-            }}
-            className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
-          >
-            🎓 Restart Interactive Tour
-          </button>
-        </div>,
-      );
-      continue;
-    }
-
-    // Regular paragraph
-    flushList();
-    flushBlockquote();
-    flushTable();
-    elements.push(
-      <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
-        {renderInline(line)}
-      </p>,
-    );
+    _processManualContentLine(lines[i], i, state, onClose);
   }
 
   // Flush remaining
-  flushList();
-  flushBlockquote();
-  flushTable();
+  _flushAllPending(state);
 
-  return elements;
+  return state.elements;
 };
 
 const UserManual = ({ onClose, onReportBug }) => {
