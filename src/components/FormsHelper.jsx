@@ -7712,103 +7712,109 @@ ${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
   return statement;
 }
 
-const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
-  const { t } = useLanguage();
-
-  // AI Status monitoring
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+function useFormsHelperCoreState() {
   const [selectedForm, setSelectedForm] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [generatedContent, setGeneratedContent] = useState(null);
-  const [_showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const formsContentRef = useRef(null);
 
-  // Veteran Profile State
+  return {
+    selectedForm, setSelectedForm, currentStep, setCurrentStep, formData, setFormData,
+    generatedContent, setGeneratedContent, showDownloadMenu, setShowDownloadMenu, formsContentRef,
+  };
+}
+
+function useFormsHelperProfileState() {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
-  const formsContentRef = useRef(null);
 
-  // AI Enhancement State
+  return {
+    showProfileSetup, setShowProfileSetup, veteranProfile, setVeteranProfile,
+    profileSaved, setProfileSaved, importStatus, setImportStatus, fileInputRef,
+  };
+}
+
+function useFormsHelperAIState() {
   const [showAIConsent, setShowAIConsent] = useState(false);
   const [isEnhancingWithAI, setIsEnhancingWithAI] = useState(false);
   const [aiEnhancedContent, setAiEnhancedContent] = useState(null);
   const [showAIVersion, setShowAIVersion] = useState(false);
   const [aiError, setAiError] = useState(null);
 
-  // Load veteran profile on mount
-  useEffect(() => {
-    const profile = getVeteranProfile();
-    setVeteranProfile(profile);
-    // Pre-fill formData with profile data
-    if (profile && Object.keys(profile).length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        // Name fields
-        veteranName:
-          `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
-        veteranFirstName: profile.firstName,
-        veteranMiddleInitial: profile.middleInitial,
-        veteranLastName: profile.lastName,
-        fullName:
-          profile.fullName ||
-          `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
+  return {
+    showAIConsent, setShowAIConsent, isEnhancingWithAI, setIsEnhancingWithAI,
+    aiEnhancedContent, setAiEnhancedContent, showAIVersion, setShowAIVersion, aiError, setAiError,
+  };
+}
 
-        // Identification
-        ssn: profile.ssn,
-        ssnLast4: profile.ssnLast4 || profile.ssn,
-        ssnFull: profile.ssnFull,
-        vaFileNumber: profile.vaFileNumber,
-        serviceNumber: profile.serviceNumber,
-        dob: profile.dob,
-        placeOfBirth: profile.placeOfBirth,
+function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
+  const profile = getVeteranProfile();
+  setVeteranProfile(profile);
+  // Pre-fill formData with profile data
+  if (profile && Object.keys(profile).length > 0) {
+    setFormData((prev) => ({
+      ...prev,
+      // Name fields
+      veteranName:
+        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
+      veteranFirstName: profile.firstName,
+      veteranMiddleInitial: profile.middleInitial,
+      veteranLastName: profile.lastName,
+      fullName:
+        profile.fullName ||
+        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
 
-        // Contact
-        email: profile.email,
-        phone: profile.phone,
-        alternatePhone: profile.alternatePhone,
+      // Identification
+      ssn: profile.ssn,
+      ssnLast4: profile.ssnLast4 || profile.ssn,
+      ssnFull: profile.ssnFull,
+      vaFileNumber: profile.vaFileNumber,
+      serviceNumber: profile.serviceNumber,
+      dob: profile.dob,
+      placeOfBirth: profile.placeOfBirth,
 
-        // Address
-        street: profile.street,
-        apt: profile.apt,
-        city: profile.city,
-        state: profile.state,
-        zip: profile.zip,
-        country: profile.country || "United States",
-        homeOfRecord: profile.homeOfRecord,
+      // Contact
+      email: profile.email,
+      phone: profile.phone,
+      alternatePhone: profile.alternatePhone,
 
-        // Military Service
-        veteranBranch: profile.branch,
-        branch: profile.branch,
-        rankAtDischarge: profile.rankAtDischarge,
-        payGrade: profile.payGrade,
-        mos: profile.mos,
-        mosTitle: profile.mosTitle,
-        serviceStartDate: profile.serviceStartDate,
-        serviceEndDate: profile.serviceEndDate,
-        characterOfService: profile.characterOfService,
-        separationType: profile.separationType,
-      }));
-    }
-  }, []);
+      // Address
+      street: profile.street,
+      apt: profile.apt,
+      city: profile.city,
+      state: profile.state,
+      zip: profile.zip,
+      country: profile.country || "United States",
+      homeOfRecord: profile.homeOfRecord,
 
-  // Handle profile field change
+      // Military Service
+      veteranBranch: profile.branch,
+      branch: profile.branch,
+      rankAtDischarge: profile.rankAtDischarge,
+      payGrade: profile.payGrade,
+      mos: profile.mos,
+      mosTitle: profile.mosTitle,
+      serviceStartDate: profile.serviceStartDate,
+      serviceEndDate: profile.serviceEndDate,
+      characterOfService: profile.characterOfService,
+      separationType: profile.separationType,
+    }));
+  }
+}
+
+function _buildFormsHelperProfileEditHandlers(ctx) {
+  const { veteranProfile, setVeteranProfile, setProfileSaved, setFormData } = ctx;
+
   const handleProfileChange = (field, value) => {
     setVeteranProfile((prev) => ({ ...prev, [field]: value }));
     setProfileSaved(false);
   };
 
-  // Save profile
   const handleSaveProfile = () => {
     const success = saveVeteranProfile(veteranProfile);
     if (success) {
@@ -7839,7 +7845,12 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
   };
 
-  // Backup all data
+  return { handleProfileChange, handleSaveProfile };
+}
+
+function _buildFormsHelperBackupRestoreHandlers(ctx) {
+  const { setVeteranProfile, fileInputRef, setImportStatus } = ctx;
+
   const handleBackup = () => {
     const data = exportAllVeteranData();
     const jsonString = JSON.stringify(data, null, 2);
@@ -7856,7 +7867,6 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     setTimeout(() => setImportStatus(null), 3000);
   };
 
-  // Restore from backup
   const handleRestoreClick = () => {
     fileInputRef.current?.click();
   };
@@ -7897,25 +7907,18 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     event.target.value = "";
   };
 
-  // Save form to My Packet
-  const handleSaveToPacket = () => {
-    const formId = saveForm({
-      formType: selectedForm?.id,
-      formNumber: selectedForm?.formNumber,
-      formName: selectedForm?.name,
-      title: formData.conditionName || selectedForm?.name,
-      formData: formData,
-      generatedContent: generatedContent,
-      status: "Draft",
-    });
+  return { handleBackup, handleRestoreClick, handleFileSelect };
+}
 
-    if (formId) {
-      setImportStatus({ type: "success", message: "Form saved to My Packet!" });
-      setTimeout(() => setImportStatus(null), 3000);
-    }
+function _buildFormsHelperProfileHandlers(ctx) {
+  return {
+    ..._buildFormsHelperProfileEditHandlers(ctx),
+    ..._buildFormsHelperBackupRestoreHandlers(ctx),
   };
+}
 
-  // Available forms with comprehensive guidance
+function _buildFormsHelperFormDataHandlers(ctx) {
+  const { setFormData, formData, selectedForm, generatedContent, setImportStatus } = ctx;
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -7940,81 +7943,74 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     markAsModified();
   };
 
-  // Generate VSO Appointment (21-22)
+  const handleSaveToPacket = () => {
+    const formId = saveForm({
+      formType: selectedForm?.id,
+      formNumber: selectedForm?.formNumber,
+      formName: selectedForm?.name,
+      title: formData.conditionName || selectedForm?.name,
+      formData: formData,
+      generatedContent: generatedContent,
+      status: "Draft",
+    });
 
-  // Generate Individual Representative Appointment (21-22a)
+    if (formId) {
+      setImportStatus({ type: "success", message: "Form saved to My Packet!" });
+      setTimeout(() => setImportStatus(null), 3000);
+    }
+  };
 
-  // Third Party Authorization generator
+  return { handleFieldChange, handleChecklistChange, handleSaveToPacket };
+}
 
-  // FOIA Request generator
+function _generateFormsHelperContent(selectedForm, formData) {
+  switch (selectedForm?.id) {
+    case "buddy-statement":
+      return generateBuddyStatement(formData);
+    case "personal-statement":
+      return generatePersonalStatement(formData);
+    case "ptsd-stressor":
+      return generatePTSDStatement(formData);
+    case "intent-to-file":
+      return generateIntentToFile(formData);
+    case "medical-release":
+      return generateMedicalRelease(formData);
+    case "priority-processing":
+      return generatePriorityProcessing(formData);
+    case "vso-appointment":
+      return generateVSOAppointment(formData);
+    case "vso-appointment-individual":
+      return generateIndividualRepAppointment(formData);
+    // New forms
+    case "third-party-authorization":
+      return generateThirdPartyAuth(formData);
+    case "personal-records-request":
+      return generateFOIARequest(formData);
+    case "alternate-signer":
+      return generateAlternateSigner(formData);
+    case "nursing-home-info":
+      return generateNursingHome(formData);
+    case "substitution-request":
+      return generateSubstitutionRequest(formData);
+    case "income-asset-statement":
+      return generateIncomeAsset(formData);
+    case "medical-expense-report":
+      return generateMedicalExpenseReport(formData);
+    case "employment-info":
+      return generateEmploymentInfo(formData);
+    default:
+      return "";
+  }
+}
 
-  // Alternate Signer generator
-
-  // Nursing Home Information generator
-
-  // Substitution Request generator
-
-  // Income & Asset Statement generator
-
-  // Medical Expense Report generator
-
-  // Employment Information generator
+function _buildFormsHelperGenerationHandlers(ctx) {
+  const {
+    selectedForm, formData, setGeneratedContent, setCurrentStep,
+    setAiEnhancedContent, setShowAIVersion, setAiError,
+  } = ctx;
 
   const generateContent = () => {
-    let content;
-    switch (selectedForm?.id) {
-      case "buddy-statement":
-        content = generateBuddyStatement(formData);
-        break;
-      case "personal-statement":
-        content = generatePersonalStatement(formData);
-        break;
-      case "ptsd-stressor":
-        content = generatePTSDStatement(formData);
-        break;
-      case "intent-to-file":
-        content = generateIntentToFile(formData);
-        break;
-      case "medical-release":
-        content = generateMedicalRelease(formData);
-        break;
-      case "priority-processing":
-        content = generatePriorityProcessing(formData);
-        break;
-      case "vso-appointment":
-        content = generateVSOAppointment(formData);
-        break;
-      case "vso-appointment-individual":
-        content = generateIndividualRepAppointment(formData);
-        break;
-      // New forms
-      case "third-party-authorization":
-        content = generateThirdPartyAuth(formData);
-        break;
-      case "personal-records-request":
-        content = generateFOIARequest(formData);
-        break;
-      case "alternate-signer":
-        content = generateAlternateSigner(formData);
-        break;
-      case "nursing-home-info":
-        content = generateNursingHome(formData);
-        break;
-      case "substitution-request":
-        content = generateSubstitutionRequest(formData);
-        break;
-      case "income-asset-statement":
-        content = generateIncomeAsset(formData);
-        break;
-      case "medical-expense-report":
-        content = generateMedicalExpenseReport(formData);
-        break;
-      case "employment-info":
-        content = generateEmploymentInfo(formData);
-        break;
-      default:
-        content = "";
-    }
+    const content = _generateFormsHelperContent(selectedForm, formData);
     setGeneratedContent(content);
     return content;
   };
@@ -8028,13 +8024,18 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     setAiError(null);
   };
 
+  return { generateContent, handleFinishWizard };
+}
+
+function _buildFormsHelperAIHandlers(ctx) {
+  const {
+    selectedForm, setShowAIConsent, setIsEnhancingWithAI, setAiError, formData,
+    setAiEnhancedContent, setShowAIVersion, showAIVersion, aiEnhancedContent, generatedContent,
+  } = ctx;
+
   // Check if current form type supports AI enhancement
   const isAIEnabledFormType = () => {
-    const aiEnabledForms = [
-      "buddy-statement",
-      "personal-statement",
-      "ptsd-stressor",
-    ];
+    const aiEnabledForms = ["buddy-statement", "personal-statement", "ptsd-stressor"];
     return aiEnabledForms.includes(selectedForm?.id);
   };
 
@@ -8050,12 +8051,10 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
   };
 
-  // Handle AI enhancement request
   const handleAIEnhanceClick = () => {
     setShowAIConsent(true);
   };
 
-  // Handle AI consent and proceed with enhancement
   const handleAIConsent = async () => {
     setShowAIConsent(false);
     setIsEnhancingWithAI(true);
@@ -8078,39 +8077,26 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
   };
 
-  // Handle canceling AI consent
   const handleAICancel = () => {
     setShowAIConsent(false);
   };
 
-  // Toggle between AI and standard version
   const toggleAIVersion = () => {
     setShowAIVersion(!showAIVersion);
   };
 
-  // Get the current display content (AI or standard)
   const getDisplayContent = () => {
-    return showAIVersion && aiEnhancedContent
-      ? aiEnhancedContent
-      : generatedContent;
+    return showAIVersion && aiEnhancedContent ? aiEnhancedContent : generatedContent;
   };
 
-  const handleDownloadOfficialPdf = async () => {
-    try {
-      // Show loading state
-      const result = await fillAndDownloadForm(selectedForm?.id, formData);
-      if (result.success) {
-        // eslint-disable-next-line no-console
-        console.log(`Downloaded: ${result.fileName}`);
-      }
-    } catch (error) {
-      console.error("Error generating official PDF:", error);
-      alert(
-        "Error generating official PDF form. Downloading text version instead.",
-      );
-      handleDownload("pdf");
-    }
+  return {
+    isAIEnabledFormType, getAIStatementType, handleAIEnhanceClick, handleAIConsent,
+    handleAICancel, toggleAIVersion, getDisplayContent,
   };
+}
+
+function _buildFormsHelperDownloadHandlers(ctx) {
+  const { selectedForm, formData, generatedContent, generateContent, setShowDownloadMenu } = ctx;
 
   const handleDownload = (format) => {
     const content = generatedContent || generateContent();
@@ -8132,7 +8118,33 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     setShowDownloadMenu(false);
   };
 
-  const renderFormSelection = () => (
+  const handleDownloadOfficialPdf = async () => {
+    try {
+      // Show loading state
+      const result = await fillAndDownloadForm(selectedForm?.id, formData);
+      if (result.success) {
+        // eslint-disable-next-line no-console
+        console.log(`Downloaded: ${result.fileName}`);
+      }
+    } catch (error) {
+      console.error("Error generating official PDF:", error);
+      alert(
+        "Error generating official PDF form. Downloading text version instead.",
+      );
+      handleDownload("pdf");
+    }
+  };
+
+  return { handleDownload, handleDownloadOfficialPdf };
+}
+
+function FormsHelperFormSelection({ state, handlers }) {
+  const { t, fileInputRef, showProfileSetup, setShowProfileSetup, importStatus, veteranProfile, profileSaved } =
+    state;
+  const { handleFileSelect, handleBackup, handleRestoreClick, handleProfileChange, handleSaveProfile } = handlers;
+  const { setSelectedForm, setFormData, setCurrentStep, setGeneratedContent } = state;
+
+  return (
     <div className="space-y-4">
       <FormSelectionHeader t={t} />
 
@@ -8197,114 +8209,183 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
       <QuickLinksSection t={t} />
     </div>
   );
+}
 
-  const renderReviewStep = () => {
-    if (!generatedContent) return null;
+function FormsHelperReviewStep({ state, handlers }) {
+  const { generatedContent, t, aiStatus, aiEnhancedContent, isEnhancingWithAI, showAIVersion, aiError } = state;
+  const { onOpenAISettings, importStatus, selectedForm } = state;
+  const { setCurrentStep, setGeneratedContent, setAiEnhancedContent, setShowAIVersion, setSelectedForm, setFormData } =
+    state;
+  const {
+    isAIEnabledFormType, handleAIEnhanceClick, toggleAIVersion, handleDownloadOfficialPdf, handleDownload,
+    handleSaveToPacket, getDisplayContent,
+  } = handlers;
 
-    const displayContent = getDisplayContent();
+  if (!generatedContent) return null;
 
-    return (
-      <div className="space-y-6">
-        {/* Success message */}
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">✅</span>
-            <div>
-              <h3 className="font-bold text-green-900 dark:text-green-200">
-                {t("formsHelper", "statementGenerated")}
-              </h3>
-              <p className="text-sm text-green-800 dark:text-green-300">
-                {t("formsHelper", "statementGeneratedDesc")}
-              </p>
-            </div>
+  const displayContent = getDisplayContent();
+
+  return (
+    <div className="space-y-6">
+      {/* Success message */}
+      <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">✅</span>
+          <div>
+            <h3 className="font-bold text-green-900 dark:text-green-200">
+              {t("formsHelper", "statementGenerated")}
+            </h3>
+            <p className="text-sm text-green-800 dark:text-green-300">
+              {t("formsHelper", "statementGeneratedDesc")}
+            </p>
           </div>
         </div>
-
-        <AIEnhancementSection
-          isAIEnabledFormType={isAIEnabledFormType}
-          aiStatus={aiStatus}
-          aiEnhancedContent={aiEnhancedContent}
-          handleAIEnhanceClick={handleAIEnhanceClick}
-          isEnhancingWithAI={isEnhancingWithAI}
-          toggleAIVersion={toggleAIVersion}
-          showAIVersion={showAIVersion}
-          aiError={aiError}
-          onOpenAISettings={onOpenAISettings}
-          t={t}
-        />
-
-        <ReviewDownloadSection
-          t={t}
-          showAIVersion={showAIVersion}
-          aiEnhancedContent={aiEnhancedContent}
-          handleDownloadOfficialPdf={handleDownloadOfficialPdf}
-          handleDownload={handleDownload}
-          handleSaveToPacket={handleSaveToPacket}
-          importStatus={importStatus}
-        />
-
-        <ReviewPreviewSection
-          showAIVersion={showAIVersion}
-          aiEnhancedContent={aiEnhancedContent}
-          displayContent={displayContent}
-          t={t}
-        />
-
-        <ReviewNextSteps selectedForm={selectedForm} t={t} />
-
-        <ReviewActionButtons
-          selectedForm={selectedForm}
-          setCurrentStep={setCurrentStep}
-          setGeneratedContent={setGeneratedContent}
-          setAiEnhancedContent={setAiEnhancedContent}
-          setShowAIVersion={setShowAIVersion}
-          setSelectedForm={setSelectedForm}
-          setFormData={setFormData}
-          t={t}
-        />
       </div>
+
+      <AIEnhancementSection
+        isAIEnabledFormType={isAIEnabledFormType}
+        aiStatus={aiStatus}
+        aiEnhancedContent={aiEnhancedContent}
+        handleAIEnhanceClick={handleAIEnhanceClick}
+        isEnhancingWithAI={isEnhancingWithAI}
+        toggleAIVersion={toggleAIVersion}
+        showAIVersion={showAIVersion}
+        aiError={aiError}
+        onOpenAISettings={onOpenAISettings}
+        t={t}
+      />
+
+      <ReviewDownloadSection
+        t={t}
+        showAIVersion={showAIVersion}
+        aiEnhancedContent={aiEnhancedContent}
+        handleDownloadOfficialPdf={handleDownloadOfficialPdf}
+        handleDownload={handleDownload}
+        handleSaveToPacket={handleSaveToPacket}
+        importStatus={importStatus}
+      />
+
+      <ReviewPreviewSection
+        showAIVersion={showAIVersion}
+        aiEnhancedContent={aiEnhancedContent}
+        displayContent={displayContent}
+        t={t}
+      />
+
+      <ReviewNextSteps selectedForm={selectedForm} t={t} />
+
+      <ReviewActionButtons
+        selectedForm={selectedForm}
+        setCurrentStep={setCurrentStep}
+        setGeneratedContent={setGeneratedContent}
+        setAiEnhancedContent={setAiEnhancedContent}
+        setShowAIVersion={setShowAIVersion}
+        setSelectedForm={setSelectedForm}
+        setFormData={setFormData}
+        t={t}
+      />
+    </div>
+  );
+}
+
+function FormsHelperContent({ state, handlers }) {
+  const { selectedForm, currentStep, generatedContent, setCurrentStep, setSelectedForm, formData } = state;
+  const { handleFieldChange, handleChecklistChange, handleFinishWizard } = handlers;
+  const steps = _getFormStepsForForm(selectedForm);
+
+  // No form selected - show form selection
+  if (!selectedForm) {
+    return <FormsHelperFormSelection state={state} handlers={handlers} />;
+  }
+
+  // Form selected but wizard not started - show form info
+  if (currentStep === 0) {
+    return (
+      <FormInfoPanel
+        selectedForm={selectedForm}
+        setCurrentStep={setCurrentStep}
+        setSelectedForm={setSelectedForm}
+        t={state.t}
+      />
     );
-  };
+  }
 
-  const renderContent = () => {
-    const steps = _getFormStepsForForm(selectedForm);
+  // In wizard steps (steps are 1-indexed, so currentStep 1 = step index 0)
+  if (currentStep >= 1 && currentStep <= steps.length && !generatedContent) {
+    return (
+      <WizardStepPanel
+        selectedForm={selectedForm}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+        handleChecklistChange={handleChecklistChange}
+        handleFinishWizard={handleFinishWizard}
+        t={state.t}
+      />
+    );
+  }
 
-    // No form selected - show form selection
-    if (!selectedForm) {
-      return renderFormSelection();
-    }
+  // Past wizard or content generated - show review/download
+  return <FormsHelperReviewStep state={state} handlers={handlers} />;
+}
 
-    // Form selected but wizard not started - show form info
-    if (currentStep === 0) {
-      return (
-        <FormInfoPanel
-          selectedForm={selectedForm}
-          setCurrentStep={setCurrentStep}
-          setSelectedForm={setSelectedForm}
-          t={t}
-        />
-      );
-    }
+function FormsHelperHeader({ onClose, onReportBug, onOpenAISettings, formsContentRef, t }) {
+  return (
+    <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📋</span>
+          <div>
+            <h2 id="forms-helper-title" className="text-xl font-bold">
+              {t("formsHelper", "title")}
+            </h2>
+            <p className="text-violet-100 text-sm">
+              {t("formsHelper", "subtitle")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <LLMRecommendationBadge toolId="forms-helper" />
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+          <ShareButton
+            targetRef={formsContentRef}
+            filename="va-forms-helper"
+            variant="icon"
+          />
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Forms Helper"
+          />
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    // In wizard steps (steps are 1-indexed, so currentStep 1 = step index 0)
-    if (currentStep >= 1 && currentStep <= steps.length && !generatedContent) {
-      return (
-        <WizardStepPanel
-          selectedForm={selectedForm}
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-          formData={formData}
-          handleFieldChange={handleFieldChange}
-          handleChecklistChange={handleChecklistChange}
-          handleFinishWizard={handleFinishWizard}
-          t={t}
-        />
-      );
-    }
-
-    // Past wizard or content generated - show review/download
-    return renderReviewStep();
-  };
+function FormsHelperView({ state, handlers }) {
+  const { onClose, onReportBug, onOpenAISettings, formsContentRef, t, showAIConsent } = state;
+  const { handleAIConsent, handleAICancel, getAIStatementType } = handlers;
 
   return (
     <>
@@ -8314,54 +8395,13 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
         size="xl"
         labelledBy="forms-helper-title"
         header={
-          <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📋</span>
-                <div>
-                  <h2 id="forms-helper-title" className="text-xl font-bold">
-                    {t("formsHelper", "title")}
-                  </h2>
-                  <p className="text-violet-100 text-sm">
-                    {t("formsHelper", "subtitle")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <LLMRecommendationBadge toolId="forms-helper" />
-                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-                <ShareButton
-                  targetRef={formsContentRef}
-                  filename="va-forms-helper"
-                  variant="icon"
-                />
-                <ReportBugLink
-                  onClick={onReportBug}
-                  variant="light"
-                  moduleName="Forms Helper"
-                />
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <FormsHelperHeader
+            onClose={onClose}
+            onReportBug={onReportBug}
+            onOpenAISettings={onOpenAISettings}
+            formsContentRef={formsContentRef}
+            t={t}
+          />
         }
         footer={
           <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -8369,7 +8409,9 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
           </div>
         }
       >
-        <div ref={formsContentRef}>{renderContent()}</div>
+        <div ref={formsContentRef}>
+          <FormsHelperContent state={state} handlers={handlers} />
+        </div>
       </ResponsiveModal>
 
       {/* Luna encouragement — lifted above the z-60 shell */}
@@ -8388,6 +8430,57 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
       </div>
     </>
   );
+}
+
+const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
+  const { t } = useLanguage();
+
+  // AI Status monitoring
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const coreState = useFormsHelperCoreState();
+  const profileState = useFormsHelperProfileState();
+  const aiState = useFormsHelperAIState();
+
+  // Load veteran profile on mount
+  useEffect(
+    () => _runFormsHelperProfilePrefillEffect(profileState.setVeteranProfile, coreState.setFormData),
+    [profileState.setVeteranProfile, coreState.setFormData],
+  );
+
+  const state = {
+    t, onClose, onReportBug, onOpenAISettings, aiStatus, setAIStatus,
+    ...coreState,
+    ...profileState,
+    ...aiState,
+  };
+
+  const ctx = { ...state };
+  const profileHandlers = _buildFormsHelperProfileHandlers(ctx);
+  const formDataHandlers = _buildFormsHelperFormDataHandlers(ctx);
+  const generationHandlers = _buildFormsHelperGenerationHandlers(ctx);
+  const aiHandlers = _buildFormsHelperAIHandlers(ctx);
+  const downloadHandlers = _buildFormsHelperDownloadHandlers({
+    ...ctx,
+    generateContent: generationHandlers.generateContent,
+  });
+
+  const handlers = {
+    ...profileHandlers,
+    ...formDataHandlers,
+    ...generationHandlers,
+    ...aiHandlers,
+    ...downloadHandlers,
+  };
+
+  return <FormsHelperView state={state} handlers={handlers} />;
 };
 
 export default FormsHelper;
