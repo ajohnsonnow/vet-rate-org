@@ -2682,6 +2682,593 @@ function ServiceTab(props) {
   );
 }
 
+function ClaimsEmptyState({ onClose, t }) {
+  return (
+    <div className="text-center py-12">
+      <svg
+        className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        📂 {t("myPacketSection.noSavedClaims")}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        {t("myPacketSection.claimsDescription")}
+      </p>
+      <button
+        onClick={onClose}
+        className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+      >
+        {t("myPacketSection.exploreSecondaryScout")}
+      </button>
+    </div>
+  );
+}
+
+function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
+  return (
+    <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
+      <button
+        onClick={() => handleDownloadStatement(claim, "txt")}
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        {t("myPacketSection.textTxt")}
+      </button>
+      <button
+        onClick={() => handleDownloadStatement(claim, "docx")}
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+        {t("myPacketSection.wordDocx")}
+      </button>
+      <button
+        onClick={() => handleDownloadStatement(claim, "pdf")}
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+        {t("myPacketSection.pdfFormat")}
+      </button>
+    </div>
+  );
+}
+
+function ClaimActionButtons({
+  claim,
+  onResume,
+  handleViewStatement,
+  showDownloadMenu,
+  setShowDownloadMenu,
+  isCertified,
+  handleDownloadStatement,
+  handleRemove,
+  t,
+}) {
+  return (
+    <>
+      {claim.status === "Drafting" ? (
+        <button
+          onClick={() => onResume(claim)}
+          className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-xs sm:text-sm"
+        >
+          {t("myPacketSection.buildStatement")}
+        </button>
+      ) : (
+        <button
+          onClick={() => handleViewStatement(claim.id)}
+          className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-xs sm:text-sm"
+        >
+          {t("myPacketSection.viewStatement")}
+        </button>
+      )}
+
+      {claim.status !== "Drafting" && (
+        <div className="relative w-full sm:w-auto">
+          <button
+            onClick={() =>
+              setShowDownloadMenu(showDownloadMenu === claim.id ? null : claim.id)
+            }
+            disabled={!isCertified}
+            aria-label={!isCertified ? t("myPacketSection.certifyBeforeDownload") : ""}
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {t("myPacketSection.download")}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {showDownloadMenu === claim.id && isCertified && (
+            <ClaimDownloadMenu
+              claim={claim}
+              handleDownloadStatement={handleDownloadStatement}
+              t={t}
+            />
+          )}
+        </div>
+      )}
+
+      <button
+        onClick={() => handleRemove(claim.id)}
+        className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-xs sm:text-sm"
+      >
+        {t("myPacketSection.remove")}
+      </button>
+    </>
+  );
+}
+
+function ClaimEntry({ claim, getStatusColor, handleStatusChange, t, ...actionProps }) {
+  return (
+    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
+              {claim.conditionName}
+            </h3>
+            <span
+              className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border whitespace-nowrap ${getStatusColor(claim.status)}`}
+            >
+              {claim.status}
+            </span>
+          </div>
+
+          {claim.parentCondition && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {t("myPacketSection.secondaryTo")}:{" "}
+              <span className="font-semibold">{claim.parentCondition}</span>
+            </p>
+          )}
+
+          {/* The Readiness Gauge - Claim Completeness Tracker */}
+          <div className="my-3">
+            <ClaimProgress
+              conditionCode={claim.diagnosticCode}
+              conditionName={claim.conditionName}
+            />
+          </div>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.saved")}:{" "}
+            {new Date(claim.dateSaved).toLocaleDateString()}
+            {claim.dateUpdated &&
+              ` • ${t("myPacketSection.updated")}: ${new Date(claim.dateUpdated).toLocaleDateString()}`}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+          <select
+            value={claim.status}
+            onChange={(e) => handleStatusChange(claim.id, e.target.value)}
+            className="w-full sm:w-auto px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 col-span-2 sm:col-span-1"
+          >
+            <option value="Drafting">{t("myPacketSection.drafting")}</option>
+            <option value="Statement Generated">
+              {t("myPacketSection.statementGenerated")}
+            </option>
+            <option value="Filed">{t("myPacketSection.filed")}</option>
+          </select>
+
+          <ClaimActionButtons claim={claim} t={t} {...actionProps} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClaimsTab({
+  claims,
+  onClose,
+  onResume,
+  handleViewStatement,
+  handleStatusChange,
+  showDownloadMenu,
+  setShowDownloadMenu,
+  isCertified,
+  handleDownloadStatement,
+  handleRemove,
+  handleClearAll,
+  getStatusColor,
+  t,
+}) {
+  if (claims.length === 0) {
+    return <ClaimsEmptyState onClose={onClose} t={t} />;
+  }
+  return (
+    <>
+      <div className="space-y-4 mb-6">
+        {claims.map((claim) => (
+          <ClaimEntry
+            key={claim.id}
+            claim={claim}
+            getStatusColor={getStatusColor}
+            handleStatusChange={handleStatusChange}
+            onResume={onResume}
+            handleViewStatement={handleViewStatement}
+            showDownloadMenu={showDownloadMenu}
+            setShowDownloadMenu={setShowDownloadMenu}
+            isCertified={isCertified}
+            handleDownloadStatement={handleDownloadStatement}
+            handleRemove={handleRemove}
+            t={t}
+          />
+        ))}
+      </div>
+
+      <div className="flex justify-center pt-4 border-t dark:border-gray-700">
+        <button
+          onClick={handleClearAll}
+          className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+        >
+          {t("myPacketSection.clearAllClaims")}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function TimelineEmptyState({ onClose, t }) {
+  return (
+    <div className="text-center py-12">
+      <svg
+        className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        🧵 {t("myPacketSection.noTimelineEvents")}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+        {t("myPacketSection.timelineDescription")}
+      </p>
+      <button
+        onClick={onClose}
+        className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        {t("myPacketSection.goToContinuityThread")}
+      </button>
+    </div>
+  );
+}
+
+function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
+  return (
+    <div className="relative flex items-start gap-4 pl-10">
+      <div
+        className={`absolute left-2.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getTimelineDotClass(event.type)}`}
+      ></div>
+
+      <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className={`px-2 py-0.5 text-xs font-medium rounded-full ${getTimelineBadgeClass(event.type)}`}
+              >
+                {event.type?.charAt(0).toUpperCase() + event.type?.slice(1) ||
+                  "Event"}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {new Date(event.date).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              {event.title}
+            </h4>
+            {event.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {event.description}
+              </p>
+            )}
+            {event.condition && (
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                {t("myPacketSection.relatedTo")}: {event.condition}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              const updated = timelineEvents.filter((e) => e.id !== event.id);
+              setTimelineEvents(updated);
+              import("../utils/veteranProfile").then((m) =>
+                m.saveTimelineEvents(updated),
+              );
+            }}
+            className="text-red-400 hover:text-red-600 transition-colors p-1"
+            aria-label="Remove event"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimelineTab({
+  timelineEvents,
+  setTimelineEvents,
+  handleClearTimelineEvents,
+  onClose,
+  t,
+}) {
+  if (timelineEvents.length === 0) {
+    return <TimelineEmptyState onClose={onClose} t={t} />;
+  }
+  const sortedEvents = [...timelineEvents].sort(
+    (a, b) => new Date(b.date) - new Date(a.date),
+  );
+  return (
+    <>
+      <div className="mb-4 flex justify-between items-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {timelineEvents.length}{" "}
+          {timelineEvents.length !== 1
+            ? t("myPacketSection.eventsTracked")
+            : t("myPacketSection.eventTracked")}
+        </p>
+        <button
+          onClick={handleClearTimelineEvents}
+          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.clearAll")}
+        </button>
+      </div>
+
+      <div className="relative">
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-400 via-slate-300 to-slate-200 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700"></div>
+
+        <div className="space-y-4">
+          {sortedEvents.map((event) => (
+            <TimelineEventEntry
+              key={event.id}
+              event={event}
+              timelineEvents={timelineEvents}
+              setTimelineEvents={setTimelineEvents}
+              t={t}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+        <p className="text-sm text-slate-700 dark:text-slate-300">
+          💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
+          {t("myPacketSection.timelineBannerText")}
+        </p>
+      </div>
+    </>
+  );
+}
+
+function PainMapsEmptyState({ onClose, t }) {
+  return (
+    <div className="text-center py-12">
+      <svg
+        className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        🎨 {t("myPacketSection.noPainMapsSaved")}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+        {t("myPacketSection.painMapsDescription")}
+      </p>
+      <button
+        onClick={onClose}
+        className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+          />
+        </svg>
+        {t("myPacketSection.goToPainPainter")}
+      </button>
+    </div>
+  );
+}
+
+function PainMapCard({ map, setViewingPainMap, handleDeletePainMap, t }) {
+  return (
+    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+      className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group"
+      onClick={() => setViewingPainMap(map)}
+    >
+      <div className="aspect-[3/4] bg-gradient-to-b from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 relative flex items-center justify-center">
+        {map.thumbnail ? (
+          <img
+            src={map.thumbnail}
+            alt={map.name}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <div className="text-center p-4">
+            <span className="text-4xl">🎨</span>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {map.painPoints?.length || 0} {t("myPacketSection.painPoints")}
+            </p>
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <span className="text-white font-semibold">
+            {t("myPacketSection.viewDetails")}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-3">
+        <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+          {map.name || t("myPacketSection.untitledPainMap")}
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {new Date(map.savedAt || map.createdAt).toLocaleDateString()}
+        </p>
+        {map.conditions && map.conditions.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {map.conditions.slice(0, 2).map((cond, idx) => (
+              <span
+                key={idx}
+                className="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded"
+              >
+                {cond}
+              </span>
+            ))}
+            {map.conditions.length > 2 && (
+              <span className="text-xs text-gray-500">
+                +{map.conditions.length - 2}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="px-3 pb-3">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeletePainMap(map.id);
+          }}
+          className="w-full px-3 py-1.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.delete")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PainMapsTab({
+  painMaps,
+  setPainMaps,
+  setViewingPainMap,
+  handleDeletePainMap,
+  onClose,
+  t,
+}) {
+  if (painMaps.length === 0) {
+    return <PainMapsEmptyState onClose={onClose} t={t} />;
+  }
+  return (
+    <>
+      <div className="mb-4 flex justify-between items-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {painMaps.length}{" "}
+          {painMaps.length !== 1
+            ? t("myPacketSection.painMapsSaved")
+            : t("myPacketSection.painMapSaved")}
+        </p>
+        <button
+          onClick={() => {
+            if (window.confirm(t("myPacketSection.confirmClearPainMaps"))) {
+              setPainMaps([]);
+              import("../utils/veteranProfile").then((m) => m.clearPainMaps());
+            }
+          }}
+          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.clearAll")}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {painMaps.map((map) => (
+          <PainMapCard
+            key={map.id}
+            map={map}
+            setViewingPainMap={setViewingPainMap}
+            handleDeletePainMap={handleDeletePainMap}
+            t={t}
+          />
+        ))}
+      </div>
+
+      <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-700 dark:text-red-300">
+          💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
+          {t("myPacketSection.painMapsBannerText")}
+        </p>
+      </div>
+    </>
+  );
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -3654,582 +4241,44 @@ Return ONLY the JSON object, no explanation.`,
 
             {/* CLAIMS TAB */}
             {activeTab === "claims" && (
-              <>
-                {claims.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      📂 {t("myPacketSection.noSavedClaims")}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {t("myPacketSection.claimsDescription")}
-                    </p>
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
-                    >
-                      {t("myPacketSection.exploreSecondaryScout")}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {/* Claims List */}
-                    <div className="space-y-4 mb-6">
-                      {claims.map((claim) => (
-                        <div
-                          key={claim.id}
-                          className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
-                                  {claim.conditionName}
-                                </h3>
-                                <span
-                                  className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border whitespace-nowrap ${getStatusColor(claim.status)}`}
-                                >
-                                  {claim.status}
-                                </span>
-                              </div>
-
-                              {claim.parentCondition && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                  {t("myPacketSection.secondaryTo")}:{" "}
-                                  <span className="font-semibold">
-                                    {claim.parentCondition}
-                                  </span>
-                                </p>
-                              )}
-
-                              {/* The Readiness Gauge - Claim Completeness Tracker */}
-                              <div className="my-3">
-                                <ClaimProgress
-                                  conditionCode={claim.diagnosticCode}
-                                  conditionName={claim.conditionName}
-                                />
-                              </div>
-
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {t("myPacketSection.saved")}:{" "}
-                                {new Date(claim.dateSaved).toLocaleDateString()}
-                                {claim.dateUpdated &&
-                                  ` • ${t("myPacketSection.updated")}: ${new Date(claim.dateUpdated).toLocaleDateString()}`}
-                              </p>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
-                              {/* Status Dropdown */}
-                              <select
-                                value={claim.status}
-                                onChange={(e) =>
-                                  handleStatusChange(claim.id, e.target.value)
-                                }
-                                className="w-full sm:w-auto px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 col-span-2 sm:col-span-1"
-                              >
-                                <option value="Drafting">
-                                  {t("myPacketSection.drafting")}
-                                </option>
-                                <option value="Statement Generated">
-                                  {t("myPacketSection.statementGenerated")}
-                                </option>
-                                <option value="Filed">
-                                  {t("myPacketSection.filed")}
-                                </option>
-                              </select>
-
-                              {/* Resume/View Statement Button */}
-                              {claim.status === "Drafting" ? (
-                                <button
-                                  onClick={() => onResume(claim)}
-                                  className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-xs sm:text-sm"
-                                >
-                                  {t("myPacketSection.buildStatement")}
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleViewStatement(claim.id)}
-                                  className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-xs sm:text-sm"
-                                >
-                                  {t("myPacketSection.viewStatement")}
-                                </button>
-                              )}
-
-                              {/* Download Button with Format Options */}
-                              {claim.status !== "Drafting" && (
-                                <div className="relative w-full sm:w-auto">
-                                  <button
-                                    onClick={() =>
-                                      setShowDownloadMenu(
-                                        showDownloadMenu === claim.id
-                                          ? null
-                                          : claim.id,
-                                      )
-                                    }
-                                    disabled={!isCertified}
-                                    aria-label={
-                                      !isCertified
-                                        ? t(
-                                            "myPacketSection.certifyBeforeDownload",
-                                          )
-                                        : ""
-                                    }
-                                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    {t("myPacketSection.download")}
-                                    <svg
-                                      className="w-4 h-4"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 9l-7 7-7-7"
-                                      />
-                                    </svg>
-                                  </button>
-
-                                  {showDownloadMenu === claim.id &&
-                                    isCertified && (
-                                      <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
-                                        <button
-                                          onClick={() =>
-                                            handleDownloadStatement(
-                                              claim,
-                                              "txt",
-                                            )
-                                          }
-                                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
-                                        >
-                                          <svg
-                                            className="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2}
-                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                            />
-                                          </svg>
-                                          {t("myPacketSection.textTxt")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleDownloadStatement(
-                                              claim,
-                                              "docx",
-                                            )
-                                          }
-                                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
-                                        >
-                                          <svg
-                                            className="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2}
-                                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                            />
-                                          </svg>
-                                          {t("myPacketSection.wordDocx")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleDownloadStatement(
-                                              claim,
-                                              "pdf",
-                                            )
-                                          }
-                                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
-                                        >
-                                          <svg
-                                            className="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2}
-                                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                            />
-                                          </svg>
-                                          {t("myPacketSection.pdfFormat")}
-                                        </button>
-                                      </div>
-                                    )}
-                                </div>
-                              )}
-
-                              {/* Remove Button */}
-                              <button
-                                onClick={() => handleRemove(claim.id)}
-                                className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-xs sm:text-sm"
-                              >
-                                {t("myPacketSection.remove")}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Clear All Button */}
-                    <div className="flex justify-center pt-4 border-t dark:border-gray-700">
-                      <button
-                        onClick={handleClearAll}
-                        className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                      >
-                        {t("myPacketSection.clearAllClaims")}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
+              <ClaimsTab
+                claims={claims}
+                onClose={onClose}
+                onResume={onResume}
+                handleViewStatement={handleViewStatement}
+                handleStatusChange={handleStatusChange}
+                showDownloadMenu={showDownloadMenu}
+                setShowDownloadMenu={setShowDownloadMenu}
+                isCertified={isCertified}
+                handleDownloadStatement={handleDownloadStatement}
+                handleRemove={handleRemove}
+                handleClearAll={handleClearAll}
+                getStatusColor={getStatusColor}
+                t={t}
+              />
             )}
 
             {/* TIMELINE EVENTS TAB */}
             {activeTab === "timeline" && (
-              <>
-                {timelineEvents.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      🧵 {t("myPacketSection.noTimelineEvents")}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
-                      {t("myPacketSection.timelineDescription")}
-                    </p>
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {t("myPacketSection.goToContinuityThread")}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-4 flex justify-between items-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {timelineEvents.length}{" "}
-                        {timelineEvents.length !== 1
-                          ? t("myPacketSection.eventsTracked")
-                          : t("myPacketSection.eventTracked")}
-                      </p>
-                      <button
-                        onClick={handleClearTimelineEvents}
-                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                      >
-                        {t("myPacketSection.clearAll")}
-                      </button>
-                    </div>
-
-                    {/* Timeline Visual */}
-                    <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-400 via-slate-300 to-slate-200 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700"></div>
-
-                      <div className="space-y-4">
-                        {timelineEvents
-                          .sort((a, b) => new Date(b.date) - new Date(a.date))
-                          .map((event, _index) => (
-                            <div
-                              key={event.id}
-                              className="relative flex items-start gap-4 pl-10"
-                            >
-                              {/* Timeline dot */}
-                              <div
-                                className={`absolute left-2.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getTimelineDotClass(event.type)}`}
-                              ></div>
-
-                              <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start gap-2">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span
-                                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${getTimelineBadgeClass(event.type)}`}
-                                      >
-                                        {event.type?.charAt(0).toUpperCase() +
-                                          event.type?.slice(1) || "Event"}
-                                      </span>
-                                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                        {new Date(
-                                          event.date,
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                        })}
-                                      </span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                      {event.title}
-                                    </h4>
-                                    {event.description && (
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {event.description}
-                                      </p>
-                                    )}
-                                    {event.condition && (
-                                      <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
-                                        {t("myPacketSection.relatedTo")}:{" "}
-                                        {event.condition}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      const updated = timelineEvents.filter(
-                                        (e) => e.id !== event.id,
-                                      );
-                                      setTimelineEvents(updated);
-                                      import("../utils/veteranProfile").then(
-                                        (m) => m.saveTimelineEvents(updated),
-                                      );
-                                    }}
-                                    className="text-red-400 hover:text-red-600 transition-colors p-1"
-                                    aria-label="Remove event"
-                                  >
-                                    <svg
-                                      className="w-4 h-4"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                      />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Info Banner */}
-                    <div className="mt-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">
-                        💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
-                        {t("myPacketSection.timelineBannerText")}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </>
+              <TimelineTab
+                timelineEvents={timelineEvents}
+                setTimelineEvents={setTimelineEvents}
+                handleClearTimelineEvents={handleClearTimelineEvents}
+                onClose={onClose}
+                t={t}
+              />
             )}
 
             {/* PAIN MAPS TAB */}
             {activeTab === "painmaps" && (
-              <>
-                {painMaps.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      🎨 {t("myPacketSection.noPainMapsSaved")}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
-                      {t("myPacketSection.painMapsDescription")}
-                    </p>
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                        />
-                      </svg>
-                      {t("myPacketSection.goToPainPainter")}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-4 flex justify-between items-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {painMaps.length}{" "}
-                        {painMaps.length !== 1
-                          ? t("myPacketSection.painMapsSaved")
-                          : t("myPacketSection.painMapSaved")}
-                      </p>
-                      <button
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              t("myPacketSection.confirmClearPainMaps"),
-                            )
-                          ) {
-                            setPainMaps([]);
-                            import("../utils/veteranProfile").then((m) =>
-                              m.clearPainMaps(),
-                            );
-                          }
-                        }}
-                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                      >
-                        {t("myPacketSection.clearAll")}
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {painMaps.map((map) => (
-                        <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-                          key={map.id}
-                          className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group"
-                          onClick={() => setViewingPainMap(map)}
-                        >
-                          {/* Map Preview */}
-                          <div className="aspect-[3/4] bg-gradient-to-b from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 relative flex items-center justify-center">
-                            {map.thumbnail ? (
-                              <img
-                                src={map.thumbnail}
-                                alt={map.name}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <div className="text-center p-4">
-                                <span className="text-4xl">🎨</span>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                  {map.painPoints?.length || 0}{" "}
-                                  {t("myPacketSection.painPoints")}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Overlay on hover */}
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-white font-semibold">
-                                {t("myPacketSection.viewDetails")}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Map Info */}
-                          <div className="p-3">
-                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                              {map.name || t("myPacketSection.untitledPainMap")}
-                            </h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(
-                                map.savedAt || map.createdAt,
-                              ).toLocaleDateString()}
-                            </p>
-                            {map.conditions && map.conditions.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {map.conditions.slice(0, 2).map((cond, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded"
-                                  >
-                                    {cond}
-                                  </span>
-                                ))}
-                                {map.conditions.length > 2 && (
-                                  <span className="text-xs text-gray-500">
-                                    +{map.conditions.length - 2}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Delete button */}
-                          <div className="px-3 pb-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeletePainMap(map.id);
-                              }}
-                              className="w-full px-3 py-1.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                            >
-                              {t("myPacketSection.delete")}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Info Banner */}
-                    <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                      <p className="text-sm text-red-700 dark:text-red-300">
-                        💡 <strong>{t("myPacketSection.whyTrackThis")}</strong>{" "}
-                        {t("myPacketSection.painMapsBannerText")}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </>
+              <PainMapsTab
+                painMaps={painMaps}
+                setPainMaps={setPainMaps}
+                setViewingPainMap={setViewingPainMap}
+                handleDeletePainMap={handleDeletePainMap}
+                onClose={onClose}
+                t={t}
+              />
             )}
 
             {/* Pain Map Detail Modal */}
