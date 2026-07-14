@@ -4127,6 +4127,199 @@ Record Access: ${recordAccess}
 ${limitationsText}`;
 }
 
+function ChecklistField({ field, formData, handleChecklistChange }) {
+  return (
+    <div key={field.name} className="mb-6">
+      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {field.options.map((option) => (
+          <label
+            key={option}
+            className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              checked={(formData[field.name] || []).includes(option)}
+              onChange={(e) =>
+                handleChecklistChange(field.name, option, e.target.checked)
+              }
+              className="mt-1 rounded border-gray-300 text-va-blue focus:ring-va-blue"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              {option}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TextareaField({ field, formData, handleFieldChange }) {
+  return (
+    <div key={field.name} className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <textarea
+          value={formData[field.name] || ""}
+          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+          placeholder={field.placeholder}
+          rows={field.rows || 4}
+          className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+          required={field.required}
+        />
+        {isSpeechRecognitionSupported() && (
+          <div
+            className="absolute right-2 top-2"
+            aria-label="Click to dictate using voice"
+          >
+            <VoiceInputButton
+              onTranscript={(text) => {
+                const currentValue = formData[field.name] || "";
+                handleFieldChange(
+                  field.name,
+                  currentValue ? `${currentValue} ${text}` : text,
+                );
+              }}
+              size="sm"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FormField({
+  field,
+  formData,
+  handleFieldChange,
+  handleChecklistChange,
+}) {
+  if (field.type === "checklist") {
+    return (
+      <ChecklistField
+        field={field}
+        formData={formData}
+        handleChecklistChange={handleChecklistChange}
+      />
+    );
+  }
+
+  if (field.type === "checkbox") {
+    return (
+      <label
+        key={field.name}
+        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer mb-4"
+      >
+        <input
+          type="checkbox"
+          checked={formData[field.name] || false}
+          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+          className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
+        />
+        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
+      </label>
+    );
+  }
+
+  if (field.type === "select") {
+    return (
+      <div key={field.name} className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          {field.label}{" "}
+          {field.required && <span className="text-red-500">*</span>}
+        </label>
+        <select
+          value={formData[field.name] || ""}
+          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+          required={field.required}
+        >
+          {field.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  if (field.type === "textarea") {
+    return (
+      <TextareaField
+        field={field}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+      />
+    );
+  }
+
+  return (
+    <div key={field.name} className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={field.type}
+        value={formData[field.name] || ""}
+        onChange={(e) => handleFieldChange(field.name, e.target.value)}
+        placeholder={field.placeholder}
+        className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+        required={field.required}
+      />
+    </div>
+  );
+}
+
+function _getFormStepsForForm(selectedForm) {
+  switch (selectedForm?.id) {
+    case "buddy-statement":
+      return buddyStatementSteps;
+    case "personal-statement":
+      return personalStatementSteps;
+    case "ptsd-stressor":
+      return ptsdStressorSteps;
+    case "intent-to-file":
+      return intentToFileSteps;
+    case "medical-release":
+      return medicalReleaseSteps;
+    case "priority-processing":
+      return priorityProcessingSteps;
+    case "vso-appointment":
+      return vsoAppointmentSteps;
+    case "vso-appointment-individual":
+      return individualRepSteps;
+    // New forms
+    case "third-party-authorization":
+      return thirdPartyAuthSteps;
+    case "personal-records-request":
+      return foiaRequestSteps;
+    case "alternate-signer":
+      return alternateSignerSteps;
+    case "nursing-home-info":
+      return nursingHomeSteps;
+    case "substitution-request":
+      return substitutionRequestSteps;
+    case "income-asset-statement":
+      return incomeAssetSteps;
+    case "medical-expense-report":
+      return medicalExpenseSteps;
+    case "employment-info":
+      return employmentInfoSteps;
+    default:
+      return [];
+  }
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -4331,45 +4524,6 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   };
 
   // Available forms with comprehensive guidance
-  const getFormSteps = () => {
-    switch (selectedForm?.id) {
-      case "buddy-statement":
-        return buddyStatementSteps;
-      case "personal-statement":
-        return personalStatementSteps;
-      case "ptsd-stressor":
-        return ptsdStressorSteps;
-      case "intent-to-file":
-        return intentToFileSteps;
-      case "medical-release":
-        return medicalReleaseSteps;
-      case "priority-processing":
-        return priorityProcessingSteps;
-      case "vso-appointment":
-        return vsoAppointmentSteps;
-      case "vso-appointment-individual":
-        return individualRepSteps;
-      // New forms
-      case "third-party-authorization":
-        return thirdPartyAuthSteps;
-      case "personal-records-request":
-        return foiaRequestSteps;
-      case "alternate-signer":
-        return alternateSignerSteps;
-      case "nursing-home-info":
-        return nursingHomeSteps;
-      case "substitution-request":
-        return substitutionRequestSteps;
-      case "income-asset-statement":
-        return incomeAssetSteps;
-      case "medical-expense-report":
-        return medicalExpenseSteps;
-      case "employment-info":
-        return employmentInfoSteps;
-      default:
-        return [];
-    }
-  };
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -6124,7 +6278,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
   const handleFinishWizard = () => {
     generateContent();
-    setCurrentStep(getFormSteps().length + 1);
+    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
     // Reset AI state when generating new content
     setAiEnhancedContent(null);
     setShowAIVersion(false);
@@ -6317,136 +6471,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
         downloadAsTxt(content, fileName);
     }
     setShowDownloadMenu(false);
-  };
-
-  const renderField = (field) => {
-    if (field.type === "checklist") {
-      return (
-        <div key={field.name} className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            {field.label}{" "}
-            {field.required && <span className="text-red-500">*</span>}
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {field.options.map((option) => (
-              <label
-                key={option}
-                className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={(formData[field.name] || []).includes(option)}
-                  onChange={(e) =>
-                    handleChecklistChange(field.name, option, e.target.checked)
-                  }
-                  className="mt-1 rounded border-gray-300 text-va-blue focus:ring-va-blue"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {option}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (field.type === "checkbox") {
-      return (
-        <label
-          key={field.name}
-          className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer mb-4"
-        >
-          <input
-            type="checkbox"
-            checked={formData[field.name] || false}
-            onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-            className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
-          />
-          <span className="text-gray-700 dark:text-gray-300">
-            {field.label}
-          </span>
-        </label>
-      );
-    }
-
-    if (field.type === "select") {
-      return (
-        <div key={field.name} className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            {field.label}{" "}
-            {field.required && <span className="text-red-500">*</span>}
-          </label>
-          <select
-            value={formData[field.name] || ""}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-            required={field.required}
-          >
-            {field.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    }
-
-    if (field.type === "textarea") {
-      return (
-        <div key={field.name} className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            {field.label}{" "}
-            {field.required && <span className="text-red-500">*</span>}
-          </label>
-          <div className="relative">
-            <textarea
-              value={formData[field.name] || ""}
-              onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              placeholder={field.placeholder}
-              rows={field.rows || 4}
-              className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-              required={field.required}
-            />
-            {isSpeechRecognitionSupported() && (
-              <div
-                className="absolute right-2 top-2"
-                aria-label="Click to dictate using voice"
-              >
-                <VoiceInputButton
-                  onTranscript={(text) => {
-                    const currentValue = formData[field.name] || "";
-                    handleFieldChange(
-                      field.name,
-                      currentValue ? `${currentValue} ${text}` : text,
-                    );
-                  }}
-                  size="sm"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div key={field.name} className="mb-4">
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          {field.label}{" "}
-          {field.required && <span className="text-red-500">*</span>}
-        </label>
-        <input
-          type={field.type}
-          value={formData[field.name] || ""}
-          onChange={(e) => handleFieldChange(field.name, e.target.value)}
-          placeholder={field.placeholder}
-          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-          required={field.required}
-        />
-      </div>
-    );
   };
 
   const renderFormSelection = () => (
@@ -7219,7 +7243,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   const renderFormInfo = () => {
     if (!selectedForm) return null;
 
-    const steps = getFormSteps();
+    const steps = _getFormStepsForForm(selectedForm);
     const hasWizard = steps.length > 0;
 
     return (
@@ -7324,7 +7348,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   };
 
   const renderWizardStep = () => {
-    const steps = getFormSteps();
+    const steps = _getFormStepsForForm(selectedForm);
     if (currentStep === 0 || currentStep > steps.length) return null;
 
     const step = steps[currentStep - 1];
@@ -7362,7 +7386,15 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           )}
 
           <div className="space-y-4">
-            {step.fields.map((field) => renderField(field))}
+            {step.fields.map((field) => (
+              <FormField
+                key={field.name}
+                field={field}
+                formData={formData}
+                handleFieldChange={handleFieldChange}
+                handleChecklistChange={handleChecklistChange}
+              />
+            ))}
           </div>
         </div>
 
@@ -7841,7 +7873,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   };
 
   const renderContent = () => {
-    const steps = getFormSteps();
+    const steps = _getFormStepsForForm(selectedForm);
 
     // No form selected - show form selection
     if (!selectedForm) {
