@@ -3545,6 +3545,206 @@ function CAPFlashcardView({
 }
 
 
+function CAPSimulationHeader({
+  setMode,
+  onClose,
+  conditionName,
+  currentQuestionIndex,
+  currentQuestions,
+  getProgress,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
+      <button
+        onClick={() => setMode("select-condition")}
+        className="absolute top-4 left-4 text-white hover:text-gray-200"
+        aria-label="Go back"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white hover:text-gray-200"
+        aria-label="Close"
+      >
+        <X className="h-6 w-6" />
+      </button>
+      <div className="text-center mb-4">
+        <h2 id="cap-question-title" className="text-2xl font-bold mb-1">
+          {conditionName}
+        </h2>
+        <p className="text-emerald-100 text-sm">
+          Question {currentQuestionIndex + 1} of {currentQuestions.length}
+        </p>
+      </div>
+      {/* Progress bar */}
+      <div className="w-full bg-emerald-900/50 rounded-full h-2">
+        <div
+          className="bg-white rounded-full h-2 transition-all duration-300"
+          style={{ width: `${getProgress()}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function CAPSimulationQuestionCard({ currentQuestion }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border-2 border-gray-200 dark:border-gray-700">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        {currentQuestion.question}
+      </h3>
+
+      {/* Intent explanation */}
+      <div className="bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-400 dark:border-teal-500 p-4 mb-4">
+        <div className="flex items-start gap-2">
+          <HelpCircle className="h-5 w-5 text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-teal-900 dark:text-teal-200 text-sm mb-1">
+              Why this question matters:
+            </h4>
+            <p className="text-teal-800 dark:text-teal-100 text-sm">
+              {currentQuestion.intent}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Definition (if available) */}
+      {currentQuestion.definition && (
+        <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-400 dark:border-purple-500 p-4 mb-4">
+          <div className="flex items-start gap-2">
+            <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
+                CFR Definition:
+              </h4>
+              <p className="text-purple-800 dark:text-purple-100 text-sm">
+                {currentQuestion.definition}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CAPSimulationAnswerOptions({
+  currentQuestion,
+  currentAnswer,
+  handleAnswer,
+}) {
+  return (
+    <div className="space-y-3">
+      <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        Select your answer:
+      </h4>
+      {currentQuestion.options.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => handleAnswer(currentQuestion.id, option.value)}
+          className={`w-full text-left p-4 rounded-lg border-2 transition ${
+            currentAnswer === option.value
+              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30"
+              : "border-gray-200 dark:border-gray-600 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                currentAnswer === option.value
+                  ? "border-teal-500 bg-teal-500"
+                  : "border-gray-300 dark:border-gray-500"
+              }`}
+            >
+              {currentAnswer === option.value && (
+                <div className="w-full h-full rounded-full bg-white scale-50" />
+              )}
+            </div>
+            <span className="text-gray-700 dark:text-gray-200 font-medium">
+              {option.label}
+            </span>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CAPSimulationCrisisAlert() {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="bg-red-50 dark:bg-red-900/30 border-2 border-red-500 rounded-lg p-4"
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl flex-shrink-0" aria-hidden="true">
+          🆘
+        </span>
+        <div>
+          <p className="font-bold text-red-800 dark:text-red-200 text-base">
+            Veterans Crisis Line
+          </p>
+          <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+            If you or a Veteran you know is in crisis, free,
+            confidential support is available 24/7:
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-red-800 dark:text-red-200 font-semibold">
+            <li>
+              📞 Call <strong>988</strong>, then Press{" "}
+              <strong>1</strong>
+            </li>
+            <li>
+              💬 Text <strong>838255</strong>
+            </li>
+            <li>🌐 VeteransCrisisLine.net</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CAPSimulationNavigation({
+  currentQuestionIndex,
+  handlePrevious,
+  handleNext,
+  canProceed,
+  isLastQuestion,
+}) {
+  return (
+    <div className="flex gap-4 justify-between pt-4">
+      <button
+        onClick={handlePrevious}
+        disabled={currentQuestionIndex === 0}
+        className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
+          currentQuestionIndex === 0
+            ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            : "bg-gray-600 text-white hover:bg-gray-700"
+        }`}
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Previous
+      </button>
+
+      <button
+        onClick={handleNext}
+        disabled={!canProceed}
+        className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
+          !canProceed
+            ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            : "bg-teal-600 text-white hover:bg-teal-700"
+        }`}
+      >
+        {isLastQuestion ? "Get Results" : "Next"}
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 function CAPSimulationView({
   onClose,
   setMode,
@@ -3572,177 +3772,41 @@ function CAPSimulationView({
       size="xl"
       labelledBy="cap-question-title"
       header={
-        <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-          <button
-            onClick={() => setMode("select-condition")}
-            className="absolute top-4 left-4 text-white hover:text-gray-200"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:text-gray-200"
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <div className="text-center mb-4">
-            <h2 id="cap-question-title" className="text-2xl font-bold mb-1">
-              {conditionName}
-            </h2>
-            <p className="text-emerald-100 text-sm">
-              Question {currentQuestionIndex + 1} of {currentQuestions.length}
-            </p>
-          </div>
-          {/* Progress bar */}
-          <div className="w-full bg-emerald-900/50 rounded-full h-2">
-            <div
-              className="bg-white rounded-full h-2 transition-all duration-300"
-              style={{ width: `${getProgress()}%` }}
-            />
-          </div>
-        </div>
+        <CAPSimulationHeader
+          setMode={setMode}
+          onClose={onClose}
+          conditionName={conditionName}
+          currentQuestionIndex={currentQuestionIndex}
+          currentQuestions={currentQuestions}
+          getProgress={getProgress}
+        />
       }
     >
       <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6 space-y-6">
         {/* Question */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border-2 border-gray-200 dark:border-gray-700">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {currentQuestion.question}
-          </h3>
-
-          {/* Intent explanation */}
-          <div className="bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-400 dark:border-teal-500 p-4 mb-4">
-            <div className="flex items-start gap-2">
-              <HelpCircle className="h-5 w-5 text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-teal-900 dark:text-teal-200 text-sm mb-1">
-                  Why this question matters:
-                </h4>
-                <p className="text-teal-800 dark:text-teal-100 text-sm">
-                  {currentQuestion.intent}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Definition (if available) */}
-          {currentQuestion.definition && (
-            <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-400 dark:border-purple-500 p-4 mb-4">
-              <div className="flex items-start gap-2">
-                <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
-                    CFR Definition:
-                  </h4>
-                  <p className="text-purple-800 dark:text-purple-100 text-sm">
-                    {currentQuestion.definition}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <CAPSimulationQuestionCard currentQuestion={currentQuestion} />
 
         {/* Answer Options */}
-        <div className="space-y-3">
-          <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Select your answer:
-          </h4>
-          {currentQuestion.options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleAnswer(currentQuestion.id, option.value)}
-              className={`w-full text-left p-4 rounded-lg border-2 transition ${
-                currentAnswer === option.value
-                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30"
-                  : "border-gray-200 dark:border-gray-600 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                    currentAnswer === option.value
-                      ? "border-teal-500 bg-teal-500"
-                      : "border-gray-300 dark:border-gray-500"
-                  }`}
-                >
-                  {currentAnswer === option.value && (
-                    <div className="w-full h-full rounded-full bg-white scale-50" />
-                  )}
-                </div>
-                <span className="text-gray-700 dark:text-gray-200 font-medium">
-                  {option.label}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <CAPSimulationAnswerOptions
+          currentQuestion={currentQuestion}
+          currentAnswer={currentAnswer}
+          handleAnswer={handleAnswer}
+        />
 
         {/* Veterans Crisis Line — required when suicidal ideation option is selected */}
         {currentQuestion.id === "q_symptoms" &&
           (currentAnswer === "severe" || currentAnswer === "gross") && (
-            <div
-              role="alert"
-              aria-live="assertive"
-              className="bg-red-50 dark:bg-red-900/30 border-2 border-red-500 rounded-lg p-4"
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0" aria-hidden="true">
-                  🆘
-                </span>
-                <div>
-                  <p className="font-bold text-red-800 dark:text-red-200 text-base">
-                    Veterans Crisis Line
-                  </p>
-                  <p className="text-red-700 dark:text-red-300 text-sm mt-1">
-                    If you or a Veteran you know is in crisis, free,
-                    confidential support is available 24/7:
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm text-red-800 dark:text-red-200 font-semibold">
-                    <li>
-                      📞 Call <strong>988</strong>, then Press{" "}
-                      <strong>1</strong>
-                    </li>
-                    <li>
-                      💬 Text <strong>838255</strong>
-                    </li>
-                    <li>🌐 VeteransCrisisLine.net</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <CAPSimulationCrisisAlert />
           )}
 
         {/* Navigation */}
-        <div className="flex gap-4 justify-between pt-4">
-          <button
-            onClick={handlePrevious}
-            disabled={currentQuestionIndex === 0}
-            className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-              currentQuestionIndex === 0
-                ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                : "bg-gray-600 text-white hover:bg-gray-700"
-            }`}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </button>
-
-          <button
-            onClick={handleNext}
-            disabled={!canProceed}
-            className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-              !canProceed
-                ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                : "bg-teal-600 text-white hover:bg-teal-700"
-            }`}
-          >
-            {isLastQuestion ? "Get Results" : "Next"}
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        <CAPSimulationNavigation
+          currentQuestionIndex={currentQuestionIndex}
+          handlePrevious={handlePrevious}
+          handleNext={handleNext}
+          canProceed={canProceed}
+          isLastQuestion={isLastQuestion}
+        />
       </div>
     </ResponsiveModal>
   );
