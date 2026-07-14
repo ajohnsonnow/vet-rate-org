@@ -5086,6 +5086,882 @@ function ReviewActionButtons({
   );
 }
 
+function FormSelectionHeader({ t }) {
+  return (
+    <div className="text-center mb-8">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        📋 {t("formsHelper", "title")}{" "}
+        <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+          {t("formsHelper", "beta")}
+        </span>
+      </h2>
+      <p className="text-gray-600 dark:text-gray-400">
+        {t("formsHelper", "selectFormPrompt")}
+      </p>
+      <span className="inline-block mt-2 px-3 py-1 bg-va-blue/10 dark:bg-va-gold/10 text-va-blue dark:text-va-gold text-sm font-medium rounded-full">
+        {forms.length} {t("formsHelper", "formsAvailable")}
+      </span>
+    </div>
+  );
+}
+
+function BackupRestoreProfileButtons({
+  showProfileSetup,
+  setShowProfileSetup,
+  handleBackup,
+  handleRestoreClick,
+  t,
+}) {
+  return (
+    <div className="flex flex-wrap gap-3 justify-center mb-6">
+      <button
+        onClick={() => setShowProfileSetup(!showProfileSetup)}
+        className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${
+          showProfileSetup
+            ? "bg-va-blue text-white"
+            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-va-blue hover:text-white dark:hover:bg-va-gold dark:hover:text-gray-900"
+        }`}
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+        {hasVeteranProfile()
+          ? t("formsHelper", "editYourProfile")
+          : t("formsHelper", "setUpProfile")}
+      </button>
+      <button
+        onClick={handleBackup}
+        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+          />
+        </svg>
+        {t("formsHelper", "backupAllData")}
+      </button>
+      <button
+        onClick={handleRestoreClick}
+        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
+        </svg>
+        {t("formsHelper", "restoreFromBackup")}
+      </button>
+    </div>
+  );
+}
+
+function ProfileSetupHeader({ profileSaved, t }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+        {t("formsHelper", "profileTitle")}
+      </h3>
+      {profileSaved && (
+        <span className="text-green-600 dark:text-green-400 text-sm font-medium flex items-center gap-1">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          {t("formsHelper", "saved")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ProfileNameFields({ veteranProfile, handleProfileChange, t }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3 mb-4">
+      {/* Name Fields */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "firstName")} *
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.firstName || ""}
+          onChange={(e) => handleProfileChange("firstName", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="John"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "middleInitial")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.middleInitial || ""}
+          onChange={(e) =>
+            handleProfileChange(
+              "middleInitial",
+              e.target.value.toUpperCase().slice(0, 1),
+            )
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="A"
+          maxLength={1}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "lastName")} *
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.lastName || ""}
+          onChange={(e) => handleProfileChange("lastName", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="Smith"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ProfileIdFields({ veteranProfile, handleProfileChange, t }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3 mb-4">
+      {/* SSN, DOB, VA File Number */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "ssnLast4")} *
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.ssn || ""}
+          onChange={(e) =>
+            handleProfileChange(
+              "ssn",
+              e.target.value.replace(/\D/g, "").slice(0, 4),
+            )
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="1234"
+          maxLength={4}
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {t("formsHelper", "ssnLast4Helper")}
+        </p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "dateOfBirth")} *
+        </label>
+        <input
+          type="date"
+          value={veteranProfile.dob || ""}
+          onChange={(e) => handleProfileChange("dob", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "vaFileNumber")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.vaFileNumber || ""}
+          onChange={(e) => handleProfileChange("vaFileNumber", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder={t("formsHelper", "vaFileNumberPlaceholder")}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ProfileContactFields({ veteranProfile, handleProfileChange, t }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3 mb-4">
+      {/* Phone, Email, Branch */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "phoneNumber")}
+        </label>
+        <input
+          type="tel"
+          value={veteranProfile.phone || ""}
+          onChange={(e) => handleProfileChange("phone", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="(555) 123-4567"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "emailAddress")}
+        </label>
+        <input
+          type="email"
+          value={veteranProfile.email || ""}
+          onChange={(e) => handleProfileChange("email", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="veteran@email.com"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "serviceBranch")}
+        </label>
+        <select
+          value={veteranProfile.branch || ""}
+          onChange={(e) => handleProfileChange("branch", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        >
+          <option value="">{t("formsHelper", "selectBranch")}</option>
+          <option value="Army">Army</option>
+          <option value="Navy">Navy</option>
+          <option value="Air Force">Air Force</option>
+          <option value="Marine Corps">Marine Corps</option>
+          <option value="Coast Guard">Coast Guard</option>
+          <option value="Space Force">Space Force</option>
+          <option value="National Guard">National Guard</option>
+          <option value="Reserve">Reserve</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function ProfileAddressFieldsA({ veteranProfile, handleProfileChange, t }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-4 mb-4">
+      {/* Address */}
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "streetAddress")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.street || ""}
+          onChange={(e) => handleProfileChange("street", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="123 Main Street"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "aptUnit")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.apt || ""}
+          onChange={(e) => handleProfileChange("apt", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="Apt 4B"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "city")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.city || ""}
+          onChange={(e) => handleProfileChange("city", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="Anytown"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ProfileAddressFieldsB({ veteranProfile, handleProfileChange, t }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "state")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.state || ""}
+          onChange={(e) =>
+            handleProfileChange(
+              "state",
+              e.target.value.toUpperCase().slice(0, 2),
+            )
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="CA"
+          maxLength={2}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "zipCode")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.zip || ""}
+          onChange={(e) =>
+            handleProfileChange(
+              "zip",
+              e.target.value.replace(/\D/g, "").slice(0, 5),
+            )
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="12345"
+          maxLength={5}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("formsHelper", "country")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.country || "United States"}
+          onChange={(e) => handleProfileChange("country", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        />
+      </div>
+    </div>
+  );
+}
+
+function MilitaryServiceBasicFields({ veteranProfile, handleProfileChange }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Service Number
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.serviceNumber || ""}
+          onChange={(e) => handleProfileChange("serviceNumber", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="If different from SSN"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Rank at Discharge
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.rankAtDischarge || ""}
+          onChange={(e) =>
+            handleProfileChange("rankAtDischarge", e.target.value)
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="e.g., E-5/SGT"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Pay Grade
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.payGrade || ""}
+          onChange={(e) =>
+            handleProfileChange("payGrade", e.target.value.toUpperCase())
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="e.g., E-5, O-3"
+        />
+      </div>
+    </div>
+  );
+}
+
+function MilitaryServiceDateFields({ veteranProfile, handleProfileChange }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          MOS/Rating Code
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.mos || ""}
+          onChange={(e) => handleProfileChange("mos", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="e.g., 11B, IT2"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Service Start Date
+        </label>
+        <input
+          type="date"
+          value={veteranProfile.serviceStartDate || ""}
+          onChange={(e) =>
+            handleProfileChange("serviceStartDate", e.target.value)
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Service End Date
+        </label>
+        <input
+          type="date"
+          value={veteranProfile.serviceEndDate || ""}
+          onChange={(e) =>
+            handleProfileChange("serviceEndDate", e.target.value)
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        />
+      </div>
+    </div>
+  );
+}
+
+function MilitaryServiceStatusFields({ veteranProfile, handleProfileChange }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Character of Service
+        </label>
+        <select
+          value={veteranProfile.characterOfService || ""}
+          onChange={(e) =>
+            handleProfileChange("characterOfService", e.target.value)
+          }
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+        >
+          <option value="">Select...</option>
+          <option value="Honorable">Honorable</option>
+          <option value="General (Under Honorable)">
+            General (Under Honorable)
+          </option>
+          <option value="Other Than Honorable">Other Than Honorable</option>
+          <option value="Bad Conduct">Bad Conduct</option>
+          <option value="Dishonorable">Dishonorable</option>
+          <option value="Entry Level Separation">Entry Level Separation</option>
+        </select>
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Place of Birth
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.placeOfBirth || ""}
+          onChange={(e) => handleProfileChange("placeOfBirth", e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+          placeholder="City, State"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ProfileMilitaryServiceDetails({
+  veteranProfile,
+  handleProfileChange,
+  t,
+}) {
+  return (
+    <details className="mb-4 border border-blue-200 dark:border-blue-700 rounded-lg">
+      <summary className="cursor-pointer px-4 py-3 bg-blue-100 dark:bg-blue-900/40 rounded-t-lg font-medium text-blue-900 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors flex items-center gap-2">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
+        </svg>
+        {t("formsHelper", "militaryServiceDetails")}
+      </summary>
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
+        <MilitaryServiceBasicFields
+          veteranProfile={veteranProfile}
+          handleProfileChange={handleProfileChange}
+        />
+        <MilitaryServiceDateFields
+          veteranProfile={veteranProfile}
+          handleProfileChange={handleProfileChange}
+        />
+        <MilitaryServiceStatusFields
+          veteranProfile={veteranProfile}
+          handleProfileChange={handleProfileChange}
+        />
+      </div>
+    </details>
+  );
+}
+
+function _formatSsnFullInput(rawValue) {
+  let val = rawValue.replace(/\D/g, "").slice(0, 9);
+  if (val.length > 5)
+    val = val.slice(0, 3) + "-" + val.slice(3, 5) + "-" + val.slice(5);
+  else if (val.length > 3) val = val.slice(0, 3) + "-" + val.slice(3);
+  return val;
+}
+
+function ProfileSensitiveDataSection({
+  veteranProfile,
+  handleProfileChange,
+  t,
+}) {
+  return (
+    <details className="mb-4 border border-amber-200 dark:border-amber-700 rounded-lg">
+      <summary className="cursor-pointer px-4 py-3 bg-amber-100 dark:bg-amber-900/40 rounded-t-lg font-medium text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors flex items-center gap-2">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
+        </svg>
+        {t("formsHelper", "sensitiveInfoOptional")}
+        <span className="ml-auto text-xs text-amber-700 dark:text-amber-400">
+          ⚠️ {t("formsHelper", "localStorageOnly")}
+        </span>
+      </summary>
+      <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-b-lg space-y-4">
+        <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+          <strong>⚠️ {t("formsHelper", "privacyNotice")}:</strong>{" "}
+          {t("formsHelper", "privacyNoticeText")}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Full SSN (XXX-XX-XXXX)
+            </label>
+            <input
+              type="password"
+              value={veteranProfile.ssnFull || ""}
+              onChange={(e) =>
+                handleProfileChange(
+                  "ssnFull",
+                  _formatSsnFullInput(e.target.value),
+                )
+              }
+              className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              placeholder="XXX-XX-XXXX"
+              autoComplete="off"
+            />
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+              Only needed for certain VA forms
+            </p>
+          </div>
+          <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Home of Record
+            </label>
+            <input
+              type="text"
+              value={veteranProfile.homeOfRecord || ""}
+              onChange={(e) =>
+                handleProfileChange("homeOfRecord", e.target.value)
+              }
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+              placeholder="City, State at enlistment"
+            />
+          </div>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function ProfileSaveFooter({ handleSaveProfile, t }) {
+  return (
+    <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
+      <p className="text-xs text-blue-700 dark:text-blue-400">
+        🔒 {t("formsHelper", "privacyLocalStorage")}
+      </p>
+      <button
+        onClick={handleSaveProfile}
+        className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        {t("formsHelper", "saveProfile")}
+      </button>
+    </div>
+  );
+}
+
+function ProfileSetupPanel({
+  veteranProfile,
+  handleProfileChange,
+  profileSaved,
+  handleSaveProfile,
+  t,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-700 rounded-xl p-6 mb-6">
+      <ProfileSetupHeader profileSaved={profileSaved} t={t} />
+
+      <p className="text-sm text-blue-800 dark:text-blue-300 mb-4">
+        {t("formsHelper", "profileDesc")}
+      </p>
+
+      <ProfileNameFields
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileIdFields
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileContactFields
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileAddressFieldsA
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileAddressFieldsB
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileMilitaryServiceDetails
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileSensitiveDataSection
+        veteranProfile={veteranProfile}
+        handleProfileChange={handleProfileChange}
+        t={t}
+      />
+
+      <ProfileSaveFooter handleSaveProfile={handleSaveProfile} t={t} />
+    </div>
+  );
+}
+
+function ProfileSavedIndicator({ setShowProfileSetup, t }) {
+  return (
+    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 mb-6 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <svg
+          className="w-5 h-5 text-green-600 dark:text-green-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="text-green-800 dark:text-green-200 font-medium">
+          {t("formsHelper", "profileSavedMsg")}
+        </span>
+      </div>
+      <button
+        onClick={() => setShowProfileSetup(true)}
+        className="text-sm text-green-700 dark:text-green-300 underline hover:no-underline"
+      >
+        {t("formsHelper", "edit")}
+      </button>
+    </div>
+  );
+}
+
+function FormSelectionInfoBox({ t }) {
+  return (
+    <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">💡</span>
+        <div>
+          <h3 className="font-bold text-purple-900 dark:text-purple-200">
+            {t("formsHelper", "proTip")}{" "}
+            {t("formsHelper", "buddyStatementsPowerful")}
+          </h3>
+          <p className="text-sm text-purple-800 dark:text-purple-300 mt-1">
+            {t("formsHelper", "buddyStatementsDesc")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormSelectionCards({
+  setSelectedForm,
+  setFormData,
+  setCurrentStep,
+  setGeneratedContent,
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {forms.map((form) => (
+        <button
+          key={form.id}
+          onClick={() => {
+            setSelectedForm(form);
+            setFormData({});
+            setCurrentStep(0);
+            setGeneratedContent(null);
+          }}
+          className="text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-va-blue dark:hover:border-va-gold transition-all hover:shadow-lg bg-white dark:bg-gray-800 group"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-3xl">{form.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-va-blue dark:group-hover:text-va-gold">
+                  {form.name}
+                </h3>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${form.difficultyColor}`}
+                >
+                  {form.difficulty}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                {form.formNumber}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                {form.description}
+              </p>
+            </div>
+            <svg
+              className="w-5 h-5 text-gray-400 group-hover:text-va-blue dark:group-hover:text-va-gold flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function QuickLinksSection({ t }) {
+  return (
+    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+        📎 {t("formsHelper", "quickLinksToForms")}
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {forms.map((form) => (
+          <a
+            key={form.id}
+            href={form.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-va-blue hover:text-white dark:hover:bg-va-gold dark:hover:text-va-blue rounded-lg transition-colors"
+          >
+            {form.formNumber} ↗
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -7241,20 +8117,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
   const renderFormSelection = () => (
     <div className="space-y-4">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          📋 {t("formsHelper", "title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            {t("formsHelper", "beta")}
-          </span>
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          {t("formsHelper", "selectFormPrompt")}
-        </p>
-        <span className="inline-block mt-2 px-3 py-1 bg-va-blue/10 dark:bg-va-gold/10 text-va-blue dark:text-va-gold text-sm font-medium rounded-full">
-          {forms.length} {t("formsHelper", "formsAvailable")}
-        </span>
-      </div>
+      <FormSelectionHeader t={t} />
 
       {/* Hidden file input for restore */}
       <input
@@ -7265,72 +8128,13 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
         className="hidden"
       />
 
-      {/* Backup/Restore and Profile Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center mb-6">
-        <button
-          onClick={() => setShowProfileSetup(!showProfileSetup)}
-          className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${
-            showProfileSetup
-              ? "bg-va-blue text-white"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-va-blue hover:text-white dark:hover:bg-va-gold dark:hover:text-gray-900"
-          }`}
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          {hasVeteranProfile()
-            ? t("formsHelper", "editYourProfile")
-            : t("formsHelper", "setUpProfile")}
-        </button>
-        <button
-          onClick={handleBackup}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            />
-          </svg>
-          {t("formsHelper", "backupAllData")}
-        </button>
-        <button
-          onClick={handleRestoreClick}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          {t("formsHelper", "restoreFromBackup")}
-        </button>
-      </div>
+      <BackupRestoreProfileButtons
+        showProfileSetup={showProfileSetup}
+        setShowProfileSetup={setShowProfileSetup}
+        handleBackup={handleBackup}
+        handleRestoreClick={handleRestoreClick}
+        t={t}
+      />
 
       {/* Import Status Message */}
       {importStatus && (
@@ -7347,662 +8151,33 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
       {/* Profile Setup Panel */}
       {showProfileSetup && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-700 rounded-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              {t("formsHelper", "profileTitle")}
-            </h3>
-            {profileSaved && (
-              <span className="text-green-600 dark:text-green-400 text-sm font-medium flex items-center gap-1">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                {t("formsHelper", "saved")}
-              </span>
-            )}
-          </div>
-
-          <p className="text-sm text-blue-800 dark:text-blue-300 mb-4">
-            {t("formsHelper", "profileDesc")}
-          </p>
-
-          <div className="grid gap-4 md:grid-cols-3 mb-4">
-            {/* Name Fields */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "firstName")} *
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.firstName || ""}
-                onChange={(e) =>
-                  handleProfileChange("firstName", e.target.value)
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="John"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "middleInitial")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.middleInitial || ""}
-                onChange={(e) =>
-                  handleProfileChange(
-                    "middleInitial",
-                    e.target.value.toUpperCase().slice(0, 1),
-                  )
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="A"
-                maxLength={1}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "lastName")} *
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.lastName || ""}
-                onChange={(e) =>
-                  handleProfileChange("lastName", e.target.value)
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="Smith"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3 mb-4">
-            {/* SSN, DOB, VA File Number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "ssnLast4")} *
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.ssn || ""}
-                onChange={(e) =>
-                  handleProfileChange(
-                    "ssn",
-                    e.target.value.replace(/\D/g, "").slice(0, 4),
-                  )
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="1234"
-                maxLength={4}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t("formsHelper", "ssnLast4Helper")}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "dateOfBirth")} *
-              </label>
-              <input
-                type="date"
-                value={veteranProfile.dob || ""}
-                onChange={(e) => handleProfileChange("dob", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "vaFileNumber")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.vaFileNumber || ""}
-                onChange={(e) =>
-                  handleProfileChange("vaFileNumber", e.target.value)
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder={t("formsHelper", "vaFileNumberPlaceholder")}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3 mb-4">
-            {/* Phone, Email, Branch */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "phoneNumber")}
-              </label>
-              <input
-                type="tel"
-                value={veteranProfile.phone || ""}
-                onChange={(e) => handleProfileChange("phone", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="(555) 123-4567"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "emailAddress")}
-              </label>
-              <input
-                type="email"
-                value={veteranProfile.email || ""}
-                onChange={(e) => handleProfileChange("email", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="veteran@email.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "serviceBranch")}
-              </label>
-              <select
-                value={veteranProfile.branch || ""}
-                onChange={(e) => handleProfileChange("branch", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-              >
-                <option value="">{t("formsHelper", "selectBranch")}</option>
-                <option value="Army">Army</option>
-                <option value="Navy">Navy</option>
-                <option value="Air Force">Air Force</option>
-                <option value="Marine Corps">Marine Corps</option>
-                <option value="Coast Guard">Coast Guard</option>
-                <option value="Space Force">Space Force</option>
-                <option value="National Guard">National Guard</option>
-                <option value="Reserve">Reserve</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-4 mb-4">
-            {/* Address */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "streetAddress")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.street || ""}
-                onChange={(e) => handleProfileChange("street", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="123 Main Street"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "aptUnit")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.apt || ""}
-                onChange={(e) => handleProfileChange("apt", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="Apt 4B"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "city")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.city || ""}
-                onChange={(e) => handleProfileChange("city", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="Anytown"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "state")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.state || ""}
-                onChange={(e) =>
-                  handleProfileChange(
-                    "state",
-                    e.target.value.toUpperCase().slice(0, 2),
-                  )
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="CA"
-                maxLength={2}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "zipCode")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.zip || ""}
-                onChange={(e) =>
-                  handleProfileChange(
-                    "zip",
-                    e.target.value.replace(/\D/g, "").slice(0, 5),
-                  )
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="12345"
-                maxLength={5}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("formsHelper", "country")}
-              </label>
-              <input
-                type="text"
-                value={veteranProfile.country || "United States"}
-                onChange={(e) => handleProfileChange("country", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-              />
-            </div>
-          </div>
-
-          {/* Military Service Section - Collapsible */}
-          <details className="mb-4 border border-blue-200 dark:border-blue-700 rounded-lg">
-            <summary className="cursor-pointer px-4 py-3 bg-blue-100 dark:bg-blue-900/40 rounded-t-lg font-medium text-blue-900 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              {t("formsHelper", "militaryServiceDetails")}
-            </summary>
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Service Number
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.serviceNumber || ""}
-                    onChange={(e) =>
-                      handleProfileChange("serviceNumber", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="If different from SSN"
-                  />
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Rank at Discharge
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.rankAtDischarge || ""}
-                    onChange={(e) =>
-                      handleProfileChange("rankAtDischarge", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="e.g., E-5/SGT"
-                  />
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Pay Grade
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.payGrade || ""}
-                    onChange={(e) =>
-                      handleProfileChange(
-                        "payGrade",
-                        e.target.value.toUpperCase(),
-                      )
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="e.g., E-5, O-3"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    MOS/Rating Code
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.mos || ""}
-                    onChange={(e) => handleProfileChange("mos", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="e.g., 11B, IT2"
-                  />
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Service Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={veteranProfile.serviceStartDate || ""}
-                    onChange={(e) =>
-                      handleProfileChange("serviceStartDate", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                  />
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Service End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={veteranProfile.serviceEndDate || ""}
-                    onChange={(e) =>
-                      handleProfileChange("serviceEndDate", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Character of Service
-                  </label>
-                  <select
-                    value={veteranProfile.characterOfService || ""}
-                    onChange={(e) =>
-                      handleProfileChange("characterOfService", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                  >
-                    <option value="">Select...</option>
-                    <option value="Honorable">Honorable</option>
-                    <option value="General (Under Honorable)">
-                      General (Under Honorable)
-                    </option>
-                    <option value="Other Than Honorable">
-                      Other Than Honorable
-                    </option>
-                    <option value="Bad Conduct">Bad Conduct</option>
-                    <option value="Dishonorable">Dishonorable</option>
-                    <option value="Entry Level Separation">
-                      Entry Level Separation
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Place of Birth
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.placeOfBirth || ""}
-                    onChange={(e) =>
-                      handleProfileChange("placeOfBirth", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="City, State"
-                  />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          {/* Sensitive Data Section - Collapsible with Warning */}
-          <details className="mb-4 border border-amber-200 dark:border-amber-700 rounded-lg">
-            <summary className="cursor-pointer px-4 py-3 bg-amber-100 dark:bg-amber-900/40 rounded-t-lg font-medium text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              {t("formsHelper", "sensitiveInfoOptional")}
-              <span className="ml-auto text-xs text-amber-700 dark:text-amber-400">
-                ⚠️ {t("formsHelper", "localStorageOnly")}
-              </span>
-            </summary>
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-b-lg space-y-4">
-              <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
-                <strong>⚠️ {t("formsHelper", "privacyNotice")}:</strong>{" "}
-                {t("formsHelper", "privacyNoticeText")}
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Full SSN (XXX-XX-XXXX)
-                  </label>
-                  <input
-                    type="password"
-                    value={veteranProfile.ssnFull || ""}
-                    onChange={(e) => {
-                      let val = e.target.value.replace(/\D/g, "").slice(0, 9);
-                      if (val.length > 5)
-                        val =
-                          val.slice(0, 3) +
-                          "-" +
-                          val.slice(3, 5) +
-                          "-" +
-                          val.slice(5);
-                      else if (val.length > 3)
-                        val = val.slice(0, 3) + "-" + val.slice(3);
-                      handleProfileChange("ssnFull", val);
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    placeholder="XXX-XX-XXXX"
-                    autoComplete="off"
-                  />
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                    Only needed for certain VA forms
-                  </p>
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Home of Record
-                  </label>
-                  <input
-                    type="text"
-                    value={veteranProfile.homeOfRecord || ""}
-                    onChange={(e) =>
-                      handleProfileChange("homeOfRecord", e.target.value)
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                    placeholder="City, State at enlistment"
-                  />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
-            <p className="text-xs text-blue-700 dark:text-blue-400">
-              🔒 {t("formsHelper", "privacyLocalStorage")}
-            </p>
-            <button
-              onClick={handleSaveProfile}
-              className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              {t("formsHelper", "saveProfile")}
-            </button>
-          </div>
-        </div>
+        <ProfileSetupPanel
+          veteranProfile={veteranProfile}
+          handleProfileChange={handleProfileChange}
+          profileSaved={profileSaved}
+          handleSaveProfile={handleSaveProfile}
+          t={t}
+        />
       )}
 
       {/* Profile saved indicator - show when profile exists */}
       {hasVeteranProfile() && !showProfileSetup && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-green-800 dark:text-green-200 font-medium">
-              {t("formsHelper", "profileSavedMsg")}
-            </span>
-          </div>
-          <button
-            onClick={() => setShowProfileSetup(true)}
-            className="text-sm text-green-700 dark:text-green-300 underline hover:no-underline"
-          >
-            {t("formsHelper", "edit")}
-          </button>
-        </div>
+        <ProfileSavedIndicator
+          setShowProfileSetup={setShowProfileSetup}
+          t={t}
+        />
       )}
 
-      {/* Info box about buddy statements */}
-      <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">💡</span>
-          <div>
-            <h3 className="font-bold text-purple-900 dark:text-purple-200">
-              {t("formsHelper", "proTip")}{" "}
-              {t("formsHelper", "buddyStatementsPowerful")}
-            </h3>
-            <p className="text-sm text-purple-800 dark:text-purple-300 mt-1">
-              {t("formsHelper", "buddyStatementsDesc")}
-            </p>
-          </div>
-        </div>
-      </div>
+      <FormSelectionInfoBox t={t} />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {forms.map((form) => (
-          <button
-            key={form.id}
-            onClick={() => {
-              setSelectedForm(form);
-              setFormData({});
-              setCurrentStep(0);
-              setGeneratedContent(null);
-            }}
-            className="text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-va-blue dark:hover:border-va-gold transition-all hover:shadow-lg bg-white dark:bg-gray-800 group"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-3xl">{form.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-va-blue dark:group-hover:text-va-gold">
-                    {form.name}
-                  </h3>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${form.difficultyColor}`}
-                  >
-                    {form.difficulty}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  {form.formNumber}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                  {form.description}
-                </p>
-              </div>
-              <svg
-                className="w-5 h-5 text-gray-400 group-hover:text-va-blue dark:group-hover:text-va-gold flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </button>
-        ))}
-      </div>
+      <FormSelectionCards
+        setSelectedForm={setSelectedForm}
+        setFormData={setFormData}
+        setCurrentStep={setCurrentStep}
+        setGeneratedContent={setGeneratedContent}
+      />
 
-      {/* Quick links section */}
-      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-          📎 {t("formsHelper", "quickLinksToForms")}
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {forms.map((form) => (
-            <a
-              key={form.id}
-              href={form.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-va-blue hover:text-white dark:hover:bg-va-gold dark:hover:text-va-blue rounded-lg transition-colors"
-            >
-              {form.formNumber} ↗
-            </a>
-          ))}
-        </div>
-      </div>
+      <QuickLinksSection t={t} />
     </div>
   );
 
