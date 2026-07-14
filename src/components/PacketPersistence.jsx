@@ -468,120 +468,115 @@ async function _uploadPacketFile(event, ctx) {
   }
 }
 
-export default function PacketPersistence({
-  onPacketLoaded,
-  onSaveComplete,
-  // eslint-disable-next-line no-unused-vars
-  showFloatingIndicator: _showFloatingIndicator = true,
-  compact = false,
-}) {
-  const { t: _t } = useLanguage();
-  const [initialized, setInitialized] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("ready");
-  const [lastSaved, setLastSaved] = useState(null);
-  const [storageInfo, setStorageInfo] = useState(null);
-  const [_showMobilePrompt, setShowMobilePrompt] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+function _runStorageInitEffect(ctx) {
+  const { setStorageInfo, setSaveStatus, setInitialized, setError } = ctx;
+  async function init() {
+    try {
+      const result = await initPersistentStorage();
+      const orientation = getOrientationInfo();
 
-  const fileInputRef = useRef(null);
+      setStorageInfo({
+        strategy: result.strategy,
+        hasFileHandle: false,
+        isMobile: isMobileDevice(),
+        isTablet: isTabletDevice(),
+        isPhone: isMobilePhone(),
+        supportsFileSystem: supportsFileSystemAccess(),
+        orientation: orientation,
+      });
 
-  // Initialize persistent storage on mount
-  useEffect(() => {
-    async function init() {
-      try {
-        const result = await initPersistentStorage();
-        const orientation = getOrientationInfo();
-
-        setStorageInfo({
-          strategy: result.strategy,
-          hasFileHandle: false,
-          isMobile: isMobileDevice(),
-          isTablet: isTabletDevice(),
-          isPhone: isMobilePhone(),
-          supportsFileSystem: supportsFileSystemAccess(),
-          orientation: orientation,
-        });
-
-        if (result.hasUnsavedChanges) {
-          setSaveStatus("unsaved");
-        }
-
-        setInitialized(true);
-      } catch (err) {
-        console.error("Failed to initialize persistent storage:", err);
-        setError("Failed to initialize storage system");
-      }
-    }
-
-    init();
-
-    // Listen for orientation changes
-    const handleOrientationChange = () => {
-      setStorageInfo((prev) => ({
-        ...prev,
-        orientation: getOrientationInfo(),
-      }));
-    };
-
-    window.addEventListener("resize", handleOrientationChange);
-    window.addEventListener("orientationchange", handleOrientationChange);
-
-    return () => {
-      window.removeEventListener("resize", handleOrientationChange);
-      window.removeEventListener("orientationchange", handleOrientationChange);
-    };
-  }, []);
-
-  // Listen for save events
-  useEffect(() => {
-    const unsubscribe = addSaveListener((eventType, data) => {
-      switch (eventType) {
-        case "saving":
-          setSaveStatus("saving");
-          break;
-        case "saved":
-        case "downloaded":
-        case "file-created":
-          setSaveStatus("saved");
-          setLastSaved(Date.now());
-          setStorageInfo((prev) => ({ ...prev, hasFileHandle: true }));
-          onSaveComplete?.(data);
-          break;
-        case "save-error":
-          setSaveStatus("error");
-          setError("Save failed - data backed up to browser");
-          break;
-        case "loaded":
-        case "restored":
-          setSaveStatus("saved");
-          setLastSaved(Date.now());
-          onPacketLoaded?.(data);
-          break;
-      }
-    });
-
-    return unsubscribe;
-  }, [onPacketLoaded, onSaveComplete]);
-
-  // Track unsaved changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (checkHasUnsavedChanges() && saveStatus !== "saving") {
+      if (result.hasUnsavedChanges) {
         setSaveStatus("unsaved");
       }
-    }, 2000);
 
-    return () => clearInterval(interval);
-  }, [saveStatus]);
+      setInitialized(true);
+    } catch (err) {
+      console.error("Failed to initialize persistent storage:", err);
+      setError("Failed to initialize storage system");
+    }
+  }
 
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
+  init();
+
+  // Listen for orientation changes
+  const handleOrientationChange = () => {
+    setStorageInfo((prev) => ({
+      ...prev,
+      orientation: getOrientationInfo(),
+    }));
+  };
+
+  window.addEventListener("resize", handleOrientationChange);
+  window.addEventListener("orientationchange", handleOrientationChange);
+
+  return () => {
+    window.removeEventListener("resize", handleOrientationChange);
+    window.removeEventListener("orientationchange", handleOrientationChange);
+  };
+}
+
+function _runSaveListenerEffect(ctx) {
+  const {
+    setSaveStatus,
+    setLastSaved,
+    setStorageInfo,
+    setError,
+    onPacketLoaded,
+    onSaveComplete,
+  } = ctx;
+  const unsubscribe = addSaveListener((eventType, data) => {
+    switch (eventType) {
+      case "saving":
+        setSaveStatus("saving");
+        break;
+      case "saved":
+      case "downloaded":
+      case "file-created":
+        setSaveStatus("saved");
+        setLastSaved(Date.now());
+        setStorageInfo((prev) => ({ ...prev, hasFileHandle: true }));
+        onSaveComplete?.(data);
+        break;
+      case "save-error":
+        setSaveStatus("error");
+        setError("Save failed - data backed up to browser");
+        break;
+      case "loaded":
+      case "restored":
+        setSaveStatus("saved");
+        setLastSaved(Date.now());
+        onPacketLoaded?.(data);
+        break;
+    }
+  });
+
+  return unsubscribe;
+}
+
+function _runUnsavedTrackingEffect(saveStatus, setSaveStatus) {
+  const interval = setInterval(() => {
+    if (checkHasUnsavedChanges() && saveStatus !== "saving") {
+      setSaveStatus("unsaved");
+    }
+  }, 2000);
+
+  return () => clearInterval(interval);
+}
+
+function usePacketPersistenceHandlers(ctx) {
+  const {
+    setIsLoading,
+    setError,
+    setSaveStatus,
+    setLastSaved,
+    setShowMobilePrompt,
+    onPacketLoaded,
+    fileInputRef,
+  } = ctx;
 
   const handleSavePacket = useCallback(async () => {
     await _saveExistingPacket({ setIsLoading, setError, setSaveStatus, setLastSaved });
-  }, []);
+  }, [setIsLoading, setError, setSaveStatus, setLastSaved]);
 
   const handleDownloadPacket = useCallback(async () => {
     await _downloadPacketBackup({
@@ -591,11 +586,11 @@ export default function PacketPersistence({
       setLastSaved,
       setShowMobilePrompt,
     });
-  }, []);
+  }, [setIsLoading, setError, setSaveStatus, setLastSaved, setShowMobilePrompt]);
 
   const handleResumePacket = useCallback(async () => {
     await _resumeExistingPacket({ setIsLoading, setError, onPacketLoaded, fileInputRef });
-  }, [onPacketLoaded]);
+  }, [setIsLoading, setError, onPacketLoaded, fileInputRef]);
 
   const handleFileUpload = useCallback(
     async (event) => {
@@ -607,37 +602,34 @@ export default function PacketPersistence({
         setLastSaved,
       });
     },
-    [onPacketLoaded],
+    [setIsLoading, setError, onPacketLoaded, setSaveStatus, setLastSaved],
   );
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
+  return { handleSavePacket, handleDownloadPacket, handleResumePacket, handleFileUpload };
+}
 
-  if (!initialized) {
-    return (
-      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-        <span className="text-sm">Initializing storage...</span>
-      </div>
-    );
-  }
+function PacketPersistenceLoadingView() {
+  return (
+    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+      <span className="text-sm">Initializing storage...</span>
+    </div>
+  );
+}
 
-  // Compact mode for headers/toolbars
-  if (compact) {
-    return (
-      <PacketPersistenceCompactView
-        saveStatus={saveStatus}
-        lastSaved={lastSaved}
-        handleSavePacket={handleSavePacket}
-        isLoading={isLoading}
-        fileInputRef={fileInputRef}
-        handleFileUpload={handleFileUpload}
-      />
-    );
-  }
-
-  // Full panel mode
+function PacketPersistenceFullPanel({
+  storageInfo,
+  saveStatus,
+  lastSaved,
+  error,
+  setError,
+  handleSavePacket,
+  handleResumePacket,
+  isLoading,
+  handleDownloadPacket,
+  fileInputRef,
+  handleFileUpload,
+}) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
       <PacketPersistenceHeader
@@ -674,6 +666,97 @@ export default function PacketPersistence({
         className="hidden"
       />
     </div>
+  );
+}
+
+export default function PacketPersistence({
+  onPacketLoaded,
+  onSaveComplete,
+  // eslint-disable-next-line no-unused-vars
+  showFloatingIndicator: _showFloatingIndicator = true,
+  compact = false,
+}) {
+  const { t: _t } = useLanguage();
+  const [initialized, setInitialized] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("ready");
+  const [lastSaved, setLastSaved] = useState(null);
+  const [storageInfo, setStorageInfo] = useState(null);
+  const [_showMobilePrompt, setShowMobilePrompt] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fileInputRef = useRef(null);
+
+  // Initialize persistent storage on mount
+  useEffect(
+    () => _runStorageInitEffect({ setStorageInfo, setSaveStatus, setInitialized, setError }),
+    [],
+  );
+
+  // Listen for save events
+  useEffect(
+    () =>
+      _runSaveListenerEffect({
+        setSaveStatus,
+        setLastSaved,
+        setStorageInfo,
+        setError,
+        onPacketLoaded,
+        onSaveComplete,
+      }),
+    [onPacketLoaded, onSaveComplete],
+  );
+
+  // Track unsaved changes
+  useEffect(
+    () => _runUnsavedTrackingEffect(saveStatus, setSaveStatus),
+    [saveStatus],
+  );
+
+  const { handleSavePacket, handleDownloadPacket, handleResumePacket, handleFileUpload } =
+    usePacketPersistenceHandlers({
+      setIsLoading,
+      setError,
+      setSaveStatus,
+      setLastSaved,
+      setShowMobilePrompt,
+      onPacketLoaded,
+      fileInputRef,
+    });
+
+  if (!initialized) {
+    return <PacketPersistenceLoadingView />;
+  }
+
+  // Compact mode for headers/toolbars
+  if (compact) {
+    return (
+      <PacketPersistenceCompactView
+        saveStatus={saveStatus}
+        lastSaved={lastSaved}
+        handleSavePacket={handleSavePacket}
+        isLoading={isLoading}
+        fileInputRef={fileInputRef}
+        handleFileUpload={handleFileUpload}
+      />
+    );
+  }
+
+  // Full panel mode
+  return (
+    <PacketPersistenceFullPanel
+      storageInfo={storageInfo}
+      saveStatus={saveStatus}
+      lastSaved={lastSaved}
+      error={error}
+      setError={setError}
+      handleSavePacket={handleSavePacket}
+      handleResumePacket={handleResumePacket}
+      isLoading={isLoading}
+      handleDownloadPacket={handleDownloadPacket}
+      fileInputRef={fileInputRef}
+      handleFileUpload={handleFileUpload}
+    />
   );
 }
 
