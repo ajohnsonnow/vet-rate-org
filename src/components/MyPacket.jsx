@@ -405,6 +405,693 @@ function _confirmDataImport(mergeMode, data, ctx) {
   setTimeout(() => setImportStatus(null), 4000);
 }
 
+function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
+  return (
+    <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h2
+            id="my-packet-title"
+            className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
+          >
+            📁 {t("myPacketSection.title")}{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-indigo-100 text-sm sm:text-base">
+            {t("myPacketSection.manageDescription")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ShareButton
+            targetRef={packetContentRef}
+            filename="my-claim-packet"
+            variant="icon"
+          />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="My Claim Packet"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6 sm:w-8 sm:h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MyPacketStatsDashboard({ stats, t }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+      <div className="text-center">
+        <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+          {stats.total}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          📊 {t("myPacketSection.total")}
+        </div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+          {stats.drafting}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          ✏️ {t("myPacketSection.statusDrafting")}
+        </div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
+          {stats.statementGenerated}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          ✅ {t("myPacketSection.ready")}
+        </div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
+          {stats.filed}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          🏆 {t("myPacketSection.statusFiled")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MyPacketBackupGuideBanner({
+  showBackupGuide,
+  claims,
+  handleBackupPacket,
+  onOpenGoogleDriveSync,
+  dismissBackupGuide,
+  t,
+}) {
+  if (!showBackupGuide || claims.length === 0) return null;
+  return (
+    <div className="mx-4 sm:mx-6 mt-4 p-4 bg-gradient-to-r from-amber-50 via-amber-100 to-yellow-50 dark:from-amber-900/30 dark:via-amber-800/30 dark:to-yellow-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl shadow-lg">
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0 text-4xl">🛡️</div>
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-1">
+            {t("myPacketSection.backupGuideTitle")}
+          </h3>
+          <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+            <strong>Important:</strong> {t("myPacketSection.backupGuideMessage")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleBackupPacket}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              {t("myPacketSection.backupGuideDownload")}
+            </button>
+            {onOpenGoogleDriveSync && (
+              <button
+                onClick={() => {
+                  dismissBackupGuide(false);
+                  onOpenGoogleDriveSync();
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-sm shadow-md"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z" />
+                </svg>
+                {t("myPacketSection.backupGuideGoogleDrive")}
+              </button>
+            )}
+            <button
+              onClick={() => dismissBackupGuide(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
+            >
+              {t("myPacketSection.backupGuideRemindLater")}
+            </button>
+            <button
+              onClick={() => dismissBackupGuide(false)}
+              className="inline-flex items-center gap-2 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
+            >
+              {t("myPacketSection.backupGuideDontShow")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MyPacketBackupRestoreControls({
+  handleBackupPacket,
+  claims,
+  handleRestoreClick,
+  onOpenGoogleDriveSync,
+  onAnalyzeStrategy,
+  fileInputRef,
+  handleFileSelect,
+  t,
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <button
+          onClick={handleBackupPacket}
+          disabled={claims.length === 0}
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          {t("myPacketSection.localBackup")}
+        </button>
+        <button
+          onClick={handleRestoreClick}
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          {t("myPacketSection.restore")}
+        </button>
+        {onOpenGoogleDriveSync && (
+          <button
+            onClick={onOpenGoogleDriveSync}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-xs sm:text-sm"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z" />
+            </svg>
+            {t("myPacketSection.googleDrive")}
+          </button>
+        )}
+        {onAnalyzeStrategy && (
+          <button
+            onClick={onAnalyzeStrategy}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
+          >
+            <span>🧭</span>
+            {t("myPacketSection.analyzeStrategy")}
+          </button>
+        )}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept=".json"
+          className="hidden"
+          aria-label="Select backup file"
+        />
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-right">
+        💡 {t("myPacketSection.cloudBackupTip")}
+      </p>
+    </div>
+  );
+}
+
+function MyPacketImportStatusMessage({ importStatus }) {
+  if (!importStatus) return null;
+  return (
+    <div
+      className={`mx-6 mt-4 px-4 py-3 rounded-lg flex items-center gap-2 ${
+        importStatus.type === "success"
+          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-100"
+          : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-100"
+      }`}
+    >
+      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        {importStatus.type === "success" ? (
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clipRule="evenodd"
+          />
+        ) : (
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
+        )}
+      </svg>
+      <span className="text-sm font-medium">{importStatus.message}</span>
+    </div>
+  );
+}
+
+function MyPacketTabNavPrimary({
+  activeTab,
+  setActiveTab,
+  claims,
+  myRatings,
+  serviceHistory,
+  timelineEvents,
+  t,
+}) {
+  return (
+    <>
+      {/* Primary Data */}
+      <button
+          onClick={() => setActiveTab("claims")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "claims"
+              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          📋{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.claims")}</span>
+          <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">
+            {claims.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("ratings")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "ratings"
+              ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          📊{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.ratings")}</span>
+          <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+            {myRatings.length}
+          </span>
+        </button>
+
+        <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+
+        {/* Service & History */}
+        <button
+          onClick={() => setActiveTab("service")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "service"
+              ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          🎖️{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.service")}</span>
+          <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">
+            {serviceHistory.deployments.length + serviceHistory.awards.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("timeline")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "timeline"
+              ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          🧵{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.timeline")}</span>
+          <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">
+            {timelineEvents.length}
+          </span>
+        </button>
+    </>
+  );
+}
+
+function MyPacketTabNavSecondary({
+  activeTab,
+  setActiveTab,
+  painMaps,
+  veteranProfile,
+  savedForms,
+  vaRecords,
+  t,
+}) {
+  return (
+    <>
+        <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+
+        {/* Evidence & Docs */}
+        <button
+          onClick={() => setActiveTab("painmaps")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "painmaps"
+              ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          🎨{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.painMaps")}</span>
+          <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
+            {painMaps.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "profile"
+              ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          ✍️{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.profile")}</span>
+          {veteranProfile.firstName && (
+            <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs">
+              ✓
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("forms")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "forms"
+              ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          📄{" "}
+          <span className="hidden sm:inline">{t("myPacketSection.forms")}</span>
+          <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">
+            {savedForms.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("varecords")}
+          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === "varecords"
+              ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+          }`}
+        >
+          🏛️ <span className="hidden sm:inline">VA Records</span>
+          {vaRecords && (
+            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+              {[vaRecords.claims?.length || 0, vaRecords.appeals?.length || 0].reduce(
+                (a, b) => a + b,
+                0,
+              )}
+            </span>
+          )}
+        </button>
+    </>
+  );
+}
+
+function MyPacketTabNav({
+  activeTab,
+  setActiveTab,
+  claims,
+  myRatings,
+  serviceHistory,
+  timelineEvents,
+  painMaps,
+  veteranProfile,
+  savedForms,
+  vaRecords,
+  t,
+}) {
+  return (
+    <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
+      <nav className="flex gap-1 overflow-x-auto pb-px scrollbar-hide" aria-label="Tabs">
+        <MyPacketTabNavPrimary
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          claims={claims}
+          myRatings={myRatings}
+          serviceHistory={serviceHistory}
+          timelineEvents={timelineEvents}
+          t={t}
+        />
+        <MyPacketTabNavSecondary
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          painMaps={painMaps}
+          veteranProfile={veteranProfile}
+          savedForms={savedForms}
+          vaRecords={vaRecords}
+          t={t}
+        />
+      </nav>
+    </div>
+  );
+}
+
+function RatingsEmptyState({ setShowVAGovPaster, t }) {
+  return (
+    <div className="text-center py-12">
+      <svg
+        className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        📊 {t("myPacketSection.noSavedRatings")}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        {t("myPacketSection.importRatingsDescription")}
+      </p>
+      <button
+        onClick={() => setShowVAGovPaster(true)}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        {t("myPacketSection.importFromVaGov")}
+      </button>
+    </div>
+  );
+}
+
+function MyRatingEditForm({
+  editingRating,
+  setEditingRating,
+  handleUpdateRating,
+  t,
+}) {
+  return (
+    <div className="space-y-3">
+      <input
+        type="text"
+        value={editingRating.name}
+        onChange={(e) =>
+          setEditingRating({ ...editingRating, name: e.target.value })
+        }
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        placeholder={t("myPacketSection.conditionName")}
+      />
+      <div className="flex gap-2">
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="10"
+          value={editingRating.rating}
+          onChange={(e) =>
+            setEditingRating({
+              ...editingRating,
+              rating: parseInt(e.target.value) || 0,
+            })
+          }
+          className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+        <button
+          onClick={() =>
+            handleUpdateRating(editingRating.id, {
+              name: editingRating.name,
+              rating: editingRating.rating,
+            })
+          }
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          {t("myPacketSection.save")}
+        </button>
+        <button
+          onClick={() => setEditingRating(null)}
+          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+        >
+          {t("myPacketSection.cancel")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MyRatingDisplay({
+  rating,
+  setEditingRating,
+  handleRemoveRating,
+  t,
+}) {
+  return (
+    <div className="flex justify-between items-center">
+      <div className="flex-1">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {rating.name || rating.condition}
+          </h3>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-bold ${getRatingBadgeClass(rating.rating)}`}
+          >
+            {rating.rating}%
+          </span>
+        </div>
+        {rating.effectiveDate && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {t("myPacketSection.effective")}:{" "}
+            {new Date(rating.effectiveDate).toLocaleDateString()}
+          </p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setEditingRating({ ...rating })}
+          className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+        >
+          {t("myPacketSection.edit")}
+        </button>
+        <button
+          onClick={() => handleRemoveRating(rating.id)}
+          className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.remove")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MyRatingEntry({
+  rating,
+  editingRating,
+  setEditingRating,
+  handleUpdateRating,
+  handleRemoveRating,
+  t,
+}) {
+  const isEditing = editingRating?.id === rating.id;
+  return (
+    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-all">
+      {isEditing ? (
+        <MyRatingEditForm
+          editingRating={editingRating}
+          setEditingRating={setEditingRating}
+          handleUpdateRating={handleUpdateRating}
+          t={t}
+        />
+      ) : (
+        <MyRatingDisplay
+          rating={rating}
+          setEditingRating={setEditingRating}
+          handleRemoveRating={handleRemoveRating}
+          t={t}
+        />
+      )}
+    </div>
+  );
+}
+
+function RatingsTab({
+  myRatings,
+  editingRating,
+  setEditingRating,
+  handleUpdateRating,
+  handleRemoveRating,
+  handleClearAllRatings,
+  setShowVAGovPaster,
+  t,
+}) {
+  if (myRatings.length === 0) {
+    return <RatingsEmptyState setShowVAGovPaster={setShowVAGovPaster} t={t} />;
+  }
+  return (
+    <>
+      <div className="mb-4 flex justify-between items-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {myRatings.length} {t("myPacketSection.ratingsSaved")}
+        </p>
+        <button
+          onClick={handleClearAllRatings}
+          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.clearAll")}
+        </button>
+      </div>
+      <div className="space-y-3">
+        {myRatings.map((rating) => (
+          <MyRatingEntry
+            key={rating.id}
+            rating={rating}
+            editingRating={editingRating}
+            setEditingRating={setEditingRating}
+            handleUpdateRating={handleUpdateRating}
+            handleRemoveRating={handleRemoveRating}
+            t={t}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -1254,593 +1941,66 @@ Return ONLY the JSON object, no explanation.`,
         size="2xl"
         labelledBy="my-packet-title"
         header={
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h2
-                  id="my-packet-title"
-                  className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
-                >
-                  📁 {t("myPacketSection.title")}{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-indigo-100 text-sm sm:text-base">
-                  {t("myPacketSection.manageDescription")}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <ShareButton
-                  targetRef={packetContentRef}
-                  filename="my-claim-packet"
-                  variant="icon"
-                />
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="My Claim Packet"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <MyPacketHeader
+            onClose={onClose}
+            onReportBug={onReportBug}
+            packetContentRef={packetContentRef}
+            t={t}
+          />
         }
       >
         <div ref={packetContentRef}>
-          {/* Statistics Dashboard */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.total}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                📊 {t("myPacketSection.total")}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                {stats.drafting}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                ✏️ {t("myPacketSection.statusDrafting")}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.statementGenerated}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                ✅ {t("myPacketSection.ready")}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
-                {stats.filed}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                🏆 {t("myPacketSection.statusFiled")}
-              </div>
-            </div>
-          </div>
+          <MyPacketStatsDashboard stats={stats} t={t} />
 
-          {/* 🛡️ GROUND GUIDE - Shows when user has data but no external backup */}
-          {showBackupGuide && claims.length > 0 && (
-            <div className="mx-4 sm:mx-6 mt-4 p-4 bg-gradient-to-r from-amber-50 via-amber-100 to-yellow-50 dark:from-amber-900/30 dark:via-amber-800/30 dark:to-yellow-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl shadow-lg">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 text-4xl">🛡️</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-1">
-                    {t("myPacketSection.backupGuideTitle")}
-                  </h3>
-                  <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
-                    <strong>Important:</strong>{" "}
-                    {t("myPacketSection.backupGuideMessage")}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={handleBackupPacket}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                      {t("myPacketSection.backupGuideDownload")}
-                    </button>
-                    {onOpenGoogleDriveSync && (
-                      <button
-                        onClick={() => {
-                          dismissBackupGuide(false);
-                          onOpenGoogleDriveSync();
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-sm shadow-md"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z" />
-                        </svg>
-                        {t("myPacketSection.backupGuideGoogleDrive")}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => dismissBackupGuide(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
-                    >
-                      {t("myPacketSection.backupGuideRemindLater")}
-                    </button>
-                    <button
-                      onClick={() => dismissBackupGuide(false)}
-                      className="inline-flex items-center gap-2 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
-                    >
-                      {t("myPacketSection.backupGuideDontShow")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <MyPacketBackupGuideBanner
+            showBackupGuide={showBackupGuide}
+            claims={claims}
+            handleBackupPacket={handleBackupPacket}
+            onOpenGoogleDriveSync={onOpenGoogleDriveSync}
+            dismissBackupGuide={dismissBackupGuide}
+            t={t}
+          />
 
-          {/* Backup/Restore Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <button
-                onClick={handleBackupPacket}
-                disabled={claims.length === 0}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                {t("myPacketSection.localBackup")}
-              </button>
-              <button
-                onClick={handleRestoreClick}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-                {t("myPacketSection.restore")}
-              </button>
-              {onOpenGoogleDriveSync && (
-                <button
-                  onClick={onOpenGoogleDriveSync}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-xs sm:text-sm"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z" />
-                  </svg>
-                  {t("myPacketSection.googleDrive")}
-                </button>
-              )}
-              {onAnalyzeStrategy && (
-                <button
-                  onClick={onAnalyzeStrategy}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
-                >
-                  <span>🧭</span>
-                  {t("myPacketSection.analyzeStrategy")}
-                </button>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                accept=".json"
-                className="hidden"
-                aria-label="Select backup file"
-              />
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-right">
-              💡 {t("myPacketSection.cloudBackupTip")}
-            </p>
-          </div>
+          <MyPacketBackupRestoreControls
+            handleBackupPacket={handleBackupPacket}
+            claims={claims}
+            handleRestoreClick={handleRestoreClick}
+            onOpenGoogleDriveSync={onOpenGoogleDriveSync}
+            onAnalyzeStrategy={onAnalyzeStrategy}
+            fileInputRef={fileInputRef}
+            handleFileSelect={handleFileSelect}
+            t={t}
+          />
 
-          {/* Import Status Message */}
-          {importStatus && (
-            <div
-              className={`mx-6 mt-4 px-4 py-3 rounded-lg flex items-center gap-2 ${
-                importStatus.type === "success"
-                  ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-100"
-                  : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-100"
-              }`}
-            >
-              <svg
-                className="w-5 h-5 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                {importStatus.type === "success" ? (
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                ) : (
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                )}
-              </svg>
-              <span className="text-sm font-medium">
-                {importStatus.message}
-              </span>
-            </div>
-          )}
+          <MyPacketImportStatusMessage importStatus={importStatus} />
 
-          {/* Tab Navigation - Organized by category */}
-          <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
-            <nav
-              className="flex gap-1 overflow-x-auto pb-px scrollbar-hide"
-              aria-label="Tabs"
-            >
-              {/* Primary Data */}
-              <button
-                onClick={() => setActiveTab("claims")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "claims"
-                    ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                📋{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.claims")}
-                </span>
-                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {claims.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("ratings")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "ratings"
-                    ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                📊{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.ratings")}
-                </span>
-                <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {myRatings.length}
-                </span>
-              </button>
-
-              <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
-
-              {/* Service & History */}
-              <button
-                onClick={() => setActiveTab("service")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "service"
-                    ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                🎖️{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.service")}
-                </span>
-                <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {serviceHistory.deployments.length +
-                    serviceHistory.awards.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("timeline")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "timeline"
-                    ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                🧵{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.timeline")}
-                </span>
-                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {timelineEvents.length}
-                </span>
-              </button>
-
-              <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
-
-              {/* Evidence & Docs */}
-              <button
-                onClick={() => setActiveTab("painmaps")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "painmaps"
-                    ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                🎨{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.painMaps")}
-                </span>
-                <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {painMaps.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "profile"
-                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                ✍️{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.profile")}
-                </span>
-                {veteranProfile.firstName && (
-                  <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs">
-                    ✓
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("forms")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "forms"
-                    ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                📄{" "}
-                <span className="hidden sm:inline">
-                  {t("myPacketSection.forms")}
-                </span>
-                <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {savedForms.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("varecords")}
-                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                  activeTab === "varecords"
-                    ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-                }`}
-              >
-                🏛️ <span className="hidden sm:inline">VA Records</span>
-                {vaRecords && (
-                  <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
-                    {[
-                      vaRecords.claims?.length || 0,
-                      vaRecords.appeals?.length || 0,
-                    ].reduce((a, b) => a + b, 0)}
-                  </span>
-                )}
-              </button>
-            </nav>
-          </div>
+          <MyPacketTabNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            claims={claims}
+            myRatings={myRatings}
+            serviceHistory={serviceHistory}
+            timelineEvents={timelineEvents}
+            painMaps={painMaps}
+            veteranProfile={veteranProfile}
+            savedForms={savedForms}
+            vaRecords={vaRecords}
+            t={t}
+          />
 
           <div className="p-6">
             {/* MY RATINGS TAB */}
             {activeTab === "ratings" && (
-              <>
-                {myRatings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      📊 {t("myPacketSection.noSavedRatings")}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {t("myPacketSection.importRatingsDescription")}
-                    </p>
-                    <button
-                      onClick={() => setShowVAGovPaster(true)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      {t("myPacketSection.importFromVaGov")}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mb-4 flex justify-between items-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {myRatings.length} {t("myPacketSection.ratingsSaved")}
-                      </p>
-                      <button
-                        onClick={handleClearAllRatings}
-                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                      >
-                        {t("myPacketSection.clearAll")}
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {myRatings.map((rating) => (
-                        <div
-                          key={rating.id}
-                          className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-all"
-                        >
-                          {editingRating?.id === rating.id ? (
-                            <div className="space-y-3">
-                              <input
-                                type="text"
-                                value={editingRating.name}
-                                onChange={(e) =>
-                                  setEditingRating({
-                                    ...editingRating,
-                                    name: e.target.value,
-                                  })
-                                }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                placeholder={t("myPacketSection.conditionName")}
-                              />
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  step="10"
-                                  value={editingRating.rating}
-                                  onChange={(e) =>
-                                    setEditingRating({
-                                      ...editingRating,
-                                      rating: parseInt(e.target.value) || 0,
-                                    })
-                                  }
-                                  className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                />
-                                <button
-                                  onClick={() =>
-                                    handleUpdateRating(rating.id, {
-                                      name: editingRating.name,
-                                      rating: editingRating.rating,
-                                    })
-                                  }
-                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                >
-                                  {t("myPacketSection.save")}
-                                </button>
-                                <button
-                                  onClick={() => setEditingRating(null)}
-                                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
-                                >
-                                  {t("myPacketSection.cancel")}
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex justify-between items-center">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3">
-                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    {rating.name || rating.condition}
-                                  </h3>
-                                  <span
-                                    className={`px-3 py-1 rounded-full text-sm font-bold ${getRatingBadgeClass(rating.rating)}`}
-                                  >
-                                    {rating.rating}%
-                                  </span>
-                                </div>
-                                {rating.effectiveDate && (
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {t("myPacketSection.effective")}:{" "}
-                                    {new Date(
-                                      rating.effectiveDate,
-                                    ).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() =>
-                                    setEditingRating({ ...rating })
-                                  }
-                                  className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                                >
-                                  {t("myPacketSection.edit")}
-                                </button>
-                                <button
-                                  onClick={() => handleRemoveRating(rating.id)}
-                                  className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                                >
-                                  {t("myPacketSection.remove")}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
+              <RatingsTab
+                myRatings={myRatings}
+                editingRating={editingRating}
+                setEditingRating={setEditingRating}
+                handleUpdateRating={handleUpdateRating}
+                handleRemoveRating={handleRemoveRating}
+                handleClearAllRatings={handleClearAllRatings}
+                setShowVAGovPaster={setShowVAGovPaster}
+                t={t}
+              />
             )}
 
             {/* VETERAN PROFILE TAB */}
