@@ -3422,42 +3422,25 @@ function CAPFlashcardTips() {
   );
 }
 
-function CAPFlashcardView({
-  onClose,
-  setMode,
-  searchTerm,
-  setSearchTerm,
-  expandedCategories,
-  setExpandedCategories,
-  flashcardTerm,
-}) {
-  const termCategories = TERM_CATEGORIES;
+function _isCategoryExpanded(categoryName, expandedCategories) {
+  return expandedCategories[categoryName] === true;
+}
 
-  // Helper to check if category is expanded - defaults to false (collapsed) for cleaner initial view
-  const isCategoryExpanded = (categoryName) => {
-    return expandedCategories[categoryName] === true;
-  };
+function _toggleCategory(category, ctx) {
+  const { expandedCategories, setExpandedCategories } = ctx;
+  setExpandedCategories((prev) => ({
+    ...prev,
+    [category]: !_isCategoryExpanded(category, expandedCategories),
+  }));
+}
 
-  const toggleCategory = (category) => {
-    setExpandedCategories((prev) => ({
-      ...prev,
-      [category]: !isCategoryExpanded(category),
-    }));
-  };
+function _setAllCategoriesExpanded(termCategories, setExpandedCategories, value) {
+  setExpandedCategories(
+    termCategories.reduce((acc, cat) => ({ ...acc, [cat.category]: value }), {}),
+  );
+}
 
-  const expandAll = () => {
-    setExpandedCategories(
-      termCategories.reduce((acc, cat) => ({ ...acc, [cat.category]: true }), {}),
-    );
-  };
-
-  const collapseAll = () => {
-    setExpandedCategories(
-      termCategories.reduce((acc, cat) => ({ ...acc, [cat.category]: false }), {}),
-    );
-  };
-
-  // Filter terms based on search
+function _filterTermCategories(termCategories, searchTerm) {
   const filteredCategories = termCategories
     .map((cat) => ({
       ...cat,
@@ -3478,6 +3461,36 @@ function CAPFlashcardView({
     (sum, cat) => sum + cat.terms.length,
     0,
   );
+
+  return { filteredCategories, totalTerms, filteredTermsCount };
+}
+
+function CAPFlashcardView({
+  onClose,
+  setMode,
+  searchTerm,
+  setSearchTerm,
+  expandedCategories,
+  setExpandedCategories,
+  flashcardTerm,
+}) {
+  const termCategories = TERM_CATEGORIES;
+
+  // Helper to check if category is expanded - defaults to false (collapsed) for cleaner initial view
+  const isCategoryExpanded = (categoryName) =>
+    _isCategoryExpanded(categoryName, expandedCategories);
+
+  const toggleCategory = (category) =>
+    _toggleCategory(category, { expandedCategories, setExpandedCategories });
+
+  const expandAll = () =>
+    _setAllCategoriesExpanded(termCategories, setExpandedCategories, true);
+
+  const collapseAll = () =>
+    _setAllCategoriesExpanded(termCategories, setExpandedCategories, false);
+
+  const { filteredCategories, totalTerms, filteredTermsCount } =
+    _filterTermCategories(termCategories, searchTerm);
 
   return (
     <>
