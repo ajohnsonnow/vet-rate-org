@@ -130,6 +130,281 @@ function safeImportToStorage(key, value, label) {
   }
 }
 
+async function _fetchAllVaData(vaAccessToken, setVaImportStatus) {
+  const fetchedData = {
+    claims: [],
+    serviceHistory: null,
+    appeals: [],
+    appealableIssues: [],
+    rawClaims: null,
+    rawServiceHistory: null,
+    rawAppeals: null,
+    rawAppealableIssues: null,
+  };
+
+  const errors = [];
+
+  // Fetch Service History
+  try {
+    setVaImportStatus((prev) => ({
+      ...prev,
+      message: "Fetching service history...",
+    }));
+    const rawServiceHistory = await fetchVAServiceHistory(vaAccessToken);
+    fetchedData.rawServiceHistory = rawServiceHistory;
+    const formatted = formatServiceHistory(rawServiceHistory);
+    // Take first service episode or flatten
+    fetchedData.serviceHistory = formatted.length > 0 ? formatted[0] : null;
+  } catch (err) {
+    console.error("[VA Import] Service history error:", err);
+    errors.push("Service History: " + err.message);
+  }
+
+  // Fetch Claims
+  try {
+    setVaImportStatus((prev) => ({ ...prev, message: "Fetching claims..." }));
+    const rawClaims = await fetchVAClaims(vaAccessToken);
+    fetchedData.rawClaims = rawClaims;
+    fetchedData.claims = formatClaims(rawClaims);
+  } catch (err) {
+    console.error("[VA Import] Claims error:", err);
+    errors.push("Claims: " + err.message);
+  }
+
+  // Fetch Appeals Status
+  try {
+    setVaImportStatus((prev) => ({
+      ...prev,
+      message: "Fetching appeals...",
+    }));
+    const rawAppeals = await fetchVAAppealsStatus(vaAccessToken);
+    fetchedData.rawAppeals = rawAppeals;
+    fetchedData.appeals = formatAppealsStatus(rawAppeals);
+  } catch (err) {
+    console.error("[VA Import] Appeals error:", err);
+    errors.push("Appeals: " + err.message);
+  }
+
+  // Fetch Appealable Issues
+  try {
+    setVaImportStatus((prev) => ({
+      ...prev,
+      message: "Fetching appealable issues...",
+    }));
+    const rawAppealableIssues = await fetchVAAppealableIssues(vaAccessToken);
+    fetchedData.rawAppealableIssues = rawAppealableIssues;
+    fetchedData.appealableIssues = formatAppealableIssues(rawAppealableIssues);
+  } catch (err) {
+    console.error("[VA Import] Appealable issues error:", err);
+    errors.push("Appealable Issues: " + err.message);
+  }
+
+  return { fetchedData, errors };
+}
+
+function _buildVaImportStatusMessage(fetchedData, errors) {
+  const counts = {
+    claims: fetchedData.claims?.length || 0,
+    appeals: fetchedData.appeals?.length || 0,
+    appealableIssues: fetchedData.appealableIssues?.length || 0,
+    serviceHistory: fetchedData.serviceHistory ? 1 : 0,
+  };
+
+  const totalImported =
+    counts.claims +
+    counts.appeals +
+    counts.appealableIssues +
+    counts.serviceHistory;
+
+  if (totalImported > 0) {
+    return {
+      loading: false,
+      success: true,
+      message: `Successfully imported ${totalImported} records! Your data is now saved locally and available to AI tools.`,
+      counts,
+    };
+  }
+  if (errors.length > 0) {
+    return {
+      loading: false,
+      success: false,
+      message: `Import completed with errors: ${errors.join("; ")}`,
+      counts,
+    };
+  }
+  return {
+    loading: false,
+    success: true,
+    message: "Import complete. No records found in your VA.gov account.",
+    counts,
+  };
+}
+
+async function _importVaData(vaAccessToken, ctx) {
+  const { setVaImportStatus, loadVARecordsData, loadClaims } = ctx;
+
+  if (!vaAccessToken) {
+    setVaImportStatus({
+      loading: false,
+      success: false,
+      message: "Not authenticated. Please connect to VA.gov first.",
+    });
+    return;
+  }
+
+  setVaImportStatus({
+    loading: true,
+    success: null,
+    message: "Fetching your VA records...",
+    counts: {},
+  });
+
+  const { fetchedData, errors } = await _fetchAllVaData(
+    vaAccessToken,
+    setVaImportStatus,
+  );
+
+  // Save to local storage with consent (save to both MyPacket and VKB)
+  setVaImportStatus((prev) => ({
+    ...prev,
+    message: "Saving to your device...",
+  }));
+
+  const consent = { saveToPacket: true, saveToVKB: true };
+  await saveVADataWithConsent(fetchedData, consent);
+
+  // Reload the VA records display
+  loadVARecordsData();
+  loadClaims(); // Reload claims tab too since we may have added claims
+
+  setVaImportStatus(_buildVaImportStatusMessage(fetchedData, errors));
+}
+
+function _importAllPacketData(data, mergeMode, ctx) {
+  const {
+    loadSavedForms,
+    loadVeteranProfile,
+    loadServiceHistory,
+    loadMyRatings,
+    loadTimelineEvents,
+    loadPainMaps,
+  } = ctx;
+
+  // Import veteran profile if present
+  if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0) {
+    safeImportToStorage(
+      "vet_rate_veteran_profile",
+      data.veteranProfile,
+      "profile",
+    );
+  }
+
+  // Import saved forms if present
+  if (
+    data.savedForms &&
+    Array.isArray(data.savedForms) &&
+    data.savedForms.length > 0
+  ) {
+    try {
+      if (mergeMode === "merge") {
+        const existingForms = getSavedForms();
+        const existingIds = new Set(existingForms.map((f) => f.id));
+        const newForms = data.savedForms.filter(
+          (f) => !existingIds.has(f.id),
+        );
+        localStorage.setItem(
+          "vet_rate_saved_forms",
+          JSON.stringify([...existingForms, ...newForms]),
+        );
+      } else {
+        localStorage.setItem(
+          "vet_rate_saved_forms",
+          JSON.stringify(data.savedForms),
+        );
+      }
+      loadSavedForms();
+    } catch (e) {
+      console.error("Error importing forms:", e);
+    }
+  }
+
+  // Import service history
+  if (data.serviceHistory) {
+    safeImportToStorage(
+      "vet_rate_service_history",
+      data.serviceHistory,
+      "service history",
+    );
+  }
+
+  // Import ratings
+  if (data.myRatings && Array.isArray(data.myRatings)) {
+    safeImportToStorage("vet_rate_my_ratings", data.myRatings, "ratings");
+  }
+
+  // Import timeline events
+  if (data.timelineEvents && Array.isArray(data.timelineEvents)) {
+    safeImportToStorage(
+      "vet_rate_timeline_events",
+      data.timelineEvents,
+      "timeline events",
+    );
+  }
+
+  // Import pain maps
+  if (data.painMaps && Array.isArray(data.painMaps)) {
+    safeImportToStorage("vet_rate_pain_maps", data.painMaps, "pain maps");
+  }
+
+  // Reload ALL state after import
+  loadVeteranProfile();
+  loadServiceHistory();
+  loadMyRatings();
+  loadTimelineEvents();
+  loadPainMaps();
+}
+
+function _buildImportSuccessMessage(data, mergeMode) {
+  const parts = [`${data.claims.length} claims`];
+  if (data.savedForms?.length) parts.push(`${data.savedForms.length} forms`);
+  if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0)
+    parts.push("profile");
+  if (data.serviceHistory?.deployments?.length)
+    parts.push(`${data.serviceHistory.deployments.length} deployments`);
+  if (data.serviceHistory?.awards?.length)
+    parts.push(`${data.serviceHistory.awards.length} awards`);
+  if (data.myRatings?.length) parts.push(`${data.myRatings.length} ratings`);
+  if (data.timelineEvents?.length)
+    parts.push(`${data.timelineEvents.length} timeline events`);
+
+  return `Successfully ${mergeMode === "merge" ? "merged" : "restored"} ${parts.join(", ")}`;
+}
+
+function _confirmDataImport(mergeMode, data, ctx) {
+  const { loadClaims, setImportStatus, setShowImportConfirm } = ctx;
+
+  const claimSuccess = importClaims(data.claims, mergeMode);
+  const statementSuccess = importStatements(data.statements, mergeMode);
+
+  _importAllPacketData(data, mergeMode, ctx);
+
+  if (claimSuccess && statementSuccess) {
+    setImportStatus({
+      type: "success",
+      message: _buildImportSuccessMessage(data, mergeMode),
+    });
+    loadClaims();
+  } else {
+    setImportStatus({
+      type: "error",
+      message: "Import failed. Please try again.",
+    });
+  }
+
+  setShowImportConfirm(null);
+  setTimeout(() => setImportStatus(null), 4000);
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -379,140 +654,11 @@ const MyPacket = ({
 
   // VA Data Import Handler - Fetches all data from VA.gov and saves locally
   const handleVaDataImport = async () => {
-    if (!vaAccessToken) {
-      setVaImportStatus({
-        loading: false,
-        success: false,
-        message: "Not authenticated. Please connect to VA.gov first.",
-      });
-      return;
-    }
-
-    setVaImportStatus({
-      loading: true,
-      success: null,
-      message: "Fetching your VA records...",
-      counts: {},
+    await _importVaData(vaAccessToken, {
+      setVaImportStatus,
+      loadVARecordsData,
+      loadClaims,
     });
-
-    const fetchedData = {
-      claims: [],
-      serviceHistory: null,
-      appeals: [],
-      appealableIssues: [],
-      rawClaims: null,
-      rawServiceHistory: null,
-      rawAppeals: null,
-      rawAppealableIssues: null,
-    };
-
-    const errors = [];
-
-    // Fetch Service History
-    try {
-      setVaImportStatus((prev) => ({
-        ...prev,
-        message: "Fetching service history...",
-      }));
-      const rawServiceHistory = await fetchVAServiceHistory(vaAccessToken);
-      fetchedData.rawServiceHistory = rawServiceHistory;
-      const formatted = formatServiceHistory(rawServiceHistory);
-      // Take first service episode or flatten
-      fetchedData.serviceHistory = formatted.length > 0 ? formatted[0] : null;
-    } catch (err) {
-      console.error("[VA Import] Service history error:", err);
-      errors.push("Service History: " + err.message);
-    }
-
-    // Fetch Claims
-    try {
-      setVaImportStatus((prev) => ({ ...prev, message: "Fetching claims..." }));
-      const rawClaims = await fetchVAClaims(vaAccessToken);
-      fetchedData.rawClaims = rawClaims;
-      fetchedData.claims = formatClaims(rawClaims);
-    } catch (err) {
-      console.error("[VA Import] Claims error:", err);
-      errors.push("Claims: " + err.message);
-    }
-
-    // Fetch Appeals Status
-    try {
-      setVaImportStatus((prev) => ({
-        ...prev,
-        message: "Fetching appeals...",
-      }));
-      const rawAppeals = await fetchVAAppealsStatus(vaAccessToken);
-      fetchedData.rawAppeals = rawAppeals;
-      fetchedData.appeals = formatAppealsStatus(rawAppeals);
-    } catch (err) {
-      console.error("[VA Import] Appeals error:", err);
-      errors.push("Appeals: " + err.message);
-    }
-
-    // Fetch Appealable Issues
-    try {
-      setVaImportStatus((prev) => ({
-        ...prev,
-        message: "Fetching appealable issues...",
-      }));
-      const rawAppealableIssues = await fetchVAAppealableIssues(vaAccessToken);
-      fetchedData.rawAppealableIssues = rawAppealableIssues;
-      fetchedData.appealableIssues =
-        formatAppealableIssues(rawAppealableIssues);
-    } catch (err) {
-      console.error("[VA Import] Appealable issues error:", err);
-      errors.push("Appealable Issues: " + err.message);
-    }
-
-    // Save to local storage with consent (save to both MyPacket and VKB)
-    setVaImportStatus((prev) => ({
-      ...prev,
-      message: "Saving to your device...",
-    }));
-
-    const consent = { saveToPacket: true, saveToVKB: true };
-    await saveVADataWithConsent(fetchedData, consent);
-
-    // Reload the VA records display
-    loadVARecordsData();
-    loadClaims(); // Reload claims tab too since we may have added claims
-
-    // Calculate counts
-    const counts = {
-      claims: fetchedData.claims?.length || 0,
-      appeals: fetchedData.appeals?.length || 0,
-      appealableIssues: fetchedData.appealableIssues?.length || 0,
-      serviceHistory: fetchedData.serviceHistory ? 1 : 0,
-    };
-
-    const totalImported =
-      counts.claims +
-      counts.appeals +
-      counts.appealableIssues +
-      counts.serviceHistory;
-
-    if (totalImported > 0) {
-      setVaImportStatus({
-        loading: false,
-        success: true,
-        message: `Successfully imported ${totalImported} records! Your data is now saved locally and available to AI tools.`,
-        counts,
-      });
-    } else if (errors.length > 0) {
-      setVaImportStatus({
-        loading: false,
-        success: false,
-        message: `Import completed with errors: ${errors.join("; ")}`,
-        counts,
-      });
-    } else {
-      setVaImportStatus({
-        loading: false,
-        success: true,
-        message: "Import complete. No records found in your VA.gov account.",
-        counts,
-      });
-    }
   };
 
   // Handle VA Disconnect - clears session but keeps imported data
@@ -874,113 +1020,17 @@ Return ONLY the JSON object, no explanation.`,
 
   // Confirm and execute import (handles complete backups with profile and forms)
   const handleConfirmImport = (mergeMode) => {
-    const { data } = showImportConfirm;
-
-    const claimSuccess = importClaims(data.claims, mergeMode);
-    const statementSuccess = importStatements(data.statements, mergeMode);
-
-    // Import veteran profile if present
-    if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0) {
-      safeImportToStorage(
-        "vet_rate_veteran_profile",
-        data.veteranProfile,
-        "profile",
-      );
-    }
-
-    // Import saved forms if present
-    if (
-      data.savedForms &&
-      Array.isArray(data.savedForms) &&
-      data.savedForms.length > 0
-    ) {
-      try {
-        if (mergeMode === "merge") {
-          const existingForms = getSavedForms();
-          const existingIds = new Set(existingForms.map((f) => f.id));
-          const newForms = data.savedForms.filter(
-            (f) => !existingIds.has(f.id),
-          );
-          localStorage.setItem(
-            "vet_rate_saved_forms",
-            JSON.stringify([...existingForms, ...newForms]),
-          );
-        } else {
-          localStorage.setItem(
-            "vet_rate_saved_forms",
-            JSON.stringify(data.savedForms),
-          );
-        }
-        loadSavedForms();
-      } catch (e) {
-        console.error("Error importing forms:", e);
-      }
-    }
-
-    // Import service history
-    if (data.serviceHistory) {
-      safeImportToStorage(
-        "vet_rate_service_history",
-        data.serviceHistory,
-        "service history",
-      );
-    }
-
-    // Import ratings
-    if (data.myRatings && Array.isArray(data.myRatings)) {
-      safeImportToStorage("vet_rate_my_ratings", data.myRatings, "ratings");
-    }
-
-    // Import timeline events
-    if (data.timelineEvents && Array.isArray(data.timelineEvents)) {
-      safeImportToStorage(
-        "vet_rate_timeline_events",
-        data.timelineEvents,
-        "timeline events",
-      );
-    }
-
-    // Import pain maps
-    if (data.painMaps && Array.isArray(data.painMaps)) {
-      safeImportToStorage("vet_rate_pain_maps", data.painMaps, "pain maps");
-    }
-
-    // Reload ALL state after import
-    loadVeteranProfile();
-    loadServiceHistory();
-    loadMyRatings();
-    loadTimelineEvents();
-    loadPainMaps();
-
-    if (claimSuccess && statementSuccess) {
-      const parts = [`${data.claims.length} claims`];
-      if (data.savedForms?.length)
-        parts.push(`${data.savedForms.length} forms`);
-      if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0)
-        parts.push("profile");
-      if (data.serviceHistory?.deployments?.length)
-        parts.push(`${data.serviceHistory.deployments.length} deployments`);
-      if (data.serviceHistory?.awards?.length)
-        parts.push(`${data.serviceHistory.awards.length} awards`);
-      if (data.myRatings?.length)
-        parts.push(`${data.myRatings.length} ratings`);
-      if (data.timelineEvents?.length)
-        parts.push(`${data.timelineEvents.length} timeline events`);
-
-      setImportStatus({
-        type: "success",
-        message: `Successfully ${mergeMode === "merge" ? "merged" : "restored"} ${parts.join(", ")}`,
-      });
-      loadClaims();
-    } else {
-      setImportStatus({
-        type: "error",
-        message: "Import failed. Please try again.",
-      });
-    }
-
-    setShowImportConfirm(null);
-    setTimeout(() => setImportStatus(null), 4000);
+    _confirmDataImport(mergeMode, showImportConfirm.data, {
+      loadSavedForms,
+      loadVeteranProfile,
+      loadServiceHistory,
+      loadMyRatings,
+      loadTimelineEvents,
+      loadPainMaps,
+      loadClaims,
+      setImportStatus,
+      setShowImportConfirm,
+    });
   };
 
   const handleStatusChange = (claimId, newStatus) => {
