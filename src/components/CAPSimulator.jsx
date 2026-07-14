@@ -1680,6 +1680,227 @@ const calculateGenericRating = (answers, condition) => {
 };
 
 
+function CAPIntroHeader({ onClose, onReportBug }) {
+  return (
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
+      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="C&P Exam Simulator"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label="Close C&P Simulator"
+        >
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
+        </button>
+      </div>
+      <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
+        <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+        <h2
+          id="cap-simulator-title"
+          className="text-xl sm:text-3xl font-bold"
+        >
+          C&P Exam Simulator{" "}
+          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+            BETA
+          </span>
+        </h2>
+      </div>
+      <p className="text-emerald-100 text-sm sm:text-lg pr-8">
+        Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book
+        Test
+      </p>
+    </div>
+  );
+}
+
+function CAPIntroModeButtons({ setMode }) {
+  return (
+    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 shadow-lg">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
+        🎯 Choose Your Mode
+      </h3>
+      <div className="flex flex-wrap gap-4 justify-center">
+        <button
+          onClick={() => setMode("select-condition")}
+          className="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+        >
+          <ClipboardList className="h-6 w-6" />
+          <div className="text-left">
+            <div>Start Simulation</div>
+            <div className="text-xs font-normal text-teal-200">
+              Practice DBQ questions
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => setMode("exam-prep")}
+          className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+        >
+          <FileText className="h-6 w-6" />
+          <div className="text-left">
+            <div>Exam Prep</div>
+            <div className="text-xs font-normal text-emerald-200">
+              See actual DBQ questions
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => setMode("flashcard")}
+          className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+        >
+          <BookOpen className="h-6 w-6" />
+          <div className="text-left">
+            <div>Learn Terminology</div>
+            <div className="text-xs font-normal text-cyan-200">
+              Key terms & definitions
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CAPIntroFeatureGrid() {
+  return (
+    <div className="grid md:grid-cols-3 gap-4">
+      <div className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
+        <div className="text-teal-600 dark:text-teal-400 mb-3">
+          <ClipboardList className="h-8 w-8" />
+        </div>
+        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+          1. Simulation
+        </h4>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
+          Answer condition-specific questions based on actual DBQ criteria
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
+        <div className="text-emerald-600 dark:text-emerald-400 mb-3">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+          2. Gap Analysis
+        </h4>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
+          See exactly what rating your answers align with and what&apos;s
+          needed for higher ratings
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 rounded-lg p-5">
+        <div className="text-cyan-600 dark:text-cyan-400 mb-3">
+          <BookOpen className="h-8 w-8" />
+        </div>
+        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+          3. Preparation
+        </h4>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
+          Get specific action items: what documents to bring, what to say,
+          what NOT to say
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CAPIntroROMTip() {
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-5">
+      <div className="flex gap-3">
+        <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+        <div>
+          <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
+            The &quot;Stop When It Hurts&quot; Principle
+          </h4>
+          <p className="text-amber-800 dark:text-amber-100 text-sm">
+            For conditions like back pain or knee pain, the simulator will
+            teach you the most important exam tip:{" "}
+            <strong>
+              Range of Motion is measured to the point where pain STOPS
+              you
+            </strong>{" "}
+            - not where you can force yourself to go. Many veterans
+            unknowingly lower their ratings by &quot;pushing through&quot;
+            during ROM testing.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CAPIntroCoverageStats({ conditionCount }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
+        Comprehensive Condition Coverage:
+      </h3>
+      <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+            {conditionCount}
+          </div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            Conditions with Simulations
+          </div>
+        </div>
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+            15+
+          </div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            Body Systems Covered
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            All 38 CFR Part 4 Subpart B
+          </div>
+        </div>
+        <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+            100%
+          </div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            FREE
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Always, no premium tiers
+          </div>
+        </div>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        <strong>Body System-Specific Questions:</strong> Each simulation
+        generates questions tailored to the specific body system
+        (musculoskeletal, mental health, respiratory, neurological, etc.)
+        based on actual DBQ criteria and 38 CFR Part 4 rating schedules.
+        Questions target the specific symptoms, measurements, and
+        functional limitations examiners assess for your condition.
+      </p>
+    </div>
+  );
+}
+
+function CAPIntroDisclaimer() {
+  return (
+    <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
+      <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+        <strong>Disclaimer:</strong> This is a training tool, not legal
+        advice. Always tell the truth during your exam. The C&P
+        examiner&apos;s job is to document your condition accurately - be
+        honest about your worst days, not just your best days. This tool
+        is based on 38 CFR Part 4 as of January 2026.
+      </p>
+    </div>
+  );
+}
+
 function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
   return (
     <ResponsiveModal
@@ -1687,42 +1908,7 @@ function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
       onClose={onClose}
       size="xl"
       labelledBy="cap-simulator-title"
-      header={
-        <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
-          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
-            {onReportBug && (
-              <ReportBugLink
-                onClick={onReportBug}
-                variant="light"
-                moduleName="C&P Exam Simulator"
-              />
-            )}
-            <button
-              onClick={onClose}
-              className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close C&P Simulator"
-            >
-              <X className="h-5 w-5 sm:h-6 sm:w-6" />
-            </button>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
-            <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
-            <h2
-              id="cap-simulator-title"
-              className="text-xl sm:text-3xl font-bold"
-            >
-              C&P Exam Simulator{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                BETA
-              </span>
-            </h2>
-          </div>
-          <p className="text-emerald-100 text-sm sm:text-lg pr-8">
-            Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book
-            Test
-          </p>
-        </div>
-      }
+      header={<CAPIntroHeader onClose={onClose} onReportBug={onReportBug} />}
     >
       <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-4 sm:p-8 space-y-4 sm:space-y-6">
         <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-lg p-6">
@@ -1745,173 +1931,150 @@ function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
         </div>
 
         {/* PRIMARY ACTION BUTTONS - Prominently placed after intro */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">
-            🎯 Choose Your Mode
-          </h3>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <button
-              onClick={() => setMode("select-condition")}
-              className="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-            >
-              <ClipboardList className="h-6 w-6" />
-              <div className="text-left">
-                <div>Start Simulation</div>
-                <div className="text-xs font-normal text-teal-200">
-                  Practice DBQ questions
-                </div>
-              </div>
-            </button>
-            <button
-              onClick={() => setMode("exam-prep")}
-              className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-            >
-              <FileText className="h-6 w-6" />
-              <div className="text-left">
-                <div>Exam Prep</div>
-                <div className="text-xs font-normal text-emerald-200">
-                  See actual DBQ questions
-                </div>
-              </div>
-            </button>
-            <button
-              onClick={() => setMode("flashcard")}
-              className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
-            >
-              <BookOpen className="h-6 w-6" />
-              <div className="text-left">
-                <div>Learn Terminology</div>
-                <div className="text-xs font-normal text-cyan-200">
-                  Key terms & definitions
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
+        <CAPIntroModeButtons setMode={setMode} />
 
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
-            <div className="text-teal-600 dark:text-teal-400 mb-3">
-              <ClipboardList className="h-8 w-8" />
-            </div>
-            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-              1. Simulation
-            </h4>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Answer condition-specific questions based on actual DBQ criteria
-            </p>
-          </div>
+        <CAPIntroFeatureGrid />
 
-          <div className="bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
-            <div className="text-emerald-600 dark:text-emerald-400 mb-3">
-              <AlertCircle className="h-8 w-8" />
-            </div>
-            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-              2. Gap Analysis
-            </h4>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              See exactly what rating your answers align with and what&apos;s
-              needed for higher ratings
-            </p>
-          </div>
+        <CAPIntroROMTip />
 
-          <div className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 rounded-lg p-5">
-            <div className="text-cyan-600 dark:text-cyan-400 mb-3">
-              <BookOpen className="h-8 w-8" />
-            </div>
-            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-              3. Preparation
-            </h4>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Get specific action items: what documents to bring, what to say,
-              what NOT to say
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-5">
-          <div className="flex gap-3">
-            <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-            <div>
-              <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
-                The &quot;Stop When It Hurts&quot; Principle
-              </h4>
-              <p className="text-amber-800 dark:text-amber-100 text-sm">
-                For conditions like back pain or knee pain, the simulator will
-                teach you the most important exam tip:{" "}
-                <strong>
-                  Range of Motion is measured to the point where pain STOPS
-                  you
-                </strong>{" "}
-                - not where you can force yourself to go. Many veterans
-                unknowingly lower their ratings by &quot;pushing through&quot;
-                during ROM testing.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
-            Comprehensive Condition Coverage:
-          </h3>
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                {conditionCount}
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Conditions with Simulations
-              </div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-                15+
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Body Systems Covered
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                All 38 CFR Part 4 Subpart B
-              </div>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                100%
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                FREE
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Always, no premium tiers
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <strong>Body System-Specific Questions:</strong> Each simulation
-            generates questions tailored to the specific body system
-            (musculoskeletal, mental health, respiratory, neurological, etc.)
-            based on actual DBQ criteria and 38 CFR Part 4 rating schedules.
-            Questions target the specific symptoms, measurements, and
-            functional limitations examiners assess for your condition.
-          </p>
-        </div>
+        <CAPIntroCoverageStats conditionCount={conditionCount} />
 
         {/* Disclaimer */}
-        <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
-          <p className="text-xs text-gray-600 dark:text-gray-400 italic">
-            <strong>Disclaimer:</strong> This is a training tool, not legal
-            advice. Always tell the truth during your exam. The C&P
-            examiner&apos;s job is to document your condition accurately - be
-            honest about your worst days, not just your best days. This tool
-            is based on 38 CFR Part 4 as of January 2026.
-          </p>
-        </div>
+        <CAPIntroDisclaimer />
       </div>
     </ResponsiveModal>
   );
 }
 
+
+function CAPExamPrepListHeader({ onClose, setMode }) {
+  return (
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setMode("intro")}
+          className="text-white hover:text-cyan-200 transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <FileText className="h-8 w-8 text-white" />
+        <div>
+          <h1
+            id="exam-prep-title"
+            className="text-xl font-bold text-white"
+          >
+            Exam Prep Room
+          </h1>
+          <p className="text-cyan-100 text-sm">
+            See the DBQ before the examiner does
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onClose}
+        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function CAPExamPrepIntroBox() {
+  return (
+    <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
+      <div className="flex items-start gap-4">
+        <div className="text-4xl">📋</div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-cyan-300 mb-2">
+            The Open Book Test
+          </h2>
+          <p className="text-gray-300 text-lg mb-4">
+            Your C&P examiner isn&apos;t improvising - they&apos;re
+            checking boxes on a standardized form called a{" "}
+            <span className="font-bold text-white">
+              Disability Benefits Questionnaire (DBQ)
+            </span>
+            .
+          </p>
+          <p className="text-gray-300">
+            This tool shows you the{" "}
+            <span className="font-bold text-cyan-300">
+              exact questions
+            </span>{" "}
+            they&apos;ll ask and{" "}
+            <span className="font-bold text-cyan-300">
+              strategic tips
+            </span>{" "}
+            on how to answer honestly without underselling your symptoms.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CAPExamPrepSearchBar({ searchTerm, setSearchTerm }) {
+  return (
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-semibold text-gray-300 mb-2">
+        Search for your condition:
+      </label>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="e.g., PTSD, Knee, Tinnitus, Migraine..."
+        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+      />
+    </div>
+  );
+}
+
+function CAPExamPrepConditionList({
+  filteredConditions,
+  searchTerm,
+  onSelectCondition,
+}) {
+  return (
+    <>
+      <div>
+        <h3 className="text-lg font-bold text-gray-200 mb-3">
+          Select a condition ({filteredConditions.length} available):
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+          {filteredConditions.map((cond) => (
+            <button
+              key={cond.key}
+              onClick={() => onSelectCondition(cond.key)}
+              className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500 rounded-lg transition-all group"
+            >
+              <div className="font-semibold text-white group-hover:text-cyan-300">
+                {cond.condition_name}
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                DC {cond.diagnostic_code} • {cond.cfr_reference}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredConditions.length === 0 && (
+        <div className="text-center py-12 text-gray-400">
+          <div className="text-4xl mb-4">🔍</div>
+          <p>No conditions found matching &quot;{searchTerm}&quot;</p>
+          <p className="text-sm mt-2">
+            Try a different search term or browse all conditions above.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
 
 function CAPExamPrepListView({
   onClose,
@@ -1955,122 +2118,135 @@ function CAPExamPrepListView({
       size="2xl"
       labelledBy="exam-prep-title"
       className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-cyan-500/30"
-      header={
-        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMode("intro")}
-              className="text-white hover:text-cyan-200 transition-colors"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <FileText className="h-8 w-8 text-white" />
-            <div>
-              <h1
-                id="exam-prep-title"
-                className="text-xl font-bold text-white"
-              >
-                Exam Prep Room
-              </h1>
-              <p className="text-cyan-100 text-sm">
-                See the DBQ before the examiner does
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-      }
+      header={<CAPExamPrepListHeader onClose={onClose} setMode={setMode} />}
     >
       <div className="space-y-6">
-        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">📋</div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-cyan-300 mb-2">
-                The Open Book Test
-              </h2>
-              <p className="text-gray-300 text-lg mb-4">
-                Your C&P examiner isn&apos;t improvising - they&apos;re
-                checking boxes on a standardized form called a{" "}
-                <span className="font-bold text-white">
-                  Disability Benefits Questionnaire (DBQ)
-                </span>
-                .
-              </p>
-              <p className="text-gray-300">
-                This tool shows you the{" "}
-                <span className="font-bold text-cyan-300">
-                  exact questions
-                </span>{" "}
-                they&apos;ll ask and{" "}
-                <span className="font-bold text-cyan-300">
-                  strategic tips
-                </span>{" "}
-                on how to answer honestly without underselling your symptoms.
-              </p>
-            </div>
-          </div>
-        </div>
+        <CAPExamPrepIntroBox />
 
         {/* Search Bar */}
-        <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Search for your condition:
-          </label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="e.g., PTSD, Knee, Tinnitus, Migraine..."
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          />
-        </div>
+        <CAPExamPrepSearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
 
         {/* Condition List */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-200 mb-3">
-            Select a condition ({filteredConditions.length} available):
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-            {filteredConditions.map((cond) => (
-              <button
-                key={cond.key}
-                onClick={() => handleExamPrepConditionSelect(cond.key)}
-                className="text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500 rounded-lg transition-all group"
-              >
-                <div className="font-semibold text-white group-hover:text-cyan-300">
-                  {cond.condition_name}
-                </div>
-                <div className="text-sm text-gray-400 mt-1">
-                  DC {cond.diagnostic_code} • {cond.cfr_reference}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {filteredConditions.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
-            <div className="text-4xl mb-4">🔍</div>
-            <p>No conditions found matching &quot;{searchTerm}&quot;</p>
-            <p className="text-sm mt-2">
-              Try a different search term or browse all conditions above.
-            </p>
-          </div>
-        )}
+        <CAPExamPrepConditionList
+          filteredConditions={filteredConditions}
+          searchTerm={searchTerm}
+          onSelectCondition={handleExamPrepConditionSelect}
+        />
       </div>
     </ResponsiveModal>
   );
 }
 
+
+function CAPSelectConditionHeader({
+  onClose,
+  setMode,
+  searchTerm,
+  setSearchTerm,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
+      <button
+        onClick={() => setMode("intro")}
+        className="absolute top-4 left-4 text-white hover:text-gray-200"
+        aria-label="Go back"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white hover:text-gray-200"
+        aria-label="Close"
+      >
+        <X className="h-6 w-6" />
+      </button>
+      <h2
+        id="cap-condition-select-title"
+        className="text-2xl font-bold text-center mb-4"
+      >
+        Select a Condition to Simulate
+      </h2>
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by condition name or diagnostic code..."
+          className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
+        />
+      </div>
+    </div>
+  );
+}
+
+function CAPSelectConditionCard({ condition, onSelect }) {
+  const dbqKey = Object.keys(dbqLogicMap).find(
+    (key) =>
+      dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
+  );
+  const isPremium = !!dbqKey;
+
+  return (
+    <button
+      onClick={() => onSelect(condition)}
+      className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition text-left group"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-teal-700 dark:group-hover:text-teal-400">
+              {condition.conditionName}
+            </h3>
+            {isPremium && (
+              <span className="px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full font-bold">
+                DBQ-SPECIFIC
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            DC {condition.diagnosticCode} •{" "}
+            {condition.ratingSchedule || "38 CFR § 4"}
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
+      </div>
+    </button>
+  );
+}
+
+function CAPSelectConditionList({
+  filteredConditions,
+  totalConditionCount,
+  onSelect,
+}) {
+  return (
+    <>
+      <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Showing {filteredConditions.length} of {totalConditionCount}{" "}
+        conditions
+      </div>
+      <div className="space-y-3 max-h-[500px] overflow-y-auto">
+        {filteredConditions.slice(0, 100).map((condition) => (
+          <CAPSelectConditionCard
+            key={condition.id}
+            condition={condition}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+      {filteredConditions.length > 100 && (
+        <p className="text-sm text-gray-500 text-center mt-4">
+          Showing first 100 results. Use search to narrow down.
+        </p>
+      )}
+    </>
+  );
+}
 
 function CAPSelectConditionView({
   onClose,
@@ -2088,88 +2264,20 @@ function CAPSelectConditionView({
       size="xl"
       labelledBy="cap-condition-select-title"
       header={
-        <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-          <button
-            onClick={() => setMode("intro")}
-            className="absolute top-4 left-4 text-white hover:text-gray-200"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:text-gray-200"
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <h2
-            id="cap-condition-select-title"
-            className="text-2xl font-bold text-center mb-4"
-          >
-            Select a Condition to Simulate
-          </h2>
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by condition name or diagnostic code..."
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-          </div>
-        </div>
+        <CAPSelectConditionHeader
+          onClose={onClose}
+          setMode={setMode}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
       }
     >
       <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          Showing {filteredConditions.length} of {totalConditionCount}{" "}
-          conditions
-        </div>
-        <div className="space-y-3 max-h-[500px] overflow-y-auto">
-          {filteredConditions.slice(0, 100).map((condition) => {
-            const dbqKey = Object.keys(dbqLogicMap).find(
-              (key) =>
-                dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
-            );
-            const isPremium = !!dbqKey;
-
-            return (
-              <button
-                key={condition.id}
-                onClick={() => handleSelectCondition(condition)}
-                className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition text-left group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-teal-700 dark:group-hover:text-teal-400">
-                        {condition.conditionName}
-                      </h3>
-                      {isPremium && (
-                        <span className="px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full font-bold">
-                          DBQ-SPECIFIC
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      DC {condition.diagnosticCode} •{" "}
-                      {condition.ratingSchedule || "38 CFR § 4"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        {filteredConditions.length > 100 && (
-          <p className="text-sm text-gray-500 text-center mt-4">
-            Showing first 100 results. Use search to narrow down.
-          </p>
-        )}
+        <CAPSelectConditionList
+          filteredConditions={filteredConditions}
+          totalConditionCount={totalConditionCount}
+          onSelect={handleSelectCondition}
+        />
       </div>
     </ResponsiveModal>
   );
