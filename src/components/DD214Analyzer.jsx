@@ -2144,50 +2144,38 @@ function _prepareManualProfileImport(
 /**
  * Main DD214 Analyzer Component
  */
-const DD214Analyzer = ({
-  onClose,
-  onReportBug,
-  onOpenAISettings,
-  onSaveResults,
-  onOpenMusterCall,
-}) => {
-  const { t } = useLanguage();
+function _getDd214CombinedText(pastedText, extractedTexts) {
+  let combined = "";
 
-  // State
-  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
-  const [inputMethod, setInputMethod] = useState("paste"); // 'paste' | 'upload' | 'manual'
-  const [pastedText, setPastedText] = useState("");
-  const [droppedFiles, setDroppedFiles] = useState([]);
-  const [extractedTexts, setExtractedTexts] = useState([]);
-  const [originalPDFFiles, setOriginalPDFFiles] = useState([]); // Keep original PDF files for vision model
-  const [ocrProgress, setOcrProgress] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  if (pastedText.trim()) {
+    combined += `=== PASTED DD214 TEXT ===\n${pastedText.trim()}\n\n`;
+  }
 
-  // Profile import confirmation modal
-  const [showProfileImportModal, setShowProfileImportModal] = useState(false);
-  const [extractedProfileData, setExtractedProfileData] = useState(null);
+  extractedTexts.forEach((item, idx) => {
+    combined += `=== DD214 DOCUMENT ${idx + 1}: ${item.filename} ===\n`;
+    combined += `(File type: ${item.fileType || "PDF"}, Method: ${item.method}, Pages: ${item.pageCount})\n\n`;
+    combined += item.text;
+    combined += "\n\n";
+  });
 
-  // Manual form builder
-  const [showFormBuilder, setShowFormBuilder] = useState(false);
+  return combined.trim();
+}
 
-  const fileInputRef = useRef(null);
+function _buildDd214DropHandlers(state) {
+  const {
+    t,
+    setIsDragging,
+    droppedFiles,
+    setDroppedFiles,
+    setOriginalPDFFiles,
+    fileInputRef,
+    setError,
+    extractedTexts,
+    setIsProcessing,
+    setOcrProgress,
+    setExtractedTexts,
+  } = state;
 
-  // Check AI status on mount and periodically
-  useEffect(() => {
-    /** @type {() => void} */
-    const checkStatus = () => setAIStatus(getAIStatus());
-    checkStatus();
-    const intervalId = setInterval(() => checkStatus(), 1000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  /**
-   * Drag and Drop Handlers
-   */
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2198,6 +2186,20 @@ const DD214Analyzer = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
+  };
+
+  const processFiles = async (files) => {
+    _processDroppedFiles(files, {
+      droppedFiles,
+      setDroppedFiles,
+      setOriginalPDFFiles,
+      fileInputRef,
+      setError,
+      extractedTexts,
+      setIsProcessing,
+      setOcrProgress,
+      setExtractedTexts,
+    });
   };
 
   const handleDrop = async (e) => {
@@ -2223,29 +2225,30 @@ const DD214Analyzer = ({
     await processFiles(files);
   };
 
-  /**
-   * Process dropped in or selected files - NOW AUTO-RUNS OCR
-   * FIX for BUG-MKUBD41U: Users were confused by the two-step process
-   * Now automatically starts OCR when files are uploaded
-   */
-  const processFiles = async (files) => {
-    _processDroppedFiles(files, {
-      droppedFiles,
-      setDroppedFiles,
-      setOriginalPDFFiles,
-      fileInputRef,
-      setError,
-      extractedTexts,
-      setIsProcessing,
-      setOcrProgress,
-      setExtractedTexts,
-    });
+  const handleFileChange = async (event) => {
+    const files = Array.from(event.target.files || []);
+    await processFiles(files);
   };
 
-  /**
-   * Run OCR on all loaded files that haven't been processed yet
-   * Called by the manual "Run OCR" button
-   */
+  return { handleDragOver, handleDragLeave, handleDrop, processFiles, handleFileChange };
+}
+
+function _buildDd214FileListHandlers(state) {
+  const {
+    t,
+    droppedFiles,
+    setDroppedFiles,
+    setOriginalPDFFiles,
+    setError,
+    extractedTexts,
+    setIsProcessing,
+    setOcrProgress,
+    setExtractedTexts,
+    originalPDFFiles,
+    setPastedText,
+    setAnalysisResult,
+  } = state;
+
   const runOCROnFiles = async () => {
     // Use droppedFiles if available, fall back to originalPDFFiles
     const filesToProcess =
@@ -2265,7 +2268,6 @@ const DD214Analyzer = ({
       return;
     }
 
-    // Use the internal OCR runner
     await _runOcrOnFiles(unprocessedFiles, {
       extractedTexts,
       setIsProcessing,
@@ -2275,17 +2277,6 @@ const DD214Analyzer = ({
     });
   };
 
-  /**
-   * Handle file selection via input
-   */
-  const handleFileChange = async (event) => {
-    const files = Array.from(event.target.files || []);
-    await processFiles(files);
-  };
-
-  /**
-   * Remove a dropped in file
-   */
   const handleRemoveFile = (index) => {
     const fileToRemove = droppedFiles[index];
     setDroppedFiles((prev) => prev.filter((_, i) => i !== index));
@@ -2298,27 +2289,40 @@ const DD214Analyzer = ({
     }
   };
 
-  /**
-   * Combine all input sources into analysis text
-   */
-  const getCombinedText = () => {
-    let combined = "";
-
-    // Add pasted text if present
-    if (pastedText.trim()) {
-      combined += `=== PASTED DD214 TEXT ===\n${pastedText.trim()}\n\n`;
-    }
-
-    // Add extracted texts from dropped in files
-    extractedTexts.forEach((item, idx) => {
-      combined += `=== DD214 DOCUMENT ${idx + 1}: ${item.filename} ===\n`;
-      combined += `(File type: ${item.fileType || "PDF"}, Method: ${item.method}, Pages: ${item.pageCount})\n\n`;
-      combined += item.text;
-      combined += "\n\n";
-    });
-
-    return combined.trim();
+  const handleClearAll = () => {
+    setPastedText("");
+    setDroppedFiles([]);
+    setExtractedTexts([]);
+    setAnalysisResult(null);
+    setError(null);
   };
+
+  return { runOCROnFiles, handleRemoveFile, handleClearAll };
+}
+
+function _buildDd214FileHandlers(state) {
+  return {
+    ..._buildDd214DropHandlers(state),
+    ..._buildDd214FileListHandlers(state),
+  };
+}
+
+function _buildDd214AnalysisHandlers(state) {
+  const {
+    t,
+    pastedText,
+    extractedTexts,
+    originalPDFFiles,
+    droppedFiles,
+    isGenerating,
+    setIsGenerating,
+    aiStatus,
+    setError,
+    setAnalysisResult,
+    setOcrProgress,
+    setExtractedProfileData,
+    setShowProfileImportModal,
+  } = state;
 
   /**
    * Main Analysis Handler - THE BUTTON
@@ -2337,7 +2341,7 @@ const DD214Analyzer = ({
     // Immediately set generating to prevent race conditions
     setIsGenerating(true);
 
-    const combinedText = getCombinedText();
+    const combinedText = _getDd214CombinedText(pastedText, extractedTexts);
     const hasPDFFiles = originalPDFFiles.length > 0;
 
     // Vision analysis: use SmolVLM-256M (transformers.js v3 + WebGPU) when:
@@ -2394,12 +2398,20 @@ const DD214Analyzer = ({
       // merge with AI results. If AI missed a field but regex found it,
       // the regex value fills the gap. If both have a value, AI wins for
       // complex fields, regex wins for structured fields like dates/MOS.
-      _applyRegexSafetyNet(data, getCombinedText(), setAnalysisResult);
+      _applyRegexSafetyNet(
+        data,
+        _getDd214CombinedText(pastedText, extractedTexts),
+        setAnalysisResult,
+      );
 
       // Automatically trigger the save flow to show import confirmation
       // This provides immediate feedback to the user
       setTimeout(() => {
-        handleSaveResultsAfterAnalysis(data);
+        _prepareAndShowProfileImport(
+          data,
+          setExtractedProfileData,
+          setShowProfileImportModal,
+        );
       }, 500);
     } catch (err) {
       console.error("Analysis error:", err);
@@ -2409,17 +2421,20 @@ const DD214Analyzer = ({
     }
   };
 
+  return { handleAnalyzeWithAI };
+}
 
-  /**
-   * Save results after analysis (automatic trigger)
-   */
-  const handleSaveResultsAfterAnalysis = (result) => {
-    _prepareAndShowProfileImport(
-      result,
-      setExtractedProfileData,
-      setShowProfileImportModal,
-    );
-  };
+function _buildDd214SaveHandlers(state) {
+  const {
+    t,
+    analysisResult,
+    pastedText,
+    extractedTexts,
+    onSaveResults,
+    setExtractedProfileData,
+    setShowProfileImportModal,
+    setError,
+  } = state;
 
   /**
    * Save results to veteran profile - Shows confirmation modal first
@@ -2444,7 +2459,7 @@ const DD214Analyzer = ({
    */
   const handleConfirmProfileImport = async (selectedFields) => {
     try {
-      const combinedText = getCombinedText();
+      const combinedText = _getDd214CombinedText(pastedText, extractedTexts);
 
       // ── 1. SAVE TO VETERAN PROFILE (existing behavior) ──
       _saveDd214ToProfile(analysisResult, combinedText, selectedFields);
@@ -2486,19 +2501,150 @@ const DD214Analyzer = ({
     setExtractedProfileData(null);
   };
 
-  /**
-   * Clear all inputs
-   */
-  const handleClearAll = () => {
-    setPastedText("");
-    setDroppedFiles([]);
-    setExtractedTexts([]);
-    setAnalysisResult(null);
-    setError(null);
-  };
+  return { handleSaveResults, handleConfirmProfileImport, handleCancelProfileImport };
+}
+
+function DD214AnalyzerUploadInput({ state, handlers }) {
+  const { fileInputRef, isDragging, ocrProgress, t } = state;
+  const { handleDragOver, handleDragLeave, handleDrop, handleFileChange } = handlers;
+
+  return (
+    <DD214UploadInput
+      fileInputRef={fileInputRef}
+      handleDragOver={handleDragOver}
+      handleDragLeave={handleDragLeave}
+      handleDrop={handleDrop}
+      isDragging={isDragging}
+      handleFileChange={handleFileChange}
+      ocrProgress={ocrProgress}
+      t={t}
+    />
+  );
+}
+
+function DD214AnalyzerModalContent({ state, handlers }) {
+  const {
+    inputMethod,
+    setInputMethod,
+    pastedText,
+    setPastedText,
+    setShowFormBuilder,
+    droppedFiles,
+    originalPDFFiles,
+    extractedTexts,
+    isProcessing,
+    error,
+    analysisResult,
+    aiStatus,
+    setAIStatus,
+    onOpenMusterCall,
+    t,
+  } = state;
+  const { runOCROnFiles, handleRemoveFile } = handlers;
+
+  return (
+    <div className="space-y-6">
+      <DD214GuidanceAndPrivacyBanners
+        onOpenMusterCall={onOpenMusterCall}
+        aiStatus={aiStatus}
+        t={t}
+      />
+
+      <DD214SmartAiLoadSection aiStatus={aiStatus} setAIStatus={setAIStatus} />
+
+      <DD214InputMethodTabs
+        inputMethod={inputMethod}
+        setInputMethod={setInputMethod}
+        extractedTexts={extractedTexts}
+        t={t}
+      />
+
+      {/* Paste Input */}
+      {inputMethod === "paste" && (
+        <DD214PasteInput
+          pastedText={pastedText}
+          setPastedText={setPastedText}
+          t={t}
+        />
+      )}
+
+      {/* Manual Entry */}
+      {inputMethod === "manual" && (
+        <DD214ManualEntry t={t} setShowFormBuilder={setShowFormBuilder} />
+      )}
+
+      {/* Upload Input */}
+      {inputMethod === "upload" && (
+        <DD214AnalyzerUploadInput state={state} handlers={handlers} />
+      )}
+
+      <DD214LoadedFilesList
+        droppedFiles={droppedFiles}
+        originalPDFFiles={originalPDFFiles}
+        extractedTexts={extractedTexts}
+        runOCROnFiles={runOCROnFiles}
+        isProcessing={isProcessing}
+        handleRemoveFile={handleRemoveFile}
+        t={t}
+      />
+
+      <DD214ErrorBanner error={error} t={t} />
+
+      <DD214AnalysisResultsPanel analysisResult={analysisResult} t={t} />
+    </div>
+  );
+}
+
+function DD214AnalyzerExtraModals({ state, handlers }) {
+  const { showProfileImportModal, extractedProfileData, showFormBuilder, setShowFormBuilder } = state;
+  const { handleConfirmProfileImport, handleCancelProfileImport } = handlers;
+
+  return (
+    <>
+      {/* Profile import confirmation — already portaled to document.body */}
+      {showProfileImportModal &&
+        extractedProfileData &&
+        createPortal(
+          <ProfileImportConfirmModal
+            extractedData={extractedProfileData}
+            currentProfile={getVeteranProfile()}
+            onConfirm={handleConfirmProfileImport}
+            onCancel={handleCancelProfileImport}
+          />,
+          document.body,
+        )}
+
+      {/* DD214 Form Builder — fixed z-[9999] portal, renders above the shell */}
+      {showFormBuilder && (
+        <DD214FormBuilder
+          onClose={() => setShowFormBuilder(false)}
+          onSave={() => {
+            // Optionally refresh the list or show success message
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function DD214AnalyzerView({ state, handlers }) {
+  const {
+    onClose,
+    onReportBug,
+    onOpenAISettings,
+    t,
+    pastedText,
+    extractedTexts,
+    droppedFiles,
+    originalPDFFiles,
+    analysisResult,
+    aiStatus,
+    isGenerating,
+    isProcessing,
+  } = state;
+  const { handleClearAll, handleSaveResults, handleAnalyzeWithAI } = handlers;
 
   // Has input if: pasted text, OR processed files with extracted text, OR loaded files (to prompt user to OCR)
-  // Vision path disabled due to custom model lacking image_embed function
   const hasInput =
     pastedText.trim() ||
     extractedTexts.length > 0 ||
@@ -2534,90 +2680,101 @@ const DD214Analyzer = ({
           />
         }
       >
-        <div className="space-y-6">
-          <DD214GuidanceAndPrivacyBanners
-            onOpenMusterCall={onOpenMusterCall}
-            aiStatus={aiStatus}
-            t={t}
-          />
-
-          <DD214SmartAiLoadSection aiStatus={aiStatus} setAIStatus={setAIStatus} />
-
-          <DD214InputMethodTabs
-            inputMethod={inputMethod}
-            setInputMethod={setInputMethod}
-            extractedTexts={extractedTexts}
-            t={t}
-          />
-
-          {/* Paste Input */}
-          {inputMethod === "paste" && (
-            <DD214PasteInput
-              pastedText={pastedText}
-              setPastedText={setPastedText}
-              t={t}
-            />
-          )}
-
-          {/* Manual Entry */}
-          {inputMethod === "manual" && (
-            <DD214ManualEntry t={t} setShowFormBuilder={setShowFormBuilder} />
-          )}
-
-          {/* Upload Input */}
-          {inputMethod === "upload" && (
-            <DD214UploadInput
-              fileInputRef={fileInputRef}
-              handleDragOver={handleDragOver}
-              handleDragLeave={handleDragLeave}
-              handleDrop={handleDrop}
-              isDragging={isDragging}
-              handleFileChange={handleFileChange}
-              ocrProgress={ocrProgress}
-              t={t}
-            />
-          )}
-
-          <DD214LoadedFilesList
-            droppedFiles={droppedFiles}
-            originalPDFFiles={originalPDFFiles}
-            extractedTexts={extractedTexts}
-            runOCROnFiles={runOCROnFiles}
-            isProcessing={isProcessing}
-            handleRemoveFile={handleRemoveFile}
-            t={t}
-          />
-
-          <DD214ErrorBanner error={error} t={t} />
-
-          <DD214AnalysisResultsPanel analysisResult={analysisResult} t={t} />
-        </div>
+        <DD214AnalyzerModalContent state={state} handlers={handlers} />
       </ResponsiveModal>
 
-      {/* Profile import confirmation — already portaled to document.body */}
-      {showProfileImportModal &&
-        extractedProfileData &&
-        createPortal(
-          <ProfileImportConfirmModal
-            extractedData={extractedProfileData}
-            currentProfile={getVeteranProfile()}
-            onConfirm={handleConfirmProfileImport}
-            onCancel={handleCancelProfileImport}
-          />,
-          document.body,
-        )}
-
-      {/* DD214 Form Builder — fixed z-[9999] portal, renders above the shell */}
-      {showFormBuilder && (
-        <DD214FormBuilder
-          onClose={() => setShowFormBuilder(false)}
-          onSave={() => {
-            // Optionally refresh the list or show success message
-          }}
-        />
-      )}
+      <DD214AnalyzerExtraModals state={state} handlers={handlers} />
     </>
   );
+}
+
+const DD214Analyzer = ({
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+  onSaveResults,
+  onOpenMusterCall,
+}) => {
+  const { t } = useLanguage();
+
+  // State
+  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
+  const [inputMethod, setInputMethod] = useState("paste"); // 'paste' | 'upload' | 'manual'
+  const [pastedText, setPastedText] = useState("");
+  const [droppedFiles, setDroppedFiles] = useState([]);
+  const [extractedTexts, setExtractedTexts] = useState([]);
+  const [originalPDFFiles, setOriginalPDFFiles] = useState([]); // Keep original PDF files for vision model
+  const [ocrProgress, setOcrProgress] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Profile import confirmation modal
+  const [showProfileImportModal, setShowProfileImportModal] = useState(false);
+  const [extractedProfileData, setExtractedProfileData] = useState(null);
+
+  // Manual form builder
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
+
+  const fileInputRef = useRef(null);
+
+  // Check AI status on mount and periodically
+  useEffect(() => {
+    /** @type {() => void} */
+    const checkStatus = () => setAIStatus(getAIStatus());
+    checkStatus();
+    const intervalId = setInterval(() => checkStatus(), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const state = {
+    t,
+    onClose,
+    onReportBug,
+    onOpenAISettings,
+    onSaveResults,
+    onOpenMusterCall,
+    aiStatus,
+    setAIStatus,
+    inputMethod,
+    setInputMethod,
+    pastedText,
+    setPastedText,
+    droppedFiles,
+    setDroppedFiles,
+    extractedTexts,
+    setExtractedTexts,
+    originalPDFFiles,
+    setOriginalPDFFiles,
+    ocrProgress,
+    setOcrProgress,
+    isProcessing,
+    setIsProcessing,
+    isGenerating,
+    setIsGenerating,
+    analysisResult,
+    setAnalysisResult,
+    error,
+    setError,
+    isDragging,
+    setIsDragging,
+    showProfileImportModal,
+    setShowProfileImportModal,
+    extractedProfileData,
+    setExtractedProfileData,
+    showFormBuilder,
+    setShowFormBuilder,
+    fileInputRef,
+  };
+  const handlers = {
+    ..._buildDd214FileHandlers(state),
+    ..._buildDd214AnalysisHandlers(state),
+    ..._buildDd214SaveHandlers(state),
+  };
+
+  return <DD214AnalyzerView state={state} handlers={handlers} />;
 };
 
 /**
