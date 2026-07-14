@@ -3457,6 +3457,183 @@ const employmentInfoSteps = [
  * Comprehensive forms wizard to help veterans fill out VA forms,
  * especially buddy/lay statements which are notoriously difficult to get.
  */
+const _buildIndividualRepVeteranSection = (
+  formData,
+) => `SECTION I - VETERAN/CLAIMANT INFORMATION
+
+Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
+
+Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
+
+Date of Birth: ${formData.dob || "________________________________________"}
+
+VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+
+================================================================================
+
+SECTION II - VETERAN CONTACT INFORMATION
+
+Telephone: ${formData.phone || "________________________________________"}
+
+Email: ${formData.email || "________________________________________"}
+
+Address:
+${formData.street || "________________________________________"}
+${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
+${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}`;
+
+const _buildIndividualRepRepresentativeSection = (
+  formData,
+  repTypeLabel,
+) => `SECTION III - REPRESENTATIVE INFORMATION
+
+Representative Type: ${repTypeLabel}
+
+Name: ${formData.repName || "________________________________________"}
+
+Organization/Firm: ${formData.repOrganization || "N/A"}
+
+Address:
+${formData.repAddress || "________________________________________"}
+${formData.repCity || "_____________"}, ${formData.repState || "__"} ${formData.repZip || "_____"}
+
+Telephone: ${formData.repPhone || "________________________________________"}
+
+Email: ${formData.repEmail || "________________________________________"}`;
+
+const _buildIndividualRepFeeAgreementSection = (
+  formData,
+  feeAgreementStatusLabel,
+) => `SECTION IV - FEE AGREEMENT
+
+Fee Agreement Status: ${feeAgreementStatusLabel}
+
+IMPORTANT FEE RULES - I understand and acknowledge:
+${
+  Array.isArray(formData.feeUnderstanding) &&
+  formData.feeUnderstanding.length > 0
+    ? formData.feeUnderstanding.map((f) => `[X] ${f}`).join("\n")
+    : `[X] Attorneys/agents may only charge fees AFTER VA issues an initial decision
+[X] VA limits fees to 33.3% of past-due benefits (unless higher approved)
+[X] The fee agreement must be filed with the VA
+[X] I can revoke this appointment at any time by filing a new form`
+}`;
+
+const _buildIndividualRepAuthorizationSection = (
+  formData,
+) => `SECTION V - AUTHORIZATION
+
+I authorize this representative to:
+${
+  Array.isArray(formData.authorizationScope) &&
+  formData.authorizationScope.length > 0
+    ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
+    : `[X] Access my VA records
+[X] Represent me in all VA claims matters
+[X] Submit evidence on my behalf
+[X] File appeals on my behalf`
+}`;
+
+const _buildMedicalReleaseVeteranSection = (
+  formData,
+) => `SECTION I - VETERAN/CLAIMANT INFORMATION
+
+Full Name: ${formData.veteranName || "________________________________________"}
+
+Date of Birth: ${formData.dob || "________________________________________"}
+
+VA File Number: ${formData.vaFileNumber || "________________________________________"}
+
+Telephone: ${formData.phone || "________________________________________"}
+
+Mailing Address:
+${formData.address || "________________________________________"}`;
+
+const _buildMedicalReleaseProvider1Section = (formData) => `PROVIDER #1:
+
+Name of Provider/Facility: ${formData.provider1Name || "________________________________________"}
+
+Street Address:
+${formData.provider1Address || "________________________________________"}
+
+Telephone: ${formData.provider1Phone || "________________________________________"}
+
+Fax Number: ${formData.provider1Fax || "________________________________________"}
+
+Dates of Treatment: ${formData.provider1Dates || "________________________________________"}
+
+Condition(s) Treated: ${formData.provider1Conditions || "________________________________________"}`;
+
+const _buildMedicalReleaseProvider2Section = (formData) => {
+  if (!formData.provider2Name) return "";
+  return `--------------------------------------------------------------------------------
+
+PROVIDER #2:
+
+Name of Provider/Facility: ${formData.provider2Name}
+
+Street Address:
+${formData.provider2Address || "________________________________________"}
+
+Telephone: ${formData.provider2Phone || "________________________________________"}
+
+Dates of Treatment: ${formData.provider2Dates || "________________________________________"}
+
+Condition(s) Treated: ${formData.provider2Conditions || "________________________________________"}
+
+`;
+};
+
+const _buildMedicalReleaseProvider3Section = (formData) => {
+  if (!formData.provider3Name) return "";
+  return `--------------------------------------------------------------------------------
+
+PROVIDER #3:
+
+Name of Provider/Facility: ${formData.provider3Name}
+
+Street Address:
+${formData.provider3Address || "________________________________________"}
+
+Telephone: ${formData.provider3Phone || "________________________________________"}
+
+Dates of Treatment: ${formData.provider3Dates || "________________________________________"}
+
+Condition(s) Treated: ${formData.provider3Conditions || "________________________________________"}
+
+`;
+};
+
+const _buildMedicalReleaseRecordsSection = (
+  formData,
+) => `SECTION III - RECORDS REQUESTED
+
+Types of records the VA should request:
+
+${
+  Array.isArray(formData.recordTypes) && formData.recordTypes.length > 0
+    ? formData.recordTypes.map((r) => `[X] ${r}`).join("\n")
+    : `[ ] Complete medical records
+[ ] Treatment notes/progress notes
+[ ] Lab results
+[ ] Imaging (X-rays, MRI, CT scans)
+[ ] Surgical records
+[ ] Mental health records
+[ ] Physical therapy records
+[ ] Prescription history
+[ ] Diagnosis and prognosis
+[ ] Disability/work restriction documentation`
+}
+
+${
+  formData.additionalInstructions
+    ? `
+Special Instructions:
+${formData.additionalInstructions}
+`
+    : ""
+}`;
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -4391,107 +4568,22 @@ https://www.va.gov/supporting-forms-for-claims/release-information-to-va-form-21
 
 ================================================================================
 
-SECTION I - VETERAN/CLAIMANT INFORMATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Date of Birth: ${formData.dob || "________________________________________"}
-
-VA File Number: ${formData.vaFileNumber || "________________________________________"}
-
-Telephone: ${formData.phone || "________________________________________"}
-
-Mailing Address:
-${formData.address || "________________________________________"}
+${_buildMedicalReleaseVeteranSection(formData)}
 
 ================================================================================
 
 SECTION II - HEALTHCARE PROVIDER INFORMATION
 
-PROVIDER #1:
-
-Name of Provider/Facility: ${formData.provider1Name || "________________________________________"}
-
-Street Address:
-${formData.provider1Address || "________________________________________"}
-
-Telephone: ${formData.provider1Phone || "________________________________________"}
-
-Fax Number: ${formData.provider1Fax || "________________________________________"}
-
-Dates of Treatment: ${formData.provider1Dates || "________________________________________"}
-
-Condition(s) Treated: ${formData.provider1Conditions || "________________________________________"}
+${_buildMedicalReleaseProvider1Section(formData)}
 
 `;
 
-    if (formData.provider2Name) {
-      statement += `--------------------------------------------------------------------------------
-
-PROVIDER #2:
-
-Name of Provider/Facility: ${formData.provider2Name}
-
-Street Address:
-${formData.provider2Address || "________________________________________"}
-
-Telephone: ${formData.provider2Phone || "________________________________________"}
-
-Dates of Treatment: ${formData.provider2Dates || "________________________________________"}
-
-Condition(s) Treated: ${formData.provider2Conditions || "________________________________________"}
-
-`;
-    }
-
-    if (formData.provider3Name) {
-      statement += `--------------------------------------------------------------------------------
-
-PROVIDER #3:
-
-Name of Provider/Facility: ${formData.provider3Name}
-
-Street Address:
-${formData.provider3Address || "________________________________________"}
-
-Telephone: ${formData.provider3Phone || "________________________________________"}
-
-Dates of Treatment: ${formData.provider3Dates || "________________________________________"}
-
-Condition(s) Treated: ${formData.provider3Conditions || "________________________________________"}
-
-`;
-    }
+    statement += _buildMedicalReleaseProvider2Section(formData);
+    statement += _buildMedicalReleaseProvider3Section(formData);
 
     statement += `================================================================================
 
-SECTION III - RECORDS REQUESTED
-
-Types of records the VA should request:
-
-${
-  Array.isArray(formData.recordTypes) && formData.recordTypes.length > 0
-    ? formData.recordTypes.map((r) => `[X] ${r}`).join("\n")
-    : `[ ] Complete medical records
-[ ] Treatment notes/progress notes
-[ ] Lab results
-[ ] Imaging (X-rays, MRI, CT scans)
-[ ] Surgical records
-[ ] Mental health records
-[ ] Physical therapy records
-[ ] Prescription history
-[ ] Diagnosis and prognosis
-[ ] Disability/work restriction documentation`
-}
-
-${
-  formData.additionalInstructions
-    ? `
-Special Instructions:
-${formData.additionalInstructions}
-`
-    : ""
-}
+${_buildMedicalReleaseRecordsSection(formData)}
 ================================================================================
 
 SECTION IV - AUTHORIZATION
@@ -4885,6 +4977,7 @@ VA Benefits Hotline: 1-800-827-1000
   };
 
   // Generate Individual Representative Appointment (21-22a)
+
   const generateIndividualRepAppointment = () => {
     const currentDate = new Date().toLocaleDateString("en-US", {
       year: "numeric",
@@ -4917,78 +5010,19 @@ Find Accredited Representatives: https://www.va.gov/ogc/apps/accreditation/
 
 ================================================================================
 
-SECTION I - VETERAN/CLAIMANT INFORMATION
-
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-
-Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
-
-Date of Birth: ${formData.dob || "________________________________________"}
-
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+${_buildIndividualRepVeteranSection(formData)}
 
 ================================================================================
 
-SECTION II - VETERAN CONTACT INFORMATION
-
-Telephone: ${formData.phone || "________________________________________"}
-
-Email: ${formData.email || "________________________________________"}
-
-Address:
-${formData.street || "________________________________________"}
-${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
-${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}
+${_buildIndividualRepRepresentativeSection(formData, repTypeLabel)}
 
 ================================================================================
 
-SECTION III - REPRESENTATIVE INFORMATION
-
-Representative Type: ${repTypeLabel}
-
-Name: ${formData.repName || "________________________________________"}
-
-Organization/Firm: ${formData.repOrganization || "N/A"}
-
-Address:
-${formData.repAddress || "________________________________________"}
-${formData.repCity || "_____________"}, ${formData.repState || "__"} ${formData.repZip || "_____"}
-
-Telephone: ${formData.repPhone || "________________________________________"}
-
-Email: ${formData.repEmail || "________________________________________"}
+${_buildIndividualRepFeeAgreementSection(formData, feeAgreementStatusLabel)}
 
 ================================================================================
 
-SECTION IV - FEE AGREEMENT
-
-Fee Agreement Status: ${feeAgreementStatusLabel}
-
-IMPORTANT FEE RULES - I understand and acknowledge:
-${
-  Array.isArray(formData.feeUnderstanding) &&
-  formData.feeUnderstanding.length > 0
-    ? formData.feeUnderstanding.map((f) => `[X] ${f}`).join("\n")
-    : `[X] Attorneys/agents may only charge fees AFTER VA issues an initial decision
-[X] VA limits fees to 33.3% of past-due benefits (unless higher approved)
-[X] The fee agreement must be filed with the VA
-[X] I can revoke this appointment at any time by filing a new form`
-}
-
-================================================================================
-
-SECTION V - AUTHORIZATION
-
-I authorize this representative to:
-${
-  Array.isArray(formData.authorizationScope) &&
-  formData.authorizationScope.length > 0
-    ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-    : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence on my behalf
-[X] File appeals on my behalf`
-}
+${_buildIndividualRepAuthorizationSection(formData)}
 
 ================================================================================
 
