@@ -31,7 +31,7 @@ const diagnosticCodes = disabilityData.disabilities.map((d) => ({
 // Tool definitions for quick access
 const TOOLS = [
   {
-    id: "tactical-calc",
+    id: "tactical-calculator",
     name: "Tactical Calculator",
     keywords: ["calculate", "rating", "combined", "math"],
     icon: "🧮",
@@ -73,7 +73,7 @@ const TOOLS = [
     category: "Discovery",
   },
   {
-    id: "pact-navigator",
+    id: "pact-act",
     name: "PACT Act Navigator",
     keywords: ["pact", "toxic", "burn pit", "presumptive"],
     icon: "⚠️",
@@ -122,7 +122,7 @@ const TOOLS = [
     category: "Calculate",
   },
   {
-    id: "retro-hunter",
+    id: "retro-pay",
     name: "Retro Pay Hunter",
     keywords: ["back pay", "retro", "retroactive"],
     icon: "💵",
@@ -164,7 +164,7 @@ const TOOLS = [
     category: "Core",
   },
   {
-    id: "web-conditions",
+    id: "web-of-conditions",
     name: "Web of Conditions",
     keywords: ["web", "graph", "relationships", "visual"],
     icon: "🕸️",
@@ -480,6 +480,160 @@ function _selectSearchResult(index, results, onToolSelect, onConditionSelect, on
   onClose();
 }
 
+function _handleCommandSearchKeyDown(e, ctx) {
+  const { results, selectedIndex, setSelectedIndex, onSelect } = ctx;
+  const totalResults = results.tools.length + results.conditions.length;
+
+  switch (e.key) {
+    case "ArrowDown":
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % Math.max(1, totalResults));
+      break;
+    case "ArrowUp":
+      e.preventDefault();
+      setSelectedIndex(
+        (prev) => (prev - 1 + totalResults) % Math.max(1, totalResults),
+      );
+      break;
+    case "Enter":
+      e.preventDefault();
+      onSelect(selectedIndex);
+      break;
+    // Escape is handled by useFocusTrap (onEscape) so it also closes the
+    // palette when focus has moved off the input to a result row.
+  }
+}
+
+function NoSearchResults({ isDark, isTbiComfort }) {
+  return (
+    <div
+      className={`p-8 text-center ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-400"}`}
+    >
+      <p className="text-lg">No results found</p>
+      <p className="text-sm mt-1">
+        Try searching for a tool name or diagnostic code
+      </p>
+    </div>
+  );
+}
+
+function SearchResultsList({
+  resultsRef,
+  results,
+  query,
+  selectedIndex,
+  isDark,
+  isTbiComfort,
+  onSelect,
+}) {
+  const isEmpty =
+    results.tools.length === 0 && results.conditions.length === 0;
+
+  return (
+    <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto">
+      <ToolResultsSection
+        tools={results.tools}
+        selectedIndex={selectedIndex}
+        isDark={isDark}
+        isTbiComfort={isTbiComfort}
+        onSelect={onSelect}
+      />
+
+      <ConditionResultsSection
+        conditions={results.conditions}
+        toolsCount={results.tools.length}
+        selectedIndex={selectedIndex}
+        isDark={isDark}
+        isTbiComfort={isTbiComfort}
+        onSelect={onSelect}
+      />
+
+      {isEmpty && query && (
+        <NoSearchResults isDark={isDark} isTbiComfort={isTbiComfort} />
+      )}
+    </div>
+  );
+}
+
+function GlobalCommandSearchPalette({
+  isDark,
+  isTbiComfort,
+  isAaaContrast,
+  query,
+  setQuery,
+  results,
+  selectedIndex,
+  setSelectedIndex,
+  inputRef,
+  resultsRef,
+  dialogRef,
+  onClose,
+  onToolSelect,
+  onConditionSelect,
+}) {
+  const handleSelect = (index) => {
+    _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose);
+  };
+
+  const handleKeyDown = (e) => {
+    _handleCommandSearchKeyDown(e, {
+      results,
+      selectedIndex,
+      setSelectedIndex,
+      onSelect: handleSelect,
+    });
+  };
+
+  return (
+    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Search Modal */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
+      <div
+        ref={dialogRef}
+        className={`
+          relative w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden
+          ${isDark || isTbiComfort ? "bg-gray-900 border border-gray-700" : "bg-white border border-slate-200"}
+          ${isAaaContrast ? "border-2 border-white" : ""}
+        `}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick search"
+      >
+        {/* Search Input */}
+        <CommandSearchInputBar
+          inputRef={inputRef}
+          query={query}
+          onQueryChange={setQuery}
+          onKeyDown={handleKeyDown}
+          isDark={isDark}
+          isTbiComfort={isTbiComfort}
+        />
+
+        {/* Results */}
+        <SearchResultsList
+          resultsRef={resultsRef}
+          results={results}
+          query={query}
+          selectedIndex={selectedIndex}
+          isDark={isDark}
+          isTbiComfort={isTbiComfort}
+          onSelect={handleSelect}
+        />
+
+        {/* Footer */}
+        <CommandSearchFooter isDark={isDark} isTbiComfort={isTbiComfort} />
+      </div>
+    </div>
+  );
+}
+
 export default function GlobalCommandSearch({
   isOpen,
   onClose,
@@ -528,106 +682,25 @@ export default function GlobalCommandSearch({
     return () => clearTimeout(timer);
   }, [query, performSearch]);
 
-  // Keyboard navigation
-  const handleKeyDown = (e) => {
-    const totalResults = results.tools.length + results.conditions.length;
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % Math.max(1, totalResults));
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex(
-          (prev) => (prev - 1 + totalResults) % Math.max(1, totalResults),
-        );
-        break;
-      case "Enter":
-        e.preventDefault();
-        handleSelect(selectedIndex);
-        break;
-      // Escape is handled by useFocusTrap (onEscape) so it also closes the
-      // palette when focus has moved off the input to a result row.
-    }
-  };
-
-  const handleSelect = (index) => {
-    _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose);
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4"
-      onClick={onClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-      {/* Search Modal */}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-      <div
-        ref={dialogRef}
-        className={`
-          relative w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden
-          ${isDark || isTbiComfort ? "bg-gray-900 border border-gray-700" : "bg-white border border-slate-200"}
-          ${isAaaContrast ? "border-2 border-white" : ""}
-        `}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Quick search"
-      >
-        {/* Search Input */}
-        <CommandSearchInputBar
-          inputRef={inputRef}
-          query={query}
-          onQueryChange={setQuery}
-          onKeyDown={handleKeyDown}
-          isDark={isDark}
-          isTbiComfort={isTbiComfort}
-        />
-
-        {/* Results */}
-        <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto">
-          <ToolResultsSection
-            tools={results.tools}
-            selectedIndex={selectedIndex}
-            isDark={isDark}
-            isTbiComfort={isTbiComfort}
-            onSelect={handleSelect}
-          />
-
-          <ConditionResultsSection
-            conditions={results.conditions}
-            toolsCount={results.tools.length}
-            selectedIndex={selectedIndex}
-            isDark={isDark}
-            isTbiComfort={isTbiComfort}
-            onSelect={handleSelect}
-          />
-
-          {/* No Results */}
-          {results.tools.length === 0 &&
-            results.conditions.length === 0 &&
-            query && (
-              <div
-                className={`p-8 text-center ${isDark || isTbiComfort ? "text-gray-500" : "text-slate-400"}`}
-              >
-                <p className="text-lg">No results found</p>
-                <p className="text-sm mt-1">
-                  Try searching for a tool name or diagnostic code
-                </p>
-              </div>
-            )}
-        </div>
-
-        {/* Footer */}
-        <CommandSearchFooter isDark={isDark} isTbiComfort={isTbiComfort} />
-      </div>
-    </div>
+    <GlobalCommandSearchPalette
+      isDark={isDark}
+      isTbiComfort={isTbiComfort}
+      isAaaContrast={isAaaContrast}
+      query={query}
+      setQuery={setQuery}
+      results={results}
+      selectedIndex={selectedIndex}
+      setSelectedIndex={setSelectedIndex}
+      inputRef={inputRef}
+      resultsRef={resultsRef}
+      dialogRef={dialogRef}
+      onClose={onClose}
+      onToolSelect={onToolSelect}
+      onConditionSelect={onConditionSelect}
+    />
   );
 }
 
