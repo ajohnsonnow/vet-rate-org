@@ -918,6 +918,54 @@ export function parseConditionsFromText(text) {
   return conditions;
 }
 
+async function _processPdfFile(file, ctx) {
+  const { setPdfFile, setPdfError, setExtractedPdfConditions, setPdfOcrProgress } = ctx;
+
+  setPdfFile(file);
+  setPdfError(null);
+  setExtractedPdfConditions([]);
+
+  try {
+    const result = await analyzePDF(file, (progress) => {
+      setPdfOcrProgress(progress);
+    });
+
+    if (result.success && result.text) {
+      // Parse conditions from the extracted text
+      const conditions = parseConditionsFromText(result.text);
+      setExtractedPdfConditions(conditions);
+
+      if (conditions.length === 0) {
+        setPdfError(
+          "No conditions found in this document. Try pasting the text manually or use a different document.",
+        );
+      }
+    } else {
+      setPdfError(result.error || "Failed to extract text from PDF");
+    }
+  } catch (err) {
+    console.error("PDF processing error:", err);
+    setPdfError(
+      "Failed to process PDF. Please try again or paste the text manually.",
+    );
+  }
+
+  setPdfOcrProgress(null);
+}
+
+async function _handlePdfDropFiles(dataTransferFiles, ctx) {
+  if (dataTransferFiles && dataTransferFiles.length > 0) {
+    const file = dataTransferFiles[0];
+    if (file.type === "application/pdf") {
+      await _processPdfFile(file, ctx);
+    } else {
+      ctx.setPdfError(
+        "Please drop a PDF file (VA decision letter, rating decision, etc.)",
+      );
+    }
+  }
+}
+
 function usePdfDropIn(onLaunch) {
   // PDF Drop-In state
   const [pdfFile, setPdfFile] = useState(null);
@@ -926,6 +974,8 @@ function usePdfDropIn(onLaunch) {
   const [extractedPdfConditions, setExtractedPdfConditions] = useState([]);
   const [pdfError, setPdfError] = useState(null);
   const pdfFileInputRef = useRef(null);
+
+  const ctx = { setPdfFile, setPdfError, setExtractedPdfConditions, setPdfOcrProgress };
 
   // PDF Drop-In handlers
   const handlePdfDragOver = (e) => {
@@ -944,58 +994,14 @@ function usePdfDropIn(onLaunch) {
     e.preventDefault();
     e.stopPropagation();
     setPdfIsDragging(false);
-
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type === "application/pdf") {
-        await processPdfFile(file);
-      } else {
-        setPdfError(
-          "Please drop a PDF file (VA decision letter, rating decision, etc.)",
-        );
-      }
-    }
+    await _handlePdfDropFiles(e.dataTransfer?.files, ctx);
   };
 
   const handlePdfFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      await processPdfFile(file);
+      await _processPdfFile(file, ctx);
     }
-  };
-
-  const processPdfFile = async (file) => {
-    setPdfFile(file);
-    setPdfError(null);
-    setExtractedPdfConditions([]);
-
-    try {
-      const result = await analyzePDF(file, (progress) => {
-        setPdfOcrProgress(progress);
-      });
-
-      if (result.success && result.text) {
-        // Parse conditions from the extracted text
-        const conditions = parseConditionsFromText(result.text);
-        setExtractedPdfConditions(conditions);
-
-        if (conditions.length === 0) {
-          setPdfError(
-            "No conditions found in this document. Try pasting the text manually or use a different document.",
-          );
-        }
-      } else {
-        setPdfError(result.error || "Failed to extract text from PDF");
-      }
-    } catch (err) {
-      console.error("PDF processing error:", err);
-      setPdfError(
-        "Failed to process PDF. Please try again or paste the text manually.",
-      );
-    }
-
-    setPdfOcrProgress(null);
   };
 
   const handleRemovePdf = () => {
@@ -1028,6 +1034,76 @@ function usePdfDropIn(onLaunch) {
     handleRemovePdf,
     handlePdfConditionsSubmit,
   };
+}
+
+function _extractDisplayCondition(condition, getDCCode) {
+  // Extract DC code from condition name if present
+  // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
+  const dcMatch = condition.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
+    /\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i,
+  );
+  let displayDCCode = null;
+  let displayCondition = condition;
+
+  if (dcMatch) {
+    // Extract first DC code number for display
+    displayDCCode = dcMatch[1].split(/[,\s-]/)[0].trim();
+    // Remove the exact matched text from display
+    displayCondition = condition.replace(dcMatch[0], "").trim();
+  } else if (
+    condition.includes("(rated under") ||
+    condition.includes("(rated analogously")
+  ) {
+    // Has a "rated under" clause but no specific DC - don't look up, just clean the display
+    displayCondition = condition
+      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
+      .replace(/\s*\(rated under [^)]+\)/gi, "")
+      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
+      .replace(/\s*\(rated analogously[^)]*\)/gi, "")
+      .trim();
+  } else {
+    // Try to look up DC code from disabilityData
+    displayDCCode = getDCCode(condition);
+  }
+
+  return { displayDCCode, displayCondition };
+}
+
+function ConditionCheckboxRow({ condition, selectedConditions, toggleCondition, getDCCode }) {
+  const { displayDCCode, displayCondition } = _extractDisplayCondition(condition, getDCCode);
+  const isSelected = selectedConditions.includes(condition);
+
+  return (
+    <label
+      className={`flex items-start p-2 rounded-lg border cursor-pointer transition-all ${
+        isSelected
+          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-sm"
+          : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => toggleCondition(condition)}
+        className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-blue-600 rounded focus:ring-blue-500"
+      />
+      <span
+        className={`text-xs ${
+          isSelected
+            ? "text-blue-900 dark:text-blue-100 font-medium"
+            : "text-gray-700 dark:text-gray-300"
+        }`}
+      >
+        {displayDCCode && (
+          <span className="text-gray-400 dark:text-gray-500 mr-1">
+            DC {displayDCCode}
+          </span>
+        )}
+        {displayCondition}
+      </span>
+    </label>
+  );
 }
 
 function ConditionSystemGroup({
@@ -1081,77 +1157,15 @@ function ConditionSystemGroup({
       </button>
       {isExpanded && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-3 bg-white dark:bg-gray-800">
-          {conditions.map((condition, index) => {
-            // Extract DC code from condition name if present
-            // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
-            const dcMatch = condition.match(
-              // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-              /\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i,
-            );
-            let displayDCCode = null;
-            let displayCondition = condition;
-
-            if (dcMatch) {
-              // Extract first DC code number for display
-              displayDCCode = dcMatch[1]
-                .split(/[,\s-]/)[0]
-                .trim();
-              // Remove the exact matched text from display
-              displayCondition = condition
-                .replace(dcMatch[0], "")
-                .trim();
-            } else if (
-              condition.includes("(rated under") ||
-              condition.includes("(rated analogously")
-            ) {
-              // Has a "rated under" clause but no specific DC - don't look up, just clean the display
-              displayCondition = condition
-                // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-                .replace(/\s*\(rated under [^)]+\)/gi, "")
-                // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-                .replace(/\s*\(rated analogously[^)]*\)/gi, "")
-                .trim();
-            } else {
-              // Try to look up DC code from disabilityData
-              displayDCCode = getDCCode(condition);
-            }
-
-            return (
-              <label
-                key={`${system}-${index}`}
-                className={`flex items-start p-2 rounded-lg border cursor-pointer transition-all ${
-                  selectedConditions.includes(condition)
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-sm"
-                    : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedConditions.includes(
-                    condition,
-                  )}
-                  onChange={() =>
-                    toggleCondition(condition)
-                  }
-                  className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span
-                  className={`text-xs ${
-                    selectedConditions.includes(condition)
-                      ? "text-blue-900 dark:text-blue-100 font-medium"
-                      : "text-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  {displayDCCode && (
-                    <span className="text-gray-400 dark:text-gray-500 mr-1">
-                      DC {displayDCCode}
-                    </span>
-                  )}
-                  {displayCondition}
-                </span>
-              </label>
-            );
-          })}
+          {conditions.map((condition, index) => (
+            <ConditionCheckboxRow
+              key={`${system}-${index}`}
+              condition={condition}
+              selectedConditions={selectedConditions}
+              toggleCondition={toggleCondition}
+              getDCCode={getDCCode}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -1182,6 +1196,231 @@ function ManualInputPanel({ manualInput, setManualInput, handleManualSubmit }) {
   );
 }
 
+function _pdfProgressLabel(pdfOcrProgress) {
+  if (!pdfOcrProgress) return "Processing...";
+  if (pdfOcrProgress.state === OCR_STATES.LOADING) return "Loading PDF...";
+  if (pdfOcrProgress.state === OCR_STATES.EXTRACTING) return "Extracting text...";
+  if (pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING) {
+    return "Running OCR on scanned pages...";
+  }
+  return "Processing...";
+}
+
+function PdfDropZone({
+  pdfIsDragging,
+  pdfFileInputRef,
+  handlePdfDragOver,
+  handlePdfDragLeave,
+  handlePdfDrop,
+  handlePdfFileChange,
+}) {
+  return (
+    <div
+      role="presentation"
+      onDragOver={handlePdfDragOver}
+      onDragLeave={handlePdfDragLeave}
+      onDrop={handlePdfDrop}
+      className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+        pdfIsDragging
+          ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+          : "border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10"
+      }`}
+    >
+      <input
+        ref={pdfFileInputRef}
+        type="file"
+        accept=".pdf"
+        onChange={handlePdfFileChange}
+        className="hidden"
+      />
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+          <svg
+            className="w-8 h-8 text-purple-600 dark:text-purple-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+        </div>
+        <div>
+          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+            Drop your PDF here
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            or{" "}
+            <button
+              onClick={() => pdfFileInputRef.current?.click()}
+              className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
+            >
+              browse to select
+            </button>
+          </p>
+        </div>
+        <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+          Supports: VA Rating Decision, Decision Letter, Benefits Summary
+          Letter (PDF)
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PdfOcrProgressIndicator({ pdfOcrProgress }) {
+  const pdfProgressLabel = _pdfProgressLabel(pdfOcrProgress);
+  return (
+    <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
+        <span className="font-medium text-purple-800 dark:text-purple-200">
+          {pdfProgressLabel}
+        </span>
+      </div>
+      {pdfOcrProgress.progress > 0 && (
+        <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
+          <div
+            className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${pdfOcrProgress.progress}%` }}
+          />
+        </div>
+      )}
+      {pdfOcrProgress.message && (
+        <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">
+          {pdfOcrProgress.message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PdfFileHeader({ pdfFile, handleRemovePdf }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+          <svg
+            className="w-5 h-5 text-purple-600 dark:text-purple-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <div>
+          <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">
+            {pdfFile.name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formatFileSize(pdfFile.size)}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={handleRemovePdf}
+        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+        aria-label="Remove file"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function PdfExtractedConditionsList({ extractedPdfConditions, handlePdfConditionsSubmit }) {
+  return (
+    <div>
+      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <span className="text-green-500">✓</span>
+        Found {extractedPdfConditions.length} Condition
+        {extractedPdfConditions.length !== 1 ? "s" : ""}
+      </h4>
+      <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
+        {extractedPdfConditions.map((condition, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
+          >
+            <span className="text-green-600 dark:text-green-400">•</span>
+            <span className="text-sm text-gray-800 dark:text-gray-200">
+              {condition}
+            </span>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={handlePdfConditionsSubmit}
+        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+      >
+        🔍 Analyze These {extractedPdfConditions.length} Conditions for
+        Secondary Claims
+      </button>
+    </div>
+  );
+}
+
+function PdfFileSelectedResults({
+  pdfFile,
+  pdfError,
+  extractedPdfConditions,
+  handleRemovePdf,
+  handlePdfConditionsSubmit,
+}) {
+  return (
+    <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
+      <PdfFileHeader pdfFile={pdfFile} handleRemovePdf={handleRemovePdf} />
+
+      {/* Error Display */}
+      {pdfError && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-sm text-red-700 dark:text-red-300">{pdfError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Extracted Conditions */}
+      {extractedPdfConditions.length > 0 && (
+        <PdfExtractedConditionsList
+          extractedPdfConditions={extractedPdfConditions}
+          handlePdfConditionsSubmit={handlePdfConditionsSubmit}
+        />
+      )}
+    </div>
+  );
+}
+
 function PdfDropInPanel({
   pdfFile,
   pdfOcrProgress,
@@ -1196,17 +1435,6 @@ function PdfDropInPanel({
   handleRemovePdf,
   handlePdfConditionsSubmit,
 }) {
-  let pdfProgressLabel = "Processing...";
-  if (pdfOcrProgress) {
-    if (pdfOcrProgress.state === OCR_STATES.LOADING) {
-      pdfProgressLabel = "Loading PDF...";
-    } else if (pdfOcrProgress.state === OCR_STATES.EXTRACTING) {
-      pdfProgressLabel = "Extracting text...";
-    } else if (pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING) {
-      pdfProgressLabel = "Running OCR on scanned pages...";
-    }
-  }
-
   return (
     <div>
       <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
@@ -1217,8 +1445,8 @@ function PdfDropInPanel({
               Drop-In Your VA Decision Letter
             </h3>
             <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
-              Drop in a PDF of your VA Rating Decision, Decision Letter,
-              or Benefits Summary to automatically extract your
+              Drop in a PDF of your VA Rating Decision, Decision Letter, or
+              Benefits Summary to automatically extract your
               service-connected conditions.
             </p>
           </div>
@@ -1227,201 +1455,202 @@ function PdfDropInPanel({
 
       {/* Drop Zone */}
       {!pdfFile && !pdfOcrProgress && (
-        <div
-          role="presentation"
-          onDragOver={handlePdfDragOver}
-          onDragLeave={handlePdfDragLeave}
-          onDrop={handlePdfDrop}
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-            pdfIsDragging
-              ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-              : "border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10"
-          }`}
-        >
-          <input
-            ref={pdfFileInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={handlePdfFileChange}
-            className="hidden"
-          />
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-purple-600 dark:text-purple-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                Drop your PDF here
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                or{" "}
-                <button
-                  onClick={() => pdfFileInputRef.current?.click()}
-                  className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
-                >
-                  browse to select
-                </button>
-              </p>
-            </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-              Supports: VA Rating Decision, Decision Letter, Benefits
-              Summary Letter (PDF)
-            </div>
-          </div>
-        </div>
+        <PdfDropZone
+          pdfIsDragging={pdfIsDragging}
+          pdfFileInputRef={pdfFileInputRef}
+          handlePdfDragOver={handlePdfDragOver}
+          handlePdfDragLeave={handlePdfDragLeave}
+          handlePdfDrop={handlePdfDrop}
+          handlePdfFileChange={handlePdfFileChange}
+        />
       )}
 
       {/* OCR Progress */}
-      {pdfOcrProgress && (
-        <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
-            <span className="font-medium text-purple-800 dark:text-purple-200">
-              {pdfProgressLabel}
-            </span>
-          </div>
-          {pdfOcrProgress.progress > 0 && (
-            <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
-              <div
-                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${pdfOcrProgress.progress}%` }}
-              />
-            </div>
-          )}
-          {pdfOcrProgress.message && (
-            <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">
-              {pdfOcrProgress.message}
-            </p>
-          )}
-        </div>
-      )}
+      {pdfOcrProgress && <PdfOcrProgressIndicator pdfOcrProgress={pdfOcrProgress} />}
 
       {/* File Selected + Results */}
       {pdfFile && !pdfOcrProgress && (
-        <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-purple-600 dark:text-purple-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">
-                  {pdfFile.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatFileSize(pdfFile.size)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleRemovePdf}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              aria-label="Remove file"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Error Display */}
-          {pdfError && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {pdfError}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Extracted Conditions */}
-          {extractedPdfConditions.length > 0 && (
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="text-green-500">✓</span>
-                Found {extractedPdfConditions.length} Condition
-                {extractedPdfConditions.length !== 1 ? "s" : ""}
-              </h4>
-              <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
-                {extractedPdfConditions.map((condition, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
-                  >
-                    <span className="text-green-600 dark:text-green-400">
-                      •
-                    </span>
-                    <span className="text-sm text-gray-800 dark:text-gray-200">
-                      {condition}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={handlePdfConditionsSubmit}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-              >
-                🔍 Analyze These {extractedPdfConditions.length}{" "}
-                Conditions for Secondary Claims
-              </button>
-            </div>
-          )}
-        </div>
+        <PdfFileSelectedResults
+          pdfFile={pdfFile}
+          pdfError={pdfError}
+          extractedPdfConditions={extractedPdfConditions}
+          handleRemovePdf={handleRemovePdf}
+          handlePdfConditionsSubmit={handlePdfConditionsSubmit}
+        />
       )}
 
       {/* Privacy Note */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-        🔒 Your PDF is processed locally in your browser - nothing is
-        sent to any server.
+        🔒 Your PDF is processed locally in your browser - nothing is sent
+        to any server.
       </p>
+    </div>
+  );
+}
+
+function ConditionSearchFilter({ searchFilter, setSearchFilter }) {
+  return (
+    <div className="mb-4">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search conditions (e.g., 'knee', 'PTSD', 'diabetes')..."
+          value={searchFilter}
+          onChange={(e) => setSearchFilter(e.target.value)}
+          className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+        />
+        <svg
+          className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+        {searchFilter && (
+          <button
+            onClick={() => setSearchFilter("")}
+            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExpandCollapseControls({
+  expandAll,
+  collapseAll,
+  selectedConditions,
+  setSelectedConditions,
+}) {
+  return (
+    <div className="flex gap-2 mb-3">
+      <button
+        onClick={expandAll}
+        className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
+      >
+        Expand All
+      </button>
+      <button
+        onClick={collapseAll}
+        className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
+      >
+        Collapse All
+      </button>
+      {selectedConditions.length > 0 && (
+        <button
+          onClick={() => setSelectedConditions([])}
+          className="text-xs px-3 py-1 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full transition-colors ml-auto"
+        >
+          Clear All Selected
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ConditionGroupsList({
+  filteredConditionsBySystem,
+  searchFilter,
+  expandedSystems,
+  selectedConditions,
+  toggleSystem,
+  toggleCondition,
+  getDCCode,
+}) {
+  return (
+    <div className="max-h-[280px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+      {Object.keys(filteredConditionsBySystem).length === 0 ? (
+        <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400 mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p>No conditions found matching &quot;{searchFilter}&quot;</p>
+          <p className="text-sm mt-1">Try a different search term</p>
+        </div>
+      ) : (
+        Object.entries(filteredConditionsBySystem).map(([system, conditions]) => (
+          <ConditionSystemGroup
+            key={system}
+            system={system}
+            conditions={conditions}
+            expandedSystems={expandedSystems}
+            searchFilter={searchFilter}
+            selectedConditions={selectedConditions}
+            toggleSystem={toggleSystem}
+            toggleCondition={toggleCondition}
+            getDCCode={getDCCode}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+
+function SelectedConditionsSummary({
+  selectedConditions,
+  setExpandedSystems,
+  toggleCondition,
+}) {
+  return (
+    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          <strong>Selected:</strong> {selectedConditions.length} condition
+          {selectedConditions.length !== 1 ? "s" : ""}
+        </p>
+        {selectedConditions.length > 0 && (
+          <button
+            onClick={() => setExpandedSystems(new Set())}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+          >
+            View selected
+          </button>
+        )}
+      </div>
+      {selectedConditions.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+          {selectedConditions.map((condition, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+            >
+              {condition}
+              <button
+                onClick={() => toggleCondition(condition)}
+                className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1448,151 +1677,30 @@ function CheckboxSelectionPanel({
         (organized by body system per 38 CFR Part 4, Subpart B):
       </p>
 
-      {/* Search Filter */}
-      <div className="mb-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search conditions (e.g., 'knee', 'PTSD', 'diabetes')..."
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
-          />
-          <svg
-            className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          {searchFilter && (
-            <button
-              onClick={() => setSearchFilter("")}
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
+      <ConditionSearchFilter searchFilter={searchFilter} setSearchFilter={setSearchFilter} />
 
-      {/* Expand/Collapse Controls */}
-      <div className="flex gap-2 mb-3">
-        <button
-          onClick={expandAll}
-          className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
-        >
-          Expand All
-        </button>
-        <button
-          onClick={collapseAll}
-          className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
-        >
-          Collapse All
-        </button>
-        {selectedConditions.length > 0 && (
-          <button
-            onClick={() => setSelectedConditions([])}
-            className="text-xs px-3 py-1 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full transition-colors ml-auto"
-          >
-            Clear All Selected
-          </button>
-        )}
-      </div>
+      <ExpandCollapseControls
+        expandAll={expandAll}
+        collapseAll={collapseAll}
+        selectedConditions={selectedConditions}
+        setSelectedConditions={setSelectedConditions}
+      />
 
-      <div className="max-h-[280px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-        {Object.keys(filteredConditionsBySystem).length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400 mb-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p>
-              No conditions found matching &quot;{searchFilter}&quot;
-            </p>
-            <p className="text-sm mt-1">Try a different search term</p>
-          </div>
-        ) : (
-          Object.entries(filteredConditionsBySystem).map(
-            ([system, conditions]) => (
-              <ConditionSystemGroup
-                key={system}
-                system={system}
-                conditions={conditions}
-                expandedSystems={expandedSystems}
-                searchFilter={searchFilter}
-                selectedConditions={selectedConditions}
-                toggleSystem={toggleSystem}
-                toggleCondition={toggleCondition}
-                getDCCode={getDCCode}
-              />
-            ),
-          )
-        )}
-      </div>
+      <ConditionGroupsList
+        filteredConditionsBySystem={filteredConditionsBySystem}
+        searchFilter={searchFilter}
+        expandedSystems={expandedSystems}
+        selectedConditions={selectedConditions}
+        toggleSystem={toggleSystem}
+        toggleCondition={toggleCondition}
+        getDCCode={getDCCode}
+      />
 
-      {/* Selected Summary */}
-      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            <strong>Selected:</strong> {selectedConditions.length}{" "}
-            condition{selectedConditions.length !== 1 ? "s" : ""}
-          </p>
-          {selectedConditions.length > 0 && (
-            <button
-              onClick={() => setExpandedSystems(new Set())}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-            >
-              View selected
-            </button>
-          )}
-        </div>
-        {selectedConditions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-            {selectedConditions.map((condition, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
-              >
-                {condition}
-                <button
-                  onClick={() => toggleCondition(condition)}
-                  className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      <SelectedConditionsSummary
+        selectedConditions={selectedConditions}
+        setExpandedSystems={setExpandedSystems}
+        toggleCondition={toggleCondition}
+      />
 
       <button
         onClick={handleCheckboxSubmit}
@@ -1655,6 +1763,70 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
   );
 }
 
+function _ratingBadgeClass(rating) {
+  if (rating.rating >= 70) {
+    return "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300";
+  }
+  if (rating.rating >= 40) {
+    return "bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300";
+  }
+  if (rating.rating >= 20) {
+    return "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300";
+  }
+  return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300";
+}
+
+function MyRatingsHeader({ savedRatings, calculateCombinedRating }) {
+  return (
+    <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-2xl">⭐</span>
+        <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+          Your Saved Ratings
+        </h3>
+      </div>
+      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+        These are your actual VA disability ratings saved from the Tactical
+        Calculator. Use them to find potential secondary conditions!
+      </p>
+      {savedRatings.length > 0 && (
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+            Combined Rating:
+          </span>
+          <span className="px-3 py-1 bg-yellow-600 text-white font-bold rounded-full">
+            {calculateCombinedRating(savedRatings)}%
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SavedRatingRow({ rating }) {
+  const ratingBadgeClass = _ratingBadgeClass(rating);
+  return (
+    <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-1 text-xs font-bold rounded ${ratingBadgeClass}`}>
+            {rating.rating}%
+          </span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">
+            {rating.name}
+          </span>
+        </div>
+        {(rating.bodyPart || rating.side) && (
+          <div className="flex gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {rating.bodyPart && <span>📍 {rating.bodyPart}</span>}
+            {rating.side && <span>↔️ {rating.side}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function MyRatingsPanel({
   savedRatings,
   calculateCombinedRating,
@@ -1662,29 +1834,10 @@ function MyRatingsPanel({
 }) {
   return (
     <div>
-      <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">⭐</span>
-          <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
-            Your Saved Ratings
-          </h3>
-        </div>
-        <p className="text-sm text-yellow-700 dark:text-yellow-300">
-          These are your actual VA disability ratings saved from the
-          Tactical Calculator. Use them to find potential secondary
-          conditions!
-        </p>
-        {savedRatings.length > 0 && (
-          <div className="mt-2 flex items-center gap-3">
-            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              Combined Rating:
-            </span>
-            <span className="px-3 py-1 bg-yellow-600 text-white font-bold rounded-full">
-              {calculateCombinedRating(savedRatings)}%
-            </span>
-          </div>
-        )}
-      </div>
+      <MyRatingsHeader
+        savedRatings={savedRatings}
+        calculateCombinedRating={calculateCombinedRating}
+      />
 
       <div className="space-y-2 max-h-[280px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
         {savedRatings.length === 0 ? (
@@ -1692,53 +1845,14 @@ function MyRatingsPanel({
             <span className="text-4xl mb-3 block">📭</span>
             <p className="font-medium">No saved ratings found</p>
             <p className="text-sm mt-1">
-              Use the <strong>Tactical Calculator</strong> to save your
-              VA disability ratings
+              Use the <strong>Tactical Calculator</strong> to save your VA
+              disability ratings
             </p>
           </div>
         ) : (
-          savedRatings.map((rating, index) => {
-            let ratingBadgeClass =
-              "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300";
-            if (rating.rating >= 70) {
-              ratingBadgeClass =
-                "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300";
-            } else if (rating.rating >= 40) {
-              ratingBadgeClass =
-                "bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300";
-            } else if (rating.rating >= 20) {
-              ratingBadgeClass =
-                "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300";
-            }
-
-            return (
-              <div
-                key={rating.id || index}
-                className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 text-xs font-bold rounded ${ratingBadgeClass}`}
-                    >
-                      {rating.rating}%
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {rating.name}
-                    </span>
-                  </div>
-                  {(rating.bodyPart || rating.side) && (
-                    <div className="flex gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {rating.bodyPart && (
-                        <span>📍 {rating.bodyPart}</span>
-                      )}
-                      {rating.side && <span>↔️ {rating.side}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          savedRatings.map((rating, index) => (
+            <SavedRatingRow key={rating.id || index} rating={rating} />
+          ))
         )}
       </div>
 
@@ -1748,12 +1862,211 @@ function MyRatingsPanel({
           className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
         >
           🔍 Analyze My {savedRatings.length} Rating
-          {savedRatings.length !== 1 ? "s" : ""} for Secondary
-          Conditions
+          {savedRatings.length !== 1 ? "s" : ""} for Secondary Conditions
         </button>
       )}
     </div>
   );
+}
+
+function SecondaryScoutHeader({ onClose, onReportBug }) {
+  return (
+    <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h2
+            id="secondary-scout-launcher-title"
+            className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
+          >
+            🔍 Secondary Scout{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-blue-100 text-sm sm:text-base">
+            Discover potential secondary claims based on your conditions
+          </p>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Secondary Scout Launcher"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6 sm:w-8 sm:h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecondaryScoutTabs({ inputMethod, setInputMethod, savedRatings, setShowVAGovPaster }) {
+  return (
+    <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
+      <button
+        onClick={() => setInputMethod("manual")}
+        className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+          inputMethod === "manual"
+            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+        }`}
+      >
+        <span className="hidden sm:inline">Type </span>Conditions
+      </button>
+      <button
+        onClick={() => setInputMethod("pdf")}
+        className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+          inputMethod === "pdf"
+            ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+        }`}
+      >
+        📄 <span className="hidden sm:inline">Drop-In </span>PDF
+      </button>
+      <button
+        onClick={() => setShowVAGovPaster(true)}
+        className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 border-b-2 border-transparent hover:border-green-600 dark:hover:border-green-400"
+      >
+        📋 Paste from VA
+      </button>
+      <button
+        onClick={() => setInputMethod("checkbox")}
+        className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+          inputMethod === "checkbox"
+            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+        }`}
+      >
+        <span className="hidden sm:inline">Select from </span>List
+      </button>
+      <button
+        onClick={() => setInputMethod("examples")}
+        className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+          inputMethod === "examples"
+            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+        }`}
+      >
+        Examples
+      </button>
+      {/* My Ratings Tab - shows only if user has saved ratings */}
+      {savedRatings.length > 0 && (
+        <button
+          onClick={() => setInputMethod("myratings")}
+          className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+            inputMethod === "myratings"
+              ? "text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-600 dark:border-yellow-400"
+              : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          }`}
+        >
+          ⭐ My Ratings
+          <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">
+            {savedRatings.length}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SecondaryScoutInfoBox() {
+  return (
+    <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded">
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+        <div className="ml-3">
+          <p className="text-sm text-yellow-700 dark:text-yellow-100">
+            <strong>Important:</strong> This tool is educational and based on
+            38 CFR § 3.310 (Secondary Service Connection). Suggestions
+            should be reviewed with a VA-accredited representative and
+            require a medical nexus opinion.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function _parseManualConditions(manualInput) {
+  // Parse input - handles both simple list and VA.gov rating format
+  // VA.gov format example: "20% rating for radiculopathy, left lower extremity (femoral)"
+  const lines = manualInput
+    .split("\n")
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0);
+
+  return lines
+    .map((line) => {
+      // Check if line matches VA.gov format: "XX% rating for [condition]"
+      // eslint-disable-next-line sonarjs/slow-regex -- single-line, non-nested quantifiers
+      const vaFormatMatch = line.match(/^\d+%\s+rating\s+for\s+(.+)$/i);
+      if (vaFormatMatch) {
+        // Extract just the condition name, capitalize properly
+        let condition = vaFormatMatch[1].trim();
+        // Capitalize first letter of each word for consistency
+        condition = condition.replace(/\b\w/g, (char) => char.toUpperCase());
+        return condition;
+      }
+      // Otherwise return the line as-is (simple format)
+      return line;
+    })
+    .filter((c) => c.length > 0);
+}
+
+function _importPastedRatings(ratings, ctx) {
+  const { setSavedRatings, setShowVAGovPaster, onLaunch } = ctx;
+
+  // Save each rating to veteranProfile for global access
+  ratings.forEach((rating) => {
+    addRating({
+      id: Date.now() + Math.random(),
+      name: rating.condition,
+      rating: rating.rating || 0,
+      effectiveDate: rating.effectiveDate,
+      source: "VA.gov Import",
+    });
+  });
+
+  // Reload saved ratings
+  setSavedRatings(getMyRatings());
+
+  // Extract just the condition names for Secondary Scout
+  const conditions = ratings.map((r) => r.condition);
+
+  // Launch Secondary Scout with these conditions
+  if (conditions.length > 0) {
+    onLaunch(conditions);
+  }
+
+  setShowVAGovPaster(false);
 }
 
 const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
@@ -1841,30 +2154,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   };
 
   const handlePastedRatings = (ratings) => {
-    // Save each rating to veteranProfile for global access
-    ratings.forEach((rating) => {
-      addRating({
-        id: Date.now() + Math.random(),
-        name: rating.condition,
-        rating: rating.rating || 0,
-        effectiveDate: rating.effectiveDate,
-        source: "VA.gov Import",
-      });
-    });
-
-    // Reload saved ratings
-    const updatedRatings = getMyRatings();
-    setSavedRatings(updatedRatings);
-
-    // Extract just the condition names for Secondary Scout
-    const conditions = ratings.map((r) => r.condition);
-
-    // Launch Secondary Scout with these conditions
-    if (conditions.length > 0) {
-      onLaunch(conditions);
-    }
-
-    setShowVAGovPaster(false);
+    _importPastedRatings(ratings, { setSavedRatings, setShowVAGovPaster, onLaunch });
   };
 
   const expandAll = () => {
@@ -1897,30 +2187,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   }, [searchFilter]);
 
   const handleManualSubmit = () => {
-    // Parse input - handles both simple list and VA.gov rating format
-    // VA.gov format example: "20% rating for radiculopathy, left lower extremity (femoral)"
-    const lines = manualInput
-      .split("\n")
-      .map((c) => c.trim())
-      .filter((c) => c.length > 0);
-
-    const conditions = lines
-      .map((line) => {
-        // Check if line matches VA.gov format: "XX% rating for [condition]"
-        // eslint-disable-next-line sonarjs/slow-regex -- single-line, non-nested quantifiers
-        const vaFormatMatch = line.match(/^\d+%\s+rating\s+for\s+(.+)$/i);
-        if (vaFormatMatch) {
-          // Extract just the condition name, capitalize properly
-          let condition = vaFormatMatch[1].trim();
-          // Capitalize first letter of each word for consistency
-          condition = condition.replace(/\b\w/g, (char) => char.toUpperCase());
-          return condition;
-        }
-        // Otherwise return the line as-is (simple format)
-        return line;
-      })
-      .filter((c) => c.length > 0);
-
+    const conditions = _parseManualConditions(manualInput);
     if (conditions.length > 0) {
       onLaunch(conditions);
     }
@@ -1963,121 +2230,15 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
         onClose={onClose}
         size="xl"
         labelledBy="secondary-scout-launcher-title"
-        header={
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h2
-                  id="secondary-scout-launcher-title"
-                  className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
-                >
-                  🔍 Secondary Scout{" "}
-                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-blue-100 text-sm sm:text-base">
-                  Discover potential secondary claims based on your conditions
-                </p>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="Secondary Scout Launcher"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
+        header={<SecondaryScoutHeader onClose={onClose} onReportBug={onReportBug} />}
       >
         <div>
-          {/* Input Method Tabs */}
-          <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setInputMethod("manual")}
-              className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
-                inputMethod === "manual"
-                  ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              <span className="hidden sm:inline">Type </span>Conditions
-            </button>
-            <button
-              onClick={() => setInputMethod("pdf")}
-              className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
-                inputMethod === "pdf"
-                  ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              📄 <span className="hidden sm:inline">Drop-In </span>PDF
-            </button>
-            <button
-              onClick={() => setShowVAGovPaster(true)}
-              className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 border-b-2 border-transparent hover:border-green-600 dark:hover:border-green-400"
-            >
-              📋 Paste from VA
-            </button>
-            <button
-              onClick={() => setInputMethod("checkbox")}
-              className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
-                inputMethod === "checkbox"
-                  ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              <span className="hidden sm:inline">Select from </span>List
-            </button>
-            <button
-              onClick={() => setInputMethod("examples")}
-              className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
-                inputMethod === "examples"
-                  ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              Examples
-            </button>
-            {/* My Ratings Tab - shows only if user has saved ratings */}
-            {savedRatings.length > 0 && (
-              <button
-                onClick={() => setInputMethod("myratings")}
-                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
-                  inputMethod === "myratings"
-                    ? "text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-600 dark:border-yellow-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                }`}
-              >
-                ⭐ My Ratings
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">
-                  {savedRatings.length}
-                </span>
-              </button>
-            )}
-          </div>
+          <SecondaryScoutTabs
+            inputMethod={inputMethod}
+            setInputMethod={setInputMethod}
+            savedRatings={savedRatings}
+            setShowVAGovPaster={setShowVAGovPaster}
+          />
 
           {/* Manual Input Method */}
           {inputMethod === "manual" && (
@@ -2139,32 +2300,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
             />
           )}
 
-          {/* Info Box */}
-          <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-yellow-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700 dark:text-yellow-100">
-                  <strong>Important:</strong> This tool is educational and based
-                  on 38 CFR § 3.310 (Secondary Service Connection). Suggestions
-                  should be reviewed with a VA-accredited representative and
-                  require a medical nexus opinion.
-                </p>
-              </div>
-            </div>
-          </div>
+          <SecondaryScoutInfoBox />
         </div>
       </ResponsiveModal>
 
