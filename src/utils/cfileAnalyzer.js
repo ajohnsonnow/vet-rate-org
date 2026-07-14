@@ -85,7 +85,10 @@ const MIN_CLAIMS_SCORE = 2;
  */
 export function computeAiExclusion(
   chunkScores,
-  { maxAiChunks = MAX_WEBGPU_AI_CHUNKS, minClaimsScore = MIN_CLAIMS_SCORE } = {},
+  {
+    maxAiChunks = MAX_WEBGPU_AI_CHUNKS,
+    minClaimsScore = MIN_CLAIMS_SCORE,
+  } = {},
 ) {
   const floorIndices = new Set();
   const capIndices = new Set();
@@ -306,100 +309,105 @@ function _repairNormalizeControlChars(content) {
 }
 
 function _repairMissingOpeningQuote(content) {
-      const fixed = content.replace(
-        // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-        /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
-        (_, colon, value, closingPart) =>
-          `${colon}"${value.trim()}${closingPart}`,
-      );
-      return JSON.parse(fixed);
+  const fixed = content.replace(
+    // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
+    /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
+    (_, colon, value, closingPart) => `${colon}"${value.trim()}${closingPart}`,
+  );
+  return JSON.parse(fixed);
 }
 
 function _repairCloseOpenBrackets(content) {
-      let repaired = content;
-      // Count open brackets
-      const openBraces = (repaired.match(/{/g) || []).length;
-      const closeBraces = (repaired.match(/}/g) || []).length;
-      const openBrackets = (repaired.match(/\[/g) || []).length;
-      const closeBrackets = (repaired.match(/]/g) || []).length;
+  let repaired = content;
+  // Count open brackets
+  const openBraces = (repaired.match(/{/g) || []).length;
+  const closeBraces = (repaired.match(/}/g) || []).length;
+  const openBrackets = (repaired.match(/\[/g) || []).length;
+  const closeBrackets = (repaired.match(/]/g) || []).length;
 
-      // Remove any trailing incomplete string/value
-      repaired = repaired.replace(/,\s*"[^"]*$/, ""); // Incomplete key
-      repaired = repaired.replace(/:\s*"[^"]*$/, ': ""'); // Incomplete string value
-      repaired = repaired.replace(/,\s*$/, ""); // Trailing comma
-      repaired = repaired.replace(/:\s*$/, ": null"); // Trailing colon
+  // Remove any trailing incomplete string/value
+  repaired = repaired.replace(/,\s*"[^"]*$/, ""); // Incomplete key
+  repaired = repaired.replace(/:\s*"[^"]*$/, ': ""'); // Incomplete string value
+  repaired = repaired.replace(/,\s*$/, ""); // Trailing comma
+  repaired = repaired.replace(/:\s*$/, ": null"); // Trailing colon
 
-      // Close arrays and objects
-      for (let i = 0; i < openBrackets - closeBrackets; i++) {
-        repaired += "]";
-      }
-      for (let i = 0; i < openBraces - closeBraces; i++) {
-        repaired += "}";
-      }
+  // Close arrays and objects
+  for (let i = 0; i < openBrackets - closeBrackets; i++) {
+    repaired += "]";
+  }
+  for (let i = 0; i < openBraces - closeBraces; i++) {
+    repaired += "}";
+  }
 
-      return JSON.parse(repaired);
+  return JSON.parse(repaired);
 }
 
 function _repairInsertMissingCommas(content) {
-      // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-      const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
-      return JSON.parse(fixed);
+  // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
+  const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
+  return JSON.parse(fixed);
 }
 
 function _repairStripPreamble(content) {
-      const jsonStart = content.indexOf("{");
-      if (jsonStart <= 0) return null;
-      let extracted = content.substring(jsonStart);
-      extracted = extracted.replace(/,\s*"[^"]*$/, "");
-      extracted = extracted.replace(/:\s*"[^"]*$/, ': ""');
-      extracted = extracted.replace(/,\s*$/, "");
-      extracted = extracted.replace(/:\s*$/, ": null");
-      const ob = (extracted.match(/{/g) || []).length;
-      const cb = (extracted.match(/}/g) || []).length;
-      const oB = (extracted.match(/\[/g) || []).length;
-      const cB = (extracted.match(/]/g) || []).length;
-      for (let i = 0; i < oB - cB; i++) extracted += "]";
-      for (let i = 0; i < ob - cb; i++) extracted += "}";
-      return JSON.parse(extracted);
+  const jsonStart = content.indexOf("{");
+  if (jsonStart <= 0) return null;
+  let extracted = content.substring(jsonStart);
+  extracted = extracted.replace(/,\s*"[^"]*$/, "");
+  extracted = extracted.replace(/:\s*"[^"]*$/, ': ""');
+  extracted = extracted.replace(/,\s*$/, "");
+  extracted = extracted.replace(/:\s*$/, ": null");
+  const ob = (extracted.match(/{/g) || []).length;
+  const cb = (extracted.match(/}/g) || []).length;
+  const oB = (extracted.match(/\[/g) || []).length;
+  const cB = (extracted.match(/]/g) || []).length;
+  for (let i = 0; i < oB - cB; i++) extracted += "]";
+  for (let i = 0; i < ob - cb; i++) extracted += "}";
+  return JSON.parse(extracted);
+}
+
+function _scanJsonCharForDepth(char, state) {
+  if (state.escapeNext) {
+    state.escapeNext = false;
+    return;
+  }
+
+  if (char === "\\" && state.inString) {
+    state.escapeNext = true;
+    return;
+  }
+
+  if (char === '"' && !state.escapeNext) {
+    state.inString = !state.inString;
+    return;
+  }
+
+  if (!state.inString) {
+    if (char === "{" || char === "[") state.depth++;
+    if (char === "}" || char === "]") {
+      state.depth--;
+      if (state.depth === 0) state.lastCompleteIndex = state.index;
+    }
+  }
 }
 
 function _repairFindLastCompleteObject(content) {
-      let depth = 0;
-      let lastCompleteIndex = -1;
-      let inString = false;
-      let escapeNext = false;
+  const state = {
+    depth: 0,
+    lastCompleteIndex: -1,
+    inString: false,
+    escapeNext: false,
+    index: 0,
+  };
 
-      for (let i = 0; i < content.length; i++) {
-        const char = content[i];
+  for (let i = 0; i < content.length; i++) {
+    state.index = i;
+    _scanJsonCharForDepth(content[i], state);
+  }
 
-        if (escapeNext) {
-          escapeNext = false;
-          continue;
-        }
-
-        if (char === "\\" && inString) {
-          escapeNext = true;
-          continue;
-        }
-
-        if (char === '"' && !escapeNext) {
-          inString = !inString;
-          continue;
-        }
-
-        if (!inString) {
-          if (char === "{" || char === "[") depth++;
-          if (char === "}" || char === "]") {
-            depth--;
-            if (depth === 0) lastCompleteIndex = i;
-          }
-        }
-      }
-
-      if (lastCompleteIndex > 0) {
-        return JSON.parse(content.substring(0, lastCompleteIndex + 1));
-      }
-      return null;
+  if (state.lastCompleteIndex > 0) {
+    return JSON.parse(content.substring(0, state.lastCompleteIndex + 1));
+  }
+  return null;
 }
 
 function _repairSingleQuotes(content) {
@@ -407,67 +415,67 @@ function _repairSingleQuotes(content) {
 }
 
 function _repairUnquotedPropertyNames(content) {
-      const fixed = content.replace(
-        /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
-        '$1 "$2":',
-      );
-      return JSON.parse(fixed);
+  const fixed = content.replace(
+    /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
+    '$1 "$2":',
+  );
+  return JSON.parse(fixed);
 }
 
 function _repairRegexFieldExtraction(content) {
-      const result = {
-        summary: "",
-        servicePeriod: {},
-        timeline: [],
-        potential_claims: [],
-        exposures: [],
-        combatIndicators: [],
-        redFlags: [],
-        actionItems: [],
-        mentalHealth: {
-          diagnoses: [],
-          indicators: [],
-          stressors: [],
-          pages: [],
-        },
-      };
+  const result = {
+    summary: "",
+    servicePeriod: {},
+    timeline: [],
+    potential_claims: [],
+    exposures: [],
+    combatIndicators: [],
+    redFlags: [],
+    actionItems: [],
+    mentalHealth: {
+      diagnoses: [],
+      indicators: [],
+      stressors: [],
+      pages: [],
+    },
+  };
 
-      // Pull condition+likelihood pairs from any fragment of the response
-      const claimRe =
-        /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
-      let m;
-      while ((m = claimRe.exec(content)) !== null) {
-        result.potential_claims.push({
-          condition: m[1],
-          likelihood: m[2],
-          inServiceEvent: "",
-          currentDiagnosis: "unclear",
-          missing_element: "",
-        });
-      }
+  // Pull condition+likelihood pairs from any fragment of the response
+  const claimRe =
+    /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
+  let m;
+  while ((m = claimRe.exec(content)) !== null) {
+    result.potential_claims.push({
+      condition: m[1],
+      likelihood: m[2],
+      inServiceEvent: "",
+      currentDiagnosis: "unclear",
+      missing_element: "",
+    });
+  }
 
-      // Pull servicePeriod fields
-      const branchM = content.match(/"branch"\s*:\s*"([^"]*)"/);
-      const entryM = content.match(/"entryDate"\s*:\s*"([^"]*)"/);
-      const sepM = content.match(/"separationDate"\s*:\s*"([^"]*)"/);
-      const mosM = content.match(/"mos"\s*:\s*"([^"]*)"/);
-      if (branchM || entryM) {
-        result.servicePeriod = {
-          branch: branchM?.[1] ?? "",
-          entryDate: entryM?.[1] ?? "",
-          separationDate: sepM?.[1] ?? "",
-          mos: mosM?.[1] ?? "",
-        };
-      }
+  // Pull servicePeriod fields
+  const branchM = content.match(/"branch"\s*:\s*"([^"]*)"/);
+  const entryM = content.match(/"entryDate"\s*:\s*"([^"]*)"/);
+  const sepM = content.match(/"separationDate"\s*:\s*"([^"]*)"/);
+  const mosM = content.match(/"mos"\s*:\s*"([^"]*)"/);
+  if (branchM || entryM) {
+    result.servicePeriod = {
+      branch: branchM?.[1] ?? "",
+      entryDate: entryM?.[1] ?? "",
+      separationDate: sepM?.[1] ?? "",
+      mos: mosM?.[1] ?? "",
+    };
+  }
 
-      if (result.potential_claims.length > 0 || result.servicePeriod.branch) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
-        );
-        return result;
-      }
-      return null;
+  if (result.potential_claims.length > 0 || result.servicePeriod.branch) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
+    );
+    return result;
+  }
+  return null;
 }
 
 function attemptJSONRepair(jsonStr) {
@@ -1012,6 +1020,31 @@ function createMetaSummary(summaries) {
  * ("Jan 2005", "January 2005", "2005-01") produce the same dedup key.
  * Avoids Date.parse for keying — it mixes local/UTC interpretation across formats.
  */
+function _findMonthNameMatch(str, monthNames) {
+  for (let i = 0; i < monthNames.length; i++) {
+    if (str.includes(monthNames[i])) return i + 1;
+  }
+  return 0;
+}
+
+function _extractNumericMonthDay(str) {
+  const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
+  if (ymd) {
+    return {
+      month: parseInt(ymd[1], 10),
+      day: ymd[2] ? parseInt(ymd[2], 10) : 0,
+    };
+  }
+  const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
+  if (mdy) {
+    return {
+      month: parseInt(mdy[1], 10),
+      day: mdy[2] ? parseInt(mdy[2], 10) : 0,
+    };
+  }
+  return { month: 0, day: 0 };
+}
+
 function normalizeDateKey(dateStr) {
   if (!dateStr) return "";
   const str = String(dateStr).toLowerCase().trim();
@@ -1035,30 +1068,16 @@ function normalizeDateKey(dateStr) {
     "dec",
   ];
 
-  let month = 0;
+  let month = _findMonthNameMatch(str, monthNames);
   let day = 0;
-  for (let i = 0; i < monthNames.length; i++) {
-    if (str.includes(monthNames[i])) {
-      month = i + 1;
-      break;
-    }
-  }
 
   if (month) {
     const dayMatch = str.match(/\b(\d{1,2})\b/);
     if (dayMatch) day = parseInt(dayMatch[1], 10);
   } else {
-    const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
-    if (ymd) {
-      month = parseInt(ymd[1], 10);
-      day = ymd[2] ? parseInt(ymd[2], 10) : 0;
-    } else {
-      const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
-      if (mdy) {
-        month = parseInt(mdy[1], 10);
-        day = mdy[2] ? parseInt(mdy[2], 10) : 0;
-      }
-    }
+    const numeric = _extractNumericMonthDay(str);
+    month = numeric.month;
+    day = numeric.day;
   }
 
   return `${year}-${month}-${day}`;
@@ -1423,7 +1442,13 @@ async function _analyzeSingleChunkPath(
   };
 }
 
-function _buildMultiChunkState(chunks, fullText, aiMode, isLocalAIMode, onProgress) {
+function _buildMultiChunkState(
+  chunks,
+  fullText,
+  aiMode,
+  isLocalAIMode,
+  onProgress,
+) {
   const totalChunks = chunks.length;
   const estimatedTime = estimateProcessingTime(
     fullText.length,
@@ -1572,7 +1597,12 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
         );
       }
 
-      result = await analyzeChunk(chunk, chunkNum, ctx.totalChunks, ctx.onProgress);
+      result = await analyzeChunk(
+        chunk,
+        chunkNum,
+        ctx.totalChunks,
+        ctx.onProgress,
+      );
       lastError = null;
       break;
     } catch (error) {
@@ -1679,7 +1709,6 @@ async function _processOneChunk(chunk, i, ctx, abortController) {
 
   // No inter-chunk sleep: local WebGPU AI has no rate limiting.
 }
-
 
 async function _finalizeMultiChunkResult(
   ctx,
@@ -1797,7 +1826,6 @@ export async function analyzeCFile(
     semanticOpts,
   );
 }
-
 
 // Slim system prompt for local AI (3 fields: servicePeriod, potential_claims, timeline).
 // Secondary fields (summary, exposures, combatIndicators, mentalHealth, redFlags,
@@ -1972,7 +2000,6 @@ function scoreChunkRelevance(text) {
 
   return Math.max(0, score);
 }
-
 
 async function _requestChunkAnalysis(chunk, chunkNum, totalChunks, onProgress) {
   // Detect if we're using local AI (smaller context). effectiveMode is the
@@ -2176,7 +2203,6 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   };
 }
 
-
 // ============================================================================
 // PAGE-BY-PAGE PIPELINE (local AI — replaces chunk-based for SWARM/LOCAL/WLLAMA)
 // ============================================================================
@@ -2366,7 +2392,6 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
   return _mapPageResultToChunkSchema(pr, pageNum);
 }
 
-
 function _prepareMedicalPages(fullText, onProgress) {
   const allPages = parseAllPages(fullText);
   if (allPages.length === 0) {
@@ -2421,11 +2446,14 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
 
       if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
         circuitWaits++;
-        ctx.onProgress(`AI engine paused — waiting 30s before page ${pageNum}…`, {
-          phase: "circuit-wait",
-          current: i + 1,
-          total: ctx.totalPages,
-        });
+        ctx.onProgress(
+          `AI engine paused — waiting 30s before page ${pageNum}…`,
+          {
+            phase: "circuit-wait",
+            current: i + 1,
+            total: ctx.totalPages,
+          },
+        );
         await new Promise((r) => setTimeout(r, 31000));
         resetAICircuitBreaker();
         attempt--;
@@ -2528,7 +2556,12 @@ function _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages) {
  * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
  * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
  */
-async function _analyzePageByPage(fullText, aiMode, onProgress, abortController) {
+async function _analyzePageByPage(
+  fullText,
+  aiMode,
+  onProgress,
+  abortController,
+) {
   const { medicalPages, skippedPages } = _prepareMedicalPages(
     fullText,
     onProgress,
@@ -2547,7 +2580,6 @@ async function _analyzePageByPage(fullText, aiMode, onProgress, abortController)
 
   return _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages);
 }
-
 
 // ============================================================================
 // UTILITY EXPORTS
