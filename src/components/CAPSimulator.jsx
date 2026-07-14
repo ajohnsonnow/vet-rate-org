@@ -2963,7 +2963,83 @@ const TERM_CATEGORIES = [
   },
 ];
 
-function CAPExamPrepQuestionCard({ q, index, expandedQuestion, setExpandedQuestion }) {
+function CAPExamPrepAnswerOption({ opt }) {
+  let weightClass = "bg-green-500/20 text-green-300";
+  let weightIcon = "✓";
+  if (opt.weight >= 3) {
+    weightClass = "bg-red-500/20 text-red-300";
+    weightIcon = "⚠️";
+  } else if (opt.weight >= 2) {
+    weightClass = "bg-yellow-500/20 text-yellow-300";
+    weightIcon = "⚡";
+  }
+  return (
+    <div className="bg-gray-800 border border-gray-600 rounded p-3 flex items-start gap-3">
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${weightClass}`}
+      >
+        {weightIcon}
+      </div>
+      <div className="flex-1">
+        <p className="text-white font-medium">{opt.label}</p>
+        {opt.weight > 0 && (
+          <p className="text-xs text-gray-400 mt-1">
+            Impact level: {opt.weight}/4
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CAPExamPrepQuestionDetail({ q }) {
+  return (
+    <div className="border-t border-gray-700 p-4 bg-gray-900/50 space-y-4">
+      {/* Intent */}
+      <div>
+        <h4 className="text-sm font-bold text-yellow-300 mb-2">
+          🎯 What They&apos;re Really Looking For:
+        </h4>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          {q.intent}
+        </p>
+      </div>
+
+      {/* Definition */}
+      {q.definition && (
+        <div>
+          <h4 className="text-sm font-bold text-blue-300 mb-2">
+            📖 Official Definition:
+          </h4>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            {q.definition}
+          </p>
+        </div>
+      )}
+
+      {/* Answer Options */}
+      {q.options && q.options.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold text-green-300 mb-2">
+            ✅ Possible Answers:
+          </h4>
+          <div className="space-y-2">
+            {q.options.map((opt, i) => (
+              <CAPExamPrepAnswerOption key={i} opt={opt} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CAPExamPrepQuestionCard({
+  q,
+  index,
+  expandedQuestion,
+  setExpandedQuestion,
+}) {
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
       <button
@@ -2990,73 +3066,156 @@ function CAPExamPrepQuestionCard({ q, index, expandedQuestion, setExpandedQuesti
         </span>
       </button>
 
-      {expandedQuestion === q.id && (
-        <div className="border-t border-gray-700 p-4 bg-gray-900/50 space-y-4">
-          {/* Intent */}
-          <div>
-            <h4 className="text-sm font-bold text-yellow-300 mb-2">
-              🎯 What They&apos;re Really Looking For:
+      {expandedQuestion === q.id && <CAPExamPrepQuestionDetail q={q} />}
+    </div>
+  );
+}
+
+function CAPExamPrepDetailHeader({
+  onClose,
+  setMode,
+  setExpandedQuestion,
+  examPrepDBQ,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => {
+            setMode("exam-prep");
+            setExpandedQuestion(null);
+          }}
+          className="text-white hover:text-cyan-200 transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <FileText className="h-8 w-8 text-white" />
+        <div>
+          <h1
+            id="exam-prep-detail-title"
+            className="text-xl font-bold text-white"
+          >
+            {examPrepDBQ.condition_name}
+          </h1>
+          <p className="text-cyan-100 text-sm">
+            DC {examPrepDBQ.diagnostic_code} • {examPrepDBQ.cfr_reference}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onClose}
+        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function CAPExamPrepTipsSection({ examPrepTips }) {
+  if (examPrepTips.length === 0) return null;
+  return (
+    <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="text-3xl">💡</div>
+        <div>
+          <h3 className="text-xl font-bold text-yellow-300 mb-2">
+            Strategic Tips for This Condition
+          </h3>
+          <p className="text-gray-300 text-sm">
+            These tips help you answer honestly while ensuring the
+            examiner understands the full impact of your condition.
+          </p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {examPrepTips.map((tip) => (
+          <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
+            <h4 className="font-bold text-yellow-200 mb-2">
+              ⚠️ {tip.title}
             </h4>
             <p className="text-gray-300 text-sm leading-relaxed">
-              {q.intent}
+              {tip.content}
             </p>
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-          {/* Definition */}
-          {q.definition && (
-            <div>
-              <h4 className="text-sm font-bold text-blue-300 mb-2">
-                📖 Official Definition:
-              </h4>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                {q.definition}
-              </p>
-            </div>
-          )}
+function CAPExamPrepQuestionsSection({
+  examPrepDBQ,
+  expandedQuestion,
+  setExpandedQuestion,
+}) {
+  if (!examPrepDBQ.tipping_points || examPrepDBQ.tipping_points.length === 0) {
+    return null;
+  }
+  return (
+    <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
+      <h3 className="text-xl font-bold text-cyan-300 mb-4">
+        📋 Questions the Examiner Will Ask
+      </h3>
+      <p className="text-gray-400 text-sm mb-6">
+        These are the actual questions from the DBQ form. Click each
+        one to see what the examiner is really looking for.
+      </p>
+      <div className="space-y-3">
+        {examPrepDBQ.tipping_points.map((q, index) => (
+          <CAPExamPrepQuestionCard
+            key={q.id}
+            q={q}
+            index={index}
+            expandedQuestion={expandedQuestion}
+            setExpandedQuestion={setExpandedQuestion}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-          {/* Answer Options */}
-          {q.options && q.options.length > 0 && (
-            <div>
-              <h4 className="text-sm font-bold text-green-300 mb-2">
-                ✅ Possible Answers:
-              </h4>
-              <div className="space-y-2">
-                {q.options.map((opt, i) => {
-                  let weightClass = "bg-green-500/20 text-green-300";
-                  let weightIcon = "✓";
-                  if (opt.weight >= 3) {
-                    weightClass = "bg-red-500/20 text-red-300";
-                    weightIcon = "⚠️";
-                  } else if (opt.weight >= 2) {
-                    weightClass = "bg-yellow-500/20 text-yellow-300";
-                    weightIcon = "⚡";
-                  }
-                  return (
-                    <div
-                      key={i}
-                      className="bg-gray-800 border border-gray-600 rounded p-3 flex items-start gap-3"
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${weightClass}`}
-                      >
-                        {weightIcon}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{opt.label}</p>
-                        {opt.weight > 0 && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            Impact level: {opt.weight}/4
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+function CAPExamPrepNotesSection({ examPrepDBQ }) {
+  if (!examPrepDBQ.notes) return null;
+  return (
+    <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
+      <h4 className="font-bold text-blue-300 mb-2">📝 Important Notes:</h4>
+      <p className="text-gray-300 text-sm">{examPrepDBQ.notes}</p>
+    </div>
+  );
+}
+
+function CAPExamPrepBottomCTA({ setMode, setExpandedQuestion }) {
+  return (
+    <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
+      <h3 className="text-lg font-bold text-cyan-300 mb-3">
+        Ready for Your Exam
+      </h3>
+      <p className="text-gray-300 mb-4">
+        Now you know exactly what questions are coming. Walk in prepared,
+        answer honestly, and don&apos;t undersell your symptoms. The
+        examiner is checking boxes - make sure they check the right ones.
+      </p>
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => {
+            setMode("exam-prep");
+            setExpandedQuestion(null);
+          }}
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+        >
+          ← View Another Condition
+        </button>
+        <button
+          onClick={() => setMode("intro")}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
+        >
+          Back to Main
+        </button>
+      </div>
     </div>
   );
 }
@@ -3077,134 +3236,33 @@ function CAPExamPrepDetailView({
       labelledBy="exam-prep-detail-title"
       className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-cyan-500/30"
       header={
-        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setMode("exam-prep");
-                setExpandedQuestion(null);
-              }}
-              className="text-white hover:text-cyan-200 transition-colors"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <FileText className="h-8 w-8 text-white" />
-            <div>
-              <h1
-                id="exam-prep-detail-title"
-                className="text-xl font-bold text-white"
-              >
-                {examPrepDBQ.condition_name}
-              </h1>
-              <p className="text-cyan-100 text-sm">
-                DC {examPrepDBQ.diagnostic_code} • {examPrepDBQ.cfr_reference}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
+        <CAPExamPrepDetailHeader
+          onClose={onClose}
+          setMode={setMode}
+          setExpandedQuestion={setExpandedQuestion}
+          examPrepDBQ={examPrepDBQ}
+        />
       }
     >
       <div className="space-y-6">
         {/* Strategic Tips Section */}
-        {examPrepTips.length > 0 && (
-          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="text-3xl">💡</div>
-              <div>
-                <h3 className="text-xl font-bold text-yellow-300 mb-2">
-                  Strategic Tips for This Condition
-                </h3>
-                <p className="text-gray-300 text-sm">
-                  These tips help you answer honestly while ensuring the
-                  examiner understands the full impact of your condition.
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {examPrepTips.map((tip) => (
-                <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
-                  <h4 className="font-bold text-yellow-200 mb-2">
-                    ⚠️ {tip.title}
-                  </h4>
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {tip.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <CAPExamPrepTipsSection examPrepTips={examPrepTips} />
 
         {/* Tipping Points / DBQ Questions Section */}
-        {examPrepDBQ.tipping_points && examPrepDBQ.tipping_points.length > 0 && (
-          <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
-            <h3 className="text-xl font-bold text-cyan-300 mb-4">
-              📋 Questions the Examiner Will Ask
-            </h3>
-            <p className="text-gray-400 text-sm mb-6">
-              These are the actual questions from the DBQ form. Click each
-              one to see what the examiner is really looking for.
-            </p>
-            <div className="space-y-3">
-              {examPrepDBQ.tipping_points.map((q, index) => (
-                <CAPExamPrepQuestionCard
-                  key={q.id}
-                  q={q}
-                  index={index}
-                  expandedQuestion={expandedQuestion}
-                  setExpandedQuestion={setExpandedQuestion}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <CAPExamPrepQuestionsSection
+          examPrepDBQ={examPrepDBQ}
+          expandedQuestion={expandedQuestion}
+          setExpandedQuestion={setExpandedQuestion}
+        />
 
         {/* Additional Notes Section */}
-        {examPrepDBQ.notes && (
-          <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
-            <h4 className="font-bold text-blue-300 mb-2">
-              📝 Important Notes:
-            </h4>
-            <p className="text-gray-300 text-sm">{examPrepDBQ.notes}</p>
-          </div>
-        )}
+        <CAPExamPrepNotesSection examPrepDBQ={examPrepDBQ} />
 
         {/* Bottom CTA */}
-        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-cyan-300 mb-3">
-            Ready for Your Exam
-          </h3>
-          <p className="text-gray-300 mb-4">
-            Now you know exactly what questions are coming. Walk in prepared,
-            answer honestly, and don&apos;t undersell your symptoms. The
-            examiner is checking boxes - make sure they check the right ones.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => {
-                setMode("exam-prep");
-                setExpandedQuestion(null);
-              }}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-            >
-              ← View Another Condition
-            </button>
-            <button
-              onClick={() => setMode("intro")}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
-            >
-              Back to Main
-            </button>
-          </div>
-        </div>
+        <CAPExamPrepBottomCTA
+          setMode={setMode}
+          setExpandedQuestion={setExpandedQuestion}
+        />
       </div>
     </ResponsiveModal>
   );
