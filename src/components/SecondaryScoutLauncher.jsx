@@ -2069,53 +2069,8 @@ function _importPastedRatings(ratings, ctx) {
   setShowVAGovPaster(false);
 }
 
-const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
-  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown when needed
-
-  const [inputMethod, setInputMethod] = useState("manual"); // 'manual', 'checkbox', 'examples', 'myratings', 'paste', or 'pdf'
-  const [manualInput, setManualInput] = useState("");
-  const [selectedConditions, setSelectedConditions] = useState([]);
-  const [searchFilter, setSearchFilter] = useState("");
-  const [expandedSystems, setExpandedSystems] = useState(new Set());
-  const [savedRatings, setSavedRatings] = useState([]);
-  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
-
-  const {
-    pdfFile,
-    pdfOcrProgress,
-    pdfIsDragging,
-    extractedPdfConditions,
-    pdfError,
-    pdfFileInputRef,
-    handlePdfDragOver,
-    handlePdfDragLeave,
-    handlePdfDrop,
-    handlePdfFileChange,
-    handleRemovePdf,
-    handlePdfConditionsSubmit,
-  } = usePdfDropIn(onLaunch);
-
-  // Load saved ratings on mount
-  useEffect(() => {
-    const ratings = getMyRatings();
-    setSavedRatings(ratings);
-  }, []);
-
-  // Create a lookup map from condition names (lowercase) to diagnostic codes
-  const conditionToDCCode = useMemo(() => {
-    const map = {};
-    disabilityData.disabilities.forEach((disability) => {
-      // Map by condition name (lowercase for case-insensitive lookup)
-      map[disability.conditionName.toLowerCase()] = disability.diagnosticCode;
-      // Also map by aliases
-      if (disability.aliases) {
-        disability.aliases.forEach((alias) => {
-          map[alias.toLowerCase()] = disability.diagnosticCode;
-        });
-      }
-    });
-    return map;
-  }, []);
+function _buildSecondaryScoutSelectionHandlers(state) {
+  const { conditionToDCCode, setSelectedConditions, setExpandedSystems, setInputMethod } = state;
 
   // Helper function to get DC code for a condition
   const getDCCode = (conditionName) => {
@@ -2153,10 +2108,6 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     });
   };
 
-  const handlePastedRatings = (ratings) => {
-    _importPastedRatings(ratings, { setSavedRatings, setShowVAGovPaster, onLaunch });
-  };
-
   const expandAll = () => {
     setExpandedSystems(new Set(Object.keys(conditionsBySystem)));
   };
@@ -2165,26 +2116,27 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     setExpandedSystems(new Set());
   };
 
-  // Filter conditions based on search
-  const filteredConditionsBySystem = useMemo(() => {
-    if (!searchFilter.trim()) return conditionsBySystem;
+  const loadExampleProfile = (conditions) => {
+    setSelectedConditions(conditions);
+    setInputMethod("checkbox");
+  };
 
-    const filterLower = searchFilter.toLowerCase();
-    const filtered = {};
+  return { getDCCode, toggleCondition, toggleSystem, expandAll, collapseAll, loadExampleProfile };
+}
 
-    Object.entries(conditionsBySystem).forEach(([system, conditions]) => {
-      const matchingConditions = conditions.filter((c) =>
-        c.toLowerCase().includes(filterLower),
-      );
-      const systemMatches = system.toLowerCase().includes(filterLower);
+function _buildSecondaryScoutSubmitHandlers(state) {
+  const {
+    onLaunch,
+    manualInput,
+    selectedConditions,
+    savedRatings,
+    setSavedRatings,
+    setShowVAGovPaster,
+  } = state;
 
-      if (matchingConditions.length > 0 || systemMatches) {
-        filtered[system] = systemMatches ? conditions : matchingConditions;
-      }
-    });
-
-    return filtered;
-  }, [searchFilter]);
+  const handlePastedRatings = (ratings) => {
+    _importPastedRatings(ratings, { setSavedRatings, setShowVAGovPaster, onLaunch });
+  };
 
   const handleManualSubmit = () => {
     const conditions = _parseManualConditions(manualInput);
@@ -2218,10 +2170,131 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     return calculateVARating(ratings).combinedRating;
   };
 
-  const loadExampleProfile = (conditions) => {
-    setSelectedConditions(conditions);
-    setInputMethod("checkbox");
+  return {
+    handlePastedRatings,
+    handleManualSubmit,
+    handleCheckboxSubmit,
+    handleMyRatingsSubmit,
+    calculateCombinedRating,
   };
+}
+
+function _buildSecondaryScoutHandlers(state) {
+  return {
+    ..._buildSecondaryScoutSelectionHandlers(state),
+    ..._buildSecondaryScoutSubmitHandlers(state),
+  };
+}
+
+function SecondaryScoutPdfPanel({ pdfDropIn }) {
+  const {
+    pdfFile,
+    pdfOcrProgress,
+    pdfIsDragging,
+    extractedPdfConditions,
+    pdfError,
+    pdfFileInputRef,
+    handlePdfDragOver,
+    handlePdfDragLeave,
+    handlePdfDrop,
+    handlePdfFileChange,
+    handleRemovePdf,
+    handlePdfConditionsSubmit,
+  } = pdfDropIn;
+
+  return (
+    <PdfDropInPanel
+      pdfFile={pdfFile}
+      pdfOcrProgress={pdfOcrProgress}
+      pdfIsDragging={pdfIsDragging}
+      extractedPdfConditions={extractedPdfConditions}
+      pdfError={pdfError}
+      pdfFileInputRef={pdfFileInputRef}
+      handlePdfDragOver={handlePdfDragOver}
+      handlePdfDragLeave={handlePdfDragLeave}
+      handlePdfDrop={handlePdfDrop}
+      handlePdfFileChange={handlePdfFileChange}
+      handleRemovePdf={handleRemovePdf}
+      handlePdfConditionsSubmit={handlePdfConditionsSubmit}
+    />
+  );
+}
+
+function SecondaryScoutCheckboxPanel({ state, handlers }) {
+  const {
+    searchFilter,
+    setSearchFilter,
+    selectedConditions,
+    setSelectedConditions,
+    expandedSystems,
+    setExpandedSystems,
+    filteredConditionsBySystem,
+  } = state;
+  const { expandAll, collapseAll, toggleSystem, toggleCondition, getDCCode, handleCheckboxSubmit } = handlers;
+
+  return (
+    <CheckboxSelectionPanel
+      searchFilter={searchFilter}
+      setSearchFilter={setSearchFilter}
+      selectedConditions={selectedConditions}
+      setSelectedConditions={setSelectedConditions}
+      expandedSystems={expandedSystems}
+      setExpandedSystems={setExpandedSystems}
+      filteredConditionsBySystem={filteredConditionsBySystem}
+      expandAll={expandAll}
+      collapseAll={collapseAll}
+      toggleSystem={toggleSystem}
+      toggleCondition={toggleCondition}
+      getDCCode={getDCCode}
+      handleCheckboxSubmit={handleCheckboxSubmit}
+    />
+  );
+}
+
+function SecondaryScoutInputPanels({ state, handlers }) {
+  const { inputMethod, manualInput, setManualInput, pdfDropIn, savedRatings } = state;
+  const { handleManualSubmit, handleMyRatingsSubmit, loadExampleProfile, calculateCombinedRating } = handlers;
+
+  return (
+    <>
+      {/* Manual Input Method */}
+      {inputMethod === "manual" && (
+        <ManualInputPanel
+          manualInput={manualInput}
+          setManualInput={setManualInput}
+          handleManualSubmit={handleManualSubmit}
+        />
+      )}
+
+      {/* PDF Drop-In Method */}
+      {inputMethod === "pdf" && <SecondaryScoutPdfPanel pdfDropIn={pdfDropIn} />}
+
+      {/* Checkbox Selection Method */}
+      {inputMethod === "checkbox" && (
+        <SecondaryScoutCheckboxPanel state={state} handlers={handlers} />
+      )}
+
+      {/* Example Profiles Method */}
+      {inputMethod === "examples" && (
+        <ExampleProfilesPanel loadExampleProfile={loadExampleProfile} />
+      )}
+
+      {/* My Ratings Method */}
+      {inputMethod === "myratings" && (
+        <MyRatingsPanel
+          savedRatings={savedRatings}
+          calculateCombinedRating={calculateCombinedRating}
+          handleMyRatingsSubmit={handleMyRatingsSubmit}
+        />
+      )}
+    </>
+  );
+}
+
+function SecondaryScoutLauncherView({ state, handlers }) {
+  const { onClose, onReportBug, inputMethod, setInputMethod, savedRatings, showVAGovPaster, setShowVAGovPaster } =
+    state;
+  const { handlePastedRatings } = handlers;
 
   return (
     <>
@@ -2240,65 +2313,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
             setShowVAGovPaster={setShowVAGovPaster}
           />
 
-          {/* Manual Input Method */}
-          {inputMethod === "manual" && (
-            <ManualInputPanel
-              manualInput={manualInput}
-              setManualInput={setManualInput}
-              handleManualSubmit={handleManualSubmit}
-            />
-          )}
-
-          {/* PDF Drop-In Method */}
-          {inputMethod === "pdf" && (
-            <PdfDropInPanel
-              pdfFile={pdfFile}
-              pdfOcrProgress={pdfOcrProgress}
-              pdfIsDragging={pdfIsDragging}
-              extractedPdfConditions={extractedPdfConditions}
-              pdfError={pdfError}
-              pdfFileInputRef={pdfFileInputRef}
-              handlePdfDragOver={handlePdfDragOver}
-              handlePdfDragLeave={handlePdfDragLeave}
-              handlePdfDrop={handlePdfDrop}
-              handlePdfFileChange={handlePdfFileChange}
-              handleRemovePdf={handleRemovePdf}
-              handlePdfConditionsSubmit={handlePdfConditionsSubmit}
-            />
-          )}
-
-          {/* Checkbox Selection Method */}
-          {inputMethod === "checkbox" && (
-            <CheckboxSelectionPanel
-              searchFilter={searchFilter}
-              setSearchFilter={setSearchFilter}
-              selectedConditions={selectedConditions}
-              setSelectedConditions={setSelectedConditions}
-              expandedSystems={expandedSystems}
-              setExpandedSystems={setExpandedSystems}
-              filteredConditionsBySystem={filteredConditionsBySystem}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
-              toggleSystem={toggleSystem}
-              toggleCondition={toggleCondition}
-              getDCCode={getDCCode}
-              handleCheckboxSubmit={handleCheckboxSubmit}
-            />
-          )}
-
-          {/* Example Profiles Method */}
-          {inputMethod === "examples" && (
-            <ExampleProfilesPanel loadExampleProfile={loadExampleProfile} />
-          )}
-
-          {/* My Ratings Method */}
-          {inputMethod === "myratings" && (
-            <MyRatingsPanel
-              savedRatings={savedRatings}
-              calculateCombinedRating={calculateCombinedRating}
-              handleMyRatingsSubmit={handleMyRatingsSubmit}
-            />
-          )}
+          <SecondaryScoutInputPanels state={state} handlers={handlers} />
 
           <SecondaryScoutInfoBox />
         </div>
@@ -2314,6 +2329,89 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       )}
     </>
   );
+}
+
+const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown when needed
+
+  const [inputMethod, setInputMethod] = useState("manual"); // 'manual', 'checkbox', 'examples', 'myratings', 'paste', or 'pdf'
+  const [manualInput, setManualInput] = useState("");
+  const [selectedConditions, setSelectedConditions] = useState([]);
+  const [searchFilter, setSearchFilter] = useState("");
+  const [expandedSystems, setExpandedSystems] = useState(new Set());
+  const [savedRatings, setSavedRatings] = useState([]);
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
+
+  const pdfDropIn = usePdfDropIn(onLaunch);
+
+  // Load saved ratings on mount
+  useEffect(() => {
+    const ratings = getMyRatings();
+    setSavedRatings(ratings);
+  }, []);
+
+  // Create a lookup map from condition names (lowercase) to diagnostic codes
+  const conditionToDCCode = useMemo(() => {
+    const map = {};
+    disabilityData.disabilities.forEach((disability) => {
+      // Map by condition name (lowercase for case-insensitive lookup)
+      map[disability.conditionName.toLowerCase()] = disability.diagnosticCode;
+      // Also map by aliases
+      if (disability.aliases) {
+        disability.aliases.forEach((alias) => {
+          map[alias.toLowerCase()] = disability.diagnosticCode;
+        });
+      }
+    });
+    return map;
+  }, []);
+
+  // Filter conditions based on search
+  const filteredConditionsBySystem = useMemo(() => {
+    if (!searchFilter.trim()) return conditionsBySystem;
+
+    const filterLower = searchFilter.toLowerCase();
+    const filtered = {};
+
+    Object.entries(conditionsBySystem).forEach(([system, conditions]) => {
+      const matchingConditions = conditions.filter((c) =>
+        c.toLowerCase().includes(filterLower),
+      );
+      const systemMatches = system.toLowerCase().includes(filterLower);
+
+      if (matchingConditions.length > 0 || systemMatches) {
+        filtered[system] = systemMatches ? conditions : matchingConditions;
+      }
+    });
+
+    return filtered;
+  }, [searchFilter]);
+
+  const state = {
+    onLaunch,
+    onClose,
+    onReportBug,
+    inputMethod,
+    setInputMethod,
+    manualInput,
+    setManualInput,
+    selectedConditions,
+    setSelectedConditions,
+    searchFilter,
+    setSearchFilter,
+    expandedSystems,
+    setExpandedSystems,
+    savedRatings,
+    setSavedRatings,
+    showVAGovPaster,
+    setShowVAGovPaster,
+    pdfDropIn,
+    conditionToDCCode,
+    filteredConditionsBySystem,
+  };
+  const handlers = _buildSecondaryScoutHandlers(state);
+
+  return <SecondaryScoutLauncherView state={state} handlers={handlers} />;
 };
 
 export default SecondaryScoutLauncher;
