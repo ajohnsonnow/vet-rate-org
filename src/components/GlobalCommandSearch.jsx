@@ -411,6 +411,75 @@ function CommandSearchFooter({ isDark, isTbiComfort }) {
   );
 }
 
+function _performCommandSearch(searchQuery, setResults, setSelectedIndex) {
+  if (!searchQuery.trim()) {
+    // Show popular tools when empty
+    setResults({
+      tools: TOOLS.slice(0, 6),
+      conditions: [],
+    });
+    return;
+  }
+
+  const q = searchQuery.toLowerCase().trim();
+
+  // Search tools
+  const matchedTools = TOOLS.filter(
+    (tool) =>
+      tool.name.toLowerCase().includes(q) ||
+      tool.keywords.some((kw) => kw.includes(q)) ||
+      tool.category.toLowerCase().includes(q),
+  ).slice(0, 5);
+
+  // Search diagnostic codes (if it looks like a code number)
+  let matchedConditions = [];
+  if (/^\d+/.test(q)) {
+    // Search by diagnostic code value (RT10-2: was Object.entries on array → keyed by index)
+    matchedConditions = diagnosticCodes
+      .filter((d) => d.code != null && String(d.code).startsWith(q))
+      .map((d) => ({
+        code: d.code,
+        name: d.name || "Unknown",
+        category: "Diagnostic Code",
+      }))
+      .slice(0, 5);
+  } else {
+    // Search by condition name
+    matchedConditions = diagnosticCodes
+      .filter((d) => {
+        const name = (d.name || "").toLowerCase();
+        const aliases = (d.aliases || []).join(" ").toLowerCase();
+        const terms = (d.searchTerms || []).join(" ").toLowerCase();
+        return name.includes(q) || aliases.includes(q) || terms.includes(q);
+      })
+      .map((d) => ({
+        code: d.code,
+        name: d.name || "Unknown",
+        category: "Diagnostic Code",
+      }))
+      .slice(0, 5);
+  }
+
+  setResults({ tools: matchedTools, conditions: matchedConditions });
+  setSelectedIndex(0);
+}
+
+function _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose) {
+  const toolsCount = results.tools.length;
+
+  if (index < toolsCount) {
+    // Tool selected
+    const tool = results.tools[index];
+    if (onToolSelect) onToolSelect(tool.id);
+  } else {
+    // Condition selected
+    const condition = results.conditions[index - toolsCount];
+    if (onConditionSelect) onConditionSelect(condition);
+  }
+
+  onClose();
+}
+
 export default function GlobalCommandSearch({
   isOpen,
   onClose,
@@ -450,56 +519,7 @@ export default function GlobalCommandSearch({
 
   // Search function
   const performSearch = useCallback((searchQuery) => {
-    if (!searchQuery.trim()) {
-      // Show popular tools when empty
-      setResults({
-        tools: TOOLS.slice(0, 6),
-        conditions: [],
-      });
-      return;
-    }
-
-    const q = searchQuery.toLowerCase().trim();
-
-    // Search tools
-    const matchedTools = TOOLS.filter(
-      (tool) =>
-        tool.name.toLowerCase().includes(q) ||
-        tool.keywords.some((kw) => kw.includes(q)) ||
-        tool.category.toLowerCase().includes(q),
-    ).slice(0, 5);
-
-    // Search diagnostic codes (if it looks like a code number)
-    let matchedConditions = [];
-    if (/^\d+/.test(q)) {
-      // Search by diagnostic code value (RT10-2: was Object.entries on array → keyed by index)
-      matchedConditions = diagnosticCodes
-        .filter((d) => d.code != null && String(d.code).startsWith(q))
-        .map((d) => ({
-          code: d.code,
-          name: d.name || "Unknown",
-          category: "Diagnostic Code",
-        }))
-        .slice(0, 5);
-    } else {
-      // Search by condition name
-      matchedConditions = diagnosticCodes
-        .filter((d) => {
-          const name = (d.name || "").toLowerCase();
-          const aliases = (d.aliases || []).join(" ").toLowerCase();
-          const terms = (d.searchTerms || []).join(" ").toLowerCase();
-          return name.includes(q) || aliases.includes(q) || terms.includes(q);
-        })
-        .map((d) => ({
-          code: d.code,
-          name: d.name || "Unknown",
-          category: "Diagnostic Code",
-        }))
-        .slice(0, 5);
-    }
-
-    setResults({ tools: matchedTools, conditions: matchedConditions });
-    setSelectedIndex(0);
+    _performCommandSearch(searchQuery, setResults, setSelectedIndex);
   }, []);
 
   // Debounced search
@@ -533,19 +553,7 @@ export default function GlobalCommandSearch({
   };
 
   const handleSelect = (index) => {
-    const toolsCount = results.tools.length;
-
-    if (index < toolsCount) {
-      // Tool selected
-      const tool = results.tools[index];
-      if (onToolSelect) onToolSelect(tool.id);
-    } else {
-      // Condition selected
-      const condition = results.conditions[index - toolsCount];
-      if (onConditionSelect) onConditionSelect(condition);
-    }
-
-    onClose();
+    _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose);
   };
 
   if (!isOpen) return null;
