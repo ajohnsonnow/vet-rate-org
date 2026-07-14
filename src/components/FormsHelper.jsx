@@ -3992,6 +3992,87 @@ function _employmentInfoImpactFields(formData) {
   };
 }
 
+function _priorityProcessingClaimantSection(formData) {
+  return `Full Name: ${formData.veteranName || "________________________________________"}
+
+Date of Birth: ${formData.dob || "________________________________________"}
+
+VA File Number: ${formData.vaFileNumber || "________________________________________"}
+
+Telephone: ${formData.phone || "________________________________________"}
+
+Email: ${formData.email || "________________________________________"}`;
+}
+
+function _priorityProcessingClaimSection(formData) {
+  const claimTypeLabels = {
+    initial: "Initial Disability Compensation Claim",
+    increase: "Claim for Increased Rating",
+    secondary: "Secondary Service Connection Claim",
+    pension: "Pension Claim",
+    dic: "Dependency and Indemnity Compensation (DIC)",
+    appeal: "Appeal",
+    other: "Other VA Benefit Claim",
+  };
+  return `Type of Pending Claim: ${claimTypeLabels[formData.claimType] || "________________________________________"}
+
+Date Claim Was Filed: ${formData.claimDate || "________________________________________"}
+
+Description of Claim:
+${formData.claimDescription || "________________________________________"}`;
+}
+
+function _priorityProcessingQualifyingSection(formData) {
+  return Array.isArray(formData.priorityReasons) &&
+    formData.priorityReasons.length > 0
+    ? formData.priorityReasons.map((r) => `[X] ${r}`).join("\n")
+    : `[ ] Terminal illness (life expectancy of 6 months or less)
+[ ] Serious illness requiring immediate care
+[ ] Financial hardship (facing eviction, utilities shutoff, etc.)
+[ ] Homeless or at imminent risk of homelessness
+[ ] ALS (Amyotrophic Lateral Sclerosis) diagnosis
+[ ] Age 85 or older
+[ ] Medal of Honor recipient
+[ ] Former Prisoner of War (POW)
+[ ] Experiencing extreme financial hardship
+[ ] Survivor of Military Sexual Trauma with pending MST claim
+[ ] Purple Heart recipient
+[ ] Very Seriously Injured/Ill (VSI) or Seriously Injured/Ill (SI)
+[ ] Other qualifying hardship`;
+}
+
+function _priorityProcessingDocsSection(formData) {
+  return Array.isArray(formData.supportingDocs) &&
+    formData.supportingDocs.length > 0
+    ? formData.supportingDocs.map((d) => `[X] ${d}`).join("\n")
+    : `[ ] Medical documentation of terminal/serious illness
+[ ] Doctor's statement about prognosis
+[ ] Eviction notice or past due rent notice
+[ ] Utility shutoff notice
+[ ] Bank statements showing financial hardship
+[ ] Homeless shelter documentation
+[ ] DD-214 showing POW status
+[ ] Medal of Honor documentation
+[ ] Other qualifying documentation`;
+}
+
+function _priorityProcessingEmergencyContactSection(formData) {
+  return `Emergency Contact Name: ${formData.emergencyContact || "________________________________________"}
+
+Emergency Contact Phone: ${formData.emergencyPhone || "________________________________________"}
+
+Best Time to Reach You: ${formData.bestTimeToCall || "________________________________________"}
+
+${
+  formData.additionalInfo
+    ? `
+Additional Information:
+${formData.additionalInfo}
+`
+    : ""
+}`;
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -5010,16 +5091,6 @@ Before submitting, contact each provider to confirm:
       day: "numeric",
     });
 
-    const claimTypeLabels = {
-      initial: "Initial Disability Compensation Claim",
-      increase: "Claim for Increased Rating",
-      secondary: "Secondary Service Connection Claim",
-      pension: "Pension Claim",
-      dic: "Dependency and Indemnity Compensation (DIC)",
-      appeal: "Appeal",
-      other: "Other VA Benefit Claim",
-    };
-
     const statement = `REQUEST FOR PRIORITY PROCESSING
 (To Be Submitted with VA Form 20-10207)
 
@@ -5037,26 +5108,13 @@ https://www.va.gov/supporting-forms-for-claims/request-priority-processing-form-
 
 SECTION I - CLAIMANT INFORMATION
 
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Date of Birth: ${formData.dob || "________________________________________"}
-
-VA File Number: ${formData.vaFileNumber || "________________________________________"}
-
-Telephone: ${formData.phone || "________________________________________"}
-
-Email: ${formData.email || "________________________________________"}
+${_priorityProcessingClaimantSection(formData)}
 
 ================================================================================
 
 SECTION II - EXISTING CLAIM INFORMATION
 
-Type of Pending Claim: ${claimTypeLabels[formData.claimType] || "________________________________________"}
-
-Date Claim Was Filed: ${formData.claimDate || "________________________________________"}
-
-Description of Claim:
-${formData.claimDescription || "________________________________________"}
+${_priorityProcessingClaimSection(formData)}
 
 ================================================================================
 
@@ -5064,23 +5122,7 @@ SECTION III - QUALIFYING CIRCUMSTANCES
 
 Check all that apply to your situation:
 
-${
-  Array.isArray(formData.priorityReasons) && formData.priorityReasons.length > 0
-    ? formData.priorityReasons.map((r) => `[X] ${r}`).join("\n")
-    : `[ ] Terminal illness (life expectancy of 6 months or less)
-[ ] Serious illness requiring immediate care
-[ ] Financial hardship (facing eviction, utilities shutoff, etc.)
-[ ] Homeless or at imminent risk of homelessness
-[ ] ALS (Amyotrophic Lateral Sclerosis) diagnosis
-[ ] Age 85 or older
-[ ] Medal of Honor recipient
-[ ] Former Prisoner of War (POW)
-[ ] Experiencing extreme financial hardship
-[ ] Survivor of Military Sexual Trauma with pending MST claim
-[ ] Purple Heart recipient
-[ ] Very Seriously Injured/Ill (VSI) or Seriously Injured/Ill (SI)
-[ ] Other qualifying hardship`
-}
+${_priorityProcessingQualifyingSection(formData)}
 
 ================================================================================
 
@@ -5097,38 +5139,13 @@ SECTION V - SUPPORTING DOCUMENTATION
 
 I have the following documentation to support my request:
 
-${
-  Array.isArray(formData.supportingDocs) && formData.supportingDocs.length > 0
-    ? formData.supportingDocs.map((d) => `[X] ${d}`).join("\n")
-    : `[ ] Medical documentation of terminal/serious illness
-[ ] Doctor's statement about prognosis
-[ ] Eviction notice or past due rent notice
-[ ] Utility shutoff notice
-[ ] Bank statements showing financial hardship
-[ ] Homeless shelter documentation
-[ ] DD-214 showing POW status
-[ ] Medal of Honor documentation
-[ ] Other qualifying documentation`
-}
+${_priorityProcessingDocsSection(formData)}
 
 ================================================================================
 
 SECTION VI - EMERGENCY CONTACT INFORMATION
 
-Emergency Contact Name: ${formData.emergencyContact || "________________________________________"}
-
-Emergency Contact Phone: ${formData.emergencyPhone || "________________________________________"}
-
-Best Time to Reach You: ${formData.bestTimeToCall || "________________________________________"}
-
-${
-  formData.additionalInfo
-    ? `
-Additional Information:
-${formData.additionalInfo}
-`
-    : ""
-}
+${_priorityProcessingEmergencyContactSection(formData)}
 ================================================================================
 
 CERTIFICATION AND SIGNATURE
