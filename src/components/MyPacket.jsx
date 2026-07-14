@@ -309,9 +309,7 @@ function _importAllPacketData(data, mergeMode, ctx) {
       if (mergeMode === "merge") {
         const existingForms = getSavedForms();
         const existingIds = new Set(existingForms.map((f) => f.id));
-        const newForms = data.savedForms.filter(
-          (f) => !existingIds.has(f.id),
-        );
+        const newForms = data.savedForms.filter((f) => !existingIds.has(f.id));
         localStorage.setItem(
           "vet_rate_saved_forms",
           JSON.stringify([...existingForms, ...newForms]),
@@ -518,7 +516,8 @@ function MyPacketBackupGuideBanner({
             {t("myPacketSection.backupGuideTitle")}
           </h3>
           <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
-            <strong>Important:</strong> {t("myPacketSection.backupGuideMessage")}
+            <strong>Important:</strong>{" "}
+            {t("myPacketSection.backupGuideMessage")}
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -548,7 +547,11 @@ function MyPacketBackupGuideBanner({
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-sm shadow-md"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z" />
                 </svg>
                 {t("myPacketSection.backupGuideGoogleDrive")}
@@ -573,6 +576,57 @@ function MyPacketBackupGuideBanner({
   );
 }
 
+function BackupRestoreButtons({
+  handleBackupPacket,
+  claims,
+  handleRestoreClick,
+  t,
+}) {
+  return (
+    <>
+      <button
+        onClick={handleBackupPacket}
+        disabled={claims.length === 0}
+        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
+        </svg>
+        {t("myPacketSection.localBackup")}
+      </button>
+      <button
+        onClick={handleRestoreClick}
+        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+          />
+        </svg>
+        {t("myPacketSection.restore")}
+      </button>
+    </>
+  );
+}
+
 function MyPacketBackupRestoreControls({
   handleBackupPacket,
   claims,
@@ -586,35 +640,12 @@ function MyPacketBackupRestoreControls({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <button
-          onClick={handleBackupPacket}
-          disabled={claims.length === 0}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          {t("myPacketSection.localBackup")}
-        </button>
-        <button
-          onClick={handleRestoreClick}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            />
-          </svg>
-          {t("myPacketSection.restore")}
-        </button>
+        <BackupRestoreButtons
+          handleBackupPacket={handleBackupPacket}
+          claims={claims}
+          handleRestoreClick={handleRestoreClick}
+          t={t}
+        />
         {onOpenGoogleDriveSync && (
           <button
             onClick={onOpenGoogleDriveSync}
@@ -661,7 +692,11 @@ function MyPacketImportStatusMessage({ importStatus }) {
           : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-100"
       }`}
     >
-      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <svg
+        className="w-5 h-5 flex-shrink-0"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
         {importStatus.type === "success" ? (
           <path
             fillRule="evenodd"
@@ -694,67 +729,69 @@ function MyPacketTabNavPrimary({
     <>
       {/* Primary Data */}
       <button
-          onClick={() => setActiveTab("claims")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "claims"
-              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          📋{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.claims")}</span>
-          <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">
-            {claims.length}
-          </span>
-        </button>
+        onClick={() => setActiveTab("claims")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "claims"
+            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        📋{" "}
+        <span className="hidden sm:inline">{t("myPacketSection.claims")}</span>
+        <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">
+          {claims.length}
+        </span>
+      </button>
 
-        <button
-          onClick={() => setActiveTab("ratings")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "ratings"
-              ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          📊{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.ratings")}</span>
-          <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
-            {myRatings.length}
-          </span>
-        </button>
+      <button
+        onClick={() => setActiveTab("ratings")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "ratings"
+            ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        📊{" "}
+        <span className="hidden sm:inline">{t("myPacketSection.ratings")}</span>
+        <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+          {myRatings.length}
+        </span>
+      </button>
 
-        <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
-        {/* Service & History */}
-        <button
-          onClick={() => setActiveTab("service")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "service"
-              ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          🎖️{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.service")}</span>
-          <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">
-            {serviceHistory.deployments.length + serviceHistory.awards.length}
-          </span>
-        </button>
+      {/* Service & History */}
+      <button
+        onClick={() => setActiveTab("service")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "service"
+            ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        🎖️{" "}
+        <span className="hidden sm:inline">{t("myPacketSection.service")}</span>
+        <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">
+          {serviceHistory.deployments.length + serviceHistory.awards.length}
+        </span>
+      </button>
 
-        <button
-          onClick={() => setActiveTab("timeline")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "timeline"
-              ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          🧵{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.timeline")}</span>
-          <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">
-            {timelineEvents.length}
-          </span>
-        </button>
+      <button
+        onClick={() => setActiveTab("timeline")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "timeline"
+            ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        🧵{" "}
+        <span className="hidden sm:inline">
+          {t("myPacketSection.timeline")}
+        </span>
+        <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">
+          {timelineEvents.length}
+        </span>
+      </button>
     </>
   );
 }
@@ -770,74 +807,76 @@ function MyPacketTabNavSecondary({
 }) {
   return (
     <>
-        <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
-        {/* Evidence & Docs */}
-        <button
-          onClick={() => setActiveTab("painmaps")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "painmaps"
-              ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          🎨{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.painMaps")}</span>
-          <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
-            {painMaps.length}
+      {/* Evidence & Docs */}
+      <button
+        onClick={() => setActiveTab("painmaps")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "painmaps"
+            ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        🎨{" "}
+        <span className="hidden sm:inline">
+          {t("myPacketSection.painMaps")}
+        </span>
+        <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
+          {painMaps.length}
+        </span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab("profile")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "profile"
+            ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        ✍️{" "}
+        <span className="hidden sm:inline">{t("myPacketSection.profile")}</span>
+        {veteranProfile.firstName && (
+          <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs">
+            ✓
           </span>
-        </button>
+        )}
+      </button>
 
-        <button
-          onClick={() => setActiveTab("profile")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "profile"
-              ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          ✍️{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.profile")}</span>
-          {veteranProfile.firstName && (
-            <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs">
-              ✓
-            </span>
-          )}
-        </button>
+      <button
+        onClick={() => setActiveTab("forms")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "forms"
+            ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        📄{" "}
+        <span className="hidden sm:inline">{t("myPacketSection.forms")}</span>
+        <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">
+          {savedForms.length}
+        </span>
+      </button>
 
-        <button
-          onClick={() => setActiveTab("forms")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "forms"
-              ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          📄{" "}
-          <span className="hidden sm:inline">{t("myPacketSection.forms")}</span>
-          <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">
-            {savedForms.length}
+      <button
+        onClick={() => setActiveTab("varecords")}
+        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+          activeTab === "varecords"
+            ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+        }`}
+      >
+        🏛️ <span className="hidden sm:inline">VA Records</span>
+        {vaRecords && (
+          <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+            {[
+              vaRecords.claims?.length || 0,
+              vaRecords.appeals?.length || 0,
+            ].reduce((a, b) => a + b, 0)}
           </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("varecords")}
-          className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === "varecords"
-              ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-          }`}
-        >
-          🏛️ <span className="hidden sm:inline">VA Records</span>
-          {vaRecords && (
-            <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
-              {[vaRecords.claims?.length || 0, vaRecords.appeals?.length || 0].reduce(
-                (a, b) => a + b,
-                0,
-              )}
-            </span>
-          )}
-        </button>
+        )}
+      </button>
     </>
   );
 }
@@ -857,7 +896,10 @@ function MyPacketTabNav({
 }) {
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
-      <nav className="flex gap-1 overflow-x-auto pb-px scrollbar-hide" aria-label="Tabs">
+      <nav
+        className="flex gap-1 overflow-x-auto pb-px scrollbar-hide"
+        aria-label="Tabs"
+      >
         <MyPacketTabNavPrimary
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -907,7 +949,12 @@ function RatingsEmptyState({ setShowVAGovPaster, t }) {
         onClick={() => setShowVAGovPaster(true)}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -975,12 +1022,7 @@ function MyRatingEditForm({
   );
 }
 
-function MyRatingDisplay({
-  rating,
-  setEditingRating,
-  handleRemoveRating,
-  t,
-}) {
+function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
   return (
     <div className="flex justify-between items-center">
       <div className="flex-1">
@@ -1406,7 +1448,13 @@ function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
   );
 }
 
-function _updateServicePeriodField(veteranProfile, setVeteranProfile, idx, field, value) {
+function _updateServicePeriodField(
+  veteranProfile,
+  setVeteranProfile,
+  idx,
+  field,
+  value,
+) {
   const newPeriods = [...veteranProfile.servicePeriods];
   newPeriods[idx] = { ...newPeriods[idx], [field]: value };
   setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
@@ -1568,9 +1616,21 @@ function ServicePeriodFieldsB({ period, update, t }) {
   );
 }
 
-function ServicePeriodEntry({ period, idx, veteranProfile, setVeteranProfile, t }) {
+function ServicePeriodEntry({
+  period,
+  idx,
+  veteranProfile,
+  setVeteranProfile,
+  t,
+}) {
   const update = (field, value) =>
-    _updateServicePeriodField(veteranProfile, setVeteranProfile, idx, field, value);
+    _updateServicePeriodField(
+      veteranProfile,
+      setVeteranProfile,
+      idx,
+      field,
+      value,
+    );
 
   return (
     <div className="border-2 border-indigo-200 dark:border-indigo-800 rounded-lg p-4 bg-indigo-50 dark:bg-indigo-900/20">
@@ -1985,7 +2045,9 @@ function DD214DataGridB({ d, t }) {
           {t("myPacketSection.timeInService")}
         </p>
         <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.yearsService ? `${d.yearsService}y ${d.monthsService || 0}m` : "N/A"}
+          {d.yearsService
+            ? `${d.yearsService}y ${d.monthsService || 0}m`
+            : "N/A"}
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
@@ -2001,7 +2063,9 @@ function DD214DataGridB({ d, t }) {
           {t("myPacketSection.foreignService")}
         </p>
         <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.foreignService ? t("myPacketSection.yes") : t("myPacketSection.no")}
+          {d.foreignService
+            ? t("myPacketSection.yes")
+            : t("myPacketSection.no")}
         </p>
       </div>
     </>
@@ -2275,7 +2339,10 @@ function DeploymentFormActions({
             type="checkbox"
             checked={newDeployment.combat}
             onChange={(e) =>
-              setNewDeployment((prev) => ({ ...prev, combat: e.target.checked }))
+              setNewDeployment((prev) => ({
+                ...prev,
+                combat: e.target.checked,
+              }))
             }
             className="rounded border-gray-300 text-green-600 focus:ring-green-500"
           />
@@ -2374,7 +2441,9 @@ function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{dep.location}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {dep.location}
+        </p>
         {(dep.startDate || dep.endDate) && (
           <p className="text-xs text-gray-500 dark:text-gray-500">
             {dep.startDate || "?"} -{" "}
@@ -2514,7 +2583,12 @@ function AwardFormFields({ newAward, setNewAward, t }) {
   );
 }
 
-function AwardFormActions({ setNewAward, handleAddAward, setShowAwardForm, t }) {
+function AwardFormActions({
+  setNewAward,
+  handleAddAward,
+  setShowAwardForm,
+  t,
+}) {
   return (
     <div className="flex gap-2">
       <button
@@ -2542,7 +2616,13 @@ function AwardFormActions({ setNewAward, handleAddAward, setShowAwardForm, t }) 
   );
 }
 
-function AwardAddForm({ newAward, setNewAward, handleAddAward, setShowAwardForm, t }) {
+function AwardAddForm({
+  newAward,
+  setNewAward,
+  handleAddAward,
+  setShowAwardForm,
+  t,
+}) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 mb-4 space-y-4">
       <AwardFormFields newAward={newAward} setNewAward={setNewAward} t={t} />
@@ -2634,7 +2714,11 @@ function AwardsSection({
   );
 }
 
-function RibbonRackSection({ serviceHistory, showRibbonRack, setShowRibbonRack }) {
+function RibbonRackSection({
+  serviceHistory,
+  showRibbonRack,
+  setShowRibbonRack,
+}) {
   if (serviceHistory.awards.length === 0) return null;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
@@ -2721,7 +2805,12 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         onClick={() => handleDownloadStatement(claim, "txt")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -2735,7 +2824,12 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         onClick={() => handleDownloadStatement(claim, "docx")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -2749,7 +2843,12 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         onClick={() => handleDownloadStatement(claim, "pdf")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -2796,14 +2895,23 @@ function ClaimActionButtons({
         <div className="relative w-full sm:w-auto">
           <button
             onClick={() =>
-              setShowDownloadMenu(showDownloadMenu === claim.id ? null : claim.id)
+              setShowDownloadMenu(
+                showDownloadMenu === claim.id ? null : claim.id,
+              )
             }
             disabled={!isCertified}
-            aria-label={!isCertified ? t("myPacketSection.certifyBeforeDownload") : ""}
+            aria-label={
+              !isCertified ? t("myPacketSection.certifyBeforeDownload") : ""
+            }
             className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t("myPacketSection.download")}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -2833,7 +2941,13 @@ function ClaimActionButtons({
   );
 }
 
-function ClaimEntry({ claim, getStatusColor, handleStatusChange, t, ...actionProps }) {
+function ClaimEntry({
+  claim,
+  getStatusColor,
+  handleStatusChange,
+  t,
+  ...actionProps
+}) {
   return (
     <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -2969,7 +3083,12 @@ function TimelineEmptyState({ onClose, t }) {
         onClick={onClose}
         className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -3033,7 +3152,12 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
             className="text-red-400 hover:text-red-600 transition-colors p-1"
             aria-label="Remove event"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -3130,7 +3254,12 @@ function PainMapsEmptyState({ onClose, t }) {
         onClick={onClose}
         className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -3269,6 +3398,1228 @@ function PainMapsTab({
   );
 }
 
+function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
+  return (
+    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 flex items-center justify-between">
+      <div>
+        <h3 id="painmap-detail-title" className="text-xl font-bold">
+          {viewingPainMap.name || t("myPacketSection.painMapDetails")}
+        </h3>
+        <p className="text-red-100 text-sm">
+          {t("myPacketSection.saved")}:{" "}
+          {new Date(
+            viewingPainMap.savedAt || viewingPainMap.createdAt,
+          ).toLocaleString()}
+        </p>
+      </div>
+      <button
+        onClick={() => setViewingPainMap(null)}
+        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function PainPointsPane({ viewingPainMap, t }) {
+  return (
+    <div>
+      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        {t("myPacketSection.painPoints")} (
+        {viewingPainMap.painPoints?.length || 0})
+      </h4>
+      {viewingPainMap.painPoints && viewingPainMap.painPoints.length > 0 ? (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {viewingPainMap.painPoints.map((point, idx) => (
+            <div
+              key={idx}
+              className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-3 h-3 rounded-full ${getPainSeverityDotClass(point.severity)}`}
+                ></span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  {point.region || point.bodyPart}
+                </span>
+              </div>
+              {point.type && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {t("myPacketSection.type")}: {point.type}
+                </p>
+              )}
+              {point.notes && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">
+                  &quot;{point.notes}&quot;
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 dark:text-gray-400">
+          {t("myPacketSection.noPainPointsRecorded")}
+        </p>
+      )}
+
+      {/* Generated Nexus Language */}
+      {viewingPainMap.nexusLanguage && (
+        <div className="mt-4">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {t("myPacketSection.nexusLanguage")}
+          </h4>
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
+              {viewingPainMap.nexusLanguage}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PainMapDetailModal({
+  viewingPainMap,
+  setViewingPainMap,
+  handleDeletePainMap,
+  t,
+}) {
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={() => setViewingPainMap(null)}
+      size="xl"
+      zIndex={70}
+      labelledBy="painmap-detail-title"
+      header={
+        <PainMapDetailHeader
+          viewingPainMap={viewingPainMap}
+          setViewingPainMap={setViewingPainMap}
+          t={t}
+        />
+      }
+    >
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Pain Map Image */}
+        <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 flex items-center justify-center">
+          {viewingPainMap.thumbnail ? (
+            <img
+              src={viewingPainMap.thumbnail}
+              alt="Pain Map"
+              className="max-w-full max-h-[400px] object-contain"
+            />
+          ) : (
+            <div className="text-center py-12">
+              <span className="text-6xl">🎨</span>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">
+                {t("myPacketSection.noPreviewAvailable")}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Pain Points List */}
+        <PainPointsPane viewingPainMap={viewingPainMap} t={t} />
+      </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => {
+            handleDeletePainMap(viewingPainMap.id);
+            setViewingPainMap(null);
+          }}
+          className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+        >
+          {t("myPacketSection.deleteMap")}
+        </button>
+        <button
+          onClick={() => setViewingPainMap(null)}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          {t("myPacketSection.close")}
+        </button>
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+function FormViewerModal({ viewingForm, setViewingForm, t }) {
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={() => setViewingForm(null)}
+      size="xl"
+      zIndex={70}
+      labelledBy="form-viewer-title"
+      header={
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
+          <div>
+            <h3 id="form-viewer-title" className="text-xl font-bold">
+              {viewingForm.title || viewingForm.formName}
+            </h3>
+            <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewingForm(null)}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+    >
+      {viewingForm.generatedContent && (
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-auto">
+          <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
+            {viewingForm.generatedContent}
+          </pre>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          onClick={() => {
+            const blob = new Blob([viewingForm.generatedContent], {
+              type: "text/plain",
+            });
+            const url = URL.createObjectURL(blob);
+            if (!url.startsWith("blob:")) return; // Validate blob URL
+            // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${viewingForm.formNumber || "form"}-${viewingForm.title || "draft"}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+        >
+          {t("myPacketSection.downloadTxt")}
+        </button>
+        <button
+          onClick={() => setViewingForm(null)}
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        >
+          {t("myPacketSection.close")}
+        </button>
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+function StatementViewerHeader({
+  setViewingStatement,
+  setViewingClaimId,
+  handleEditStatement,
+  t,
+}) {
+  return (
+    <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 flex items-center justify-between">
+      <h3 id="statement-viewer-title" className="text-xl font-bold">
+        {t("myPacketSection.generatedStatement")}
+      </h3>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleEditStatement}
+          className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
+        >
+          {t("myPacketSection.editStatement")}
+        </button>
+        <button
+          onClick={() => {
+            setViewingStatement(null);
+            setViewingClaimId(null);
+          }}
+          className="text-white hover:text-gray-200"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StatementViewerModal({
+  viewingStatement,
+  setViewingStatement,
+  setViewingClaimId,
+  handleEditStatement,
+  isCertified,
+  setIsCertified,
+  t,
+}) {
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={() => {
+        setViewingStatement(null);
+        setViewingClaimId(null);
+      }}
+      size="xl"
+      zIndex={70}
+      labelledBy="statement-viewer-title"
+      header={
+        <StatementViewerHeader
+          setViewingStatement={setViewingStatement}
+          setViewingClaimId={setViewingClaimId}
+          handleEditStatement={handleEditStatement}
+          t={t}
+        />
+      }
+    >
+      <div className="space-y-6">
+        {/* Draft Watermark */}
+        <DraftWatermark variant="banner" />
+
+        <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            {t("myPacketSection.statementInSupport")}
+          </h4>
+          <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
+            {viewingStatement.statement}
+          </pre>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            {t("myPacketSection.doctorsCheatSheet")}
+          </h4>
+          <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
+            {viewingStatement.doctorNote}
+          </pre>
+
+          {/* Medical Disclaimer Footer */}
+          <NexusDisclaimerFooter className="mt-4" />
+        </div>
+
+        {/* Certification Checkbox before download */}
+        <div className="border-t pt-4">
+          <CertificationCheckbox
+            checked={isCertified}
+            onChange={setIsCertified}
+          />
+        </div>
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+function ImportConfirmActionButtons({
+  handleConfirmImport,
+  setShowImportConfirm,
+  t,
+}) {
+  return (
+    <div className="space-y-3">
+      <button
+        onClick={() => handleConfirmImport("replace")}
+        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        {t("myPacketSection.replaceAllFreshStart")}
+      </button>
+      <button
+        onClick={() => handleConfirmImport("merge")}
+        className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        {t("myPacketSection.mergeAddNewOnly")}
+      </button>
+      <button
+        onClick={() => setShowImportConfirm(null)}
+        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        {t("myPacketSection.cancel")}
+      </button>
+    </div>
+  );
+}
+
+function ImportConfirmationModal({
+  showImportConfirm,
+  setShowImportConfirm,
+  handleConfirmImport,
+  t,
+}) {
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={() => setShowImportConfirm(null)}
+      size="sm"
+      zIndex={70}
+      labelledBy="import-confirm-title"
+      header={
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+          <h3 id="import-confirm-title" className="text-xl font-bold">
+            📥 {t("myPacketSection.confirmImport")}
+          </h3>
+        </div>
+      }
+    >
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          {t("myPacketSection.backupDetails")}:
+        </p>
+        <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
+          <li>
+            • <strong>{showImportConfirm.meta.claimCount}</strong>{" "}
+            {t("myPacketSection.claimsFound")}
+          </li>
+          <li>
+            • <strong>{showImportConfirm.meta.statementCount}</strong>{" "}
+            {t("myPacketSection.statementsFound")}
+          </li>
+          {showImportConfirm.meta.exportDate && (
+            <li>
+              • {t("myPacketSection.backupDate")}:{" "}
+              {new Date(showImportConfirm.meta.exportDate).toLocaleDateString()}
+            </li>
+          )}
+        </ul>
+      </div>
+
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {t("myPacketSection.importQuestion")}
+      </p>
+
+      <ImportConfirmActionButtons
+        handleConfirmImport={handleConfirmImport}
+        setShowImportConfirm={setShowImportConfirm}
+        t={t}
+      />
+
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+        ⚠️ {t("myPacketSection.replaceAllWarning")}
+      </p>
+    </ResponsiveModal>
+  );
+}
+
+function PacketBuyMeCoffeeTriggers({
+  claims,
+  backupCreated,
+  setBackupCreated,
+}) {
+  return (
+    <>
+      <BuyMeCoffee
+        show={claims.length > 0 && !backupCreated}
+        trigger="packet"
+        context={{ count: claims.length }}
+      />
+
+      <BuyMeCoffee
+        show={backupCreated}
+        trigger="export"
+        context={{ count: claims.length }}
+        onDismiss={() => setBackupCreated(false)}
+      />
+    </>
+  );
+}
+
+function VaGovRatingPasterModal({ handlePastedRatings, setShowVAGovPaster }) {
+  return (
+    <VAGovRatingPaster
+      onRatingsParsed={handlePastedRatings}
+      onClose={() => setShowVAGovPaster(false)}
+    />
+  );
+}
+
+function getStatusColor(status) {
+  switch (status) {
+    case "Drafting":
+      return "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-100 border-yellow-300 dark:border-yellow-700";
+    case "Statement Generated":
+      return "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 border-blue-300 dark:border-blue-700";
+    case "Filed":
+      return "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-100 border-green-300 dark:border-green-700";
+    default:
+      return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600";
+  }
+}
+
+function downloadAsTxt(statement, fileName) {
+  const content =
+    statement.statement +
+    "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" +
+    statement.doctorNote;
+  // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
+  const blob = new Blob([content], { type: "text/plain" });
+  triggerBlobDownload(blob, `${fileName}.txt`);
+}
+
+async function downloadAsDocx(statement, fileName, claim) {
+  try {
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              text: "STATEMENT IN SUPPORT OF CLAIM",
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+            new Paragraph({
+              text: `Condition: ${claim.conditionName}`,
+              spacing: { after: 200 },
+            }),
+            ...statement.statement.split("\n").map(
+              (line) =>
+                new Paragraph({
+                  children: [new TextRun(line)],
+                  spacing: { after: 100 },
+                }),
+            ),
+            new Paragraph({
+              text: "",
+              spacing: { after: 400 },
+            }),
+            new Paragraph({
+              text: "DOCTOR'S CHEAT SHEET",
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+            ...statement.doctorNote.split("\n").map(
+              (line) =>
+                new Paragraph({
+                  children: [new TextRun(line)],
+                  spacing: { after: 100 },
+                }),
+            ),
+          ],
+        },
+      ],
+    });
+
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
+    const blob = await Packer.toBlob(doc);
+    triggerBlobDownload(blob, `${fileName}.docx`);
+  } catch (error) {
+    console.error("Error generating DOCX:", error);
+    alert("Error generating Word document. Please try another format.");
+  }
+}
+
+function downloadAsPdf(statement, fileName, claim) {
+  try {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    const maxWidth = pageWidth - margin * 2;
+    let yPosition = 20;
+
+    // Title
+    pdf.setFontSize(16);
+    pdf.setFont(undefined, "bold");
+    pdf.text("STATEMENT IN SUPPORT OF CLAIM", pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 15;
+
+    // Condition
+    pdf.setFontSize(11);
+    pdf.text(`Condition: ${claim.conditionName}`, margin, yPosition);
+    yPosition += 10;
+
+    // Statement content
+    pdf.setFont(undefined, "normal");
+    pdf.setFontSize(10);
+    const statementLines = pdf.splitTextToSize(statement.statement, maxWidth);
+    statementLines.forEach((line) => {
+      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.text(line, margin, yPosition);
+      yPosition += 5;
+    });
+
+    // Doctor's note section
+    yPosition += 10;
+    if (yPosition > pdf.internal.pageSize.getHeight() - 40) {
+      pdf.addPage();
+      yPosition = 20;
+    }
+
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, "bold");
+    pdf.text("DOCTOR'S CHEAT SHEET", pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 10;
+
+    pdf.setFont(undefined, "normal");
+    pdf.setFontSize(10);
+    const doctorLines = pdf.splitTextToSize(statement.doctorNote, maxWidth);
+    doctorLines.forEach((line) => {
+      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.text(line, margin, yPosition);
+      yPosition += 5;
+    });
+
+    pdf.save(`${fileName}.pdf`);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert("Error generating PDF. Please try another format.");
+  }
+}
+
+function _loadVeteranProfile(ctx) {
+  const { setVeteranProfile } = ctx;
+  const profile = getVeteranProfile();
+  // Initialize servicePeriods array if it doesn't exist
+  if (!Array.isArray(profile.servicePeriods)) {
+    profile.servicePeriods = [];
+  }
+  setVeteranProfile(profile || {});
+}
+
+async function _checkAIStatus(ctx) {
+  const { setAIStatus } = ctx;
+  const status = await getAIStatus();
+  setAIStatus(status);
+}
+
+function _loadServiceHistory(ctx) {
+  const { setServiceHistory } = ctx;
+  const history = getServiceHistory();
+  setServiceHistory(history);
+}
+
+function _loadTimelineEvents(ctx) {
+  const { setTimelineEvents } = ctx;
+  const events = getTimelineEvents();
+  setTimelineEvents(events);
+}
+
+function _loadPainMaps(ctx) {
+  const { setPainMaps } = ctx;
+  const maps = getPainMaps();
+  setPainMaps(maps);
+}
+
+function _loadSavedForms(ctx) {
+  const { setSavedForms } = ctx;
+  const forms = getSavedForms();
+  setSavedForms(forms);
+}
+
+function _loadMyRatings(ctx) {
+  const { setMyRatings } = ctx;
+  const ratings = getMyRatings();
+  setMyRatings(ratings);
+}
+
+function _loadVARecordsData(ctx) {
+  const { setVaRecords } = ctx;
+  const records = loadVARecords();
+  setVaRecords(records);
+}
+
+function _loadClaimsData(ctx) {
+  const { setClaims, setStats } = ctx;
+  const savedClaims = getSavedClaims();
+  setClaims(savedClaims);
+  setStats(getClaimStats());
+}
+
+function _deletePainMapAndReload(mapId, ctx) {
+  const { loadPainMaps } = ctx;
+  if (window.confirm("Delete this pain map?")) {
+    deletePainMap(mapId);
+    loadPainMaps();
+  }
+}
+
+function _clearTimelineEventsAndReload(ctx) {
+  const { loadTimelineEvents } = ctx;
+  if (window.confirm("Clear all timeline events? This cannot be undone.")) {
+    clearTimelineEvents();
+    loadTimelineEvents();
+  }
+}
+
+function _removeFormAndReload(formId, ctx) {
+  const { loadSavedForms } = ctx;
+  if (
+    window.confirm(
+      "Are you sure you want to remove this form from your packet?",
+    )
+  ) {
+    deleteSavedForm(formId);
+    loadSavedForms();
+  }
+}
+
+function _removeRatingAndReload(ratingId, ctx) {
+  const { loadMyRatings } = ctx;
+  if (window.confirm("Are you sure you want to remove this rating?")) {
+    removeRating(ratingId);
+    loadMyRatings();
+  }
+}
+
+function _updateRatingAndReload(ratingId, updates, ctx) {
+  const { loadMyRatings, setEditingRating } = ctx;
+  updateRating(ratingId, updates);
+  loadMyRatings();
+  setEditingRating(null);
+}
+
+function _clearAllRatingsAndReload(ctx) {
+  const { loadMyRatings } = ctx;
+  if (
+    window.confirm(
+      "Are you sure you want to clear all saved ratings? This cannot be undone.",
+    )
+  ) {
+    clearMyRatings();
+    loadMyRatings();
+  }
+}
+
+function _savePastedRatings(parsedRatings, ctx) {
+  const { loadMyRatings, setShowVAGovPaster } = ctx;
+  // Save each rating to veteranProfile
+  parsedRatings.forEach((rating) => {
+    addRating(rating);
+  });
+  loadMyRatings();
+  setShowVAGovPaster(false);
+}
+
+function _clearVARecordsAndReload(ctx) {
+  const { loadVARecordsData } = ctx;
+  if (window.confirm("Clear all imported VA records? This cannot be undone.")) {
+    clearVARecords();
+    loadVARecordsData();
+  }
+}
+
+function _disconnectVaSession(ctx) {
+  const { vaLogout, setVaImportStatus } = ctx;
+  vaLogout();
+  setVaImportStatus({
+    loading: false,
+    success: null,
+    message: "",
+    counts: {},
+  });
+}
+
+function _removeDeploymentAndReload(depId, ctx) {
+  const { loadServiceHistory } = ctx;
+  if (window.confirm("Remove this deployment from your service history?")) {
+    removeDeployment(depId);
+    loadServiceHistory();
+  }
+}
+
+function _removeAwardAndReload(awardId, ctx) {
+  const { loadServiceHistory } = ctx;
+  if (window.confirm("Remove this award from your service history?")) {
+    removeAward(awardId);
+    loadServiceHistory();
+  }
+}
+
+function _clearDD214AndReload(ctx) {
+  const { loadServiceHistory } = ctx;
+  if (window.confirm("Clear all DD214 extracted data?")) {
+    clearDD214Data();
+    loadServiceHistory();
+  }
+}
+
+function _removeClaimAndReload(claimId, ctx) {
+  const { loadClaims } = ctx;
+  if (
+    window.confirm(
+      "Are you sure you want to remove this claim from your packet?",
+    )
+  ) {
+    removeClaim(claimId);
+    loadClaims();
+  }
+}
+
+function _clearAllClaimsAndReload(ctx) {
+  const { loadClaims } = ctx;
+  if (
+    window.confirm(
+      "Are you sure you want to clear all saved claims? This cannot be undone.",
+    )
+  ) {
+    clearAllClaims();
+    loadClaims();
+  }
+}
+
+function _dismissBackupGuide(remindLater = true, ctx) {
+  const { setShowBackupGuide } = ctx;
+  setShowBackupGuide(false);
+  if (!remindLater) {
+    localStorage.setItem("vetrate_backup_guide_dismissed", "true");
+  }
+}
+
+function _triggerRestoreClick(ctx) {
+  const { fileInputRef } = ctx;
+  if (fileInputRef.current) {
+    fileInputRef.current.click();
+  }
+}
+
+function _changeClaimStatus(claimId, newStatus, ctx) {
+  const { loadClaims } = ctx;
+  // Prevent changing to 'Statement Generated' if no statement exists
+  if (newStatus === "Statement Generated") {
+    const statement = getStatement(claimId);
+    if (!statement) {
+      alert(
+        'Cannot mark as "Statement Generated" - no statement found. Please complete the Build Statement process first.',
+      );
+      return;
+    }
+  }
+
+  updateClaimStatus(claimId, newStatus);
+  loadClaims();
+}
+
+function _viewStatementForClaim(claimId, ctx) {
+  const { setViewingStatement, setViewingClaimId } = ctx;
+  const statement = getStatement(claimId);
+  if (statement) {
+    setViewingStatement(statement);
+    setViewingClaimId(claimId);
+  } else {
+    alert("No statement found for this claim. Please build a statement first.");
+  }
+}
+
+function _dd214DragOver(e, ctx) {
+  const { setIsDraggingDD214 } = ctx;
+  e.preventDefault();
+  e.stopPropagation();
+  setIsDraggingDD214(true);
+}
+
+function _dd214DragLeave(e, ctx) {
+  const { setIsDraggingDD214 } = ctx;
+  e.preventDefault();
+  e.stopPropagation();
+  setIsDraggingDD214(false);
+}
+
+function _dd214DropFile(e, ctx) {
+  const { setIsDraggingDD214, onOpenDD214Analyzer } = ctx;
+  e.preventDefault();
+  e.stopPropagation();
+  setIsDraggingDD214(false);
+
+  const files = Array.from(e.dataTransfer?.files || []);
+  const pdfFile = files.find(
+    (f) =>
+      f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+  );
+
+  if (pdfFile) {
+    // Open DD214 Analyzer with the dropped file
+    // Store the file temporarily and open analyzer
+    if (onOpenDD214Analyzer) {
+      onOpenDD214Analyzer();
+    }
+  } else {
+    alert("Please drop a PDF file (DD214 document).");
+  }
+}
+
+function _dd214FileSelected(e, ctx) {
+  const { onOpenDD214Analyzer, dd214FileInputRef } = ctx;
+  const file = e.target.files?.[0];
+  if (file) {
+    if (
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      // Open DD214 Analyzer
+      if (onOpenDD214Analyzer) {
+        onOpenDD214Analyzer();
+      }
+    } else {
+      alert("Please select a PDF file.");
+    }
+  }
+  // Reset input
+  if (dd214FileInputRef.current) {
+    dd214FileInputRef.current.value = "";
+  }
+}
+
+function _addDeploymentAndReset(newDeployment, ctx) {
+  const { loadServiceHistory, setNewDeployment, setShowDeploymentForm } = ctx;
+  if (!newDeployment.theater || !newDeployment.location) {
+    alert("Please enter at least theater and location");
+    return;
+  }
+  addDeployment(newDeployment);
+  loadServiceHistory();
+  setNewDeployment({
+    theater: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+    unit: "",
+    notes: "",
+    hazardous: false,
+    combat: false,
+  });
+  setShowDeploymentForm(false);
+}
+
+function _addAwardAndReset(newAward, ctx) {
+  const { loadServiceHistory, setNewAward, setShowAwardForm } = ctx;
+  if (!newAward.name) {
+    alert("Please enter the award name");
+    return;
+  }
+  addAward(newAward);
+  loadServiceHistory();
+  setNewAward({
+    name: "",
+    abbreviation: "",
+    dateReceived: "",
+    notes: "",
+    isCombat: false,
+  });
+  setShowAwardForm(false);
+}
+
+function _parseDD214AiResponse(contentStr) {
+  let cleanContent = contentStr.trim();
+  if (cleanContent.startsWith("```json")) cleanContent = cleanContent.slice(7);
+  if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+  if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
+  try {
+    return JSON.parse(cleanContent.trim());
+  } catch (parseError) {
+    console.error("Parse error:", parseError);
+    throw new Error("Could not parse DD214 data");
+  }
+}
+
+async function _processDD214Text(dd214Text, aiStatus, ctx) {
+  const {
+    setIsProcessingDD214,
+    loadServiceHistory,
+    setDD214Text,
+    setShowDD214Processor,
+  } = ctx;
+  if (!dd214Text.trim()) {
+    alert("Please paste your DD214 text first");
+    return;
+  }
+
+  if (!aiStatus.available) {
+    alert(
+      "AI is not configured. Please set up AI in settings to process DD214 automatically.",
+    );
+    return;
+  }
+
+  setIsProcessingDD214(true);
+
+  try {
+    const response = await generateAI(
+      `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
+{
+  "branch": "Army/Navy/Air Force/Marines/Coast Guard/Space Force",
+  "mos": "Primary MOS code",
+  "mosTitle": "MOS job title",
+  "entryDate": "YYYY-MM-DD or null",
+  "separationDate": "YYYY-MM-DD or null",
+  "yearsService": number or null,
+  "monthsService": number or null,
+  "separationType": "Honorable/General/Other Than Honorable/etc",
+  "characterOfService": "Honorable/General/etc",
+  "reenlisted": true/false,
+  "foreignService": true/false
+}
+
+DD214 TEXT:
+${dd214Text}
+
+Return ONLY the JSON object, no explanation.`,
+      {
+        temperature: 0.3,
+        maxTokens: 512,
+        expectJSON: true,
+      },
+    );
+
+    // generateAI returns { text, mode } object - extract the text content
+    const content = response?.text || response;
+    if (content) {
+      const contentStr =
+        typeof content === "string" ? content : JSON.stringify(content);
+      const data = _parseDD214AiResponse(contentStr);
+
+      saveDD214Data({
+        ...data,
+        extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
+      });
+      loadServiceHistory();
+      setDD214Text("");
+      setShowDD214Processor(false);
+      alert("DD214 information extracted and saved successfully!");
+    } else {
+      alert(
+        "Could not extract DD214 information. Please try again or enter manually.",
+      );
+    }
+  } catch (error) {
+    console.error("Error processing DD214:", error);
+    alert("Error processing DD214. Please try again.");
+  } finally {
+    setIsProcessingDD214(false);
+  }
+}
+
+function _createPacketBackup(claims, ctx) {
+  const {
+    setImportStatus,
+    setBackupCreated,
+    setHasExternalBackup,
+    setShowBackupGuide,
+  } = ctx;
+  const statements = getAllStatements();
+  const veteranProfile = getVeteranProfile();
+  const forms = getSavedForms();
+  const exportData = exportCompletePacket(
+    claims,
+    statements,
+    veteranProfile,
+    forms,
+  );
+  downloadPacketBackup(
+    exportData,
+    `vet-rate-complete-backup-${new Date().toISOString().split("T")[0]}.json`,
+  );
+  setImportStatus({
+    type: "success",
+    message: `Complete backup created with ${claims.length} claims, ${forms.length} forms, and your profile`,
+  });
+  setBackupCreated(true);
+  setHasExternalBackup(true);
+  setShowBackupGuide(false);
+  localStorage.setItem(
+    "vetrate_external_backup_created",
+    Date.now().toString(),
+  );
+  setTimeout(() => setImportStatus(null), 4000);
+}
+
+function _handleBackupFileSelect(event, ctx) {
+  const { setImportStatus, setShowImportConfirm } = ctx;
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.name.endsWith(".json")) {
+    setImportStatus({
+      type: "error",
+      message: "Invalid file type. Please select a .json backup file.",
+    });
+    return;
+  }
+
+  // Validate file size (5MB max)
+  if (file.size > 5 * 1024 * 1024) {
+    setImportStatus({
+      type: "error",
+      message: "File too large. Maximum size is 5MB.",
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Use complete import to handle profile and forms too
+    const result = importCompletePacket(e.target.result);
+
+    if (!result.success) {
+      setImportStatus({ type: "error", message: result.error });
+      return;
+    }
+
+    // Show confirmation dialog with preview
+    setShowImportConfirm({
+      data: result.data,
+      meta: result.meta,
+    });
+  };
+
+  reader.onerror = () => {
+    setImportStatus({ type: "error", message: "Failed to read file." });
+  };
+
+  reader.readAsText(file);
+
+  // Reset input so same file can be selected again
+  event.target.value = "";
+}
+
+function _downloadStatementForClaim(claim, format = "txt", ctx) {
+  const { setShowDownloadMenu } = ctx;
+  const statement = getStatement(claim.id);
+
+  if (!statement) {
+    alert("No statement found for this claim. Please build a statement first.");
+    return;
+  }
+
+  const fileName = `VA-Statement-${claim.conditionName.replace(/\s+/g, "-")}`;
+
+  switch (format) {
+    case "txt":
+      downloadAsTxt(statement, fileName);
+      break;
+    case "docx":
+      downloadAsDocx(statement, fileName, claim);
+      break;
+    case "pdf":
+      downloadAsPdf(statement, fileName, claim);
+      break;
+    default:
+      downloadAsTxt(statement, fileName);
+  }
+
+  setShowDownloadMenu(null);
+}
+
+function _editViewedStatement(viewingClaimId, claims, ctx) {
+  const { onResume, setViewingStatement, setViewingClaimId } = ctx;
+  if (viewingClaimId) {
+    const claim = claims.find((c) => c.id === viewingClaimId);
+    if (claim && onResume) {
+      setViewingStatement(null);
+      setViewingClaimId(null);
+      onResume(claim);
+    }
+  }
+}
+
+function MyPacketTabContent(props) {
+  const { activeTab, viewingPainMap, viewingForm } = props;
+  return (
+    <div className="p-6">
+      {/* MY RATINGS TAB */}
+      {activeTab === "ratings" && <RatingsTab {...props} />}
+
+      {/* VETERAN PROFILE TAB */}
+      {activeTab === "profile" && <ProfileTab {...props} />}
+
+      {/* FORMS TAB */}
+      {activeTab === "forms" && <FormsTab {...props} />}
+
+      {/* VA RECORDS TAB - Full VA Data Center */}
+      {activeTab === "varecords" && <VADataCenter embeddedMode={true} />}
+
+      {/* SERVICE HISTORY TAB */}
+      {activeTab === "service" && <ServiceTab {...props} />}
+
+      {/* CLAIMS TAB */}
+      {activeTab === "claims" && <ClaimsTab {...props} />}
+
+      {/* TIMELINE EVENTS TAB */}
+      {activeTab === "timeline" && <TimelineTab {...props} />}
+
+      {/* PAIN MAPS TAB */}
+      {activeTab === "painmaps" && <PainMapsTab {...props} />}
+
+      {/* Pain Map Detail Modal */}
+      {viewingPainMap && <PainMapDetailModal {...props} />}
+
+      {/* Form Viewer Modal */}
+      {viewingForm && <FormViewerModal {...props} />}
+    </div>
+  );
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -3404,117 +4755,51 @@ const MyPacket = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVaAuthenticated, vaAccessToken]);
 
-  const loadVeteranProfile = () => {
-    const profile = getVeteranProfile();
-    // Initialize servicePeriods array if it doesn't exist
-    if (!Array.isArray(profile.servicePeriods)) {
-      profile.servicePeriods = [];
-    }
-    setVeteranProfile(profile || {});
-  };
+  const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
 
   const checkAIStatus = async () => {
-    const status = await getAIStatus();
-    setAIStatus(status);
+    await _checkAIStatus({ setAIStatus });
   };
 
-  const loadServiceHistory = () => {
-    const history = getServiceHistory();
-    setServiceHistory(history);
-  };
+  const loadServiceHistory = () => _loadServiceHistory({ setServiceHistory });
 
-  const loadTimelineEvents = () => {
-    const events = getTimelineEvents();
-    setTimelineEvents(events);
-  };
+  const loadTimelineEvents = () => _loadTimelineEvents({ setTimelineEvents });
 
-  const loadPainMaps = () => {
-    const maps = getPainMaps();
-    setPainMaps(maps);
-  };
+  const loadPainMaps = () => _loadPainMaps({ setPainMaps });
 
-  const handleDeletePainMap = (mapId) => {
-    if (window.confirm("Delete this pain map?")) {
-      deletePainMap(mapId);
-      loadPainMaps();
-    }
-  };
+  const handleDeletePainMap = (mapId) =>
+    _deletePainMapAndReload(mapId, { loadPainMaps });
 
-  const handleClearTimelineEvents = () => {
-    if (window.confirm("Clear all timeline events? This cannot be undone.")) {
-      clearTimelineEvents();
-      loadTimelineEvents();
-    }
-  };
+  const handleClearTimelineEvents = () =>
+    _clearTimelineEventsAndReload({ loadTimelineEvents });
 
-  const loadSavedForms = () => {
-    const forms = getSavedForms();
-    setSavedForms(forms);
-  };
+  const loadSavedForms = () => _loadSavedForms({ setSavedForms });
 
-  const loadMyRatings = () => {
-    const ratings = getMyRatings();
-    setMyRatings(ratings);
-  };
+  const loadMyRatings = () => _loadMyRatings({ setMyRatings });
 
-  const handleRemoveForm = (formId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this form from your packet?",
-      )
-    ) {
-      deleteSavedForm(formId);
-      loadSavedForms();
-    }
-  };
+  const handleRemoveForm = (formId) =>
+    _removeFormAndReload(formId, { loadSavedForms });
 
-  const handleRemoveRating = (ratingId) => {
-    if (window.confirm("Are you sure you want to remove this rating?")) {
-      removeRating(ratingId);
-      loadMyRatings();
-    }
-  };
+  const handleRemoveRating = (ratingId) =>
+    _removeRatingAndReload(ratingId, { loadMyRatings });
 
-  const handleUpdateRating = (ratingId, updates) => {
-    updateRating(ratingId, updates);
-    loadMyRatings();
-    setEditingRating(null);
-  };
-
-  const handleClearAllRatings = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear all saved ratings? This cannot be undone.",
-      )
-    ) {
-      clearMyRatings();
-      loadMyRatings();
-    }
-  };
-
-  const handlePastedRatings = (parsedRatings) => {
-    // Save each rating to veteranProfile
-    parsedRatings.forEach((rating) => {
-      addRating(rating);
+  const handleUpdateRating = (ratingId, updates) =>
+    _updateRatingAndReload(ratingId, updates, {
+      loadMyRatings,
+      setEditingRating,
     });
-    loadMyRatings();
-    setShowVAGovPaster(false);
-  };
+
+  const handleClearAllRatings = () =>
+    _clearAllRatingsAndReload({ loadMyRatings });
+
+  const handlePastedRatings = (parsedRatings) =>
+    _savePastedRatings(parsedRatings, { loadMyRatings, setShowVAGovPaster });
 
   // VA Records handlers
-  const loadVARecordsData = () => {
-    const records = loadVARecords();
-    setVaRecords(records);
-  };
+  const loadVARecordsData = () => _loadVARecordsData({ setVaRecords });
 
-  const _handleClearVARecords = () => {
-    if (
-      window.confirm("Clear all imported VA records? This cannot be undone.")
-    ) {
-      clearVARecords();
-      loadVARecordsData();
-    }
-  };
+  const _handleClearVARecords = () =>
+    _clearVARecordsAndReload({ loadVARecordsData });
 
   // VA Data Import Handler - Fetches all data from VA.gov and saves locally
   const handleVaDataImport = async () => {
@@ -3526,215 +4811,52 @@ const MyPacket = ({
   };
 
   // Handle VA Disconnect - clears session but keeps imported data
-  const _handleVaDisconnect = () => {
-    vaLogout();
-    setVaImportStatus({
-      loading: false,
-      success: null,
-      message: "",
-      counts: {},
-    });
-  };
+  const _handleVaDisconnect = () =>
+    _disconnectVaSession({ vaLogout, setVaImportStatus });
 
   // Service History handlers
-  const handleAddDeployment = () => {
-    if (!newDeployment.theater || !newDeployment.location) {
-      alert("Please enter at least theater and location");
-      return;
-    }
-    addDeployment(newDeployment);
-    loadServiceHistory();
-    setNewDeployment({
-      theater: "",
-      location: "",
-      startDate: "",
-      endDate: "",
-      unit: "",
-      notes: "",
-      hazardous: false,
-      combat: false,
+  const handleAddDeployment = () =>
+    _addDeploymentAndReset(newDeployment, {
+      loadServiceHistory,
+      setNewDeployment,
+      setShowDeploymentForm,
     });
-    setShowDeploymentForm(false);
-  };
 
-  const handleRemoveDeployment = (depId) => {
-    if (window.confirm("Remove this deployment from your service history?")) {
-      removeDeployment(depId);
-      loadServiceHistory();
-    }
-  };
+  const handleRemoveDeployment = (depId) =>
+    _removeDeploymentAndReload(depId, { loadServiceHistory });
 
-  const handleAddAward = () => {
-    if (!newAward.name) {
-      alert("Please enter the award name");
-      return;
-    }
-    addAward(newAward);
-    loadServiceHistory();
-    setNewAward({
-      name: "",
-      abbreviation: "",
-      dateReceived: "",
-      notes: "",
-      isCombat: false,
+  const handleAddAward = () =>
+    _addAwardAndReset(newAward, {
+      loadServiceHistory,
+      setNewAward,
+      setShowAwardForm,
     });
-    setShowAwardForm(false);
-  };
 
-  const handleRemoveAward = (awardId) => {
-    if (window.confirm("Remove this award from your service history?")) {
-      removeAward(awardId);
-      loadServiceHistory();
-    }
-  };
+  const handleRemoveAward = (awardId) =>
+    _removeAwardAndReload(awardId, { loadServiceHistory });
 
   const handleProcessDD214 = async () => {
-    if (!dd214Text.trim()) {
-      alert("Please paste your DD214 text first");
-      return;
-    }
-
-    if (!aiStatus.available) {
-      alert(
-        "AI is not configured. Please set up AI in settings to process DD214 automatically.",
-      );
-      return;
-    }
-
-    setIsProcessingDD214(true);
-
-    try {
-      const response = await generateAI(
-        `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
-{
-  "branch": "Army/Navy/Air Force/Marines/Coast Guard/Space Force",
-  "mos": "Primary MOS code",
-  "mosTitle": "MOS job title",
-  "entryDate": "YYYY-MM-DD or null",
-  "separationDate": "YYYY-MM-DD or null",
-  "yearsService": number or null,
-  "monthsService": number or null,
-  "separationType": "Honorable/General/Other Than Honorable/etc",
-  "characterOfService": "Honorable/General/etc",
-  "reenlisted": true/false,
-  "foreignService": true/false
-}
-
-DD214 TEXT:
-${dd214Text}
-
-Return ONLY the JSON object, no explanation.`,
-        {
-          temperature: 0.3,
-          maxTokens: 512,
-          expectJSON: true,
-        },
-      );
-
-      // generateAI returns { text, mode } object - extract the text content
-      const content = response?.text || response;
-      if (content) {
-        const contentStr =
-          typeof content === "string" ? content : JSON.stringify(content);
-        // Parse JSON from response
-        let data;
-        try {
-          let cleanContent = contentStr.trim();
-          if (cleanContent.startsWith("```json"))
-            cleanContent = cleanContent.slice(7);
-          if (cleanContent.startsWith("```"))
-            cleanContent = cleanContent.slice(3);
-          if (cleanContent.endsWith("```"))
-            cleanContent = cleanContent.slice(0, -3);
-          data = JSON.parse(cleanContent.trim());
-        } catch (parseError) {
-          console.error("Parse error:", parseError);
-          throw new Error("Could not parse DD214 data");
-        }
-
-        saveDD214Data({
-          ...data,
-          extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
-        });
-        loadServiceHistory();
-        setDD214Text("");
-        setShowDD214Processor(false);
-        alert("DD214 information extracted and saved successfully!");
-      } else {
-        alert(
-          "Could not extract DD214 information. Please try again or enter manually.",
-        );
-      }
-    } catch (error) {
-      console.error("Error processing DD214:", error);
-      alert("Error processing DD214. Please try again.");
-    } finally {
-      setIsProcessingDD214(false);
-    }
+    await _processDD214Text(dd214Text, aiStatus, {
+      setIsProcessingDD214,
+      loadServiceHistory,
+      setDD214Text,
+      setShowDD214Processor,
+    });
   };
 
-  const handleClearDD214 = () => {
-    if (window.confirm("Clear all DD214 extracted data?")) {
-      clearDD214Data();
-      loadServiceHistory();
-    }
-  };
+  const handleClearDD214 = () => _clearDD214AndReload({ loadServiceHistory });
 
   // DD214 Drag and Drop handlers - connects to DD214 Analyzer
-  const handleDD214DragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingDD214(true);
-  };
+  const handleDD214DragOver = (e) => _dd214DragOver(e, { setIsDraggingDD214 });
 
-  const handleDD214DragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingDD214(false);
-  };
+  const handleDD214DragLeave = (e) =>
+    _dd214DragLeave(e, { setIsDraggingDD214 });
 
-  const handleDD214Drop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingDD214(false);
+  const handleDD214Drop = (e) =>
+    _dd214DropFile(e, { setIsDraggingDD214, onOpenDD214Analyzer });
 
-    const files = Array.from(e.dataTransfer?.files || []);
-    const pdfFile = files.find(
-      (f) =>
-        f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
-    );
-
-    if (pdfFile) {
-      // Open DD214 Analyzer with the dropped file
-      // Store the file temporarily and open analyzer
-      if (onOpenDD214Analyzer) {
-        onOpenDD214Analyzer();
-      }
-    } else {
-      alert("Please drop a PDF file (DD214 document).");
-    }
-  };
-
-  const handleDD214FileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (
-        file.type === "application/pdf" ||
-        file.name.toLowerCase().endsWith(".pdf")
-      ) {
-        // Open DD214 Analyzer
-        if (onOpenDD214Analyzer) {
-          onOpenDD214Analyzer();
-        }
-      } else {
-        alert("Please select a PDF file.");
-      }
-    }
-    // Reset input
-    if (dd214FileInputRef.current) {
-      dd214FileInputRef.current.value = "";
-    }
-  };
+  const handleDD214FileSelect = (e) =>
+    _dd214FileSelected(e, { onOpenDD214Analyzer, dd214FileInputRef });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -3747,33 +4869,12 @@ Return ONLY the JSON object, no explanation.`,
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDownloadMenu]);
 
-  const loadClaims = () => {
-    const savedClaims = getSavedClaims();
-    setClaims(savedClaims);
-    setStats(getClaimStats());
-  };
+  const loadClaims = () => _loadClaimsData({ setClaims, setStats });
 
-  const handleRemove = (claimId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this claim from your packet?",
-      )
-    ) {
-      removeClaim(claimId);
-      loadClaims();
-    }
-  };
+  const handleRemove = (claimId) =>
+    _removeClaimAndReload(claimId, { loadClaims });
 
-  const handleClearAll = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear all saved claims? This cannot be undone.",
-      )
-    ) {
-      clearAllClaims();
-      loadClaims();
-    }
-  };
+  const handleClearAll = () => _clearAllClaimsAndReload({ loadClaims });
 
   // Check if user needs backup guidance on mount
   useEffect(() => {
@@ -3789,98 +4890,24 @@ Return ONLY the JSON object, no explanation.`,
   }, [claims.length]);
 
   // Dismiss backup guide
-  const dismissBackupGuide = (remindLater = true) => {
-    setShowBackupGuide(false);
-    if (!remindLater) {
-      localStorage.setItem("vetrate_backup_guide_dismissed", "true");
-    }
-  };
+  const dismissBackupGuide = (remindLater = true) =>
+    _dismissBackupGuide(remindLater, { setShowBackupGuide });
 
   // Backup COMPLETE packet to JSON file (includes profile and forms)
-  const handleBackupPacket = () => {
-    const statements = getAllStatements();
-    const veteranProfile = getVeteranProfile();
-    const forms = getSavedForms();
-    const exportData = exportCompletePacket(
-      claims,
-      statements,
-      veteranProfile,
-      forms,
-    );
-    downloadPacketBackup(
-      exportData,
-      `vet-rate-complete-backup-${new Date().toISOString().split("T")[0]}.json`,
-    );
-    setImportStatus({
-      type: "success",
-      message: `Complete backup created with ${claims.length} claims, ${forms.length} forms, and your profile`,
+  const handleBackupPacket = () =>
+    _createPacketBackup(claims, {
+      setImportStatus,
+      setBackupCreated,
+      setHasExternalBackup,
+      setShowBackupGuide,
     });
-    setBackupCreated(true);
-    setHasExternalBackup(true);
-    setShowBackupGuide(false);
-    localStorage.setItem(
-      "vetrate_external_backup_created",
-      Date.now().toString(),
-    );
-    setTimeout(() => setImportStatus(null), 4000);
-  };
 
   // Trigger file input for restore
-  const handleRestoreClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+  const handleRestoreClick = () => _triggerRestoreClick({ fileInputRef });
 
   // Handle file selection for restore
-  const handleFileSelect = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.name.endsWith(".json")) {
-      setImportStatus({
-        type: "error",
-        message: "Invalid file type. Please select a .json backup file.",
-      });
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setImportStatus({
-        type: "error",
-        message: "File too large. Maximum size is 5MB.",
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // Use complete import to handle profile and forms too
-      const result = importCompletePacket(e.target.result);
-
-      if (!result.success) {
-        setImportStatus({ type: "error", message: result.error });
-        return;
-      }
-
-      // Show confirmation dialog with preview
-      setShowImportConfirm({
-        data: result.data,
-        meta: result.meta,
-      });
-    };
-
-    reader.onerror = () => {
-      setImportStatus({ type: "error", message: "Failed to read file." });
-    };
-
-    reader.readAsText(file);
-
-    // Reset input so same file can be selected again
-    event.target.value = "";
-  };
+  const handleFileSelect = (event) =>
+    _handleBackupFileSelect(event, { setImportStatus, setShowImportConfirm });
 
   // Confirm and execute import (handles complete backups with profile and forms)
   const handleConfirmImport = (mergeMode) => {
@@ -3897,218 +4924,21 @@ Return ONLY the JSON object, no explanation.`,
     });
   };
 
-  const handleStatusChange = (claimId, newStatus) => {
-    // Prevent changing to 'Statement Generated' if no statement exists
-    if (newStatus === "Statement Generated") {
-      const statement = getStatement(claimId);
-      if (!statement) {
-        alert(
-          'Cannot mark as "Statement Generated" - no statement found. Please complete the Build Statement process first.',
-        );
-        return;
-      }
-    }
+  const handleStatusChange = (claimId, newStatus) =>
+    _changeClaimStatus(claimId, newStatus, { loadClaims });
 
-    updateClaimStatus(claimId, newStatus);
-    loadClaims();
-  };
+  const handleViewStatement = (claimId) =>
+    _viewStatementForClaim(claimId, { setViewingStatement, setViewingClaimId });
 
-  const handleViewStatement = (claimId) => {
-    const statement = getStatement(claimId);
-    if (statement) {
-      setViewingStatement(statement);
-      setViewingClaimId(claimId);
-    } else {
-      alert(
-        "No statement found for this claim. Please build a statement first.",
-      );
-    }
-  };
+  const handleDownloadStatement = (claim, format = "txt") =>
+    _downloadStatementForClaim(claim, format, { setShowDownloadMenu });
 
-  const handleDownloadStatement = (claim, format = "txt") => {
-    const statement = getStatement(claim.id);
-
-    if (!statement) {
-      alert(
-        "No statement found for this claim. Please build a statement first.",
-      );
-      return;
-    }
-
-    const fileName = `VA-Statement-${claim.conditionName.replace(/\s+/g, "-")}`;
-
-    switch (format) {
-      case "txt":
-        downloadAsTxt(statement, fileName);
-        break;
-      case "docx":
-        downloadAsDocx(statement, fileName, claim);
-        break;
-      case "pdf":
-        downloadAsPdf(statement, fileName, claim);
-        break;
-      default:
-        downloadAsTxt(statement, fileName);
-    }
-
-    setShowDownloadMenu(null);
-  };
-
-  const downloadAsTxt = (statement, fileName) => {
-    const content =
-      statement.statement +
-      "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" +
-      statement.doctorNote;
-    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
-    const blob = new Blob([content], { type: "text/plain" });
-    triggerBlobDownload(blob, `${fileName}.txt`);
-  };
-
-  const downloadAsDocx = async (statement, fileName, claim) => {
-    try {
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: [
-              new Paragraph({
-                text: "STATEMENT IN SUPPORT OF CLAIM",
-                heading: HeadingLevel.HEADING_1,
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 400 },
-              }),
-              new Paragraph({
-                text: `Condition: ${claim.conditionName}`,
-                spacing: { after: 200 },
-              }),
-              ...statement.statement.split("\n").map(
-                (line) =>
-                  new Paragraph({
-                    children: [new TextRun(line)],
-                    spacing: { after: 100 },
-                  }),
-              ),
-              new Paragraph({
-                text: "",
-                spacing: { after: 400 },
-              }),
-              new Paragraph({
-                text: "DOCTOR'S CHEAT SHEET",
-                heading: HeadingLevel.HEADING_1,
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 400 },
-              }),
-              ...statement.doctorNote.split("\n").map(
-                (line) =>
-                  new Paragraph({
-                    children: [new TextRun(line)],
-                    spacing: { after: 100 },
-                  }),
-              ),
-            ],
-          },
-        ],
-      });
-
-      // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
-      const blob = await Packer.toBlob(doc);
-      triggerBlobDownload(blob, `${fileName}.docx`);
-    } catch (error) {
-      console.error("Error generating DOCX:", error);
-      alert("Error generating Word document. Please try another format.");
-    }
-  };
-
-  const downloadAsPdf = (statement, fileName, claim) => {
-    try {
-      const pdf = new jsPDF();
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 15;
-      const maxWidth = pageWidth - margin * 2;
-      let yPosition = 20;
-
-      // Title
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, "bold");
-      pdf.text("STATEMENT IN SUPPORT OF CLAIM", pageWidth / 2, yPosition, {
-        align: "center",
-      });
-      yPosition += 15;
-
-      // Condition
-      pdf.setFontSize(11);
-      pdf.text(`Condition: ${claim.conditionName}`, margin, yPosition);
-      yPosition += 10;
-
-      // Statement content
-      pdf.setFont(undefined, "normal");
-      pdf.setFontSize(10);
-      const statementLines = pdf.splitTextToSize(statement.statement, maxWidth);
-      statementLines.forEach((line) => {
-        if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        pdf.text(line, margin, yPosition);
-        yPosition += 5;
-      });
-
-      // Doctor's note section
-      yPosition += 10;
-      if (yPosition > pdf.internal.pageSize.getHeight() - 40) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, "bold");
-      pdf.text("DOCTOR'S CHEAT SHEET", pageWidth / 2, yPosition, {
-        align: "center",
-      });
-      yPosition += 10;
-
-      pdf.setFont(undefined, "normal");
-      pdf.setFontSize(10);
-      const doctorLines = pdf.splitTextToSize(statement.doctorNote, maxWidth);
-      doctorLines.forEach((line) => {
-        if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        pdf.text(line, margin, yPosition);
-        yPosition += 5;
-      });
-
-      pdf.save(`${fileName}.pdf`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Error generating PDF. Please try another format.");
-    }
-  };
-
-  const handleEditStatement = () => {
-    if (viewingClaimId) {
-      const claim = claims.find((c) => c.id === viewingClaimId);
-      if (claim && onResume) {
-        setViewingStatement(null);
-        setViewingClaimId(null);
-        onResume(claim);
-      }
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Drafting":
-        return "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-100 border-yellow-300 dark:border-yellow-700";
-      case "Statement Generated":
-        return "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 border-blue-300 dark:border-blue-700";
-      case "Filed":
-        return "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-100 border-green-300 dark:border-green-700";
-      default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600";
-    }
-  };
+  const handleEditStatement = () =>
+    _editViewedStatement(viewingClaimId, claims, {
+      onResume,
+      setViewingStatement,
+      setViewingClaimId,
+    });
 
   return (
     <>
@@ -4165,548 +4995,111 @@ Return ONLY the JSON object, no explanation.`,
             t={t}
           />
 
-          <div className="p-6">
-            {/* MY RATINGS TAB */}
-            {activeTab === "ratings" && (
-              <RatingsTab
-                myRatings={myRatings}
-                editingRating={editingRating}
-                setEditingRating={setEditingRating}
-                handleUpdateRating={handleUpdateRating}
-                handleRemoveRating={handleRemoveRating}
-                handleClearAllRatings={handleClearAllRatings}
-                setShowVAGovPaster={setShowVAGovPaster}
-                t={t}
-              />
-            )}
-
-            {/* VETERAN PROFILE TAB */}
-            {activeTab === "profile" && (
-              <ProfileTab
-                veteranProfile={veteranProfile}
-                setVeteranProfile={setVeteranProfile}
-                t={t}
-              />
-            )}
-
-            {/* FORMS TAB */}
-            {activeTab === "forms" && (
-              <FormsTab
-                savedForms={savedForms}
-                setViewingForm={setViewingForm}
-                handleRemoveForm={handleRemoveForm}
-                t={t}
-              />
-            )}
-
-            {/* VA RECORDS TAB - Full VA Data Center */}
-            {activeTab === "varecords" && <VADataCenter embeddedMode={true} />}
-
-            {/* SERVICE HISTORY TAB */}
-            {activeTab === "service" && (
-              <ServiceTab
-                aiStatus={aiStatus}
-                showDD214Processor={showDD214Processor}
-                setShowDD214Processor={setShowDD214Processor}
-                serviceHistory={serviceHistory}
-                dd214FileInputRef={dd214FileInputRef}
-                handleDD214DragOver={handleDD214DragOver}
-                handleDD214DragLeave={handleDD214DragLeave}
-                handleDD214Drop={handleDD214Drop}
-                handleDD214FileSelect={handleDD214FileSelect}
-                isDraggingDD214={isDraggingDD214}
-                dd214Text={dd214Text}
-                setDD214Text={setDD214Text}
-                handleProcessDD214={handleProcessDD214}
-                isProcessingDD214={isProcessingDD214}
-                onOpenAISettings={onOpenAISettings}
-                handleClearDD214={handleClearDD214}
-                showDeploymentForm={showDeploymentForm}
-                setShowDeploymentForm={setShowDeploymentForm}
-                newDeployment={newDeployment}
-                setNewDeployment={setNewDeployment}
-                handleAddDeployment={handleAddDeployment}
-                handleRemoveDeployment={handleRemoveDeployment}
-                showAwardForm={showAwardForm}
-                setShowAwardForm={setShowAwardForm}
-                newAward={newAward}
-                setNewAward={setNewAward}
-                handleAddAward={handleAddAward}
-                handleRemoveAward={handleRemoveAward}
-                showRibbonRack={showRibbonRack}
-                setShowRibbonRack={setShowRibbonRack}
-                t={t}
-              />
-            )}
-
-            {/* CLAIMS TAB */}
-            {activeTab === "claims" && (
-              <ClaimsTab
-                claims={claims}
-                onClose={onClose}
-                onResume={onResume}
-                handleViewStatement={handleViewStatement}
-                handleStatusChange={handleStatusChange}
-                showDownloadMenu={showDownloadMenu}
-                setShowDownloadMenu={setShowDownloadMenu}
-                isCertified={isCertified}
-                handleDownloadStatement={handleDownloadStatement}
-                handleRemove={handleRemove}
-                handleClearAll={handleClearAll}
-                getStatusColor={getStatusColor}
-                t={t}
-              />
-            )}
-
-            {/* TIMELINE EVENTS TAB */}
-            {activeTab === "timeline" && (
-              <TimelineTab
-                timelineEvents={timelineEvents}
-                setTimelineEvents={setTimelineEvents}
-                handleClearTimelineEvents={handleClearTimelineEvents}
-                onClose={onClose}
-                t={t}
-              />
-            )}
-
-            {/* PAIN MAPS TAB */}
-            {activeTab === "painmaps" && (
-              <PainMapsTab
-                painMaps={painMaps}
-                setPainMaps={setPainMaps}
-                setViewingPainMap={setViewingPainMap}
-                handleDeletePainMap={handleDeletePainMap}
-                onClose={onClose}
-                t={t}
-              />
-            )}
-
-            {/* Pain Map Detail Modal */}
-            {viewingPainMap && (
-              <ResponsiveModal
-                isOpen
-                onClose={() => setViewingPainMap(null)}
-                size="xl"
-                zIndex={70}
-                labelledBy="painmap-detail-title"
-                header={
-                  <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 flex items-center justify-between">
-                    <div>
-                      <h3
-                        id="painmap-detail-title"
-                        className="text-xl font-bold"
-                      >
-                        {viewingPainMap.name ||
-                          t("myPacketSection.painMapDetails")}
-                      </h3>
-                      <p className="text-red-100 text-sm">
-                        {t("myPacketSection.saved")}:{" "}
-                        {new Date(
-                          viewingPainMap.savedAt || viewingPainMap.createdAt,
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setViewingPainMap(null)}
-                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                }
-              >
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Pain Map Image */}
-                  <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 flex items-center justify-center">
-                    {viewingPainMap.thumbnail ? (
-                      <img
-                        src={viewingPainMap.thumbnail}
-                        alt="Pain Map"
-                        className="max-w-full max-h-[400px] object-contain"
-                      />
-                    ) : (
-                      <div className="text-center py-12">
-                        <span className="text-6xl">🎨</span>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">
-                          {t("myPacketSection.noPreviewAvailable")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Pain Points List */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                      {t("myPacketSection.painPoints")} (
-                      {viewingPainMap.painPoints?.length || 0})
-                    </h4>
-                    {viewingPainMap.painPoints &&
-                    viewingPainMap.painPoints.length > 0 ? (
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                        {viewingPainMap.painPoints.map((point, idx) => (
-                          <div
-                            key={idx}
-                            className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`w-3 h-3 rounded-full ${getPainSeverityDotClass(point.severity)}`}
-                              ></span>
-                              <span className="font-medium text-gray-900 dark:text-gray-100">
-                                {point.region || point.bodyPart}
-                              </span>
-                            </div>
-                            {point.type && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {t("myPacketSection.type")}: {point.type}
-                              </p>
-                            )}
-                            {point.notes && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">
-                                &quot;{point.notes}&quot;
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 dark:text-gray-400">
-                        {t("myPacketSection.noPainPointsRecorded")}
-                      </p>
-                    )}
-
-                    {/* Generated Nexus Language */}
-                    {viewingPainMap.nexusLanguage && (
-                      <div className="mt-4">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                          {t("myPacketSection.nexusLanguage")}
-                        </h4>
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                          <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
-                            {viewingPainMap.nexusLanguage}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      handleDeletePainMap(viewingPainMap.id);
-                      setViewingPainMap(null);
-                    }}
-                    className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                  >
-                    {t("myPacketSection.deleteMap")}
-                  </button>
-                  <button
-                    onClick={() => setViewingPainMap(null)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {t("myPacketSection.close")}
-                  </button>
-                </div>
-              </ResponsiveModal>
-            )}
-
-            {/* Form Viewer Modal */}
-            {viewingForm && (
-              <ResponsiveModal
-                isOpen
-                onClose={() => setViewingForm(null)}
-                size="xl"
-                zIndex={70}
-                labelledBy="form-viewer-title"
-                header={
-                  <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
-                    <div>
-                      <h3 id="form-viewer-title" className="text-xl font-bold">
-                        {viewingForm.title || viewingForm.formName}
-                      </h3>
-                      <p className="text-blue-100 text-sm">
-                        {viewingForm.formNumber}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setViewingForm(null)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                }
-              >
-                {viewingForm.generatedContent && (
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-auto">
-                    <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
-                      {viewingForm.generatedContent}
-                    </pre>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    onClick={() => {
-                      const blob = new Blob([viewingForm.generatedContent], {
-                        type: "text/plain",
-                      });
-                      const url = URL.createObjectURL(blob);
-                      if (!url.startsWith("blob:")) return; // Validate blob URL
-                      // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `${viewingForm.formNumber || "form"}-${viewingForm.title || "draft"}.txt`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-                  >
-                    {t("myPacketSection.downloadTxt")}
-                  </button>
-                  <button
-                    onClick={() => setViewingForm(null)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {t("myPacketSection.close")}
-                  </button>
-                </div>
-              </ResponsiveModal>
-            )}
-          </div>
+          <MyPacketTabContent
+            activeTab={activeTab}
+            aiStatus={aiStatus}
+            claims={claims}
+            dd214FileInputRef={dd214FileInputRef}
+            dd214Text={dd214Text}
+            editingRating={editingRating}
+            getStatusColor={getStatusColor}
+            handleAddAward={handleAddAward}
+            handleAddDeployment={handleAddDeployment}
+            handleClearAll={handleClearAll}
+            handleClearAllRatings={handleClearAllRatings}
+            handleClearDD214={handleClearDD214}
+            handleClearTimelineEvents={handleClearTimelineEvents}
+            handleDD214DragLeave={handleDD214DragLeave}
+            handleDD214DragOver={handleDD214DragOver}
+            handleDD214Drop={handleDD214Drop}
+            handleDD214FileSelect={handleDD214FileSelect}
+            handleDeletePainMap={handleDeletePainMap}
+            handleDownloadStatement={handleDownloadStatement}
+            handleProcessDD214={handleProcessDD214}
+            handleRemove={handleRemove}
+            handleRemoveAward={handleRemoveAward}
+            handleRemoveDeployment={handleRemoveDeployment}
+            handleRemoveForm={handleRemoveForm}
+            handleRemoveRating={handleRemoveRating}
+            handleStatusChange={handleStatusChange}
+            handleUpdateRating={handleUpdateRating}
+            handleViewStatement={handleViewStatement}
+            isCertified={isCertified}
+            isDraggingDD214={isDraggingDD214}
+            isProcessingDD214={isProcessingDD214}
+            myRatings={myRatings}
+            newAward={newAward}
+            newDeployment={newDeployment}
+            onClose={onClose}
+            onOpenAISettings={onOpenAISettings}
+            onResume={onResume}
+            painMaps={painMaps}
+            savedForms={savedForms}
+            serviceHistory={serviceHistory}
+            setDD214Text={setDD214Text}
+            setEditingRating={setEditingRating}
+            setNewAward={setNewAward}
+            setNewDeployment={setNewDeployment}
+            setPainMaps={setPainMaps}
+            setShowAwardForm={setShowAwardForm}
+            setShowDD214Processor={setShowDD214Processor}
+            setShowDeploymentForm={setShowDeploymentForm}
+            setShowDownloadMenu={setShowDownloadMenu}
+            setShowRibbonRack={setShowRibbonRack}
+            setShowVAGovPaster={setShowVAGovPaster}
+            setTimelineEvents={setTimelineEvents}
+            setVeteranProfile={setVeteranProfile}
+            setViewingForm={setViewingForm}
+            setViewingPainMap={setViewingPainMap}
+            showAwardForm={showAwardForm}
+            showDD214Processor={showDD214Processor}
+            showDeploymentForm={showDeploymentForm}
+            showDownloadMenu={showDownloadMenu}
+            showRibbonRack={showRibbonRack}
+            t={t}
+            timelineEvents={timelineEvents}
+            veteranProfile={veteranProfile}
+            viewingForm={viewingForm}
+            viewingPainMap={viewingPainMap}
+          />
         </div>
       </ResponsiveModal>
 
       {/* Statement Viewer Modal */}
       {viewingStatement && (
-        <ResponsiveModal
-          isOpen
-          onClose={() => {
-            setViewingStatement(null);
-            setViewingClaimId(null);
-          }}
-          size="xl"
-          zIndex={70}
-          labelledBy="statement-viewer-title"
-          header={
-            <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 flex items-center justify-between">
-              <h3 id="statement-viewer-title" className="text-xl font-bold">
-                {t("myPacketSection.generatedStatement")}
-              </h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleEditStatement}
-                  className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
-                >
-                  {t("myPacketSection.editStatement")}
-                </button>
-                <button
-                  onClick={() => {
-                    setViewingStatement(null);
-                    setViewingClaimId(null);
-                  }}
-                  className="text-white hover:text-gray-200"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          }
-        >
-          <div className="space-y-6">
-            {/* Draft Watermark */}
-            <DraftWatermark variant="banner" />
-
-            <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                {t("myPacketSection.statementInSupport")}
-              </h4>
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-                {viewingStatement.statement}
-              </pre>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                {t("myPacketSection.doctorsCheatSheet")}
-              </h4>
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-                {viewingStatement.doctorNote}
-              </pre>
-
-              {/* Medical Disclaimer Footer */}
-              <NexusDisclaimerFooter className="mt-4" />
-            </div>
-
-            {/* Certification Checkbox before download */}
-            <div className="border-t pt-4">
-              <CertificationCheckbox
-                checked={isCertified}
-                onChange={setIsCertified}
-              />
-            </div>
-          </div>
-        </ResponsiveModal>
+        <StatementViewerModal
+          viewingStatement={viewingStatement}
+          setViewingStatement={setViewingStatement}
+          setViewingClaimId={setViewingClaimId}
+          handleEditStatement={handleEditStatement}
+          isCertified={isCertified}
+          setIsCertified={setIsCertified}
+          t={t}
+        />
       )}
 
       {/* Import Confirmation Modal */}
       {showImportConfirm && (
-        <ResponsiveModal
-          isOpen
-          onClose={() => setShowImportConfirm(null)}
-          size="sm"
-          zIndex={70}
-          labelledBy="import-confirm-title"
-          header={
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
-              <h3 id="import-confirm-title" className="text-xl font-bold">
-                📥 {t("myPacketSection.confirmImport")}
-              </h3>
-            </div>
-          }
-        >
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              {t("myPacketSection.backupDetails")}:
-            </p>
-            <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
-              <li>
-                • <strong>{showImportConfirm.meta.claimCount}</strong>{" "}
-                {t("myPacketSection.claimsFound")}
-              </li>
-              <li>
-                • <strong>{showImportConfirm.meta.statementCount}</strong>{" "}
-                {t("myPacketSection.statementsFound")}
-              </li>
-              {showImportConfirm.meta.exportDate && (
-                <li>
-                  • {t("myPacketSection.backupDate")}:{" "}
-                  {new Date(
-                    showImportConfirm.meta.exportDate,
-                  ).toLocaleDateString()}
-                </li>
-              )}
-            </ul>
-          </div>
-
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {t("myPacketSection.importQuestion")}
-          </p>
-
-          <div className="space-y-3">
-            <button
-              onClick={() => handleConfirmImport("replace")}
-              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              {t("myPacketSection.replaceAllFreshStart")}
-            </button>
-            <button
-              onClick={() => handleConfirmImport("merge")}
-              className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              {t("myPacketSection.mergeAddNewOnly")}
-            </button>
-            <button
-              onClick={() => setShowImportConfirm(null)}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              {t("myPacketSection.cancel")}
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-            ⚠️ {t("myPacketSection.replaceAllWarning")}
-          </p>
-        </ResponsiveModal>
+        <ImportConfirmationModal
+          showImportConfirm={showImportConfirm}
+          setShowImportConfirm={setShowImportConfirm}
+          handleConfirmImport={handleConfirmImport}
+          t={t}
+        />
       )}
 
-      {/* Buy Me a Coffee - shows when packet has claims */}
-      <BuyMeCoffee
-        show={claims.length > 0 && !backupCreated}
-        trigger="packet"
-        context={{ count: claims.length }}
-      />
-
-      {/* Buy Me a Coffee - shows after backup created */}
-      <BuyMeCoffee
-        show={backupCreated}
-        trigger="export"
-        context={{ count: claims.length }}
-        onDismiss={() => setBackupCreated(false)}
+      {/* Buy Me a Coffee triggers */}
+      <PacketBuyMeCoffeeTriggers
+        claims={claims}
+        backupCreated={backupCreated}
+        setBackupCreated={setBackupCreated}
       />
 
       {/* VA.gov Rating Paster Modal */}
       {showVAGovPaster && (
-        <VAGovRatingPaster
-          onRatingsParsed={handlePastedRatings}
-          onClose={() => setShowVAGovPaster(false)}
+        <VaGovRatingPasterModal
+          handlePastedRatings={handlePastedRatings}
+          setShowVAGovPaster={setShowVAGovPaster}
         />
       )}
     </>
