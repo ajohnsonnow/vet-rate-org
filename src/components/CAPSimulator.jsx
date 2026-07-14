@@ -152,96 +152,84 @@ const getBodySystem = (condition) => {
   return match ? match.system : "general";
 };
 
-function _musculoskeletalQuestions(conditionName, allCriteriaText) {
-  const questions = [];
-  // Check if ROM-based (most spine/joint conditions)
-  const hasROM =
-    allCriteriaText.includes("range of motion") ||
-    allCriteriaText.includes("flexion") ||
-    allCriteriaText.includes("extension") ||
-    allCriteriaText.includes("degrees");
-  const hasAnkylosis = allCriteriaText.includes("ankylosis");
-  const hasPain =
-    allCriteriaText.includes("pain") || allCriteriaText.includes("painful");
-  const hasIncapacitating = allCriteriaText.includes("incapacitating");
+function _qRom(conditionName) {
+  return {
+    id: "q_rom",
+    question: `How limited is your range of motion for ${conditionName}?`,
+    intent:
+      "Range of motion (ROM) is measured in degrees and is a primary rating factor for musculoskeletal conditions per 38 CFR § 4.71a.",
+    definition:
+      "The examiner will use a goniometer to measure your active and passive range of motion. Loss of motion directly affects your rating percentage.",
+    options: [
+      {
+        value: "severe",
+        label: "Severely limited - less than half of normal motion",
+        weight: 4,
+      },
+      {
+        value: "moderate",
+        label: "Moderately limited - about half of normal motion",
+        weight: 3,
+      },
+      {
+        value: "mild",
+        label: "Mildly limited - more than half of normal motion",
+        weight: 2,
+      },
+      {
+        value: "minimal",
+        label: "Minimally limited - nearly full motion",
+        weight: 1,
+      },
+      {
+        value: "normal",
+        label: "Normal or near-normal range of motion",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
 
-  if (hasROM) {
-    questions.push({
-      id: "q_rom",
-      question: `How limited is your range of motion for ${conditionName}?`,
-      intent:
-        "Range of motion (ROM) is measured in degrees and is a primary rating factor for musculoskeletal conditions per 38 CFR § 4.71a.",
-      definition:
-        "The examiner will use a goniometer to measure your active and passive range of motion. Loss of motion directly affects your rating percentage.",
-      options: [
-        {
-          value: "severe",
-          label: "Severely limited - less than half of normal motion",
-          weight: 4,
-        },
-        {
-          value: "moderate",
-          label: "Moderately limited - about half of normal motion",
-          weight: 3,
-        },
-        {
-          value: "mild",
-          label: "Mildly limited - more than half of normal motion",
-          weight: 2,
-        },
-        {
-          value: "minimal",
-          label: "Minimally limited - nearly full motion",
-          weight: 1,
-        },
-        {
-          value: "normal",
-          label: "Normal or near-normal range of motion",
-          weight: 0,
-        },
-      ],
-      required: true,
-    });
-  }
+function _qPainMotion() {
+  return {
+    id: "q_pain_motion",
+    question: "Does pain further limit your motion or function?",
+    intent:
+      "Per DeLuca v. Brown and 38 CFR § 4.40, functional loss due to pain must be considered even if ROM appears adequate.",
+    definition:
+      "Functional loss includes pain on movement, weakness, fatigability, and incoordination. The examiner should document where pain begins during ROM testing.",
+    options: [
+      {
+        value: "severe",
+        label:
+          "Yes - significant additional limitation with pain (pain starts early in motion)",
+        weight: 4,
+      },
+      {
+        value: "moderate",
+        label: "Yes - moderate additional limitation with pain",
+        weight: 3,
+      },
+      {
+        value: "mild",
+        label:
+          "Yes - mild additional limitation with pain (pain at end of motion)",
+        weight: 2,
+      },
+      {
+        value: "minimal",
+        label: "Minimal pain that does not limit function",
+        weight: 1,
+      },
+      { value: "none", label: "No pain with motion", weight: 0 },
+    ],
+    required: true,
+  };
+}
 
-  if (hasPain) {
-    questions.push({
-      id: "q_pain_motion",
-      question: "Does pain further limit your motion or function?",
-      intent:
-        "Per DeLuca v. Brown and 38 CFR § 4.40, functional loss due to pain must be considered even if ROM appears adequate.",
-      definition:
-        "Functional loss includes pain on movement, weakness, fatigability, and incoordination. The examiner should document where pain begins during ROM testing.",
-      options: [
-        {
-          value: "severe",
-          label:
-            "Yes - significant additional limitation with pain (pain starts early in motion)",
-          weight: 4,
-        },
-        {
-          value: "moderate",
-          label: "Yes - moderate additional limitation with pain",
-          weight: 3,
-        },
-        {
-          value: "mild",
-          label:
-            "Yes - mild additional limitation with pain (pain at end of motion)",
-          weight: 2,
-        },
-        {
-          value: "minimal",
-          label: "Minimal pain that does not limit function",
-          weight: 1,
-        },
-        { value: "none", label: "No pain with motion", weight: 0 },
-      ],
-      required: true,
-    });
-  }
-
-  questions.push({
+function _qFlareups() {
+  return {
     id: "q_flareups",
     question:
       "Do you experience flare-ups that cause additional functional loss?",
@@ -274,737 +262,792 @@ function _musculoskeletalQuestions(conditionName, allCriteriaText) {
       { value: "none", label: "No significant flare-ups", weight: 0 },
     ],
     required: true,
-  });
+  };
+}
 
-  if (hasAnkylosis) {
-    questions.push({
-      id: "q_ankylosis",
-      question: "Is the affected joint fixed in position (ankylosis)?",
-      intent:
-        "Ankylosis (joint fused/fixed) warrants higher ratings per 38 CFR § 4.71a.",
-      definition:
-        "Ankylosis: Complete fixation of a joint in one position, either favorable (functional position) or unfavorable (non-functional position).",
-      options: [
-        {
-          value: "unfavorable",
-          label:
-            "Yes - joint is fixed in an unfavorable/non-functional position",
-          weight: 4,
-        },
-        {
-          value: "favorable",
-          label:
-            "Yes - joint is fixed but in a favorable/functional position",
-          weight: 3,
-        },
-        {
-          value: "no",
-          label: "No - the joint still moves, even if limited",
-          weight: 0,
-        },
-      ],
-      required: true,
-    });
-  }
+function _qAnkylosis() {
+  return {
+    id: "q_ankylosis",
+    question: "Is the affected joint fixed in position (ankylosis)?",
+    intent:
+      "Ankylosis (joint fused/fixed) warrants higher ratings per 38 CFR § 4.71a.",
+    definition:
+      "Ankylosis: Complete fixation of a joint in one position, either favorable (functional position) or unfavorable (non-functional position).",
+    options: [
+      {
+        value: "unfavorable",
+        label:
+          "Yes - joint is fixed in an unfavorable/non-functional position",
+        weight: 4,
+      },
+      {
+        value: "favorable",
+        label:
+          "Yes - joint is fixed but in a favorable/functional position",
+        weight: 3,
+      },
+      {
+        value: "no",
+        label: "No - the joint still moves, even if limited",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
 
+function _qIncapacitating() {
+  return {
+    id: "q_incapacitating",
+    question:
+      "Have you had incapacitating episodes requiring bed rest prescribed by a physician?",
+    intent:
+      "Incapacitating episodes (bed rest prescribed by doctor) are a separate rating pathway for spine conditions with IVDS.",
+    definition:
+      "Incapacitating Episode: A period of acute signs/symptoms requiring bed rest PRESCRIBED BY A PHYSICIAN and treatment by a physician.",
+    options: [
+      {
+        value: "6_weeks",
+        label: "Yes - at least 6 weeks total in the past 12 months",
+        weight: 4,
+      },
+      {
+        value: "4_weeks",
+        label: "Yes - at least 4 but less than 6 weeks total",
+        weight: 3,
+      },
+      {
+        value: "2_weeks",
+        label: "Yes - at least 2 but less than 4 weeks total",
+        weight: 2,
+      },
+      {
+        value: "1_week",
+        label: "Yes - at least 1 but less than 2 weeks total",
+        weight: 1,
+      },
+      { value: "none", label: "No prescribed bed rest", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _musculoskeletalQuestions(conditionName, allCriteriaText) {
+  const questions = [];
+  const hasROM =
+    allCriteriaText.includes("range of motion") ||
+    allCriteriaText.includes("flexion") ||
+    allCriteriaText.includes("extension") ||
+    allCriteriaText.includes("degrees");
+  const hasAnkylosis = allCriteriaText.includes("ankylosis");
+  const hasPain =
+    allCriteriaText.includes("pain") || allCriteriaText.includes("painful");
+  const hasIncapacitating = allCriteriaText.includes("incapacitating");
+
+  if (hasROM) questions.push(_qRom(conditionName));
+  if (hasPain) questions.push(_qPainMotion());
+  questions.push(_qFlareups());
+  if (hasAnkylosis) questions.push(_qAnkylosis());
   if (
     hasIncapacitating ||
     allCriteriaText.includes("bed rest") ||
     allCriteriaText.includes("physician")
   ) {
-    questions.push({
-      id: "q_incapacitating",
-      question:
-        "Have you had incapacitating episodes requiring bed rest prescribed by a physician?",
-      intent:
-        "Incapacitating episodes (bed rest prescribed by doctor) are a separate rating pathway for spine conditions with IVDS.",
-      definition:
-        "Incapacitating Episode: A period of acute signs/symptoms requiring bed rest PRESCRIBED BY A PHYSICIAN and treatment by a physician.",
-      options: [
-        {
-          value: "6_weeks",
-          label: "Yes - at least 6 weeks total in the past 12 months",
-          weight: 4,
-        },
-        {
-          value: "4_weeks",
-          label: "Yes - at least 4 but less than 6 weeks total",
-          weight: 3,
-        },
-        {
-          value: "2_weeks",
-          label: "Yes - at least 2 but less than 4 weeks total",
-          weight: 2,
-        },
-        {
-          value: "1_week",
-          label: "Yes - at least 1 but less than 2 weeks total",
-          weight: 1,
-        },
-        { value: "none", label: "No prescribed bed rest", weight: 0 },
-      ],
-      required: true,
-    });
+    questions.push(_qIncapacitating());
   }
   return questions;
 }
 
+function _qOccupational() {
+  return {
+    id: "q_occupational",
+    question: "How do your symptoms affect your ability to work?",
+    intent:
+      "Occupational impairment is a key factor in mental health ratings per 38 CFR § 4.130.",
+    definition:
+      "Ranges from occasional decrease in work efficiency (30%) to total occupational impairment (100%).",
+    options: [
+      {
+        value: "total",
+        label: "Total - cannot work at all due to symptoms",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label:
+          "Severe - can rarely sustain employment, major deficiencies",
+        weight: 3,
+      },
+      {
+        value: "reduced",
+        label:
+          "Reduced reliability - frequent missed work, poor performance",
+        weight: 2,
+      },
+      {
+        value: "occasional",
+        label: "Occasional decrease in work efficiency",
+        weight: 1,
+      },
+      { value: "minimal", label: "Minimal impact on work", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qSocialMH() {
+  return {
+    id: "q_social",
+    question: "How do your symptoms affect your social relationships?",
+    intent:
+      "Social impairment is equally important - includes family, friends, and community interactions.",
+    definition:
+      "Ranges from occasional difficulty adapting (30%) to near-total social isolation (100%).",
+    options: [
+      {
+        value: "total",
+        label: "Near-total isolation - no meaningful relationships",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label:
+          "Severe - avoid most social contact, few or no close relationships",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Difficulty maintaining relationships, frequent conflicts",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label: "Some difficulty in social situations",
+        weight: 1,
+      },
+      { value: "normal", label: "Normal social functioning", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qSymptomsMental() {
+  return {
+    id: "q_symptoms",
+    question:
+      "Which of these symptoms do you experience? (Select the most severe that applies)",
+    intent:
+      "Specific symptoms determine rating tiers per 38 CFR § 4.130 criteria.",
+    definition:
+      "Higher ratings require more severe symptoms like persistent hallucinations (70%), gross impairment in thought processes (100%).",
+    options: [
+      {
+        value: "gross",
+        label:
+          "Gross impairment in thought/communication, persistent danger to self/others",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label:
+          "Suicidal ideation, obsessional rituals, impaired impulse control",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label:
+          "Panic attacks (weekly+), difficulty understanding complex commands",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label:
+          "Depressed mood, anxiety, mild memory loss, sleep disturbance",
+        weight: 1,
+      },
+      {
+        value: "minimal",
+        label: "Symptoms controlled with medication, minimal impairment",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qGafMH() {
+  return {
+    id: "q_gaf",
+    question: "How would you describe your overall level of functioning?",
+    intent:
+      "Global Assessment of Functioning helps correlate symptom severity with functional impairment.",
+    definition:
+      "Consider your ability to handle routine daily activities, maintain hygiene, manage finances, and make decisions.",
+    options: [
+      {
+        value: "gross",
+        label:
+          "Cannot perform basic self-care or activities of daily living",
+        weight: 4,
+      },
+      {
+        value: "major",
+        label:
+          "Major impairment - neglect hygiene, unable to manage affairs",
+        weight: 3,
+      },
+      {
+        value: "serious",
+        label: "Serious impairment - difficulty with routine tasks",
+        weight: 2,
+      },
+      {
+        value: "moderate",
+        label: "Some difficulty but generally functioning",
+        weight: 1,
+      },
+      {
+        value: "good",
+        label: "Generally good functioning with mild symptoms",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
 function _mentalHealthQuestions(_conditionName, _allCriteriaText) {
-  let questions = [];
-  questions = [
-    {
-      id: "q_occupational",
-      question: "How do your symptoms affect your ability to work?",
-      intent:
-        "Occupational impairment is a key factor in mental health ratings per 38 CFR § 4.130.",
-      definition:
-        "Ranges from occasional decrease in work efficiency (30%) to total occupational impairment (100%).",
-      options: [
-        {
-          value: "total",
-          label: "Total - cannot work at all due to symptoms",
-          weight: 4,
-        },
-        {
-          value: "severe",
-          label:
-            "Severe - can rarely sustain employment, major deficiencies",
-          weight: 3,
-        },
-        {
-          value: "reduced",
-          label:
-            "Reduced reliability - frequent missed work, poor performance",
-          weight: 2,
-        },
-        {
-          value: "occasional",
-          label: "Occasional decrease in work efficiency",
-          weight: 1,
-        },
-        { value: "minimal", label: "Minimal impact on work", weight: 0 },
-      ],
-      required: true,
-    },
-    {
-      id: "q_social",
-      question: "How do your symptoms affect your social relationships?",
-      intent:
-        "Social impairment is equally important - includes family, friends, and community interactions.",
-      definition:
-        "Ranges from occasional difficulty adapting (30%) to near-total social isolation (100%).",
-      options: [
-        {
-          value: "total",
-          label: "Near-total isolation - no meaningful relationships",
-          weight: 4,
-        },
-        {
-          value: "severe",
-          label:
-            "Severe - avoid most social contact, few or no close relationships",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label: "Difficulty maintaining relationships, frequent conflicts",
-          weight: 2,
-        },
-        {
-          value: "mild",
-          label: "Some difficulty in social situations",
-          weight: 1,
-        },
-        { value: "normal", label: "Normal social functioning", weight: 0 },
-      ],
-      required: true,
-    },
-    {
-      id: "q_symptoms",
-      question:
-        "Which of these symptoms do you experience? (Select the most severe that applies)",
-      intent:
-        "Specific symptoms determine rating tiers per 38 CFR § 4.130 criteria.",
-      definition:
-        "Higher ratings require more severe symptoms like persistent hallucinations (70%), gross impairment in thought processes (100%).",
-      options: [
-        {
-          value: "gross",
-          label:
-            "Gross impairment in thought/communication, persistent danger to self/others",
-          weight: 4,
-        },
-        {
-          value: "severe",
-          label:
-            "Suicidal ideation, obsessional rituals, impaired impulse control",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label:
-            "Panic attacks (weekly+), difficulty understanding complex commands",
-          weight: 2,
-        },
-        {
-          value: "mild",
-          label:
-            "Depressed mood, anxiety, mild memory loss, sleep disturbance",
-          weight: 1,
-        },
-        {
-          value: "minimal",
-          label: "Symptoms controlled with medication, minimal impairment",
-          weight: 0,
-        },
-      ],
-      required: true,
-    },
-    {
-      id: "q_gaf",
-      question: "How would you describe your overall level of functioning?",
-      intent:
-        "Global Assessment of Functioning helps correlate symptom severity with functional impairment.",
-      definition:
-        "Consider your ability to handle routine daily activities, maintain hygiene, manage finances, and make decisions.",
-      options: [
-        {
-          value: "gross",
-          label:
-            "Cannot perform basic self-care or activities of daily living",
-          weight: 4,
-        },
-        {
-          value: "major",
-          label:
-            "Major impairment - neglect hygiene, unable to manage affairs",
-          weight: 3,
-        },
-        {
-          value: "serious",
-          label: "Serious impairment - difficulty with routine tasks",
-          weight: 2,
-        },
-        {
-          value: "moderate",
-          label: "Some difficulty but generally functioning",
-          weight: 1,
-        },
-        {
-          value: "good",
-          label: "Generally good functioning with mild symptoms",
-          weight: 0,
-        },
-      ],
-      required: true,
-    },
-  ];
-  return questions;
+  return [_qOccupational(), _qSocialMH(), _qSymptomsMental(), _qGafMH()];
+}
+
+function _qBreathing() {
+  return {
+    id: "q_breathing",
+    question:
+      "How severely does your breathing affect your daily activities?",
+    intent:
+      "Functional impairment from respiratory conditions is assessed alongside PFT results.",
+    definition:
+      "Consider walking, climbing stairs, exercise tolerance, and activities that require exertion.",
+    options: [
+      {
+        value: "severe",
+        label: "Severe - dyspnea at rest or with minimal exertion",
+        weight: 4,
+      },
+      {
+        value: "marked",
+        label:
+          "Marked - significant dyspnea with light activity (walking short distances)",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label:
+          "Moderate - dyspnea with moderate exertion (climbing stairs)",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label: "Mild - dyspnea only with significant exertion",
+        weight: 1,
+      },
+      { value: "minimal", label: "Minimal breathing issues", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qPft() {
+  return {
+    id: "q_pft",
+    question:
+      "What were your most recent pulmonary function test (PFT) results?",
+    intent:
+      "PFT values (FEV-1, FVC, FEV-1/FVC, DLCO) determine rating per 38 CFR § 4.97.",
+    definition:
+      "FEV-1 less than 40% predicted = 100%. FEV-1 40-55% = 60%. FEV-1 56-70% = 30%. FEV-1 71-80% = 10%.",
+    options: [
+      {
+        value: "severe",
+        label:
+          "FEV-1 less than 40% predicted (or equivalent severe restriction)",
+        weight: 4,
+      },
+      {
+        value: "moderate_severe",
+        label: "FEV-1 40-55% predicted",
+        weight: 3,
+      },
+      { value: "moderate", label: "FEV-1 56-70% predicted", weight: 2 },
+      { value: "mild", label: "FEV-1 71-80% predicted", weight: 1 },
+      {
+        value: "normal",
+        label: "FEV-1 greater than 80% or no PFT results available",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qOxygen() {
+  return {
+    id: "q_oxygen",
+    question:
+      "Do you require supplemental oxygen or have cardiac complications?",
+    intent:
+      "Oxygen dependence and cor pulmonale (right heart failure) indicate severe impairment.",
+    definition:
+      "Cor pulmonale: Right-sided heart failure caused by chronic lung disease. Requires 100% rating.",
+    options: [
+      {
+        value: "cor_pulmonale",
+        label: "Yes - cor pulmonale (right heart failure) diagnosed",
+        weight: 4,
+      },
+      {
+        value: "continuous_o2",
+        label: "Yes - require continuous supplemental oxygen",
+        weight: 3,
+      },
+      {
+        value: "intermittent_o2",
+        label: "Yes - require intermittent supplemental oxygen",
+        weight: 2,
+      },
+      { value: "no", label: "No supplemental oxygen needed", weight: 0 },
+    ],
+    required: true,
+  };
 }
 
 function _respiratoryQuestions(conditionName, allCriteriaText) {
-  let questions = [];
   const hasPFT =
     allCriteriaText.includes("fev") ||
     allCriteriaText.includes("fvc") ||
     allCriteriaText.includes("dlco");
 
-  questions = [
-    {
-      id: "q_breathing",
-      question:
-        "How severely does your breathing affect your daily activities?",
-      intent:
-        "Functional impairment from respiratory conditions is assessed alongside PFT results.",
-      definition:
-        "Consider walking, climbing stairs, exercise tolerance, and activities that require exertion.",
-      options: [
-        {
-          value: "severe",
-          label: "Severe - dyspnea at rest or with minimal exertion",
-          weight: 4,
-        },
-        {
-          value: "marked",
-          label:
-            "Marked - significant dyspnea with light activity (walking short distances)",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label:
-            "Moderate - dyspnea with moderate exertion (climbing stairs)",
-          weight: 2,
-        },
-        {
-          value: "mild",
-          label: "Mild - dyspnea only with significant exertion",
-          weight: 1,
-        },
-        { value: "minimal", label: "Minimal breathing issues", weight: 0 },
-      ],
-      required: true,
-    },
-  ];
+  const questions = [_qBreathing()];
 
-  if (hasPFT) {
-    questions.push({
-      id: "q_pft",
-      question:
-        "What were your most recent pulmonary function test (PFT) results?",
-      intent:
-        "PFT values (FEV-1, FVC, FEV-1/FVC, DLCO) determine rating per 38 CFR § 4.97.",
-      definition:
-        "FEV-1 less than 40% predicted = 100%. FEV-1 40-55% = 60%. FEV-1 56-70% = 30%. FEV-1 71-80% = 10%.",
-      options: [
-        {
-          value: "severe",
-          label:
-            "FEV-1 less than 40% predicted (or equivalent severe restriction)",
-          weight: 4,
-        },
-        {
-          value: "moderate_severe",
-          label: "FEV-1 40-55% predicted",
-          weight: 3,
-        },
-        { value: "moderate", label: "FEV-1 56-70% predicted", weight: 2 },
-        { value: "mild", label: "FEV-1 71-80% predicted", weight: 1 },
-        {
-          value: "normal",
-          label: "FEV-1 greater than 80% or no PFT results available",
-          weight: 0,
-        },
-      ],
-      required: true,
-    });
-  }
+  if (hasPFT) questions.push(_qPft());
 
   if (
     allCriteriaText.includes("oxygen") ||
     allCriteriaText.includes("cor pulmonale")
   ) {
-    questions.push({
-      id: "q_oxygen",
-      question:
-        "Do you require supplemental oxygen or have cardiac complications?",
-      intent:
-        "Oxygen dependence and cor pulmonale (right heart failure) indicate severe impairment.",
-      definition:
-        "Cor pulmonale: Right-sided heart failure caused by chronic lung disease. Requires 100% rating.",
-      options: [
-        {
-          value: "cor_pulmonale",
-          label: "Yes - cor pulmonale (right heart failure) diagnosed",
-          weight: 4,
-        },
-        {
-          value: "continuous_o2",
-          label: "Yes - require continuous supplemental oxygen",
-          weight: 3,
-        },
-        {
-          value: "intermittent_o2",
-          label: "Yes - require intermittent supplemental oxygen",
-          weight: 2,
-        },
-        { value: "no", label: "No supplemental oxygen needed", weight: 0 },
-      ],
-      required: true,
-    });
+    questions.push(_qOxygen());
   }
   return questions;
+}
+
+function _qNerveFunction() {
+  return {
+    id: "q_nerve_function",
+    question: "What level of nerve impairment do you have?",
+    intent:
+      "Neurological ratings are based on completeness of paralysis per 38 CFR § 4.124a.",
+    definition:
+      "Complete paralysis = total loss of function. Incomplete = partial function remains (mild, moderate, or severe).",
+    options: [
+      {
+        value: "complete",
+        label:
+          "Complete paralysis - total loss of function in affected area",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label: "Severe incomplete - marked impairment, minimal function",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label:
+          "Moderate incomplete - noticeable impairment but some function",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label: "Mild incomplete - slight impairment",
+        weight: 1,
+      },
+      {
+        value: "none",
+        label: "No paralysis - normal function",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qSymptomsNeuro() {
+  return {
+    id: "q_symptoms_neuro",
+    question: "Which symptoms do you experience?",
+    intent:
+      "Document specific neurological symptoms for accurate assessment.",
+    definition:
+      "Common symptoms include numbness, tingling, weakness, pain radiating along nerve path, and loss of reflexes.",
+    options: [
+      {
+        value: "severe",
+        label:
+          "Multiple severe symptoms - significant weakness, constant pain, loss of reflexes",
+        weight: 4,
+      },
+      {
+        value: "moderate",
+        label:
+          "Moderate symptoms - weakness, frequent numbness/tingling, intermittent pain",
+        weight: 3,
+      },
+      {
+        value: "mild",
+        label: "Mild symptoms - occasional numbness/tingling",
+        weight: 2,
+      },
+      { value: "minimal", label: "Minimal symptoms", weight: 1 },
+      { value: "none", label: "No neurological symptoms", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qProstrating() {
+  return {
+    id: "q_prostrating",
+    question:
+      "When you have an attack, do you have to stop all activity and lie down?",
+    intent:
+      '"Prostrating" attacks are key to ratings - requires stopping activity and lying down in dark/quiet room.',
+    definition:
+      "Prostrating: So severe that normal physical activity must stop. The veteran must lie down.",
+    options: [
+      {
+        value: "always",
+        label: "Yes - always have to stop everything and lie down",
+        weight: 4,
+      },
+      {
+        value: "usually",
+        label: "Usually have to lie down",
+        weight: 3,
+      },
+      {
+        value: "sometimes",
+        label: "Sometimes have to lie down",
+        weight: 2,
+      },
+      { value: "rarely", label: "Rarely need to lie down", weight: 1 },
+      {
+        value: "never",
+        label: "Can power through without lying down",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qFrequencyHeadache() {
+  return {
+    id: "q_frequency_headache",
+    question: "How often do you have PROSTRATING attacks?",
+    intent:
+      "Frequency determines rating: 10% = 1 per 2 months. 30% = 1 per month. 50% = very frequent.",
+    definition:
+      "Count only attacks severe enough to be prostrating (must stop activity and lie down).",
+    options: [
+      {
+        value: "very_frequent",
+        label: "More than once per month",
+        weight: 4,
+      },
+      { value: "monthly", label: "About once per month", weight: 3 },
+      {
+        value: "bi_monthly",
+        label: "About once every 2 months",
+        weight: 2,
+      },
+      {
+        value: "less",
+        label: "Less than once every 2 months",
+        weight: 1,
+      },
+      { value: "none", label: "No prostrating attacks", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qEconomic() {
+  return {
+    id: "q_economic",
+    question:
+      "Do these attacks cause you to miss work or affect your income?",
+    intent:
+      '"Economic inadaptability" is required for 50% rating - attacks prevent gainful employment.',
+    definition:
+      "Economic inadaptability: Missing work, losing jobs, or inability to maintain employment due to attacks.",
+    options: [
+      {
+        value: "severe",
+        label: "Yes - frequently miss work or lost jobs due to attacks",
+        weight: 4,
+      },
+      {
+        value: "moderate",
+        label: "Yes - occasionally miss work",
+        weight: 2,
+      },
+      { value: "minimal", label: "Rarely affects work", weight: 1 },
+      { value: "none", label: "No impact on work", weight: 0 },
+    ],
+    required: true,
+  };
 }
 
 function _neurologicalQuestions(conditionName, allCriteriaText) {
-  let questions = [];
-  const _hasParalysis =
-    allCriteriaText.includes("paralysis") ||
-    allCriteriaText.includes("incomplete") ||
-    allCriteriaText.includes("complete");
-
-  questions = [
-    {
-      id: "q_nerve_function",
-      question: "What level of nerve impairment do you have?",
-      intent:
-        "Neurological ratings are based on completeness of paralysis per 38 CFR § 4.124a.",
-      definition:
-        "Complete paralysis = total loss of function. Incomplete = partial function remains (mild, moderate, or severe).",
-      options: [
-        {
-          value: "complete",
-          label:
-            "Complete paralysis - total loss of function in affected area",
-          weight: 4,
-        },
-        {
-          value: "severe",
-          label: "Severe incomplete - marked impairment, minimal function",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label:
-            "Moderate incomplete - noticeable impairment but some function",
-          weight: 2,
-        },
-        {
-          value: "mild",
-          label: "Mild incomplete - slight impairment",
-          weight: 1,
-        },
-        {
-          value: "none",
-          label: "No paralysis - normal function",
-          weight: 0,
-        },
-      ],
-      required: true,
-    },
-    {
-      id: "q_symptoms_neuro",
-      question: "Which symptoms do you experience?",
-      intent:
-        "Document specific neurological symptoms for accurate assessment.",
-      definition:
-        "Common symptoms include numbness, tingling, weakness, pain radiating along nerve path, and loss of reflexes.",
-      options: [
-        {
-          value: "severe",
-          label:
-            "Multiple severe symptoms - significant weakness, constant pain, loss of reflexes",
-          weight: 4,
-        },
-        {
-          value: "moderate",
-          label:
-            "Moderate symptoms - weakness, frequent numbness/tingling, intermittent pain",
-          weight: 3,
-        },
-        {
-          value: "mild",
-          label: "Mild symptoms - occasional numbness/tingling",
-          weight: 2,
-        },
-        { value: "minimal", label: "Minimal symptoms", weight: 1 },
-        { value: "none", label: "No neurological symptoms", weight: 0 },
-      ],
-      required: true,
-    },
-  ];
-
-  // For headache conditions
-  if (
+  const isHeadache =
     allCriteriaText.includes("prostrating") ||
     conditionName.toLowerCase().includes("headache") ||
-    conditionName.toLowerCase().includes("migraine")
-  ) {
-    questions = [
-      {
-        id: "q_prostrating",
-        question:
-          "When you have an attack, do you have to stop all activity and lie down?",
-        intent:
-          '"Prostrating" attacks are key to ratings - requires stopping activity and lying down in dark/quiet room.',
-        definition:
-          "Prostrating: So severe that normal physical activity must stop. The veteran must lie down.",
-        options: [
-          {
-            value: "always",
-            label: "Yes - always have to stop everything and lie down",
-            weight: 4,
-          },
-          {
-            value: "usually",
-            label: "Usually have to lie down",
-            weight: 3,
-          },
-          {
-            value: "sometimes",
-            label: "Sometimes have to lie down",
-            weight: 2,
-          },
-          { value: "rarely", label: "Rarely need to lie down", weight: 1 },
-          {
-            value: "never",
-            label: "Can power through without lying down",
-            weight: 0,
-          },
-        ],
-        required: true,
-      },
-      {
-        id: "q_frequency_headache",
-        question: "How often do you have PROSTRATING attacks?",
-        intent:
-          "Frequency determines rating: 10% = 1 per 2 months. 30% = 1 per month. 50% = very frequent.",
-        definition:
-          "Count only attacks severe enough to be prostrating (must stop activity and lie down).",
-        options: [
-          {
-            value: "very_frequent",
-            label: "More than once per month",
-            weight: 4,
-          },
-          { value: "monthly", label: "About once per month", weight: 3 },
-          {
-            value: "bi_monthly",
-            label: "About once every 2 months",
-            weight: 2,
-          },
-          {
-            value: "less",
-            label: "Less than once every 2 months",
-            weight: 1,
-          },
-          { value: "none", label: "No prostrating attacks", weight: 0 },
-        ],
-        required: true,
-      },
-      {
-        id: "q_economic",
-        question:
-          "Do these attacks cause you to miss work or affect your income?",
-        intent:
-          '"Economic inadaptability" is required for 50% rating - attacks prevent gainful employment.',
-        definition:
-          "Economic inadaptability: Missing work, losing jobs, or inability to maintain employment due to attacks.",
-        options: [
-          {
-            value: "severe",
-            label: "Yes - frequently miss work or lost jobs due to attacks",
-            weight: 4,
-          },
-          {
-            value: "moderate",
-            label: "Yes - occasionally miss work",
-            weight: 2,
-          },
-          { value: "minimal", label: "Rarely affects work", weight: 1 },
-          { value: "none", label: "No impact on work", weight: 0 },
-        ],
-        required: true,
-      },
-    ];
+    conditionName.toLowerCase().includes("migraine");
+
+  if (isHeadache) {
+    return [_qProstrating(), _qFrequencyHeadache(), _qEconomic()];
   }
-  return questions;
+  return [_qNerveFunction(), _qSymptomsNeuro()];
+}
+
+function _qExercise() {
+  return {
+    id: "q_exercise",
+    question:
+      "What level of physical activity causes symptoms (fatigue, shortness of breath, chest pain)?",
+    intent:
+      "Exercise tolerance measured in METs is primary rating criteria per 38 CFR § 4.104.",
+    definition:
+      "METs (metabolic equivalents): 1-3 METs = activities like dressing. 3-5 METs = light housework. 5-7 METs = yard work. 7+ METs = jogging.",
+    options: [
+      {
+        value: "1_3",
+        label:
+          "Symptoms with minimal activity (1-3 METs) - dressing, eating, walking indoors",
+        weight: 4,
+      },
+      {
+        value: "3_5",
+        label:
+          "Symptoms with light activity (3-5 METs) - light housework, slow walking",
+        weight: 3,
+      },
+      {
+        value: "5_7",
+        label:
+          "Symptoms with moderate activity (5-7 METs) - yard work, climbing stairs",
+        weight: 2,
+      },
+      {
+        value: "7_10",
+        label:
+          "Symptoms only with heavy exertion (7-10 METs) - jogging, heavy labor",
+        weight: 1,
+      },
+      {
+        value: "10+",
+        label: "No symptoms even with heavy exertion",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qEf() {
+  return {
+    id: "q_ef",
+    question: "What is your Left Ventricular Ejection Fraction (LVEF)?",
+    intent: "LVEF is a key objective measure for heart conditions.",
+    definition:
+      "Normal LVEF is 55-70%. Lower values indicate heart failure. LVEF under 30% typically warrants 100% rating.",
+    options: [
+      { value: "under_30", label: "LVEF less than 30%", weight: 4 },
+      { value: "30_50", label: "LVEF 30-50%", weight: 3 },
+      { value: "50_55", label: "LVEF 50-55%", weight: 2 },
+      {
+        value: "normal",
+        label: "LVEF 55% or higher (normal)",
+        weight: 0,
+      },
+      { value: "unknown", label: "Unknown/not tested", weight: 1 },
+    ],
+    required: true,
+  };
+}
+
+function _qChf() {
+  return {
+    id: "q_chf",
+    question: "Have you experienced congestive heart failure?",
+    intent: "CHF episodes are significant and warrant higher ratings.",
+    definition:
+      "Congestive heart failure: Heart cannot pump blood effectively, causing fluid buildup in lungs/body.",
+    options: [
+      {
+        value: "chronic",
+        label: "Yes - chronic/ongoing heart failure",
+        weight: 4,
+      },
+      {
+        value: "recent",
+        label: "Yes - episode within the past year",
+        weight: 3,
+      },
+      {
+        value: "history",
+        label: "Yes - history of CHF but controlled now",
+        weight: 2,
+      },
+      { value: "no", label: "No history of CHF", weight: 0 },
+    ],
+    required: true,
+  };
 }
 
 function _cardiovascularQuestions(conditionName, allCriteriaText) {
-  let questions = [];
-  const _hasMETs =
-    allCriteriaText.includes("met") || allCriteriaText.includes("workload");
   const hasEF = allCriteriaText.includes("ejection fraction");
 
-  questions = [
-    {
-      id: "q_exercise",
-      question:
-        "What level of physical activity causes symptoms (fatigue, shortness of breath, chest pain)?",
-      intent:
-        "Exercise tolerance measured in METs is primary rating criteria per 38 CFR § 4.104.",
-      definition:
-        "METs (metabolic equivalents): 1-3 METs = activities like dressing. 3-5 METs = light housework. 5-7 METs = yard work. 7+ METs = jogging.",
-      options: [
-        {
-          value: "1_3",
-          label:
-            "Symptoms with minimal activity (1-3 METs) - dressing, eating, walking indoors",
-          weight: 4,
-        },
-        {
-          value: "3_5",
-          label:
-            "Symptoms with light activity (3-5 METs) - light housework, slow walking",
-          weight: 3,
-        },
-        {
-          value: "5_7",
-          label:
-            "Symptoms with moderate activity (5-7 METs) - yard work, climbing stairs",
-          weight: 2,
-        },
-        {
-          value: "7_10",
-          label:
-            "Symptoms only with heavy exertion (7-10 METs) - jogging, heavy labor",
-          weight: 1,
-        },
-        {
-          value: "10+",
-          label: "No symptoms even with heavy exertion",
-          weight: 0,
-        },
-      ],
-      required: true,
-    },
-  ];
+  const questions = [_qExercise()];
 
-  if (hasEF) {
-    questions.push({
-      id: "q_ef",
-      question: "What is your Left Ventricular Ejection Fraction (LVEF)?",
-      intent: "LVEF is a key objective measure for heart conditions.",
-      definition:
-        "Normal LVEF is 55-70%. Lower values indicate heart failure. LVEF under 30% typically warrants 100% rating.",
-      options: [
-        { value: "under_30", label: "LVEF less than 30%", weight: 4 },
-        { value: "30_50", label: "LVEF 30-50%", weight: 3 },
-        { value: "50_55", label: "LVEF 50-55%", weight: 2 },
-        {
-          value: "normal",
-          label: "LVEF 55% or higher (normal)",
-          weight: 0,
-        },
-        { value: "unknown", label: "Unknown/not tested", weight: 1 },
-      ],
-      required: true,
-    });
-  }
+  if (hasEF) questions.push(_qEf());
 
   if (
     allCriteriaText.includes("congestive") ||
     allCriteriaText.includes("heart failure")
   ) {
-    questions.push({
-      id: "q_chf",
-      question: "Have you experienced congestive heart failure?",
-      intent: "CHF episodes are significant and warrant higher ratings.",
-      definition:
-        "Congestive heart failure: Heart cannot pump blood effectively, causing fluid buildup in lungs/body.",
-      options: [
-        {
-          value: "chronic",
-          label: "Yes - chronic/ongoing heart failure",
-          weight: 4,
-        },
-        {
-          value: "recent",
-          label: "Yes - episode within the past year",
-          weight: 3,
-        },
-        {
-          value: "history",
-          label: "Yes - history of CHF but controlled now",
-          weight: 2,
-        },
-        { value: "no", label: "No history of CHF", weight: 0 },
-      ],
-      required: true,
-    });
+    questions.push(_qChf());
   }
   return questions;
 }
 
+function _qSymptomsGi() {
+  return {
+    id: "q_symptoms_gi",
+    question: "How severe are your digestive symptoms?",
+    intent:
+      "Digestive ratings depend on symptom severity and nutritional impact.",
+    definition:
+      "Consider pain, nausea, vomiting, diarrhea, constipation, and how symptoms affect eating and nutrition.",
+    options: [
+      {
+        value: "severe",
+        label:
+          "Severe - constant symptoms, significant weight loss, malnutrition concerns",
+        weight: 4,
+      },
+      {
+        value: "considerable",
+        label:
+          "Considerable - frequent symptoms affecting diet and daily life",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label:
+          "Moderate - regular symptoms requiring medication/diet changes",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label: "Mild - occasional symptoms, well controlled",
+        weight: 1,
+      },
+      { value: "minimal", label: "Minimal symptoms", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qNutrition() {
+  return {
+    id: "q_nutrition",
+    question: "Has your condition affected your nutrition or weight?",
+    intent:
+      "Nutritional impact and weight loss are key factors in digestive ratings.",
+    definition:
+      "Definite impairment of health, anemia, and weight loss indicate severe digestive conditions.",
+    options: [
+      {
+        value: "marked",
+        label:
+          "Yes - marked malnutrition, significant anemia, or substantial weight loss",
+        weight: 4,
+      },
+      {
+        value: "impaired",
+        label:
+          "Yes - definite impairment of health or moderate weight loss",
+        weight: 3,
+      },
+      {
+        value: "minor",
+        label: "Yes - minor weight changes or dietary restrictions",
+        weight: 2,
+      },
+      {
+        value: "stable",
+        label: "Weight stable with dietary management",
+        weight: 1,
+      },
+      { value: "normal", label: "No nutritional impact", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qGerd() {
+  return {
+    id: "q_gerd",
+    question: "How often do you experience reflux symptoms?",
+    intent:
+      "GERD ratings based on frequency of symptoms and associated complications.",
+    definition:
+      "Symptoms include heartburn, regurgitation, epigastric/substernal pain, dysphagia.",
+    options: [
+      {
+        value: "persistent",
+        label:
+          "Persistent - symptoms despite medication, with complications",
+        weight: 4,
+      },
+      {
+        value: "considerable",
+        label: "Considerable - frequent symptoms (multiple times weekly)",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Moderate - regular symptoms requiring daily medication",
+        weight: 2,
+      },
+      { value: "mild", label: "Mild - occasional symptoms", weight: 1 },
+      { value: "rare", label: "Rare symptoms", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
 function _digestiveQuestions(conditionName, allCriteriaText) {
-  let questions = [];
-  questions = [
-    {
-      id: "q_symptoms_gi",
-      question: "How severe are your digestive symptoms?",
-      intent:
-        "Digestive ratings depend on symptom severity and nutritional impact.",
-      definition:
-        "Consider pain, nausea, vomiting, diarrhea, constipation, and how symptoms affect eating and nutrition.",
-      options: [
-        {
-          value: "severe",
-          label:
-            "Severe - constant symptoms, significant weight loss, malnutrition concerns",
-          weight: 4,
-        },
-        {
-          value: "considerable",
-          label:
-            "Considerable - frequent symptoms affecting diet and daily life",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label:
-            "Moderate - regular symptoms requiring medication/diet changes",
-          weight: 2,
-        },
-        {
-          value: "mild",
-          label: "Mild - occasional symptoms, well controlled",
-          weight: 1,
-        },
-        { value: "minimal", label: "Minimal symptoms", weight: 0 },
-      ],
-      required: true,
-    },
-    {
-      id: "q_nutrition",
-      question: "Has your condition affected your nutrition or weight?",
-      intent:
-        "Nutritional impact and weight loss are key factors in digestive ratings.",
-      definition:
-        "Definite impairment of health, anemia, and weight loss indicate severe digestive conditions.",
-      options: [
-        {
-          value: "marked",
-          label:
-            "Yes - marked malnutrition, significant anemia, or substantial weight loss",
-          weight: 4,
-        },
-        {
-          value: "impaired",
-          label:
-            "Yes - definite impairment of health or moderate weight loss",
-          weight: 3,
-        },
-        {
-          value: "minor",
-          label: "Yes - minor weight changes or dietary restrictions",
-          weight: 2,
-        },
-        {
-          value: "stable",
-          label: "Weight stable with dietary management",
-          weight: 1,
-        },
-        { value: "normal", label: "No nutritional impact", weight: 0 },
-      ],
-      required: true,
-    },
-  ];
+  const questions = [_qSymptomsGi(), _qNutrition()];
 
   if (
     allCriteriaText.includes("epigastric") ||
     allCriteriaText.includes("substernal") ||
     conditionName.toLowerCase().includes("gerd")
   ) {
-    questions.push({
-      id: "q_gerd",
-      question: "How often do you experience reflux symptoms?",
-      intent:
-        "GERD ratings based on frequency of symptoms and associated complications.",
-      definition:
-        "Symptoms include heartburn, regurgitation, epigastric/substernal pain, dysphagia.",
-      options: [
-        {
-          value: "persistent",
-          label:
-            "Persistent - symptoms despite medication, with complications",
-          weight: 4,
-        },
-        {
-          value: "considerable",
-          label: "Considerable - frequent symptoms (multiple times weekly)",
-          weight: 3,
-        },
-        {
-          value: "moderate",
-          label: "Moderate - regular symptoms requiring daily medication",
-          weight: 2,
-        },
-        { value: "mild", label: "Mild - occasional symptoms", weight: 1 },
-        { value: "rare", label: "Rare symptoms", weight: 0 },
-      ],
-      required: true,
-    });
+    questions.push(_qGerd());
   }
   return questions;
 }
@@ -1079,233 +1122,255 @@ function _skinQuestions(_conditionName, _allCriteriaText) {
   return questions;
 }
 
+function _qTinnitus() {
+  return {
+    id: "q_tinnitus",
+    question: "Is your tinnitus constant or intermittent?",
+    intent:
+      "Tinnitus is rated at maximum 10% regardless of whether unilateral or bilateral.",
+    definition:
+      "Tinnitus: Ringing, buzzing, or other sounds in the ears. Recurrent tinnitus warrants 10%.",
+    options: [
+      {
+        value: "constant",
+        label: "Constant/continuous ringing",
+        weight: 2,
+      },
+      {
+        value: "recurrent",
+        label: "Recurrent (comes and goes but frequent)",
+        weight: 2,
+      },
+      { value: "occasional", label: "Occasional", weight: 1 },
+      { value: "rare", label: "Rare", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qTinnitusImpact() {
+  return {
+    id: "q_tinnitus_impact",
+    question: "How does tinnitus affect your daily life?",
+    intent:
+      "Document functional impact for potential secondary conditions (anxiety, sleep problems).",
+    definition:
+      "While tinnitus itself maxes at 10%, related conditions may be separately compensable.",
+    options: [
+      {
+        value: "severe",
+        label:
+          "Severely affects sleep, concentration, and mental health",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Moderately affects daily functioning",
+        weight: 2,
+      },
+      {
+        value: "mild",
+        label: "Mildly annoying but manageable",
+        weight: 1,
+      },
+      { value: "minimal", label: "Minimal impact", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qHearing() {
+  return {
+    id: "q_hearing",
+    question:
+      "Have you had an audiometry test? What were your results?",
+    intent:
+      "Hearing loss is rated based on audiometry (pure tone thresholds and speech discrimination).",
+    definition:
+      "Rating is determined by Tables VI, VIA, and VII in 38 CFR § 4.85-4.86 using audiometry results.",
+    options: [
+      {
+        value: "profound",
+        label:
+          "Profound hearing loss - 91+ dB average or cannot hear speech",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label: "Severe hearing loss - 71-90 dB average",
+        weight: 3,
+      },
+      {
+        value: "moderate_severe",
+        label: "Moderately severe - 56-70 dB average",
+        weight: 2,
+      },
+      {
+        value: "moderate",
+        label: "Moderate - 41-55 dB average",
+        weight: 1,
+      },
+      {
+        value: "mild",
+        label: "Mild or normal hearing - 0-40 dB average",
+        weight: 0,
+      },
+    ],
+    required: true,
+  };
+}
+
+function _qSpeech() {
+  return {
+    id: "q_speech",
+    question:
+      "What is your speech discrimination (word recognition) score?",
+    intent:
+      "Speech discrimination is combined with pure tone average for rating calculation.",
+    definition:
+      "Using Maryland CNC test: scores determine Roman numeral designation per Table VI.",
+    options: [
+      { value: "under_52", label: "Less than 52%", weight: 4 },
+      { value: "52_66", label: "52-66%", weight: 3 },
+      { value: "68_82", label: "68-82%", weight: 2 },
+      { value: "84_92", label: "84-92%", weight: 1 },
+      { value: "94_100", label: "94-100% (normal)", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
 function _earQuestions(conditionName, _allCriteriaText) {
-  let questions = [];
   if (conditionName.toLowerCase().includes("tinnitus")) {
-    questions = [
-      {
-        id: "q_tinnitus",
-        question: "Is your tinnitus constant or intermittent?",
-        intent:
-          "Tinnitus is rated at maximum 10% regardless of whether unilateral or bilateral.",
-        definition:
-          "Tinnitus: Ringing, buzzing, or other sounds in the ears. Recurrent tinnitus warrants 10%.",
-        options: [
-          {
-            value: "constant",
-            label: "Constant/continuous ringing",
-            weight: 2,
-          },
-          {
-            value: "recurrent",
-            label: "Recurrent (comes and goes but frequent)",
-            weight: 2,
-          },
-          { value: "occasional", label: "Occasional", weight: 1 },
-          { value: "rare", label: "Rare", weight: 0 },
-        ],
-        required: true,
-      },
-      {
-        id: "q_tinnitus_impact",
-        question: "How does tinnitus affect your daily life?",
-        intent:
-          "Document functional impact for potential secondary conditions (anxiety, sleep problems).",
-        definition:
-          "While tinnitus itself maxes at 10%, related conditions may be separately compensable.",
-        options: [
-          {
-            value: "severe",
-            label:
-              "Severely affects sleep, concentration, and mental health",
-            weight: 3,
-          },
-          {
-            value: "moderate",
-            label: "Moderately affects daily functioning",
-            weight: 2,
-          },
-          {
-            value: "mild",
-            label: "Mildly annoying but manageable",
-            weight: 1,
-          },
-          { value: "minimal", label: "Minimal impact", weight: 0 },
-        ],
-        required: true,
-      },
-    ];
-  } else {
-    questions = [
-      {
-        id: "q_hearing",
-        question:
-          "Have you had an audiometry test? What were your results?",
-        intent:
-          "Hearing loss is rated based on audiometry (pure tone thresholds and speech discrimination).",
-        definition:
-          "Rating is determined by Tables VI, VIA, and VII in 38 CFR § 4.85-4.86 using audiometry results.",
-        options: [
-          {
-            value: "profound",
-            label:
-              "Profound hearing loss - 91+ dB average or cannot hear speech",
-            weight: 4,
-          },
-          {
-            value: "severe",
-            label: "Severe hearing loss - 71-90 dB average",
-            weight: 3,
-          },
-          {
-            value: "moderate_severe",
-            label: "Moderately severe - 56-70 dB average",
-            weight: 2,
-          },
-          {
-            value: "moderate",
-            label: "Moderate - 41-55 dB average",
-            weight: 1,
-          },
-          {
-            value: "mild",
-            label: "Mild or normal hearing - 0-40 dB average",
-            weight: 0,
-          },
-        ],
-        required: true,
-      },
-      {
-        id: "q_speech",
-        question:
-          "What is your speech discrimination (word recognition) score?",
-        intent:
-          "Speech discrimination is combined with pure tone average for rating calculation.",
-        definition:
-          "Using Maryland CNC test: scores determine Roman numeral designation per Table VI.",
-        options: [
-          { value: "under_52", label: "Less than 52%", weight: 4 },
-          { value: "52_66", label: "52-66%", weight: 3 },
-          { value: "68_82", label: "68-82%", weight: 2 },
-          { value: "84_92", label: "84-92%", weight: 1 },
-          { value: "94_100", label: "94-100% (normal)", weight: 0 },
-        ],
-        required: true,
-      },
-    ];
+    return [_qTinnitus(), _qTinnitusImpact()];
   }
-  return questions;
+  return [_qHearing(), _qSpeech()];
+}
+
+function _qSeverityGen(conditionName) {
+  return {
+    id: "q_severity_gen",
+    question: `How severe are your symptoms from ${conditionName}?`,
+    intent:
+      "Overall severity assessment based on how condition affects daily life.",
+    definition:
+      "Consider all symptoms and their combined impact on your functioning.",
+    options: [
+      {
+        value: "very_severe",
+        label: "Very severe - significantly limits daily activities",
+        weight: 4,
+      },
+      {
+        value: "severe",
+        label: "Severe - noticeable impact on daily activities",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Moderate - some limitations",
+        weight: 2,
+      },
+      { value: "mild", label: "Mild - minimal limitations", weight: 1 },
+      { value: "minimal", label: "Minimal symptoms", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qFrequencyGen() {
+  return {
+    id: "q_frequency_gen",
+    question: "How often do you experience symptoms?",
+    intent: "Symptom frequency is a key factor in VA ratings.",
+    definition:
+      "Consider how often symptoms occur and their consistency.",
+    options: [
+      {
+        value: "constant",
+        label: "Constant or nearly constant",
+        weight: 4,
+      },
+      { value: "daily", label: "Daily", weight: 3 },
+      { value: "weekly", label: "Several times per week", weight: 2 },
+      { value: "monthly", label: "A few times per month", weight: 1 },
+      { value: "rarely", label: "Rarely", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qWorkGen() {
+  return {
+    id: "q_work_gen",
+    question: "How do symptoms affect your ability to work?",
+    intent: "Occupational impairment is often a critical rating factor.",
+    definition:
+      "Consider missed work, reduced productivity, and ability to perform job duties.",
+    options: [
+      {
+        value: "total",
+        label: "Cannot work due to condition",
+        weight: 4,
+      },
+      {
+        value: "major",
+        label: "Significant work impairment - miss work frequently",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Moderate - occasional absences or reduced efficiency",
+        weight: 2,
+      },
+      { value: "minor", label: "Minor impact on work", weight: 1 },
+      { value: "none", label: "No impact on work", weight: 0 },
+    ],
+    required: true,
+  };
+}
+
+function _qTreatmentGen() {
+  return {
+    id: "q_treatment_gen",
+    question: "What level of treatment do you require?",
+    intent:
+      "Treatment intensity often correlates with condition severity.",
+    definition:
+      "Higher ratings often require more intensive ongoing treatment.",
+    options: [
+      {
+        value: "intensive",
+        label:
+          "Intensive - hospitalizations, surgery, or continuous therapy",
+        weight: 4,
+      },
+      {
+        value: "regular",
+        label: "Regular specialist care and multiple medications",
+        weight: 3,
+      },
+      {
+        value: "moderate",
+        label: "Regular medication and periodic doctor visits",
+        weight: 2,
+      },
+      { value: "minimal", label: "Minimal treatment", weight: 1 },
+      { value: "none", label: "No treatment needed", weight: 0 },
+    ],
+    required: true,
+  };
 }
 
 function _addGeneralFallbackQuestions(conditionName, questions) {
   if (questions.length < 3) {
     const generalQuestions = [
-      {
-        id: "q_severity_gen",
-        question: `How severe are your symptoms from ${conditionName}?`,
-        intent:
-          "Overall severity assessment based on how condition affects daily life.",
-        definition:
-          "Consider all symptoms and their combined impact on your functioning.",
-        options: [
-          {
-            value: "very_severe",
-            label: "Very severe - significantly limits daily activities",
-            weight: 4,
-          },
-          {
-            value: "severe",
-            label: "Severe - noticeable impact on daily activities",
-            weight: 3,
-          },
-          {
-            value: "moderate",
-            label: "Moderate - some limitations",
-            weight: 2,
-          },
-          { value: "mild", label: "Mild - minimal limitations", weight: 1 },
-          { value: "minimal", label: "Minimal symptoms", weight: 0 },
-        ],
-        required: true,
-      },
-      {
-        id: "q_frequency_gen",
-        question: "How often do you experience symptoms?",
-        intent: "Symptom frequency is a key factor in VA ratings.",
-        definition:
-          "Consider how often symptoms occur and their consistency.",
-        options: [
-          {
-            value: "constant",
-            label: "Constant or nearly constant",
-            weight: 4,
-          },
-          { value: "daily", label: "Daily", weight: 3 },
-          { value: "weekly", label: "Several times per week", weight: 2 },
-          { value: "monthly", label: "A few times per month", weight: 1 },
-          { value: "rarely", label: "Rarely", weight: 0 },
-        ],
-        required: true,
-      },
-      {
-        id: "q_work_gen",
-        question: "How do symptoms affect your ability to work?",
-        intent: "Occupational impairment is often a critical rating factor.",
-        definition:
-          "Consider missed work, reduced productivity, and ability to perform job duties.",
-        options: [
-          {
-            value: "total",
-            label: "Cannot work due to condition",
-            weight: 4,
-          },
-          {
-            value: "major",
-            label: "Significant work impairment - miss work frequently",
-            weight: 3,
-          },
-          {
-            value: "moderate",
-            label: "Moderate - occasional absences or reduced efficiency",
-            weight: 2,
-          },
-          { value: "minor", label: "Minor impact on work", weight: 1 },
-          { value: "none", label: "No impact on work", weight: 0 },
-        ],
-        required: true,
-      },
-      {
-        id: "q_treatment_gen",
-        question: "What level of treatment do you require?",
-        intent:
-          "Treatment intensity often correlates with condition severity.",
-        definition:
-          "Higher ratings often require more intensive ongoing treatment.",
-        options: [
-          {
-            value: "intensive",
-            label:
-              "Intensive - hospitalizations, surgery, or continuous therapy",
-            weight: 4,
-          },
-          {
-            value: "regular",
-            label: "Regular specialist care and multiple medications",
-            weight: 3,
-          },
-          {
-            value: "moderate",
-            label: "Regular medication and periodic doctor visits",
-            weight: 2,
-          },
-          { value: "minimal", label: "Minimal treatment", weight: 1 },
-          { value: "none", label: "No treatment needed", weight: 0 },
-        ],
-        required: true,
-      },
+      _qSeverityGen(conditionName),
+      _qFrequencyGen(),
+      _qWorkGen(),
+      _qTreatmentGen(),
     ];
 
-    // Add general questions we don't already have
     generalQuestions.forEach((gq) => {
       if (!questions.find((q) => q.id === gq.id)) {
         questions.push(gq);
@@ -1472,98 +1537,79 @@ function _buildRatingGaps(predictedRating, ratingKeys, ratings) {
   return gaps;
 }
 
-function _buildExamActionItems(conditionNameLower) {
-  const actionItems = [];
-
-  // Generic high-value action items
-  actionItems.push(
-    "Request and bring copies of ALL medical records related to this condition (treatment notes, imaging, lab results)",
-  );
-  actionItems.push(
-    'Prepare a written "bad day" statement describing your symptoms at their WORST - give this to the examiner',
-  );
-  actionItems.push(
-    "List all medications you take for this condition and note any side effects",
-  );
-
-  // Add condition-type specific guidance
-  if (
-    conditionNameLower.includes("pain") ||
-    conditionNameLower.includes("arthritis") ||
-    conditionNameLower.includes("joint")
-  ) {
-    actionItems.push(
+const CONDITION_ACTION_GROUPS = [
+  {
+    test: (s) =>
+      s.includes("pain") || s.includes("arthritis") || s.includes("joint"),
+    items: [
       "During ROM testing: STOP at the point of pain - do NOT push through to show effort",
-    );
-    actionItems.push(
       "Mention morning stiffness: how long until you can move normally?",
-    );
-    actionItems.push(
       "Bring any assistive devices you use (brace, cane, walker)",
-    );
-  } else if (
-    conditionNameLower.includes("mental") ||
-    conditionNameLower.includes("ptsd") ||
-    conditionNameLower.includes("depression") ||
-    conditionNameLower.includes("anxiety")
-  ) {
-    actionItems.push(
+    ],
+  },
+  {
+    test: (s) =>
+      s.includes("mental") ||
+      s.includes("ptsd") ||
+      s.includes("depression") ||
+      s.includes("anxiety"),
+    items: [
       "Bring buddy statements from family/friends who witness your symptoms",
-    );
-    actionItems.push(
       "Document any work problems: missed days, poor reviews, conflicts with coworkers",
-    );
-    actionItems.push(
       "Mention any suicidal thoughts, panic attacks, or isolation behaviors - these are key criteria",
-    );
-  } else if (
-    conditionNameLower.includes("respiratory") ||
-    conditionNameLower.includes("lung") ||
-    conditionNameLower.includes("asthma")
-  ) {
-    actionItems.push(
+    ],
+  },
+  {
+    test: (s) =>
+      s.includes("respiratory") || s.includes("lung") || s.includes("asthma"),
+    items: [
       "Bring pulmonary function test (PFT) results if available",
-    );
-    actionItems.push(
       "Document use of inhalers, nebulizers, or supplemental oxygen",
-    );
-    actionItems.push(
       "Note any hospitalizations or ER visits for breathing issues",
-    );
-  } else if (
-    conditionNameLower.includes("heart") ||
-    conditionNameLower.includes("cardiac")
-  ) {
-    actionItems.push(
+    ],
+  },
+  {
+    test: (s) => s.includes("heart") || s.includes("cardiac"),
+    items: [
       "Bring any cardiac testing results (EKG, echocardiogram, stress test)",
-    );
-    actionItems.push("Document your exercise tolerance in METs if known");
-    actionItems.push("Note any work restrictions from your cardiologist");
-  } else if (conditionNameLower.includes("diabetes")) {
-    actionItems.push("Document your A1C levels over the past year");
-    actionItems.push("List all medications including insulin dosages");
-    actionItems.push(
+      "Document your exercise tolerance in METs if known",
+      "Note any work restrictions from your cardiologist",
+    ],
+  },
+  {
+    test: (s) => s.includes("diabetes"),
+    items: [
+      "Document your A1C levels over the past year",
+      "List all medications including insulin dosages",
       "Note any secondary complications (neuropathy, retinopathy, nephropathy)",
-    );
-  } else if (
-    conditionNameLower.includes("sleep") ||
-    conditionNameLower.includes("apnea")
-  ) {
-    actionItems.push("Bring your sleep study results");
-    actionItems.push("Document CPAP compliance data if available");
-    actionItems.push(
+    ],
+  },
+  {
+    test: (s) => s.includes("sleep") || s.includes("apnea"),
+    items: [
+      "Bring your sleep study results",
+      "Document CPAP compliance data if available",
       "Note daytime symptoms: fatigue, concentration problems, falling asleep inappropriately",
-    );
-  }
+    ],
+  },
+];
 
-  // Always add these universal items
+function _buildExamActionItems(conditionNameLower) {
+  const actionItems = [
+    "Request and bring copies of ALL medical records related to this condition (treatment notes, imaging, lab results)",
+    'Prepare a written "bad day" statement describing your symptoms at their WORST - give this to the examiner',
+    "List all medications you take for this condition and note any side effects",
+  ];
+
+  const group = CONDITION_ACTION_GROUPS.find((g) =>
+    g.test(conditionNameLower),
+  );
+  if (group) actionItems.push(...group.items);
+
   actionItems.push(
     "Write down your questions before the exam - you may forget in the moment",
-  );
-  actionItems.push(
     'If today is a "good day," tell the examiner and describe what a typical or bad day is like',
   );
-
   return actionItems;
 }
 
