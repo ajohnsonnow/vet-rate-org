@@ -1204,6 +1204,353 @@ function WhatIfTab({
   );
 }
 
+function QuickLoadRatingsBanner({ t, myRatings, conditions, handleLoadMyRatings }) {
+  if (!(myRatings.length > 0 && conditions.length === 0)) return null;
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
+      <span className="text-sm text-amber-700 dark:text-amber-300">
+        ⭐ {t("tacticalCalc", "youHaveSavedRatings")} (
+        {myRatings.length})
+      </span>
+      <button
+        onClick={handleLoadMyRatings}
+        className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
+      >
+        {t("tacticalCalc", "loadNow")}
+      </button>
+    </div>
+  );
+}
+
+function BodyPartSelectField({ t, newCondition, setNewCondition, allBodyParts }) {
+  return (
+    <div className="sm:col-span-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "bodyPartConditionType")}
+      </label>
+      <select
+        aria-label={t(
+          "tacticalCalc",
+          "bodyPartConditionType",
+        )}
+        value={newCondition.bodyPart}
+        onChange={(e) => {
+          const bp = e.target.value;
+          const info = allBodyParts.find(
+            (p) => p.value === bp,
+          );
+          setNewCondition((prev) => ({
+            ...prev,
+            bodyPart: bp,
+            side: info?.canBeBilateral ? prev.side : "none",
+          }));
+        }}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      >
+        <option value="">
+          {t("tacticalCalc", "select")}
+        </option>
+        <optgroup
+          label={t("tacticalCalc", "extremitiesBilateral")}
+        >
+          {BODY_PARTS.extremities.map((bp) => (
+            <option key={bp.value} value={bp.value}>
+              {bp.label}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup
+          label={t("tacticalCalc", "otherBodySystems")}
+        >
+          {BODY_PARTS.other.map((bp) => (
+            <option key={bp.value} value={bp.value}>
+              {bp.label}
+            </option>
+          ))}
+        </optgroup>
+      </select>
+    </div>
+  );
+}
+
+function SideSelectField({ t, newCondition, setNewCondition }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "side")}
+      </label>
+      <select
+        aria-label={t("tacticalCalc", "side")}
+        value={newCondition.side}
+        onChange={(e) =>
+          setNewCondition((prev) => ({
+            ...prev,
+            side: e.target.value,
+          }))
+        }
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      >
+        <option value="none">
+          {t("tacticalCalc", "notBilateral")}
+        </option>
+        <option value="left">
+          {t("tacticalCalc", "left")}
+        </option>
+        <option value="right">
+          {t("tacticalCalc", "right")}
+        </option>
+        <option value="bilateral">
+          {t("tacticalCalc", "bothBilateral")}
+        </option>
+      </select>
+    </div>
+  );
+}
+
+function RatingSelectField({ t, newCondition, setNewCondition }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "ratingPercent")}
+      </label>
+      <select
+        aria-label={t("tacticalCalc", "ratingPercent")}
+        value={newCondition.rating}
+        onChange={(e) =>
+          setNewCondition((prev) => ({
+            ...prev,
+            rating: parseInt(e.target.value),
+          }))
+        }
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      >
+        {ratingOptions.map((r) => (
+          <option key={r} value={r}>
+            {r}%
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function CustomNameField({ t, newCondition, setNewCondition, canBeBilateral }) {
+  return (
+    <div className={canBeBilateral ? "sm:col-span-2" : ""}>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "customLabelOptional")}
+      </label>
+      <input
+        type="text"
+        value={newCondition.name}
+        onChange={(e) =>
+          setNewCondition((prev) => ({
+            ...prev,
+            name: e.target.value,
+          }))
+        }
+        placeholder={t(
+          "tacticalCalc",
+          "customLabelPlaceholder",
+        )}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      />
+    </div>
+  );
+}
+
+function AddConditionForm({
+  t,
+  newCondition,
+  setNewCondition,
+  allBodyParts,
+  canBeBilateral,
+  handleAddCondition,
+}) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+        <span>➕</span> {t("tacticalCalc", "addRatedCondition")}
+      </h3>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BodyPartSelectField
+          t={t}
+          newCondition={newCondition}
+          setNewCondition={setNewCondition}
+          allBodyParts={allBodyParts}
+        />
+
+        {canBeBilateral && (
+          <SideSelectField
+            t={t}
+            newCondition={newCondition}
+            setNewCondition={setNewCondition}
+          />
+        )}
+
+        <RatingSelectField
+          t={t}
+          newCondition={newCondition}
+          setNewCondition={setNewCondition}
+        />
+
+        <CustomNameField
+          t={t}
+          newCondition={newCondition}
+          setNewCondition={setNewCondition}
+          canBeBilateral={canBeBilateral}
+        />
+      </div>
+
+      <button
+        onClick={handleAddCondition}
+        disabled={!newCondition.bodyPart}
+        className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {t("tacticalCalc", "addToCalculatorBtn")}
+      </button>
+    </div>
+  );
+}
+
+function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
+  if (recordCandidates.length === 0) return null;
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+      <p className="text-sm text-blue-900 dark:text-blue-200">
+        📂 {recordCandidates.length} rated condition
+        {recordCandidates.length === 1 ? "" : "s"} found in your
+        records (saved claims &amp; analyzed documents).
+      </p>
+      <button
+        onClick={handleLoadFromRecords}
+        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      >
+        Load into calculator
+      </button>
+    </div>
+  );
+}
+
+function ConditionRow({ condition, handleEditCondition, handleRemoveCondition }) {
+  return (
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg border ${
+        condition.side !== "none"
+          ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
+          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+          {condition.rating}%
+        </span>
+        <div>
+          <p className="font-medium text-gray-800 dark:text-gray-200">
+            {condition.name}
+          </p>
+          {condition.side !== "none" && (
+            <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+              🔄 Bilateral ({condition.side})
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handleEditCondition(condition)}
+          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+          aria-label="Edit"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={() =>
+            handleRemoveCondition(condition.id)
+          }
+          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+          aria-label="Remove"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConditionsListSection({
+  t,
+  conditions,
+  setConditions,
+  handleEditCondition,
+  handleRemoveCondition,
+}) {
+  return (
+    <div className="flex flex-col flex-1 min-h-0">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
+        <span>
+          📋 {t("tacticalCalc", "yourRatedConditions")} (
+          {conditions.length})
+        </span>
+        {conditions.length > 0 && (
+          <button
+            onClick={() => setConditions([])}
+            className="text-xs text-red-600 hover:text-red-700"
+          >
+            {t("tacticalCalc", "clearAll")}
+          </button>
+        )}
+      </h3>
+
+      {conditions.length === 0 ? (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
+          <div className="text-4xl mb-2">📝</div>
+          <p>{t("tacticalCalc", "noConditionsYet")}</p>
+          <p className="text-sm mt-1">
+            {t("tacticalCalc", "noConditionsAddYours")}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2 overflow-y-auto flex-1 pr-2">
+          {conditions.map((condition) => (
+            <ConditionRow
+              key={condition.id}
+              condition={condition}
+              handleEditCondition={handleEditCondition}
+              handleRemoveCondition={handleRemoveCondition}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CalculatorInputSection({
   t,
   conditions,
@@ -1222,286 +1569,39 @@ function CalculatorInputSection({
   handleLoadMyRatings,
 }) {
   return (
-            <div className="space-y-6 flex flex-col h-full">
-              {/* Quick Load from My Ratings */}
-              {myRatings.length > 0 && conditions.length === 0 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
-                  <span className="text-sm text-amber-700 dark:text-amber-300">
-                    ⭐ {t("tacticalCalc", "youHaveSavedRatings")} (
-                    {myRatings.length})
-                  </span>
-                  <button
-                    onClick={handleLoadMyRatings}
-                    className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
-                  >
-                    {t("tacticalCalc", "loadNow")}
-                  </button>
-                </div>
-              )}
+    <div className="space-y-6 flex flex-col h-full">
+      <QuickLoadRatingsBanner
+        t={t}
+        myRatings={myRatings}
+        conditions={conditions}
+        handleLoadMyRatings={handleLoadMyRatings}
+      />
 
-              {/* Add Condition Form */}
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                  <span>➕</span> {t("tacticalCalc", "addRatedCondition")}
-                </h3>
+      <AddConditionForm
+        t={t}
+        newCondition={newCondition}
+        setNewCondition={setNewCondition}
+        allBodyParts={allBodyParts}
+        canBeBilateral={canBeBilateral}
+        handleAddCondition={handleAddCondition}
+      />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Body Part */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("tacticalCalc", "bodyPartConditionType")}
-                    </label>
-                    <select
-                      aria-label={t(
-                        "tacticalCalc",
-                        "bodyPartConditionType",
-                      )}
-                      value={newCondition.bodyPart}
-                      onChange={(e) => {
-                        const bp = e.target.value;
-                        const info = allBodyParts.find(
-                          (p) => p.value === bp,
-                        );
-                        setNewCondition((prev) => ({
-                          ...prev,
-                          bodyPart: bp,
-                          side: info?.canBeBilateral ? prev.side : "none",
-                        }));
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      <option value="">
-                        {t("tacticalCalc", "select")}
-                      </option>
-                      <optgroup
-                        label={t("tacticalCalc", "extremitiesBilateral")}
-                      >
-                        {BODY_PARTS.extremities.map((bp) => (
-                          <option key={bp.value} value={bp.value}>
-                            {bp.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup
-                        label={t("tacticalCalc", "otherBodySystems")}
-                      >
-                        {BODY_PARTS.other.map((bp) => (
-                          <option key={bp.value} value={bp.value}>
-                            {bp.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </div>
+      <div aria-live="polite" className="sr-only">
+        {recordsAnnouncement}
+      </div>
+      <RecordsCandidatesBanner
+        recordCandidates={recordCandidates}
+        handleLoadFromRecords={handleLoadFromRecords}
+      />
 
-                  {/* Side (if bilateral capable) */}
-                  {canBeBilateral && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {t("tacticalCalc", "side")}
-                      </label>
-                      <select
-                        aria-label={t("tacticalCalc", "side")}
-                        value={newCondition.side}
-                        onChange={(e) =>
-                          setNewCondition((prev) => ({
-                            ...prev,
-                            side: e.target.value,
-                          }))
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                      >
-                        <option value="none">
-                          {t("tacticalCalc", "notBilateral")}
-                        </option>
-                        <option value="left">
-                          {t("tacticalCalc", "left")}
-                        </option>
-                        <option value="right">
-                          {t("tacticalCalc", "right")}
-                        </option>
-                        <option value="bilateral">
-                          {t("tacticalCalc", "bothBilateral")}
-                        </option>
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Rating */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("tacticalCalc", "ratingPercent")}
-                    </label>
-                    <select
-                      aria-label={t("tacticalCalc", "ratingPercent")}
-                      value={newCondition.rating}
-                      onChange={(e) =>
-                        setNewCondition((prev) => ({
-                          ...prev,
-                          rating: parseInt(e.target.value),
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      {ratingOptions.map((r) => (
-                        <option key={r} value={r}>
-                          {r}%
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Custom Name (optional) */}
-                  <div className={canBeBilateral ? "sm:col-span-2" : ""}>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t("tacticalCalc", "customLabelOptional")}
-                    </label>
-                    <input
-                      type="text"
-                      value={newCondition.name}
-                      onChange={(e) =>
-                        setNewCondition((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      placeholder={t(
-                        "tacticalCalc",
-                        "customLabelPlaceholder",
-                      )}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleAddCondition}
-                  disabled={!newCondition.bodyPart}
-                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("tacticalCalc", "addToCalculatorBtn")}
-                </button>
-              </div>
-
-              <div aria-live="polite" className="sr-only">
-                {recordsAnnouncement}
-              </div>
-              {recordCandidates.length > 0 && (
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
-                  <p className="text-sm text-blue-900 dark:text-blue-200">
-                    📂 {recordCandidates.length} rated condition
-                    {recordCandidates.length === 1 ? "" : "s"} found in your
-                    records (saved claims &amp; analyzed documents).
-                  </p>
-                  <button
-                    onClick={handleLoadFromRecords}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  >
-                    Load into calculator
-                  </button>
-                </div>
-              )}
-
-              {/* Conditions List - Expands to fill remaining space */}
-              <div className="flex flex-col flex-1 min-h-0">
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
-                  <span>
-                    📋 {t("tacticalCalc", "yourRatedConditions")} (
-                    {conditions.length})
-                  </span>
-                  {conditions.length > 0 && (
-                    <button
-                      onClick={() => setConditions([])}
-                      className="text-xs text-red-600 hover:text-red-700"
-                    >
-                      {t("tacticalCalc", "clearAll")}
-                    </button>
-                  )}
-                </h3>
-
-                {conditions.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                    <div className="text-4xl mb-2">📝</div>
-                    <p>{t("tacticalCalc", "noConditionsYet")}</p>
-                    <p className="text-sm mt-1">
-                      {t("tacticalCalc", "noConditionsAddYours")}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 overflow-y-auto flex-1 pr-2">
-                    {/*  Removed max-h-64, added flex-1 */}
-                    {conditions.map((condition) => (
-                      <div
-                        key={condition.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          condition.side !== "none"
-                            ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
-                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
-                            {condition.rating}%
-                          </span>
-                          <div>
-                            <p className="font-medium text-gray-800 dark:text-gray-200">
-                              {condition.name}
-                            </p>
-                            {condition.side !== "none" && (
-                              <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
-                                🔄 Bilateral ({condition.side})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleEditCondition(condition)}
-                            className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-                            aria-label="Edit"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleRemoveCondition(condition.id)
-                            }
-                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                            aria-label="Remove"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+      <ConditionsListSection
+        t={t}
+        conditions={conditions}
+        setConditions={setConditions}
+        handleEditCondition={handleEditCondition}
+        handleRemoveCondition={handleRemoveCondition}
+      />
+    </div>
   );
 }
 
