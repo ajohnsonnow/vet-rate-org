@@ -3941,6 +3941,205 @@ function _restartSimulation(ctx) {
   ctx.setMode("intro");
 }
 
+function _deriveSimulatorState({
+  allConditions,
+  searchTerm,
+  selectedConditionKey,
+  selectedCondition,
+  currentQuestionIndex,
+}) {
+  const filteredConditions = allConditions.filter((c) => {
+    if (!searchTerm.trim()) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      c.conditionName?.toLowerCase().includes(search) ||
+      c.diagnosticCode?.includes(search) ||
+      c.aliases?.some((a) => a.toLowerCase().includes(search)) ||
+      c.searchTerms?.some((t) => t.toLowerCase().includes(search))
+    );
+  });
+
+  const currentCondition = selectedConditionKey
+    ? dbqLogicMap[selectedConditionKey]
+    : null;
+  const currentQuestions =
+    currentCondition?.tipping_points ||
+    (selectedCondition ? generateGenericQuestions(selectedCondition) : []);
+  const currentQuestion = currentQuestions[currentQuestionIndex];
+
+  return {
+    filteredConditions,
+    currentCondition,
+    currentQuestions,
+    currentQuestion,
+  };
+}
+
+function _answerQuestion(questionId, value, setAnswers) {
+  setAnswers((prev) => ({
+    ...prev,
+    [questionId]: value,
+  }));
+}
+
+function _calculateResults(ctx) {
+  const {
+    currentCondition,
+    selectedCondition,
+    answers,
+    setSimulationResult,
+    setMode,
+  } = ctx;
+  const result = _computeSimulationResult(
+    currentCondition,
+    selectedCondition,
+    answers,
+  );
+  if (!result) return;
+  setSimulationResult(result);
+  setMode("results");
+}
+
+function _goToNextQuestion(ctx) {
+  if (ctx.currentQuestionIndex < ctx.currentQuestions.length - 1) {
+    ctx.setCurrentQuestionIndex((prev) => prev + 1);
+  } else {
+    _calculateResults(ctx);
+  }
+}
+
+function _goToPreviousQuestion(ctx) {
+  if (ctx.currentQuestionIndex > 0) {
+    ctx.setCurrentQuestionIndex((prev) => prev - 1);
+  }
+}
+
+function _computeProgress(currentQuestionIndex, currentQuestions) {
+  if (!currentQuestions.length) return 0;
+  return ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+}
+
+const CAP_MODE_ROUTES = [
+  {
+    test: (s) => s.mode === "intro",
+    render: (s) => (
+      <CAPIntroView
+        onClose={s.onClose}
+        onReportBug={s.onReportBug}
+        setMode={s.setMode}
+        conditionCount={s.allConditions.length}
+      />
+    ),
+  },
+  {
+    test: (s) => s.mode === "exam-prep",
+    render: (s) => (
+      <CAPExamPrepListView
+        onClose={s.onClose}
+        setMode={s.setMode}
+        searchTerm={s.searchTerm}
+        setSearchTerm={s.setSearchTerm}
+        setExamPrepCondition={s.setExamPrepCondition}
+        setExamPrepDBQ={s.setExamPrepDBQ}
+        setExamPrepTips={s.setExamPrepTips}
+      />
+    ),
+  },
+  {
+    test: (s) => s.mode === "exam-prep-detail" && s.examPrepDBQ,
+    render: (s) => (
+      <CAPExamPrepDetailView
+        onClose={s.onClose}
+        setMode={s.setMode}
+        examPrepDBQ={s.examPrepDBQ}
+        examPrepTips={s.examPrepTips}
+        expandedQuestion={s.expandedQuestion}
+        setExpandedQuestion={s.setExpandedQuestion}
+      />
+    ),
+  },
+  {
+    test: (s) => s.mode === "select-condition",
+    render: (s) => (
+      <CAPSelectConditionView
+        onClose={s.onClose}
+        setMode={s.setMode}
+        searchTerm={s.searchTerm}
+        setSearchTerm={s.setSearchTerm}
+        filteredConditions={s.filteredConditions}
+        totalConditionCount={s.allConditions.length}
+        handleSelectCondition={s.handleSelectCondition}
+      />
+    ),
+  },
+  {
+    test: (s) => s.mode === "flashcard",
+    render: (s) => (
+      <CAPFlashcardView
+        onClose={s.onClose}
+        setMode={s.setMode}
+        searchTerm={s.searchTerm}
+        setSearchTerm={s.setSearchTerm}
+        expandedCategories={s.expandedCategories}
+        setExpandedCategories={s.setExpandedCategories}
+        flashcardTerm={s.flashcardTerm}
+      />
+    ),
+  },
+  {
+    test: (s) =>
+      s.mode === "simulation" &&
+      (s.currentCondition || s.selectedCondition) &&
+      s.currentQuestion,
+    render: (s) => (
+      <CAPSimulationView
+        onClose={s.onClose}
+        setMode={s.setMode}
+        currentCondition={s.currentCondition}
+        selectedCondition={s.selectedCondition}
+        currentQuestion={s.currentQuestion}
+        currentQuestionIndex={s.currentQuestionIndex}
+        currentQuestions={s.currentQuestions}
+        answers={s.answers}
+        getProgress={s.getProgress}
+        handleAnswer={s.handleAnswer}
+        handlePrevious={s.handlePrevious}
+        handleNext={s.handleNext}
+      />
+    ),
+  },
+  {
+    test: (s) => s.mode === "results" && s.simulationResult,
+    render: (s) => (
+      <CAPResultsView
+        onClose={s.onClose}
+        currentCondition={s.currentCondition}
+        selectedCondition={s.selectedCondition}
+        simulationResult={s.simulationResult}
+        answers={s.answers}
+        currentQuestions={s.currentQuestions}
+        handleRestart={s.handleRestart}
+        onSendToCalculator={s.onSendToCalculator}
+      />
+    ),
+  },
+];
+
+function CAPSimulatorRouter(props) {
+  const s = { ...props, ..._deriveSimulatorState(props) };
+
+  s.handleSelectCondition = (condition) => _selectCondition(condition, props);
+  s.handleAnswer = (questionId, value) =>
+    _answerQuestion(questionId, value, props.setAnswers);
+  s.handleNext = () => _goToNextQuestion(s);
+  s.handlePrevious = () => _goToPreviousQuestion(s);
+  s.handleRestart = () => _restartSimulation(props);
+  s.getProgress = () => _computeProgress(s.currentQuestionIndex, s.currentQuestions);
+
+  const route = CAP_MODE_ROUTES.find((r) => r.test(s));
+  return route ? route.render(s) : null;
+}
+
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   const { _t } = useLanguage();
   const [mode, setMode] = useState("intro"); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
@@ -3966,209 +4165,43 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     [],
   );
 
-  // Generate DBQ-based questions specific to the condition and body system
-
-  // Generic rating calculator for conditions without specific logic
-
-  // Filter conditions based on search
-  const filteredConditions = allConditions.filter((c) => {
-    if (!searchTerm.trim()) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      c.conditionName?.toLowerCase().includes(search) ||
-      c.diagnosticCode?.includes(search) ||
-      c.aliases?.some((a) => a.toLowerCase().includes(search)) ||
-      c.searchTerms?.some((t) => t.toLowerCase().includes(search))
-    );
-  });
-
-  const _availableConditions = Object.keys(dbqLogicMap);
-  const currentCondition = selectedConditionKey
-    ? dbqLogicMap[selectedConditionKey]
-    : null;
-  const currentQuestions =
-    currentCondition?.tipping_points ||
-    (selectedCondition ? generateGenericQuestions(selectedCondition) : []);
-  const currentQuestion = currentQuestions[currentQuestionIndex];
-
-  // Handle condition selection
-  const handleSelectCondition = (condition) =>
-    _selectCondition(condition, {
-      setSelectedCondition,
-      setSelectedConditionKey,
-      setCurrentQuestionIndex,
-      setAnswers,
-      setMode,
-    });
-
-  // Handle answer selection
-  const handleAnswer = (questionId, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-  };
-
-  // Navigate to next question
-  const handleNext = () => {
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    } else {
-      calculateResults();
-    }
-  };
-
-  // Navigate to previous question
-  const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
-    }
-  };
-
-  // Calculate rating results
-  const calculateResults = () => {
-    const result = _computeSimulationResult(
-      currentCondition,
-      selectedCondition,
-      answers,
-    );
-    if (!result) return;
-    setSimulationResult(result);
-    setMode("results");
-  };
-
-  const handleRestart = () =>
-    _restartSimulation({
-      setSelectedConditionKey,
-      setCurrentQuestionIndex,
-      setAnswers,
-      setSimulationResult,
-      setMode,
-    });
-
   // Show flashcard for a term
   const _showFlashcard = (term) => {
     setFlashcardTerm(term);
   };
 
-  // Get progress percentage
-  const getProgress = () => {
-    if (!currentQuestions.length) return 0;
-    return ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
-  };
-
-  // Intro screen
-  if (mode === "intro") {
-    return (
-      <CAPIntroView
-        onClose={onClose}
-        onReportBug={onReportBug}
-        setMode={setMode}
-        conditionCount={allConditions.length}
-      />
-    );
-  }
-
-  // Exam Prep Mode - Condition Selection
-  if (mode === "exam-prep") {
-    return (
-      <CAPExamPrepListView
-        onClose={onClose}
-        setMode={setMode}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        setExamPrepCondition={setExamPrepCondition}
-        setExamPrepDBQ={setExamPrepDBQ}
-        setExamPrepTips={setExamPrepTips}
-      />
-    );
-  }
-
-  // Exam Prep Detail View - Shows DBQ questions and tips
-  if (mode === "exam-prep-detail" && examPrepDBQ) {
-    return (
-      <CAPExamPrepDetailView
-        onClose={onClose}
-        setMode={setMode}
-        examPrepDBQ={examPrepDBQ}
-        examPrepTips={examPrepTips}
-        expandedQuestion={expandedQuestion}
-        setExpandedQuestion={setExpandedQuestion}
-      />
-    );
-  }
-
-  // Condition selection screen
-  if (mode === "select-condition") {
-    return (
-      <CAPSelectConditionView
-        onClose={onClose}
-        setMode={setMode}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredConditions={filteredConditions}
-        totalConditionCount={allConditions.length}
-        handleSelectCondition={handleSelectCondition}
-      />
-    );
-  }
-
-  // Flashcard mode screen
-  if (mode === "flashcard") {
-    return (
-      <CAPFlashcardView
-        onClose={onClose}
-        setMode={setMode}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        expandedCategories={expandedCategories}
-        setExpandedCategories={setExpandedCategories}
-        flashcardTerm={flashcardTerm}
-      />
-    );
-  }
-
-  // Simulation screen (questions)
-  if (
-    mode === "simulation" &&
-    (currentCondition || selectedCondition) &&
-    currentQuestion
-  ) {
-    return (
-      <CAPSimulationView
-        onClose={onClose}
-        setMode={setMode}
-        currentCondition={currentCondition}
-        selectedCondition={selectedCondition}
-        currentQuestion={currentQuestion}
-        currentQuestionIndex={currentQuestionIndex}
-        currentQuestions={currentQuestions}
-        answers={answers}
-        getProgress={getProgress}
-        handleAnswer={handleAnswer}
-        handlePrevious={handlePrevious}
-        handleNext={handleNext}
-      />
-    );
-  }
-
-  // Results screen
-  if (mode === "results" && simulationResult) {
-    return (
-      <CAPResultsView
-        onClose={onClose}
-        currentCondition={currentCondition}
-        selectedCondition={selectedCondition}
-        simulationResult={simulationResult}
-        answers={answers}
-        currentQuestions={currentQuestions}
-        handleRestart={handleRestart}
-        onSendToCalculator={onSendToCalculator}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <CAPSimulatorRouter
+      onClose={onClose}
+      onReportBug={onReportBug}
+      onSendToCalculator={onSendToCalculator}
+      mode={mode}
+      setMode={setMode}
+      selectedConditionKey={selectedConditionKey}
+      selectedCondition={selectedCondition}
+      setSelectedCondition={setSelectedCondition}
+      setSelectedConditionKey={setSelectedConditionKey}
+      currentQuestionIndex={currentQuestionIndex}
+      setCurrentQuestionIndex={setCurrentQuestionIndex}
+      answers={answers}
+      setAnswers={setAnswers}
+      simulationResult={simulationResult}
+      setSimulationResult={setSimulationResult}
+      flashcardTerm={flashcardTerm}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      allConditions={allConditions}
+      expandedCategories={expandedCategories}
+      setExpandedCategories={setExpandedCategories}
+      setExamPrepCondition={setExamPrepCondition}
+      examPrepDBQ={examPrepDBQ}
+      setExamPrepDBQ={setExamPrepDBQ}
+      examPrepTips={examPrepTips}
+      setExamPrepTips={setExamPrepTips}
+      expandedQuestion={expandedQuestion}
+      setExpandedQuestion={setExpandedQuestion}
+    />
+  );
 };
 
 export default CAPSimulator;
