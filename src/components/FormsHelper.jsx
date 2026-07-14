@@ -5962,6 +5962,1756 @@ function QuickLinksSection({ t }) {
   );
 }
 
+function downloadAsTxt(content, fileName) {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  if (!url.startsWith("blob:")) return; // Validate blob URL
+  // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fileName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function downloadAsDocx(content, fileName) {
+  try {
+    const lines = content.split("\n");
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: lines.map((line) => {
+            if (line.startsWith("═")) {
+              return new Paragraph({ text: "" });
+            }
+            if (/^[A-Z]{2,}/.test(line) && line.endsWith(":")) {
+              return new Paragraph({
+                children: [new TextRun({ text: line, bold: true })],
+                spacing: { before: 200, after: 100 },
+              });
+            }
+            return new Paragraph({
+              children: [new TextRun(line)],
+              spacing: { after: 50 },
+            });
+          }),
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    if (!url.startsWith("blob:")) return; // Validate blob URL
+    // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileName}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error generating DOCX:", error);
+    alert("Error generating Word document. Please try TXT format.");
+  }
+}
+
+function downloadAsPdf(content, fileName) {
+  try {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    const maxWidth = pageWidth - margin * 2;
+    let yPosition = 20;
+
+    pdf.setFontSize(10);
+    const lines = pdf.splitTextToSize(content, maxWidth);
+
+    lines.forEach((line) => {
+      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.text(line, margin, yPosition);
+      yPosition += 5;
+    });
+
+    pdf.save(`${fileName}.pdf`);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert("Error generating PDF. Please try TXT format.");
+  }
+}
+
+function _buildBuddyDailyLifeImpactSection(formData) {
+  if (
+    !formData.dailyImpact &&
+    !formData.workImpact &&
+    !formData.specificExamples
+  ) {
+    return "";
+  }
+  let section = `
+D. Impact of Condition on Veteran's Daily Life:
+
+`;
+  if (formData.dailyImpact) {
+    section += `Impact on Daily Activities:
+${formData.dailyImpact}
+
+`;
+  }
+  if (formData.workImpact) {
+    section += `Impact on Employment/Work:
+${formData.workImpact}
+
+`;
+  }
+  if (formData.specificExamples) {
+    section += `Specific Examples/Incidents:
+${formData.specificExamples}
+
+`;
+  }
+  return section;
+}
+
+function _buildBuddyAdditionalInfoSection(formData) {
+  if (!formData.additionalInfo) return "";
+  return `
+E. Additional Information:
+
+${formData.additionalInfo}
+
+`;
+}
+
+function _buildPersonalStatementTreatmentHistorySection(formData) {
+  if (
+    !formData.currentTreatment &&
+    !formData.medications &&
+    !formData.treatmentEffectiveness
+  ) {
+    return "";
+  }
+  const currentTreatmentSection = formData.currentTreatment
+    ? `
+A. Current Treatment:
+
+${formData.currentTreatment}
+`
+    : "";
+  const medicationsSection = formData.medications
+    ? `
+B. Current Medications:
+
+${formData.medications}
+`
+    : "";
+  const treatmentEffectivenessSection = formData.treatmentEffectiveness
+    ? `
+C. Treatment Effectiveness:
+
+${formData.treatmentEffectiveness}
+`
+    : "";
+  return `
+SECTION V - TREATMENT HISTORY
+${currentTreatmentSection}${medicationsSection}${treatmentEffectivenessSection}
+--------------------------------------------------------------------------------
+`;
+}
+
+function _buildPersonalStatementSecondaryConditionSection(formData) {
+  return formData.claimType === "secondary" && formData.primaryCondition
+    ? `
+Secondary to (Primary Condition): ${formData.primaryCondition}
+`
+    : "";
+}
+
+function _buildPersonalStatementFirstTreatmentSection(formData) {
+  return formData.firstTreatment
+    ? `
+C. First Treatment Sought:
+
+${formData.firstTreatment}
+`
+    : "";
+}
+
+function _buildPersonalStatementFlareUpsSection(formData) {
+  return formData.flareUps
+    ? `
+C. Flare-Ups:
+
+${formData.flareUps}
+`
+    : "";
+}
+
+function _buildPersonalStatementSocialImpactSection(formData) {
+  return formData.socialImpact
+    ? `
+C. Impact on Relationships and Social Activities:
+
+${formData.socialImpact}
+`
+    : "";
+}
+
+function _buildPTSDSymptomsChecklist(formData) {
+  return Array.isArray(formData.symptoms) && formData.symptoms.length > 0
+    ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
+    : `[ ] Nightmares or disturbing dreams
+[ ] Flashbacks (reliving the event)
+[ ] Intrusive thoughts or memories
+[ ] Avoiding reminders of the trauma
+[ ] Difficulty sleeping
+[ ] Hypervigilance (always on alert)
+[ ] Exaggerated startle response
+[ ] Difficulty concentrating
+[ ] Irritability or anger outbursts
+[ ] Emotional numbness
+[ ] Feeling detached from others
+[ ] Negative thoughts about self or world
+[ ] Memory problems
+[ ] Loss of interest in activities
+[ ] Difficulty feeling positive emotions`;
+}
+
+function _buildPTSDSymptomDetailsSection(formData) {
+  return formData.symptomDetails
+    ? `
+Detailed Description of Symptoms:
+
+${formData.symptomDetails}
+`
+    : "";
+}
+
+function buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow) {
+  return `
+================================================================================
+
+                         *** CRITICAL DEADLINES ***
+
+If you file your Intent to File on: ${currentDate}
+
+Your deadline to submit a complete claim is: ${oneYearFromNow}
+
+You have exactly ONE YEAR from your Intent to File date to submit your
+complete disability claim (VA Form 21-526EZ).
+
+================================================================================
+
+WHY INTENT TO FILE MATTERS:
+
+If approved, your VA benefits can be BACKDATED to your Intent to File date.
+
+Example:
+- You file Intent to File on ${currentDate}
+- You submit your complete claim 6 months later
+- If approved, you receive 6 months of BACK PAY
+
+This could be worth thousands of dollars!
+
+================================================================================
+
+NEXT STEPS CHECKLIST:
+
+[ ] 1. Submit Intent to File TODAY (use one of the methods above)
+
+[ ] 2. Save your confirmation number: _______________________
+
+[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
+
+[ ] 4. Gather evidence:
+    [ ] Service treatment records
+    [ ] VA medical records
+    [ ] Private medical records
+    [ ] Buddy statements
+    [ ] Nexus letters (if applicable)
+
+[ ] 5. File complete claim (VA Form 21-526EZ) before deadline
+
+================================================================================
+
+RESOURCES:
+
+File Intent to File Online:
+https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
+
+File Disability Claim Online:
+https://www.va.gov/disability/file-disability-claim-form-21-526ez/
+
+Find a VA Regional Office:
+https://www.va.gov/find-locations/
+
+Find an Accredited VSO:
+https://www.va.gov/vso/
+
+VA Benefits Hotline: 1-800-827-1000
+
+================================================================================
+`;
+}
+
+function generateMedicalRelease(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const expirationDate = new Date(
+    Date.now() + 180 * 24 * 60 * 60 * 1000,
+  ).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  let statement = `AUTHORIZATION TO DISCLOSE INFORMATION TO VA
+Reference Worksheet for VA Forms 21-4142 & 21-4142a
+
+================================================================================
+
+                      *** REFERENCE DOCUMENT ***
+
+This worksheet contains the information you will need to complete the 
+official VA Form 21-4142 (Authorization to Disclose Information) and 
+VA Form 21-4142a (General Release for Medical Provider Information).
+
+Submit the official forms online at:
+https://www.va.gov/supporting-forms-for-claims/release-information-to-va-form-21-4142/
+
+================================================================================
+
+${_buildMedicalReleaseVeteranSection(formData)}
+
+================================================================================
+
+SECTION II - HEALTHCARE PROVIDER INFORMATION
+
+${_buildMedicalReleaseProvider1Section(formData)}
+
+`;
+
+  statement += _buildMedicalReleaseProvider2Section(formData);
+  statement += _buildMedicalReleaseProvider3Section(formData);
+
+  statement += `================================================================================
+
+${_buildMedicalReleaseRecordsSection(formData)}
+================================================================================
+
+SECTION IV - AUTHORIZATION
+
+I authorize the healthcare provider(s) listed above to release medical 
+information pertaining to the conditions listed to the Department of 
+Veterans Affairs. This information is needed to evaluate my claim for 
+VA disability benefits.
+
+EXPIRATION: This authorization expires ${expirationDate}
+            (180 days from the date of signature)
+
+
+Signature: ________________________________________
+
+Printed Name: ${formData.veteranName || "________________________________________"}
+
+Date Signed: ${currentDate}
+
+================================================================================
+
+SUBMISSION INSTRUCTIONS:
+
+1. Use this worksheet to gather your information
+
+2. Submit official forms online (recommended):
+   https://www.va.gov/supporting-forms-for-claims/release-information-to-va-form-21-4142/
+
+3. Or download and mail the forms:
+   - VA Form 21-4142: https://www.va.gov/find-forms/about-form-21-4142/
+   - VA Form 21-4142a: https://www.va.gov/find-forms/about-form-21-4142a/
+
+4. Submit a SEPARATE 21-4142 for EACH healthcare provider
+
+================================================================================
+
+IMPORTANT REMINDERS:
+
+[ ] Verify provider addresses and phone numbers are current
+[ ] Include complete dates of treatment (from - to)
+[ ] List ALL conditions treated by each provider
+[ ] Authorization expires in 180 days - submit promptly
+[ ] Keep copies of all signed forms for your records
+[ ] Follow up with the VA if records aren't obtained within 30 days
+
+================================================================================
+
+PROVIDER VERIFICATION CHECKLIST:
+
+Before submitting, contact each provider to confirm:
+[ ] They still have your records on file
+[ ] Their mailing address is correct
+[ ] Their fax number is correct (if applicable)
+[ ] Records will be released to VA upon request
+
+================================================================================
+`;
+
+  return statement;
+}
+
+function generatePriorityProcessing(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const statement = `REQUEST FOR PRIORITY PROCESSING
+(To Be Submitted with VA Form 20-10207)
+
+================================================================================
+
+                    *** URGENT HARDSHIP REQUEST ***
+
+This document contains information for your Request for Priority Processing.
+You MUST have an existing pending claim to request expedited processing.
+
+Submit the official form online at:
+https://www.va.gov/supporting-forms-for-claims/request-priority-processing-form-20-10207/
+
+================================================================================
+
+SECTION I - CLAIMANT INFORMATION
+
+${_priorityProcessingClaimantSection(formData)}
+
+================================================================================
+
+SECTION II - EXISTING CLAIM INFORMATION
+
+${_priorityProcessingClaimSection(formData)}
+
+================================================================================
+
+SECTION III - QUALIFYING CIRCUMSTANCES
+
+Check all that apply to your situation:
+
+${_priorityProcessingQualifyingSection(formData)}
+
+================================================================================
+
+SECTION IV - DETAILED EXPLANATION OF HARDSHIP
+
+Describe your hardship situation in detail, including specific dates, 
+amounts, and circumstances:
+
+${formData.hardshipExplanation || "[Provide detailed explanation of your hardship, including specific evidence such as eviction notices, medical documentation, financial statements, etc.]"}
+
+================================================================================
+
+SECTION V - SUPPORTING DOCUMENTATION
+
+I have the following documentation to support my request:
+
+${_priorityProcessingDocsSection(formData)}
+
+================================================================================
+
+SECTION VI - EMERGENCY CONTACT INFORMATION
+
+${_priorityProcessingEmergencyContactSection(formData)}
+================================================================================
+
+CERTIFICATION AND SIGNATURE
+
+I certify under penalty of perjury that the information provided in this 
+request is true and correct. I understand that making false statements may 
+result in criminal penalties under 18 U.S.C. 1001 and denial of my request.
+
+
+Signature: ________________________________________
+
+Printed Name: ${formData.veteranName || "________________________________________"}
+
+Date Signed: ${currentDate}
+
+================================================================================
+
+SUBMISSION INSTRUCTIONS:
+
+1. Gather ALL supporting documentation before submitting
+
+2. Submit online (recommended):
+   https://www.va.gov/supporting-forms-for-claims/request-priority-processing-form-20-10207/
+
+3. Or call the VA at 1-800-827-1000 to request expedited processing
+
+4. Upload or mail ALL supporting documentation with your request
+
+5. Keep copies of everything for your records
+
+================================================================================
+
+IMPORTANT NOTES:
+
+- Priority processing is NOT guaranteed
+- You MUST have an existing pending claim
+- Provide as much documentation as possible
+- The more evidence you provide, the better your chances
+- Follow up within 2 weeks if you don't receive confirmation
+
+================================================================================
+
+EMERGENCY RESOURCES:
+
+If you are in crisis, please use these resources immediately:
+
+Veterans Crisis Line: Dial 988, Press 1
+Crisis Text Line: Text 838255
+
+Homeless Veterans Hotline: 1-877-4AID-VET (1-877-424-3838)
+https://www.va.gov/homeless/
+
+National Suicide Prevention Lifeline: 988
+https://988lifeline.org/
+
+VA Benefits Hotline: 1-800-827-1000
+
+================================================================================
+`;
+
+  return statement;
+}
+
+function generateVSOAppointment(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const vsoName =
+    formData.vsoName === "Other" ? formData.vsoOther : formData.vsoName;
+
+  const statement = `APPOINTMENT OF VETERANS SERVICE ORGANIZATION
+VA Form 21-22 Information Sheet
+
+================================================================================
+
+                    APPOINTING A VSO AS YOUR REPRESENTATIVE
+
+This document contains information for your VA Form 21-22.
+A VSO can help with your VA claims at NO COST to you.
+
+Official Form: https://www.va.gov/find-forms/about-form-21-22/
+Find a VSO: https://www.va.gov/vso/
+
+================================================================================
+
+SECTION I - VETERAN/CLAIMANT INFORMATION
+
+${_vsoAppointmentVeteranSection(formData)}
+
+================================================================================
+
+SECTION II - CONTACT INFORMATION
+
+${_vsoAppointmentContactSection(formData)}
+
+================================================================================
+
+SECTION III - VETERANS SERVICE ORGANIZATION
+
+${_vsoAppointmentOrgSection(formData, vsoName)}
+
+================================================================================
+
+SECTION IV - AUTHORIZATION
+
+I hereby appoint the above-named organization to represent me in the 
+preparation, presentation, and prosecution of claims for benefits from 
+the Department of Veterans Affairs.
+
+Authorization Scope:
+${_vsoAppointmentAuthorizationSection(formData)}
+
+================================================================================
+
+VETERAN CERTIFICATION
+
+I certify that I have read and understand the Privacy Act notice and 
+the terms of this appointment.
+
+Signature: ________________________________________
+
+Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
+
+Date: ${currentDate}
+
+================================================================================
+
+WHAT HAPPENS NEXT:
+
+1. Complete the official VA Form 21-22:
+   https://www.va.gov/find-forms/about-form-21-22/
+
+2. Submit online through VA.gov (recommended) or mail to your regional office
+
+3. Contact your chosen VSO to introduce yourself:
+   - DAV: 1-877-426-2838 | www.dav.org
+   - American Legion: 1-800-433-3318 | www.legion.org
+   - VFW: 1-833-839-8387 | www.vfw.org
+   - AMVETS: 1-877-726-8387 | www.amvets.org
+
+4. Gather any evidence or documentation for your claims
+
+5. Your VSO will have access to your VA records within a few days
+
+================================================================================
+
+IMPORTANT NOTES:
+
+✓ VSO services are 100% FREE - they cannot charge you any fees
+✓ You can change VSOs at any time by filing a new 21-22
+✓ Your previous representative appointment will be automatically revoked
+✓ VSOs are trained and accredited by the VA
+✓ They can represent you for ALL VA benefits, not just disability
+
+================================================================================
+
+FIND YOUR LOCAL VSO:
+
+Online Directory: https://www.va.gov/vso/
+VA Benefits Hotline: 1-800-827-1000
+
+================================================================================
+`;
+
+  return statement;
+}
+
+function generateIndividualRepAppointment(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const repTypeLabel =
+    formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
+
+  let feeAgreementStatusLabel = "NO FEE (PRO BONO)";
+  if (formData.feeAgreement === "attached") {
+    feeAgreementStatusLabel = "ATTACHED";
+  } else if (formData.feeAgreement === "will-submit") {
+    feeAgreementStatusLabel = "TO BE SUBMITTED SEPARATELY";
+  }
+
+  const statement = `APPOINTMENT OF INDIVIDUAL AS CLAIMANT'S REPRESENTATIVE
+VA Form 21-22a Information Sheet
+
+================================================================================
+
+              APPOINTING AN ATTORNEY OR CLAIMS AGENT
+
+This document contains information for your VA Form 21-22a.
+Use this form to appoint an individual (attorney or claims agent).
+
+Official Form: https://www.va.gov/find-forms/about-form-21-22a/
+Find Accredited Representatives: https://www.va.gov/ogc/apps/accreditation/
+
+================================================================================
+
+${_buildIndividualRepVeteranSection(formData)}
+
+================================================================================
+
+${_buildIndividualRepRepresentativeSection(formData, repTypeLabel)}
+
+================================================================================
+
+${_buildIndividualRepFeeAgreementSection(formData, feeAgreementStatusLabel)}
+
+================================================================================
+
+${_buildIndividualRepAuthorizationSection(formData)}
+
+================================================================================
+
+VETERAN CERTIFICATION
+
+I certify that:
+- I have read and understand the Privacy Act notice
+- I understand the fee agreement terms
+- I knowingly appoint this individual as my representative
+
+Veteran Signature: ________________________________________
+
+Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
+
+Date: ${currentDate}
+
+================================================================================
+
+REPRESENTATIVE CERTIFICATION
+
+Representative Signature: ________________________________________
+
+Printed Name: ${formData.repName || ""}
+
+Date: ________________________________________
+
+================================================================================
+
+WHAT HAPPENS NEXT:
+
+1. Complete the official VA Form 21-22a:
+   https://www.va.gov/find-forms/about-form-21-22a/
+
+2. Ensure your representative is VA-accredited:
+   https://www.va.gov/ogc/apps/accreditation/
+
+3. Execute your fee agreement (if applicable)
+
+4. Submit the form and fee agreement to VA
+
+5. Your representative will receive access to your records
+
+================================================================================
+
+FEE LIMITATIONS (per 38 CFR § 14.636):
+
+- Fees may ONLY be charged after VA issues an initial decision
+- Maximum fee is 33.3% of past-due benefits
+- Higher fees require VA approval
+- Fee agreements must be in writing and filed with VA
+- Fees for "frivolous" claims are not allowed
+
+================================================================================
+
+VERIFY ACCREDITATION:
+
+Before hiring any attorney or claims agent, verify they are accredited:
+https://www.va.gov/ogc/apps/accreditation/
+
+VA Office of General Counsel Accreditation Search
+Phone: 1-202-461-7699
+
+================================================================================
+`;
+
+  return statement;
+}
+
+function generateThirdPartyAuth(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._thirdPartyAuthVeteranFields(formData),
+    ..._thirdPartyAuthPartyFields(formData),
+    ..._thirdPartyAuthAuthorizationFields(formData),
+  };
+
+  return `THIRD PARTY AUTHORIZATION INFORMATION
+VA Form 21-0845
+
+================================================================================
+
+VETERAN/CLAIMANT INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+Last 4 of SSN: XXX-XX-${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+
+Contact:
+Phone: ${f.phone}
+Email: ${f.email}
+Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
+
+================================================================================
+
+AUTHORIZED THIRD PARTY
+
+Name: ${f.thirdPartyName}
+Relationship: ${f.thirdPartyRelationship}
+Phone: ${f.thirdPartyPhone}
+Email: ${f.thirdPartyEmail}
+Address: ${f.thirdPartyAddress}
+
+================================================================================
+
+AUTHORIZATION DETAILS
+
+Duration: ${f.authorizationDuration}
+
+This person is authorized to:
+${f.authorizationScopeText}
+
+Limited to specific claim: ${f.limitToSpecificClaim}
+${f.specificClaimDetailsLine}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
+
+================================================================================
+`;
+}
+
+function generateFOIARequest(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const branchLabels = {
+    army: "U.S. Army",
+    navy: "U.S. Navy",
+    "air-force": "U.S. Air Force",
+    marines: "U.S. Marine Corps",
+    "coast-guard": "U.S. Coast Guard",
+    "space-force": "U.S. Space Force",
+  };
+  const deliveryMethodLabels = {
+    mail: "Mail to my address",
+    email: "Email",
+  };
+
+  return `FREEDOM OF INFORMATION ACT / PRIVACY ACT REQUEST
+VA Form 20-10206
+
+================================================================================
+
+REQUESTOR INFORMATION
+
+Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
+SSN: ${formData.ssn || "____"}
+Date of Birth: ${formData.dob || "____"}
+VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+Branch of Service: ${branchLabels[formData.branchOfService] || "____"}
+
+Contact:
+Phone: ${formData.phone || "____"}
+Email: ${formData.email || "____"}
+Address: ${formData.street || "____"}, ${formData.city || "____"}, ${formData.state || "__"} ${formData.zip || "_____"}
+
+================================================================================
+
+RECORDS REQUESTED
+
+${Array.isArray(formData.recordsRequested) ? formData.recordsRequested.map((r) => `[X] ${r}`).join("\n") : "[  ] See form for records requested"}
+
+Date Range: ${formData.dateRange || "All available records"}
+
+Specific Conditions/Claims: ${formData.specificConditions || "All conditions on file"}
+
+================================================================================
+
+DELIVERY PREFERENCES
+
+Method: ${deliveryMethodLabels[formData.deliveryMethod] || "Pick up at VARO"}
+Expedited Processing: ${formData.expediteReason !== "no" ? "YES - " + (formData.expediteDetails || formData.expediteReason) : "No"}
+
+================================================================================
+
+IMPORTANT NOTES:
+- Processing typically takes 30-90+ days
+- Expedited requests require justification
+- Some records may require redaction of third-party information
+- There is no fee for veterans requesting their own records
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
+
+================================================================================
+`;
+}
+
+function generateAlternateSigner(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const reasonLabels = {
+    "physical-disability": "Physical Disability",
+    hospitalized: "Hospitalized",
+    "cognitive-impairment": "Cognitive Impairment",
+    "vision-impairment": "Vision Impairment",
+    paralysis: "Paralysis/Mobility Limitation",
+    other: "Other Medical Condition",
+  };
+  const relationLabels = {
+    spouse: "Spouse",
+    "adult-child": "Adult Child",
+    parent: "Parent",
+    sibling: "Sibling",
+    "legal-guardian": "Legal Guardian",
+    "court-appointed": "Court-Appointed Representative",
+    other: "Other",
+  };
+
+  return `ALTERNATE SIGNER CERTIFICATION
+VA Form 21-0972
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
+Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
+Date of Birth: ${formData.dob || "____"}
+VA File Number: ${formData.vaFileNumber || "Same as SSN"}
+
+================================================================================
+
+REASON FOR ALTERNATE SIGNER
+
+Reason: ${reasonLabels[formData.unableToSignReason] || formData.unableToSignReason || "____"}
+Permanent Condition: ${formData.isPermanent === "yes" ? "YES" : "NO"}
+
+Description:
+${formData.conditionDetails || "____"}
+
+================================================================================
+
+ALTERNATE SIGNER INFORMATION
+
+Name: ${formData.altSignerName || "____"}
+Relationship to Veteran: ${relationLabels[formData.altSignerRelationship] || "____"}
+Phone: ${formData.altSignerPhone || "____"}
+Email: ${formData.altSignerEmail || "____"}
+Address: ${formData.altSignerAddress || "____"}
+
+================================================================================
+
+CERTIFICATIONS
+
+The alternate signer certifies:
+${Array.isArray(formData.certifications) ? formData.certifications.map((c) => `[X] ${c}`).join("\n") : "[  ] See form for certifications"}
+
+${formData.witnessStatement ? `Additional Statement: ${formData.witnessStatement}` : ""}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
+
+================================================================================
+`;
+}
+
+function generateNursingHome(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._nursingHomeVeteranFields(formData),
+    ..._nursingHomeFacilityFields(formData),
+    ..._nursingHomeAdmissionFields(formData),
+    ..._nursingHomeBenefitFields(formData),
+  };
+
+  return `NURSING HOME INFORMATION
+VA Form 21-0779
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+
+================================================================================
+
+NURSING HOME FACILITY
+
+Name: ${f.facilityName}
+Type: ${f.facilityType}
+Address: ${f.facilityAddress}, ${f.facilityCity}, ${f.facilityState} ${f.facilityZip}
+Phone: ${f.facilityPhone}
+
+================================================================================
+
+ADMISSION DETAILS
+
+Admission Date: ${f.admissionDate}
+Expected Stay: ${f.expectedStay}
+
+Level of Care:
+${f.levelOfCareText}
+
+Medicaid Status: ${f.medicaidStatus}
+
+================================================================================
+
+BENEFIT REQUESTED
+
+Benefit Type: ${f.benefitType}
+Currently Receiving VA Benefits: ${f.currentlyReceivingText}
+
+${f.additionalInfoLine}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
+
+================================================================================
+`;
+}
+
+function generateSubstitutionRequest(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._substitutionRequestVeteranFields(formData),
+    ..._substitutionRequestClaimantFields(formData),
+    ..._substitutionRequestClaimFields(formData),
+  };
+
+  return `REQUEST FOR SUBSTITUTION OF CLAIMANT
+VA Form 21P-0847
+
+================================================================================
+
+DECEASED VETERAN INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.veteranSSN}
+Date of Birth: ${f.veteranDOB}
+Date of Death: ${f.dateOfDeath}
+VA File Number: ${f.vaFileNumber}
+
+================================================================================
+
+SUBSTITUTE CLAIMANT INFORMATION (YOU)
+
+Name: ${f.substituteFirstName} ${f.substituteMiddleInitial} ${f.substituteLastName}
+SSN: ${f.substituteSSN}
+Date of Birth: ${f.substituteDOB}
+Relationship to Veteran: ${f.relationshipToVeteran}
+
+Contact:
+Phone: ${f.phone}
+Email: ${f.email}
+Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
+
+================================================================================
+
+PENDING CLAIM INFORMATION
+
+Type of Pending Claim:
+${f.pendingClaimTypeText}
+
+Claim Details: ${f.claimDetails}
+Approximate Filing Date: ${f.claimFiledDate}
+
+================================================================================
+
+ACKNOWLEDGMENTS
+
+${f.acknowledgmentsText}
+
+================================================================================
+
+IMPORTANT: Request must be filed within 1 YEAR of the veteran's death.
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
+
+================================================================================
+`;
+}
+
+function generateIncomeAsset(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._incomeAssetClaimantFields(formData),
+    ..._incomeAssetMonthlyIncomeFields(formData),
+    ..._incomeAssetAssetFields(formData),
+    ..._incomeAssetMedicalExpenseFields(formData),
+  };
+
+  return `INCOME AND ASSET STATEMENT
+VA Form 21P-0969
+
+================================================================================
+
+CLAIMANT INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+Marital Status: ${f.maritalStatus}
+
+================================================================================
+
+MONTHLY INCOME
+
+Social Security:                    ${f.socialSecurityIncome}
+Military Retirement:                ${f.militaryRetirement}
+Civil Service/Federal Retirement:   ${f.civilServiceRetirement}
+Other Pension/Retirement:           ${f.otherRetirement}
+Wages/Salary:                       ${f.wages}
+Interest & Dividends:               ${f.interestDividends}
+Rental Income:                      ${f.rentalIncome}
+Other Income:                       ${f.otherIncome}
+${f.otherIncomeSourceLine}
+
+================================================================================
+
+ASSETS
+
+Bank Accounts (total):              ${f.bankAccounts}
+Stocks/Bonds/Mutual Funds:          ${f.stocks}
+IRA/401k/Retirement:                ${f.ira401k}
+Real Estate (not primary home):     ${f.realEstate}
+Vehicles:                           ${f.vehicles}
+Other Assets:                       ${f.otherAssets}
+
+Primary Home (reference):           ${f.primaryHomeValue}
+
+================================================================================
+
+DEDUCTIBLE MEDICAL EXPENSES (MONTHLY)
+
+Health Insurance Premiums:          ${f.healthInsurancePremiums}
+Medicare Part B:                    ${f.medicarePartB}
+Prescriptions:                      ${f.prescriptions}
+Doctor Visits:                      ${f.doctorVisits}
+Nursing Home/Assisted Living:       ${f.nursingHomeCost}
+In-Home Care:                       ${f.inHomeCare}
+Medical Equipment:                  ${f.medicalEquipment}
+Other Medical:                      ${f.otherMedical}
+
+${f.medicalExpenseNoteLine}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
+
+================================================================================
+`;
+}
+
+function generateMedicalExpenseReport(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._medicalExpenseReportClaimantFields(formData),
+    ..._medicalExpenseReportPeriodFields(formData),
+    ..._medicalExpenseReportInsuranceFields(formData),
+    ..._medicalExpenseReportOutOfPocketFields(formData),
+  };
+
+  return `MEDICAL EXPENSE REPORT
+VA Form 21P-8416
+
+================================================================================
+
+CLAIMANT INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+VA File Number: ${f.vaFileNumber}
+Phone: ${f.phone}
+
+================================================================================
+
+REPORTING PERIOD
+
+Year: ${f.reportingYear}
+Period: ${f.reportPeriodStart} to ${f.reportPeriodEnd}
+Report Type: ${f.reportType}
+
+================================================================================
+
+INSURANCE & CARE COSTS (FOR PERIOD)
+
+Health Insurance Premiums:          ${f.healthInsurance}
+Medicare Part B:                    ${f.medicarePartB}
+Medicare Supplement/Medigap:        ${f.medicareSupplement}
+Prescription Drug Plan Premium:     ${f.prescriptionPlan}
+Nursing Home/Assisted Living:       ${f.nursingHome}
+Adult Day Care:                     ${f.adultDayCare}
+Home Health Aide/In-Home Care:      ${f.homeHealthAide}
+
+================================================================================
+
+OUT-OF-POCKET MEDICAL COSTS (FOR PERIOD)
+
+Prescriptions:                      ${f.prescriptions}
+Doctor Visit Copays:                ${f.doctorCopays}
+Hospital/ER Copays:                 ${f.hospitalCopays}
+Dental Expenses:                    ${f.dentalExpenses}
+Vision/Eye Care:                    ${f.visionExpenses}
+Hearing Aids/Care:                  ${f.hearingAids}
+Medical Equipment/Supplies:         ${f.medicalEquipment}
+Medical Transportation:             ${f.transportation}
+Other Medical:                      ${f.otherMedical}
+
+${f.otherDescriptionLine}
+
+================================================================================
+
+KEEP YOUR RECEIPTS - VA may request documentation.
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
+
+================================================================================
+`;
+}
+
+function generateEmploymentInfo(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const f = {
+    ..._employmentInfoVeteranFields(formData),
+    ..._employmentInfoEmployerFields(formData),
+    ..._employmentInfoDetailsFields(formData),
+    ..._employmentInfoImpactFields(formData),
+  };
+
+  return `REQUEST FOR EMPLOYMENT INFORMATION
+VA Form 21-4192
+
+================================================================================
+
+This form is for TDIU (Total Disability Individual Unemployability) claims.
+Send this to your employer(s) for completion.
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
+SSN: ${f.ssn}
+Date of Birth: ${f.dob}
+VA File Number: ${f.vaFileNumber}
+Phone: ${f.phone}
+
+================================================================================
+
+EMPLOYER INFORMATION
+
+Company Name: ${f.employerName}
+Address: ${f.employerAddress}, ${f.employerCity}, ${f.employerState} ${f.employerZip}
+Phone: ${f.employerPhone}
+Supervisor/HR Contact: ${f.supervisorName}
+
+================================================================================
+
+EMPLOYMENT DETAILS
+
+Job Title: ${f.jobTitle}
+Start Date: ${f.startDate}
+End Date: ${f.endDate}
+Still Employed: ${f.stillEmployedText}
+Hours Per Week: ${f.hoursPerWeek}
+Earnings: ${f.earnings}
+
+================================================================================
+
+DISABILITY IMPACT ON EMPLOYMENT
+
+${f.reasonForLeavingLine}
+
+Accommodations Made:
+${f.accommodationsText}
+
+Time Missed Due to Disability: ${f.missedWork}
+
+Impact Description:
+${f.impactDescription}
+
+================================================================================
+
+IMPORTANT FOR TDIU CLAIMS:
+- This form strengthens your claim by documenting employment limitations
+- Send to your last employer(s) with a cover letter
+- Employer should complete the employer section and return to VA
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
+
+================================================================================
+`;
+}
+
+function generateBuddyStatement(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const relationLabels = {
+    "fellow-service-member": "Fellow Service Member",
+    supervisor: "Military Supervisor/NCO/Officer",
+    spouse: "Spouse",
+    family: "Family Member",
+    friend: "Friend",
+    coworker: "Civilian Coworker",
+    caregiver: "Caregiver",
+    other: "Other",
+  };
+
+  // Clean, official format that works as an attachment to VA Form 21-10210
+  let statement = `STATEMENT IN SUPPORT OF CLAIM
+(To Be Submitted with VA Form 21-10210)
+
+--------------------------------------------------------------------------------
+
+SECTION I - PERSON PROVIDING STATEMENT (WITNESS/AFFIANT)
+
+Full Name: ${formData.witnessName || "________________________________________"}
+
+Relationship to Veteran: ${relationLabels[formData.witnessRelation] || formData.witnessRelation || "____________________"}
+
+Contact Phone: ${formData.witnessPhone || "________________________________________"}
+
+Contact Email: ${formData.witnessEmail || "________________________________________"}
+
+--------------------------------------------------------------------------------
+
+SECTION II - VETERAN INFORMATION
+
+Veteran's Full Name: ${formData.veteranName || "________________________________________"}
+
+Branch of Service: ${formData.veteranBranch || "________________________________________"}
+
+Condition/Disability Claimed: ${formData.conditionName || "________________________________________"}
+
+--------------------------------------------------------------------------------
+
+SECTION III - STATEMENT
+
+A. How I Know the Veteran:
+
+${formData.howKnown || "[Describe how you came to know the veteran]"}
+
+Length of Acquaintance: ${formData.knownSince || "________________________________________"}
+
+
+B. What I Personally Witnessed or Observed:
+
+${formData.whatObserved || "[Describe what you personally witnessed regarding the veteran's condition, injury, or symptoms]"}
+
+
+C. When and Where These Observations Occurred:
+
+Timeframe: ${formData.whenObserved || "________________________________________"}
+
+Location: ${formData.whereObserved || "________________________________________"}
+
+`;
+
+  statement += _buildBuddyDailyLifeImpactSection(formData);
+  statement += _buildBuddyAdditionalInfoSection(formData);
+
+  statement += `--------------------------------------------------------------------------------
+
+SECTION IV - CERTIFICATION AND SIGNATURE
+
+I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001 (making false statements to a federal agency).
+
+${formData.willingToTestify ? "[X] I am willing to provide additional testimony or clarification if requested.\n" : "[ ] I am willing to provide additional testimony or clarification if requested.\n"}
+
+Signature: ________________________________________
+
+Printed Name: ${formData.witnessName || "________________________________________"}
+
+Date Signed: ${currentDate}
+
+--------------------------------------------------------------------------------
+
+FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
+
+Received by: _________________ Date: _________ File Number: _________________
+
+--------------------------------------------------------------------------------
+
+INSTRUCTIONS:
+
+1. The witness should review this statement for accuracy, then print and sign it.
+
+2. This statement should be submitted as an attachment to VA Form 21-10210 
+   (Lay/Witness Statement).
+
+3. Submit online at: https://www.va.gov/supporting-forms-for-claims/lay-witness-statement-form-21-10210/
+   Or mail to your VA Regional Office.
+
+4. Retain a copy of this signed statement for your records.
+
+5. The veteran should include this statement with their VA disability claim.
+`;
+
+  return statement;
+}
+
+function generatePersonalStatement(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const claimTypeLabels = {
+    initial: "Initial Service Connection",
+    increase: "Claim for Increased Rating",
+    secondary: "Secondary Service Connection",
+    reopened: "Reopened Claim",
+  };
+
+  const statement = `STATEMENT IN SUPPORT OF CLAIM
+(To Be Submitted with VA Form 21-4138)
+
+--------------------------------------------------------------------------------
+
+SECTION I - CLAIMANT INFORMATION
+
+Full Name: ${formData.veteranName || "________________________________________"}
+
+Claim Type: ${claimTypeLabels[formData.claimType] || formData.claimType || "____________________"}
+
+Condition Claimed: ${formData.conditionName || "________________________________________"}
+${_buildPersonalStatementSecondaryConditionSection(formData)}
+--------------------------------------------------------------------------------
+
+SECTION II - IN-SERVICE EVENT/INJURY/ONSET
+
+A. When Symptoms First Began:
+
+${formData.onsetDate || "[Date or timeframe when symptoms first appeared]"}
+
+
+B. In-Service Event, Injury, or Exposure:
+
+${formData.inServiceEvent || "[Describe the specific event, injury, training accident, exposure, or circumstances that led to or caused this condition]"}
+
+${_buildPersonalStatementFirstTreatmentSection(formData)}
+--------------------------------------------------------------------------------
+
+SECTION III - CURRENT SYMPTOMS AND SEVERITY
+
+A. Description of Symptoms:
+
+${formData.symptoms || "[Describe your current symptoms in detail - include frequency, severity, triggers, and physical/mental effects]"}
+
+
+B. Description of Worst Days:
+
+${formData.worstDays || "[Describe what your worst days look like - this helps the VA understand the full impact of your condition]"}
+
+${_buildPersonalStatementFlareUpsSection(formData)}
+--------------------------------------------------------------------------------
+
+SECTION IV - FUNCTIONAL IMPACT
+
+A. Impact on Employment:
+
+${formData.workImpact || "[Describe how this condition affects your ability to work - missed days, limitations, accommodations needed, etc.]"}
+
+
+B. Impact on Daily Activities:
+
+${formData.dailyImpact || "[Describe how this condition affects daily life - self-care, household tasks, hobbies, driving, etc.]"}
+
+${_buildPersonalStatementSocialImpactSection(formData)}
+--------------------------------------------------------------------------------
+${_buildPersonalStatementTreatmentHistorySection(formData)}
+CERTIFICATION AND SIGNATURE
+
+I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
+
+
+Signature: ________________________________________
+
+Printed Name: ${formData.veteranName || "________________________________________"}
+
+Date Signed: ${currentDate}
+
+--------------------------------------------------------------------------------
+
+FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
+
+Received by: _________________ Date: _________ File Number: _________________
+
+--------------------------------------------------------------------------------
+
+INSTRUCTIONS:
+
+1. Review this statement for accuracy and completeness.
+
+2. Print and sign where indicated.
+
+3. Submit with VA Form 21-4138 or as an attachment to your VA disability claim.
+
+4. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
+   Or mail to your VA Regional Office.
+
+5. Retain a copy for your records.
+`;
+
+  return statement;
+}
+
+function generatePTSDStatement(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const stressorLabels = {
+    combat: "Combat-Related Trauma",
+    mst: "Military Sexual Trauma (MST)",
+    "personal-assault": "Personal Assault",
+    accident: "Serious Accident/Injury",
+    death: "Witnessing Death or Serious Injury",
+    "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
+    other: "Other Traumatic Event",
+  };
+
+  const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
+(To Be Submitted with VA Form 21-0781)
+
+--------------------------------------------------------------------------------
+
+SECTION I - VETERAN IDENTIFICATION
+
+Full Name: ${formData.veteranName || "________________________________________"}
+
+Branch of Service: ${formData.branch || "________________________________________"}
+
+Dates of Military Service: ${formData.serviceDates || "________________________________________"}
+
+--------------------------------------------------------------------------------
+
+SECTION II - STRESSOR EVENT INFORMATION
+
+Type of Stressor: ${stressorLabels[formData.stressorType] || formData.stressorType || "____________________"}
+
+Date of Incident: ${formData.eventDate || "________________________________________"}
+(Provide as specific a date as possible - month/year minimum)
+
+Location of Incident: ${formData.eventLocation || "________________________________________"}
+(City/Base/Country or geographic location)
+
+${formData.unitInfo ? `Unit Assignment at Time of Event: ${formData.unitInfo}` : "Unit Assignment at Time of Event: ________________________________________"}
+
+--------------------------------------------------------------------------------
+
+SECTION III - DETAILED DESCRIPTION OF STRESSOR EVENT
+
+${formData.eventDescription || "[Provide a detailed description of the traumatic event. Include: what happened before, during, and after the event; who was involved; what you saw, heard, and felt; how you responded; and the immediate aftermath.]"}
+
+--------------------------------------------------------------------------------
+
+SECTION IV - CORROBORATING EVIDENCE
+
+A. Witnesses to Event:
+${formData.witnesses || "None identified / Unknown"}
+
+B. Supporting Documentation:
+${formData.documentation || "None identified"}
+
+C. Was This Event Reported? To Whom?
+${formData.reportedTo || "Not reported / Unknown"}
+
+--------------------------------------------------------------------------------
+
+SECTION V - CURRENT PTSD SYMPTOMS
+
+Check all symptoms you currently experience:
+
+${_buildPTSDSymptomsChecklist(formData)}
+
+${_buildPTSDSymptomDetailsSection(formData)}
+--------------------------------------------------------------------------------
+
+CERTIFICATION AND SIGNATURE
+
+I hereby certify that the statements made herein are true and correct to the best of my knowledge and recollection. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
+
+
+Signature: ________________________________________
+
+Printed Name: ${formData.veteranName || "________________________________________"}
+
+Date Signed: ${currentDate}
+
+--------------------------------------------------------------------------------
+
+FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
+
+Received by: _________________ Date: _________ File Number: _________________
+
+--------------------------------------------------------------------------------
+
+INSTRUCTIONS:
+
+1. This statement should accompany VA Form 21-0781 (Statement in Support of 
+   Claim for Service Connection for PTSD).
+
+2. For MST claims, use VA Form 21-0781a instead.
+
+3. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
+   Or mail to your VA Regional Office.
+
+4. Retain a copy for your records.
+
+IMPORTANT NOTES:
+
+- Combat veterans may have reduced evidentiary requirements under 38 CFR 3.304(f)(2)
+- MST claims have special evidence provisions under 38 CFR 3.304(f)(5)
+- Fear of hostile activity claims: 38 CFR 3.304(f)(3)
+
+CRISIS RESOURCES:
+
+- Veterans Crisis Line: Dial 988, Press 1
+- Crisis Text Line: Text 838255
+- VA PTSD Resources: https://www.ptsd.va.gov/
+`;
+
+  return statement;
+}
+
+function generateIntentToFile(formData) {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const oneYearFromNow = new Date(
+    Date.now() + 365 * 24 * 60 * 60 * 1000,
+  ).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const benefitLabels = {
+    compensation: "Disability Compensation",
+    pension: "Pension",
+    survivors: "Survivors Benefits (DIC)",
+  };
+
+  const methodLabels = {
+    online: "Online at VA.gov (Recommended)",
+    phone: "By Phone (1-800-827-1000)",
+    mail: "By Mail",
+    inperson: "In Person at VA Regional Office",
+  };
+
+  const statement = `INTENT TO FILE WORKSHEET
+VA Form 21-0966 - Reference Document
+
+================================================================================
+
+                    *** IMPORTANT ACTION REQUIRED ***
+
+This document is your PLANNING WORKSHEET for filing an Intent to File.
+
+To protect your effective date, you must submit an Intent to File through 
+one of the official VA channels listed below. This worksheet is for your 
+records only and does NOT constitute an official Intent to File.
+
+================================================================================
+
+SUBMIT YOUR INTENT TO FILE NOW:
+
+Option 1 (Fastest): Online at VA.gov
+https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
+
+Option 2: By Phone
+Call 1-800-827-1000 (M-F, 8am-9pm ET)
+Tell the representative you want to file an "Intent to File"
+
+Option 3: In Person
+Visit your local VA Regional Office
+https://www.va.gov/find-locations/
+
+================================================================================
+
+YOUR INFORMATION FOR REFERENCE:
+
+Full Name: ${formData.veteranName || "________________________________________"}
+
+Date of Birth: ${formData.dob || "________________________________________"}
+
+VA File Number (if known): ${formData.vaFileNumber || "________________________________________"}
+
+Mailing Address:
+${formData.address || "________________________________________"}
+
+Phone: ${formData.phone || "________________________________________"}
+
+Email: ${formData.email || "________________________________________"}
+
+================================================================================
+
+BENEFIT TYPE: ${benefitLabels[formData.benefitType] || "________________________________________"}
+
+${
+  formData.conditions
+    ? `
+Conditions You Plan to Claim:
+${formData.conditions}
+`
+    : ""
+}
+Preferred Submission Method: ${methodLabels[formData.preferredMethod] || "________________________________________"}
+${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
+
+  return statement;
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -6190,1726 +7940,77 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     markAsModified();
   };
 
-  const buildBuddyDailyLifeImpactSection = () => {
-    if (
-      !formData.dailyImpact &&
-      !formData.workImpact &&
-      !formData.specificExamples
-    ) {
-      return "";
-    }
-    let section = `
-D. Impact of Condition on Veteran's Daily Life:
-
-`;
-    if (formData.dailyImpact) {
-      section += `Impact on Daily Activities:
-${formData.dailyImpact}
-
-`;
-    }
-    if (formData.workImpact) {
-      section += `Impact on Employment/Work:
-${formData.workImpact}
-
-`;
-    }
-    if (formData.specificExamples) {
-      section += `Specific Examples/Incidents:
-${formData.specificExamples}
-
-`;
-    }
-    return section;
-  };
-
-  const buildBuddyAdditionalInfoSection = () => {
-    if (!formData.additionalInfo) return "";
-    return `
-E. Additional Information:
-
-${formData.additionalInfo}
-
-`;
-  };
-
-  const generateBuddyStatement = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const relationLabels = {
-      "fellow-service-member": "Fellow Service Member",
-      supervisor: "Military Supervisor/NCO/Officer",
-      spouse: "Spouse",
-      family: "Family Member",
-      friend: "Friend",
-      coworker: "Civilian Coworker",
-      caregiver: "Caregiver",
-      other: "Other",
-    };
-
-    // Clean, official format that works as an attachment to VA Form 21-10210
-    let statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-10210)
-
---------------------------------------------------------------------------------
-
-SECTION I - PERSON PROVIDING STATEMENT (WITNESS/AFFIANT)
-
-Full Name: ${formData.witnessName || "________________________________________"}
-
-Relationship to Veteran: ${relationLabels[formData.witnessRelation] || formData.witnessRelation || "____________________"}
-
-Contact Phone: ${formData.witnessPhone || "________________________________________"}
-
-Contact Email: ${formData.witnessEmail || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - VETERAN INFORMATION
-
-Veteran's Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.veteranBranch || "________________________________________"}
-
-Condition/Disability Claimed: ${formData.conditionName || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - STATEMENT
-
-A. How I Know the Veteran:
-
-${formData.howKnown || "[Describe how you came to know the veteran]"}
-
-Length of Acquaintance: ${formData.knownSince || "________________________________________"}
-
-
-B. What I Personally Witnessed or Observed:
-
-${formData.whatObserved || "[Describe what you personally witnessed regarding the veteran's condition, injury, or symptoms]"}
-
-
-C. When and Where These Observations Occurred:
-
-Timeframe: ${formData.whenObserved || "________________________________________"}
-
-Location: ${formData.whereObserved || "________________________________________"}
-
-`;
-
-    statement += buildBuddyDailyLifeImpactSection();
-    statement += buildBuddyAdditionalInfoSection();
-
-    statement += `--------------------------------------------------------------------------------
-
-SECTION IV - CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001 (making false statements to a federal agency).
-
-${formData.willingToTestify ? "[X] I am willing to provide additional testimony or clarification if requested.\n" : "[ ] I am willing to provide additional testimony or clarification if requested.\n"}
-
-Signature: ________________________________________
-
-Printed Name: ${formData.witnessName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. The witness should review this statement for accuracy, then print and sign it.
-
-2. This statement should be submitted as an attachment to VA Form 21-10210 
-   (Lay/Witness Statement).
-
-3. Submit online at: https://www.va.gov/supporting-forms-for-claims/lay-witness-statement-form-21-10210/
-   Or mail to your VA Regional Office.
-
-4. Retain a copy of this signed statement for your records.
-
-5. The veteran should include this statement with their VA disability claim.
-`;
-
-    return statement;
-  };
-
-  const buildPersonalStatementTreatmentHistorySection = () => {
-    if (
-      !formData.currentTreatment &&
-      !formData.medications &&
-      !formData.treatmentEffectiveness
-    ) {
-      return "";
-    }
-    const currentTreatmentSection = formData.currentTreatment
-      ? `
-A. Current Treatment:
-
-${formData.currentTreatment}
-`
-      : "";
-    const medicationsSection = formData.medications
-      ? `
-B. Current Medications:
-
-${formData.medications}
-`
-      : "";
-    const treatmentEffectivenessSection = formData.treatmentEffectiveness
-      ? `
-C. Treatment Effectiveness:
-
-${formData.treatmentEffectiveness}
-`
-      : "";
-    return `
-SECTION V - TREATMENT HISTORY
-${currentTreatmentSection}${medicationsSection}${treatmentEffectivenessSection}
---------------------------------------------------------------------------------
-`;
-  };
-
-  const buildPersonalStatementSecondaryConditionSection = () =>
-    formData.claimType === "secondary" && formData.primaryCondition
-      ? `
-Secondary to (Primary Condition): ${formData.primaryCondition}
-`
-      : "";
-
-  const buildPersonalStatementFirstTreatmentSection = () =>
-    formData.firstTreatment
-      ? `
-C. First Treatment Sought:
-
-${formData.firstTreatment}
-`
-      : "";
-
-  const buildPersonalStatementFlareUpsSection = () =>
-    formData.flareUps
-      ? `
-C. Flare-Ups:
-
-${formData.flareUps}
-`
-      : "";
-
-  const buildPersonalStatementSocialImpactSection = () =>
-    formData.socialImpact
-      ? `
-C. Impact on Relationships and Social Activities:
-
-${formData.socialImpact}
-`
-      : "";
-
-  const generatePersonalStatement = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const claimTypeLabels = {
-      initial: "Initial Service Connection",
-      increase: "Claim for Increased Rating",
-      secondary: "Secondary Service Connection",
-      reopened: "Reopened Claim",
-    };
-
-    const statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-4138)
-
---------------------------------------------------------------------------------
-
-SECTION I - CLAIMANT INFORMATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Claim Type: ${claimTypeLabels[formData.claimType] || formData.claimType || "____________________"}
-
-Condition Claimed: ${formData.conditionName || "________________________________________"}
-${buildPersonalStatementSecondaryConditionSection()}
---------------------------------------------------------------------------------
-
-SECTION II - IN-SERVICE EVENT/INJURY/ONSET
-
-A. When Symptoms First Began:
-
-${formData.onsetDate || "[Date or timeframe when symptoms first appeared]"}
-
-
-B. In-Service Event, Injury, or Exposure:
-
-${formData.inServiceEvent || "[Describe the specific event, injury, training accident, exposure, or circumstances that led to or caused this condition]"}
-
-${buildPersonalStatementFirstTreatmentSection()}
---------------------------------------------------------------------------------
-
-SECTION III - CURRENT SYMPTOMS AND SEVERITY
-
-A. Description of Symptoms:
-
-${formData.symptoms || "[Describe your current symptoms in detail - include frequency, severity, triggers, and physical/mental effects]"}
-
-
-B. Description of Worst Days:
-
-${formData.worstDays || "[Describe what your worst days look like - this helps the VA understand the full impact of your condition]"}
-
-${buildPersonalStatementFlareUpsSection()}
---------------------------------------------------------------------------------
-
-SECTION IV - FUNCTIONAL IMPACT
-
-A. Impact on Employment:
-
-${formData.workImpact || "[Describe how this condition affects your ability to work - missed days, limitations, accommodations needed, etc.]"}
-
-
-B. Impact on Daily Activities:
-
-${formData.dailyImpact || "[Describe how this condition affects daily life - self-care, household tasks, hobbies, driving, etc.]"}
-
-${buildPersonalStatementSocialImpactSection()}
---------------------------------------------------------------------------------
-${buildPersonalStatementTreatmentHistorySection()}
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. Review this statement for accuracy and completeness.
-
-2. Print and sign where indicated.
-
-3. Submit with VA Form 21-4138 or as an attachment to your VA disability claim.
-
-4. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-5. Retain a copy for your records.
-`;
-
-    return statement;
-  };
-
-  const buildPTSDSymptomsChecklist = () =>
-    Array.isArray(formData.symptoms) && formData.symptoms.length > 0
-      ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
-      : `[ ] Nightmares or disturbing dreams
-[ ] Flashbacks (reliving the event)
-[ ] Intrusive thoughts or memories
-[ ] Avoiding reminders of the trauma
-[ ] Difficulty sleeping
-[ ] Hypervigilance (always on alert)
-[ ] Exaggerated startle response
-[ ] Difficulty concentrating
-[ ] Irritability or anger outbursts
-[ ] Emotional numbness
-[ ] Feeling detached from others
-[ ] Negative thoughts about self or world
-[ ] Memory problems
-[ ] Loss of interest in activities
-[ ] Difficulty feeling positive emotions`;
-
-  const buildPTSDSymptomDetailsSection = () =>
-    formData.symptomDetails
-      ? `
-Detailed Description of Symptoms:
-
-${formData.symptomDetails}
-`
-      : "";
-
-  const generatePTSDStatement = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const stressorLabels = {
-      combat: "Combat-Related Trauma",
-      mst: "Military Sexual Trauma (MST)",
-      "personal-assault": "Personal Assault",
-      accident: "Serious Accident/Injury",
-      death: "Witnessing Death or Serious Injury",
-      "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-      other: "Other Traumatic Event",
-    };
-
-    const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
-(To Be Submitted with VA Form 21-0781)
-
---------------------------------------------------------------------------------
-
-SECTION I - VETERAN IDENTIFICATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.branch || "________________________________________"}
-
-Dates of Military Service: ${formData.serviceDates || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - STRESSOR EVENT INFORMATION
-
-Type of Stressor: ${stressorLabels[formData.stressorType] || formData.stressorType || "____________________"}
-
-Date of Incident: ${formData.eventDate || "________________________________________"}
-(Provide as specific a date as possible - month/year minimum)
-
-Location of Incident: ${formData.eventLocation || "________________________________________"}
-(City/Base/Country or geographic location)
-
-${formData.unitInfo ? `Unit Assignment at Time of Event: ${formData.unitInfo}` : "Unit Assignment at Time of Event: ________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - DETAILED DESCRIPTION OF STRESSOR EVENT
-
-${formData.eventDescription || "[Provide a detailed description of the traumatic event. Include: what happened before, during, and after the event; who was involved; what you saw, heard, and felt; how you responded; and the immediate aftermath.]"}
-
---------------------------------------------------------------------------------
-
-SECTION IV - CORROBORATING EVIDENCE
-
-A. Witnesses to Event:
-${formData.witnesses || "None identified / Unknown"}
-
-B. Supporting Documentation:
-${formData.documentation || "None identified"}
-
-C. Was This Event Reported? To Whom?
-${formData.reportedTo || "Not reported / Unknown"}
-
---------------------------------------------------------------------------------
-
-SECTION V - CURRENT PTSD SYMPTOMS
-
-Check all symptoms you currently experience:
-
-${buildPTSDSymptomsChecklist()}
-
-${buildPTSDSymptomDetailsSection()}
---------------------------------------------------------------------------------
-
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and recollection. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. This statement should accompany VA Form 21-0781 (Statement in Support of 
-   Claim for Service Connection for PTSD).
-
-2. For MST claims, use VA Form 21-0781a instead.
-
-3. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-4. Retain a copy for your records.
-
-IMPORTANT NOTES:
-
-- Combat veterans may have reduced evidentiary requirements under 38 CFR 3.304(f)(2)
-- MST claims have special evidence provisions under 38 CFR 3.304(f)(5)
-- Fear of hostile activity claims: 38 CFR 3.304(f)(3)
-
-CRISIS RESOURCES:
-
-- Veterans Crisis Line: Dial 988, Press 1
-- Crisis Text Line: Text 838255
-- VA PTSD Resources: https://www.ptsd.va.gov/
-`;
-
-    return statement;
-  };
-
-  const buildIntentToFileDeadlinesSection = (currentDate, oneYearFromNow) => `
-================================================================================
-
-                         *** CRITICAL DEADLINES ***
-
-If you file your Intent to File on: ${currentDate}
-
-Your deadline to submit a complete claim is: ${oneYearFromNow}
-
-You have exactly ONE YEAR from your Intent to File date to submit your
-complete disability claim (VA Form 21-526EZ).
-
-================================================================================
-
-WHY INTENT TO FILE MATTERS:
-
-If approved, your VA benefits can be BACKDATED to your Intent to File date.
-
-Example:
-- You file Intent to File on ${currentDate}
-- You submit your complete claim 6 months later
-- If approved, you receive 6 months of BACK PAY
-
-This could be worth thousands of dollars!
-
-================================================================================
-
-NEXT STEPS CHECKLIST:
-
-[ ] 1. Submit Intent to File TODAY (use one of the methods above)
-
-[ ] 2. Save your confirmation number: _______________________
-
-[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
-
-[ ] 4. Gather evidence:
-    [ ] Service treatment records
-    [ ] VA medical records
-    [ ] Private medical records
-    [ ] Buddy statements
-    [ ] Nexus letters (if applicable)
-
-[ ] 5. File complete claim (VA Form 21-526EZ) before deadline
-
-================================================================================
-
-RESOURCES:
-
-File Intent to File Online:
-https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
-
-File Disability Claim Online:
-https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-
-Find a VA Regional Office:
-https://www.va.gov/find-locations/
-
-Find an Accredited VSO:
-https://www.va.gov/vso/
-
-VA Benefits Hotline: 1-800-827-1000
-
-================================================================================
-`;
-
-  const generateIntentToFile = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const oneYearFromNow = new Date(
-      Date.now() + 365 * 24 * 60 * 60 * 1000,
-    ).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const benefitLabels = {
-      compensation: "Disability Compensation",
-      pension: "Pension",
-      survivors: "Survivors Benefits (DIC)",
-    };
-
-    const methodLabels = {
-      online: "Online at VA.gov (Recommended)",
-      phone: "By Phone (1-800-827-1000)",
-      mail: "By Mail",
-      inperson: "In Person at VA Regional Office",
-    };
-
-    const statement = `INTENT TO FILE WORKSHEET
-VA Form 21-0966 - Reference Document
-
-================================================================================
-
-                    *** IMPORTANT ACTION REQUIRED ***
-
-This document is your PLANNING WORKSHEET for filing an Intent to File.
-
-To protect your effective date, you must submit an Intent to File through 
-one of the official VA channels listed below. This worksheet is for your 
-records only and does NOT constitute an official Intent to File.
-
-================================================================================
-
-SUBMIT YOUR INTENT TO FILE NOW:
-
-Option 1 (Fastest): Online at VA.gov
-https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/
-
-Option 2: By Phone
-Call 1-800-827-1000 (M-F, 8am-9pm ET)
-Tell the representative you want to file an "Intent to File"
-
-Option 3: In Person
-Visit your local VA Regional Office
-https://www.va.gov/find-locations/
-
-================================================================================
-
-YOUR INFORMATION FOR REFERENCE:
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Date of Birth: ${formData.dob || "________________________________________"}
-
-VA File Number (if known): ${formData.vaFileNumber || "________________________________________"}
-
-Mailing Address:
-${formData.address || "________________________________________"}
-
-Phone: ${formData.phone || "________________________________________"}
-
-Email: ${formData.email || "________________________________________"}
-
-================================================================================
-
-BENEFIT TYPE: ${benefitLabels[formData.benefitType] || "________________________________________"}
-
-${
-  formData.conditions
-    ? `
-Conditions You Plan to Claim:
-${formData.conditions}
-`
-    : ""
-}
-Preferred Submission Method: ${methodLabels[formData.preferredMethod] || "________________________________________"}
-${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
-
-    return statement;
-  };
-
-  const generateMedicalRelease = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const expirationDate = new Date(
-      Date.now() + 180 * 24 * 60 * 60 * 1000,
-    ).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    let statement = `AUTHORIZATION TO DISCLOSE INFORMATION TO VA
-Reference Worksheet for VA Forms 21-4142 & 21-4142a
-
-================================================================================
-
-                      *** REFERENCE DOCUMENT ***
-
-This worksheet contains the information you will need to complete the 
-official VA Form 21-4142 (Authorization to Disclose Information) and 
-VA Form 21-4142a (General Release for Medical Provider Information).
-
-Submit the official forms online at:
-https://www.va.gov/supporting-forms-for-claims/release-information-to-va-form-21-4142/
-
-================================================================================
-
-${_buildMedicalReleaseVeteranSection(formData)}
-
-================================================================================
-
-SECTION II - HEALTHCARE PROVIDER INFORMATION
-
-${_buildMedicalReleaseProvider1Section(formData)}
-
-`;
-
-    statement += _buildMedicalReleaseProvider2Section(formData);
-    statement += _buildMedicalReleaseProvider3Section(formData);
-
-    statement += `================================================================================
-
-${_buildMedicalReleaseRecordsSection(formData)}
-================================================================================
-
-SECTION IV - AUTHORIZATION
-
-I authorize the healthcare provider(s) listed above to release medical 
-information pertaining to the conditions listed to the Department of 
-Veterans Affairs. This information is needed to evaluate my claim for 
-VA disability benefits.
-
-EXPIRATION: This authorization expires ${expirationDate}
-            (180 days from the date of signature)
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
-================================================================================
-
-SUBMISSION INSTRUCTIONS:
-
-1. Use this worksheet to gather your information
-
-2. Submit official forms online (recommended):
-   https://www.va.gov/supporting-forms-for-claims/release-information-to-va-form-21-4142/
-
-3. Or download and mail the forms:
-   - VA Form 21-4142: https://www.va.gov/find-forms/about-form-21-4142/
-   - VA Form 21-4142a: https://www.va.gov/find-forms/about-form-21-4142a/
-
-4. Submit a SEPARATE 21-4142 for EACH healthcare provider
-
-================================================================================
-
-IMPORTANT REMINDERS:
-
-[ ] Verify provider addresses and phone numbers are current
-[ ] Include complete dates of treatment (from - to)
-[ ] List ALL conditions treated by each provider
-[ ] Authorization expires in 180 days - submit promptly
-[ ] Keep copies of all signed forms for your records
-[ ] Follow up with the VA if records aren't obtained within 30 days
-
-================================================================================
-
-PROVIDER VERIFICATION CHECKLIST:
-
-Before submitting, contact each provider to confirm:
-[ ] They still have your records on file
-[ ] Their mailing address is correct
-[ ] Their fax number is correct (if applicable)
-[ ] Records will be released to VA upon request
-
-================================================================================
-`;
-
-    return statement;
-  };
-
-  const generatePriorityProcessing = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const statement = `REQUEST FOR PRIORITY PROCESSING
-(To Be Submitted with VA Form 20-10207)
-
-================================================================================
-
-                    *** URGENT HARDSHIP REQUEST ***
-
-This document contains information for your Request for Priority Processing.
-You MUST have an existing pending claim to request expedited processing.
-
-Submit the official form online at:
-https://www.va.gov/supporting-forms-for-claims/request-priority-processing-form-20-10207/
-
-================================================================================
-
-SECTION I - CLAIMANT INFORMATION
-
-${_priorityProcessingClaimantSection(formData)}
-
-================================================================================
-
-SECTION II - EXISTING CLAIM INFORMATION
-
-${_priorityProcessingClaimSection(formData)}
-
-================================================================================
-
-SECTION III - QUALIFYING CIRCUMSTANCES
-
-Check all that apply to your situation:
-
-${_priorityProcessingQualifyingSection(formData)}
-
-================================================================================
-
-SECTION IV - DETAILED EXPLANATION OF HARDSHIP
-
-Describe your hardship situation in detail, including specific dates, 
-amounts, and circumstances:
-
-${formData.hardshipExplanation || "[Provide detailed explanation of your hardship, including specific evidence such as eviction notices, medical documentation, financial statements, etc.]"}
-
-================================================================================
-
-SECTION V - SUPPORTING DOCUMENTATION
-
-I have the following documentation to support my request:
-
-${_priorityProcessingDocsSection(formData)}
-
-================================================================================
-
-SECTION VI - EMERGENCY CONTACT INFORMATION
-
-${_priorityProcessingEmergencyContactSection(formData)}
-================================================================================
-
-CERTIFICATION AND SIGNATURE
-
-I certify under penalty of perjury that the information provided in this 
-request is true and correct. I understand that making false statements may 
-result in criminal penalties under 18 U.S.C. 1001 and denial of my request.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
-================================================================================
-
-SUBMISSION INSTRUCTIONS:
-
-1. Gather ALL supporting documentation before submitting
-
-2. Submit online (recommended):
-   https://www.va.gov/supporting-forms-for-claims/request-priority-processing-form-20-10207/
-
-3. Or call the VA at 1-800-827-1000 to request expedited processing
-
-4. Upload or mail ALL supporting documentation with your request
-
-5. Keep copies of everything for your records
-
-================================================================================
-
-IMPORTANT NOTES:
-
-- Priority processing is NOT guaranteed
-- You MUST have an existing pending claim
-- Provide as much documentation as possible
-- The more evidence you provide, the better your chances
-- Follow up within 2 weeks if you don't receive confirmation
-
-================================================================================
-
-EMERGENCY RESOURCES:
-
-If you are in crisis, please use these resources immediately:
-
-Veterans Crisis Line: Dial 988, Press 1
-Crisis Text Line: Text 838255
-
-Homeless Veterans Hotline: 1-877-4AID-VET (1-877-424-3838)
-https://www.va.gov/homeless/
-
-National Suicide Prevention Lifeline: 988
-https://988lifeline.org/
-
-VA Benefits Hotline: 1-800-827-1000
-
-================================================================================
-`;
-
-    return statement;
-  };
-
   // Generate VSO Appointment (21-22)
-  const generateVSOAppointment = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const vsoName =
-      formData.vsoName === "Other" ? formData.vsoOther : formData.vsoName;
-
-    const statement = `APPOINTMENT OF VETERANS SERVICE ORGANIZATION
-VA Form 21-22 Information Sheet
-
-================================================================================
-
-                    APPOINTING A VSO AS YOUR REPRESENTATIVE
-
-This document contains information for your VA Form 21-22.
-A VSO can help with your VA claims at NO COST to you.
-
-Official Form: https://www.va.gov/find-forms/about-form-21-22/
-Find a VSO: https://www.va.gov/vso/
-
-================================================================================
-
-SECTION I - VETERAN/CLAIMANT INFORMATION
-
-${_vsoAppointmentVeteranSection(formData)}
-
-================================================================================
-
-SECTION II - CONTACT INFORMATION
-
-${_vsoAppointmentContactSection(formData)}
-
-================================================================================
-
-SECTION III - VETERANS SERVICE ORGANIZATION
-
-${_vsoAppointmentOrgSection(formData, vsoName)}
-
-================================================================================
-
-SECTION IV - AUTHORIZATION
-
-I hereby appoint the above-named organization to represent me in the 
-preparation, presentation, and prosecution of claims for benefits from 
-the Department of Veterans Affairs.
-
-Authorization Scope:
-${_vsoAppointmentAuthorizationSection(formData)}
-
-================================================================================
-
-VETERAN CERTIFICATION
-
-I certify that I have read and understand the Privacy Act notice and 
-the terms of this appointment.
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
-
-Date: ${currentDate}
-
-================================================================================
-
-WHAT HAPPENS NEXT:
-
-1. Complete the official VA Form 21-22:
-   https://www.va.gov/find-forms/about-form-21-22/
-
-2. Submit online through VA.gov (recommended) or mail to your regional office
-
-3. Contact your chosen VSO to introduce yourself:
-   - DAV: 1-877-426-2838 | www.dav.org
-   - American Legion: 1-800-433-3318 | www.legion.org
-   - VFW: 1-833-839-8387 | www.vfw.org
-   - AMVETS: 1-877-726-8387 | www.amvets.org
-
-4. Gather any evidence or documentation for your claims
-
-5. Your VSO will have access to your VA records within a few days
-
-================================================================================
-
-IMPORTANT NOTES:
-
-✓ VSO services are 100% FREE - they cannot charge you any fees
-✓ You can change VSOs at any time by filing a new 21-22
-✓ Your previous representative appointment will be automatically revoked
-✓ VSOs are trained and accredited by the VA
-✓ They can represent you for ALL VA benefits, not just disability
-
-================================================================================
-
-FIND YOUR LOCAL VSO:
-
-Online Directory: https://www.va.gov/vso/
-VA Benefits Hotline: 1-800-827-1000
-
-================================================================================
-`;
-
-    return statement;
-  };
 
   // Generate Individual Representative Appointment (21-22a)
 
-  const generateIndividualRepAppointment = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const repTypeLabel =
-      formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
-
-    let feeAgreementStatusLabel = "NO FEE (PRO BONO)";
-    if (formData.feeAgreement === "attached") {
-      feeAgreementStatusLabel = "ATTACHED";
-    } else if (formData.feeAgreement === "will-submit") {
-      feeAgreementStatusLabel = "TO BE SUBMITTED SEPARATELY";
-    }
-
-    const statement = `APPOINTMENT OF INDIVIDUAL AS CLAIMANT'S REPRESENTATIVE
-VA Form 21-22a Information Sheet
-
-================================================================================
-
-              APPOINTING AN ATTORNEY OR CLAIMS AGENT
-
-This document contains information for your VA Form 21-22a.
-Use this form to appoint an individual (attorney or claims agent).
-
-Official Form: https://www.va.gov/find-forms/about-form-21-22a/
-Find Accredited Representatives: https://www.va.gov/ogc/apps/accreditation/
-
-================================================================================
-
-${_buildIndividualRepVeteranSection(formData)}
-
-================================================================================
-
-${_buildIndividualRepRepresentativeSection(formData, repTypeLabel)}
-
-================================================================================
-
-${_buildIndividualRepFeeAgreementSection(formData, feeAgreementStatusLabel)}
-
-================================================================================
-
-${_buildIndividualRepAuthorizationSection(formData)}
-
-================================================================================
-
-VETERAN CERTIFICATION
-
-I certify that:
-- I have read and understand the Privacy Act notice
-- I understand the fee agreement terms
-- I knowingly appoint this individual as my representative
-
-Veteran Signature: ________________________________________
-
-Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
-
-Date: ${currentDate}
-
-================================================================================
-
-REPRESENTATIVE CERTIFICATION
-
-Representative Signature: ________________________________________
-
-Printed Name: ${formData.repName || ""}
-
-Date: ________________________________________
-
-================================================================================
-
-WHAT HAPPENS NEXT:
-
-1. Complete the official VA Form 21-22a:
-   https://www.va.gov/find-forms/about-form-21-22a/
-
-2. Ensure your representative is VA-accredited:
-   https://www.va.gov/ogc/apps/accreditation/
-
-3. Execute your fee agreement (if applicable)
-
-4. Submit the form and fee agreement to VA
-
-5. Your representative will receive access to your records
-
-================================================================================
-
-FEE LIMITATIONS (per 38 CFR § 14.636):
-
-- Fees may ONLY be charged after VA issues an initial decision
-- Maximum fee is 33.3% of past-due benefits
-- Higher fees require VA approval
-- Fee agreements must be in writing and filed with VA
-- Fees for "frivolous" claims are not allowed
-
-================================================================================
-
-VERIFY ACCREDITATION:
-
-Before hiring any attorney or claims agent, verify they are accredited:
-https://www.va.gov/ogc/apps/accreditation/
-
-VA Office of General Counsel Accreditation Search
-Phone: 1-202-461-7699
-
-================================================================================
-`;
-
-    return statement;
-  };
-
   // Third Party Authorization generator
-  const generateThirdPartyAuth = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._thirdPartyAuthVeteranFields(formData),
-      ..._thirdPartyAuthPartyFields(formData),
-      ..._thirdPartyAuthAuthorizationFields(formData),
-    };
-
-    return `THIRD PARTY AUTHORIZATION INFORMATION
-VA Form 21-0845
-
-================================================================================
-
-VETERAN/CLAIMANT INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-Last 4 of SSN: XXX-XX-${f.ssn}
-Date of Birth: ${f.dob}
-VA File Number: ${f.vaFileNumber}
-
-Contact:
-Phone: ${f.phone}
-Email: ${f.email}
-Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
-
-================================================================================
-
-AUTHORIZED THIRD PARTY
-
-Name: ${f.thirdPartyName}
-Relationship: ${f.thirdPartyRelationship}
-Phone: ${f.thirdPartyPhone}
-Email: ${f.thirdPartyEmail}
-Address: ${f.thirdPartyAddress}
-
-================================================================================
-
-AUTHORIZATION DETAILS
-
-Duration: ${f.authorizationDuration}
-
-This person is authorized to:
-${f.authorizationScopeText}
-
-Limited to specific claim: ${f.limitToSpecificClaim}
-${f.specificClaimDetailsLine}
-
-================================================================================
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
-
-================================================================================
-`;
-  };
 
   // FOIA Request generator
-  const generateFOIARequest = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const branchLabels = {
-      army: "U.S. Army",
-      navy: "U.S. Navy",
-      "air-force": "U.S. Air Force",
-      marines: "U.S. Marine Corps",
-      "coast-guard": "U.S. Coast Guard",
-      "space-force": "U.S. Space Force",
-    };
-    const deliveryMethodLabels = {
-      mail: "Mail to my address",
-      email: "Email",
-    };
-
-    return `FREEDOM OF INFORMATION ACT / PRIVACY ACT REQUEST
-VA Form 20-10206
-
-================================================================================
-
-REQUESTOR INFORMATION
-
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-SSN: ${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-Branch of Service: ${branchLabels[formData.branchOfService] || "____"}
-
-Contact:
-Phone: ${formData.phone || "____"}
-Email: ${formData.email || "____"}
-Address: ${formData.street || "____"}, ${formData.city || "____"}, ${formData.state || "__"} ${formData.zip || "_____"}
-
-================================================================================
-
-RECORDS REQUESTED
-
-${Array.isArray(formData.recordsRequested) ? formData.recordsRequested.map((r) => `[X] ${r}`).join("\n") : "[  ] See form for records requested"}
-
-Date Range: ${formData.dateRange || "All available records"}
-
-Specific Conditions/Claims: ${formData.specificConditions || "All conditions on file"}
-
-================================================================================
-
-DELIVERY PREFERENCES
-
-Method: ${deliveryMethodLabels[formData.deliveryMethod] || "Pick up at VARO"}
-Expedited Processing: ${formData.expediteReason !== "no" ? "YES - " + (formData.expediteDetails || formData.expediteReason) : "No"}
-
-================================================================================
-
-IMPORTANT NOTES:
-- Processing typically takes 30-90+ days
-- Expedited requests require justification
-- Some records may require redaction of third-party information
-- There is no fee for veterans requesting their own records
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
-
-================================================================================
-`;
-  };
 
   // Alternate Signer generator
-  const generateAlternateSigner = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const reasonLabels = {
-      "physical-disability": "Physical Disability",
-      hospitalized: "Hospitalized",
-      "cognitive-impairment": "Cognitive Impairment",
-      "vision-impairment": "Vision Impairment",
-      paralysis: "Paralysis/Mobility Limitation",
-      other: "Other Medical Condition",
-    };
-    const relationLabels = {
-      spouse: "Spouse",
-      "adult-child": "Adult Child",
-      parent: "Parent",
-      sibling: "Sibling",
-      "legal-guardian": "Legal Guardian",
-      "court-appointed": "Court-Appointed Representative",
-      other: "Other",
-    };
-
-    return `ALTERNATE SIGNER CERTIFICATION
-VA Form 21-0972
-
-================================================================================
-
-VETERAN INFORMATION
-
-Name: ${formData.veteranFirstName || ""} ${formData.veteranMiddleInitial || ""} ${formData.veteranLastName || ""}
-Last 4 of SSN: XXX-XX-${formData.ssn || "____"}
-Date of Birth: ${formData.dob || "____"}
-VA File Number: ${formData.vaFileNumber || "Same as SSN"}
-
-================================================================================
-
-REASON FOR ALTERNATE SIGNER
-
-Reason: ${reasonLabels[formData.unableToSignReason] || formData.unableToSignReason || "____"}
-Permanent Condition: ${formData.isPermanent === "yes" ? "YES" : "NO"}
-
-Description:
-${formData.conditionDetails || "____"}
-
-================================================================================
-
-ALTERNATE SIGNER INFORMATION
-
-Name: ${formData.altSignerName || "____"}
-Relationship to Veteran: ${relationLabels[formData.altSignerRelationship] || "____"}
-Phone: ${formData.altSignerPhone || "____"}
-Email: ${formData.altSignerEmail || "____"}
-Address: ${formData.altSignerAddress || "____"}
-
-================================================================================
-
-CERTIFICATIONS
-
-The alternate signer certifies:
-${Array.isArray(formData.certifications) ? formData.certifications.map((c) => `[X] ${c}`).join("\n") : "[  ] See form for certifications"}
-
-${formData.witnessStatement ? `Additional Statement: ${formData.witnessStatement}` : ""}
-
-================================================================================
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
-
-================================================================================
-`;
-  };
 
   // Nursing Home Information generator
-  const generateNursingHome = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._nursingHomeVeteranFields(formData),
-      ..._nursingHomeFacilityFields(formData),
-      ..._nursingHomeAdmissionFields(formData),
-      ..._nursingHomeBenefitFields(formData),
-    };
-
-    return `NURSING HOME INFORMATION
-VA Form 21-0779
-
-================================================================================
-
-VETERAN INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-SSN: ${f.ssn}
-Date of Birth: ${f.dob}
-VA File Number: ${f.vaFileNumber}
-
-================================================================================
-
-NURSING HOME FACILITY
-
-Name: ${f.facilityName}
-Type: ${f.facilityType}
-Address: ${f.facilityAddress}, ${f.facilityCity}, ${f.facilityState} ${f.facilityZip}
-Phone: ${f.facilityPhone}
-
-================================================================================
-
-ADMISSION DETAILS
-
-Admission Date: ${f.admissionDate}
-Expected Stay: ${f.expectedStay}
-
-Level of Care:
-${f.levelOfCareText}
-
-Medicaid Status: ${f.medicaidStatus}
-
-================================================================================
-
-BENEFIT REQUESTED
-
-Benefit Type: ${f.benefitType}
-Currently Receiving VA Benefits: ${f.currentlyReceivingText}
-
-${f.additionalInfoLine}
-
-================================================================================
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
-
-================================================================================
-`;
-  };
 
   // Substitution Request generator
-  const generateSubstitutionRequest = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._substitutionRequestVeteranFields(formData),
-      ..._substitutionRequestClaimantFields(formData),
-      ..._substitutionRequestClaimFields(formData),
-    };
-
-    return `REQUEST FOR SUBSTITUTION OF CLAIMANT
-VA Form 21P-0847
-
-================================================================================
-
-DECEASED VETERAN INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-SSN: ${f.veteranSSN}
-Date of Birth: ${f.veteranDOB}
-Date of Death: ${f.dateOfDeath}
-VA File Number: ${f.vaFileNumber}
-
-================================================================================
-
-SUBSTITUTE CLAIMANT INFORMATION (YOU)
-
-Name: ${f.substituteFirstName} ${f.substituteMiddleInitial} ${f.substituteLastName}
-SSN: ${f.substituteSSN}
-Date of Birth: ${f.substituteDOB}
-Relationship to Veteran: ${f.relationshipToVeteran}
-
-Contact:
-Phone: ${f.phone}
-Email: ${f.email}
-Address: ${f.street}, ${f.city}, ${f.state} ${f.zip}
-
-================================================================================
-
-PENDING CLAIM INFORMATION
-
-Type of Pending Claim:
-${f.pendingClaimTypeText}
-
-Claim Details: ${f.claimDetails}
-Approximate Filing Date: ${f.claimFiledDate}
-
-================================================================================
-
-ACKNOWLEDGMENTS
-
-${f.acknowledgmentsText}
-
-================================================================================
-
-IMPORTANT: Request must be filed within 1 YEAR of the veteran's death.
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
-
-================================================================================
-`;
-  };
 
   // Income & Asset Statement generator
-  const generateIncomeAsset = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._incomeAssetClaimantFields(formData),
-      ..._incomeAssetMonthlyIncomeFields(formData),
-      ..._incomeAssetAssetFields(formData),
-      ..._incomeAssetMedicalExpenseFields(formData),
-    };
-
-    return `INCOME AND ASSET STATEMENT
-VA Form 21P-0969
-
-================================================================================
-
-CLAIMANT INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-SSN: ${f.ssn}
-Date of Birth: ${f.dob}
-VA File Number: ${f.vaFileNumber}
-Marital Status: ${f.maritalStatus}
-
-================================================================================
-
-MONTHLY INCOME
-
-Social Security:                    ${f.socialSecurityIncome}
-Military Retirement:                ${f.militaryRetirement}
-Civil Service/Federal Retirement:   ${f.civilServiceRetirement}
-Other Pension/Retirement:           ${f.otherRetirement}
-Wages/Salary:                       ${f.wages}
-Interest & Dividends:               ${f.interestDividends}
-Rental Income:                      ${f.rentalIncome}
-Other Income:                       ${f.otherIncome}
-${f.otherIncomeSourceLine}
-
-================================================================================
-
-ASSETS
-
-Bank Accounts (total):              ${f.bankAccounts}
-Stocks/Bonds/Mutual Funds:          ${f.stocks}
-IRA/401k/Retirement:                ${f.ira401k}
-Real Estate (not primary home):     ${f.realEstate}
-Vehicles:                           ${f.vehicles}
-Other Assets:                       ${f.otherAssets}
-
-Primary Home (reference):           ${f.primaryHomeValue}
-
-================================================================================
-
-DEDUCTIBLE MEDICAL EXPENSES (MONTHLY)
-
-Health Insurance Premiums:          ${f.healthInsurancePremiums}
-Medicare Part B:                    ${f.medicarePartB}
-Prescriptions:                      ${f.prescriptions}
-Doctor Visits:                      ${f.doctorVisits}
-Nursing Home/Assisted Living:       ${f.nursingHomeCost}
-In-Home Care:                       ${f.inHomeCare}
-Medical Equipment:                  ${f.medicalEquipment}
-Other Medical:                      ${f.otherMedical}
-
-${f.medicalExpenseNoteLine}
-
-================================================================================
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
-
-================================================================================
-`;
-  };
 
   // Medical Expense Report generator
-  const generateMedicalExpenseReport = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._medicalExpenseReportClaimantFields(formData),
-      ..._medicalExpenseReportPeriodFields(formData),
-      ..._medicalExpenseReportInsuranceFields(formData),
-      ..._medicalExpenseReportOutOfPocketFields(formData),
-    };
-
-    return `MEDICAL EXPENSE REPORT
-VA Form 21P-8416
-
-================================================================================
-
-CLAIMANT INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-SSN: ${f.ssn}
-VA File Number: ${f.vaFileNumber}
-Phone: ${f.phone}
-
-================================================================================
-
-REPORTING PERIOD
-
-Year: ${f.reportingYear}
-Period: ${f.reportPeriodStart} to ${f.reportPeriodEnd}
-Report Type: ${f.reportType}
-
-================================================================================
-
-INSURANCE & CARE COSTS (FOR PERIOD)
-
-Health Insurance Premiums:          ${f.healthInsurance}
-Medicare Part B:                    ${f.medicarePartB}
-Medicare Supplement/Medigap:        ${f.medicareSupplement}
-Prescription Drug Plan Premium:     ${f.prescriptionPlan}
-Nursing Home/Assisted Living:       ${f.nursingHome}
-Adult Day Care:                     ${f.adultDayCare}
-Home Health Aide/In-Home Care:      ${f.homeHealthAide}
-
-================================================================================
-
-OUT-OF-POCKET MEDICAL COSTS (FOR PERIOD)
-
-Prescriptions:                      ${f.prescriptions}
-Doctor Visit Copays:                ${f.doctorCopays}
-Hospital/ER Copays:                 ${f.hospitalCopays}
-Dental Expenses:                    ${f.dentalExpenses}
-Vision/Eye Care:                    ${f.visionExpenses}
-Hearing Aids/Care:                  ${f.hearingAids}
-Medical Equipment/Supplies:         ${f.medicalEquipment}
-Medical Transportation:             ${f.transportation}
-Other Medical:                      ${f.otherMedical}
-
-${f.otherDescriptionLine}
-
-================================================================================
-
-KEEP YOUR RECEIPTS - VA may request documentation.
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
-
-================================================================================
-`;
-  };
 
   // Employment Information generator
-  const generateEmploymentInfo = () => {
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const f = {
-      ..._employmentInfoVeteranFields(formData),
-      ..._employmentInfoEmployerFields(formData),
-      ..._employmentInfoDetailsFields(formData),
-      ..._employmentInfoImpactFields(formData),
-    };
-
-    return `REQUEST FOR EMPLOYMENT INFORMATION
-VA Form 21-4192
-
-================================================================================
-
-This form is for TDIU (Total Disability Individual Unemployability) claims.
-Send this to your employer(s) for completion.
-
-================================================================================
-
-VETERAN INFORMATION
-
-Name: ${f.veteranFirstName} ${f.veteranMiddleInitial} ${f.veteranLastName}
-SSN: ${f.ssn}
-Date of Birth: ${f.dob}
-VA File Number: ${f.vaFileNumber}
-Phone: ${f.phone}
-
-================================================================================
-
-EMPLOYER INFORMATION
-
-Company Name: ${f.employerName}
-Address: ${f.employerAddress}, ${f.employerCity}, ${f.employerState} ${f.employerZip}
-Phone: ${f.employerPhone}
-Supervisor/HR Contact: ${f.supervisorName}
-
-================================================================================
-
-EMPLOYMENT DETAILS
-
-Job Title: ${f.jobTitle}
-Start Date: ${f.startDate}
-End Date: ${f.endDate}
-Still Employed: ${f.stillEmployedText}
-Hours Per Week: ${f.hoursPerWeek}
-Earnings: ${f.earnings}
-
-================================================================================
-
-DISABILITY IMPACT ON EMPLOYMENT
-
-${f.reasonForLeavingLine}
-
-Accommodations Made:
-${f.accommodationsText}
-
-Time Missed Due to Disability: ${f.missedWork}
-
-Impact Description:
-${f.impactDescription}
-
-================================================================================
-
-IMPORTANT FOR TDIU CLAIMS:
-- This form strengthens your claim by documenting employment limitations
-- Send to your last employer(s) with a cover letter
-- Employer should complete the employer section and return to VA
-
-Date: ${currentDate}
-
-Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
-
-================================================================================
-`;
-  };
 
   const generateContent = () => {
     let content;
     switch (selectedForm?.id) {
       case "buddy-statement":
-        content = generateBuddyStatement();
+        content = generateBuddyStatement(formData);
         break;
       case "personal-statement":
-        content = generatePersonalStatement();
+        content = generatePersonalStatement(formData);
         break;
       case "ptsd-stressor":
-        content = generatePTSDStatement();
+        content = generatePTSDStatement(formData);
         break;
       case "intent-to-file":
-        content = generateIntentToFile();
+        content = generateIntentToFile(formData);
         break;
       case "medical-release":
-        content = generateMedicalRelease();
+        content = generateMedicalRelease(formData);
         break;
       case "priority-processing":
-        content = generatePriorityProcessing();
+        content = generatePriorityProcessing(formData);
         break;
       case "vso-appointment":
-        content = generateVSOAppointment();
+        content = generateVSOAppointment(formData);
         break;
       case "vso-appointment-individual":
-        content = generateIndividualRepAppointment();
+        content = generateIndividualRepAppointment(formData);
         break;
       // New forms
       case "third-party-authorization":
-        content = generateThirdPartyAuth();
+        content = generateThirdPartyAuth(formData);
         break;
       case "personal-records-request":
-        content = generateFOIARequest();
+        content = generateFOIARequest(formData);
         break;
       case "alternate-signer":
-        content = generateAlternateSigner();
+        content = generateAlternateSigner(formData);
         break;
       case "nursing-home-info":
-        content = generateNursingHome();
+        content = generateNursingHome(formData);
         break;
       case "substitution-request":
-        content = generateSubstitutionRequest();
+        content = generateSubstitutionRequest(formData);
         break;
       case "income-asset-statement":
-        content = generateIncomeAsset();
+        content = generateIncomeAsset(formData);
         break;
       case "medical-expense-report":
-        content = generateMedicalExpenseReport();
+        content = generateMedicalExpenseReport(formData);
         break;
       case "employment-info":
-        content = generateEmploymentInfo();
+        content = generateEmploymentInfo(formData);
         break;
       default:
         content = "";
@@ -7992,90 +8093,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
     return showAIVersion && aiEnhancedContent
       ? aiEnhancedContent
       : generatedContent;
-  };
-
-  const downloadAsTxt = (content, fileName) => {
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    if (!url.startsWith("blob:")) return; // Validate blob URL
-    // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadAsDocx = async (content, fileName) => {
-    try {
-      const lines = content.split("\n");
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: lines.map((line) => {
-              if (line.startsWith("═")) {
-                return new Paragraph({ text: "" });
-              }
-              if (/^[A-Z]{2,}/.test(line) && line.endsWith(":")) {
-                return new Paragraph({
-                  children: [new TextRun({ text: line, bold: true })],
-                  spacing: { before: 200, after: 100 },
-                });
-              }
-              return new Paragraph({
-                children: [new TextRun(line)],
-                spacing: { after: 50 },
-              });
-            }),
-          },
-        ],
-      });
-
-      const blob = await Packer.toBlob(doc);
-      const url = URL.createObjectURL(blob);
-      if (!url.startsWith("blob:")) return; // Validate blob URL
-      // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${fileName}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error generating DOCX:", error);
-      alert("Error generating Word document. Please try TXT format.");
-    }
-  };
-
-  const downloadAsPdf = (content, fileName) => {
-    try {
-      const pdf = new jsPDF();
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 15;
-      const maxWidth = pageWidth - margin * 2;
-      let yPosition = 20;
-
-      pdf.setFontSize(10);
-      const lines = pdf.splitTextToSize(content, maxWidth);
-
-      lines.forEach((line) => {
-        if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        pdf.text(line, margin, yPosition);
-        yPosition += 5;
-      });
-
-      pdf.save(`${fileName}.pdf`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Error generating PDF. Please try TXT format.");
-    }
   };
 
   const handleDownloadOfficialPdf = async () => {
