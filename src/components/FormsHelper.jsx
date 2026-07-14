@@ -4586,6 +4586,506 @@ function WizardStepPanel({
   );
 }
 
+function AIUnavailableNotice({ onOpenAISettings, t }) {
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">✨</span>
+          <div>
+            <h3 className="font-bold text-amber-900 dark:text-amber-200">
+              {t("formsHelper", "aiEnhancementAvailable")}
+            </h3>
+            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+              {t("formsHelper", "aiEnhancementAvailableDesc")}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onOpenAISettings}
+          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
+        >
+          ⚙️ {t("formsHelper", "configureAI")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AIEnhanceButtonLabel({ isEnhancingWithAI, t }) {
+  if (isEnhancingWithAI) {
+    return (
+      <>
+        <svg
+          className="animate-spin h-5 w-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        {t("formsHelper", "enhancing")}
+      </>
+    );
+  }
+  return (
+    <>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13 10V3L4 14h7v7l9-11h-7z"
+        />
+      </svg>
+      {t("formsHelper", "enhanceWithAI")}
+    </>
+  );
+}
+
+function AIEnhanceControls({
+  aiEnhancedContent,
+  handleAIEnhanceClick,
+  isEnhancingWithAI,
+  toggleAIVersion,
+  showAIVersion,
+  t,
+}) {
+  if (!aiEnhancedContent) {
+    return (
+      <button
+        onClick={handleAIEnhanceClick}
+        disabled={isEnhancingWithAI}
+        className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+      >
+        <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={toggleAIVersion}
+        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+          showAIVersion
+            ? "bg-purple-600 text-white"
+            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+        }`}
+      >
+        ✨ {t("formsHelper", "aiVersion")}
+      </button>
+      <button
+        onClick={toggleAIVersion}
+        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+          !showAIVersion
+            ? "bg-purple-600 text-white"
+            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+        }`}
+      >
+        📝 {t("formsHelper", "original")}
+      </button>
+    </div>
+  );
+}
+
+function AIEnhancementHeader({ aiStatus, t }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-3xl">✨</span>
+      <div>
+        <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg flex items-center gap-2">
+          {t("formsHelper", "aiStatementAssistant")}
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${
+              aiStatus.effectiveMode === AI_MODES.LOCAL
+                ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
+                : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+            }`}
+          >
+            {aiStatus.effectiveMode === AI_MODES.LOCAL
+              ? "🔒 Local AI"
+              : "☁️ Cloud AI"}
+          </span>
+        </h3>
+        <p className="text-sm text-purple-700 dark:text-purple-300">
+          {t("formsHelper", "aiEnhanceDesc")}
+        </p>
+        <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400 mt-2">
+          <span>💡</span>
+          <span>
+            <strong>{t("formsHelper", "tip")}:</strong>{" "}
+            {t("formsHelper", "aiTipAllModels")}
+          </span>
+        </div>
+        {aiStatus.effectiveMode === AI_MODES.LOCAL && (
+          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+            ✅ {t("formsHelper", "aiPrivateNotice")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AIEnhancementSection({
+  isAIEnabledFormType,
+  aiStatus,
+  aiEnhancedContent,
+  handleAIEnhanceClick,
+  isEnhancingWithAI,
+  toggleAIVersion,
+  showAIVersion,
+  aiError,
+  onOpenAISettings,
+  t,
+}) {
+  if (!isAIEnabledFormType()) return null;
+
+  if (!isAnyAIAvailable()) {
+    return <AIUnavailableNotice onOpenAISettings={onOpenAISettings} t={t} />;
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <AIEnhancementHeader aiStatus={aiStatus} t={t} />
+
+        <div className="flex flex-col gap-2">
+          <AIEnhanceControls
+            aiEnhancedContent={aiEnhancedContent}
+            handleAIEnhanceClick={handleAIEnhanceClick}
+            isEnhancingWithAI={isEnhancingWithAI}
+            toggleAIVersion={toggleAIVersion}
+            showAIVersion={showAIVersion}
+            t={t}
+          />
+        </div>
+      </div>
+
+      {/* AI Error Message */}
+      {aiError && (
+        <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
+          ⚠️ {aiError}
+        </div>
+      )}
+
+      {/* Version indicator */}
+      {aiEnhancedContent && (
+        <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
+          {showAIVersion
+            ? `✨ ${t("formsHelper", "viewingAIVersion")}`
+            : `📝 ${t("formsHelper", "viewingOriginal")}`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DownloadOptionsCard({
+  t,
+  showAIVersion,
+  aiEnhancedContent,
+  handleDownloadOfficialPdf,
+  handleDownload,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
+      <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <span className="text-xl">📥</span>{" "}
+        {t("formsHelper", "downloadYourForm")}
+        {showAIVersion && aiEnhancedContent && (
+          <span className="text-sm font-normal text-purple-600 dark:text-purple-400">
+            ({t("formsHelper", "aiEnhanced")})
+          </span>
+        )}
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Primary: Official PDF */}
+        <button
+          onClick={() => handleDownloadOfficialPdf()}
+          className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+        >
+          <span className="text-2xl">📋</span>
+          <div className="text-left">
+            <div className="font-bold">
+              {t("formsHelper", "officialVAFormPdf")}
+            </div>
+            <div className="text-sm text-blue-100">
+              {t("formsHelper", "readyToSign")}
+            </div>
+          </div>
+        </button>
+
+        {/* Secondary options */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleDownload("txt")}
+            className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
+          >
+            <span className="text-xl">📄</span>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              .TXT
+            </span>
+          </button>
+          <button
+            onClick={() => handleDownload("docx")}
+            className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
+          >
+            <span className="text-xl">📝</span>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              .DOCX
+            </span>
+          </button>
+          <button
+            onClick={() => handleDownload("pdf")}
+            className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
+          >
+            <span className="text-xl">📑</span>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              .PDF
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaveToPacketCard({ t, handleSaveToPacket }) {
+  return (
+    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📦</span>
+          <div>
+            <h3 className="font-bold text-purple-900 dark:text-purple-200">
+              {t("formsHelper", "saveToMyPacket")}
+            </h3>
+            <p className="text-sm text-purple-700 dark:text-purple-300">
+              {t("formsHelper", "saveToPacketDesc")}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleSaveToPacket}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+            />
+          </svg>
+          {t("formsHelper", "saveToPacketBtn")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReviewDownloadSection({
+  t,
+  showAIVersion,
+  aiEnhancedContent,
+  handleDownloadOfficialPdf,
+  handleDownload,
+  handleSaveToPacket,
+  importStatus,
+}) {
+  return (
+    <>
+      <DownloadOptionsCard
+        t={t}
+        showAIVersion={showAIVersion}
+        aiEnhancedContent={aiEnhancedContent}
+        handleDownloadOfficialPdf={handleDownloadOfficialPdf}
+        handleDownload={handleDownload}
+      />
+
+      <SaveToPacketCard t={t} handleSaveToPacket={handleSaveToPacket} />
+
+      {/* Import Status Message */}
+      {importStatus && (
+        <div
+          className={`p-3 rounded-lg text-center font-medium ${
+            importStatus.type === "success"
+              ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
+              : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700"
+          }`}
+        >
+          {importStatus.type === "success" ? "✅" : "❌"} {importStatus.message}
+        </div>
+      )}
+    </>
+  );
+}
+
+function ReviewPreviewSection({
+  showAIVersion,
+  aiEnhancedContent,
+  displayContent,
+  t,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <details className="group" open={showAIVersion && aiEnhancedContent}>
+        <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
+          <span className="font-medium text-gray-700 dark:text-gray-300">
+            📄 {t("formsHelper", "textPreview")}{" "}
+            {showAIVersion && aiEnhancedContent
+              ? `(${t("formsHelper", "aiEnhanced")})`
+              : ""}{" "}
+            ({t("formsHelper", "clickToExpand")})
+          </span>
+          <svg
+            className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </summary>
+        <pre className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72">
+          {displayContent}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+function ReviewNextSteps({ selectedForm, t }) {
+  return (
+    <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+      <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">
+        📋 {t("formsHelper", "nextSteps")}
+      </h3>
+      <ol className="list-decimal list-inside text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
+        <li>
+          <strong>{t("formsHelper", "download")}</strong>{" "}
+          {t("formsHelper", "nextStepDownload")}
+        </li>
+        <li>
+          <strong>{t("formsHelper", "review")}</strong>{" "}
+          {t("formsHelper", "nextStepReview")}
+        </li>
+        <li>
+          <strong>{t("formsHelper", "print")}</strong>{" "}
+          {t("formsHelper", "nextStepPrint")}
+        </li>
+        <li>
+          <strong>{t("formsHelper", "sign")}</strong>{" "}
+          {t("formsHelper", "nextStepSign")}
+        </li>
+        <li>
+          <strong>{t("formsHelper", "submit")}</strong>{" "}
+          {t("formsHelper", "nextStepSubmit")}{" "}
+          <a
+            href={selectedForm?.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-bold"
+          >
+            VA.gov
+          </a>{" "}
+          {t("formsHelper", "orMailTo")}
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+function ReviewActionButtons({
+  selectedForm,
+  setCurrentStep,
+  setGeneratedContent,
+  setAiEnhancedContent,
+  setShowAIVersion,
+  setSelectedForm,
+  setFormData,
+  t,
+}) {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <button
+        onClick={() => {
+          setCurrentStep(1);
+          setGeneratedContent(null);
+          setAiEnhancedContent(null);
+          setShowAIVersion(false);
+        }}
+        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
+      >
+        ← {t("formsHelper", "editAnswers")}
+      </button>
+      <button
+        onClick={() => {
+          setSelectedForm(null);
+          setFormData({});
+          setCurrentStep(0);
+          setGeneratedContent(null);
+          setAiEnhancedContent(null);
+          setShowAIVersion(false);
+        }}
+        className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
+      >
+        {t("formsHelper", "startNewForm")}
+      </button>
+      <a
+        href={selectedForm?.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="px-4 py-2 bg-va-gold hover:bg-yellow-400 text-va-blue rounded-lg font-bold flex items-center gap-2"
+      >
+        {t("formsHelper", "submitAtVA")}
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          />
+        </svg>
+      </a>
+    </div>
+  );
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -7528,393 +8028,48 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           </div>
         </div>
 
-        {/* AI Enhancement Option - Only show for supported form types */}
-        {isAIEnabledFormType() && isAnyAIAvailable() && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <span className="text-3xl">✨</span>
-                <div>
-                  <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg flex items-center gap-2">
-                    {t("formsHelper", "aiStatementAssistant")}
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        aiStatus.effectiveMode === AI_MODES.LOCAL
-                          ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
-                          : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
-                      }`}
-                    >
-                      {aiStatus.effectiveMode === AI_MODES.LOCAL
-                        ? "🔒 Local AI"
-                        : "☁️ Cloud AI"}
-                    </span>
-                  </h3>
-                  <p className="text-sm text-purple-700 dark:text-purple-300">
-                    {t("formsHelper", "aiEnhanceDesc")}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400 mt-2">
-                    <span>💡</span>
-                    <span>
-                      <strong>{t("formsHelper", "tip")}:</strong>{" "}
-                      {t("formsHelper", "aiTipAllModels")}
-                    </span>
-                  </div>
-                  {aiStatus.effectiveMode === AI_MODES.LOCAL && (
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      ✅ {t("formsHelper", "aiPrivateNotice")}
-                    </p>
-                  )}
-                </div>
-              </div>
+        <AIEnhancementSection
+          isAIEnabledFormType={isAIEnabledFormType}
+          aiStatus={aiStatus}
+          aiEnhancedContent={aiEnhancedContent}
+          handleAIEnhanceClick={handleAIEnhanceClick}
+          isEnhancingWithAI={isEnhancingWithAI}
+          toggleAIVersion={toggleAIVersion}
+          showAIVersion={showAIVersion}
+          aiError={aiError}
+          onOpenAISettings={onOpenAISettings}
+          t={t}
+        />
 
-              <div className="flex flex-col gap-2">
-                {!aiEnhancedContent ? (
-                  <button
-                    onClick={handleAIEnhanceClick}
-                    disabled={isEnhancingWithAI}
-                    className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    {isEnhancingWithAI ? (
-                      <>
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        {t("formsHelper", "enhancing")}
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                          />
-                        </svg>
-                        {t("formsHelper", "enhanceWithAI")}
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={toggleAIVersion}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                        showAIVersion
-                          ? "bg-purple-600 text-white"
-                          : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-                      }`}
-                    >
-                      ✨ {t("formsHelper", "aiVersion")}
-                    </button>
-                    <button
-                      onClick={toggleAIVersion}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                        !showAIVersion
-                          ? "bg-purple-600 text-white"
-                          : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-                      }`}
-                    >
-                      📝 {t("formsHelper", "original")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+        <ReviewDownloadSection
+          t={t}
+          showAIVersion={showAIVersion}
+          aiEnhancedContent={aiEnhancedContent}
+          handleDownloadOfficialPdf={handleDownloadOfficialPdf}
+          handleDownload={handleDownload}
+          handleSaveToPacket={handleSaveToPacket}
+          importStatus={importStatus}
+        />
 
-            {/* AI Error Message */}
-            {aiError && (
-              <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
-                ⚠️ {aiError}
-              </div>
-            )}
+        <ReviewPreviewSection
+          showAIVersion={showAIVersion}
+          aiEnhancedContent={aiEnhancedContent}
+          displayContent={displayContent}
+          t={t}
+        />
 
-            {/* Version indicator */}
-            {aiEnhancedContent && (
-              <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-                {showAIVersion
-                  ? `✨ ${t("formsHelper", "viewingAIVersion")}`
-                  : `📝 ${t("formsHelper", "viewingOriginal")}`}
-              </div>
-            )}
-          </div>
-        )}
+        <ReviewNextSteps selectedForm={selectedForm} t={t} />
 
-        {/* AI Not Available Message - Show for supported form types when AI is not configured */}
-        {isAIEnabledFormType() && !isAnyAIAvailable() && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">✨</span>
-                <div>
-                  <h3 className="font-bold text-amber-900 dark:text-amber-200">
-                    {t("formsHelper", "aiEnhancementAvailable")}
-                  </h3>
-                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    {t("formsHelper", "aiEnhancementAvailableDesc")}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onOpenAISettings}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
-              >
-                ⚙️ {t("formsHelper", "configureAI")}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Download Options - Prominent */}
-        <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
-          <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <span className="text-xl">📥</span>{" "}
-            {t("formsHelper", "downloadYourForm")}
-            {showAIVersion && aiEnhancedContent && (
-              <span className="text-sm font-normal text-purple-600 dark:text-purple-400">
-                ({t("formsHelper", "aiEnhanced")})
-              </span>
-            )}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Primary: Official PDF */}
-            <button
-              onClick={() => handleDownloadOfficialPdf()}
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
-            >
-              <span className="text-2xl">📋</span>
-              <div className="text-left">
-                <div className="font-bold">
-                  {t("formsHelper", "officialVAFormPdf")}
-                </div>
-                <div className="text-sm text-blue-100">
-                  {t("formsHelper", "readyToSign")}
-                </div>
-              </div>
-            </button>
-
-            {/* Secondary options */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleDownload("txt")}
-                className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
-              >
-                <span className="text-xl">📄</span>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  .TXT
-                </span>
-              </button>
-              <button
-                onClick={() => handleDownload("docx")}
-                className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
-              >
-                <span className="text-xl">📝</span>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  .DOCX
-                </span>
-              </button>
-              <button
-                onClick={() => handleDownload("pdf")}
-                className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
-              >
-                <span className="text-xl">📑</span>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  .PDF
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Save to My Packet */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📦</span>
-              <div>
-                <h3 className="font-bold text-purple-900 dark:text-purple-200">
-                  {t("formsHelper", "saveToMyPacket")}
-                </h3>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
-                  {t("formsHelper", "saveToPacketDesc")}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleSaveToPacket}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                />
-              </svg>
-              {t("formsHelper", "saveToPacketBtn")}
-            </button>
-          </div>
-        </div>
-
-        {/* Import Status Message */}
-        {importStatus && (
-          <div
-            className={`p-3 rounded-lg text-center font-medium ${
-              importStatus.type === "success"
-                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
-                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700"
-            }`}
-          >
-            {importStatus.type === "success" ? "✅" : "❌"}{" "}
-            {importStatus.message}
-          </div>
-        )}
-
-        {/* Preview */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <details className="group" open={showAIVersion && aiEnhancedContent}>
-            <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                📄 {t("formsHelper", "textPreview")}{" "}
-                {showAIVersion && aiEnhancedContent
-                  ? `(${t("formsHelper", "aiEnhanced")})`
-                  : ""}{" "}
-                ({t("formsHelper", "clickToExpand")})
-              </span>
-              <svg
-                className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </summary>
-            <pre className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72">
-              {displayContent}
-            </pre>
-          </details>
-        </div>
-
-        {/* Next steps */}
-        <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-          <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">
-            📋 {t("formsHelper", "nextSteps")}
-          </h3>
-          <ol className="list-decimal list-inside text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
-            <li>
-              <strong>{t("formsHelper", "download")}</strong>{" "}
-              {t("formsHelper", "nextStepDownload")}
-            </li>
-            <li>
-              <strong>{t("formsHelper", "review")}</strong>{" "}
-              {t("formsHelper", "nextStepReview")}
-            </li>
-            <li>
-              <strong>{t("formsHelper", "print")}</strong>{" "}
-              {t("formsHelper", "nextStepPrint")}
-            </li>
-            <li>
-              <strong>{t("formsHelper", "sign")}</strong>{" "}
-              {t("formsHelper", "nextStepSign")}
-            </li>
-            <li>
-              <strong>{t("formsHelper", "submit")}</strong>{" "}
-              {t("formsHelper", "nextStepSubmit")}{" "}
-              <a
-                href={selectedForm?.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-bold"
-              >
-                VA.gov
-              </a>{" "}
-              {t("formsHelper", "orMailTo")}
-            </li>
-          </ol>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => {
-              setCurrentStep(1);
-              setGeneratedContent(null);
-              setAiEnhancedContent(null);
-              setShowAIVersion(false);
-            }}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
-          >
-            ← {t("formsHelper", "editAnswers")}
-          </button>
-          <button
-            onClick={() => {
-              setSelectedForm(null);
-              setFormData({});
-              setCurrentStep(0);
-              setGeneratedContent(null);
-              setAiEnhancedContent(null);
-              setShowAIVersion(false);
-            }}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
-          >
-            {t("formsHelper", "startNewForm")}
-          </button>
-          <a
-            href={selectedForm?.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-va-gold hover:bg-yellow-400 text-va-blue rounded-lg font-bold flex items-center gap-2"
-          >
-            {t("formsHelper", "submitAtVA")}
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-          </a>
-        </div>
+        <ReviewActionButtons
+          selectedForm={selectedForm}
+          setCurrentStep={setCurrentStep}
+          setGeneratedContent={setGeneratedContent}
+          setAiEnhancedContent={setAiEnhancedContent}
+          setShowAIVersion={setShowAIVersion}
+          setSelectedForm={setSelectedForm}
+          setFormData={setFormData}
+          t={t}
+        />
       </div>
     );
   };
