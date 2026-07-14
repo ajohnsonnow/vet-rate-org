@@ -79,6 +79,119 @@ function _charCountClass(length, minLength) {
   return "text-gray-500 dark:text-gray-400";
 }
 
+async function _saveFeatureRequestLocally(featureId, formData) {
+  const systemInfo = getSystemInfo();
+  try {
+    await saveFeatureRequest({
+      request_id: featureId,
+      priority: PRIORITY_VALUES[formData.priority] || "medium",
+      category: formData.category,
+      module: formData.module,
+      title: formData.title,
+      description: formData.description,
+      problemSolved: formData.problemSolved,
+      proposedSolution: formData.proposedSolution,
+      alternativesConsidered: formData.alternativesConsidered,
+      additionalContext: formData.additionalContext,
+      veteranEmail: formData.veteranEmail || null,
+      systemInfo,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(`✅ Feature request ${featureId} saved to My Tickets`);
+  } catch (storageError) {
+    // Fallback to localStorage if IndexedDB fails
+    console.warn(
+      "IndexedDB save failed, using localStorage fallback:",
+      storageError,
+    );
+    saveFeatureToLocalStorage({
+      request_id: featureId,
+      priority: PRIORITY_VALUES[formData.priority],
+      category: formData.category,
+      module: formData.module,
+      title: formData.title,
+      description: formData.description,
+      created_at: new Date().toISOString(),
+    });
+  }
+}
+
+async function _sendFeatureRequestRemote(featureId, formData, generatedReport, t) {
+  // Note: This is best-effort. Local save is the primary success path.
+  try {
+    const priorityLabel = formData.priority
+      ? t("featureRequest", `priority${formData.priority}Label`)
+      : "Feature";
+
+    // Scrub PII from user-authored free-text before any remote send (RT1-2).
+    const formPayload = {
+      _subject: `[${featureId}] ${priorityLabel} - ${scrubText(formData.title || "")}`,
+      _template: "table",
+      request_id: featureId,
+      title: scrubText(formData.title || ""),
+      category: formData.category,
+      priority: priorityLabel,
+      module: formData.module,
+      description: scrubText(formData.description || ""),
+      problem_solved: scrubText(
+        formData.problemSolved || t("featureRequest", "notSpecified"),
+      ),
+      proposed_solution: scrubText(
+        formData.proposedSolution || t("featureRequest", "notSpecified"),
+      ),
+      alternatives: scrubText(
+        formData.alternativesConsidered ||
+          t("featureRequest", "noneMentioned"),
+      ),
+      additional_context: scrubText(
+        formData.additionalContext || t("common", "none"),
+      ),
+      veteran_email:
+        formData.veteranEmail || t("featureRequest", "anonymousNoReply"),
+      submitted_at: new Date().toISOString(),
+      full_report: scrubText(generatedReport || ""),
+    };
+
+    // Remote send only when the operator has configured an endpoint; otherwise
+    // the request is already saved locally and nothing leaves the device.
+    const response = FORMSUBMIT_URL
+      ? await fetch(FORMSUBMIT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(formPayload),
+        })
+      : null;
+
+    if (response && !response.ok) {
+      console.warn(
+        `⚠️ FormSubmit returned ${response.status} - request saved locally`,
+      );
+    } else if (response) {
+      const result = await response.json();
+
+      if (result.success) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `✅ Feature request ${featureId} sent via FormSubmit AND saved locally`,
+        );
+      } else {
+        console.warn(
+          `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - request saved locally`,
+        );
+      }
+    }
+  } catch (emailError) {
+    // Log but don't fail - local save is what matters
+    console.warn(
+      `⚠️ Could not send email notification (${emailError.message}). Your request was saved locally in My Tickets.`,
+    );
+  }
+}
+
 function FeatureRequest({ onClose, appState = {}, onOpenRoadmap }) {
   const { t } = useLanguage();
 
@@ -201,6 +314,7 @@ ${t("featureRequest", "thankYouMessage")}
   };
 
   // Submit feature request via FormSubmit.co API (no email client needed!) and optionally save locally
+  // Submit feature request via FormSubmit.co API (no email client needed!) and optionally save locally
   const handleSubmitRequest = async () => {
     setSubmitting(true);
     setSubmitError("");
@@ -208,120 +322,14 @@ ${t("featureRequest", "thankYouMessage")}
     try {
       // === Save to local database if user wants to track ===
       if (formData.saveToMyTickets) {
-        try {
-          const systemInfo = getSystemInfo();
-
-          await saveFeatureRequest({
-            request_id: featureId,
-            priority: PRIORITY_VALUES[formData.priority] || "medium",
-            category: formData.category,
-            module: formData.module,
-            title: formData.title,
-            description: formData.description,
-            problemSolved: formData.problemSolved,
-            proposedSolution: formData.proposedSolution,
-            alternativesConsidered: formData.alternativesConsidered,
-            additionalContext: formData.additionalContext,
-            veteranEmail: formData.veteranEmail || null,
-            systemInfo,
-          });
-
-          // eslint-disable-next-line no-console
-          console.log(`✅ Feature request ${featureId} saved to My Tickets`);
-        } catch (storageError) {
-          // Fallback to localStorage if IndexedDB fails
-          console.warn(
-            "IndexedDB save failed, using localStorage fallback:",
-            storageError,
-          );
-          saveFeatureToLocalStorage({
-            request_id: featureId,
-            priority: PRIORITY_VALUES[formData.priority],
-            category: formData.category,
-            module: formData.module,
-            title: formData.title,
-            description: formData.description,
-            created_at: new Date().toISOString(),
-          });
-        }
+        await _saveFeatureRequestLocally(featureId, formData);
       }
 
       // Also copy to clipboard as backup
       await copyToClipboard(generatedReport);
 
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
-      // Note: This is best-effort. Local save is the primary success path.
-      try {
-        const priorityLabel = formData.priority
-          ? t("featureRequest", `priority${formData.priority}Label`)
-          : "Feature";
-
-        // Scrub PII from user-authored free-text before any remote send (RT1-2).
-        const formPayload = {
-          _subject: `[${featureId}] ${priorityLabel} - ${scrubText(formData.title || "")}`,
-          _template: "table",
-          request_id: featureId,
-          title: scrubText(formData.title || ""),
-          category: formData.category,
-          priority: priorityLabel,
-          module: formData.module,
-          description: scrubText(formData.description || ""),
-          problem_solved: scrubText(
-            formData.problemSolved || t("featureRequest", "notSpecified"),
-          ),
-          proposed_solution: scrubText(
-            formData.proposedSolution || t("featureRequest", "notSpecified"),
-          ),
-          alternatives: scrubText(
-            formData.alternativesConsidered ||
-              t("featureRequest", "noneMentioned"),
-          ),
-          additional_context: scrubText(
-            formData.additionalContext || t("common", "none"),
-          ),
-          veteran_email:
-            formData.veteranEmail || t("featureRequest", "anonymousNoReply"),
-          submitted_at: new Date().toISOString(),
-          full_report: scrubText(generatedReport || ""),
-        };
-
-        // Remote send only when the operator has configured an endpoint; otherwise
-        // the request is already saved locally and nothing leaves the device.
-        const response = FORMSUBMIT_URL
-          ? await fetch(FORMSUBMIT_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify(formPayload),
-            })
-          : null;
-
-        if (response && !response.ok) {
-          console.warn(
-            `⚠️ FormSubmit returned ${response.status} - request saved locally`,
-          );
-        } else if (response) {
-          const result = await response.json();
-
-          if (result.success) {
-            // eslint-disable-next-line no-console
-            console.log(
-              `✅ Feature request ${featureId} sent via FormSubmit AND saved locally`,
-            );
-          } else {
-            console.warn(
-              `⚠️ FormSubmit submission failed: ${result.message || "Unknown error"} - request saved locally`,
-            );
-          }
-        }
-      } catch (emailError) {
-        // Log but don't fail - local save is what matters
-        console.warn(
-          `⚠️ Could not send email notification (${emailError.message}). Your request was saved locally in My Tickets.`,
-        );
-      }
+      await _sendFeatureRequestRemote(featureId, formData, generatedReport, t);
 
       // Always succeed if we got this far (local save succeeded)
       setSubmitted(true);
