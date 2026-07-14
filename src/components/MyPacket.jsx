@@ -1092,6 +1092,612 @@ function RatingsTab({
   );
 }
 
+function ProfileIntroAndPrivacy({ t }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-start gap-3 mb-4">
+        <span className="text-3xl">✍️</span>
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {t("myPacketSection.veteranProfile")}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {t("myPacketSection.profileDescription")}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-2">
+          <svg
+            className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <div className="text-sm">
+            <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1">
+              {t("myPacketSection.privacyFirst")}
+            </p>
+            <p className="text-indigo-800 dark:text-indigo-200">
+              {t("myPacketSection.privacyDetails")}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PersonalInfoFieldsA({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.firstName")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.firstName || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, firstName: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="John"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.lastName")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.lastName || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, lastName: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="Doe"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.middleInitial")}
+        </label>
+        <input
+          type="text"
+          maxLength={1}
+          value={veteranProfile.middleInitial || ""}
+          onChange={(e) =>
+            setVeteranProfile({
+              ...veteranProfile,
+              middleInitial: e.target.value.toUpperCase(),
+            })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="M"
+        />
+      </div>
+    </>
+  );
+}
+
+function PersonalInfoFieldsB({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.dateOfBirth")}
+        </label>
+        <input
+          type="date"
+          value={veteranProfile.dob || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, dob: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.ssnLast4")}
+        </label>
+        <input
+          type="text"
+          maxLength={4}
+          value={veteranProfile.ssnLast4 || ""}
+          onChange={(e) =>
+            setVeteranProfile({
+              ...veteranProfile,
+              ssnLast4: e.target.value.replace(/\D/g, ""),
+            })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="1234"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.vaFileNumber")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.vaFileNumber || ""}
+          onChange={(e) =>
+            setVeteranProfile({
+              ...veteranProfile,
+              vaFileNumber: e.target.value,
+            })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="C-12345678"
+        />
+      </div>
+    </>
+  );
+}
+
+function PersonalInfoSection({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+        👤 {t("myPacketSection.personalInformation")}
+      </h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <PersonalInfoFieldsA
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+        <PersonalInfoFieldsB
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ContactPhoneFields({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.email")}
+        </label>
+        <input
+          type="email"
+          value={veteranProfile.email || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, email: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="veteran@email.com"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.phone")}
+        </label>
+        <input
+          type="tel"
+          value={veteranProfile.phone || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, phone: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="(555) 123-4567"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.alternatePhone")}
+        </label>
+        <input
+          type="tel"
+          value={veteranProfile.alternatePhone || ""}
+          onChange={(e) =>
+            setVeteranProfile({
+              ...veteranProfile,
+              alternatePhone: e.target.value,
+            })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="(555) 987-6543"
+        />
+      </div>
+    </>
+  );
+}
+
+function ContactAddressFields({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.streetAddress")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.street || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, street: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="123 Main Street"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.city")}
+        </label>
+        <input
+          type="text"
+          value={veteranProfile.city || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, city: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="Springfield"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.state")}
+        </label>
+        <input
+          type="text"
+          maxLength={2}
+          value={veteranProfile.state || ""}
+          onChange={(e) =>
+            setVeteranProfile({
+              ...veteranProfile,
+              state: e.target.value.toUpperCase(),
+            })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="IL"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t("myPacketSection.zipCode")}
+        </label>
+        <input
+          type="text"
+          maxLength={10}
+          value={veteranProfile.zip || ""}
+          onChange={(e) =>
+            setVeteranProfile({ ...veteranProfile, zip: e.target.value })
+          }
+          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+          placeholder="62701"
+        />
+      </div>
+    </>
+  );
+}
+
+function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+        📞 {t("myPacketSection.contactInformation")}
+      </h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ContactPhoneFields
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+        <ContactAddressFields
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+      </div>
+    </div>
+  );
+}
+
+function _updateServicePeriodField(veteranProfile, setVeteranProfile, idx, field, value) {
+  const newPeriods = [...veteranProfile.servicePeriods];
+  newPeriods[idx] = { ...newPeriods[idx], [field]: value };
+  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+}
+
+function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+        {t("myPacketSection.period")} #{idx + 1}
+      </h5>
+      <button
+        onClick={() => {
+          const newPeriods = veteranProfile.servicePeriods.filter(
+            (_, i) => i !== idx,
+          );
+          setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+        }}
+        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold"
+      >
+        🗑️ {t("myPacketSection.remove")}
+      </button>
+    </div>
+  );
+}
+
+function ServicePeriodFieldsA({ period, update, t }) {
+  return (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.branch")}
+        </label>
+        <select
+          value={period.branch || ""}
+          onChange={(e) => update("branch", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        >
+          <option value="">{t("myPacketSection.select")}</option>
+          <option value="Army">Army</option>
+          <option value="Navy">Navy</option>
+          <option value="Air Force">Air Force</option>
+          <option value="Marines">Marines</option>
+          <option value="Coast Guard">Coast Guard</option>
+          <option value="Space Force">Space Force</option>
+          <option value="Army National Guard">Army National Guard</option>
+          <option value="Air National Guard">Air National Guard</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.component")}
+        </label>
+        <select
+          value={period.component || "Active"}
+          onChange={(e) => update("component", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        >
+          <option value="Active">{t("myPacketSection.activeDuty")}</option>
+          <option value="Guard">{t("myPacketSection.nationalGuard")}</option>
+          <option value="Reserve">{t("myPacketSection.reserve")}</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.startDate")}
+        </label>
+        <input
+          type="date"
+          value={period.serviceStartDate || ""}
+          onChange={(e) => update("serviceStartDate", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.endDate")}
+        </label>
+        <input
+          type="date"
+          value={period.serviceEndDate || ""}
+          onChange={(e) => update("serviceEndDate", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        />
+      </div>
+    </>
+  );
+}
+
+function ServicePeriodFieldsB({ period, update, t }) {
+  return (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.dischargeType")}
+        </label>
+        <select
+          value={period.characterOfService || ""}
+          onChange={(e) => update("characterOfService", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        >
+          <option value="">{t("myPacketSection.select")}</option>
+          <option value="Honorable">{t("myPacketSection.honorable")}</option>
+          <option value="General Under Honorable">
+            {t("myPacketSection.generalUnderHonorable")}
+          </option>
+          <option value="Other Than Honorable">
+            {t("myPacketSection.otherThanHonorable")}
+          </option>
+          <option value="Medical">{t("myPacketSection.medical")}</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.formType")}
+        </label>
+        <select
+          value={period.formType || "DD214"}
+          onChange={(e) => update("formType", e.target.value)}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        >
+          <option value="DD214">DD214 (Active Duty)</option>
+          <option value="NGB22">NGB 22 (National Guard)</option>
+          <option value="DD256">DD256 (Reserve)</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.mosRank")}
+        </label>
+        <input
+          type="text"
+          value={period.mos || ""}
+          onChange={(e) => update("mos", e.target.value)}
+          placeholder={t("myPacketSection.mosRankPlaceholder")}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {t("myPacketSection.notesOptional")}
+        </label>
+        <input
+          type="text"
+          value={period.notes || ""}
+          onChange={(e) => update("notes", e.target.value)}
+          placeholder={t("myPacketSection.notesPlaceholder")}
+          className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+        />
+      </div>
+    </>
+  );
+}
+
+function ServicePeriodEntry({ period, idx, veteranProfile, setVeteranProfile, t }) {
+  const update = (field, value) =>
+    _updateServicePeriodField(veteranProfile, setVeteranProfile, idx, field, value);
+
+  return (
+    <div className="border-2 border-indigo-200 dark:border-indigo-800 rounded-lg p-4 bg-indigo-50 dark:bg-indigo-900/20">
+      <ServicePeriodHeader
+        idx={idx}
+        veteranProfile={veteranProfile}
+        setVeteranProfile={setVeteranProfile}
+        t={t}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ServicePeriodFieldsA period={period} update={update} t={t} />
+        <ServicePeriodFieldsB period={period} update={update} t={t} />
+      </div>
+    </div>
+  );
+}
+
+function ServicePeriodsSection({ veteranProfile, setVeteranProfile, t }) {
+  const hasPeriods =
+    veteranProfile.servicePeriods && veteranProfile.servicePeriods.length > 0;
+
+  return (
+    <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          🎖️ {t("myPacketSection.servicePeriods")}
+        </h4>
+        <button
+          onClick={() => {
+            const newPeriod = {
+              id: `temp-${Date.now()}`,
+              branch: "",
+              component: "Active",
+              serviceStartDate: "",
+              serviceEndDate: "",
+              characterOfService: "",
+              mos: "",
+              rankAtDischarge: "",
+              formType: "DD214",
+              notes: "",
+              isNew: true,
+            };
+            setVeteranProfile({
+              ...veteranProfile,
+              servicePeriods: [
+                ...(veteranProfile.servicePeriods || []),
+                newPeriod,
+              ],
+            });
+          }}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+        >
+          <span>+</span> {t("myPacketSection.addServicePeriod")}
+        </button>
+      </div>
+
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {t("myPacketSection.servicePeriodsDescription")}
+      </p>
+
+      {hasPeriods ? (
+        <div className="space-y-4">
+          {veteranProfile.servicePeriods.map((period, idx) => (
+            <ServicePeriodEntry
+              key={period.id || idx}
+              period={period}
+              idx={idx}
+              veteranProfile={veteranProfile}
+              setVeteranProfile={setVeteranProfile}
+              t={t}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <p className="text-sm">{t("myPacketSection.noServicePeriods")}</p>
+          <p className="text-xs mt-1">
+            {t("myPacketSection.clickToAddServicePeriod")}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
+  return (
+    <>
+      <ProfileIntroAndPrivacy t={t} />
+
+      <div className="space-y-6">
+        <PersonalInfoSection
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+        <ContactInfoSection
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+        <ServicePeriodsSection
+          veteranProfile={veteranProfile}
+          setVeteranProfile={setVeteranProfile}
+          t={t}
+        />
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => {
+              localStorage.setItem(
+                "vet_rate_veteran_profile",
+                JSON.stringify(veteranProfile),
+              );
+              alert(`✅ ${t("myPacketSection.profileSaved")}`);
+            }}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            💾 {t("myPacketSection.saveProfile")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 const MyPacket = ({
   onResume,
   onClose,
@@ -2005,640 +2611,11 @@ Return ONLY the JSON object, no explanation.`,
 
             {/* VETERAN PROFILE TAB */}
             {activeTab === "profile" && (
-              <>
-                <div className="mb-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <span className="text-3xl">✍️</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {t("myPacketSection.veteranProfile")}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {t("myPacketSection.profileDescription")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-6">
-                    <div className="flex items-start gap-2">
-                      <svg
-                        className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <div className="text-sm">
-                        <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1">
-                          {t("myPacketSection.privacyFirst")}
-                        </p>
-                        <p className="text-indigo-800 dark:text-indigo-200">
-                          {t("myPacketSection.privacyDetails")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Profile Form */}
-                <div className="space-y-6">
-                  {/* Personal Information Section */}
-                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                      👤 {t("myPacketSection.personalInformation")}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.firstName")}
-                        </label>
-                        <input
-                          type="text"
-                          value={veteranProfile.firstName || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              firstName: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="John"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.lastName")}
-                        </label>
-                        <input
-                          type="text"
-                          value={veteranProfile.lastName || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              lastName: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="Doe"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.middleInitial")}
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={1}
-                          value={veteranProfile.middleInitial || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              middleInitial: e.target.value.toUpperCase(),
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="M"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.dateOfBirth")}
-                        </label>
-                        <input
-                          type="date"
-                          value={veteranProfile.dob || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              dob: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.ssnLast4")}
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={4}
-                          value={veteranProfile.ssnLast4 || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              ssnLast4: e.target.value.replace(/\D/g, ""),
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="1234"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.vaFileNumber")}
-                        </label>
-                        <input
-                          type="text"
-                          value={veteranProfile.vaFileNumber || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              vaFileNumber: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="C-12345678"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information Section */}
-                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                      📞 {t("myPacketSection.contactInformation")}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.email")}
-                        </label>
-                        <input
-                          type="email"
-                          value={veteranProfile.email || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              email: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="veteran@email.com"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.phone")}
-                        </label>
-                        <input
-                          type="tel"
-                          value={veteranProfile.phone || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              phone: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="(555) 123-4567"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.alternatePhone")}
-                        </label>
-                        <input
-                          type="tel"
-                          value={veteranProfile.alternatePhone || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              alternatePhone: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="(555) 987-6543"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.streetAddress")}
-                        </label>
-                        <input
-                          type="text"
-                          value={veteranProfile.street || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              street: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="123 Main Street"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.city")}
-                        </label>
-                        <input
-                          type="text"
-                          value={veteranProfile.city || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              city: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="Springfield"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.state")}
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={2}
-                          value={veteranProfile.state || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              state: e.target.value.toUpperCase(),
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="IL"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("myPacketSection.zipCode")}
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={10}
-                          value={veteranProfile.zip || ""}
-                          onChange={(e) =>
-                            setVeteranProfile({
-                              ...veteranProfile,
-                              zip: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
-                          placeholder="62701"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Service Information Section - Now supports multiple periods */}
-                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        🎖️ {t("myPacketSection.servicePeriods")}
-                      </h4>
-                      <button
-                        onClick={() => {
-                          const newPeriod = {
-                            id: `temp-${Date.now()}`,
-                            branch: "",
-                            component: "Active",
-                            serviceStartDate: "",
-                            serviceEndDate: "",
-                            characterOfService: "",
-                            mos: "",
-                            rankAtDischarge: "",
-                            formType: "DD214",
-                            notes: "",
-                            isNew: true,
-                          };
-                          setVeteranProfile({
-                            ...veteranProfile,
-                            servicePeriods: [
-                              ...(veteranProfile.servicePeriods || []),
-                              newPeriod,
-                            ],
-                          });
-                        }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
-                      >
-                        <span>+</span> {t("myPacketSection.addServicePeriod")}
-                      </button>
-                    </div>
-
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      {t("myPacketSection.servicePeriodsDescription")}
-                    </p>
-
-                    {/* Service Periods List */}
-                    {veteranProfile.servicePeriods &&
-                    veteranProfile.servicePeriods.length > 0 ? (
-                      <div className="space-y-4">
-                        {veteranProfile.servicePeriods.map((period, idx) => (
-                          <div
-                            key={period.id || idx}
-                            className="border-2 border-indigo-200 dark:border-indigo-800 rounded-lg p-4 bg-indigo-50 dark:bg-indigo-900/20"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <h5 className="font-semibold text-gray-900 dark:text-gray-100">
-                                {t("myPacketSection.period")} #{idx + 1}
-                              </h5>
-                              <button
-                                onClick={() => {
-                                  const newPeriods =
-                                    veteranProfile.servicePeriods.filter(
-                                      (_, i) => i !== idx,
-                                    );
-                                  setVeteranProfile({
-                                    ...veteranProfile,
-                                    servicePeriods: newPeriods,
-                                  });
-                                }}
-                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold"
-                              >
-                                🗑️ {t("myPacketSection.remove")}
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.branch")}
-                                </label>
-                                <select
-                                  value={period.branch || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      branch: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                >
-                                  <option value="">
-                                    {t("myPacketSection.select")}
-                                  </option>
-                                  <option value="Army">Army</option>
-                                  <option value="Navy">Navy</option>
-                                  <option value="Air Force">Air Force</option>
-                                  <option value="Marines">Marines</option>
-                                  <option value="Coast Guard">
-                                    Coast Guard
-                                  </option>
-                                  <option value="Space Force">
-                                    Space Force
-                                  </option>
-                                  <option value="Army National Guard">
-                                    Army National Guard
-                                  </option>
-                                  <option value="Air National Guard">
-                                    Air National Guard
-                                  </option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.component")}
-                                </label>
-                                <select
-                                  value={period.component || "Active"}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      component: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                >
-                                  <option value="Active">
-                                    {t("myPacketSection.activeDuty")}
-                                  </option>
-                                  <option value="Guard">
-                                    {t("myPacketSection.nationalGuard")}
-                                  </option>
-                                  <option value="Reserve">
-                                    {t("myPacketSection.reserve")}
-                                  </option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.startDate")}
-                                </label>
-                                <input
-                                  type="date"
-                                  value={period.serviceStartDate || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      serviceStartDate: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.endDate")}
-                                </label>
-                                <input
-                                  type="date"
-                                  value={period.serviceEndDate || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      serviceEndDate: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.dischargeType")}
-                                </label>
-                                <select
-                                  value={period.characterOfService || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      characterOfService: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                >
-                                  <option value="">
-                                    {t("myPacketSection.select")}
-                                  </option>
-                                  <option value="Honorable">
-                                    {t("myPacketSection.honorable")}
-                                  </option>
-                                  <option value="General Under Honorable">
-                                    {t("myPacketSection.generalUnderHonorable")}
-                                  </option>
-                                  <option value="Other Than Honorable">
-                                    {t("myPacketSection.otherThanHonorable")}
-                                  </option>
-                                  <option value="Medical">
-                                    {t("myPacketSection.medical")}
-                                  </option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.formType")}
-                                </label>
-                                <select
-                                  value={period.formType || "DD214"}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      formType: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                >
-                                  <option value="DD214">
-                                    DD214 (Active Duty)
-                                  </option>
-                                  <option value="NGB22">
-                                    NGB 22 (National Guard)
-                                  </option>
-                                  <option value="DD256">DD256 (Reserve)</option>
-                                  <option value="Other">Other</option>
-                                </select>
-                              </div>
-
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.mosRank")}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={period.mos || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      mos: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  placeholder={t(
-                                    "myPacketSection.mosRankPlaceholder",
-                                  )}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                />
-                              </div>
-
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  {t("myPacketSection.notesOptional")}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={period.notes || ""}
-                                  onChange={(e) => {
-                                    const newPeriods = [
-                                      ...veteranProfile.servicePeriods,
-                                    ];
-                                    newPeriods[idx] = {
-                                      ...newPeriods[idx],
-                                      notes: e.target.value,
-                                    };
-                                    setVeteranProfile({
-                                      ...veteranProfile,
-                                      servicePeriods: newPeriods,
-                                    });
-                                  }}
-                                  placeholder={t(
-                                    "myPacketSection.notesPlaceholder",
-                                  )}
-                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <p className="text-sm">
-                          {t("myPacketSection.noServicePeriods")}
-                        </p>
-                        <p className="text-xs mt-1">
-                          {t("myPacketSection.clickToAddServicePeriod")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={() => {
-                        localStorage.setItem(
-                          "vet_rate_veteran_profile",
-                          JSON.stringify(veteranProfile),
-                        );
-                        alert(`✅ ${t("myPacketSection.profileSaved")}`);
-                      }}
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      💾 {t("myPacketSection.saveProfile")}
-                    </button>
-                  </div>
-                </div>
-              </>
+              <ProfileTab
+                veteranProfile={veteranProfile}
+                setVeteranProfile={setVeteranProfile}
+                t={t}
+              />
             )}
 
             {/* FORMS TAB */}
