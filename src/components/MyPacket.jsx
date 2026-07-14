@@ -4620,23 +4620,9 @@ function MyPacketTabContent(props) {
   );
 }
 
-const MyPacket = ({
-  onResume,
-  onClose,
-  onReportBug,
-  onAnalyzeStrategy,
-  onOpenGoogleDriveSync,
-  onOpenAISettings,
-  onOpenDD214Analyzer,
-}) => {
-  const { t } = useLanguage();
+function useMyPacketCoreState() {
   const [claims, setClaims] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    drafting: 0,
-    statementGenerated: 0,
-    filed: 0,
-  });
+  const [stats, setStats] = useState({ total: 0, drafting: 0, statementGenerated: 0, filed: 0 });
   const [viewingStatement, setViewingStatement] = useState(null);
   const [viewingClaimId, setViewingClaimId] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(null);
@@ -4649,7 +4635,16 @@ const MyPacket = ({
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
 
-  // Tab state for Claims vs Forms vs Ratings view
+  return {
+    claims, setClaims, stats, setStats, viewingStatement, setViewingStatement,
+    viewingClaimId, setViewingClaimId, showDownloadMenu, setShowDownloadMenu,
+    importStatus, setImportStatus, showImportConfirm, setShowImportConfirm,
+    backupCreated, setBackupCreated, isCertified, setIsCertified,
+    showBackupGuide, setShowBackupGuide, setHasExternalBackup, fileInputRef, packetContentRef,
+  };
+}
+
+function useMyPacketTabsState() {
   const [activeTab, setActiveTab] = useState("claims");
   const [savedForms, setSavedForms] = useState([]);
   const [viewingForm, setViewingForm] = useState(null);
@@ -4657,35 +4652,31 @@ const MyPacket = ({
   const [editingRating, setEditingRating] = useState(null);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
-  // Veteran Profile state
-  const [veteranProfile, setVeteranProfile] = useState({});
+  return {
+    activeTab, setActiveTab, savedForms, setSavedForms, viewingForm, setViewingForm,
+    myRatings, setMyRatings, editingRating, setEditingRating, showVAGovPaster, setShowVAGovPaster,
+  };
+}
 
-  // Service History state
-  const [serviceHistory, setServiceHistory] = useState({
-    deployments: [],
-    awards: [],
-    dd214Data: null,
-  });
+function useMyPacketTimelinePainState() {
+  const [timelineEvents, setTimelineEvents] = useState([]);
+  const [painMaps, setPainMaps] = useState([]);
+  const [viewingPainMap, setViewingPainMap] = useState(null);
+
+  return { timelineEvents, setTimelineEvents, painMaps, setPainMaps, viewingPainMap, setViewingPainMap };
+}
+
+function useMyPacketServiceHistoryState() {
+  const [serviceHistory, setServiceHistory] = useState({ deployments: [], awards: [], dd214Data: null });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
   const [showAwardForm, setShowAwardForm] = useState(false);
   const [showRibbonRack, setShowRibbonRack] = useState(false);
   const [showDD214Processor, setShowDD214Processor] = useState(false);
   const [newDeployment, setNewDeployment] = useState({
-    theater: "",
-    location: "",
-    startDate: "",
-    endDate: "",
-    unit: "",
-    notes: "",
-    hazardous: false,
-    combat: false,
+    theater: "", location: "", startDate: "", endDate: "", unit: "", notes: "", hazardous: false, combat: false,
   });
   const [newAward, setNewAward] = useState({
-    name: "",
-    abbreviation: "",
-    dateReceived: "",
-    notes: "",
-    isCombat: false,
+    name: "", abbreviation: "", dateReceived: "", notes: "", isCombat: false,
   });
   const [dd214Text, setDD214Text] = useState("");
   const [isProcessingDD214, setIsProcessingDD214] = useState(false);
@@ -4693,17 +4684,17 @@ const MyPacket = ({
   const [isDraggingDD214, setIsDraggingDD214] = useState(false);
   const dd214FileInputRef = useRef(null);
 
-  // Timeline Events state (Continuity Thread)
-  const [timelineEvents, setTimelineEvents] = useState([]);
+  return {
+    serviceHistory, setServiceHistory, showDeploymentForm, setShowDeploymentForm,
+    showAwardForm, setShowAwardForm, showRibbonRack, setShowRibbonRack,
+    showDD214Processor, setShowDD214Processor, newDeployment, setNewDeployment, newAward, setNewAward,
+    dd214Text, setDD214Text, isProcessingDD214, setIsProcessingDD214,
+    aiStatus, setAIStatus, isDraggingDD214, setIsDraggingDD214, dd214FileInputRef,
+  };
+}
 
-  // Pain Maps state
-  const [painMaps, setPainMaps] = useState([]);
-  const [viewingPainMap, setViewingPainMap] = useState(null);
-
-  // VA Records state
+function useMyPacketVaState() {
   const [vaRecords, setVaRecords] = useState(null);
-
-  // VA Authentication & Import state
   const {
     isAuthenticated: isVaAuthenticated,
     isLoading: _vaAuthLoading,
@@ -4713,95 +4704,90 @@ const MyPacket = ({
     accessToken: vaAccessToken,
     error: _vaAuthError,
   } = useVaAuth();
-  const [vaImportStatus, setVaImportStatus] = useState({
-    loading: false,
-    success: null,
-    message: "",
-    counts: {},
-  });
+  const [vaImportStatus, setVaImportStatus] = useState({ loading: false, success: null, message: "", counts: {} });
 
-  useEffect(() => {
-    loadClaims();
-    loadSavedForms();
-    loadMyRatings();
-    loadServiceHistory();
-    loadTimelineEvents();
-    loadPainMaps();
-    loadVeteranProfile();
-    loadVARecordsData();
-    checkAIStatus();
-  }, []);
+  return { vaRecords, setVaRecords, isVaAuthenticated, vaLogout, vaAccessToken, vaImportStatus, setVaImportStatus };
+}
 
-  // Auto-import VA records after fresh OAuth connection
-  useEffect(() => {
-    const justConnected = sessionStorage.getItem("va_auth_just_connected");
-    if (
-      justConnected &&
-      isVaAuthenticated &&
-      vaAccessToken &&
-      !vaImportStatus.loading
-    ) {
-      sessionStorage.removeItem("va_auth_just_connected");
-      // eslint-disable-next-line no-console
-      console.log(
-        "[MyPacket] Auto-importing VA records after fresh auth connection",
-      );
-      // Small delay to ensure UI is ready
-      const timer = setTimeout(() => {
-        handleVaDataImport();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVaAuthenticated, vaAccessToken]);
+function _buildPacketLoaders(state) {
+  const {
+    setVeteranProfile,
+    setAIStatus,
+    setServiceHistory,
+    setTimelineEvents,
+    setPainMaps,
+    setSavedForms,
+    setMyRatings,
+    setVaRecords,
+    setClaims,
+    setStats,
+  } = state;
 
   const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
-
   const checkAIStatus = async () => {
     await _checkAIStatus({ setAIStatus });
   };
-
   const loadServiceHistory = () => _loadServiceHistory({ setServiceHistory });
-
   const loadTimelineEvents = () => _loadTimelineEvents({ setTimelineEvents });
-
   const loadPainMaps = () => _loadPainMaps({ setPainMaps });
+  const loadSavedForms = () => _loadSavedForms({ setSavedForms });
+  const loadMyRatings = () => _loadMyRatings({ setMyRatings });
+  const loadVARecordsData = () => _loadVARecordsData({ setVaRecords });
+  const loadClaims = () => _loadClaimsData({ setClaims, setStats });
 
+  return {
+    loadVeteranProfile,
+    checkAIStatus,
+    loadServiceHistory,
+    loadTimelineEvents,
+    loadPainMaps,
+    loadSavedForms,
+    loadMyRatings,
+    loadVARecordsData,
+    loadClaims,
+  };
+}
+
+function _buildPacketPainTimelineHandlers(ctx) {
+  const { loadPainMaps, loadTimelineEvents } = ctx;
   const handleDeletePainMap = (mapId) =>
     _deletePainMapAndReload(mapId, { loadPainMaps });
-
   const handleClearTimelineEvents = () =>
     _clearTimelineEventsAndReload({ loadTimelineEvents });
+  return { handleDeletePainMap, handleClearTimelineEvents };
+}
 
-  const loadSavedForms = () => _loadSavedForms({ setSavedForms });
-
-  const loadMyRatings = () => _loadMyRatings({ setMyRatings });
+function _buildPacketFormsRatingsHandlers(ctx) {
+  const { loadSavedForms, loadMyRatings, setEditingRating, setShowVAGovPaster } = ctx;
 
   const handleRemoveForm = (formId) =>
     _removeFormAndReload(formId, { loadSavedForms });
-
   const handleRemoveRating = (ratingId) =>
     _removeRatingAndReload(ratingId, { loadMyRatings });
-
   const handleUpdateRating = (ratingId, updates) =>
     _updateRatingAndReload(ratingId, updates, {
       loadMyRatings,
       setEditingRating,
     });
-
   const handleClearAllRatings = () =>
     _clearAllRatingsAndReload({ loadMyRatings });
-
   const handlePastedRatings = (parsedRatings) =>
     _savePastedRatings(parsedRatings, { loadMyRatings, setShowVAGovPaster });
 
-  // VA Records handlers
-  const loadVARecordsData = () => _loadVARecordsData({ setVaRecords });
+  return {
+    handleRemoveForm,
+    handleRemoveRating,
+    handleUpdateRating,
+    handleClearAllRatings,
+    handlePastedRatings,
+  };
+}
+
+function _buildPacketVaHandlers(ctx) {
+  const { loadVARecordsData, loadClaims, vaAccessToken, setVaImportStatus, vaLogout } = ctx;
 
   const _handleClearVARecords = () =>
     _clearVARecordsAndReload({ loadVARecordsData });
-
-  // VA Data Import Handler - Fetches all data from VA.gov and saves locally
   const handleVaDataImport = async () => {
     await _importVaData(vaAccessToken, {
       setVaImportStatus,
@@ -4809,32 +4795,44 @@ const MyPacket = ({
       loadClaims,
     });
   };
-
-  // Handle VA Disconnect - clears session but keeps imported data
   const _handleVaDisconnect = () =>
     _disconnectVaSession({ vaLogout, setVaImportStatus });
 
-  // Service History handlers
+  return { _handleClearVARecords, handleVaDataImport, _handleVaDisconnect };
+}
+
+function _buildPacketServiceHistoryHandlers(ctx) {
+  const {
+    loadServiceHistory,
+    newDeployment,
+    setNewDeployment,
+    setShowDeploymentForm,
+    newAward,
+    setNewAward,
+    setShowAwardForm,
+    dd214Text,
+    aiStatus,
+    setIsProcessingDD214,
+    setDD214Text,
+    setShowDD214Processor,
+  } = ctx;
+
   const handleAddDeployment = () =>
     _addDeploymentAndReset(newDeployment, {
       loadServiceHistory,
       setNewDeployment,
       setShowDeploymentForm,
     });
-
   const handleRemoveDeployment = (depId) =>
     _removeDeploymentAndReload(depId, { loadServiceHistory });
-
   const handleAddAward = () =>
     _addAwardAndReset(newAward, {
       loadServiceHistory,
       setNewAward,
       setShowAwardForm,
     });
-
   const handleRemoveAward = (awardId) =>
     _removeAwardAndReload(awardId, { loadServiceHistory });
-
   const handleProcessDD214 = async () => {
     await _processDD214Text(dd214Text, aiStatus, {
       setIsProcessingDD214,
@@ -4843,57 +4841,67 @@ const MyPacket = ({
       setShowDD214Processor,
     });
   };
-
   const handleClearDD214 = () => _clearDD214AndReload({ loadServiceHistory });
 
-  // DD214 Drag and Drop handlers - connects to DD214 Analyzer
-  const handleDD214DragOver = (e) => _dd214DragOver(e, { setIsDraggingDD214 });
+  return {
+    handleAddDeployment,
+    handleRemoveDeployment,
+    handleAddAward,
+    handleRemoveAward,
+    handleProcessDD214,
+    handleClearDD214,
+  };
+}
 
+function _buildPacketDD214DropHandlers(ctx) {
+  const { setIsDraggingDD214, onOpenDD214Analyzer, dd214FileInputRef } = ctx;
+
+  const handleDD214DragOver = (e) => _dd214DragOver(e, { setIsDraggingDD214 });
   const handleDD214DragLeave = (e) =>
     _dd214DragLeave(e, { setIsDraggingDD214 });
-
   const handleDD214Drop = (e) =>
     _dd214DropFile(e, { setIsDraggingDD214, onOpenDD214Analyzer });
-
   const handleDD214FileSelect = (e) =>
     _dd214FileSelected(e, { onOpenDD214Analyzer, dd214FileInputRef });
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showDownloadMenu && !event.target.closest(".relative")) {
-        setShowDownloadMenu(null);
-      }
-    };
+  return {
+    handleDD214DragOver,
+    handleDD214DragLeave,
+    handleDD214Drop,
+    handleDD214FileSelect,
+  };
+}
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showDownloadMenu]);
-
-  const loadClaims = () => _loadClaimsData({ setClaims, setStats });
-
-  const handleRemove = (claimId) =>
-    _removeClaimAndReload(claimId, { loadClaims });
-
+function _buildPacketClaimsHandlers(ctx) {
+  const { loadClaims } = ctx;
+  const handleRemove = (claimId) => _removeClaimAndReload(claimId, { loadClaims });
   const handleClearAll = () => _clearAllClaimsAndReload({ loadClaims });
+  const handleStatusChange = (claimId, newStatus) =>
+    _changeClaimStatus(claimId, newStatus, { loadClaims });
+  return { handleRemove, handleClearAll, handleStatusChange };
+}
 
-  // Check if user needs backup guidance on mount
-  useEffect(() => {
-    const hasBackedUp = localStorage.getItem("vetrate_external_backup_created");
-    setHasExternalBackup(!!hasBackedUp);
-    // Show guide if they have claims but haven't downloaded a backup
-    const hasDismissedGuide = localStorage.getItem(
-      "vetrate_backup_guide_dismissed",
-    );
-    if (claims.length > 0 && !hasBackedUp && !hasDismissedGuide) {
-      setShowBackupGuide(true);
-    }
-  }, [claims.length]);
+function _buildPacketBackupRestoreHandlers(ctx) {
+  const {
+    setShowBackupGuide,
+    claims,
+    setImportStatus,
+    setBackupCreated,
+    setHasExternalBackup,
+    fileInputRef,
+    setShowImportConfirm,
+    showImportConfirm,
+    loadSavedForms,
+    loadVeteranProfile,
+    loadServiceHistory,
+    loadMyRatings,
+    loadTimelineEvents,
+    loadPainMaps,
+    loadClaims,
+  } = ctx;
 
-  // Dismiss backup guide
   const dismissBackupGuide = (remindLater = true) =>
     _dismissBackupGuide(remindLater, { setShowBackupGuide });
-
-  // Backup COMPLETE packet to JSON file (includes profile and forms)
   const handleBackupPacket = () =>
     _createPacketBackup(claims, {
       setImportStatus,
@@ -4901,15 +4909,9 @@ const MyPacket = ({
       setHasExternalBackup,
       setShowBackupGuide,
     });
-
-  // Trigger file input for restore
   const handleRestoreClick = () => _triggerRestoreClick({ fileInputRef });
-
-  // Handle file selection for restore
   const handleFileSelect = (event) =>
     _handleBackupFileSelect(event, { setImportStatus, setShowImportConfirm });
-
-  // Confirm and execute import (handles complete backups with profile and forms)
   const handleConfirmImport = (mergeMode) => {
     _confirmDataImport(mergeMode, showImportConfirm.data, {
       loadSavedForms,
@@ -4924,15 +4926,23 @@ const MyPacket = ({
     });
   };
 
-  const handleStatusChange = (claimId, newStatus) =>
-    _changeClaimStatus(claimId, newStatus, { loadClaims });
+  return {
+    dismissBackupGuide,
+    handleBackupPacket,
+    handleRestoreClick,
+    handleFileSelect,
+    handleConfirmImport,
+  };
+}
+
+function _buildPacketStatementHandlers(ctx) {
+  const { setViewingStatement, setViewingClaimId, setShowDownloadMenu, viewingClaimId, claims, onResume } =
+    ctx;
 
   const handleViewStatement = (claimId) =>
     _viewStatementForClaim(claimId, { setViewingStatement, setViewingClaimId });
-
   const handleDownloadStatement = (claim, format = "txt") =>
     _downloadStatementForClaim(claim, format, { setShowDownloadMenu });
-
   const handleEditStatement = () =>
     _editViewedStatement(viewingClaimId, claims, {
       onResume,
@@ -4940,131 +4950,100 @@ const MyPacket = ({
       setViewingClaimId,
     });
 
+  return { handleViewStatement, handleDownloadStatement, handleEditStatement };
+}
+
+function _runPacketInitLoadEffect(setters) {
+  const {
+    setClaims,
+    setStats,
+    setSavedForms,
+    setMyRatings,
+    setServiceHistory,
+    setTimelineEvents,
+    setPainMaps,
+    setVeteranProfile,
+    setVaRecords,
+    setAIStatus,
+  } = setters;
+  _loadClaimsData({ setClaims, setStats });
+  _loadSavedForms({ setSavedForms });
+  _loadMyRatings({ setMyRatings });
+  _loadServiceHistory({ setServiceHistory });
+  _loadTimelineEvents({ setTimelineEvents });
+  _loadPainMaps({ setPainMaps });
+  _loadVeteranProfile({ setVeteranProfile });
+  _loadVARecordsData({ setVaRecords });
+  _checkAIStatus({ setAIStatus });
+}
+
+// Auto-import VA records after fresh OAuth connection
+function _runPacketVaAutoImportEffect(ctx) {
+  const { isVaAuthenticated, vaAccessToken, vaImportStatus, handleVaDataImport } = ctx;
+  const justConnected = sessionStorage.getItem("va_auth_just_connected");
+  if (
+    justConnected &&
+    isVaAuthenticated &&
+    vaAccessToken &&
+    !vaImportStatus.loading
+  ) {
+    sessionStorage.removeItem("va_auth_just_connected");
+    // eslint-disable-next-line no-console
+    console.log(
+      "[MyPacket] Auto-importing VA records after fresh auth connection",
+    );
+    // Small delay to ensure UI is ready
+    const timer = setTimeout(() => {
+      handleVaDataImport();
+    }, 500);
+    return () => clearTimeout(timer);
+  }
+}
+
+function _runPacketClickOutsideEffect(showDownloadMenu, setShowDownloadMenu) {
+  const handleClickOutside = (event) => {
+    if (showDownloadMenu && !event.target.closest(".relative")) {
+      setShowDownloadMenu(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}
+
+// Check if user needs backup guidance on mount / when claims change
+function _runPacketBackupGuideEffect(claimsLength, setHasExternalBackup, setShowBackupGuide) {
+  const hasBackedUp = localStorage.getItem("vetrate_external_backup_created");
+  setHasExternalBackup(!!hasBackedUp);
+  // Show guide if they have claims but haven't downloaded a backup
+  const hasDismissedGuide = localStorage.getItem(
+    "vetrate_backup_guide_dismissed",
+  );
+  if (claimsLength > 0 && !hasBackedUp && !hasDismissedGuide) {
+    setShowBackupGuide(true);
+  }
+}
+
+function MyPacketExtraModals({ state, handlers }) {
+  const {
+    viewingStatement,
+    setViewingStatement,
+    setViewingClaimId,
+    isCertified,
+    setIsCertified,
+    showImportConfirm,
+    setShowImportConfirm,
+    claims,
+    backupCreated,
+    setBackupCreated,
+    showVAGovPaster,
+    setShowVAGovPaster,
+    t,
+  } = state;
+  const { handleEditStatement, handleConfirmImport, handlePastedRatings } = handlers;
+
   return (
     <>
-      <ResponsiveModal
-        isOpen
-        onClose={onClose}
-        size="2xl"
-        labelledBy="my-packet-title"
-        header={
-          <MyPacketHeader
-            onClose={onClose}
-            onReportBug={onReportBug}
-            packetContentRef={packetContentRef}
-            t={t}
-          />
-        }
-      >
-        <div ref={packetContentRef}>
-          <MyPacketStatsDashboard stats={stats} t={t} />
-
-          <MyPacketBackupGuideBanner
-            showBackupGuide={showBackupGuide}
-            claims={claims}
-            handleBackupPacket={handleBackupPacket}
-            onOpenGoogleDriveSync={onOpenGoogleDriveSync}
-            dismissBackupGuide={dismissBackupGuide}
-            t={t}
-          />
-
-          <MyPacketBackupRestoreControls
-            handleBackupPacket={handleBackupPacket}
-            claims={claims}
-            handleRestoreClick={handleRestoreClick}
-            onOpenGoogleDriveSync={onOpenGoogleDriveSync}
-            onAnalyzeStrategy={onAnalyzeStrategy}
-            fileInputRef={fileInputRef}
-            handleFileSelect={handleFileSelect}
-            t={t}
-          />
-
-          <MyPacketImportStatusMessage importStatus={importStatus} />
-
-          <MyPacketTabNav
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            claims={claims}
-            myRatings={myRatings}
-            serviceHistory={serviceHistory}
-            timelineEvents={timelineEvents}
-            painMaps={painMaps}
-            veteranProfile={veteranProfile}
-            savedForms={savedForms}
-            vaRecords={vaRecords}
-            t={t}
-          />
-
-          <MyPacketTabContent
-            activeTab={activeTab}
-            aiStatus={aiStatus}
-            claims={claims}
-            dd214FileInputRef={dd214FileInputRef}
-            dd214Text={dd214Text}
-            editingRating={editingRating}
-            getStatusColor={getStatusColor}
-            handleAddAward={handleAddAward}
-            handleAddDeployment={handleAddDeployment}
-            handleClearAll={handleClearAll}
-            handleClearAllRatings={handleClearAllRatings}
-            handleClearDD214={handleClearDD214}
-            handleClearTimelineEvents={handleClearTimelineEvents}
-            handleDD214DragLeave={handleDD214DragLeave}
-            handleDD214DragOver={handleDD214DragOver}
-            handleDD214Drop={handleDD214Drop}
-            handleDD214FileSelect={handleDD214FileSelect}
-            handleDeletePainMap={handleDeletePainMap}
-            handleDownloadStatement={handleDownloadStatement}
-            handleProcessDD214={handleProcessDD214}
-            handleRemove={handleRemove}
-            handleRemoveAward={handleRemoveAward}
-            handleRemoveDeployment={handleRemoveDeployment}
-            handleRemoveForm={handleRemoveForm}
-            handleRemoveRating={handleRemoveRating}
-            handleStatusChange={handleStatusChange}
-            handleUpdateRating={handleUpdateRating}
-            handleViewStatement={handleViewStatement}
-            isCertified={isCertified}
-            isDraggingDD214={isDraggingDD214}
-            isProcessingDD214={isProcessingDD214}
-            myRatings={myRatings}
-            newAward={newAward}
-            newDeployment={newDeployment}
-            onClose={onClose}
-            onOpenAISettings={onOpenAISettings}
-            onResume={onResume}
-            painMaps={painMaps}
-            savedForms={savedForms}
-            serviceHistory={serviceHistory}
-            setDD214Text={setDD214Text}
-            setEditingRating={setEditingRating}
-            setNewAward={setNewAward}
-            setNewDeployment={setNewDeployment}
-            setPainMaps={setPainMaps}
-            setShowAwardForm={setShowAwardForm}
-            setShowDD214Processor={setShowDD214Processor}
-            setShowDeploymentForm={setShowDeploymentForm}
-            setShowDownloadMenu={setShowDownloadMenu}
-            setShowRibbonRack={setShowRibbonRack}
-            setShowVAGovPaster={setShowVAGovPaster}
-            setTimelineEvents={setTimelineEvents}
-            setVeteranProfile={setVeteranProfile}
-            setViewingForm={setViewingForm}
-            setViewingPainMap={setViewingPainMap}
-            showAwardForm={showAwardForm}
-            showDD214Processor={showDD214Processor}
-            showDeploymentForm={showDeploymentForm}
-            showDownloadMenu={showDownloadMenu}
-            showRibbonRack={showRibbonRack}
-            t={t}
-            timelineEvents={timelineEvents}
-            veteranProfile={veteranProfile}
-            viewingForm={viewingForm}
-            viewingPainMap={viewingPainMap}
-          />
-        </div>
-      </ResponsiveModal>
-
       {/* Statement Viewer Modal */}
       {viewingStatement && (
         <StatementViewerModal
@@ -5104,6 +5083,187 @@ const MyPacket = ({
       )}
     </>
   );
+}
+
+function MyPacketBackupSection({ state, handlers }) {
+  const { showBackupGuide, claims, onOpenGoogleDriveSync, onAnalyzeStrategy, fileInputRef, t } = state;
+  const { dismissBackupGuide, handleBackupPacket, handleRestoreClick, handleFileSelect } = handlers;
+
+  return (
+    <>
+      <MyPacketBackupGuideBanner
+        showBackupGuide={showBackupGuide}
+        claims={claims}
+        handleBackupPacket={handleBackupPacket}
+        onOpenGoogleDriveSync={onOpenGoogleDriveSync}
+        dismissBackupGuide={dismissBackupGuide}
+        t={t}
+      />
+
+      <MyPacketBackupRestoreControls
+        handleBackupPacket={handleBackupPacket}
+        claims={claims}
+        handleRestoreClick={handleRestoreClick}
+        onOpenGoogleDriveSync={onOpenGoogleDriveSync}
+        onAnalyzeStrategy={onAnalyzeStrategy}
+        fileInputRef={fileInputRef}
+        handleFileSelect={handleFileSelect}
+        t={t}
+      />
+    </>
+  );
+}
+
+function MyPacketView({ state, handlers }) {
+  const {
+    onClose,
+    onReportBug,
+    packetContentRef,
+    t,
+    stats,
+    claims,
+    importStatus,
+    activeTab,
+    setActiveTab,
+    myRatings,
+    serviceHistory,
+    timelineEvents,
+    painMaps,
+    veteranProfile,
+    savedForms,
+    vaRecords,
+  } = state;
+
+  return (
+    <>
+      <ResponsiveModal
+        isOpen
+        onClose={onClose}
+        size="2xl"
+        labelledBy="my-packet-title"
+        header={
+          <MyPacketHeader
+            onClose={onClose}
+            onReportBug={onReportBug}
+            packetContentRef={packetContentRef}
+            t={t}
+          />
+        }
+      >
+        <div ref={packetContentRef}>
+          <MyPacketStatsDashboard stats={stats} t={t} />
+
+          <MyPacketBackupSection state={state} handlers={handlers} />
+
+          <MyPacketImportStatusMessage importStatus={importStatus} />
+
+          <MyPacketTabNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            claims={claims}
+            myRatings={myRatings}
+            serviceHistory={serviceHistory}
+            timelineEvents={timelineEvents}
+            painMaps={painMaps}
+            veteranProfile={veteranProfile}
+            savedForms={savedForms}
+            vaRecords={vaRecords}
+            t={t}
+          />
+
+          <MyPacketTabContent {...state} {...handlers} getStatusColor={getStatusColor} />
+        </div>
+      </ResponsiveModal>
+
+      <MyPacketExtraModals state={state} handlers={handlers} />
+    </>
+  );
+}
+
+const MyPacket = ({
+  onResume,
+  onClose,
+  onReportBug,
+  onAnalyzeStrategy,
+  onOpenGoogleDriveSync,
+  onOpenAISettings,
+  onOpenDD214Analyzer,
+}) => {
+  const { t } = useLanguage();
+  const coreState = useMyPacketCoreState();
+  const tabsState = useMyPacketTabsState();
+  const [veteranProfile, setVeteranProfile] = useState({});
+  const serviceHistoryState = useMyPacketServiceHistoryState();
+  const timelinePainState = useMyPacketTimelinePainState();
+  const vaState = useMyPacketVaState();
+
+  const state = {
+    t, onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync, onOpenAISettings, onOpenDD214Analyzer,
+    ...coreState,
+    veteranProfile, setVeteranProfile,
+    ...tabsState,
+    ...timelinePainState,
+    ...serviceHistoryState,
+    ...vaState,
+  };
+
+  const loaders = _buildPacketLoaders(state);
+  const ctx = { ...state, ...loaders };
+  const handlers = {
+    ...loaders,
+    ..._buildPacketPainTimelineHandlers(ctx),
+    ..._buildPacketFormsRatingsHandlers(ctx),
+    ..._buildPacketVaHandlers(ctx),
+    ..._buildPacketServiceHistoryHandlers(ctx),
+    ..._buildPacketDD214DropHandlers(ctx),
+    ..._buildPacketClaimsHandlers(ctx),
+    ..._buildPacketBackupRestoreHandlers(ctx),
+    ..._buildPacketStatementHandlers(ctx),
+  };
+
+  useEffect(
+    () =>
+      _runPacketInitLoadEffect({
+        setClaims: coreState.setClaims, setStats: coreState.setStats,
+        setSavedForms: tabsState.setSavedForms, setMyRatings: tabsState.setMyRatings,
+        setServiceHistory: serviceHistoryState.setServiceHistory,
+        setTimelineEvents: timelinePainState.setTimelineEvents, setPainMaps: timelinePainState.setPainMaps,
+        setVeteranProfile, setVaRecords: vaState.setVaRecords, setAIStatus: serviceHistoryState.setAIStatus,
+      }),
+    [
+      coreState.setClaims, coreState.setStats, tabsState.setSavedForms, tabsState.setMyRatings,
+      serviceHistoryState.setServiceHistory, timelinePainState.setTimelineEvents, timelinePainState.setPainMaps,
+      serviceHistoryState.setAIStatus, vaState.setVaRecords,
+    ],
+  );
+
+  useEffect(
+    () =>
+      _runPacketVaAutoImportEffect({
+        isVaAuthenticated: vaState.isVaAuthenticated,
+        vaAccessToken: vaState.vaAccessToken,
+        vaImportStatus: vaState.vaImportStatus,
+        handleVaDataImport: handlers.handleVaDataImport,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [vaState.isVaAuthenticated, vaState.vaAccessToken],
+  );
+
+  useEffect(
+    () => _runPacketClickOutsideEffect(coreState.showDownloadMenu, coreState.setShowDownloadMenu),
+    [coreState.showDownloadMenu, coreState.setShowDownloadMenu],
+  );
+  useEffect(
+    () =>
+      _runPacketBackupGuideEffect(
+        coreState.claims.length,
+        coreState.setHasExternalBackup,
+        coreState.setShowBackupGuide,
+      ),
+    [coreState.claims.length, coreState.setHasExternalBackup, coreState.setShowBackupGuide],
+  );
+
+  return <MyPacketView state={state} handlers={handlers} />;
 };
 
 export default MyPacket;
