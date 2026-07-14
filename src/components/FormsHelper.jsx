@@ -4438,6 +4438,154 @@ function FormInfoPanel({ selectedForm, setCurrentStep, setSelectedForm, t }) {
   );
 }
 
+function WizardProgressBar({ currentStep, totalSteps, selectedForm, t }) {
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <span>
+          {t("formsHelper", "stepOf")
+            .replace("{current}", currentStep)
+            .replace("{total}", totalSteps)}
+        </span>
+        <span>{selectedForm?.name}</span>
+      </div>
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div
+          className="bg-va-blue h-2 rounded-full transition-all duration-300"
+          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WizardStepNavigation({
+  currentStep,
+  setCurrentStep,
+  isLastStep,
+  handleFinishWizard,
+  t,
+}) {
+  return (
+    <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+      <button
+        onClick={() => {
+          if (currentStep === 1) {
+            setCurrentStep(0);
+          } else {
+            setCurrentStep((prev) => prev - 1);
+          }
+        }}
+        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
+      >
+        ← {t("formsHelper", "back")}
+      </button>
+
+      {isLastStep ? (
+        <button
+          onClick={handleFinishWizard}
+          className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
+        >
+          {t("formsHelper", "generateStatement")}
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </button>
+      ) : (
+        <button
+          onClick={() => setCurrentStep((prev) => prev + 1)}
+          className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
+        >
+          {t("formsHelper", "next")}
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function WizardStepPanel({
+  selectedForm,
+  currentStep,
+  setCurrentStep,
+  formData,
+  handleFieldChange,
+  handleChecklistChange,
+  handleFinishWizard,
+  t,
+}) {
+  const steps = _getFormStepsForForm(selectedForm);
+  if (currentStep === 0 || currentStep > steps.length) return null;
+
+  const step = steps[currentStep - 1];
+  const isLastStep = currentStep === steps.length;
+
+  return (
+    <div className="space-y-6">
+      <WizardProgressBar
+        currentStep={currentStep}
+        totalSteps={steps.length}
+        selectedForm={selectedForm}
+        t={t}
+      />
+
+      {/* Step content */}
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          {step.title}
+        </h3>
+        {step.subtitle && (
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {step.subtitle}
+          </p>
+        )}
+
+        <div className="space-y-4">
+          {step.fields.map((field) => (
+            <FormField
+              key={field.name}
+              field={field}
+              formData={formData}
+              handleFieldChange={handleFieldChange}
+              handleChecklistChange={handleChecklistChange}
+            />
+          ))}
+        </div>
+      </div>
+
+      <WizardStepNavigation
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        isLastStep={isLastStep}
+        handleFinishWizard={handleFinishWizard}
+        t={t}
+      />
+    </div>
+  );
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -7358,118 +7506,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
     </div>
   );
 
-  const renderWizardStep = () => {
-    const steps = _getFormStepsForForm(selectedForm);
-    if (currentStep === 0 || currentStep > steps.length) return null;
-
-    const step = steps[currentStep - 1];
-    const isLastStep = currentStep === steps.length;
-
-    return (
-      <div className="space-y-6">
-        {/* Progress bar */}
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-            <span>
-              {t("formsHelper", "stepOf")
-                .replace("{current}", currentStep)
-                .replace("{total}", steps.length)}
-            </span>
-            <span>{selectedForm?.name}</span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-va-blue h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / steps.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Step content */}
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            {step.title}
-          </h3>
-          {step.subtitle && (
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {step.subtitle}
-            </p>
-          )}
-
-          <div className="space-y-4">
-            {step.fields.map((field) => (
-              <FormField
-                key={field.name}
-                field={field}
-                formData={formData}
-                handleFieldChange={handleFieldChange}
-                handleChecklistChange={handleChecklistChange}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => {
-              if (currentStep === 1) {
-                setCurrentStep(0);
-              } else {
-                setCurrentStep((prev) => prev - 1);
-              }
-            }}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
-          >
-            ← {t("formsHelper", "back")}
-          </button>
-
-          {isLastStep ? (
-            <button
-              onClick={handleFinishWizard}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
-            >
-              {t("formsHelper", "generateStatement")}
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
-          ) : (
-            <button
-              onClick={() => setCurrentStep((prev) => prev + 1)}
-              className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
-            >
-              {t("formsHelper", "next")}
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const renderReviewStep = () => {
     if (!generatedContent) return null;
 
@@ -7905,7 +7941,18 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
     // In wizard steps (steps are 1-indexed, so currentStep 1 = step index 0)
     if (currentStep >= 1 && currentStep <= steps.length && !generatedContent) {
-      return renderWizardStep();
+      return (
+        <WizardStepPanel
+          selectedForm={selectedForm}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          formData={formData}
+          handleFieldChange={handleFieldChange}
+          handleChecklistChange={handleChecklistChange}
+          handleFinishWizard={handleFinishWizard}
+          t={t}
+        />
+      );
     }
 
     // Past wizard or content generated - show review/download
