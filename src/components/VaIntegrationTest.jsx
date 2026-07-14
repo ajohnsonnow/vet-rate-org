@@ -137,6 +137,73 @@ async function _fetchAppealableIssuesData(accessToken, ctx) {
   }
 }
 
+function _buildVaIntegrationHandlers(accessToken, dataState, auth) {
+  const {
+    setServiceHistory,
+    setClaims,
+    setAppealableIssues,
+    setRawServiceHistory,
+    setRawClaims,
+    setRawAppealableIssues,
+    setLoading,
+    setErrors,
+    setShowRawJson,
+  } = dataState;
+  const { login, logout } = auth;
+
+  const fetchServiceHistory = () =>
+    _fetchServiceHistoryData(accessToken, {
+      setLoading,
+      setErrors,
+      setRawServiceHistory,
+      setServiceHistory,
+    });
+
+  const fetchClaims = () =>
+    _fetchClaimsData(accessToken, {
+      setLoading,
+      setErrors,
+      setRawClaims,
+      setClaims,
+    });
+
+  // Note: Appeals API is Future Scope - this function is available but not auto-called
+  const fetchAppealableIssues = () =>
+    _fetchAppealableIssuesData(accessToken, {
+      setLoading,
+      setErrors,
+      setRawAppealableIssues,
+      setAppealableIssues,
+    });
+
+  const toggleRawJson = (key) => {
+    setShowRawJson((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleLogin = async () => {
+    await login();
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setServiceHistory(null);
+    setClaims(null);
+    setAppealableIssues(null);
+    setRawServiceHistory(null);
+    setRawClaims(null);
+    setRawAppealableIssues(null);
+  };
+
+  return {
+    fetchServiceHistory,
+    fetchClaims,
+    fetchAppealableIssues,
+    toggleRawJson,
+    handleLogin,
+    handleLogout,
+  };
+}
+
 // Format date for display
 function formatDate(dateString) {
   if (!dateString) return "N/A";
@@ -881,24 +948,21 @@ function VaSandboxNoticeFooter() {
   );
 }
 
-function VaAuthenticatedView({
-  loading,
-  errors,
-  serviceHistory,
-  rawServiceHistory,
-  claims,
-  rawClaims,
-  appealableIssues,
-  rawAppealableIssues,
-  showRawJson,
-  fetchAllData,
-  fetchServiceHistory,
-  fetchClaims,
-  fetchAppealableIssues,
-  toggleRawJson,
-  expandedClaim,
-  setExpandedClaim,
-}) {
+function VaAuthenticatedView({ dataState, handlers, fetchAllData }) {
+  const {
+    loading,
+    errors,
+    serviceHistory,
+    rawServiceHistory,
+    claims,
+    rawClaims,
+    appealableIssues,
+    rawAppealableIssues,
+    showRawJson,
+    expandedClaim,
+    setExpandedClaim,
+  } = dataState;
+  const { fetchServiceHistory, fetchClaims, fetchAppealableIssues, toggleRawJson } = handlers;
   const anyLoading = loading.serviceHistory || loading.claims || loading.appealableIssues;
   return (
     <div className="space-y-6">
@@ -951,111 +1015,19 @@ function VaAuthenticatedView({
   );
 }
 
-const VaIntegrationTest = ({ onClose }) => {
-  const { t: _t } = useLanguage();
-
-  // State for sandbox test modal
-  const [showSandboxTest, setShowSandboxTest] = useState(false);
-
-  const {
-    isAuthenticated,
-    isLoading: authLoading,
-    userInfo,
-    login,
-    logout,
-    accessToken,
-    error: authError,
-  } = useVaAuth();
-
-  // Data states
-  const [serviceHistory, setServiceHistory] = useState(null);
-  const [claims, setClaims] = useState(null);
-  const [appealableIssues, setAppealableIssues] = useState(null);
-
-  // Raw JSON states
-  const [rawServiceHistory, setRawServiceHistory] = useState(null);
-  const [rawClaims, setRawClaims] = useState(null);
-  const [rawAppealableIssues, setRawAppealableIssues] = useState(null);
-
-  // UI states
-  const [loading, setLoading] = useState({
-    serviceHistory: false,
-    claims: false,
-    appealableIssues: false,
-  });
-  const [errors, setErrors] = useState({
-    serviceHistory: null,
-    claims: null,
-    appealableIssues: null,
-  });
-  const [showRawJson, setShowRawJson] = useState({
-    serviceHistory: false,
-    claims: false,
-    appealableIssues: false,
-  });
-  const [expandedClaim, setExpandedClaim] = useState(null);
-
-  const fetchServiceHistory = () =>
-    _fetchServiceHistoryData(accessToken, {
-      setLoading,
-      setErrors,
-      setRawServiceHistory,
-      setServiceHistory,
-    });
-
-  const fetchClaims = () =>
-    _fetchClaimsData(accessToken, {
-      setLoading,
-      setErrors,
-      setRawClaims,
-      setClaims,
-    });
-
-  // Note: Appeals API is Future Scope - this function is available but not auto-called
-  const fetchAppealableIssues = () =>
-    _fetchAppealableIssuesData(accessToken, {
-      setLoading,
-      setErrors,
-      setRawAppealableIssues,
-      setAppealableIssues,
-    });
-
-  // Fetch all data when authenticated
-  const fetchAllData = useCallback(async () => {
-    if (!accessToken) return;
-
-    // Fetch service history
-    fetchServiceHistory();
-    // Fetch claims
-    fetchClaims();
-    // Note: Appeals API (fetchAppealableIssues) is Future Scope - not called automatically
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
-
-  // Auto-fetch data when authenticated
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      fetchAllData();
-    }
-  }, [isAuthenticated, accessToken, fetchAllData]);
-
-  const toggleRawJson = (key) => {
-    setShowRawJson((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleLogin = async () => {
-    await login();
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    setServiceHistory(null);
-    setClaims(null);
-    setAppealableIssues(null);
-    setRawServiceHistory(null);
-    setRawClaims(null);
-    setRawAppealableIssues(null);
-  };
+function VaIntegrationTestModals({
+  onClose,
+  isAuthenticated,
+  userInfo,
+  authLoading,
+  authError,
+  showSandboxTest,
+  setShowSandboxTest,
+  handlers,
+  dataState,
+  fetchAllData,
+}) {
+  const { handleLogin, handleLogout } = handlers;
 
   const header = (
     <VaIntegrationHeader
@@ -1088,22 +1060,9 @@ const VaIntegrationTest = ({ onClose }) => {
             />
           ) : (
             <VaAuthenticatedView
-              loading={loading}
-              errors={errors}
-              serviceHistory={serviceHistory}
-              rawServiceHistory={rawServiceHistory}
-              claims={claims}
-              rawClaims={rawClaims}
-              appealableIssues={appealableIssues}
-              rawAppealableIssues={rawAppealableIssues}
-              showRawJson={showRawJson}
+              dataState={dataState}
+              handlers={handlers}
               fetchAllData={fetchAllData}
-              fetchServiceHistory={fetchServiceHistory}
-              fetchClaims={fetchClaims}
-              fetchAppealableIssues={fetchAppealableIssues}
-              toggleRawJson={toggleRawJson}
-              expandedClaim={expandedClaim}
-              setExpandedClaim={setExpandedClaim}
             />
           )}
         </div>
@@ -1116,6 +1075,97 @@ const VaIntegrationTest = ({ onClose }) => {
         </div>
       )}
     </>
+  );
+}
+
+const VaIntegrationTest = ({ onClose }) => {
+  const { t: _t } = useLanguage();
+
+  // State for sandbox test modal
+  const [showSandboxTest, setShowSandboxTest] = useState(false);
+
+  const auth = useVaAuth();
+  const { isAuthenticated, accessToken } = auth;
+
+  // Data states
+  const [serviceHistory, setServiceHistory] = useState(null);
+  const [claims, setClaims] = useState(null);
+  const [appealableIssues, setAppealableIssues] = useState(null);
+
+  // Raw JSON states
+  const [rawServiceHistory, setRawServiceHistory] = useState(null);
+  const [rawClaims, setRawClaims] = useState(null);
+  const [rawAppealableIssues, setRawAppealableIssues] = useState(null);
+
+  // UI states
+  const [loading, setLoading] = useState({ serviceHistory: false, claims: false, appealableIssues: false });
+  const [errors, setErrors] = useState({ serviceHistory: null, claims: null, appealableIssues: null });
+  const [showRawJson, setShowRawJson] = useState({ serviceHistory: false, claims: false, appealableIssues: false });
+  const [expandedClaim, setExpandedClaim] = useState(null);
+
+  // Fetch all data when authenticated
+  const fetchAllData = useCallback(async () => {
+    if (!accessToken) return;
+
+    // Note: Appeals API (fetchAppealableIssues) is Future Scope - not called automatically
+    _fetchServiceHistoryData(accessToken, {
+      setLoading,
+      setErrors,
+      setRawServiceHistory,
+      setServiceHistory,
+    });
+    _fetchClaimsData(accessToken, {
+      setLoading,
+      setErrors,
+      setRawClaims,
+      setClaims,
+    });
+  }, [accessToken]);
+
+  // Auto-fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      fetchAllData();
+    }
+  }, [isAuthenticated, accessToken, fetchAllData]);
+
+  const dataState = {
+    serviceHistory,
+    setServiceHistory,
+    claims,
+    setClaims,
+    appealableIssues,
+    setAppealableIssues,
+    rawServiceHistory,
+    setRawServiceHistory,
+    rawClaims,
+    setRawClaims,
+    rawAppealableIssues,
+    setRawAppealableIssues,
+    loading,
+    setLoading,
+    errors,
+    setErrors,
+    showRawJson,
+    setShowRawJson,
+    expandedClaim,
+    setExpandedClaim,
+  };
+  const handlers = _buildVaIntegrationHandlers(accessToken, dataState, auth);
+
+  return (
+    <VaIntegrationTestModals
+      onClose={onClose}
+      isAuthenticated={isAuthenticated}
+      userInfo={auth.userInfo}
+      authLoading={auth.isLoading}
+      authError={auth.error}
+      showSandboxTest={showSandboxTest}
+      setShowSandboxTest={setShowSandboxTest}
+      handlers={handlers}
+      dataState={dataState}
+      fetchAllData={fetchAllData}
+    />
   );
 };
 
