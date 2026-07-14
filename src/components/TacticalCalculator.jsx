@@ -3100,6 +3100,466 @@ function RatesTab({ t }) {
 
 
 
+function TacticalCalculatorHeader({ t, calculatorContentRef, onReportBug, onClose }) {
+  return (
+    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+
+      <div className="relative flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl sm:text-3xl">🧮</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2
+              id="calculator-title"
+              className="text-lg sm:text-2xl md:text-3xl font-bold truncate"
+            >
+              {t("tacticalCalc", "title")}{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                {t("common", "beta")}
+              </span>
+            </h2>
+            <p className="text-blue-100 text-xs sm:text-sm md:text-base mt-1 truncate">
+              {t("tacticalCalc", "subtitle")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <ShareButton
+            targetRef={calculatorContentRef}
+            filename="vet-rate-calculator"
+            variant="icon"
+          />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Tactical Calculator"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Close"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getTacticalCalculatorTabs(t, capResults) {
+  return [
+    {
+      id: "myratings",
+      label: t("tacticalCalc", "myRatingsTab"),
+      shortLabel: "⭐ " + t("tacticalCalc", "myRatings"),
+      icon: "⭐",
+    },
+    ...(capResults.length > 0
+      ? [
+          {
+            id: "capresults",
+            label: t("tacticalCalc", "capResultsTab"),
+            shortLabel: "🏥 C&P",
+            icon: "🏥",
+            badge: capResults.length,
+          },
+        ]
+      : []),
+    {
+      id: "calculator",
+      label: t("tacticalCalc", "calculatorTab"),
+      shortLabel: "🧮 " + t("tacticalCalc", "calculator"),
+      icon: "🧮",
+    },
+    {
+      id: "paycheck",
+      label: t("tacticalCalc", "paycheckTab"),
+      shortLabel: "💵 " + t("tacticalCalc", "paycheck"),
+      icon: "💵",
+    },
+    {
+      id: "whatif",
+      label: t("tacticalCalc", "whatIfTab"),
+      shortLabel: "🎯 " + t("tacticalCalc", "whatIf"),
+      icon: "🎯",
+    },
+    {
+      id: "rates",
+      label: t("tacticalCalc", "ratesTab"),
+      shortLabel: "📊 " + t("tacticalCalc", "rates2026"),
+      icon: "📊",
+    },
+  ];
+}
+
+function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
+  return (
+    <button
+      onClick={() => setActiveTab(tab.id)}
+      className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
+    >
+      <span className="hidden sm:inline">{tab.label}</span>
+      <span className="inline sm:hidden">{tab.shortLabel}</span>
+      {tab.badge && (
+        <span
+          className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full font-bold ${
+            activeTab === tab.id
+              ? "bg-white/30"
+              : "bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300"
+          }`}
+        >
+          {tab.badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function TacticalCalculatorTabNav({ t, activeTab, setActiveTab, capResults }) {
+  const tabs = getTacticalCalculatorTabs(t, capResults);
+  return (
+    <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
+      <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
+        {tabs.map((tab) => (
+          <TacticalCalculatorTabButton
+            key={tab.id}
+            tab={tab}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+function TacticalCalculatorContent({ activeTab, capResults, state, onClearCapResults }) {
+  return (
+    <div className="p-3 sm:p-4 md:p-6">
+      {/* My Ratings Tab - Save and manage your actual VA ratings */}
+      {activeTab === "myratings" && <MyRatingsTab {...state} />}
+
+      {/* C&P Simulator Results Tab */}
+      {activeTab === "capresults" && capResults.length > 0 && (
+        <CapResultsTab {...state} onClearCapResults={onClearCapResults} />
+      )}
+
+      {/* Calculator Tab */}
+      {activeTab === "calculator" && <CalculatorTab {...state} />}
+
+      {/* Paycheck Tab */}
+      {activeTab === "paycheck" && <PaycheckTab {...state} />}
+
+      {/* What-If Tab */}
+      {activeTab === "whatif" && <WhatIfTab {...state} />}
+
+      {/* Rates Tab - 2026 VA Compensation Rates */}
+      {activeTab === "rates" && <RatesTab {...state} />}
+    </div>
+  );
+}
+
+function TacticalCalculatorFooter({ t, conditions, onClose }) {
+  return (
+    <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          <p>📋 {t("tacticalCalc", "footerCFR")}</p>
+          <p>{t("tacticalCalc", "footerDisclaimer")}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <BuyMeCoffee
+            show={conditions.length > 0}
+            trigger="tactical-calculator"
+            componentKey="tactical-calculator"
+          />
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t("tacticalCalc", "close")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditConditionNameField({ t, editForm, setEditForm }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "conditionName")}
+      </label>
+      <input
+        type="text"
+        value={editForm.name}
+        onChange={(e) =>
+          setEditForm({ ...editForm, name: e.target.value })
+        }
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        placeholder={t("tacticalCalc", "conditionPlaceholder")}
+      />
+    </div>
+  );
+}
+
+function EditConditionBodyPartField({ t, editForm, setEditForm }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "bodyPartSystem")}
+      </label>
+      <select
+        aria-label={t("tacticalCalc", "bodyPartSystem")}
+        value={editForm.bodyPart}
+        onChange={(e) =>
+          setEditForm({ ...editForm, bodyPart: e.target.value })
+        }
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="">{t("tacticalCalc", "selectBodyPart")}</option>
+        <optgroup label={t("tacticalCalc", "extremitiesGroup")}>
+          {BODY_PARTS.extremities.map((bp) => (
+            <option key={bp.value} value={bp.value}>
+              {bp.label}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label={t("tacticalCalc", "otherSystems")}>
+          {BODY_PARTS.other.map((bp) => (
+            <option key={bp.value} value={bp.value}>
+              {bp.label}
+            </option>
+          ))}
+        </optgroup>
+      </select>
+    </div>
+  );
+}
+
+function EditConditionRatingField({ t, editForm, setEditForm }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "ratingPercentage")}
+      </label>
+      <select
+        aria-label={t("tacticalCalc", "ratingPercentage")}
+        value={editForm.rating}
+        onChange={(e) =>
+          setEditForm({
+            ...editForm,
+            rating: parseInt(e.target.value),
+          })
+        }
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        {ratingOptions.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}%
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function EditConditionSideField({ t, editForm, setEditForm, allBodyParts }) {
+  const canBeBilateral = allBodyParts.find(
+    (bp) => bp.value === editForm.bodyPart,
+  )?.canBeBilateral;
+  if (!editForm.bodyPart || !canBeBilateral) return null;
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {t("tacticalCalc", "sideBilateral")}
+      </label>
+      <select
+        aria-label={t("tacticalCalc", "sideBilateral")}
+        value={editForm.side}
+        onChange={(e) =>
+          setEditForm({ ...editForm, side: e.target.value })
+        }
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="none">
+          {t("tacticalCalc", "notBilateral")}
+        </option>
+        <option value="left">{t("tacticalCalc", "left")}</option>
+        <option value="right">{t("tacticalCalc", "right")}</option>
+        <option value="bilateral">
+          {t("tacticalCalc", "bothSides")}
+        </option>
+      </select>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        💡 {t("tacticalCalc", "bilateralHint")}
+      </p>
+    </div>
+  );
+}
+
+function EditConditionBilateralExplanation({ t, editForm }) {
+  if (editForm.side === "none") return null;
+  return (
+    <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
+      <div className="flex gap-2">
+        <span className="text-lg">🔄</span>
+        <div className="text-sm text-purple-700 dark:text-purple-300">
+          <p className="font-semibold">
+            {t("tacticalCalc", "bilateralWillApply")}
+          </p>
+          <p className="text-xs mt-1">
+            {t("tacticalCalc", "bilateralExplanation")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TacticalCalculatorMainModal({ state, onClose, onReportBug, onClearCapResults }) {
+  const {
+    t,
+    calculatorContentRef,
+    conditions,
+    capResults,
+    activeTab,
+    setActiveTab,
+  } = state;
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="calculator-title"
+      header={
+        <TacticalCalculatorHeader
+          t={t}
+          calculatorContentRef={calculatorContentRef}
+          onReportBug={onReportBug}
+          onClose={onClose}
+        />
+      }
+    >
+      <div ref={calculatorContentRef}>
+        {/* Tab Navigation - Sticky */}
+        <TacticalCalculatorTabNav
+          t={t}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          capResults={capResults}
+        />
+
+        {/* Content */}
+        <TacticalCalculatorContent
+          activeTab={activeTab}
+          capResults={capResults}
+          state={state}
+          onClearCapResults={onClearCapResults}
+        />
+
+        {/* Footer */}
+        <TacticalCalculatorFooter t={t} conditions={conditions} onClose={onClose} />
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+function VAGovRatingPasterModal({ showVAGovPaster, handlePastedRatings, setShowVAGovPaster }) {
+  if (!showVAGovPaster) return null;
+  return (
+    <VAGovRatingPaster
+      onRatingsParsed={handlePastedRatings}
+      onClose={() => setShowVAGovPaster(false)}
+      showExample={true}
+    />
+  );
+}
+
+function EditConditionModal({
+  t,
+  editingCondition,
+  editForm,
+  setEditForm,
+  allBodyParts,
+  handleCancelEdit,
+  handleSaveEdit,
+}) {
+  if (!editingCondition) return null;
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={handleCancelEdit}
+      size="md"
+      zIndex={70}
+      labelledBy="edit-condition-title"
+      header={
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4">
+          <h3 id="edit-condition-title" className="text-xl font-bold">
+            {t("tacticalCalc", "editCondition")}
+          </h3>
+          <p className="text-blue-100 text-sm mt-1">
+            Update rating and bilateral status
+          </p>
+        </div>
+      }
+      footer={
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={handleCancelEdit}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t("tacticalCalc", "cancel")}
+          </button>
+          <button
+            onClick={handleSaveEdit}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t("tacticalCalc", "saveChanges")}
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <EditConditionNameField t={t} editForm={editForm} setEditForm={setEditForm} />
+
+        <EditConditionBodyPartField t={t} editForm={editForm} setEditForm={setEditForm} />
+
+        <EditConditionRatingField t={t} editForm={editForm} setEditForm={setEditForm} />
+
+        {/* Side (only show if body part can be bilateral) */}
+        <EditConditionSideField
+          t={t}
+          editForm={editForm}
+          setEditForm={setEditForm}
+          allBodyParts={allBodyParts}
+        />
+
+        {/* Bilateral Factor Explanation */}
+        <EditConditionBilateralExplanation t={t} editForm={editForm} />
+      </div>
+    </ResponsiveModal>
+  );
+}
+
 const TacticalCalculator = ({
   onClose,
   onReportBug,
@@ -3113,11 +3573,6 @@ const TacticalCalculator = ({
   });
   const {
     t,
-    calculatorContentRef,
-    conditions,
-    capResults,
-    activeTab,
-    setActiveTab,
     showVAGovPaster,
     setShowVAGovPaster,
     editingCondition,
@@ -3131,356 +3586,30 @@ const TacticalCalculator = ({
 
   return (
     <>
-      <ResponsiveModal
-        isOpen
+      <TacticalCalculatorMainModal
+        state={state}
         onClose={onClose}
-        size="2xl"
-        labelledBy="calculator-title"
-        header={
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-
-            <div className="relative flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl sm:text-3xl">🧮</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h2
-                    id="calculator-title"
-                    className="text-lg sm:text-2xl md:text-3xl font-bold truncate"
-                  >
-                    {t("tacticalCalc", "title")}{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                      {t("common", "beta")}
-                    </span>
-                  </h2>
-                  <p className="text-blue-100 text-xs sm:text-sm md:text-base mt-1 truncate">
-                    {t("tacticalCalc", "subtitle")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <ShareButton
-                  targetRef={calculatorContentRef}
-                  filename="vet-rate-calculator"
-                  variant="icon"
-                />
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="light"
-                    moduleName="Tactical Calculator"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-      >
-        <div ref={calculatorContentRef}>
-          {/* Tab Navigation - Sticky */}
-          <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
-            <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
-              {[
-                {
-                  id: "myratings",
-                  label: t("tacticalCalc", "myRatingsTab"),
-                  shortLabel: "⭐ " + t("tacticalCalc", "myRatings"),
-                  icon: "⭐",
-                },
-                ...(capResults.length > 0
-                  ? [
-                      {
-                        id: "capresults",
-                        label: t("tacticalCalc", "capResultsTab"),
-                        shortLabel: "🏥 C&P",
-                        icon: "🏥",
-                        badge: capResults.length,
-                      },
-                    ]
-                  : []),
-                {
-                  id: "calculator",
-                  label: t("tacticalCalc", "calculatorTab"),
-                  shortLabel: "🧮 " + t("tacticalCalc", "calculator"),
-                  icon: "🧮",
-                },
-                {
-                  id: "paycheck",
-                  label: t("tacticalCalc", "paycheckTab"),
-                  shortLabel: "💵 " + t("tacticalCalc", "paycheck"),
-                  icon: "💵",
-                },
-                {
-                  id: "whatif",
-                  label: t("tacticalCalc", "whatIfTab"),
-                  shortLabel: "🎯 " + t("tacticalCalc", "whatIf"),
-                  icon: "🎯",
-                },
-                {
-                  id: "rates",
-                  label: t("tacticalCalc", "ratesTab"),
-                  shortLabel: "📊 " + t("tacticalCalc", "rates2026"),
-                  icon: "📊",
-                },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
-                >
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="inline sm:hidden">{tab.shortLabel}</span>
-                  {tab.badge && (
-                    <span
-                      className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full font-bold ${
-                        activeTab === tab.id
-                          ? "bg-white/30"
-                          : "bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300"
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Content */}
-          <div className="p-3 sm:p-4 md:p-6">
-            {/* My Ratings Tab - Save and manage your actual VA ratings */}
-            {activeTab === "myratings" && <MyRatingsTab {...state} />}
-
-            {/* C&P Simulator Results Tab */}
-            {activeTab === "capresults" && capResults.length > 0 && (
-              <CapResultsTab {...state} onClearCapResults={onClearCapResults} />
-            )}
-
-            {/* Calculator Tab */}
-            {activeTab === "calculator" && <CalculatorTab {...state} />}
-
-            {/* Paycheck Tab */}
-            {activeTab === "paycheck" && <PaycheckTab {...state} />}
-
-            {/* What-If Tab */}
-            {activeTab === "whatif" && <WhatIfTab {...state} />}
-
-            {/* Rates Tab - 2026 VA Compensation Rates */}
-            {activeTab === "rates" && <RatesTab {...state} />}
-          </div>
-
-          {/* Footer */}
-          <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                <p>📋 {t("tacticalCalc", "footerCFR")}</p>
-                <p>{t("tacticalCalc", "footerDisclaimer")}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <BuyMeCoffee
-                  show={conditions.length > 0}
-                  trigger="tactical-calculator"
-                  componentKey="tactical-calculator"
-                />
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
-                  {t("tacticalCalc", "close")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ResponsiveModal>
+        onReportBug={onReportBug}
+        onClearCapResults={onClearCapResults}
+      />
 
       {/* VA.gov Rating Paster Modal */}
-      {showVAGovPaster && (
-        <VAGovRatingPaster
-          onRatingsParsed={handlePastedRatings}
-          onClose={() => setShowVAGovPaster(false)}
-          showExample={true}
-        />
-      )}
+      <VAGovRatingPasterModal
+        showVAGovPaster={showVAGovPaster}
+        handlePastedRatings={handlePastedRatings}
+        setShowVAGovPaster={setShowVAGovPaster}
+      />
 
       {/* Edit Condition Modal */}
-      {editingCondition && (
-        <ResponsiveModal
-          isOpen
-          onClose={handleCancelEdit}
-          size="md"
-          zIndex={70}
-          labelledBy="edit-condition-title"
-          header={
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4">
-              <h3 id="edit-condition-title" className="text-xl font-bold">
-                {t("tacticalCalc", "editCondition")}
-              </h3>
-              <p className="text-blue-100 text-sm mt-1">
-                Update rating and bilateral status
-              </p>
-            </div>
-          }
-          footer={
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleCancelEdit}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                {t("tacticalCalc", "cancel")}
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {t("tacticalCalc", "saveChanges")}
-              </button>
-            </div>
-          }
-        >
-          <div className="space-y-4">
-            {/* Condition Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("tacticalCalc", "conditionName")}
-              </label>
-              <input
-                type="text"
-                value={editForm.name}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, name: e.target.value })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder={t("tacticalCalc", "conditionPlaceholder")}
-              />
-            </div>
-
-            {/* Body Part */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("tacticalCalc", "bodyPartSystem")}
-              </label>
-              <select
-                aria-label={t("tacticalCalc", "bodyPartSystem")}
-                value={editForm.bodyPart}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, bodyPart: e.target.value })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">{t("tacticalCalc", "selectBodyPart")}</option>
-                <optgroup label={t("tacticalCalc", "extremitiesGroup")}>
-                  {BODY_PARTS.extremities.map((bp) => (
-                    <option key={bp.value} value={bp.value}>
-                      {bp.label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label={t("tacticalCalc", "otherSystems")}>
-                  {BODY_PARTS.other.map((bp) => (
-                    <option key={bp.value} value={bp.value}>
-                      {bp.label}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-
-            {/* Rating Percentage */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("tacticalCalc", "ratingPercentage")}
-              </label>
-              <select
-                aria-label={t("tacticalCalc", "ratingPercentage")}
-                value={editForm.rating}
-                onChange={(e) =>
-                  setEditForm({
-                    ...editForm,
-                    rating: parseInt(e.target.value),
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                {ratingOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}%
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Side (only show if body part can be bilateral) */}
-            {editForm.bodyPart &&
-              allBodyParts.find((bp) => bp.value === editForm.bodyPart)
-                ?.canBeBilateral && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("tacticalCalc", "sideBilateral")}
-                  </label>
-                  <select
-                    aria-label={t("tacticalCalc", "sideBilateral")}
-                    value={editForm.side}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, side: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="none">
-                      {t("tacticalCalc", "notBilateral")}
-                    </option>
-                    <option value="left">{t("tacticalCalc", "left")}</option>
-                    <option value="right">{t("tacticalCalc", "right")}</option>
-                    <option value="bilateral">
-                      {t("tacticalCalc", "bothSides")}
-                    </option>
-                  </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    💡 {t("tacticalCalc", "bilateralHint")}
-                  </p>
-                </div>
-              )}
-
-            {/* Bilateral Factor Explanation */}
-            {editForm.side !== "none" && (
-              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
-                <div className="flex gap-2">
-                  <span className="text-lg">🔄</span>
-                  <div className="text-sm text-purple-700 dark:text-purple-300">
-                    <p className="font-semibold">
-                      {t("tacticalCalc", "bilateralWillApply")}
-                    </p>
-                    <p className="text-xs mt-1">
-                      {t("tacticalCalc", "bilateralExplanation")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </ResponsiveModal>
-      )}
+      <EditConditionModal
+        t={t}
+        editingCondition={editingCondition}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        allBodyParts={allBodyParts}
+        handleCancelEdit={handleCancelEdit}
+        handleSaveEdit={handleSaveEdit}
+      />
     </>
   );
 };
