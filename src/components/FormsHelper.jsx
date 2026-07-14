@@ -4320,6 +4320,124 @@ function _getFormStepsForForm(selectedForm) {
   }
 }
 
+function FormInfoActionButtons({ selectedForm, hasWizard, setCurrentStep, t }) {
+  return (
+    <div className="flex flex-wrap gap-3">
+      {hasWizard ? (
+        <button
+          onClick={() => setCurrentStep(1)}
+          className="flex-1 px-6 py-3 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+          {t("formsHelper", "startGuidedBuilder")}
+        </button>
+      ) : (
+        <a
+          href={selectedForm.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 px-6 py-3 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+          {t("formsHelper", "goToVAForm")}
+        </a>
+      )}
+      <a
+        href={selectedForm.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium flex items-center gap-2 transition-colors text-gray-700 dark:text-gray-300"
+      >
+        {t("formsHelper", "officialForm")} ↗
+      </a>
+    </div>
+  );
+}
+
+function FormInfoPanel({ selectedForm, setCurrentStep, setSelectedForm, t }) {
+  if (!selectedForm) return null;
+
+  const steps = _getFormStepsForForm(selectedForm);
+  const hasWizard = steps.length > 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Form header */}
+      <div className="flex items-start gap-4">
+        <span className="text-4xl">{selectedForm.icon}</span>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {selectedForm.name}
+          </h2>
+          <p className="text-va-blue dark:text-va-gold font-medium">
+            {selectedForm.formNumber}
+          </p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            {selectedForm.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Tips */}
+      <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+        <h3 className="font-bold text-green-900 dark:text-green-200 mb-2">
+          💡 {t("formsHelper", "tipsForSuccess")}
+        </h3>
+        <ul className="space-y-1">
+          {selectedForm.tips.map((tip, i) => (
+            <li
+              key={i}
+              className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2"
+            >
+              <span className="text-green-600">✓</span>
+              {tip}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Action buttons */}
+      <FormInfoActionButtons
+        selectedForm={selectedForm}
+        hasWizard={hasWizard}
+        setCurrentStep={setCurrentStep}
+        t={t}
+      />
+
+      <button
+        onClick={() => setSelectedForm(null)}
+        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
+      >
+        ← {t("formsHelper", "backToAllForms")}
+      </button>
+    </div>
+  );
+}
+
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
 
@@ -7240,113 +7358,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
     </div>
   );
 
-  const renderFormInfo = () => {
-    if (!selectedForm) return null;
-
-    const steps = _getFormStepsForForm(selectedForm);
-    const hasWizard = steps.length > 0;
-
-    return (
-      <div className="space-y-6">
-        {/* Form header */}
-        <div className="flex items-start gap-4">
-          <span className="text-4xl">{selectedForm.icon}</span>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {selectedForm.name}
-            </h2>
-            <p className="text-va-blue dark:text-va-gold font-medium">
-              {selectedForm.formNumber}
-            </p>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              {selectedForm.description}
-            </p>
-          </div>
-        </div>
-
-        {/* Tips */}
-        <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
-          <h3 className="font-bold text-green-900 dark:text-green-200 mb-2">
-            💡 {t("formsHelper", "tipsForSuccess")}
-          </h3>
-          <ul className="space-y-1">
-            {selectedForm.tips.map((tip, i) => (
-              <li
-                key={i}
-                className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2"
-              >
-                <span className="text-green-600">✓</span>
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-3">
-          {hasWizard ? (
-            <button
-              onClick={() => setCurrentStep(1)}
-              className="flex-1 px-6 py-3 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
-              {t("formsHelper", "startGuidedBuilder")}
-            </button>
-          ) : (
-            <a
-              href={selectedForm.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 px-6 py-3 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-              {t("formsHelper", "goToVAForm")}
-            </a>
-          )}
-          <a
-            href={selectedForm.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium flex items-center gap-2 transition-colors text-gray-700 dark:text-gray-300"
-          >
-            {t("formsHelper", "officialForm")} ↗
-          </a>
-        </div>
-
-        <button
-          onClick={() => setSelectedForm(null)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
-        >
-          ← {t("formsHelper", "backToAllForms")}
-        </button>
-      </div>
-    );
-  };
-
   const renderWizardStep = () => {
     const steps = _getFormStepsForForm(selectedForm);
     if (currentStep === 0 || currentStep > steps.length) return null;
@@ -7882,7 +7893,14 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
     // Form selected but wizard not started - show form info
     if (currentStep === 0) {
-      return renderFormInfo();
+      return (
+        <FormInfoPanel
+          selectedForm={selectedForm}
+          setCurrentStep={setCurrentStep}
+          setSelectedForm={setSelectedForm}
+          t={t}
+        />
+      );
     }
 
     // In wizard steps (steps are 1-indexed, so currentStep 1 = step index 0)
