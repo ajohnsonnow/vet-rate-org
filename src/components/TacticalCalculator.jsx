@@ -2456,6 +2456,265 @@ function MyRatingsTab({
   );
 }
 
+function CapResultsHeaderInfo({ t, setCapResults, onClearCapResults, setActiveTab }) {
+  return (
+    <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-xl">🏥</span>
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-teal-900 dark:text-teal-100">
+            {t("tacticalCalc", "capSimulatorResults")}
+          </h3>
+          <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
+            {t("tacticalCalc", "capSimulatorDesc")}
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setCapResults([]);
+            if (onClearCapResults) onClearCapResults();
+            setActiveTab("calculator");
+          }}
+          className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
+        >
+          {t("tacticalCalc", "clearAll")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CapResultCard({
+  t,
+  result,
+  index,
+  setConditions,
+  handleAddToMyRatings,
+  removeCapResult,
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-teal-200 dark:border-teal-700 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${getRatingBadgeColor(result.rating)}`}
+          >
+            {result.rating}%
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900 dark:text-white">
+              {result.conditionName}
+            </p>
+            {result.diagnosticCode && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                DC {result.diagnosticCode}
+              </p>
+            )}
+          </div>
+        </div>
+        <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full">
+          C&P Sim
+        </span>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            // Add to current calculator conditions
+            const condition = {
+              id: Date.now().toString() + index,
+              name: result.conditionName,
+              bodyPart: "other",
+              rating: result.rating,
+              side: "none",
+              source: "C&P Simulator",
+              diagnosticCode: result.diagnosticCode,
+            };
+            setConditions((prev) => [...prev, condition]);
+            // Remove from C&P results
+            removeCapResult(index);
+          }}
+          className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+        >
+          <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
+        </button>
+        <button
+          onClick={() => {
+            // Add directly to My Ratings
+            const rating = {
+              name: result.conditionName,
+              bodyPart: "other",
+              rating: result.rating,
+              side: "none",
+              source: "C&P Simulator",
+              diagnosticCode: result.diagnosticCode,
+            };
+            handleAddToMyRatings(rating);
+            // Remove from C&P results
+            removeCapResult(index);
+          }}
+          className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+        >
+          <span>⭐</span> {t("tacticalCalc", "saveToMyRatings")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CapResultsGrid({
+  t,
+  capResults,
+  setConditions,
+  handleAddToMyRatings,
+  removeCapResult,
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {capResults.map((result, index) => (
+        <CapResultCard
+          key={result.id || index}
+          t={t}
+          result={result}
+          index={index}
+          setConditions={setConditions}
+          handleAddToMyRatings={handleAddToMyRatings}
+          removeCapResult={removeCapResult}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CapResultsPreviewStats({ t, conditions, capResults }) {
+  const previewConditions = [
+    ...conditions,
+    ...capResults.map((r, i) => ({
+      id: `preview-${i}`,
+      name: r.conditionName,
+      bodyPart: "other",
+      rating: r.rating,
+      side: "none",
+    })),
+  ];
+  const previewResults = calculateVARating(previewConditions);
+
+  return (
+    <div className="grid grid-cols-3 gap-3 text-center">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <div className="text-2xl font-bold text-blue-600">
+          {conditions.length}
+        </div>
+        <div className="text-xs text-gray-500">
+          {t("tacticalCalc", "current")}
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <div className="text-2xl font-bold text-teal-600">
+          +{capResults.length}
+        </div>
+        <div className="text-xs text-gray-500">
+          {t("tacticalCalc", "fromCAP")}
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <div className="text-2xl font-bold text-green-600">
+          {previewResults.combinedRating}%
+        </div>
+        <div className="text-xs text-gray-500">
+          {t("tacticalCalc", "combined")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CapResultsAddAllButton({
+  t,
+  capResults,
+  setConditions,
+  setCapResults,
+  onClearCapResults,
+  setActiveTab,
+}) {
+  return (
+    <button
+      onClick={() => {
+        // Add all C&P results to conditions
+        const newConditions = capResults.map((r, i) => ({
+          id: Date.now().toString() + i,
+          name: r.conditionName,
+          bodyPart: "other",
+          rating: r.rating,
+          side: "none",
+          source: "C&P Simulator",
+          diagnosticCode: r.diagnosticCode,
+        }));
+        setConditions((prev) => [...prev, ...newConditions]);
+        setCapResults([]);
+        if (onClearCapResults) onClearCapResults();
+        setActiveTab("calculator");
+      }}
+      className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
+    >
+      {t("tacticalCalc", "addAllToCalculator")}
+    </button>
+  );
+}
+
+function CapResultsCombinedPreview({
+  t,
+  conditions,
+  capResults,
+  setConditions,
+  setCapResults,
+  onClearCapResults,
+  setActiveTab,
+}) {
+  if (capResults.length === 0) return null;
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+        {t("tacticalCalc", "quickPreview")}
+      </h4>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        {t("tacticalCalc", "ifYouAddAll")}
+      </p>
+
+      <CapResultsPreviewStats t={t} conditions={conditions} capResults={capResults} />
+
+      <CapResultsAddAllButton
+        t={t}
+        capResults={capResults}
+        setConditions={setConditions}
+        setCapResults={setCapResults}
+        onClearCapResults={onClearCapResults}
+        setActiveTab={setActiveTab}
+      />
+    </div>
+  );
+}
+
+function CapResultsEducationalNote({ t }) {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+      <div className="flex gap-3">
+        <span className="text-xl">💡</span>
+        <div>
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>
+              {t("common", "remember") || "Remember"}:
+            </strong>{" "}
+            {t("tacticalCalc", "capRemember")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CapResultsTab({
   t,
   conditions,
@@ -2465,204 +2724,38 @@ function CapResultsTab({
   setActiveTab,
   handleAddToMyRatings,
   removeCapResult,
+  onClearCapResults,
 }) {
   return (
-            <div className="space-y-6">
-              {/* Header Info */}
-              <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">🏥</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-teal-900 dark:text-teal-100">
-                      {t("tacticalCalc", "capSimulatorResults")}
-                    </h3>
-                    <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
-                      {t("tacticalCalc", "capSimulatorDesc")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setCapResults([]);
-                      if (onClearCapResults) onClearCapResults();
-                      setActiveTab("calculator");
-                    }}
-                    className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
-                  >
-                    {t("tacticalCalc", "clearAll")}
-                  </button>
-                </div>
-              </div>
+    <div className="space-y-6">
+      <CapResultsHeaderInfo
+        t={t}
+        setCapResults={setCapResults}
+        onClearCapResults={onClearCapResults}
+        setActiveTab={setActiveTab}
+      />
 
-              {/* Results List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {capResults.map((result, index) => (
-                  <div
-                    key={result.id || index}
-                    className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-teal-200 dark:border-teal-700 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${getRatingBadgeColor(result.rating)}`}
-                        >
-                          {result.rating}%
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {result.conditionName}
-                          </p>
-                          {result.diagnosticCode && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              DC {result.diagnosticCode}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full">
-                        C&P Sim
-                      </span>
-                    </div>
+      <CapResultsGrid
+        t={t}
+        capResults={capResults}
+        setConditions={setConditions}
+        handleAddToMyRatings={handleAddToMyRatings}
+        removeCapResult={removeCapResult}
+      />
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          // Add to current calculator conditions
-                          const condition = {
-                            id: Date.now().toString() + index,
-                            name: result.conditionName,
-                            bodyPart: "other",
-                            rating: result.rating,
-                            side: "none",
-                            source: "C&P Simulator",
-                            diagnosticCode: result.diagnosticCode,
-                          };
-                          setConditions((prev) => [...prev, condition]);
-                          // Remove from C&P results
-                          removeCapResult(index);
-                        }}
-                        className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
-                      </button>
-                      <button
-                        onClick={() => {
-                          // Add directly to My Ratings
-                          const rating = {
-                            name: result.conditionName,
-                            bodyPart: "other",
-                            rating: result.rating,
-                            side: "none",
-                            source: "C&P Simulator",
-                            diagnosticCode: result.diagnosticCode,
-                          };
-                          handleAddToMyRatings(rating);
-                          // Remove from C&P results
-                          removeCapResult(index);
-                        }}
-                        className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <span>⭐</span> {t("tacticalCalc", "saveToMyRatings")}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <CapResultsCombinedPreview
+        t={t}
+        conditions={conditions}
+        capResults={capResults}
+        setConditions={setConditions}
+        setCapResults={setCapResults}
+        onClearCapResults={onClearCapResults}
+        setActiveTab={setActiveTab}
+      />
 
-              {/* Calculate Combined if we add all */}
-              {capResults.length > 0 && (
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                    {t("tacticalCalc", "quickPreview")}
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {t("tacticalCalc", "ifYouAddAll")}
-                  </p>
-
-                  {(() => {
-                    const previewConditions = [
-                      ...conditions,
-                      ...capResults.map((r, i) => ({
-                        id: `preview-${i}`,
-                        name: r.conditionName,
-                        bodyPart: "other",
-                        rating: r.rating,
-                        side: "none",
-                      })),
-                    ];
-                    const previewResults =
-                      calculateVARating(previewConditions);
-
-                    return (
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {conditions.length}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {t("tacticalCalc", "current")}
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <div className="text-2xl font-bold text-teal-600">
-                            +{capResults.length}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {t("tacticalCalc", "fromCAP")}
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <div className="text-2xl font-bold text-green-600">
-                            {previewResults.combinedRating}%
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {t("tacticalCalc", "combined")}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  <button
-                    onClick={() => {
-                      // Add all C&P results to conditions
-                      const newConditions = capResults.map((r, i) => ({
-                        id: Date.now().toString() + i,
-                        name: r.conditionName,
-                        bodyPart: "other",
-                        rating: r.rating,
-                        side: "none",
-                        source: "C&P Simulator",
-                        diagnosticCode: r.diagnosticCode,
-                      }));
-                      setConditions((prev) => [...prev, ...newConditions]);
-                      setCapResults([]);
-                      if (onClearCapResults) onClearCapResults();
-                      setActiveTab("calculator");
-                    }}
-                    className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
-                  >
-                    {t("tacticalCalc", "addAllToCalculator")}
-                  </button>
-                </div>
-              )}
-
-              {/* Educational Note */}
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-                <div className="flex gap-3">
-                  <span className="text-xl">💡</span>
-                  <div>
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                      <strong>
-                        {t("common", "remember") || "Remember"}:
-                      </strong>{" "}
-                      {t("tacticalCalc", "capRemember")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Educational Note */}
+      <CapResultsEducationalNote t={t} />
+    </div>
   );
 }
 
@@ -3056,6 +3149,7 @@ const TacticalCalculator = ({
   onReportBug,
   initialConditions = [],
   capSimulatorResults = [],
+  onClearCapResults,
 }) => {
   const state = useTacticalCalculatorState({
     initialConditions,
@@ -3223,7 +3317,9 @@ const TacticalCalculator = ({
             {activeTab === "myratings" && <MyRatingsTab {...state} />}
 
             {/* C&P Simulator Results Tab */}
-            {activeTab === "capresults" && capResults.length > 0 && <CapResultsTab {...state} />}
+            {activeTab === "capresults" && capResults.length > 0 && (
+              <CapResultsTab {...state} onClearCapResults={onClearCapResults} />
+            )}
 
             {/* Calculator Tab */}
             {activeTab === "calculator" && <CalculatorTab {...state} />}
