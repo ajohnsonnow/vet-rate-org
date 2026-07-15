@@ -842,7 +842,6 @@ function getDossierStyles() {
   return `${getResetHeaderDisclaimerStyles()}${getSectionsProfileStyles()}${getClaimsGridStyles()}${getStatementsStyles()}${getRatingsFormsStyles()}${getFooterRawDataStyles()}${getPrintResponsiveStyles()}`;
 }
 
-
 /**
  * Generate the complete dossier HTML document
  * @returns {string} Complete HTML document

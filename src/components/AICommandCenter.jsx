@@ -186,8 +186,7 @@ async function checkWebGPU(setWebGPUStatus) {
     setWebGPUStatus({
       supported: true,
       checked: true,
-      device:
-        adapterInfo.description || adapterInfo.device || "GPU Detected",
+      device: adapterInfo.description || adapterInfo.device || "GPU Detected",
       vendor: adapterInfo.vendor || "Unknown",
     });
   } catch (e) {
@@ -280,12 +279,8 @@ async function initializeLocalEngine({
 
   try {
     // Dynamically import the Diamond Swarm
-    const {
-      initializeSwarm,
-      generateWithSwarm,
-      isSwarmReady,
-      getSwarmStatus,
-    } = await import("../utils/diamondSwarm");
+    const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } =
+      await import("../utils/diamondSwarm");
 
     // Initialize with selected model
     await initializeSwarm({
@@ -440,11 +435,7 @@ function useAITestBox() {
   return { testPrompt, setTestPrompt, testResponse, isTesting, handleTestAI };
 }
 
-const AICommandCenterBrandBanner = ({
-  aiStatus,
-  onClose,
-  onReportBug,
-}) => (
+const AICommandCenterBrandBanner = ({ aiStatus, onClose, onReportBug }) => (
   <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
     <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
 
@@ -566,8 +557,7 @@ function ModelPickerButton({ model, isSelected, onSelect }) {
             {model.description}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            {model.size} download • {model.vramRequired}{" "}
-            VRAM
+            {model.size} download • {model.vramRequired} VRAM
           </p>
         </div>
         {isSelected && (
@@ -608,8 +598,8 @@ function ModelSelectionPanel({
       >
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="animate-spin">⏳</span>{" "}
-            {loadProgress.text} ({loadProgress.progress}%)
+            <span className="animate-spin">⏳</span> {loadProgress.text} (
+            {loadProgress.progress}%)
           </span>
         ) : (
           <span>🚀 Download & Activate Local AI</span>
@@ -818,8 +808,7 @@ function LocalAICard({
             )}
           </div>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Runs entirely on your device. Zero data transmitted. Works
-            offline.
+            Runs entirely on your device. Zero data transmitted. Works offline.
           </p>
 
           {webGPUStatus.supported && webGPUStatus.device && (
@@ -999,14 +988,10 @@ function QuickTipsCard() {
         </li>
         <li>
           •{" "}
-          <strong className="text-blue-600 dark:text-blue-400">
-            Cloud AI
-          </strong>{" "}
+          <strong className="text-blue-600 dark:text-blue-400">Cloud AI</strong>{" "}
           = faster but sends data to Google
         </li>
-        <li>
-          • Both use the same Diamond Knowledge Base (130K+ VA entries)
-        </li>
+        <li>• Both use the same Diamond Knowledge Base (130K+ VA entries)</li>
       </ul>
     </div>
   );
@@ -1105,9 +1090,7 @@ function DeviceCapabilityCard({ deviceCapability, webGPUStatus }) {
           <p
             className={`font-semibold ${webGPUStatus.supported ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
           >
-            {webGPUStatus.supported
-              ? "✅ Supported"
-              : "❌ Not Available"}
+            {webGPUStatus.supported ? "✅ Supported" : "❌ Not Available"}
           </p>
         </div>
         {webGPUStatus.supported && webGPUStatus.device && (
@@ -1170,8 +1153,8 @@ function AdvancedTab({
               Diamond Knowledge Base
             </h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Both Local and Cloud AI use our 130,000+ entry database of
-              VA regulations, 38 CFR, BVA decisions, and CAVC rulings.
+              Both Local and Cloud AI use our 130,000+ entry database of VA
+              regulations, 38 CFR, BVA decisions, and CAVC rulings.
             </p>
             <p className="mt-2 text-xs text-purple-600 dark:text-purple-400/80">
               Local AI: 6-8 entries per query (optimized for GPU memory)

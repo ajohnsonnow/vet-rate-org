@@ -506,9 +506,7 @@ function computeConfidence(bestType, bestScore, matches, filenameHints) {
   const priorityBonus = docConfig.priority >= 9 ? 10 : 0;
 
   // Filename match bonus
-  const filenameBonus = filenameHints.includes(bestType.toLowerCase())
-    ? 10
-    : 0;
+  const filenameBonus = filenameHints.includes(bestType.toLowerCase()) ? 10 : 0;
 
   let confidence = Math.min(
     100,
@@ -537,7 +535,13 @@ function computeConfidence(bestType, bestScore, matches, filenameHints) {
   return confidence;
 }
 
-function logClassificationResult(bestType, bestScore, confidence, matches, scores) {
+function logClassificationResult(
+  bestType,
+  bestScore,
+  confidence,
+  matches,
+  scores,
+) {
   // eslint-disable-next-line no-console
   console.log("🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====");
   // eslint-disable-next-line no-console
@@ -612,12 +616,7 @@ export const classifyDocument = (text, filename = "") => {
       );
 
     if (DEBUG_CLASSIFICATION) {
-      logDocTypeScore(
-        docType,
-        matchedPatterns,
-        matchedNegativePatterns,
-        score,
-      );
+      logDocTypeScore(docType, matchedPatterns, matchedNegativePatterns, score);
     }
 
     // Store debug info

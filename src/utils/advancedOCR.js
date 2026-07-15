@@ -469,8 +469,7 @@ async function recognizePageWithEnsemble(
   let pageText =
     pageResults.length > 1 ? ensembleVote(pageResults) : primary.text;
   const avgConfidence =
-    pageResults.reduce((sum, r) => sum + r.confidence, 0) /
-    pageResults.length;
+    pageResults.reduce((sum, r) => sum + r.confidence, 0) / pageResults.length;
 
   // RETRY LOGIC: If OCR extracted very little text, try maximum scale
   // with the most aggressive preprocessing
@@ -521,7 +520,13 @@ async function runPagesWithBoundedConcurrency(
 /**
  * Combine per-page OCR results into the final corrected text + metadata.
  */
-function buildOCRResult(results, numPages, strategy, pagesToProcess, startTime) {
+function buildOCRResult(
+  results,
+  numPages,
+  strategy,
+  pagesToProcess,
+  startTime,
+) {
   // Combine all pages
   const fullText = results
     .map(

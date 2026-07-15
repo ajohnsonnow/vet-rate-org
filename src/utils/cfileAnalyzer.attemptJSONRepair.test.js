@@ -29,9 +29,7 @@ describe("cfileAnalyzer: attemptJSONRepair", () => {
   });
 
   it("strips a text preamble before the first brace (strategy 1c)", () => {
-    const result = attemptJSONRepair(
-      'Based on the records: {"summary": "ok"}',
-    );
+    const result = attemptJSONRepair('Based on the records: {"summary": "ok"}');
     expect(result.summary).toBe("ok");
   });
 

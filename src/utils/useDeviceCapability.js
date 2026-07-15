@@ -186,8 +186,7 @@ const applyCapableAdvice = (advice, isMobile) => {
   advice.cloudAI.recommended = true;
   advice.cloudAI.badge = "⚡ Faster on your device";
   if (isMobile) {
-    advice.localAI.warning =
-      "⚠️ May drain battery and use significant memory.";
+    advice.localAI.warning = "⚠️ May drain battery and use significant memory.";
   }
 };
 
@@ -206,8 +205,7 @@ const applyLegacyAdvice = (advice, androidVersion, iosVersion) => {
     advice.localAI.description =
       "Your device may struggle with Local AI. We recommend Cloud AI.";
   }
-  advice.localAI.warning =
-    "⚠️ Local AI may freeze or crash on older devices.";
+  advice.localAI.warning = "⚠️ Local AI may freeze or crash on older devices.";
   advice.cloudAI.recommended = true;
   advice.cloudAI.badge = "✨ Recommended for your device";
   advice.cloudAI.description =

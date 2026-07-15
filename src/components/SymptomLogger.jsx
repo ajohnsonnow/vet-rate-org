@@ -299,15 +299,15 @@ const SYMPTOM_PROMPT_BUILDERS = {
 };
 
 const buildMigrainePrompts = (contextData) => ({
-        triggers: `Help a veteran document migraine triggers for VA disability evidence. Current context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, weather: ${contextData.weather || "not specified"}, stress level: ${contextData.stressLevel}/10.
+  triggers: `Help a veteran document migraine triggers for VA disability evidence. Current context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, weather: ${contextData.weather || "not specified"}, stress level: ${contextData.stressLevel}/10.
         
 Generate 5-7 common migraine triggers relevant to this context. Format as a brief comma-separated list the veteran can select from or use as inspiration. Include triggers like: bright lights, loud noises, strong smells, weather changes, stress, lack of sleep, certain foods, dehydration, screen time, hormonal changes.`,
 
-        activityImpact: `Help a veteran document how a migraine affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - had to stop activities" : "No"}.
+  activityImpact: `Help a veteran document how a migraine affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - had to stop activities" : "No"}.
         
 Generate a brief description of activities typically affected by a migraine of this severity. Focus on work impact, daily tasks, and social activities. Write 2-3 sentences that the veteran can customize.`,
 
-        notes: `Help a veteran write clinical notes for a migraine episode for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for a migraine episode for VA disability documentation. Context:
 - Severity: ${contextData.severity}/10
 - Duration: ${contextData.duration || "not specified"}
 - Location: ${contextData.bodyLocation || "head"}
@@ -320,15 +320,15 @@ Write a 2-3 sentence clinical-style note describing this episode. Include sensor
 });
 
 const buildIbsPrompts = (contextData) => ({
-        triggers: `Help a veteran document IBS triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, stress level: ${contextData.stressLevel}/10.
+  triggers: `Help a veteran document IBS triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, stress level: ${contextData.stressLevel}/10.
         
 Generate 5-7 common IBS triggers. Include: specific foods (dairy, gluten, caffeine, spicy foods), stress, anxiety, lack of sleep, irregular eating schedule, medications.`,
 
-        activityImpact: `Help a veteran document how an IBS episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - prevented normal activities" : "No"}.
+  activityImpact: `Help a veteran document how an IBS episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - prevented normal activities" : "No"}.
         
 Generate a brief description of activities typically affected. Focus on work interruptions, inability to leave home/bathroom access needs, social/travel limitations. Write 2-3 sentences the veteran can customize.`,
 
-        notes: `Help a veteran write clinical notes for an IBS episode for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for an IBS episode for VA disability documentation. Context:
 - Severity: ${contextData.severity}/10
 - Duration: ${contextData.duration || "not specified"}
 - Stress: ${contextData.stressLevel}/10
@@ -339,15 +339,15 @@ Write a 2-3 sentence clinical-style note. Include symptoms (cramping, bloating, 
 });
 
 const buildPainPrompts = (contextData) => ({
-        triggers: `Help a veteran document pain flare-up triggers for VA disability evidence. Context: pain scale ${contextData.painScale || contextData.severity}/10, location: ${contextData.bodyLocation || "not specified"}, weather: ${contextData.weather || "not specified"}.
+  triggers: `Help a veteran document pain flare-up triggers for VA disability evidence. Context: pain scale ${contextData.painScale || contextData.severity}/10, location: ${contextData.bodyLocation || "not specified"}, weather: ${contextData.weather || "not specified"}.
         
 Generate 5-7 common pain triggers relevant to this context. Include: physical activity, prolonged sitting/standing, weather changes, lifting, repetitive motions, stress, poor sleep.`,
 
-        activityImpact: `Help a veteran document how a pain flare-up affected their daily activities for VA disability evidence. Pain: ${contextData.painScale || contextData.severity}/10, Location: ${contextData.bodyLocation || "not specified"}, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
+  activityImpact: `Help a veteran document how a pain flare-up affected their daily activities for VA disability evidence. Pain: ${contextData.painScale || contextData.severity}/10, Location: ${contextData.bodyLocation || "not specified"}, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
         
 Generate a description of functional limitations. Include specific activities that were difficult/impossible, mobility issues, work impact. Write 2-3 sentences.`,
 
-        notes: `Help a veteran write clinical notes for a pain flare-up for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for a pain flare-up for VA disability documentation. Context:
 - Pain Level: ${contextData.painScale || contextData.severity}/10
 - Location: ${contextData.bodyLocation || "not specified"}
 - Duration: ${contextData.duration || "not specified"}
@@ -359,15 +359,15 @@ Write a 2-3 sentence clinical note describing the pain quality (sharp, dull, rad
 });
 
 const buildMentalPrompts = (contextData) => ({
-        triggers: `Help a veteran document mental health episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
+  triggers: `Help a veteran document mental health episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
         
 Generate 5-7 common mental health triggers. Include: specific stressors, anniversary reactions, crowds, loud noises, sleep disturbance, isolation, reminders of service, work stress, family conflict.`,
 
-        activityImpact: `Help a veteran document how a mental health episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function normally: ${contextData.prostrating ? "Yes" : "No"}.
+  activityImpact: `Help a veteran document how a mental health episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function normally: ${contextData.prostrating ? "Yes" : "No"}.
         
 Generate a description of functional impact. Include work/social impairment, isolation, inability to complete tasks, relationship effects. Write 2-3 sentences.`,
 
-        notes: `Help a veteran write clinical notes for a mental health episode for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for a mental health episode for VA disability documentation. Context:
 - Severity: ${contextData.severity}/10
 - Duration: ${contextData.duration || "not specified"}
 - Stress Level: ${contextData.stressLevel}/10
@@ -378,15 +378,15 @@ Write a 2-3 sentence clinical note describing symptoms (anxiety, depression, hyp
 });
 
 const buildFatiguePrompts = (contextData) => ({
-        triggers: `Help a veteran document fatigue episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}.
+  triggers: `Help a veteran document fatigue episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}.
         
 Generate 5-7 common fatigue triggers. Include: poor sleep, physical exertion, stress, medications, weather, chronic pain flares, mental health symptoms.`,
 
-        activityImpact: `Help a veteran document how fatigue affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function: ${contextData.prostrating ? "Yes" : "No"}.
+  activityImpact: `Help a veteran document how fatigue affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function: ${contextData.prostrating ? "Yes" : "No"}.
         
 Generate a description of functional limitations. Include inability to work, rest requirements, cognitive effects, self-care difficulties. Write 2-3 sentences.`,
 
-        notes: `Help a veteran write clinical notes for a fatigue episode for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for a fatigue episode for VA disability documentation. Context:
 - Severity: ${contextData.severity}/10
 - Duration: ${contextData.duration || "not specified"}
 - Unable to function: ${contextData.prostrating ? "Yes" : "No"}
@@ -395,15 +395,15 @@ Write a 2-3 sentence clinical note describing fatigue severity, physical/cogniti
 });
 
 const buildSleepPrompts = (contextData) => ({
-        triggers: `Help a veteran document sleep disorder triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
+  triggers: `Help a veteran document sleep disorder triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
         
 Generate 5-7 common sleep disruption triggers. Include: nightmares, pain, anxiety, medications, caffeine, irregular schedule, environmental factors, sleep apnea symptoms.`,
 
-        activityImpact: `Help a veteran document how sleep problems affected their next-day activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Impaired next-day function: ${contextData.prostrating ? "Yes" : "No"}.
+  activityImpact: `Help a veteran document how sleep problems affected their next-day activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Impaired next-day function: ${contextData.prostrating ? "Yes" : "No"}.
         
 Generate a description of daytime impairment. Include work performance, cognitive function, safety concerns, mood effects. Write 2-3 sentences.`,
 
-        notes: `Help a veteran write clinical notes for sleep disturbance for VA disability documentation. Context:
+  notes: `Help a veteran write clinical notes for sleep disturbance for VA disability documentation. Context:
 - Severity: ${contextData.severity}/10
 - Duration: ${contextData.duration || "not specified"}
 - Impaired function: ${contextData.prostrating ? "Yes" : "No"}
@@ -412,15 +412,15 @@ Write a 2-3 sentence clinical note describing sleep quality, disturbances (insom
 });
 
 const buildDefaultPrompts = (contextData, config) => ({
-      triggers: `Help a veteran document ${config.label.toLowerCase()} triggers for VA disability evidence. Severity: ${contextData.severity}/10.
+  triggers: `Help a veteran document ${config.label.toLowerCase()} triggers for VA disability evidence. Severity: ${contextData.severity}/10.
       
 Generate 5-7 potential triggers or contributing factors that the veteran can select from or customize.`,
 
-      activityImpact: `Help a veteran document how ${config.label.toLowerCase()} affected their daily activities. Severity: ${contextData.severity}/10, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
+  activityImpact: `Help a veteran document how ${config.label.toLowerCase()} affected their daily activities. Severity: ${contextData.severity}/10, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
       
 Generate 2-3 sentences describing typical activity limitations for documentation purposes.`,
 
-      notes: `Help a veteran write clinical notes for a ${config.label.toLowerCase()} episode. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
+  notes: `Help a veteran write clinical notes for a ${config.label.toLowerCase()} episode. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
       
 Write a 2-3 sentence clinical-style note suitable for VA disability documentation.`,
 });
@@ -591,7 +591,6 @@ const addPDFFooter = (doc, margin) => {
   );
 };
 
-
 const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
   <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
     <div className="flex items-center justify-between mb-3">
@@ -607,8 +606,8 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
       }}
     />
     <p className="text-xs text-white/70 mt-2">
-      ✨ AI can help suggest triggers, activity impact, and clinical-style
-      notes for your symptom entries.
+      ✨ AI can help suggest triggers, activity impact, and clinical-style notes
+      for your symptom entries.
     </p>
   </div>
 );
@@ -676,288 +675,287 @@ const SymptomLoggerHeader = ({
   onReportBug,
   onClose,
 }) => (
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+  <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <span className="text-3xl">{config.emoji}</span>
-              </div>
-              <div>
-                <h2
-                  id="symptom-logger-title"
-                  className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
-                >
-                  Symptom Logger
-                  <AIStatusBadge status={aiStatus} />
-                  <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                    BETA
-                  </span>
-                </h2>
-                <p className="text-white/80 text-sm sm:text-base mt-1">
-                  The 50% Maker • Track Frequency for VA Ratings
-                </p>
-              </div>
-            </div>
-            <SymptomLoggerHeaderActions
-              showAISettings={showAISettings}
-              setShowAISettings={setShowAISettings}
-              symptomLoggerContentRef={symptomLoggerContentRef}
-              onReportBug={onReportBug}
-              onClose={onClose}
-            />
-          </div>
-
-          {/* AI Settings Panel */}
-          {showAISettings && (
-            <SymptomLoggerAISettingsPanel
-              aiStatus={aiStatus}
-              setAIStatus={setAIStatus}
-            />
-          )}
+    <div className="relative flex items-start justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">{config.emoji}</span>
         </div>
+        <div>
+          <h2
+            id="symptom-logger-title"
+            className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
+          >
+            Symptom Logger
+            <AIStatusBadge status={aiStatus} />
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-white/80 text-sm sm:text-base mt-1">
+            The 50% Maker • Track Frequency for VA Ratings
+          </p>
+        </div>
+      </div>
+      <SymptomLoggerHeaderActions
+        showAISettings={showAISettings}
+        setShowAISettings={setShowAISettings}
+        symptomLoggerContentRef={symptomLoggerContentRef}
+        onReportBug={onReportBug}
+        onClose={onClose}
+      />
+    </div>
+
+    {/* AI Settings Panel */}
+    {showAISettings && (
+      <SymptomLoggerAISettingsPanel
+        aiStatus={aiStatus}
+        setAIStatus={setAIStatus}
+      />
+    )}
+  </div>
 );
 
 const SymptomLoggerFooter = ({ logs, onClose }) => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <BuyMeCoffee show={logs.length > 0} trigger="symptom-logger" />
-      <button
-        onClick={onClose}
-        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-      >
-        Close
-      </button>
-    </div>
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <BuyMeCoffee show={logs.length > 0} trigger="symptom-logger" />
+    <button
+      onClick={onClose}
+      className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      Close
+    </button>
+  </div>
 );
 
 const SymptomTypeSelector = ({ symptomType, setSymptomType }) => (
-        <div className="px-6 py-4 border-b dark:border-gray-700">
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(SYMPTOM_TYPES).map(([key, typeConfig]) => {
-              const isActive = symptomType === key;
-              const colorMap = {
-                migraine: "bg-purple-600",
-                ibs: "bg-blue-600",
-                pain: "bg-red-600",
-                fatigue: "bg-orange-600",
-                sleep: "bg-indigo-600",
-                digestive: "bg-amber-600",
-                mental: "bg-teal-600",
-                general: "bg-slate-600",
-              };
-              return (
-                <button
-                  key={key}
-                  onClick={() => setSymptomType(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    isActive
-                      ? `${colorMap[key]} text-white shadow-lg`
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  <span>{typeConfig.emoji}</span>
-                  <span className="whitespace-nowrap">{typeConfig.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+  <div className="px-6 py-4 border-b dark:border-gray-700">
+    <div className="flex flex-wrap gap-2">
+      {Object.entries(SYMPTOM_TYPES).map(([key, typeConfig]) => {
+        const isActive = symptomType === key;
+        const colorMap = {
+          migraine: "bg-purple-600",
+          ibs: "bg-blue-600",
+          pain: "bg-red-600",
+          fatigue: "bg-orange-600",
+          sleep: "bg-indigo-600",
+          digestive: "bg-amber-600",
+          mental: "bg-teal-600",
+          general: "bg-slate-600",
+        };
+        return (
+          <button
+            key={key}
+            onClick={() => setSymptomType(key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              isActive
+                ? `${colorMap[key]} text-white shadow-lg`
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <span>{typeConfig.emoji}</span>
+            <span className="whitespace-nowrap">{typeConfig.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
 );
 
-const TabNavigation = ({ activeTab, setActiveTab, colors, logs, symptomType }) => (
-        <div className="px-6 pt-4 border-b dark:border-gray-700">
-          <nav className="flex gap-1">
-            {[
-              { id: "log", label: "➕ Log Attack", icon: "📝" },
-              {
-                id: "history",
-                label: `📋 History (${logs.filter((l) => l.type === symptomType).length})`,
-                icon: "📋",
-              },
-              { id: "export", label: "📊 Stats & Export", icon: "📊" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === tab.id
-                    ? `${colors.bg} text-white`
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+const TabNavigation = ({
+  activeTab,
+  setActiveTab,
+  colors,
+  logs,
+  symptomType,
+}) => (
+  <div className="px-6 pt-4 border-b dark:border-gray-700">
+    <nav className="flex gap-1">
+      {[
+        { id: "log", label: "➕ Log Attack", icon: "📝" },
+        {
+          id: "history",
+          label: `📋 History (${logs.filter((l) => l.type === symptomType).length})`,
+          icon: "📋",
+        },
+        { id: "export", label: "📊 Stats & Export", icon: "📊" },
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id)}
+          className={`px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+            activeTab === tab.id
+              ? `${colors.bg} text-white`
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </nav>
+  </div>
 );
 
 const TrackFrequencyBanner = ({ config, colors }) => (
-              <div
-                className={`p-4 ${colors.bgLight} ${colors.border} border rounded-xl`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{config.emoji}</span>
-                  <div>
-                    <h3 className={`font-bold ${colors.text}`}>
-                      Why Track Frequency?
-                    </h3>
-                    <p className={`text-sm ${colors.text} mt-1`}>
-                      The VA rates {config.label.toLowerCase()}s on{" "}
-                      <strong>frequency</strong>, not just severity. Having a
-                      documented log showing &quot;X prostrating attacks per
-                      month&quot; is powerful evidence.
-                    </p>
-                  </div>
-                </div>
-              </div>
+  <div className={`p-4 ${colors.bgLight} ${colors.border} border rounded-xl`}>
+    <div className="flex items-start gap-3">
+      <span className="text-2xl">{config.emoji}</span>
+      <div>
+        <h3 className={`font-bold ${colors.text}`}>Why Track Frequency?</h3>
+        <p className={`text-sm ${colors.text} mt-1`}>
+          The VA rates {config.label.toLowerCase()}s on{" "}
+          <strong>frequency</strong>, not just severity. Having a documented log
+          showing &quot;X prostrating attacks per month&quot; is powerful
+          evidence.
+        </p>
+      </div>
+    </div>
+  </div>
 );
 
 const DateTimeFields = ({ newLog, setNewLog }) => (
   <>
-                {/* Date & Time */}
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    📅 Date
-                  </label>
-                  <input
-                    type="date"
-                    aria-label="Date"
-                    value={newLog.date}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({ ...prev, date: e.target.value }))
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ⏰ Time
-                  </label>
-                  <input
-                    type="time"
-                    aria-label="Time"
-                    value={newLog.time}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({ ...prev, time: e.target.value }))
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+    {/* Date & Time */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        📅 Date
+      </label>
+      <input
+        type="date"
+        aria-label="Date"
+        value={newLog.date}
+        onChange={(e) =>
+          setNewLog((prev) => ({ ...prev, date: e.target.value }))
+        }
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+      />
+    </div>
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        ⏰ Time
+      </label>
+      <input
+        type="time"
+        aria-label="Time"
+        value={newLog.time}
+        onChange={(e) =>
+          setNewLog((prev) => ({ ...prev, time: e.target.value }))
+        }
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+      />
+    </div>
   </>
 );
 
 const SeverityDurationFields = ({ newLog, setNewLog, colors, config }) => (
   <>
-                {/* Severity */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    💢 Severity: {newLog.severity}/10
-                  </label>
-                  <input
-                    type="range"
-                    aria-label="Severity, 1 to 10"
-                    min="1"
-                    max="10"
-                    value={newLog.severity}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({
-                        ...prev,
-                        severity: parseInt(e.target.value),
-                      }))
-                    }
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>1 - Mild</span>
-                    <span>5 - Moderate</span>
-                    <span>10 - Severe</span>
-                  </div>
-                </div>
+    {/* Severity */}
+    <div className="md:col-span-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        💢 Severity: {newLog.severity}/10
+      </label>
+      <input
+        type="range"
+        aria-label="Severity, 1 to 10"
+        min="1"
+        max="10"
+        value={newLog.severity}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            severity: parseInt(e.target.value),
+          }))
+        }
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+      />
+      <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <span>1 - Mild</span>
+        <span>5 - Moderate</span>
+        <span>10 - Severe</span>
+      </div>
+    </div>
 
-                {/* Duration */}
-                <div className="md:col-span-2">
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ⏱️ Duration
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {config.durationOptions.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() =>
-                          setNewLog((prev) => ({ ...prev, duration: option }))
-                        }
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          newLog.duration === option
-                            ? `${colors.bg} text-white`
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+    {/* Duration */}
+    <div className="md:col-span-2">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        ⏱️ Duration
+      </label>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {config.durationOptions.map((option) => (
+          <button
+            key={option}
+            onClick={() => setNewLog((prev) => ({ ...prev, duration: option }))}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              newLog.duration === option
+                ? `${colors.bg} text-white`
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
   </>
 );
 
 const BodyLocationPainScaleFields = ({ newLog, setNewLog, symptomType }) => (
   <>
-                {/* Body Location - NEW FIELD */}
-                <div className="md:col-span-2">
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    📍 Body Location (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newLog.bodyLocation}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({
-                        ...prev,
-                        bodyLocation: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., Lower back, Left knee, Head/neck, Stomach..."
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    💡 Tip: Use the Somatic Target tool to select precise body
-                    locations
-                  </p>
-                </div>
+    {/* Body Location - NEW FIELD */}
+    <div className="md:col-span-2">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        📍 Body Location (optional)
+      </label>
+      <input
+        type="text"
+        value={newLog.bodyLocation}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            bodyLocation: e.target.value,
+          }))
+        }
+        placeholder="e.g., Lower back, Left knee, Head/neck, Stomach..."
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+      />
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        💡 Tip: Use the Somatic Target tool to select precise body locations
+      </p>
+    </div>
 
-                {/* Pain Scale - Show for pain type */}
-                {symptomType === "pain" && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      🔥 Pain Scale: {newLog.painScale}/10
-                    </label>
-                    <input
-                      type="range"
-                      aria-label="Pain scale, 0 to 10"
-                      min="0"
-                      max="10"
-                      value={newLog.painScale}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          painScale: parseInt(e.target.value),
-                        }))
-                      }
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>0 - No pain</span>
-                      <span>5 - Moderate</span>
-                      <span>10 - Worst possible</span>
-                    </div>
-                  </div>
-                )}
+    {/* Pain Scale - Show for pain type */}
+    {symptomType === "pain" && (
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          🔥 Pain Scale: {newLog.painScale}/10
+        </label>
+        <input
+          type="range"
+          aria-label="Pain scale, 0 to 10"
+          min="0"
+          max="10"
+          value={newLog.painScale}
+          onChange={(e) =>
+            setNewLog((prev) => ({
+              ...prev,
+              painScale: parseInt(e.target.value),
+            }))
+          }
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>0 - No pain</span>
+          <span>5 - Moderate</span>
+          <span>10 - Worst possible</span>
+        </div>
+      </div>
+    )}
   </>
 );
 
@@ -969,148 +967,146 @@ const ActivityWeatherFields = ({
   generateAISuggestion,
 }) => (
   <>
-                {/* Activity Impact - NEW FIELD */}
-                <div className="md:col-span-2">
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    🎯 Activities Affected (optional)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={newLog.activityImpact}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          activityImpact: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
-                      className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                    />
-                    {aiStatus.available && (
-                      <button
-                        onClick={() => generateAISuggestion("activityImpact")}
-                        disabled={isAIGenerating === "activityImpact"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
-                      >
-                        {isAIGenerating === "activityImpact" ? "..." : "✨ AI"}
-                      </button>
-                    )}
-                  </div>
-                </div>
+    {/* Activity Impact - NEW FIELD */}
+    <div className="md:col-span-2">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        🎯 Activities Affected (optional)
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={newLog.activityImpact}
+          onChange={(e) =>
+            setNewLog((prev) => ({
+              ...prev,
+              activityImpact: e.target.value,
+            }))
+          }
+          placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
+          className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+        />
+        {aiStatus.available && (
+          <button
+            onClick={() => generateAISuggestion("activityImpact")}
+            disabled={isAIGenerating === "activityImpact"}
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+          >
+            {isAIGenerating === "activityImpact" ? "..." : "✨ AI"}
+          </button>
+        )}
+      </div>
+    </div>
 
-                {/* Weather Conditions - NEW FIELD */}
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    🌤️ Weather (optional)
-                  </label>
-                  <select
-                    aria-label="Weather"
-                    value={newLog.weather}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({
-                        ...prev,
-                        weather: e.target.value,
-                      }))
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">Select weather</option>
-                    <option value="Clear/Sunny">Clear/Sunny</option>
-                    <option value="Cloudy">Cloudy</option>
-                    <option value="Rainy">Rainy</option>
-                    <option value="Stormy">Stormy</option>
-                    <option value="Hot">Hot</option>
-                    <option value="Cold">Cold</option>
-                    <option value="Humid">Humid</option>
-                    <option value="Windy">Windy</option>
-                    <option value="Pressure Change">
-                      Barometric Pressure Change
-                    </option>
-                  </select>
-                </div>
+    {/* Weather Conditions - NEW FIELD */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        🌤️ Weather (optional)
+      </label>
+      <select
+        aria-label="Weather"
+        value={newLog.weather}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            weather: e.target.value,
+          }))
+        }
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+      >
+        <option value="">Select weather</option>
+        <option value="Clear/Sunny">Clear/Sunny</option>
+        <option value="Cloudy">Cloudy</option>
+        <option value="Rainy">Rainy</option>
+        <option value="Stormy">Stormy</option>
+        <option value="Hot">Hot</option>
+        <option value="Cold">Cold</option>
+        <option value="Humid">Humid</option>
+        <option value="Windy">Windy</option>
+        <option value="Pressure Change">Barometric Pressure Change</option>
+      </select>
+    </div>
   </>
 );
 
 const StressProstratingMedicationFields = ({ newLog, setNewLog, config }) => (
   <>
-                {/* Stress Level - NEW FIELD */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    😰 Stress Level: {newLog.stressLevel}/10
-                  </label>
-                  <input
-                    type="range"
-                    aria-label="Stress level, 0 to 10"
-                    min="0"
-                    max="10"
-                    value={newLog.stressLevel}
-                    onChange={(e) =>
-                      setNewLog((prev) => ({
-                        ...prev,
-                        stressLevel: parseInt(e.target.value),
-                      }))
-                    }
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>0 - Calm</span>
-                    <span>5 - Moderate</span>
-                    <span>10 - Extreme</span>
-                  </div>
-                </div>
+    {/* Stress Level - NEW FIELD */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        😰 Stress Level: {newLog.stressLevel}/10
+      </label>
+      <input
+        type="range"
+        aria-label="Stress level, 0 to 10"
+        min="0"
+        max="10"
+        value={newLog.stressLevel}
+        onChange={(e) =>
+          setNewLog((prev) => ({
+            ...prev,
+            stressLevel: parseInt(e.target.value),
+          }))
+        }
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+      />
+      <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <span>0 - Calm</span>
+        <span>5 - Moderate</span>
+        <span>10 - Extreme</span>
+      </div>
+    </div>
 
-                {/* Prostrating */}
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={newLog.prostrating}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          prostrating: e.target.checked,
-                        }))
-                      }
-                      className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    />
-                    <div>
-                      <span className="font-medium text-red-800 dark:text-red-200">
-                        🛑 {config.questions.prostrating}
-                      </span>
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                        &quot;Prostrating&quot; = had to stop activities. This
-                        is KEY for higher ratings!
-                      </p>
-                    </div>
-                  </label>
-                </div>
+    {/* Prostrating */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
+        <input
+          type="checkbox"
+          checked={newLog.prostrating}
+          onChange={(e) =>
+            setNewLog((prev) => ({
+              ...prev,
+              prostrating: e.target.checked,
+            }))
+          }
+          className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+        />
+        <div>
+          <span className="font-medium text-red-800 dark:text-red-200">
+            🛑 {config.questions.prostrating}
+          </span>
+          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            &quot;Prostrating&quot; = had to stop activities. This is KEY for
+            higher ratings!
+          </p>
+        </div>
+      </label>
+    </div>
 
-                {/* Medication */}
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={newLog.medication}
-                      onChange={(e) =>
-                        setNewLog((prev) => ({
-                          ...prev,
-                          medication: e.target.checked,
-                        }))
-                      }
-                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-200">
-                        💊 {config.questions.medication}
-                      </span>
-                    </div>
-                  </label>
-                </div>
+    {/* Medication */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <input
+          type="checkbox"
+          checked={newLog.medication}
+          onChange={(e) =>
+            setNewLog((prev) => ({
+              ...prev,
+              medication: e.target.checked,
+            }))
+          }
+          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+        />
+        <div>
+          <span className="font-medium text-gray-800 dark:text-gray-200">
+            💊 {config.questions.medication}
+          </span>
+        </div>
+      </label>
+    </div>
   </>
 );
 
@@ -1283,31 +1279,31 @@ const LogAttackTab = ({
       />
     </div>
 
-              <button
-                onClick={handleAddLog}
-                className={`w-full py-4 ${colors.bg} text-white rounded-lg font-bold text-lg hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2`}
-              >
-                <span>➕</span>
-                <span>Log This Attack</span>
-              </button>
+    <button
+      onClick={handleAddLog}
+      className={`w-full py-4 ${colors.bg} text-white rounded-lg font-bold text-lg hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2`}
+    >
+      <span>➕</span>
+      <span>Log This Attack</span>
+    </button>
   </div>
 );
 
 const EmptyHistoryState = ({ config, colors, setActiveTab }) => (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  <div className="text-6xl mb-4">{config.emoji}</div>
-                  <p className="text-lg font-medium">No entries yet</p>
-                  <p className="text-sm mt-2">
-                    Start logging your {config.label.toLowerCase()} attacks to
-                    build evidence for your claim.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab("log")}
-                    className={`mt-4 px-6 py-2 ${colors.bg} text-white rounded-lg font-medium`}
-                  >
-                    Log Your First Attack
-                  </button>
-                </div>
+  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+    <div className="text-6xl mb-4">{config.emoji}</div>
+    <p className="text-lg font-medium">No entries yet</p>
+    <p className="text-sm mt-2">
+      Start logging your {config.label.toLowerCase()} attacks to build evidence
+      for your claim.
+    </p>
+    <button
+      onClick={() => setActiveTab("log")}
+      className={`mt-4 px-6 py-2 ${colors.bg} text-white rounded-lg font-medium`}
+    >
+      Log Your First Attack
+    </button>
+  </div>
 );
 
 const LogEntryDetails = ({ log, colors }) => (
@@ -1337,9 +1333,7 @@ const LogEntryDetails = ({ log, colors }) => (
         Duration: <strong>{log.duration}</strong>
       </span>
       {log.medication && (
-        <span className="text-gray-500 dark:text-gray-400">
-          💊 Medication
-        </span>
+        <span className="text-gray-500 dark:text-gray-400">💊 Medication</span>
       )}
     </div>
     {log.bodyLocation && (
@@ -1373,7 +1367,11 @@ const LogEntryDetails = ({ log, colors }) => (
   </div>
 );
 
-const LogEntryDeleteConfirm = ({ log, setShowDeleteConfirm, handleDeleteLog }) => (
+const LogEntryDeleteConfirm = ({
+  log,
+  setShowDeleteConfirm,
+  handleDeleteLog,
+}) => (
   <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/50 rounded-lg flex items-center justify-between">
     <span className="text-sm text-red-700 dark:text-red-300">
       Delete this entry?
@@ -1448,7 +1446,11 @@ const HistoryTab = ({
 }) => (
   <div className="space-y-4">
     {logs.filter((log) => log.type === symptomType).length === 0 ? (
-      <EmptyHistoryState config={config} colors={colors} setActiveTab={setActiveTab} />
+      <EmptyHistoryState
+        config={config}
+        colors={colors}
+        setActiveTab={setActiveTab}
+      />
     ) : (
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {logs
@@ -1469,114 +1471,116 @@ const HistoryTab = ({
 );
 
 const StatsGrid = ({ stats }) => (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                  <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-                    {stats.prostratingLast30}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Prostrating
-                    <br />
-                    Last 30 Days
-                  </div>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                  <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-                    {stats.avgPerMonth}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Avg/Month
-                    <br />
-                    (90-day)
-                  </div>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                  <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-                    {stats.avgSeverity}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Avg Severity
-                    <br />
-                    /10
-                  </div>
-                </div>
-                <div
-                  className={`rounded-xl p-4 text-center ${stats.suggestedRating >= 30 ? "bg-green-100 dark:bg-green-900/50" : "bg-gray-50 dark:bg-gray-900"}`}
-                >
-                  <div
-                    className={`text-3xl font-bold ${stats.suggestedRating >= 30 ? "text-green-700 dark:text-green-300" : "text-gray-800 dark:text-gray-200"}`}
-                  >
-                    {stats.suggestedRating}%
-                  </div>
-                  <div
-                    className={`text-xs mt-1 ${stats.suggestedRating >= 30 ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}`}
-                  >
-                    Suggested
-                    <br />
-                    VA Rating
-                  </div>
-                </div>
-              </div>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+        {stats.prostratingLast30}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        Prostrating
+        <br />
+        Last 30 Days
+      </div>
+    </div>
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+        {stats.avgPerMonth}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        Avg/Month
+        <br />
+        (90-day)
+      </div>
+    </div>
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+        {stats.avgSeverity}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        Avg Severity
+        <br />
+        /10
+      </div>
+    </div>
+    <div
+      className={`rounded-xl p-4 text-center ${stats.suggestedRating >= 30 ? "bg-green-100 dark:bg-green-900/50" : "bg-gray-50 dark:bg-gray-900"}`}
+    >
+      <div
+        className={`text-3xl font-bold ${stats.suggestedRating >= 30 ? "text-green-700 dark:text-green-300" : "text-gray-800 dark:text-gray-200"}`}
+      >
+        {stats.suggestedRating}%
+      </div>
+      <div
+        className={`text-xs mt-1 ${stats.suggestedRating >= 30 ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}`}
+      >
+        Suggested
+        <br />
+        VA Rating
+      </div>
+    </div>
+  </div>
 );
 
 const RatingCriteriaSection = ({ stats, colors, config }) => (
   <>
-              {/* Rating Criteria Reference */}
-              <div
-                className={`p-4 ${colors.bgLight} ${colors.border} border rounded-xl`}
-              >
-                <h4 className={`font-semibold ${colors.text} mb-3`}>
-                  📋 VA Rating Criteria for {config.label}
-                </h4>
-                <div className="space-y-2">
-                  {config.ratingCriteria.map((criteria) => (
-                    <div
-                      key={criteria.rating}
-                      className={`flex items-center gap-3 p-2 rounded-lg ${
-                        stats.suggestedRating === criteria.rating
-                          ? "bg-white dark:bg-gray-800 border-2 border-green-500"
-                          : ""
-                      }`}
-                    >
-                      <span className="w-12 h-12 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg font-bold text-lg">
-                        {criteria.rating}%
-                      </span>
-                      <span className={`text-sm ${colors.text}`}>
-                        {criteria.description}
-                      </span>
-                      {stats.suggestedRating === criteria.rating && (
-                        <span className="ml-auto text-green-600 dark:text-green-400 text-sm font-medium">
-                          ← Your Data
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+    {/* Rating Criteria Reference */}
+    <div className={`p-4 ${colors.bgLight} ${colors.border} border rounded-xl`}>
+      <h4 className={`font-semibold ${colors.text} mb-3`}>
+        📋 VA Rating Criteria for {config.label}
+      </h4>
+      <div className="space-y-2">
+        {config.ratingCriteria.map((criteria) => (
+          <div
+            key={criteria.rating}
+            className={`flex items-center gap-3 p-2 rounded-lg ${
+              stats.suggestedRating === criteria.rating
+                ? "bg-white dark:bg-gray-800 border-2 border-green-500"
+                : ""
+            }`}
+          >
+            <span className="w-12 h-12 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg font-bold text-lg">
+              {criteria.rating}%
+            </span>
+            <span className={`text-sm ${colors.text}`}>
+              {criteria.description}
+            </span>
+            {stats.suggestedRating === criteria.rating && (
+              <span className="ml-auto text-green-600 dark:text-green-400 text-sm font-medium">
+                ← Your Data
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   </>
 );
 
 const ExportPDFButtonSection = ({ logs, symptomType, handleExportPDF }) => (
   <>
-              {/* Export Button */}
-              <button
-                onClick={handleExportPDF}
-                disabled={
-                  logs.filter((l) => l.type === symptomType).length === 0
-                }
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-              >
-                <span>📄</span>
-                <span>Export PDF for C&P Exam</span>
-              </button>
-              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                Print this and bring it to your C&P exam as documented frequency
-                evidence
-              </p>
+    {/* Export Button */}
+    <button
+      onClick={handleExportPDF}
+      disabled={logs.filter((l) => l.type === symptomType).length === 0}
+      className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+    >
+      <span>📄</span>
+      <span>Export PDF for C&P Exam</span>
+    </button>
+    <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+      Print this and bring it to your C&P exam as documented frequency evidence
+    </p>
   </>
 );
 
-const ExportTab = ({ stats, colors, config, logs, symptomType, handleExportPDF }) => (
+const ExportTab = ({
+  stats,
+  colors,
+  config,
+  logs,
+  symptomType,
+  handleExportPDF,
+}) => (
   <div className="space-y-6">
     <StatsGrid stats={stats} />
     <RatingCriteriaSection stats={stats} colors={colors} config={config} />
@@ -1706,7 +1710,13 @@ function _computeSymptomStats(logs, symptomType) {
   };
 }
 
-function useSymptomLoggerInitEffects({ setLogs, setSymptomType, setNewLog, setActiveTab, setAIStatus }) {
+function useSymptomLoggerInitEffects({
+  setLogs,
+  setSymptomType,
+  setNewLog,
+  setActiveTab,
+  setAIStatus,
+}) {
   useEffect(() => {
     const checkAI = async () => {
       const status = await getAIStatus();
@@ -1945,20 +1955,24 @@ function useSymptomLoggerState() {
     [logs, symptomType],
   );
 
-  const { handleAddLog, handleDeleteLog, generateAISuggestion, handleExportPDF } =
-    useSymptomLoggerHandlers({
-      logs,
-      setLogs,
-      symptomType,
-      newLog,
-      setNewLog,
-      setActiveTab,
-      setShowDeleteConfirm,
-      aiStatus,
-      setIsAIGenerating,
-      setAIError,
-      stats,
-    });
+  const {
+    handleAddLog,
+    handleDeleteLog,
+    generateAISuggestion,
+    handleExportPDF,
+  } = useSymptomLoggerHandlers({
+    logs,
+    setLogs,
+    symptomType,
+    newLog,
+    setNewLog,
+    setActiveTab,
+    setShowDeleteConfirm,
+    aiStatus,
+    setIsAIGenerating,
+    setAIError,
+    stats,
+  });
 
   const config = SYMPTOM_TYPES[symptomType];
   const colors = SYMPTOM_COLOR_CLASSES[config.color];

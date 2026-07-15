@@ -117,7 +117,13 @@ function filterDbqForms(forms, selectedCategory, searchQuery) {
  * Download a single DBQ for offline access
  */
 async function downloadOneForm(form, deps) {
-  const { setStatus, setCachedStatus, setCacheStats, setCoffeeContext, setShowBuyMeCoffee } = deps;
+  const {
+    setStatus,
+    setCachedStatus,
+    setCacheStats,
+    setCoffeeContext,
+    setShowBuyMeCoffee,
+  } = deps;
   setStatus({ type: "info", message: `Downloading ${form.title}...` });
 
   const result = await downloadAndCacheDbq(form);
@@ -298,8 +304,7 @@ function useDbqIndexAndFilter() {
     try {
       setIsLoading(true);
 
-      const { forms, categories: loadedCategories } =
-        await loadDbqFormsIndex();
+      const { forms, categories: loadedCategories } = await loadDbqFormsIndex();
       setDbqForms(forms);
       setCategories(loadedCategories);
 
@@ -512,8 +517,12 @@ function SearchFilterBar({ index, cacheActions }) {
     dbqForms,
     cacheStats,
   } = index;
-  const { downloadProgress, handleDownloadAll, handleExportZip, handleClearCache } =
-    cacheActions;
+  const {
+    downloadProgress,
+    handleDownloadAll,
+    handleExportZip,
+    handleClearCache,
+  } = cacheActions;
 
   return (
     <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
@@ -703,8 +712,8 @@ function InfoFooter() {
   return (
     <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
       <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-        💡 Download forms for offline access. Pre-fill your information
-        before doctor visits. All processing happens locally on your device.
+        💡 Download forms for offline access. Pre-fill your information before
+        doctor visits. All processing happens locally on your device.
       </p>
     </div>
   );

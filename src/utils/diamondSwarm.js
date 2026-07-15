@@ -353,9 +353,7 @@ function _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks) {
 function _ensureMLCGPUPatch() {
   if (window._mlc_gpu_patched || !navigator.gpu) return;
 
-  const _origRequestAdapter = navigator.gpu.requestAdapter.bind(
-    navigator.gpu,
-  );
+  const _origRequestAdapter = navigator.gpu.requestAdapter.bind(navigator.gpu);
   navigator.gpu.requestAdapter = async function (options) {
     const a = await _origRequestAdapter(options);
     if (!a) return a;
@@ -372,8 +370,7 @@ function _ensureMLCGPUPatch() {
         maxComputeWorkgroupSizeX: aLimits.maxComputeWorkgroupSizeX,
         maxComputeWorkgroupSizeY: aLimits.maxComputeWorkgroupSizeY,
         maxComputeWorkgroupSizeZ: aLimits.maxComputeWorkgroupSizeZ,
-        maxComputeWorkgroupStorageSize:
-          aLimits.maxComputeWorkgroupStorageSize,
+        maxComputeWorkgroupStorageSize: aLimits.maxComputeWorkgroupStorageSize,
         maxBindGroups: aLimits.maxBindGroups,
         maxBindingsPerBindGroup: aLimits.maxBindingsPerBindGroup,
         maxDynamicStorageBuffersPerPipelineLayout:

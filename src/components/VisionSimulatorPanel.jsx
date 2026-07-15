@@ -265,10 +265,10 @@ const InfoBanner = () => (
         />
       </svg>
       <div className="text-sm text-blue-800 dark:text-blue-200">
-        <strong>How it works:</strong> This uses OCR (Tesseract.js) to
-        extract text from your document, then combines it with AI analysis.
-        While not as powerful as a true vision model, it works great for
-        text-heavy documents like DD214s, medical records, and VA forms.
+        <strong>How it works:</strong> This uses OCR (Tesseract.js) to extract
+        text from your document, then combines it with AI analysis. While not as
+        powerful as a true vision model, it works great for text-heavy documents
+        like DD214s, medical records, and VA forms.
       </div>
     </div>
   </div>
@@ -526,9 +526,7 @@ const FullAnalysisResult = ({ analysisResult }) => (
         {analysisResult.dd214Elements.serviceInfo?.branch && (
           <p className="text-sm">
             Branch:{" "}
-            <strong>
-              {analysisResult.dd214Elements.serviceInfo.branch}
-            </strong>
+            <strong>{analysisResult.dd214Elements.serviceInfo.branch}</strong>
           </p>
         )}
       </div>

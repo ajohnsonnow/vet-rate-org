@@ -827,10 +827,7 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
     fieldMap.veteranMiddleInitial,
     vetNameParts.length > 2 ? vetNameParts[1]?.[0] : "",
   );
-  setTextField(
-    fieldMap.veteranLastName,
-    vetNameParts[vetNameParts.length - 1],
-  );
+  setTextField(fieldMap.veteranLastName, vetNameParts[vetNameParts.length - 1]);
   setTextField(fieldMap.veteranSSN1, vetSSN.first);
   setTextField(fieldMap.veteranSSN2, vetSSN.middle);
   setTextField(fieldMap.veteranSSN3, vetSSN.last);
@@ -852,11 +849,9 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
 }
 
 function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
-  const claimantNameParts = (
-    data.claimantName ||
-    data.witnessName ||
-    ""
-  ).split(" ");
+  const claimantNameParts = (data.claimantName || data.witnessName || "").split(
+    " ",
+  );
   const claimantPhone = parsePhoneParts(
     data.claimantPhone || data.witnessPhone,
   );
@@ -900,8 +895,7 @@ function build21_10210_Statement(data) {
   if (data.whatObserved)
     fullStatement += `WHAT I PERSONALLY OBSERVED:\n${data.whatObserved}\n\n`;
   if (data.whenObserved) fullStatement += `WHEN: ${data.whenObserved}\n`;
-  if (data.whereObserved)
-    fullStatement += `WHERE: ${data.whereObserved}\n\n`;
+  if (data.whereObserved) fullStatement += `WHERE: ${data.whereObserved}\n\n`;
   if (data.dailyImpact)
     fullStatement += `IMPACT ON DAILY LIFE:\n${data.dailyImpact}\n\n`;
   if (data.workImpact)
@@ -1359,9 +1353,7 @@ function parse21_0781_Name(data) {
   const firstName = nameParts[0] || "";
   const middleInitial = nameParts.length > 2 ? nameParts[1].charAt(0) : "";
   const lastName =
-    nameParts.length > 2
-      ? nameParts.slice(2).join(" ")
-      : nameParts[1] || "";
+    nameParts.length > 2 ? nameParts.slice(2).join(" ") : nameParts[1] || "";
   return { firstName, middleInitial, lastName };
 }
 
@@ -1396,8 +1388,7 @@ function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
   );
   setCheckbox(
     fieldMap.personalTraumaticNonMST,
-    data.stressorType === "personal_non_mst" ||
-      data.personalTraumaticNonMST,
+    data.stressorType === "personal_non_mst" || data.personalTraumaticNonMST,
   );
   setCheckbox(
     fieldMap.personalTraumaticMST,
@@ -1412,11 +1403,7 @@ function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
 function fill21_0781_StressorEvents(setTextField, fieldMap, data) {
   // Stressor events - support both single incident and multiple incidents
   // For single incident data format
-  if (
-    data.incidentDescription ||
-    data.incidentLocation ||
-    data.incidentDate
-  ) {
+  if (data.incidentDescription || data.incidentLocation || data.incidentDate) {
     setTextField(fieldMap.stressor1Description, data.incidentDescription);
     setTextField(fieldMap.stressor1Location, data.incidentLocation);
     setTextField(fieldMap.stressor1Dates, data.incidentDate);
@@ -1464,10 +1451,7 @@ function fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data) {
     data.depressionPanicAnxiety ||
       data.behavioralChanges?.includes("depression"),
   );
-  setCheckbox(
-    fieldMap.prescriptionMedsChanges,
-    data.prescriptionMedsChanges,
-  );
+  setCheckbox(fieldMap.prescriptionMedsChanges, data.prescriptionMedsChanges);
   setCheckbox(fieldMap.otcMedsChanges, data.otcMedsChanges);
   setCheckbox(fieldMap.substanceUseChanges, data.substanceUseChanges);
   setCheckbox(fieldMap.disciplinaryLegal, data.disciplinaryLegal);
@@ -1522,7 +1506,12 @@ function fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data) {
   setTextField(fieldMap.treatmentFacility3, data.treatmentFacility3);
 }
 
-function fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data) {
+function fill21_0781_RemarksAndConsent(
+  setTextField,
+  setCheckbox,
+  fieldMap,
+  data,
+) {
   setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
 
   setCheckbox(fieldMap.consentVBA, data.consentVBA !== false); // Default to consent
@@ -1684,9 +1673,7 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
 }
 
 function fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data) {
-  const benefits = data.benefitTypes || [data.benefitType] || [
-      "compensation",
-    ];
+  const benefits = data.benefitTypes || [data.benefitType] || ["compensation"];
   const benefitStr = benefits.join(",").toLowerCase();
   if (benefitStr.includes("compensation"))
     setCheckbox(fieldMap.compensationCheckbox, true);
@@ -2083,10 +2070,7 @@ function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
   setTextField(fieldMap.insuranceNumber, data.insuranceNumber || "");
   setTextField(fieldMap.veteranPhone, data.veteranPhone || data.phone || "");
-  setTextField(
-    fieldMap.veteranEmail,
-    data.veteranEmail || data.email || "",
-  );
+  setTextField(fieldMap.veteranEmail, data.veteranEmail || data.email || "");
 }
 
 function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
@@ -2106,10 +2090,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
     fieldMap.claimantLastName,
     data.claimantLastName || claimantParts[claimantParts.length - 1] || "",
   );
-  setTextField(
-    fieldMap.claimantRelationship,
-    data.claimantRelationship || "",
-  );
+  setTextField(fieldMap.claimantRelationship, data.claimantRelationship || "");
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
@@ -2128,14 +2109,8 @@ function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
     data.vsoName || data.organizationName || "",
   );
   setTextField(fieldMap.representativeName, data.representativeName || "");
-  setTextField(
-    fieldMap.representativeTitle,
-    data.representativeTitle || "",
-  );
-  setTextField(
-    fieldMap.representativeEmail,
-    data.representativeEmail || "",
-  );
+  setTextField(fieldMap.representativeTitle, data.representativeTitle || "");
+  setTextField(fieldMap.representativeEmail, data.representativeEmail || "");
 
   setTextField(
     fieldMap.organizationStreet,
@@ -2150,14 +2125,8 @@ function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
     fieldMap.organizationState,
     data.organizationState || data.vsoState || "",
   );
-  setTextField(
-    fieldMap.organizationCountry,
-    data.organizationCountry || "USA",
-  );
-  const orgZip = (data.organizationZip || data.vsoZip || "").replace(
-    /\D/g,
-    "",
-  );
+  setTextField(fieldMap.organizationCountry, data.organizationCountry || "USA");
+  const orgZip = (data.organizationZip || data.vsoZip || "").replace(/\D/g, "");
   setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
   setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
 
@@ -2168,15 +2137,9 @@ function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
   setCheckbox(fieldMap.vrAndEFile, data.vrAndEFile || data.authVRE);
   setCheckbox(fieldMap.eduFile, data.eduFile || data.authEducation);
   setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
-  setCheckbox(
-    fieldMap.insuranceFile,
-    data.insuranceFile || data.authInsurance,
-  );
+  setCheckbox(fieldMap.insuranceFile, data.insuranceFile || data.authInsurance);
 
-  setCheckbox(
-    fieldMap.authorizeDisclosure,
-    data.authorizeDisclosure !== false,
-  );
+  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure !== false);
   setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
   setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
   setCheckbox(fieldMap.hivInfection, data.discloseHIV);
@@ -2394,12 +2357,7 @@ function _fillForm2122aClaimantInfo(setTextField, fieldMap, data) {
   _fillForm2122aClaimantContact(setTextField, fieldMap, data);
 }
 
-function _fillForm2122aRepresentativeInfo(
-  setTextField,
-  fieldMap,
-  data,
-  ssn,
-) {
+function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   const repParts = (data.representativeName || "").split(" ").filter(Boolean);
   setTextField(
     fieldMap.representativeFirstName,

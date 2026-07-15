@@ -110,15 +110,18 @@ If you cannot test a change, say so. If you're guessing, say "I'm guessing." Nev
 
 | Use case | Model | ID |
 |---|---|---|
+| Hardest reasoning, long-horizon agentic tasks (2× cost, always-on thinking) | **Fable 5** | `claude-fable-5` |
 | Complex engineering, architecture, long agentic runs | **Opus 4.8** | `claude-opus-4-8` |
-| Daily coding, code review, most agent work | **Sonnet 4.6** | `claude-sonnet-4-6` |
+| Daily coding, code review, most agent work | **Sonnet 5** | `claude-sonnet-5` |
 | Classification, extraction, high-volume routing | **Haiku 4.5** | `claude-haiku-4-5-20251001` |
 
-**Opus 4.8** (`claude-opus-4-8`, released 2026-05-28) is the current flagship — $5/$25 per MTok, 1M context, adaptive thinking. **Opus 4.7 (`claude-opus-4-7`) is now legacy** — still available, not retired; default new work to 4.8.
+**Claude Fable 5** (`claude-fable-5`, released 2026-06-09) is the most capable publicly available model — Mythos-class, above Opus. $10/$50 per MTok, 1M context, 128K output. Thinking always on, no temperature/top_p/top_k, no assistant prefill, requires 30-day data retention (ZDR incompatible). Enable via `/model fable` (Claude Code ≥ v2.1.170).
 
-**Sunsets:** Haiku 3 retired 2026-04-19; Sonnet 4 / Opus 4 retire 2026-06-15.
+**Opus 4.8** (`claude-opus-4-8`, released 2026-05-28) is the default daily flagship — $5/$25 per MTok, 1M context, adaptive thinking. **Opus 4.7 (`claude-opus-4-7`) is legacy** — still available, not retired; default new work to 4.8.
 
-**Tokenizer:** the ~35% token premium was a one-time change at the 4.6 → 4.7 boundary; **Opus 4.7 and 4.8 tokenize identically**, so 4.7 → 4.8 adds no further premium. Budget the ceiling once when leaving a pre-4.7 model.
+**Sunsets:** Haiku 3 retired 2026-04-20; Sonnet 4 / Opus 4 (`*-20250514`) retired 2026-06-15; Opus 4.1 retires 2026-08-05 → use Opus 4.8.
+
+**Tokenizer:** the ~35% token premium was a one-time change at the 4.6 → 4.7 boundary; Opus 4.7/4.8/Fable 5 tokenize identically, so leaving a pre-4.7 model is the only ceiling to budget for.
 
 **Prompt caching** (1-hour TTL) cuts Claude API spend ~90% for repeated context. Always cache stable system prompts and large reference docs. See [claude-code-best-practices.md §5](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md).
 
@@ -237,6 +240,12 @@ See [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-pr
 | Agent security / prompt injection | [ai-agent-security-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-agent-security-best-practices.md) |
 | Threat-model a system | [threat-modeling-best-practices.md](../best-practices-toolkit/docs/best-practices/threat-modeling-best-practices.md) |
 | Preflight before commit | [preflight-checks-best-practices.md](../best-practices-toolkit/docs/best-practices/preflight-checks-best-practices.md) |
+| Accessibility statement / VPAT (WCAG 2.2 AA, federal/veteran audience) | [accessibility-statement-vpat-best-practices.md](../best-practices-toolkit/docs/best-practices/accessibility-statement-vpat-best-practices.md) |
+| PII/PHI + data-protection antipatterns | [compliance-data-protection-antipatterns.md](../best-practices-toolkit/docs/best-practices/compliance-data-protection-antipatterns.md) |
+| Fake tests, orphaned workers, MCP/tool drift | [tooling-docs-test-antipatterns.md](../best-practices-toolkit/docs/best-practices/tooling-docs-test-antipatterns.md) |
+| Marketing-vs-shipped-feature drift | [product-completeness-antipatterns.md](../best-practices-toolkit/docs/best-practices/product-completeness-antipatterns.md) |
+| Brand/UI consistency checks | [brand-frontend-antipatterns.md](../best-practices-toolkit/docs/best-practices/brand-frontend-antipatterns.md) |
+| GitHub Actions hardening | [github-actions-best-practices.md](../best-practices-toolkit/docs/best-practices/github-actions-best-practices.md) |
 
 ---
 

@@ -41,16 +41,15 @@ const MissionStatement = () => (
       <p className="text-lg">To the Veterans who served and sacrificed:</p>
 
       <p>
-        You earned your benefits through blood, sweat, and years of service.
-        You should not need a law degree or thousands of dollars to claim
-        what is rightfully yours.
+        You earned your benefits through blood, sweat, and years of service. You
+        should not need a law degree or thousands of dollars to claim what is
+        rightfully yours.
       </p>
 
       <p>
-        This tool exists because the VA claims process is unnecessarily
-        complex, and too many veterans are either denied their rightful
-        benefits or preyed upon by companies charging $5,000+ to fill out
-        paperwork.
+        This tool exists because the VA claims process is unnecessarily complex,
+        and too many veterans are either denied their rightful benefits or
+        preyed upon by companies charging $5,000+ to fill out paperwork.
       </p>
 
       <p className="text-va-gold font-bold">That ends here.</p>
@@ -79,9 +78,8 @@ const MissionPromises = () => (
             className="text-gray-300 text-sm"
             style={{ fontFamily: "Courier New, monospace" }}
           >
-            This tool is free. No hidden fees. No premium tiers. No
-            &quot;pay to unlock&quot; features. Everything is available to
-            everyone.
+            This tool is free. No hidden fees. No premium tiers. No &quot;pay to
+            unlock&quot; features. Everything is available to everyone.
           </p>
         </div>
       </div>
@@ -94,9 +92,9 @@ const MissionPromises = () => (
             className="text-gray-300 text-sm"
             style={{ fontFamily: "Courier New, monospace" }}
           >
-            Your data never leaves your browser. No accounts. No cloud
-            storage. No analytics tracking your medical information. Your
-            claim is YOUR business.
+            Your data never leaves your browser. No accounts. No cloud storage.
+            No analytics tracking your medical information. Your claim is YOUR
+            business.
           </p>
         </div>
       </div>
@@ -134,8 +132,8 @@ const MissionPersonalStatement = () => (
       <br />
       <br />
       You deserve better tools than a stack of confusing forms and a 1-800
-      number. You deserve to understand your own claim, build your own
-      evidence, and advocate for yourself with confidence.
+      number. You deserve to understand your own claim, build your own evidence,
+      and advocate for yourself with confidence.
       <br />
       <br />
       This is my way of continuing to serve.&quot;

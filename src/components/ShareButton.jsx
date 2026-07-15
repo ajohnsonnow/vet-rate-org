@@ -340,11 +340,7 @@ const ShareButtonIcon = ({
       className={`rounded-lg p-2 text-gray-600 transition-colors hover:bg-green-100 hover:text-green-600 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-green-500/10 dark:hover:text-green-400 ${className}`}
     >
       {isCapturing ? (
-        <svg
-          className="w-5 h-5 animate-spin"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle
             className="opacity-25"
             cx="12"
@@ -393,11 +389,7 @@ const ShareButtonFloating = ({
       aria-label="Export for Reddit (PII Protected)"
     >
       {isCapturing ? (
-        <svg
-          className="w-6 h-6 animate-spin"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle
             className="opacity-25"
             cx="12"

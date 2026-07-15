@@ -241,9 +241,7 @@ const MissingItemsChecklist = ({ missingItems }) => {
         >
           <item.icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 text-sm">
-              {item.label}
-            </p>
+            <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
             <p className="text-xs text-gray-600 mt-1">{item.description}</p>
           </div>
         </div>
@@ -301,16 +299,15 @@ const ClaimProgressHelpText = () => (
           <strong>Diagnosis:</strong> Medical proof you have the condition
         </li>
         <li>
-          <strong>In-Service Event:</strong> Proof something happened in
-          service
+          <strong>In-Service Event:</strong> Proof something happened in service
         </li>
         <li>
           <strong>Nexus:</strong> Medical opinion linking the two together
         </li>
       </ul>
       <p className="text-xs text-blue-800 mt-3">
-        All three are required for a successful claim. Don&apos;t file until
-        you hit 100%.
+        All three are required for a successful claim. Don&apos;t file until you
+        hit 100%.
       </p>
     </div>
   </div>

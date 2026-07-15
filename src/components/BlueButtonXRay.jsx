@@ -269,9 +269,7 @@ function trimUnmatchedQuoteTail(text) {
   const quoteCount = (repaired.match(/"/g) || []).length;
   if (quoteCount % 2 !== 0) {
     // eslint-disable-next-line no-console
-    console.log(
-      "🔧 Detected unmatched quotes - finding last complete object",
-    );
+    console.log("🔧 Detected unmatched quotes - finding last complete object");
 
     // Find last complete object (ends with },)
     const patterns = [
@@ -455,10 +453,7 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
       "Document is too large for local AI. Try using Cloud AI or upload a smaller file.",
     );
   }
-  if (
-    rawText.includes("[Warrant Council") ||
-    rawText.includes("CW5 Auditor")
-  ) {
+  if (rawText.includes("[Warrant Council") || rawText.includes("CW5 Auditor")) {
     // AI returned a helpful message but not JSON - extract and return as error.
     // Uses indexOf/slice instead of a regex here because the equivalent
     // /will help with[:\s]*(.+?)(?:Your question|$)/s pattern has adjacent
@@ -468,12 +463,9 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
     if (helpIdx !== -1) {
       const afterHelp = rawText.slice(helpIdx + "will help with".length);
       const stopIdx = afterHelp.indexOf("Your question");
-      const captured =
-        stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
+      const captured = stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
       const message = captured.replace(/^[:\s]+/, "");
-      throw new Error(
-        "AI is initializing. " + message.trim().split("\n")[0],
-      );
+      throw new Error("AI is initializing. " + message.trim().split("\n")[0]);
     }
   }
 
@@ -771,8 +763,8 @@ function InfoBanner({ aiStatus }) {
             What is the Blue Button Report?
           </h3>
           <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-1">
-            The <strong>Blue Button</strong> is your instant-download VA
-            medical record from{" "}
+            The <strong>Blue Button</strong> is your instant-download VA medical
+            record from{" "}
             <a
               href="https://www.va.gov/my-health/medical-records/download/"
               target="_blank"
@@ -809,14 +801,14 @@ function LargeDocumentInfo() {
             Large Files? No Problem!
           </h3>
           <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-            Got a big medical record? Don&apos;t worry! The system
-            automatically handles large Blue Button files by breaking
-            them into smaller sections and combining the results.{" "}
+            Got a big medical record? Don&apos;t worry! The system automatically
+            handles large Blue Button files by breaking them into smaller
+            sections and combining the results.{" "}
             <strong>You don&apos;t need to do anything special.</strong>
           </p>
           <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
-            📄 Files of any size work • ⚡ Processing time depends on
-            file size • 🔄 Multi-part files process automatically
+            📄 Files of any size work • ⚡ Processing time depends on file size
+            • 🔄 Multi-part files process automatically
           </p>
         </div>
       </div>
@@ -922,8 +914,7 @@ function Step1ActionButtons({
       {/* Explanation of options */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
         💡 <strong>Save to My Packet</strong> stores the document now.{" "}
-        <strong>AI Scan</strong> auto-saves first, then extracts
-        diagnoses.
+        <strong>AI Scan</strong> auto-saves first, then extracts diagnoses.
       </p>
     </>
   );
@@ -954,17 +945,16 @@ function HowToDownloadGuide() {
         </li>
         <li>
           <strong>Step 2:</strong> Check{" "}
-          <strong>&quot;Select all VA records&quot;</strong> (includes
-          all conditions, labs, meds)
+          <strong>&quot;Select all VA records&quot;</strong> (includes all
+          conditions, labs, meds)
         </li>
         <li>
-          <strong>Step 3:</strong> Choose{" "}
-          <strong>&quot;Text file&quot;</strong> format (works best
-          with X-Ray)
+          <strong>Step 3:</strong> Choose <strong>&quot;Text file&quot;</strong>{" "}
+          format (works best with X-Ray)
         </li>
         <li>
-          Click <strong>&quot;Download report&quot;</strong> and drop
-          the file in here
+          Click <strong>&quot;Download report&quot;</strong> and drop the file
+          in here
         </li>
       </ol>
     </div>
@@ -1110,8 +1100,8 @@ function ConditionsListPanel({ conditions, onToggle, onCheckRatingCriteria }) {
           📋 Extracted Diagnoses
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Click a condition to select it, then add to your calculator
-          or check rating criteria
+          Click a condition to select it, then add to your calculator or check
+          rating criteria
         </p>
       </div>
 
@@ -1137,8 +1127,7 @@ function AddToCalculatorPanel({ conditions, onAddToCalculator }) {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <p className="font-semibold text-gray-800 dark:text-gray-100">
-            {conditions.filter((c) => c.selected).length}{" "}
-            condition(s) selected
+            {conditions.filter((c) => c.selected).length} condition(s) selected
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Add to Pathfinder for strategic analysis
@@ -1246,10 +1235,10 @@ function UnclaimedAlert({ unclaimedCount }) {
             Potential Unclaimed Disabilities Found!
           </h3>
           <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-            You have <strong>{unclaimedCount} condition(s)</strong>{" "}
-            in your VA records that are commonly service-connected. Use
-            the <strong>Pathfinder</strong> to analyze which ones might
-            qualify for compensation!
+            You have <strong>{unclaimedCount} condition(s)</strong> in your VA
+            records that are commonly service-connected. Use the{" "}
+            <strong>Pathfinder</strong> to analyze which ones might qualify for
+            compensation!
           </p>
         </div>
       </div>
@@ -1268,14 +1257,13 @@ function SupportCTA() {
         />
         <div className="flex-1">
           <p className="text-blue-200 font-semibold mb-1">
-            🩺 That medical record parsing would cost $200+ at a law
-            firm
+            🩺 That medical record parsing would cost $200+ at a law firm
           </p>
           <p className="text-blue-300/70 text-sm">
-            This AI-powered tool scans your Blue Button records,
-            extracts diagnoses, and cross-references VA&apos;s rating
-            schedule - all locally in your browser. Help fund the
-            servers and development that make this possible.
+            This AI-powered tool scans your Blue Button records, extracts
+            diagnoses, and cross-references VA&apos;s rating schedule - all
+            locally in your browser. Help fund the servers and development that
+            make this possible.
           </p>
         </div>
       </div>
@@ -1610,8 +1598,7 @@ async function handleSaveToVKB(
         classification: PACKET_DOC_TYPES.BLUE_BUTTON,
         rawText: textToSave || "",
         extractedData: {
-          conditions:
-            extractedConditions.length > 0 ? extractedConditions : [],
+          conditions: extractedConditions.length > 0 ? extractedConditions : [],
           processingDate: new Date().toISOString(),
         },
         pageCount: 1,
@@ -1770,9 +1757,7 @@ async function processChunkWithRetry(
       );
 
       const chunkPrompt =
-        BLUE_BUTTON_AI_PROMPT_HEADER +
-        chunkText +
-        BLUE_BUTTON_AI_PROMPT_FOOTER;
+        BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
 
       // AIS-05: non-blocking crisis scan over this raw record chunk.
       scanDocumentForCrisis(chunkText);
@@ -1976,7 +1961,12 @@ async function analyzeWithAI(text, setProcessingStage) {
     return formatConditionsResponse(parsed);
   }
 
-  return processChunkedDocument(text, maxTextTokens, textTokens, setProcessingStage);
+  return processChunkedDocument(
+    text,
+    maxTextTokens,
+    textTokens,
+    setProcessingStage,
+  );
 }
 
 /**
@@ -2058,7 +2048,9 @@ async function handleProcessFile(
       }
     }
 
-    setProcessingStage("AI analyzing diagnoses (this may take 30-60 seconds)...");
+    setProcessingStage(
+      "AI analyzing diagnoses (this may take 30-60 seconds)...",
+    );
     const result = await analyzeWithAI(text, setProcessingStage);
 
     if (result.conditions.length === 0) {
@@ -2110,7 +2102,13 @@ function useFileHandlers({
 
   const handleDrop = useCallback(
     (e) =>
-      onFileDropped(e, setIsDragging, setError, setFile, setExtractedConditions),
+      onFileDropped(
+        e,
+        setIsDragging,
+        setError,
+        setFile,
+        setExtractedConditions,
+      ),
     [setIsDragging, setError, setFile, setExtractedConditions],
   );
   const handleDragOver = useCallback(
@@ -2238,12 +2236,32 @@ function useBlueButtonXRay() {
   );
 
   return {
-    aiStatus, file, isDragging, fileInputRef, isProcessing, processingStage,
-    error, extractedConditions, rawText, showRawText, savedToVKB, savingToVKB,
-    setShowRawText, handleSaveToVKBClick, handleDrop, handleDragOver,
-    handleDragLeave, handleFileSelect, handleProcessFileClick,
-    toggleConditionSelection, selectAllClaimable, handleReset, unclaimedCount,
-    dropZoneClass, vkbStateStep1, vkbStateResults,
+    aiStatus,
+    file,
+    isDragging,
+    fileInputRef,
+    isProcessing,
+    processingStage,
+    error,
+    extractedConditions,
+    rawText,
+    showRawText,
+    savedToVKB,
+    savingToVKB,
+    setShowRawText,
+    handleSaveToVKBClick,
+    handleDrop,
+    handleDragOver,
+    handleDragLeave,
+    handleFileSelect,
+    handleProcessFileClick,
+    toggleConditionSelection,
+    selectAllClaimable,
+    handleReset,
+    unclaimedCount,
+    dropZoneClass,
+    vkbStateStep1,
+    vkbStateResults,
   };
 }
 
@@ -2256,12 +2274,31 @@ export default function BlueButtonXRay({
 }) {
   const { _t } = useLanguage();
   const {
-    aiStatus, file, fileInputRef, isProcessing, processingStage,
-    error, extractedConditions, rawText, showRawText, savedToVKB, savingToVKB,
-    setShowRawText, handleSaveToVKBClick, handleDrop, handleDragOver,
-    handleDragLeave, handleFileSelect, handleProcessFileClick,
-    toggleConditionSelection, selectAllClaimable, handleReset, unclaimedCount,
-    dropZoneClass, vkbStateStep1, vkbStateResults,
+    aiStatus,
+    file,
+    fileInputRef,
+    isProcessing,
+    processingStage,
+    error,
+    extractedConditions,
+    rawText,
+    showRawText,
+    savedToVKB,
+    savingToVKB,
+    setShowRawText,
+    handleSaveToVKBClick,
+    handleDrop,
+    handleDragOver,
+    handleDragLeave,
+    handleFileSelect,
+    handleProcessFileClick,
+    toggleConditionSelection,
+    selectAllClaimable,
+    handleReset,
+    unclaimedCount,
+    dropZoneClass,
+    vkbStateStep1,
+    vkbStateResults,
   } = useBlueButtonXRay();
 
   return (

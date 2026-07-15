@@ -250,9 +250,7 @@ async function saveDD214Form(formData, deps) {
   // Validate required fields
   const requiredFields = getMissingRequiredFieldLabels(formData);
   if (requiredFields.length > 0) {
-    alert(
-      `Please fill in required fields:\n- ${requiredFields.join("\n- ")}`,
-    );
+    alert(`Please fill in required fields:\n- ${requiredFields.join("\n- ")}`);
     return;
   }
 
@@ -392,8 +390,7 @@ function DD214FormBuilderHeader({
             📋 Build My DD214
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manually enter your DD214 information • {savedDD214sCount}{" "}
-            DD214
+            Manually enter your DD214 information • {savedDD214sCount} DD214
             {savedDD214sCount !== 1 ? "s" : ""} saved
           </p>
         </div>

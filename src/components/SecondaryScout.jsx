@@ -333,7 +333,11 @@ function SecondaryScoutFilterControls({
   );
 }
 
-function FloatingActionBarSummary({ selectedForPacket, getUnsavedSelectedCount, t }) {
+function FloatingActionBarSummary({
+  selectedForPacket,
+  getUnsavedSelectedCount,
+  t,
+}) {
   return (
     <div className="flex items-center gap-2">
       <svg
@@ -584,22 +588,36 @@ const SecondaryScout = ({
   const [packetPrimary, setPacketPrimary] = useState("");
   const [packetSecondary, setPacketSecondary] = useState("");
 
-  const { suggestions, filteredSuggestions, summary, savedClaims, setSavedClaims } =
-    useSecondaryClaimsData(userDisabilities, probabilityFilter);
+  const {
+    suggestions,
+    filteredSuggestions,
+    summary,
+    savedClaims,
+    setSavedClaims,
+  } = useSecondaryClaimsData(userDisabilities, probabilityFilter);
 
   const { handleSaveClaim, handleLearnHow, isClaimAlreadySaved } =
     createClaimHandlers({ savedClaims, setSavedClaims, onLearnHow });
 
   const {
-    toggleSelectForPacket, isSelectedForPacket, selectAllFiltered,
-    clearSelection, getUnsavedSelectedCount,
+    toggleSelectForPacket,
+    isSelectedForPacket,
+    selectAllFiltered,
+    clearSelection,
+    getUnsavedSelectedCount,
   } = createSelectionHandlers({
-    selectedForPacket, setSelectedForPacket, savedClaims, filteredSuggestions,
+    selectedForPacket,
+    setSelectedForPacket,
+    savedClaims,
+    filteredSuggestions,
   });
 
   const addSelectedToPacket = createAddSelectedToPacketHandler({
-    filteredSuggestions, selectedForPacket, savedClaims,
-    setSavedClaims, setSelectedForPacket,
+    filteredSuggestions,
+    selectedForPacket,
+    savedClaims,
+    setSavedClaims,
+    setSelectedForPacket,
   });
 
   if (!userDisabilities || userDisabilities.length === 0) {
@@ -607,18 +625,33 @@ const SecondaryScout = ({
   }
 
   const filterControlsProps = {
-    probabilityFilter, setProbabilityFilter, selectAllFiltered,
-    clearSelection, selectedForPacket, t,
+    probabilityFilter,
+    setProbabilityFilter,
+    selectAllFiltered,
+    clearSelection,
+    selectedForPacket,
+    t,
   };
   const gridProps = {
-    filteredSuggestions, selectedCondition, setSelectedCondition,
-    handleLearnHow, handleSaveClaim, isClaimAlreadySaved, onViewPacket,
-    isSelectedForPacket, toggleSelectForPacket, setPacketPrimary,
-    setPacketSecondary, setShowDoctorsPacket,
+    filteredSuggestions,
+    selectedCondition,
+    setSelectedCondition,
+    handleLearnHow,
+    handleSaveClaim,
+    isClaimAlreadySaved,
+    onViewPacket,
+    isSelectedForPacket,
+    toggleSelectForPacket,
+    setPacketPrimary,
+    setPacketSecondary,
+    setShowDoctorsPacket,
   };
   const floatingBarProps = {
-    selectedForPacket, getUnsavedSelectedCount, addSelectedToPacket,
-    clearSelection, t,
+    selectedForPacket,
+    getUnsavedSelectedCount,
+    addSelectedToPacket,
+    clearSelection,
+    t,
   };
 
   return (
@@ -664,7 +697,11 @@ function getSelectionBadgeClasses(isSaved, isSelected) {
 function SelectionIcon({ isSaved, isSelected }) {
   if (isSaved) {
     return (
-      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+      <svg
+        className="w-4 h-4 text-green-600"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
         <path
           fillRule="evenodd"
           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -675,7 +712,12 @@ function SelectionIcon({ isSaved, isSelected }) {
   }
   if (isSelected) {
     return (
-      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className="w-4 h-4 text-white"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -853,8 +895,7 @@ function WarningNotice({ warning, t }) {
         </div>
         <div className="ml-3">
           <p className="text-sm text-amber-800">
-            <strong>{t("secondaryScoutSection.note")}:</strong>{" "}
-            {warning}
+            <strong>{t("secondaryScoutSection.note")}:</strong> {warning}
           </p>
         </div>
       </div>

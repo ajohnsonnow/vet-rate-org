@@ -43,13 +43,15 @@ import { getMyRatings } from "./veteranProfile";
  */
 export const normalizeConditionName = (name) => {
   if (typeof name !== "string") return "";
-  return name
-    .toLowerCase()
-    // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    name
+      .toLowerCase()
+      // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
+      .replace(/\([^)]*\)/g, " ")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 };
 
 /**

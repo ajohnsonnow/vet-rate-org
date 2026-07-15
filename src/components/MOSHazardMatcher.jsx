@@ -1270,9 +1270,7 @@ function MOSSearchResultsDropdown({ results, setSelectedMOS, setSearchQuery }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-bold text-amber-400">
-                {result.code}
-              </span>
+              <span className="font-bold text-amber-400">{result.code}</span>
               <span className="text-white ml-2">{result.title}</span>
               {result.matchType === "alias" && result.matchedAlias && (
                 <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">
@@ -1310,12 +1308,12 @@ function MOSNoResults() {
         No matching MOS found. Try a different code or job title.
       </p>
       <p className="text-gray-500 text-sm mt-2">
-        <strong>Modern:</strong> 11B, 68W, 88M (Army) | 2A3X3, 3P0X1
-        (Air Force) | GM, HM, BM (Navy) | 0311, 0331 (Marines)
+        <strong>Modern:</strong> 11B, 68W, 88M (Army) | 2A3X3, 3P0X1 (Air Force)
+        | GM, HM, BM (Navy) | 0311, 0331 (Marines)
       </p>
       <p className="text-gray-500 text-sm mt-1">
-        <strong>Historical:</strong> 91B, 63B (Army) | SK, BT (Navy) |
-        81130 (Air Force)
+        <strong>Historical:</strong> 91B, 63B (Army) | SK, BT (Navy) | 81130
+        (Air Force)
       </p>
       <p className="text-cyan-400/70 text-xs mt-2">
         💡 We support historical codes that have been merged or renamed!
@@ -1364,9 +1362,7 @@ function MOSHeaderCard({ selectedMOS }) {
           <p className="text-white/70 text-sm">
             {selectedMOS.branch} • {selectedMOS.category}
           </p>
-          <h3 className="text-3xl font-black text-white">
-            {selectedMOS.code}
-          </h3>
+          <h3 className="text-3xl font-black text-white">{selectedMOS.code}</h3>
           <p className="text-xl text-white/90">{selectedMOS.title}</p>
           {/* Historical aliases */}
           {selectedMOS.aliases && selectedMOS.aliases.length > 0 && (
@@ -1395,12 +1391,11 @@ function MOSHeaderCard({ selectedMOS }) {
           <p className="text-white/70 text-sm mt-2">
             Physical: {selectedMOS.physicalDemand || "Varies"}
           </p>
-          {selectedMOS.timePeriod &&
-            selectedMOS.timePeriod !== "Active" && (
-              <span className="mt-2 inline-block px-2 py-1 bg-amber-700/50 text-amber-200 rounded text-xs">
-                {selectedMOS.timePeriod}
-              </span>
-            )}
+          {selectedMOS.timePeriod && selectedMOS.timePeriod !== "Active" && (
+            <span className="mt-2 inline-block px-2 py-1 bg-amber-700/50 text-amber-200 rounded text-xs">
+              {selectedMOS.timePeriod}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -1427,7 +1422,11 @@ function MOSHazardsCard({ hazards }) {
   );
 }
 
-function MOSCommonInjuriesCard({ injuries, selectedConditions, toggleCondition }) {
+function MOSCommonInjuriesCard({
+  injuries,
+  selectedConditions,
+  toggleCondition,
+}) {
   return (
     <div className="bg-gray-800/50 rounded-xl border border-slate-700 overflow-hidden">
       <div className="p-4 bg-slate-700/50 border-b border-slate-600">
@@ -1454,17 +1453,11 @@ function MOSCommonInjuriesCard({ injuries, selectedConditions, toggleCondition }
                 <span
                   className={`text-xl ${selectedConditions.includes(injury.condition) ? "text-green-400" : "text-slate-500"}`}
                 >
-                  {selectedConditions.includes(injury.condition)
-                    ? "✓"
-                    : "○"}
+                  {selectedConditions.includes(injury.condition) ? "✓" : "○"}
                 </span>
                 <div>
-                  <p className="font-semibold text-white">
-                    {injury.condition}
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    {injury.notes}
-                  </p>
+                  <p className="font-semibold text-white">{injury.condition}</p>
+                  <p className="text-sm text-slate-400">{injury.notes}</p>
                 </div>
               </div>
               <span
@@ -1553,8 +1546,8 @@ function SelectedMOSDetails({
       <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-6 text-center">
         <p className="text-amber-200 text-lg">
           <span className="text-2xl mr-2">💪</span>
-          <strong>{selectedMOS.title}s</strong> experience these
-          conditions at rates far above the general population.{" "}
+          <strong>{selectedMOS.title}s</strong> experience these conditions at
+          rates far above the general population.{" "}
           <strong>Your service caused this.</strong>
         </p>
       </div>
@@ -1665,9 +1658,9 @@ function MOSSupportCTA() {
           </p>
           <p className="text-slate-400 text-sm">
             Every MOS, every hazard, every common injury - compiled from
-            military studies, VA data, and veteran testimonies. Help add
-            more job codes and keep this resource free for every veteran
-            who needs to prove their service caused real damage.
+            military studies, VA data, and veteran testimonies. Help add more
+            job codes and keep this resource free for every veteran who needs to
+            prove their service caused real damage.
           </p>
         </div>
       </div>

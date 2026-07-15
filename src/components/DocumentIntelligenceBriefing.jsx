@@ -586,8 +586,8 @@ function MissingFieldsExpandedPanel({
       {/* Header with Save All button */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Fill in the fields from your DD214. Press Enter or click ✓ to add
-          each field.
+          Fill in the fields from your DD214. Press Enter or click ✓ to add each
+          field.
         </p>
         {filledCount > 0 && (
           <button
@@ -1235,12 +1235,12 @@ function OCRFailedMessage() {
       <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2 mb-4 max-w-lg mx-auto">
         <p>
           Many older DD214s (especially those from the typewriter era or
-          documents that have been copied multiple times) are simply too
-          faded or degraded for our OCR technology to read reliably.
+          documents that have been copied multiple times) are simply too faded
+          or degraded for our OCR technology to read reliably.
         </p>
         <p className="font-medium">
-          This is <strong>not your fault</strong> - it&apos;s a limitation
-          of working with aged documents.
+          This is <strong>not your fault</strong> - it&apos;s a limitation of
+          working with aged documents.
         </p>
       </div>
 
@@ -1252,9 +1252,8 @@ function OCRFailedMessage() {
           <li className="flex gap-2">
             <span className="text-green-600 dark:text-green-400">✓</span>
             <span>
-              <strong>Manual Entry:</strong> Use the &quot;Enter DD214
-              Fields Manually&quot; panel below to enter your information
-              by hand.
+              <strong>Manual Entry:</strong> Use the &quot;Enter DD214 Fields
+              Manually&quot; panel below to enter your information by hand.
             </span>
           </li>
           <li className="flex gap-2">
@@ -1352,7 +1351,13 @@ function getAwardsDisplayData(fieldKey, value, filteredData) {
     branchForBadges,
   );
 
-  return { sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges };
+  return {
+    sortedVisualAwards,
+    badges,
+    tabs,
+    combatIndicators,
+    branchForBadges,
+  };
 }
 
 function ArrayValueField({
@@ -1362,8 +1367,13 @@ function ArrayValueField({
   getTooltip,
   onArrayItemDelete,
 }) {
-  const { sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges } =
-    getAwardsDisplayData(fieldKey, value, filteredData);
+  const {
+    sortedVisualAwards,
+    badges,
+    tabs,
+    combatIndicators,
+    branchForBadges,
+  } = getAwardsDisplayData(fieldKey, value, filteredData);
 
   return (
     <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -1618,7 +1628,10 @@ function ExtractedInformationSection({
  * Loads the base extraction/navigation/document state that the briefing
  * controller builds on.
  */
-function useDocumentBriefingSourceState({ extractionResult, providedConflicts }) {
+function useDocumentBriefingSourceState({
+  extractionResult,
+  providedConflicts,
+}) {
   const {
     filename,
     size,

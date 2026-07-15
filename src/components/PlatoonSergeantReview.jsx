@@ -209,9 +209,7 @@ function DocumentInfoCard({
 
       <div className="flex flex-wrap gap-2">
         {method && <ExtractionMethodBadge method={method} />}
-        {quality && (
-          <QualityBadge quality={quality} confidence={confidence} />
-        )}
+        {quality && <QualityBadge quality={quality} confidence={confidence} />}
         {pageCount && (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             📑 {pageCount} page{pageCount !== 1 ? "s" : ""}
@@ -273,13 +271,13 @@ function OcrProcessingWarning({ isOCRActive, isComplete }) {
             Advanced OCR In Progress
           </h5>
           <p className="text-sm text-amber-700 dark:text-amber-400">
-            Scanned or low-quality documents require character recognition
-            which can take <strong>1-3 minutes per page</strong>. This is
-            processing locally on your device for privacy.
+            Scanned or low-quality documents require character recognition which
+            can take <strong>1-3 minutes per page</strong>. This is processing
+            locally on your device for privacy.
           </p>
           <p className="text-xs text-amber-600 dark:text-amber-500 mt-2 italic">
-            💡 Tip: High-quality scans (300+ DPI) and text-based PDFs
-            process much faster.
+            💡 Tip: High-quality scans (300+ DPI) and text-based PDFs process
+            much faster.
           </p>
         </div>
       </div>
@@ -360,19 +358,17 @@ function CompletionMessage({ isComplete, confidence }) {
                 : "text-green-800 dark:text-green-300"
             }`}
           >
-            Extraction Complete{" "}
-            {confidence && `(${confidence}% confidence)`}
+            Extraction Complete {confidence && `(${confidence}% confidence)`}
           </h5>
           {isLowConfidence ? (
             <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2">
               <p>
-                <strong>Low OCR confidence detected.</strong> The document
-                may be difficult to read (faded, creased, or poor scan
-                quality).
+                <strong>Low OCR confidence detected.</strong> The document may
+                be difficult to read (faded, creased, or poor scan quality).
               </p>
               <p>
-                Field extraction may have errors. Please verify all data in
-                the SigInt Briefing carefully.
+                Field extraction may have errors. Please verify all data in the
+                SigInt Briefing carefully.
               </p>
               <p className="text-xs italic">
                 💡 For better results, try re-scanning at 300+ DPI with good
@@ -381,8 +377,8 @@ function CompletionMessage({ isComplete, confidence }) {
             </div>
           ) : (
             <p className="text-sm text-green-700 dark:text-green-400">
-              Document successfully inspected. Proceeding to SigInt
-              Intelligence Briefing...
+              Document successfully inspected. Proceeding to SigInt Intelligence
+              Briefing...
             </p>
           )}
         </div>

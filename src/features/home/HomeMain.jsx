@@ -127,8 +127,8 @@ function SearchSection({
           isLoading={isLoading}
         />
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
-          💡 <strong>Tip:</strong> Search by condition name, diagnostic code,
-          or keyword - covers all 15 body systems from 38 CFR Part 4
+          💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or
+          keyword - covers all 15 body systems from 38 CFR Part 4
         </p>
 
         {/* Demo Data Loader - "Gold Standard" Example */}

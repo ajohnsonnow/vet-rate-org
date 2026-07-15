@@ -257,7 +257,11 @@ function BDDBuilderTitleRow({ onClose, onReportBug }) {
   );
 }
 
-function BDDBuilderStatusBanner({ separationDate, eligibility, checklistCompletion }) {
+function BDDBuilderStatusBanner({
+  separationDate,
+  eligibility,
+  checklistCompletion,
+}) {
   if (!(separationDate && eligibility.phase)) return null;
   const phaseBadge = getPhaseBadge(eligibility.phase);
 
@@ -409,7 +413,15 @@ function ActiveTabContent({
   return null;
 }
 
-function BDDBuilderBody({ showSetup, activeTab, separationDate, branch, onSetDate, onSetBranch, ...tabContentProps }) {
+function BDDBuilderBody({
+  showSetup,
+  activeTab,
+  separationDate,
+  branch,
+  onSetDate,
+  onSetBranch,
+  ...tabContentProps
+}) {
   return (
     <div>
       {/* ── SETUP VIEW ────────────────────────────── */}
@@ -680,7 +692,11 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
 /**
  * Dashboard Tab - at-a-glance overview
  */
-function EligibilityStatusCard({ eligibility, checklistCompletion, onChangeDate }) {
+function EligibilityStatusCard({
+  eligibility,
+  checklistCompletion,
+  onChangeDate,
+}) {
   let cardClass;
   let headingClass;
   let headingText;
@@ -754,7 +770,12 @@ function EligibilityStatusCard({ eligibility, checklistCompletion, onChangeDate 
   );
 }
 
-function ConditionsQuickStats({ nextMilestone, conditions, checkedItems, checklistCompletion }) {
+function ConditionsQuickStats({
+  nextMilestone,
+  conditions,
+  checkedItems,
+  checklistCompletion,
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Next Action */}
@@ -818,9 +839,7 @@ function ConditionsQuickStats({ nextMilestone, conditions, checkedItems, checkli
 
 function ConditionChip({ condition, onRemove }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 rounded-full text-sm border border-emerald-200 dark:border-emerald-700"
-    >
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 rounded-full text-sm border border-emerald-200 dark:border-emerald-700">
       {condition}
       <button
         onClick={() => onRemove(condition)}
@@ -1043,7 +1062,10 @@ const DashboardTab = ({
       />
 
       {eligibility.daysUntilSep != null && eligibility.daysUntilSep >= 0 && (
-        <KeyDatesCard eligibility={eligibility} separationDate={separationDate} />
+        <KeyDatesCard
+          eligibility={eligibility}
+          separationDate={separationDate}
+        />
       )}
     </div>
   );
@@ -1101,7 +1123,12 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
   );
 }
 
-function MilestoneItem({ milestone: m, isExpanded, onToggle, onNavigateToTool }) {
+function MilestoneItem({
+  milestone: m,
+  isExpanded,
+  onToggle,
+  onNavigateToTool,
+}) {
   let dotClass;
   if (m.isPast) {
     dotClass = "bg-green-500 border-green-500";
@@ -1120,7 +1147,8 @@ function MilestoneItem({ milestone: m, isExpanded, onToggle, onNavigateToTool })
     cardBorderClass =
       "border-green-200 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10";
   } else {
-    cardBorderClass = "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700";
+    cardBorderClass =
+      "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700";
   }
 
   let daysLabel;
@@ -1135,7 +1163,9 @@ function MilestoneItem({ milestone: m, isExpanded, onToggle, onNavigateToTool })
   return (
     <div className="relative pl-14">
       {/* Timeline dot */}
-      <div className={`absolute left-4 w-5 h-5 rounded-full border-2 ${dotClass}`} />
+      <div
+        className={`absolute left-4 w-5 h-5 rounded-full border-2 ${dotClass}`}
+      />
 
       <button
         onClick={onToggle}

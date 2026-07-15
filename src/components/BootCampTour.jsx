@@ -491,9 +491,7 @@ function buildFinalStep(t) {
     },
     onHighlightStarted: () => {
       // Open the Navigator on the final step so it's ready when tour ends
-      const navigatorButton = document.getElementById(
-        "tour-ai-navigator-btn",
-      );
+      const navigatorButton = document.getElementById("tour-ai-navigator-btn");
       if (navigatorButton) {
         navigatorButton.click();
       }

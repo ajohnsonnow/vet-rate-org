@@ -386,7 +386,10 @@ function speakJudgeText(
         attemptSpeakUtterance(text, callback, utteranceDeps);
       };
       // Also try immediately in case voices are already loaded
-      setTimeout(() => attemptSpeakUtterance(text, callback, utteranceDeps), 100);
+      setTimeout(
+        () => attemptSpeakUtterance(text, callback, utteranceDeps),
+        100,
+      );
     } else {
       attemptSpeakUtterance(text, callback, utteranceDeps);
     }
@@ -983,7 +986,12 @@ export default function TheTribunal({
 /**
  * Modal header: title, score display, and top-right action buttons
  */
-function TribunalHeader({ sessionScore, onClose, onReportBug, onOpenAISettings }) {
+function TribunalHeader({
+  sessionScore,
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+}) {
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
       <div className="flex items-start justify-between gap-2">
@@ -1229,8 +1237,8 @@ function MicrophoneControls({
       </div>
       {!micSupported && (
         <p className="mt-2 text-xs text-red-800 dark:text-red-300">
-          Voice input isn&apos;t supported in this browser — type your
-          response below instead.
+          Voice input isn&apos;t supported in this browser — type your response
+          below instead.
         </p>
       )}
     </div>
@@ -1307,7 +1315,10 @@ function HearingFooter({
     <div>
       <LiveCaptions isSpeaking={isSpeaking} captionText={captionText} />
 
-      <VoiceStatusIndicators isListening={isListening} isSpeaking={isSpeaking} />
+      <VoiceStatusIndicators
+        isListening={isListening}
+        isSpeaking={isSpeaking}
+      />
 
       {/* Two-Column Control Panel */}
       <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -1356,9 +1367,9 @@ function AIRequiredWarning() {
             AI Required for Analysis
           </h3>
           <p className="text-amber-800 dark:text-amber-200 text-sm mt-1">
-            Click the <strong>AI Status button</strong> in the header
-            above to load your secure Local AI (100% private) or enter
-            your Gemini API key.
+            Click the <strong>AI Status button</strong> in the header above to
+            load your secure Local AI (100% private) or enter your Gemini API
+            key.
           </p>
         </div>
       </div>
@@ -1406,8 +1417,7 @@ function AIModeToggle({ aiAvailable, useAI, setUseAI }) {
       {useAI && aiAvailable && (
         <p className="mt-2 text-xs text-purple-700 dark:text-purple-300 bg-purple-200/50 dark:bg-purple-900/50 rounded p-2">
           ✨ AI judges will evaluate your arguments using real veterans law
-          principles, cite relevant case law, and provide personalized
-          coaching.
+          principles, cite relevant case law, and provide personalized coaching.
         </p>
       )}
     </div>
@@ -1472,12 +1482,11 @@ function SelfHelpDisclaimer() {
   return (
     <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <p className="text-xs text-gray-600 dark:text-gray-400">
-        <strong>Educational self-help only.</strong> The Tribunal is a
-        practice tool, not legal representation. Vet-Rate.org does not
-        prepare or present claims to the VA on your behalf and is not an
-        accredited claims agent or attorney (38 C.F.R. § 14.629). For
-        complex claims or appeals, consult an accredited VSO, claims agent,
-        or attorney.
+        <strong>Educational self-help only.</strong> The Tribunal is a practice
+        tool, not legal representation. Vet-Rate.org does not prepare or present
+        claims to the VA on your behalf and is not an accredited claims agent or
+        attorney (38 C.F.R. § 14.629). For complex claims or appeals, consult an
+        accredited VSO, claims agent, or attorney.
       </p>
     </div>
   );
@@ -1497,31 +1506,31 @@ function AudioTechNotice({ acknowledgedWarning, setAcknowledgedWarning }) {
           </h4>
           <p className="text-sm text-amber-800 dark:text-amber-300 mb-2">
             This feature can use <strong>speech synthesis</strong>{" "}
-            (text-to-speech) and <strong>speech recognition</strong>{" "}
-            (microphone input). Both are optional — every word the judge
-            says is also shown as text.
+            (text-to-speech) and <strong>speech recognition</strong> (microphone
+            input). Both are optional — every word the judge says is also shown
+            as text.
           </p>
           <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
             <li>
               💬 <strong>Live captions:</strong> Everything the judge says
-              appears in the on-screen caption panel and transcript — no
-              audio needed.
+              appears in the on-screen caption panel and transcript — no audio
+              needed.
             </li>
             <li>
-              🔊 <strong>Speakers/Headphones (optional):</strong> The AI
-              judge can speak aloud. Voice can be turned off at any time.
+              🔊 <strong>Speakers/Headphones (optional):</strong> The AI judge
+              can speak aloud. Voice can be turned off at any time.
             </li>
             <li>
               🎤 <strong>Microphone (optional):</strong> Grant microphone
               permission only if you want to answer by voice.
             </li>
             <li>
-              ⌨️ <strong>Typing always works:</strong> The text box stays
-              active at all times — even while the judge is speaking.
+              ⌨️ <strong>Typing always works:</strong> The text box stays active
+              at all times — even while the judge is speaking.
             </li>
             <li>
-              🔒 <strong>Privacy:</strong> Voice data is processed locally
-              by your browser and is NOT recorded or stored.
+              🔒 <strong>Privacy:</strong> Voice data is processed locally by
+              your browser and is NOT recorded or stored.
             </li>
           </ul>
           <label className="flex items-center gap-2 mt-3 cursor-pointer">
@@ -1562,7 +1571,11 @@ function PreHearingInstructions({
 
       {!aiAvailable && <AIRequiredWarning />}
 
-      <AIModeToggle aiAvailable={aiAvailable} useAI={useAI} setUseAI={setUseAI} />
+      <AIModeToggle
+        aiAvailable={aiAvailable}
+        useAI={useAI}
+        setUseAI={setUseAI}
+      />
 
       <PersonaSelector
         selectedPersona={selectedPersona}
@@ -1669,9 +1682,7 @@ function AIProcessingIndicator({ selectedPersona }) {
               style={{ animationDelay: "300ms" }}
             ></div>
           </div>
-          <span className="text-sm">
-            Judge is considering your response...
-          </span>
+          <span className="text-sm">Judge is considering your response...</span>
         </div>
       </div>
     </div>

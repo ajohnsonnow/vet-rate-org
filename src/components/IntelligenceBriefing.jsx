@@ -302,8 +302,8 @@ function DiscrepancyBanner({ count }) {
             {count} Discrepancy(ies) Detected
           </p>
           <p className="text-sm text-red-600 dark:text-red-300">
-            Multiple values found for some fields. Review and select the
-            correct one.
+            Multiple values found for some fields. Review and select the correct
+            one.
           </p>
         </div>
       </div>
@@ -383,7 +383,10 @@ function BriefingSectionContent({ activeSection, editableData, onFieldEdit }) {
   return (
     <>
       {activeSection === "personal" && (
-        <PersonalSection editableData={editableData} onFieldEdit={onFieldEdit} />
+        <PersonalSection
+          editableData={editableData}
+          onFieldEdit={onFieldEdit}
+        />
       )}
 
       {activeSection === "service" && (
@@ -466,9 +469,7 @@ function ServiceSection({ editableData, onFieldEdit }) {
         <Field
           label="Character of Service"
           value={editableData.characterOfService || ""}
-          onChange={(val) =>
-            onFieldEdit("service", "characterOfService", val)
-          }
+          onChange={(val) => onFieldEdit("service", "characterOfService", val)}
         />
       </div>
     </div>

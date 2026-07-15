@@ -125,7 +125,11 @@ async function sendMessage({
       preset: "LEGAL", // Use LEGAL preset for accurate regulatory guidance
       maxTokens: 2048,
       temperature: 0.3, // Slightly more flexible than pure LEGAL but still precise
-      systemPrompt: buildSystemPrompt(currentTool, isHelperMode, veteranContext),
+      systemPrompt: buildSystemPrompt(
+        currentTool,
+        isHelperMode,
+        veteranContext,
+      ),
       taskType: "assistant",
       context: {
         currentTool,
@@ -454,7 +458,12 @@ function useMessageActions() {
     }
   };
 
-  return { copiedMessageIdx, summaryStates, handleCopyMessage, handleSummarize };
+  return {
+    copiedMessageIdx,
+    summaryStates,
+    handleCopyMessage,
+    handleSummarize,
+  };
 }
 
 function useNavigatorConversation({
@@ -659,7 +668,9 @@ function SummarizeButton({ content, idx, summaryStates, onSummarize }) {
 function ModeBadge({ mode, t }) {
   return (
     <span className="text-xs opacity-70">
-      {mode === "local" ? t("aiAssistant", "modeLocal") : t("aiAssistant", "modeCloud")}
+      {mode === "local"
+        ? t("aiAssistant", "modeLocal")
+        : t("aiAssistant", "modeCloud")}
     </span>
   );
 }
@@ -685,9 +696,7 @@ function SummarySection({ idx, summaryStates, copiedMessageIdx, onCopy }) {
           BLUF Summary
         </span>
         <button
-          onClick={() =>
-            onCopy(summaryStates[idx].summary, `summary-${idx}`)
-          }
+          onClick={() => onCopy(summaryStates[idx].summary, `summary-${idx}`)}
           className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
           aria-label="Copy summary for Reddit"
         >
@@ -778,14 +787,8 @@ function LoadingIndicator({ variant, t }) {
       <div className={v.loadingWrapClass}>
         <div className="flex space-x-1">
           <div className={v.dotClass} style={{ animationDelay: "0ms" }}></div>
-          <div
-            className={v.dotClass}
-            style={{ animationDelay: "150ms" }}
-          ></div>
-          <div
-            className={v.dotClass}
-            style={{ animationDelay: "300ms" }}
-          ></div>
+          <div className={v.dotClass} style={{ animationDelay: "150ms" }}></div>
+          <div className={v.dotClass} style={{ animationDelay: "300ms" }}></div>
         </div>
         <span className="text-sm text-gray-600 dark:text-gray-400">
           {t("aiAssistant", v.loadingLabelKey)}
@@ -912,7 +915,9 @@ function MessageComposer({
         <button
           onClick={onSend}
           disabled={!input.trim() || isLoading}
-          aria-label={variant === "docked" ? t("aiAssistant", "sendMessage") : undefined}
+          aria-label={
+            variant === "docked" ? t("aiAssistant", "sendMessage") : undefined
+          }
           className={c.buttonClass}
         >
           <svg
@@ -1367,8 +1372,12 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
       messagesEndRef,
     });
 
-  const { copiedMessageIdx, summaryStates, handleCopyMessage, handleSummarize } =
-    useMessageActions();
+  const {
+    copiedMessageIdx,
+    summaryStates,
+    handleCopyMessage,
+    handleSummarize,
+  } = useMessageActions();
 
   if (isMinimized) {
     return (

@@ -503,8 +503,7 @@ async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
       onPageComplete: (pageNum, total) => {
         setOcrProgress({
           state: OCR_STATES.OCR_IN_PROGRESS,
-          progress:
-            10 + ((i + pageNum / total) / originalPDFFiles.length) * 60,
+          progress: 10 + ((i + pageNum / total) / originalPDFFiles.length) * 60,
           message: `SmolVLM: page ${pageNum}/${total} of ${pdfFile.name}...`,
         });
       },
@@ -660,10 +659,7 @@ function _parseDd214Json(content, t) {
     cleanContent = cleanContent.replace(/,(\s*[}\]])/g, "$1");
 
     // eslint-disable-next-line no-console
-    console.log(
-      "🧹 After comment removal:",
-      cleanContent.substring(0, 500),
-    );
+    console.log("🧹 After comment removal:", cleanContent.substring(0, 500));
 
     data = JSON.parse(cleanContent.trim());
 
@@ -840,7 +836,11 @@ async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
   }
 }
 
-async function _saveDd214ToPacket(analysisResult, combinedText, extractedTexts) {
+async function _saveDd214ToPacket(
+  analysisResult,
+  combinedText,
+  extractedTexts,
+) {
   // This stores the full document text + structured data forever
   try {
     const sourceFileName =
@@ -935,13 +935,18 @@ function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
       <div className="flex items-center gap-3">
         <span className="text-3xl">📜</span>
         <div>
-          <h2 id="dd214-analyzer-title" className="text-xl font-bold text-white">
+          <h2
+            id="dd214-analyzer-title"
+            className="text-xl font-bold text-white"
+          >
             {t("dd214Analyzer", "title")}{" "}
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               {t("dd214Analyzer", "beta")}
             </span>
           </h2>
-          <p className="text-sm text-blue-200">{t("dd214Analyzer", "subtitle")}</p>
+          <p className="text-sm text-blue-200">
+            {t("dd214Analyzer", "subtitle")}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -959,7 +964,12 @@ function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
           className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label={t("dd214Analyzer", "close")}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1047,7 +1057,12 @@ function DD214SmartAiLoadSection({ aiStatus, setAIStatus }) {
   );
 }
 
-function DD214InputMethodTabs({ inputMethod, setInputMethod, extractedTexts, t }) {
+function DD214InputMethodTabs({
+  inputMethod,
+  setInputMethod,
+  extractedTexts,
+  t,
+}) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -1256,7 +1271,12 @@ function DD214FileRow({ file, idx, extractedTexts, handleRemoveFile, t }) {
         onClick={() => handleRemoveFile(idx)}
         className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1373,7 +1393,8 @@ function DD214ResultsSummaryHeader({ analysisResult, t }) {
         ✅ {t("dd214Analyzer", "analysisComplete")}
         {analysisResult.dd214Count > 1 && (
           <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded-full">
-            {analysisResult.dd214Count} {t("dd214Analyzer", "dd214sConsolidated")}
+            {analysisResult.dd214Count}{" "}
+            {t("dd214Analyzer", "dd214sConsolidated")}
           </span>
         )}
       </h3>
@@ -1395,7 +1416,9 @@ function DD214PersonalIdCards({ analysisResult }) {
       )}
       {analysisResult.dateOfBirth && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Date of Birth
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.dateOfBirth}
           </p>
@@ -1403,7 +1426,9 @@ function DD214PersonalIdCards({ analysisResult }) {
       )}
       {analysisResult.placeOfBirth && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Place of Birth</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Place of Birth
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.placeOfBirth}
           </p>
@@ -1411,7 +1436,9 @@ function DD214PersonalIdCards({ analysisResult }) {
       )}
       {analysisResult.homeOfRecord && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Home of Record</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Home of Record
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.homeOfRecord}
           </p>
@@ -1529,7 +1556,9 @@ function DD214ServiceDateCards({ analysisResult, t }) {
       <DD214PriorServiceCards analysisResult={analysisResult} />
       {analysisResult.dateOfRank && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Date of Rank</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Date of Rank
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.dateOfRank}
           </p>
@@ -1573,7 +1602,9 @@ function DD214PriorServiceCards({ analysisResult }) {
           analysisResult.seaService.months > 0 ||
           analysisResult.seaService.days > 0) && (
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Sea Service</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Sea Service
+            </p>
             <p className="font-bold text-gray-900 dark:text-gray-100">
               {_formatServiceDuration(analysisResult.seaService)}
             </p>
@@ -1589,7 +1620,9 @@ function DD214BenefitsCards({ analysisResult }) {
       {/* Benefits & Obligations */}
       {analysisResult.sglCoverage && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">SGLI Coverage</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            SGLI Coverage
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.sglCoverage}
           </p>
@@ -1597,7 +1630,9 @@ function DD214BenefitsCards({ analysisResult }) {
       )}
       {analysisResult.giBlStatus && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">GI Bill Status</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            GI Bill Status
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.giBlStatus}
           </p>
@@ -1638,7 +1673,9 @@ function DD214SeparationCards({ analysisResult, t }) {
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">Separation Type</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Separation Type
+        </p>
         <p className="font-bold text-gray-900 dark:text-gray-100">
           {analysisResult.separationType || t("dd214Analyzer", "na")}
         </p>
@@ -1655,7 +1692,9 @@ function DD214SeparationCards({ analysisResult, t }) {
       )}
       {analysisResult.reentryCode && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Reentry Code</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Reentry Code
+          </p>
           <p className="font-bold text-gray-900 dark:text-gray-100">
             {analysisResult.reentryCode}
           </p>
@@ -1849,7 +1888,13 @@ function DD214AnalysisResultsPanel({ analysisResult, t }) {
 }
 
 function _processDroppedFiles(files, ctx) {
-  const { droppedFiles, setDroppedFiles, setOriginalPDFFiles, fileInputRef, setError } = ctx;
+  const {
+    droppedFiles,
+    setDroppedFiles,
+    setOriginalPDFFiles,
+    fileInputRef,
+    setError,
+  } = ctx;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1892,7 +1937,13 @@ function _processDroppedFiles(files, ctx) {
 }
 
 async function _runOcrOnFiles(filesToProcess, ctx) {
-  const { extractedTexts, setIsProcessing, setError, setOcrProgress, setExtractedTexts } = ctx;
+  const {
+    extractedTexts,
+    setIsProcessing,
+    setError,
+    setOcrProgress,
+    setExtractedTexts,
+  } = ctx;
 
   if (!filesToProcess || filesToProcess.length === 0) {
     // eslint-disable-next-line no-console
@@ -1933,17 +1984,20 @@ async function _runOcrOnFiles(filesToProcess, ctx) {
           `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
         );
         // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
-        const musterResult = await processFormationDocument(file, (progress) => {
-          // Map MusterCall progress → OCR progress bar state
-          const mapped = {
-            state: _mapMusterCallStateToOcrState(progress.state),
-            progress: progress.progress || 0,
-            message: progress.message || `Processing ${file.name}...`,
-            currentPage: progress.currentPage,
-            totalPages: progress.totalPages,
-          };
-          setOcrProgress(mapped);
-        });
+        const musterResult = await processFormationDocument(
+          file,
+          (progress) => {
+            // Map MusterCall progress → OCR progress bar state
+            const mapped = {
+              state: _mapMusterCallStateToOcrState(progress.state),
+              progress: progress.progress || 0,
+              message: progress.message || `Processing ${file.name}...`,
+              currentPage: progress.currentPage,
+              totalPages: progress.totalPages,
+            };
+            setOcrProgress(mapped);
+          },
+        );
         const result = {
           text: musterResult.text || "",
           pageCount: musterResult.pageCount || 1,
@@ -1982,7 +2036,11 @@ async function _runOcrOnFiles(filesToProcess, ctx) {
   }
 }
 
-function _prepareAndShowProfileImport(result, setExtractedProfileData, setShowProfileImportModal) {
+function _prepareAndShowProfileImport(
+  result,
+  setExtractedProfileData,
+  setShowProfileImportModal,
+) {
   if (!result) {
     console.warn("handleSaveResultsAfterAnalysis called with empty result");
     return;
@@ -2230,7 +2288,13 @@ function _buildDd214DropHandlers(state) {
     await processFiles(files);
   };
 
-  return { handleDragOver, handleDragLeave, handleDrop, processFiles, handleFileChange };
+  return {
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    processFiles,
+    handleFileChange,
+  };
 }
 
 function _buildDd214FileListHandlers(state) {
@@ -2501,12 +2565,17 @@ function _buildDd214SaveHandlers(state) {
     setExtractedProfileData(null);
   };
 
-  return { handleSaveResults, handleConfirmProfileImport, handleCancelProfileImport };
+  return {
+    handleSaveResults,
+    handleConfirmProfileImport,
+    handleCancelProfileImport,
+  };
 }
 
 function DD214AnalyzerUploadInput({ state, handlers }) {
   const { fileInputRef, isDragging, ocrProgress, t } = state;
-  const { handleDragOver, handleDragLeave, handleDrop, handleFileChange } = handlers;
+  const { handleDragOver, handleDragLeave, handleDrop, handleFileChange } =
+    handlers;
 
   return (
     <DD214UploadInput
@@ -2596,7 +2665,12 @@ function DD214AnalyzerModalContent({ state, handlers }) {
 }
 
 function DD214AnalyzerExtraModals({ state, handlers }) {
-  const { showProfileImportModal, extractedProfileData, showFormBuilder, setShowFormBuilder } = state;
+  const {
+    showProfileImportModal,
+    extractedProfileData,
+    showFormBuilder,
+    setShowFormBuilder,
+  } = state;
   const { handleConfirmProfileImport, handleCancelProfileImport } = handlers;
 
   return (

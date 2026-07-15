@@ -54,9 +54,7 @@ function runFileSelect(selectedFiles, ctx) {
         validationResult.valid.length,
         "files",
       );
-      const result = formationQueue.initializeFormation(
-        validationResult.valid,
-      );
+      const result = formationQueue.initializeFormation(validationResult.valid);
       // eslint-disable-next-line no-console
       console.log(
         "🎯 initializeFormation returned:",
@@ -80,9 +78,7 @@ function runFileSelect(selectedFiles, ctx) {
 
     setError(null);
   } else {
-    setError(
-      "No valid files selected. Please select PDF, DOCX, or TXT files.",
-    );
+    setError("No valid files selected. Please select PDF, DOCX, or TXT files.");
     toast.error(
       "No valid files selected. Only PDF, DOCX, and TXT files are supported.",
     );
@@ -110,8 +106,12 @@ export const useMusterCallFileIntake = ({
   const handleFileSelect = useCallback(
     (selectedFiles) =>
       runFileSelect(selectedFiles, {
-        useSequentialMode, formationQueue, toast, setError,
-        setValidation, setFiles,
+        useSequentialMode,
+        formationQueue,
+        toast,
+        setError,
+        setValidation,
+        setFiles,
       }),
     [useSequentialMode, formationQueue, toast, setError],
   );

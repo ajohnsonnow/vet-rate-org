@@ -444,18 +444,16 @@ function DateTerminologyInfo() {
           decision date on your VA letter)
         </p>
         <p>
-          <strong>Payment Effective Date:</strong> When payments actually
-          start = <strong>first day of month FOLLOWING</strong> effective
-          date
+          <strong>Payment Effective Date:</strong> When payments actually start
+          = <strong>first day of month FOLLOWING</strong> effective date
         </p>
         <p className="text-xs text-blue-400 mt-2 italic">
-          Per 38 CFR § 3.400: &quot;Payment shall commence on the first day
-          of the month following the month in which the effective date
-          falls.&quot;
+          Per 38 CFR § 3.400: &quot;Payment shall commence on the first day of
+          the month following the month in which the effective date falls.&quot;
         </p>
         <p className="text-xs text-amber-300 mt-2">
-          💡 Example: Decision effective Jan 15, 2024 → Payments start Feb
-          1, 2024 (not Jan 15)
+          💡 Example: Decision effective Jan 15, 2024 → Payments start Feb 1,
+          2024 (not Jan 15)
         </p>
       </div>
     </div>
@@ -474,15 +472,14 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
             <strong className="text-amber-400">
               Effective Date vs Payment Date:
             </strong>
-            <br />• <strong>Effective Date:</strong> When entitlement
-            began (decision date)
-            <br />• <strong>Payment Start:</strong> First of FOLLOWING
-            month (38 CFR § 3.400)
+            <br />• <strong>Effective Date:</strong> When entitlement began
+            (decision date)
+            <br />• <strong>Payment Start:</strong> First of FOLLOWING month (38
+            CFR § 3.400)
             <br />
             <br />
             <em className="text-gray-400">
-              Example: Effective date Feb 15, 2024 → Payments start Mar
-              1, 2024
+              Example: Effective date Feb 15, 2024 → Payments start Mar 1, 2024
             </em>
           </span>
         </span>
@@ -616,13 +613,11 @@ function LoadedConditionsNotice({ conditions }) {
       </div>
       <p className="text-purple-300 text-sm">
         {conditions.length} condition
-        {conditions.length !== 1 ? "s" : ""} detected for bilateral
-        factor analysis.
+        {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
+        analysis.
         {conditions.filter(
           (c) =>
-            c.side === "bilateral" ||
-            c.side === "left" ||
-            c.side === "right",
+            c.side === "bilateral" || c.side === "left" || c.side === "right",
         ).length > 0 && (
           <span className="block mt-1 text-purple-400">
             ⚠️ Paired body parts found - bilateral factor may apply!
@@ -803,9 +798,7 @@ function FoundMoneyBanner({ analysis, totals }) {
             </p>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-4">
-            <p className="text-gray-400 text-sm">
-              Total Should Have Received
-            </p>
+            <p className="text-gray-400 text-sm">Total Should Have Received</p>
             <p className="text-3xl font-bold text-green-400">
               $
               {totals.total.toLocaleString("en-US", {
@@ -822,9 +815,7 @@ function FoundMoneyBanner({ analysis, totals }) {
 function YearlyBreakdown({ totals }) {
   return (
     <div className="bg-gray-800/30 rounded-xl p-6">
-      <h3 className="text-lg font-bold text-white mb-4">
-        📈 Yearly Breakdown
-      </h3>
+      <h3 className="text-lg font-bold text-white mb-4">📈 Yearly Breakdown</h3>
 
       <div className="space-y-3">
         {totals.yearlyBreakdown.map((year) => (
@@ -988,8 +979,8 @@ function AIAnalysisSection({
       {!showAIAnalysis && (
         <p className="text-purple-300 text-sm">
           Get an AI-powered analysis that explains your findings in plain
-          language, recommends next steps, and warns you about common
-          mistakes when filing retroactive pay claims.
+          language, recommends next steps, and warns you about common mistakes
+          when filing retroactive pay claims.
         </p>
       )}
     </div>
@@ -1034,9 +1025,7 @@ function CuePatternsReference({ showCuePatterns, setShowCuePatterns }) {
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">📚</span>
-          <h3 className="text-lg font-bold text-white">
-            Common CUE Patterns
-          </h3>
+          <h3 className="text-lg font-bold text-white">Common CUE Patterns</h3>
         </div>
         <span className="text-gray-400">{showCuePatterns ? "−" : "+"}</span>
       </button>
@@ -1057,8 +1046,8 @@ function RetroPayFooter() {
     <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-6 py-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-gray-500 text-center sm:text-left">
-          ⚠️ This tool provides estimates only. Consult with a VSO or
-          attorney for official payment disputes.
+          ⚠️ This tool provides estimates only. Consult with a VSO or attorney
+          for official payment disputes.
         </p>
         <BuyMeCoffee variant="compact" />
       </div>
@@ -1090,7 +1079,10 @@ function RetroPayHunterBody({
 }) {
   return (
     <div className="space-y-6">
-      <AIModeStatusBar aiStatus={aiStatus} onAISettingsClick={onAISettingsClick} />
+      <AIModeStatusBar
+        aiStatus={aiStatus}
+        onAISettingsClick={onAISettingsClick}
+      />
       <DateTerminologyInfo />
       <AddRatingPeriodForm
         newEntry={newEntry}
@@ -1098,7 +1090,10 @@ function RetroPayHunterBody({
         handleAddPeriod={handleAddPeriod}
         conditions={conditions}
       />
-      <RatingTimeline ratingHistory={ratingHistory} onRemove={handleRemovePeriod} />
+      <RatingTimeline
+        ratingHistory={ratingHistory}
+        onRemove={handleRemovePeriod}
+      />
 
       {ratingHistory.length > 0 && !analysis && (
         <ToolCardButton
@@ -1202,10 +1197,26 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
   });
 
   const bodyProps = {
-    aiStatus, onAISettingsClick, newEntry, setNewEntry, handleAddPeriod,
-    conditions, ratingHistory, handleRemovePeriod, isAnalyzing, runAnalysis,
-    analysis, totals, cueAlerts, bilateralCheck, showAIAnalysis,
-    handleAIAnalysis, isAIThinking, aiAnalysis, showCuePatterns, setShowCuePatterns,
+    aiStatus,
+    onAISettingsClick,
+    newEntry,
+    setNewEntry,
+    handleAddPeriod,
+    conditions,
+    ratingHistory,
+    handleRemovePeriod,
+    isAnalyzing,
+    runAnalysis,
+    analysis,
+    totals,
+    cueAlerts,
+    bilateralCheck,
+    showAIAnalysis,
+    handleAIAnalysis,
+    isAIThinking,
+    aiAnalysis,
+    showCuePatterns,
+    setShowCuePatterns,
   };
 
   return (
@@ -1215,7 +1226,9 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
       size="xl"
       labelledBy="retro-pay-hunter-title"
       className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"
-      header={<RetroPayHunterHeader onClose={onClose} onReportBug={onReportBug} />}
+      header={
+        <RetroPayHunterHeader onClose={onClose} onReportBug={onReportBug} />
+      }
     >
       <RetroPayHunterBody {...bodyProps} />
     </ResponsiveModal>

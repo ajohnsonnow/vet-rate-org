@@ -118,7 +118,14 @@ function _storageStrategyDescription(storageInfo) {
   return 'Your data is saved in your browser. Use "Download Backup" before closing to ensure your data is safe from cache clears.';
 }
 
-function PacketPersistenceCompactView({ saveStatus, lastSaved, handleSavePacket, isLoading, fileInputRef, handleFileUpload }) {
+function PacketPersistenceCompactView({
+  saveStatus,
+  lastSaved,
+  handleSavePacket,
+  isLoading,
+  fileInputRef,
+  handleFileUpload,
+}) {
   return (
     <div className="flex items-center gap-3">
       <SaveIndicator status={saveStatus} lastSaved={lastSaved} />
@@ -129,7 +136,12 @@ function PacketPersistenceCompactView({ saveStatus, lastSaved, handleSavePacket,
         className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
         aria-label="Save packet to your device"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -177,7 +189,10 @@ function PacketPersistenceErrorBanner({ error, setError }) {
     <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
       <span>⚠️</span>
       {error}
-      <button onClick={() => setError(null)} className="ml-auto hover:text-red-900">
+      <button
+        onClick={() => setError(null)}
+        className="ml-auto hover:text-red-900"
+      >
         ✕
       </button>
     </div>
@@ -225,7 +240,12 @@ function PacketPersistenceMainActions({
         {isLoading ? (
           <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full" />
         ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -253,7 +273,12 @@ function PacketPersistenceMainActions({
         {isLoading ? (
           <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full" />
         ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -271,8 +296,15 @@ function PacketPersistenceMainActions({
   );
 }
 
-function PacketPersistenceMobileReminder({ storageInfo, saveStatus, handleDownloadPacket }) {
-  if (!(storageInfo?.isMobile || storageInfo?.isTablet) || saveStatus !== "unsaved") {
+function PacketPersistenceMobileReminder({
+  storageInfo,
+  saveStatus,
+  handleDownloadPacket,
+}) {
+  if (
+    !(storageInfo?.isMobile || storageInfo?.isTablet) ||
+    saveStatus !== "unsaved"
+  ) {
     return null;
   }
   return (
@@ -351,8 +383,8 @@ function PacketPersistenceHowItWorks() {
             💻 On Computer
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Click &quot;Save Packet&quot; once, then we auto-save to your file as
-            you type
+            Click &quot;Save Packet&quot; once, then we auto-save to your file
+            as you type
           </p>
         </div>
         <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -400,7 +432,13 @@ async function _saveExistingPacket(ctx) {
 }
 
 async function _downloadPacketBackup(ctx) {
-  const { setIsLoading, setError, setSaveStatus, setLastSaved, setShowMobilePrompt } = ctx;
+  const {
+    setIsLoading,
+    setError,
+    setSaveStatus,
+    setLastSaved,
+    setShowMobilePrompt,
+  } = ctx;
   setIsLoading(true);
   setError(null);
 
@@ -446,7 +484,13 @@ async function _resumeExistingPacket(ctx) {
 }
 
 async function _uploadPacketFile(event, ctx) {
-  const { setIsLoading, setError, onPacketLoaded, setSaveStatus, setLastSaved } = ctx;
+  const {
+    setIsLoading,
+    setError,
+    onPacketLoaded,
+    setSaveStatus,
+    setLastSaved,
+  } = ctx;
   const file = event.target.files?.[0];
   if (!file) return;
 
@@ -575,7 +619,12 @@ function usePacketPersistenceHandlers(ctx) {
   } = ctx;
 
   const handleSavePacket = useCallback(async () => {
-    await _saveExistingPacket({ setIsLoading, setError, setSaveStatus, setLastSaved });
+    await _saveExistingPacket({
+      setIsLoading,
+      setError,
+      setSaveStatus,
+      setLastSaved,
+    });
   }, [setIsLoading, setError, setSaveStatus, setLastSaved]);
 
   const handleDownloadPacket = useCallback(async () => {
@@ -586,10 +635,21 @@ function usePacketPersistenceHandlers(ctx) {
       setLastSaved,
       setShowMobilePrompt,
     });
-  }, [setIsLoading, setError, setSaveStatus, setLastSaved, setShowMobilePrompt]);
+  }, [
+    setIsLoading,
+    setError,
+    setSaveStatus,
+    setLastSaved,
+    setShowMobilePrompt,
+  ]);
 
   const handleResumePacket = useCallback(async () => {
-    await _resumeExistingPacket({ setIsLoading, setError, onPacketLoaded, fileInputRef });
+    await _resumeExistingPacket({
+      setIsLoading,
+      setError,
+      onPacketLoaded,
+      fileInputRef,
+    });
   }, [setIsLoading, setError, onPacketLoaded, fileInputRef]);
 
   const handleFileUpload = useCallback(
@@ -605,7 +665,12 @@ function usePacketPersistenceHandlers(ctx) {
     [setIsLoading, setError, onPacketLoaded, setSaveStatus, setLastSaved],
   );
 
-  return { handleSavePacket, handleDownloadPacket, handleResumePacket, handleFileUpload };
+  return {
+    handleSavePacket,
+    handleDownloadPacket,
+    handleResumePacket,
+    handleFileUpload,
+  };
 }
 
 function PacketPersistenceLoadingView() {
@@ -689,7 +754,13 @@ export default function PacketPersistence({
 
   // Initialize persistent storage on mount
   useEffect(
-    () => _runStorageInitEffect({ setStorageInfo, setSaveStatus, setInitialized, setError }),
+    () =>
+      _runStorageInitEffect({
+        setStorageInfo,
+        setSaveStatus,
+        setInitialized,
+        setError,
+      }),
     [],
   );
 
@@ -713,16 +784,20 @@ export default function PacketPersistence({
     [saveStatus],
   );
 
-  const { handleSavePacket, handleDownloadPacket, handleResumePacket, handleFileUpload } =
-    usePacketPersistenceHandlers({
-      setIsLoading,
-      setError,
-      setSaveStatus,
-      setLastSaved,
-      setShowMobilePrompt,
-      onPacketLoaded,
-      fileInputRef,
-    });
+  const {
+    handleSavePacket,
+    handleDownloadPacket,
+    handleResumePacket,
+    handleFileUpload,
+  } = usePacketPersistenceHandlers({
+    setIsLoading,
+    setError,
+    setSaveStatus,
+    setLastSaved,
+    setShowMobilePrompt,
+    onPacketLoaded,
+    fileInputRef,
+  });
 
   if (!initialized) {
     return <PacketPersistenceLoadingView />;

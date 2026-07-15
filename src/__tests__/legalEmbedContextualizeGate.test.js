@@ -36,14 +36,23 @@ describe("embed.mjs CONTEXTUALIZE_CHUNKS gate", () => {
   it("defaults OFF: embeds the raw chunk.text, no title prefix", async () => {
     delete process.env.CONTEXTUALIZE_CHUNKS;
     vi.resetModules();
-    const { embedSource } = await import("../../scripts/legal-ingestion/embed.mjs");
+    const { embedSource } =
+      await import("../../scripts/legal-ingestion/embed.mjs");
 
     const dir = mkdtempSync(join(tmpdir(), "embed-gate-"));
     const chunkFile = writeChunkFile(dir, [
-      { citation: "38 CFR § 4.21", title: "§ 4.21 Application of rating schedule.", text: "Body text." },
+      {
+        citation: "38 CFR § 4.21",
+        title: "§ 4.21 Application of rating schedule.",
+        text: "Body text.",
+      },
     ]);
     const { embedder, calls } = stubEmbedder();
-    await embedSource({ chunkFile, vectorFile: join(dir, "ecfr.bin"), embedder });
+    await embedSource({
+      chunkFile,
+      vectorFile: join(dir, "ecfr.bin"),
+      embedder,
+    });
 
     expect(calls).toEqual(["Body text."]);
     rmSync(dir, { recursive: true, force: true });
@@ -52,23 +61,35 @@ describe("embed.mjs CONTEXTUALIZE_CHUNKS gate", () => {
   it("CONTEXTUALIZE_CHUNKS=1 prepends the section title before embedding", async () => {
     process.env.CONTEXTUALIZE_CHUNKS = "1";
     vi.resetModules();
-    const { embedSource } = await import("../../scripts/legal-ingestion/embed.mjs");
+    const { embedSource } =
+      await import("../../scripts/legal-ingestion/embed.mjs");
 
     const dir = mkdtempSync(join(tmpdir(), "embed-gate-"));
     const chunkFile = writeChunkFile(dir, [
-      { citation: "38 CFR § 4.21", title: "§ 4.21 Application of rating schedule.", text: "Body text." },
+      {
+        citation: "38 CFR § 4.21",
+        title: "§ 4.21 Application of rating schedule.",
+        text: "Body text.",
+      },
     ]);
     const { embedder, calls } = stubEmbedder();
-    await embedSource({ chunkFile, vectorFile: join(dir, "ecfr.bin"), embedder });
+    await embedSource({
+      chunkFile,
+      vectorFile: join(dir, "ecfr.bin"),
+      embedder,
+    });
 
-    expect(calls).toEqual(["§ 4.21 Application of rating schedule.\n\nBody text."]);
+    expect(calls).toEqual([
+      "§ 4.21 Application of rating schedule.\n\nBody text.",
+    ]);
     rmSync(dir, { recursive: true, force: true });
   });
 
   it("still writes the correct vector count regardless of the gate", async () => {
     process.env.CONTEXTUALIZE_CHUNKS = "1";
     vi.resetModules();
-    const { embedSource } = await import("../../scripts/legal-ingestion/embed.mjs");
+    const { embedSource } =
+      await import("../../scripts/legal-ingestion/embed.mjs");
 
     const dir = mkdtempSync(join(tmpdir(), "embed-gate-"));
     const chunkFile = writeChunkFile(dir, [

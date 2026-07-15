@@ -331,8 +331,8 @@ const CustomInput = ({ customValue, onChange, onApply, currentModel }) => (
       </button>
     </div>
     <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
-      💡 Range: 128 - {currentModel.absoluteMax.toLocaleString()} tokens.
-      Use presets unless you have specific needs.
+      💡 Range: 128 - {currentModel.absoluteMax.toLocaleString()} tokens. Use
+      presets unless you have specific needs.
     </p>
   </div>
 );
@@ -379,8 +379,8 @@ const WarningsPanel = ({
                 💾 VRAM Impact: {vramImpact}
               </p>
               <p className="text-xs text-gray-700 dark:text-gray-300">
-                This is additional VRAM needed <strong>on top of</strong>{" "}
-                the model&apos;s base requirements.
+                This is additional VRAM needed <strong>on top of</strong> the
+                model&apos;s base requirements.
               </p>
             </div>
           )}
@@ -408,14 +408,14 @@ const AdvancedDetails = ({ currentModel, aiStatus }) => (
 
     <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
       <p>
-        <strong>What are tokens?</strong> Tokens are the building blocks
-        of text for AI models. Roughly, 1 token ≈ 0.75 words, so 1,000
-        tokens ≈ 750 words.
+        <strong>What are tokens?</strong> Tokens are the building blocks of text
+        for AI models. Roughly, 1 token ≈ 0.75 words, so 1,000 tokens ≈ 750
+        words.
       </p>
 
       <p>
-        <strong>Why does it matter?</strong> The token limit determines
-        how long the AI&apos;s response can be:
+        <strong>Why does it matter?</strong> The token limit determines how long
+        the AI&apos;s response can be:
       </p>
 
       <ul className="list-disc ml-5 space-y-1">
@@ -423,12 +423,12 @@ const AdvancedDetails = ({ currentModel, aiStatus }) => (
           <strong>512 tokens</strong> = ~380 words = Brief paragraph
         </li>
         <li>
-          <strong>2,048 tokens</strong> = ~1,500 words = Detailed
-          statement (3-4 pages)
+          <strong>2,048 tokens</strong> = ~1,500 words = Detailed statement (3-4
+          pages)
         </li>
         <li>
-          <strong>4,096 tokens</strong> = ~3,000 words = Comprehensive
-          report (6-8 pages)
+          <strong>4,096 tokens</strong> = ~3,000 words = Comprehensive report
+          (6-8 pages)
         </li>
       </ul>
 
@@ -437,9 +437,9 @@ const AdvancedDetails = ({ currentModel, aiStatus }) => (
           💡 For most veterans:
         </p>
         <p className="text-blue-800 dark:text-blue-200">
-          The <strong>Balanced (2,048)</strong> preset is perfect for
-          personal statements, DBQs, and nexus letters. You rarely need
-          more unless doing comprehensive research analysis.
+          The <strong>Balanced (2,048)</strong> preset is perfect for personal
+          statements, DBQs, and nexus letters. You rarely need more unless doing
+          comprehensive research analysis.
         </p>
       </div>
     </div>
@@ -460,16 +460,16 @@ const AdvancedDetails = ({ currentModel, aiStatus }) => (
         </li>
         {aiStatus.effectiveMode === "local" && (
           <li>
-            <strong>VRAM Consideration:</strong> Higher token limits
-            require more GPU memory. If generation is slow or fails,
-            reduce the token limit.
+            <strong>VRAM Consideration:</strong> Higher token limits require
+            more GPU memory. If generation is slow or fails, reduce the token
+            limit.
           </li>
         )}
         {aiStatus.effectiveMode === "cloud" && (
           <li>
-            <strong>API Cost:</strong> Higher limits consume more API
-            quota. Google&apos;s free tier is generous, but larger
-            responses use more quota.
+            <strong>API Cost:</strong> Higher limits consume more API quota.
+            Google&apos;s free tier is generous, but larger responses use more
+            quota.
           </li>
         )}
       </ul>

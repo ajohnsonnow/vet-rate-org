@@ -132,8 +132,7 @@ const BODY_ZONES = {
       "Locking Up": "lumbar facet joint syndrome",
       "Sciatic Pain": "sciatica with nerve root compression",
       "Disc Herniation": "lumbar intervertebral disc herniation",
-      "Spinal Stenosis":
-        "lumbar spinal stenosis with neurogenic claudication",
+      "Spinal Stenosis": "lumbar spinal stenosis with neurogenic claudication",
     },
   },
   hip_left: {
@@ -229,8 +228,7 @@ const BODY_ZONES = {
       "Cold Extremities": "peripheral vascular disease",
       "Leg Pain Walking": "intermittent claudication",
       "Varicose Veins": "chronic venous insufficiency",
-      "Blood Clots History":
-        "deep vein thrombosis/pulmonary embolism history",
+      "Blood Clots History": "deep vein thrombosis/pulmonary embolism history",
       "Poor Wound Healing": "arterial insufficiency",
     },
   },
@@ -295,8 +293,7 @@ const BODY_ZONES = {
       "Chronic Kidney Disease": "chronic kidney disease requiring monitoring",
       "Frequent UTIs": "recurrent urinary tract infections",
       Incontinence: "urinary incontinence requiring management",
-      "Enlarged Prostate":
-        "benign prostatic hyperplasia with urinary symptoms",
+      "Enlarged Prostate": "benign prostatic hyperplasia with urinary symptoms",
       "Painful Urination": "chronic dysuria/interstitial cystitis",
     },
   },
@@ -724,29 +721,11 @@ function HipsLegsZones({ zoneProps }) {
       <circle cx="170" cy="280" r="20" {...zoneProps("hip_right")} />
 
       {/* Knees */}
-      <ellipse
-        cx="125"
-        cy="400"
-        rx="22"
-        ry="28"
-        {...zoneProps("knee_left")}
-      />
-      <ellipse
-        cx="175"
-        cy="400"
-        rx="22"
-        ry="28"
-        {...zoneProps("knee_right")}
-      />
+      <ellipse cx="125" cy="400" rx="22" ry="28" {...zoneProps("knee_left")} />
+      <ellipse cx="175" cy="400" rx="22" ry="28" {...zoneProps("knee_right")} />
 
       {/* Ankles/Feet */}
-      <ellipse
-        cx="125"
-        cy="550"
-        rx="18"
-        ry="25"
-        {...zoneProps("ankle_left")}
-      />
+      <ellipse cx="125" cy="550" rx="18" ry="25" {...zoneProps("ankle_left")} />
       <ellipse
         cx="175"
         cy="550"
@@ -950,9 +929,7 @@ function ExportButtons({ symptoms, exportToText, onLogToSymptomLogger }) {
           const logData = {
             type: "pain",
             bodyPart: symptoms.map((s) => s.zoneName).join(", "),
-            medicalTerm: symptoms
-              .map((s) => s.medicalTerminology)
-              .join("; "),
+            medicalTerm: symptoms.map((s) => s.medicalTerminology).join("; "),
             notes: symptoms
               .map(
                 (s) =>
@@ -1031,9 +1008,7 @@ function UsageTipsCard() {
     <div className="mt-6 bg-blue-900/30 border border-blue-500/30 rounded p-4">
       <h4 className="text-blue-400 font-bold mb-2">💡 Pro Tips:</h4>
       <ul className="text-gray-300 text-sm space-y-1">
-        <li>
-          • Click multiple body parts to build a complete symptom profile
-        </li>
+        <li>• Click multiple body parts to build a complete symptom profile</li>
         <li>
           • The app translates your clicks into exact VA medical terminology
         </li>
@@ -1041,8 +1016,7 @@ function UsageTipsCard() {
           • Copy the medical text and paste it into your Personal Statement
         </li>
         <li>
-          • Red zones with a thick border show where you&apos;ve logged
-          symptoms
+          • Red zones with a thick border show where you&apos;ve logged symptoms
         </li>
       </ul>
     </div>

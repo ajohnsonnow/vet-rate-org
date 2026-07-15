@@ -110,7 +110,10 @@ const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
  * All TacticalCalculator useState/useRef/useEffect declarations, grouped
  * into a single hook so the component body stays under the line budget.
  */
-function useTacticalCalculatorFormState(initialConditions, capSimulatorResults) {
+function useTacticalCalculatorFormState(
+  initialConditions,
+  capSimulatorResults,
+) {
   const { t } = useLanguage();
 
   // Ref for screenshot capture
@@ -551,7 +554,10 @@ function computeDerivedResults({
   const myRatingsPyramiding = detectPyramiding(myRatings);
 
   const results = calculateVARating(conditions);
-  const compensation = calculateCompensation(results.combinedRating, dependents);
+  const compensation = calculateCompensation(
+    results.combinedRating,
+    dependents,
+  );
   const pyramiding = detectPyramiding(conditions);
   const tdiu = checkTDIUEligibility(conditions);
   const whatIfResults = calculateWhatIf(
@@ -578,7 +584,10 @@ function computeDerivedResults({
 /**
  * Assembles all TacticalCalculator state, handlers, and derived results
  */
-function useTacticalCalculatorState({ initialConditions, capSimulatorResults }) {
+function useTacticalCalculatorState({
+  initialConditions,
+  capSimulatorResults,
+}) {
   const formState = useTacticalCalculatorFormState(
     initialConditions,
     capSimulatorResults,
@@ -955,7 +964,11 @@ function PayResults({ t, results, compensation }) {
         </p>
       </div>
 
-      <PayResultsBreakdown t={t} results={results} compensation={compensation} />
+      <PayResultsBreakdown
+        t={t}
+        results={results}
+        compensation={compensation}
+      />
 
       {/* SMC Note */}
       {results.combinedRating === 100 && (
@@ -1204,13 +1217,17 @@ function WhatIfTab({
   );
 }
 
-function QuickLoadRatingsBanner({ t, myRatings, conditions, handleLoadMyRatings }) {
+function QuickLoadRatingsBanner({
+  t,
+  myRatings,
+  conditions,
+  handleLoadMyRatings,
+}) {
   if (!(myRatings.length > 0 && conditions.length === 0)) return null;
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
       <span className="text-sm text-amber-700 dark:text-amber-300">
-        ⭐ {t("tacticalCalc", "youHaveSavedRatings")} (
-        {myRatings.length})
+        ⭐ {t("tacticalCalc", "youHaveSavedRatings")} ({myRatings.length})
       </span>
       <button
         onClick={handleLoadMyRatings}
@@ -1222,23 +1239,23 @@ function QuickLoadRatingsBanner({ t, myRatings, conditions, handleLoadMyRatings 
   );
 }
 
-function BodyPartSelectField({ t, newCondition, setNewCondition, allBodyParts }) {
+function BodyPartSelectField({
+  t,
+  newCondition,
+  setNewCondition,
+  allBodyParts,
+}) {
   return (
     <div className="sm:col-span-2">
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {t("tacticalCalc", "bodyPartConditionType")}
       </label>
       <select
-        aria-label={t(
-          "tacticalCalc",
-          "bodyPartConditionType",
-        )}
+        aria-label={t("tacticalCalc", "bodyPartConditionType")}
         value={newCondition.bodyPart}
         onChange={(e) => {
           const bp = e.target.value;
-          const info = allBodyParts.find(
-            (p) => p.value === bp,
-          );
+          const info = allBodyParts.find((p) => p.value === bp);
           setNewCondition((prev) => ({
             ...prev,
             bodyPart: bp,
@@ -1247,21 +1264,15 @@ function BodyPartSelectField({ t, newCondition, setNewCondition, allBodyParts })
         }}
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
       >
-        <option value="">
-          {t("tacticalCalc", "select")}
-        </option>
-        <optgroup
-          label={t("tacticalCalc", "extremitiesBilateral")}
-        >
+        <option value="">{t("tacticalCalc", "select")}</option>
+        <optgroup label={t("tacticalCalc", "extremitiesBilateral")}>
           {BODY_PARTS.extremities.map((bp) => (
             <option key={bp.value} value={bp.value}>
               {bp.label}
             </option>
           ))}
         </optgroup>
-        <optgroup
-          label={t("tacticalCalc", "otherBodySystems")}
-        >
+        <optgroup label={t("tacticalCalc", "otherBodySystems")}>
           {BODY_PARTS.other.map((bp) => (
             <option key={bp.value} value={bp.value}>
               {bp.label}
@@ -1290,18 +1301,10 @@ function SideSelectField({ t, newCondition, setNewCondition }) {
         }
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
       >
-        <option value="none">
-          {t("tacticalCalc", "notBilateral")}
-        </option>
-        <option value="left">
-          {t("tacticalCalc", "left")}
-        </option>
-        <option value="right">
-          {t("tacticalCalc", "right")}
-        </option>
-        <option value="bilateral">
-          {t("tacticalCalc", "bothBilateral")}
-        </option>
+        <option value="none">{t("tacticalCalc", "notBilateral")}</option>
+        <option value="left">{t("tacticalCalc", "left")}</option>
+        <option value="right">{t("tacticalCalc", "right")}</option>
+        <option value="bilateral">{t("tacticalCalc", "bothBilateral")}</option>
       </select>
     </div>
   );
@@ -1349,10 +1352,7 @@ function CustomNameField({ t, newCondition, setNewCondition, canBeBilateral }) {
             name: e.target.value,
           }))
         }
-        placeholder={t(
-          "tacticalCalc",
-          "customLabelPlaceholder",
-        )}
+        placeholder={t("tacticalCalc", "customLabelPlaceholder")}
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
       />
     </div>
@@ -1420,8 +1420,8 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
       <p className="text-sm text-blue-900 dark:text-blue-200">
         📂 {recordCandidates.length} rated condition
-        {recordCandidates.length === 1 ? "" : "s"} found in your
-        records (saved claims &amp; analyzed documents).
+        {recordCandidates.length === 1 ? "" : "s"} found in your records (saved
+        claims &amp; analyzed documents).
       </p>
       <button
         onClick={handleLoadFromRecords}
@@ -1433,7 +1433,11 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
   );
 }
 
-function ConditionRow({ condition, handleEditCondition, handleRemoveCondition }) {
+function ConditionRow({
+  condition,
+  handleEditCondition,
+  handleRemoveCondition,
+}) {
   return (
     <div
       className={`flex items-center justify-between p-3 rounded-lg border ${
@@ -1478,9 +1482,7 @@ function ConditionRow({ condition, handleEditCondition, handleRemoveCondition })
           </svg>
         </button>
         <button
-          onClick={() =>
-            handleRemoveCondition(condition.id)
-          }
+          onClick={() => handleRemoveCondition(condition.id)}
           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           aria-label="Remove"
         >
@@ -1514,8 +1516,7 @@ function ConditionsListSection({
     <div className="flex flex-col flex-1 min-h-0">
       <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
         <span>
-          📋 {t("tacticalCalc", "yourRatedConditions")} (
-          {conditions.length})
+          📋 {t("tacticalCalc", "yourRatedConditions")} ({conditions.length})
         </span>
         {conditions.length > 0 && (
           <button
@@ -1610,9 +1611,7 @@ function ResultsValidationBadge({ t }) {
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
       <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
         <span className="text-lg">✓</span>
-        <span className="font-medium">
-          {t("tacticalCalc", "verifiedPer")}
-        </span>
+        <span className="font-medium">{t("tacticalCalc", "verifiedPer")}</span>
         <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
           {t("tacticalCalc", "matchesVAGov")}
         </span>
@@ -1692,14 +1691,11 @@ function PyramidingWarningItem({ t, warning }) {
         </span>
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-        <strong>{warning.regulation}:</strong>{" "}
-        {warning.guidance}
+        <strong>{warning.regulation}:</strong> {warning.guidance}
       </p>
       {warning.conditions && (
         <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
-          <strong>
-            {t("tacticalCalc", "affectedConditions")}:
-          </strong>{" "}
+          <strong>{t("tacticalCalc", "affectedConditions")}:</strong>{" "}
           {warning.conditions.join(", ")}
         </div>
       )}
@@ -1740,17 +1736,21 @@ function TdiuAdvisorySection({ tdiu }) {
         {tdiu.basis === "single60"
           ? "One of these conditions is rated 60% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."
           : "These ratings combine to 70% or higher with at least one condition rated 40% or higher, meeting the schedular TDIU threshold under 38 CFR § 4.16(a)."}{" "}
-        If your service-connected conditions prevent you from
-        maintaining substantially gainful employment, TDIU pays
-        at the 100% rate even below a 100% schedular rating. The
-        TDIU Work Impact Builder tool can help you prepare VA
-        Form 21-8940 — and speak with a VSO before filing.
+        If your service-connected conditions prevent you from maintaining
+        substantially gainful employment, TDIU pays at the 100% rate even below
+        a 100% schedular rating. The TDIU Work Impact Builder tool can help you
+        prepare VA Form 21-8940 — and speak with a VSO before filing.
       </p>
     </div>
   );
 }
 
-function GapAnalysisSection({ t, results, ratingNeededFor90, ratingNeededFor100 }) {
+function GapAnalysisSection({
+  t,
+  results,
+  ratingNeededFor90,
+  ratingNeededFor100,
+}) {
   return (
     <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
       <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
@@ -1824,9 +1824,8 @@ function QuickPayPreview({ t, results, setActiveTab }) {
           </p>
           <p className="text-2xl font-bold text-green-700 dark:text-green-300">
             $
-            {VA_PAY_RATES_2026.solo[
-              results.combinedRating
-            ]?.toLocaleString() || "0"}
+            {VA_PAY_RATES_2026.solo[results.combinedRating]?.toLocaleString() ||
+              "0"}
           </p>
         </div>
         <button
@@ -1856,12 +1855,11 @@ function CalculationStepDetail({ step }) {
           </div>
         </div>
       )}
-      {step.nonBilateral &&
-        step.nonBilateral.length > 0 && (
-          <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
-            Non-bilateral: {step.nonBilateral.join(", ")}
-          </div>
-        )}
+      {step.nonBilateral && step.nonBilateral.length > 0 && (
+        <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
+          Non-bilateral: {step.nonBilateral.join(", ")}
+        </div>
+      )}
       {step.ratings && (
         <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
           Ratings (sorted): [{step.ratings.join("%, ")}%]
@@ -1871,10 +1869,7 @@ function CalculationStepDetail({ step }) {
         <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
           <div className="text-purple-700 dark:text-purple-300">
             <div>Combined: {step.combinedBilateral}%</div>
-            <div>
-              Bilateral Factor (+10%):{" "}
-              {step.bilateralFactor}%
-            </div>
+            <div>Bilateral Factor (+10%): {step.bilateralFactor}%</div>
             <div className="font-bold mt-1">
               Group Rating: {step.bilateralGroupRating}%
             </div>
@@ -1884,9 +1879,7 @@ function CalculationStepDetail({ step }) {
       {step.rawScore !== undefined && (
         <div className="ml-8 mt-2 p-2 bg-green-50 dark:bg-green-900/30 rounded text-sm">
           <div className="text-green-700 dark:text-green-300 space-y-1">
-            <div className="font-mono">
-              Raw Score: {step.rawScore}%
-            </div>
+            <div className="font-mono">Raw Score: {step.rawScore}%</div>
             <div className="font-bold">
               Final (rounded to 10): {step.roundedTo}%
             </div>
@@ -2041,11 +2034,11 @@ function CalculatorTab({
     setActiveTab,
   };
   return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-              <CalculatorInputSection {...props} />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+      <CalculatorInputSection {...props} />
 
-              <CalculatorResultsSection {...props} />
-            </div>
+      <CalculatorResultsSection {...props} />
+    </div>
   );
 }
 
@@ -2073,9 +2066,7 @@ function SaveConfirmationBanner({ t, showSaveConfirm }) {
   if (!showSaveConfirm) return null;
   return (
     <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
-      <span className="text-green-600 dark:text-green-400">
-        ✓
-      </span>
+      <span className="text-green-600 dark:text-green-400">✓</span>
       <span className="text-green-700 dark:text-green-300 text-sm">
         {t("tacticalCalc", "ratingsSavedSuccess")}
       </span>
@@ -2095,9 +2086,7 @@ function MyRatingRow({ rating, allBodyParts, handleRemoveFromMyRatings }) {
         <div>
           <p className="font-medium text-gray-900 dark:text-white text-sm">
             {rating.name ||
-              allBodyParts.find(
-                (bp) => bp.value === rating.bodyPart,
-              )?.label ||
+              allBodyParts.find((bp) => bp.value === rating.bodyPart)?.label ||
               rating.bodyPart}
           </p>
           {rating.side !== "none" && (
@@ -2108,9 +2097,7 @@ function MyRatingRow({ rating, allBodyParts, handleRemoveFromMyRatings }) {
         </div>
       </div>
       <button
-        onClick={() =>
-          handleRemoveFromMyRatings(rating.id)
-        }
+        onClick={() => handleRemoveFromMyRatings(rating.id)}
         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
         aria-label="Remove"
       >
@@ -2225,8 +2212,7 @@ function SavedRatingsList({
             onClick={handleSaveAsMyRatings}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
           >
-            <span>⭐</span>{" "}
-            {t("tacticalCalc", "saveCalcConditions")}
+            <span>⭐</span> {t("tacticalCalc", "saveCalcConditions")}
           </button>
         )}
       </div>
@@ -2239,28 +2225,25 @@ function MyRatingsPyramidingWarning({ t, myRatingsPyramiding }) {
   return (
     <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-lg p-4">
       <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-        <span>⚠️</span>{" "}
-        {t("tacticalCalc", "pyramidingAlert")}
+        <span>⚠️</span> {t("tacticalCalc", "pyramidingAlert")}
       </h5>
       <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
         {myRatingsPyramiding.summary}
       </p>
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {myRatingsPyramiding.warnings.map(
-          (warning, idx) => (
-            <div
-              key={idx}
-              className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
-            >
-              <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                {warning.message}
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                {warning.regulation}: {warning.guidance}
-              </p>
-            </div>
-          ),
-        )}
+        {myRatingsPyramiding.warnings.map((warning, idx) => (
+          <div
+            key={idx}
+            className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
+          >
+            <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
+              {warning.message}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {warning.regulation}: {warning.guidance}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2287,7 +2270,12 @@ function MyRatingsGapAnalysis({ t, myRatingsResults }) {
   );
 }
 
-function MyRatingsSummaryFilled({ t, myRatings, myRatingsResults, myRatingsPyramiding }) {
+function MyRatingsSummaryFilled({
+  t,
+  myRatings,
+  myRatingsResults,
+  myRatingsPyramiding,
+}) {
   return (
     <>
       {/* Combined Rating Display */}
@@ -2320,9 +2308,7 @@ function MyRatingsSummaryFilled({ t, myRatings, myRatingsResults, myRatingsPyram
         <p className="text-green-200 text-sm mt-2">
           $
           {(
-            (VA_PAY_RATES_2026.solo[
-              myRatingsResults.combinedRating
-            ] || 0) * 12
+            (VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating] || 0) * 12
           ).toLocaleString()}
           /{t("tacticalCalc", "yearlyPay").toLowerCase()}
         </p>
@@ -2352,7 +2338,10 @@ function MyRatingsSummaryFilled({ t, myRatings, myRatingsResults, myRatingsPyram
       <MyRatingsGapAnalysis t={t} myRatingsResults={myRatingsResults} />
 
       {/* Pyramiding Warnings for My Ratings */}
-      <MyRatingsPyramidingWarning t={t} myRatingsPyramiding={myRatingsPyramiding} />
+      <MyRatingsPyramidingWarning
+        t={t}
+        myRatingsPyramiding={myRatingsPyramiding}
+      />
     </>
   );
 }
@@ -2360,9 +2349,7 @@ function MyRatingsSummaryFilled({ t, myRatings, myRatingsResults, myRatingsPyram
 function MyRatingsSummaryEmpty({ t }) {
   return (
     <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
-      <span className="text-6xl mb-4 block opacity-30">
-        📊
-      </span>
+      <span className="text-6xl mb-4 block opacity-30">📊</span>
       <p className="text-gray-500 dark:text-gray-400">
         {t("tacticalCalc", "saveRatingsToSee")}
       </p>
@@ -2370,7 +2357,12 @@ function MyRatingsSummaryEmpty({ t }) {
   );
 }
 
-function MyRatingsSummarySection({ t, myRatings, myRatingsResults, myRatingsPyramiding }) {
+function MyRatingsSummarySection({
+  t,
+  myRatings,
+  myRatingsResults,
+  myRatingsPyramiding,
+}) {
   return (
     <div className="space-y-4">
       {myRatings.length > 0 ? (
@@ -2456,7 +2448,12 @@ function MyRatingsTab({
   );
 }
 
-function CapResultsHeaderInfo({ t, setCapResults, onClearCapResults, setActiveTab }) {
+function CapResultsHeaderInfo({
+  t,
+  setCapResults,
+  onClearCapResults,
+  setActiveTab,
+}) {
   return (
     <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
       <div className="flex items-start gap-3">
@@ -2683,7 +2680,11 @@ function CapResultsCombinedPreview({
         {t("tacticalCalc", "ifYouAddAll")}
       </p>
 
-      <CapResultsPreviewStats t={t} conditions={conditions} capResults={capResults} />
+      <CapResultsPreviewStats
+        t={t}
+        conditions={conditions}
+        capResults={capResults}
+      />
 
       <CapResultsAddAllButton
         t={t}
@@ -2704,9 +2705,7 @@ function CapResultsEducationalNote({ t }) {
         <span className="text-xl">💡</span>
         <div>
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>
-              {t("common", "remember") || "Remember"}:
-            </strong>{" "}
+            <strong>{t("common", "remember") || "Remember"}:</strong>{" "}
             {t("tacticalCalc", "capRemember")}
           </p>
         </div>
@@ -2771,8 +2770,8 @@ function RatesHeaderInfo({ t }) {
             {t("tacticalCalc", "vaDisabilityRates2026")}
           </h3>
           <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-            {t("tacticalCalc", "effectiveDate")} •{" "}
-            {t("tacticalCalc", "source")}:{" "}
+            {t("tacticalCalc", "effectiveDate")} • {t("tacticalCalc", "source")}
+            :{" "}
             <a
               href="https://www.va.gov/disability/compensation-rates/veteran-rates/"
               target="_blank"
@@ -2857,18 +2856,18 @@ function VeteranAloneRatesTable({ t }) {
                 </td>
                 <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
                   $
-                  {VA_PAY_RATES_2026.solo[rating]?.toLocaleString(
-                    "en-US",
-                    { minimumFractionDigits: 2 },
-                  )}
+                  {VA_PAY_RATES_2026.solo[rating]?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
                 </td>
                 <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
                   $
-                  {(
-                    VA_PAY_RATES_2026.solo[rating] * 12
-                  )?.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                  })}
+                  {(VA_PAY_RATES_2026.solo[rating] * 12)?.toLocaleString(
+                    "en-US",
+                    {
+                      minimumFractionDigits: 2,
+                    },
+                  )}
                 </td>
               </tr>
             ))}
@@ -2905,10 +2904,7 @@ function WithSpouseRatesTable({ t }) {
           </thead>
           <tbody>
             {[30, 40, 50, 60, 70, 80, 90, 100].map((rating) => (
-              <tr
-                key={rating}
-                className="border-b dark:border-gray-700"
-              >
+              <tr key={rating} className="border-b dark:border-gray-700">
                 <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">
                   {rating}%
                 </td>
@@ -2923,10 +2919,9 @@ function WithSpouseRatesTable({ t }) {
                 </td>
                 <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
                   +$
-                  {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString(
-                    "en-US",
-                    { minimumFractionDigits: 2 },
-                  )}
+                  {VA_PAY_RATES_2026.spouse[rating]?.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
                 </td>
               </tr>
             ))}
@@ -3098,9 +3093,12 @@ function RatesTab({ t }) {
   );
 }
 
-
-
-function TacticalCalculatorHeader({ t, calculatorContentRef, onReportBug, onClose }) {
+function TacticalCalculatorHeader({
+  t,
+  calculatorContentRef,
+  onReportBug,
+  onClose,
+}) {
   return (
     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -3250,7 +3248,12 @@ function TacticalCalculatorTabNav({ t, activeTab, setActiveTab, capResults }) {
   );
 }
 
-function TacticalCalculatorContent({ activeTab, capResults, state, onClearCapResults }) {
+function TacticalCalculatorContent({
+  activeTab,
+  capResults,
+  state,
+  onClearCapResults,
+}) {
   return (
     <div className="p-3 sm:p-4 md:p-6">
       {/* My Ratings Tab - Save and manage your actual VA ratings */}
@@ -3311,9 +3314,7 @@ function EditConditionNameField({ t, editForm, setEditForm }) {
       <input
         type="text"
         value={editForm.name}
-        onChange={(e) =>
-          setEditForm({ ...editForm, name: e.target.value })
-        }
+        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         placeholder={t("tacticalCalc", "conditionPlaceholder")}
       />
@@ -3330,9 +3331,7 @@ function EditConditionBodyPartField({ t, editForm, setEditForm }) {
       <select
         aria-label={t("tacticalCalc", "bodyPartSystem")}
         value={editForm.bodyPart}
-        onChange={(e) =>
-          setEditForm({ ...editForm, bodyPart: e.target.value })
-        }
+        onChange={(e) => setEditForm({ ...editForm, bodyPart: e.target.value })}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
       >
         <option value="">{t("tacticalCalc", "selectBodyPart")}</option>
@@ -3395,19 +3394,13 @@ function EditConditionSideField({ t, editForm, setEditForm, allBodyParts }) {
       <select
         aria-label={t("tacticalCalc", "sideBilateral")}
         value={editForm.side}
-        onChange={(e) =>
-          setEditForm({ ...editForm, side: e.target.value })
-        }
+        onChange={(e) => setEditForm({ ...editForm, side: e.target.value })}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
       >
-        <option value="none">
-          {t("tacticalCalc", "notBilateral")}
-        </option>
+        <option value="none">{t("tacticalCalc", "notBilateral")}</option>
         <option value="left">{t("tacticalCalc", "left")}</option>
         <option value="right">{t("tacticalCalc", "right")}</option>
-        <option value="bilateral">
-          {t("tacticalCalc", "bothSides")}
-        </option>
+        <option value="bilateral">{t("tacticalCalc", "bothSides")}</option>
       </select>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
         💡 {t("tacticalCalc", "bilateralHint")}
@@ -3435,7 +3428,12 @@ function EditConditionBilateralExplanation({ t, editForm }) {
   );
 }
 
-function TacticalCalculatorMainModal({ state, onClose, onReportBug, onClearCapResults }) {
+function TacticalCalculatorMainModal({
+  state,
+  onClose,
+  onReportBug,
+  onClearCapResults,
+}) {
   const {
     t,
     calculatorContentRef,
@@ -3477,13 +3475,21 @@ function TacticalCalculatorMainModal({ state, onClose, onReportBug, onClearCapRe
         />
 
         {/* Footer */}
-        <TacticalCalculatorFooter t={t} conditions={conditions} onClose={onClose} />
+        <TacticalCalculatorFooter
+          t={t}
+          conditions={conditions}
+          onClose={onClose}
+        />
       </div>
     </ResponsiveModal>
   );
 }
 
-function VAGovRatingPasterModal({ showVAGovPaster, handlePastedRatings, setShowVAGovPaster }) {
+function VAGovRatingPasterModal({
+  showVAGovPaster,
+  handlePastedRatings,
+  setShowVAGovPaster,
+}) {
   if (!showVAGovPaster) return null;
   return (
     <VAGovRatingPaster
@@ -3539,11 +3545,23 @@ function EditConditionModal({
       }
     >
       <div className="space-y-4">
-        <EditConditionNameField t={t} editForm={editForm} setEditForm={setEditForm} />
+        <EditConditionNameField
+          t={t}
+          editForm={editForm}
+          setEditForm={setEditForm}
+        />
 
-        <EditConditionBodyPartField t={t} editForm={editForm} setEditForm={setEditForm} />
+        <EditConditionBodyPartField
+          t={t}
+          editForm={editForm}
+          setEditForm={setEditForm}
+        />
 
-        <EditConditionRatingField t={t} editForm={editForm} setEditForm={setEditForm} />
+        <EditConditionRatingField
+          t={t}
+          editForm={editForm}
+          setEditForm={setEditForm}
+        />
 
         {/* Side (only show if body part can be bilateral) */}
         <EditConditionSideField

@@ -307,9 +307,7 @@ const performWebGPUInitialization = async () => {
     }
 
     // eslint-disable-next-line no-console
-    console.log(
-      `🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`,
-    );
+    console.log(`🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`);
     // eslint-disable-next-line no-console
     console.log(`🎮 Selected: ${selectedGPU.info.displayName}`);
 
@@ -321,9 +319,7 @@ const performWebGPUInitialization = async () => {
     );
 
     if (missingFeatures.length > 0) {
-      console.warn(
-        `⚠️ Missing WebGPU features: ${missingFeatures.join(", ")}`,
-      );
+      console.warn(`⚠️ Missing WebGPU features: ${missingFeatures.join(", ")}`);
       console.warn("⚠️ Some AI models may not work properly");
     }
 
@@ -628,8 +624,7 @@ const patchWebGPUAdapterForMLC = () => {
         ...descriptor.requiredLimits,
         maxComputeInvocationsPerWorkgroup:
           adapterLimits.maxComputeInvocationsPerWorkgroup || 1024,
-        maxStorageBufferBindingSize:
-          adapterLimits.maxStorageBufferBindingSize,
+        maxStorageBufferBindingSize: adapterLimits.maxStorageBufferBindingSize,
         maxBufferSize: adapterLimits.maxBufferSize,
         maxComputeWorkgroupSizeX: adapterLimits.maxComputeWorkgroupSizeX,
         maxComputeWorkgroupSizeY: adapterLimits.maxComputeWorkgroupSizeY,
@@ -789,7 +784,8 @@ const getVisionModelGateStatus = (modelId, selectedModel) => {
   return {
     isVisionModel,
     isCustomVisionModel,
-    isBlocked: isVisionModel && !isCustomVisionModel && !hasExperimentalFeatures,
+    isBlocked:
+      isVisionModel && !isCustomVisionModel && !hasExperimentalFeatures,
   };
 };
 
@@ -912,9 +908,7 @@ const generateViaDiamondSwarm = async (prompt, options) => {
   console.log("🔧 Generate: Taking Diamond Swarm path");
   const { generateWithSwarm, getCurrentAgent, hasWebLLMEngine } =
     await import("../utils/diamondSwarm");
-  const { isLocalServerAvailable } = await import(
-    "../utils/unifiedAIService"
-  );
+  const { isLocalServerAvailable } = await import("../utils/unifiedAIService");
 
   // Try local server first (llama.cpp with Diamond Swarm GGUF)
   if (isLocalServerAvailable()) {
@@ -1239,7 +1233,11 @@ const runInitializeEngine = async (modelId, ctx) => {
     return null;
   }
 
-  return loadLegacyWebLLMEngine(modelId, { isVisionModel, isCustomVisionModel }, ctx);
+  return loadLegacyWebLLMEngine(
+    modelId,
+    { isVisionModel, isCustomVisionModel },
+    ctx,
+  );
 };
 
 /**
@@ -1455,13 +1453,8 @@ const runInterruptGeneration = async (ctx) => {
  * state/setters passed in `ctx`.
  */
 const runSwitchModel = async (newModelId, ctx) => {
-  const {
-    engine,
-    setEngine,
-    setLoadedModelId,
-    setIsReady,
-    initializeEngine,
-  } = ctx;
+  const { engine, setEngine, setLoadedModelId, setIsReady, initializeEngine } =
+    ctx;
 
   // Unload current model
   if (engine) {
@@ -1510,11 +1503,28 @@ const runUpdateGPUPreference = async (newPreference, ctx) => {
  */
 function buildLocalAIProviderApi(deps) {
   const {
-    webGPUStatus, setWebGPUStatus, isLoading, loadProgress, isReady, error, setError, isGenerating,
-    selectedModel, setSelectedModel, installedModels, loadedModelId,
-    gpuPreference, updateGPUPreference,
-    experimentalMode, setExperimentalMode, showExperimentalWarning, setShowExperimentalWarning,
-    initializeEngine, generate, interruptGeneration, switchModel,
+    webGPUStatus,
+    setWebGPUStatus,
+    isLoading,
+    loadProgress,
+    isReady,
+    error,
+    setError,
+    isGenerating,
+    selectedModel,
+    setSelectedModel,
+    installedModels,
+    loadedModelId,
+    gpuPreference,
+    updateGPUPreference,
+    experimentalMode,
+    setExperimentalMode,
+    showExperimentalWarning,
+    setShowExperimentalWarning,
+    initializeEngine,
+    generate,
+    interruptGeneration,
+    switchModel,
   } = deps;
 
   return {
@@ -1589,7 +1599,10 @@ export const useLocalAIProviderState = () => {
   // Update GPU preference and re-check WebGPU
   const updateGPUPreference = useCallback(
     (newPreference) =>
-      runUpdateGPUPreference(newPreference, { setGpuPreferenceState, setWebGPUStatus }),
+      runUpdateGPUPreference(newPreference, {
+        setGpuPreferenceState,
+        setWebGPUStatus,
+      }),
     [],
   );
 
@@ -1614,8 +1627,15 @@ export const useLocalAIProviderState = () => {
   const initializeEngine = useCallback(
     (modelId = selectedModel.id) =>
       runInitializeEngine(modelId, {
-        selectedModel, setIsLoading, setError, setLoadProgress, setIsReady,
-        setEngine, setLoadedModelId, setInstalledModels, setIsGenerating,
+        selectedModel,
+        setIsLoading,
+        setError,
+        setLoadProgress,
+        setIsReady,
+        setEngine,
+        setLoadedModelId,
+        setInstalledModels,
+        setIsGenerating,
       }),
     [selectedModel],
   );
@@ -1624,7 +1644,11 @@ export const useLocalAIProviderState = () => {
   const generate = useCallback(
     (prompt, options = {}) =>
       runGenerateCompletion(prompt, options, {
-        selectedModel, loadedModelId, engine, isReady, setIsGenerating,
+        selectedModel,
+        loadedModelId,
+        engine,
+        isReady,
+        setIsGenerating,
       }),
     [engine, isReady, selectedModel, loadedModelId],
   );
@@ -1639,7 +1663,11 @@ export const useLocalAIProviderState = () => {
   const switchModel = useCallback(
     (newModelId) =>
       runSwitchModel(newModelId, {
-        engine, setEngine, setLoadedModelId, setIsReady, initializeEngine,
+        engine,
+        setEngine,
+        setLoadedModelId,
+        setIsReady,
+        initializeEngine,
       }),
     [engine, initializeEngine],
   );
@@ -1654,10 +1682,27 @@ export const useLocalAIProviderState = () => {
   }, [engine]);
 
   return buildLocalAIProviderApi({
-    webGPUStatus, setWebGPUStatus, isLoading, loadProgress, isReady, error, setError, isGenerating,
-    selectedModel, setSelectedModel, installedModels, loadedModelId,
-    gpuPreference, updateGPUPreference,
-    experimentalMode, setExperimentalMode, showExperimentalWarning, setShowExperimentalWarning,
-    initializeEngine, generate, interruptGeneration, switchModel,
+    webGPUStatus,
+    setWebGPUStatus,
+    isLoading,
+    loadProgress,
+    isReady,
+    error,
+    setError,
+    isGenerating,
+    selectedModel,
+    setSelectedModel,
+    installedModels,
+    loadedModelId,
+    gpuPreference,
+    updateGPUPreference,
+    experimentalMode,
+    setExperimentalMode,
+    showExperimentalWarning,
+    setShowExperimentalWarning,
+    initializeEngine,
+    generate,
+    interruptGeneration,
+    switchModel,
   });
 };

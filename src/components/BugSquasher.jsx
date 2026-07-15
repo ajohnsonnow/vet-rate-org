@@ -140,9 +140,7 @@ async function _sendBugReportRemote(reportId, formData, generatedReport) {
       steps_to_reproduce: scrubText(
         formData.stepsToReproduce || "Not provided",
       ),
-      expected_behavior: scrubText(
-        formData.expectedBehavior || "Not provided",
-      ),
+      expected_behavior: scrubText(formData.expectedBehavior || "Not provided"),
       actual_behavior: scrubText(formData.actualBehavior || "Not provided"),
       additional_context: scrubText(formData.additionalContext || "None"),
       veteran_email: formData.veteranEmail || "Anonymous (no reply requested)",
@@ -270,7 +268,6 @@ async function _copyReportToClipboard(generatedReport, setCopied) {
   }
 }
 
-
 // DIAMOND LEVEL: Auto-detect current module using smart context tracking.
 // Now supports ALL 45+ tools in the app!
 function _autoDetectModule(appState, formData, setFormData) {
@@ -368,9 +365,7 @@ function BugSquasherHeader({ step, onClose }) {
             <h2 id="bug-squasher-title" className="text-2xl font-bold">
               🐛 Bug Squasher
             </h2>
-            <p className="text-red-100 text-sm">
-              Help me fix issues quickly
-            </p>
+            <p className="text-red-100 text-sm">Help me fix issues quickly</p>
           </div>
         </div>
         <button
@@ -403,9 +398,7 @@ function BugSquasherHeader({ step, onClose }) {
             <div key={s} className="flex items-center flex-1">
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                  step >= s
-                    ? "bg-white text-red-600"
-                    : "bg-white/30 text-white"
+                  step >= s ? "bg-white text-red-600" : "bg-white/30 text-white"
                 }`}
               >
                 {step > s ? "✓" : s}
@@ -507,17 +500,16 @@ function BugSquasherStep1Classification({ formData, onInputChange }) {
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          <strong>💡 Tip:</strong> The more details you provide, the faster
-          I can squash this bug! Technical details will be automatically
-          captured to help diagnose the issue.
+          <strong>💡 Tip:</strong> The more details you provide, the faster I
+          can squash this bug! Technical details will be automatically captured
+          to help diagnose the issue.
         </p>
       </div>
 
       {/* Module Selection */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Which module were you using?{" "}
-          <span className="text-red-500">*</span>
+          Which module were you using? <span className="text-red-500">*</span>
         </label>
         <select
           value={formData.module}
@@ -551,7 +543,10 @@ function BugSquasherStep1Classification({ formData, onInputChange }) {
         </p>
       </div>
 
-      <BugSquasherSeverityPicker formData={formData} onInputChange={onInputChange} />
+      <BugSquasherSeverityPicker
+        formData={formData}
+        onInputChange={onInputChange}
+      />
 
       {/* Category */}
       <div>
@@ -753,8 +748,8 @@ function BugSquasherTrackingOptions({ formData, onInputChange }) {
             Save to My Tickets
           </span>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Track this bug report in your My Packet. You&apos;ll be
-            notified when it&apos;s fixed!
+            Track this bug report in your My Packet. You&apos;ll be notified
+            when it&apos;s fixed!
           </p>
         </div>
       </label>
@@ -773,9 +768,8 @@ function BugSquasherTrackingOptions({ formData, onInputChange }) {
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
-          We respect your privacy. Leave blank to stay anonymous. Only
-          fill this in if you&apos;d like me to email you when the bug is
-          squashed.
+          We respect your privacy. Leave blank to stay anonymous. Only fill this
+          in if you&apos;d like me to email you when the bug is squashed.
         </p>
       </div>
     </div>
@@ -811,8 +805,7 @@ function BugSquasherWhatHappensNext({ formData }) {
         <li>• I&apos;ll investigate this bug personally</li>
         {formData.saveToMyTickets && (
           <li>
-            • Check &quot;My Tickets&quot; in My Packet for status
-            updates
+            • Check &quot;My Tickets&quot; in My Packet for status updates
           </li>
         )}
         {formData.veteranEmail && (
@@ -885,8 +878,8 @@ function BugSquasherSuccessPanel({
         Bug Report Saved! 🐛✓
       </h3>
       <p className="text-green-700 dark:text-green-100 mb-4">
-        Your bug report has been <strong>saved to My Tickets</strong>{" "}
-        and the report is copied to your clipboard!
+        Your bug report has been <strong>saved to My Tickets</strong> and the
+        report is copied to your clipboard!
       </p>
       <BugSquasherWhatHappensNext formData={formData} />
       <p className="text-sm text-green-600 dark:text-green-400">
@@ -975,11 +968,7 @@ function BugSquasherSubmitButton({ submitting, onSubmitReport }) {
     >
       {submitting ? (
         <>
-          <svg
-            className="w-6 h-6 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -1112,7 +1101,6 @@ function BugSquasherStep3Review({
   );
 }
 
-
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
   const { t: _t } = useLanguage();
 
@@ -1209,4 +1197,3 @@ function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
 }
 
 export default BugSquasher;
-

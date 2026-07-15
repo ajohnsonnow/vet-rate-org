@@ -246,8 +246,7 @@ function buildChartData(calculation, currentAge) {
       calculation.propertyTaxSavings / calculation.yearsRemaining;
     const healthcarePerYear =
       calculation.healthcareValue / calculation.yearsRemaining;
-    const total =
-      yearData.vaPay + propertyPerYear * i + healthcarePerYear * i;
+    const total = yearData.vaPay + propertyPerYear * i + healthcarePerYear * i;
 
     points.push({
       age: startYear + i,
@@ -267,8 +266,7 @@ function buildChartPath(chartData, chartWidth, chartHeight, padding) {
   const maxAge = chartData[chartData.length - 1].age;
 
   const xScale = (age) =>
-    padding +
-    ((age - minAge) / (maxAge - minAge)) * (chartWidth - padding * 2);
+    padding + ((age - minAge) / (maxAge - minAge)) * (chartWidth - padding * 2);
   const yScale = (value) =>
     chartHeight - padding - (value / maxValue) * (chartHeight - padding * 2);
 
@@ -589,9 +587,12 @@ const ChartDataPoints = ({ chartData, chartWidth, chartHeight, padding }) => (
       const minAge = chartData[0].age;
       const maxAge = chartData[chartData.length - 1].age;
       const x =
-        padding + ((d.age - minAge) / (maxAge - minAge)) * (chartWidth - padding * 2);
+        padding +
+        ((d.age - minAge) / (maxAge - minAge)) * (chartWidth - padding * 2);
       const y =
-        chartHeight - padding - (d.value / maxValue) * (chartHeight - padding * 2);
+        chartHeight -
+        padding -
+        (d.value / maxValue) * (chartHeight - padding * 2);
 
       return (
         <g key={i}>
@@ -854,7 +855,11 @@ const BreakdownCards = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <VAPayCard calculation={calculation} />
-      <PropertyTaxCard rating={rating} state={state} calculation={calculation} />
+      <PropertyTaxCard
+        rating={rating}
+        state={state}
+        calculation={calculation}
+      />
       <EducationCard
         rating={rating}
         hasSpouse={hasSpouse}
@@ -902,9 +907,9 @@ const SMCNotIncludedNotice = ({ smcSCheck }) => (
     {smcSCheck.potentiallyEligible && (
       <p className="text-sm text-amber-300 mt-3">
         Your saved ratings show a single 100% disability plus additional
-        separate ratings that combine to 60% or more. You may qualify for
-        SMC-S (statutory housebound, 38 U.S.C. § 1114(s)) — ask a VSO to
-        review your ratings.
+        separate ratings that combine to 60% or more. You may qualify for SMC-S
+        (statutory housebound, 38 U.S.C. § 1114(s)) — ask a VSO to review your
+        ratings.
       </p>
     )}
   </div>
@@ -914,17 +919,15 @@ const SMCNotIncludedNotice = ({ smcSCheck }) => (
 const DashboardDisclaimer = () => (
   <div className="bg-gray-800/30 rounded-xl p-4 text-center">
     <p className="text-xs text-gray-500">
-      ⚠️ These are estimates for educational purposes only. Actual values
-      depend on individual circumstances, VA policy changes, state laws, and
-      other factors. COLA rates vary annually. Consult a financial advisor
-      for personal planning. Property tax exemptions vary by state and
-      locality.
+      ⚠️ These are estimates for educational purposes only. Actual values depend
+      on individual circumstances, VA policy changes, state laws, and other
+      factors. COLA rates vary annually. Consult a financial advisor for
+      personal planning. Property tax exemptions vary by state and locality.
     </p>
     <p className="text-xs text-gray-500 mt-2">
-      <strong>Note:</strong> This calculator shows base VA compensation
-      rates. Veterans receiving Special Monthly Compensation (SMC) at any
-      level (SMC-K, SMC-L, SMC-S, etc.) will have higher lifetime values not
-      reflected here.
+      <strong>Note:</strong> This calculator shows base VA compensation rates.
+      Veterans receiving Special Monthly Compensation (SMC) at any level (SMC-K,
+      SMC-L, SMC-S, etc.) will have higher lifetime values not reflected here.
     </p>
   </div>
 );
@@ -945,8 +948,8 @@ const SupportCTA = () => (
         <p className="text-emerald-300/70 text-sm">
           Most vets never see these numbers. This calculator took months to
           build - property tax data for all 50 states, COLA projections,
-          education benefits. Help keep it free for every veteran who needs
-          to see their true worth.
+          education benefits. Help keep it free for every veteran who needs to
+          see their true worth.
         </p>
       </div>
     </div>
@@ -1095,13 +1098,14 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
         size="xl"
         labelledBy="million-dollar-dashboard-title"
         className="!bg-gray-900"
-        header={
-          <DashboardHeader onClose={onClose} onReportBug={onReportBug} />
-        }
+        header={<DashboardHeader onClose={onClose} onReportBug={onReportBug} />}
       >
         {/* Content - Scrollable */}
         <div className="space-y-6">
-          <TheBigNumber animatedTotal={d.animatedTotal} currentAge={d.currentAge} />
+          <TheBigNumber
+            animatedTotal={d.animatedTotal}
+            currentAge={d.currentAge}
+          />
 
           <ProfileInputControls
             ageInputValue={d.ageInputValue}

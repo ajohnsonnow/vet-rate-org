@@ -99,7 +99,11 @@ function computeEdgeCount(data, width, height) {
 /**
  * Estimate the document/image type from structural signals
  */
-function estimateImageType(isLikelyDocument, isStandardLetter, hasHighTextDensity) {
+function estimateImageType(
+  isLikelyDocument,
+  isStandardLetter,
+  hasHighTextDensity,
+) {
   if (isLikelyDocument) {
     return isStandardLetter
       ? "Official Document (Letter Size)"

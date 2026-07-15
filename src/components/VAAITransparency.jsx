@@ -79,8 +79,7 @@ const HIGH_IMPACT_AI_SYSTEMS = [
       "Reduces documentation burden, increases face-to-face time with patients",
     status: "Pilot",
     riskLevel: "High-Impact",
-    veteranBenefit:
-      "Your doctor can focus more on you instead of typing notes",
+    veteranBenefit: "Your doctor can focus more on you instead of typing notes",
   },
   {
     name: "Claims Document Classification",
@@ -168,11 +167,11 @@ function OverviewHero() {
             How VA Uses AI in Your Care & Benefits
           </h3>
           <p className="text-blue-800 dark:text-blue-200 text-lg leading-relaxed">
-            The VA uses <strong>227 artificial intelligence systems</strong>{" "}
-            to improve veteran healthcare, speed up disability claims, detect
+            The VA uses <strong>227 artificial intelligence systems</strong> to
+            improve veteran healthcare, speed up disability claims, detect
             fraud, and reduce administrative burden. This transparency hub
-            explains how these AI tools work, how they affect you, and how
-            your data is protected.
+            explains how these AI tools work, how they affect you, and how your
+            data is protected.
           </p>
         </div>
       </div>
@@ -266,8 +265,8 @@ function OverviewImportantNotice() {
         <div className="text-sm text-amber-900 dark:text-amber-100">
           <strong>Important:</strong> All high-impact AI systems that affect
           your healthcare or benefits require human review and oversight. AI
-          assists VA staff but does not make final decisions about your care
-          or claims on its own.
+          assists VA staff but does not make final decisions about your care or
+          claims on its own.
         </div>
       </div>
     </div>
@@ -285,7 +284,16 @@ function OverviewTab() {
   );
 }
 
-function AISystemCard({ system, accentClass, impactBoxClass, impactLabelClass, impactTextClass, benefitBoxClass, benefitIconClass, benefitTextClass }) {
+function AISystemCard({
+  system,
+  accentClass,
+  impactBoxClass,
+  impactLabelClass,
+  impactTextClass,
+  benefitBoxClass,
+  benefitIconClass,
+  benefitTextClass,
+}) {
   return (
     <div
       className={`border-2 ${accentClass} rounded-lg p-5 bg-gradient-to-br from-teal-50 to-white dark:from-teal-900/20 dark:to-gray-800`}
@@ -320,8 +328,12 @@ function AISystemCard({ system, accentClass, impactBoxClass, impactLabelClass, i
         </div>
         <div className={`text-sm ${impactTextClass}`}>{system.impact}</div>
       </div>
-      <div className={`flex items-start gap-2 ${benefitBoxClass} p-3 rounded-lg`}>
-        <CheckCircle className={`h-5 w-5 ${benefitIconClass} flex-shrink-0 mt-0.5`} />
+      <div
+        className={`flex items-start gap-2 ${benefitBoxClass} p-3 rounded-lg`}
+      >
+        <CheckCircle
+          className={`h-5 w-5 ${benefitIconClass} flex-shrink-0 mt-0.5`}
+        />
         <div className={`text-sm ${benefitTextClass}`}>
           <strong>How This Helps You:</strong> {system.veteranBenefit}
         </div>
@@ -338,7 +350,9 @@ function WorkflowList({ workflows, iconClass }) {
           key={idx}
           className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
         >
-          <CheckCircle className={`h-4 w-4 ${iconClass} flex-shrink-0 mt-0.5`} />
+          <CheckCircle
+            className={`h-4 w-4 ${iconClass} flex-shrink-0 mt-0.5`}
+          />
           <span>{workflow}</span>
         </li>
       ))}
@@ -361,21 +375,21 @@ function HealthcareAITab() {
         </p>
 
         <div className="space-y-4">
-          {HIGH_IMPACT_AI_SYSTEMS.filter((sys) => sys.category === "Healthcare").map(
-            (system, idx) => (
-              <AISystemCard
-                key={idx}
-                system={system}
-                accentClass="border-teal-200 dark:border-teal-800"
-                impactBoxClass="bg-teal-100 dark:bg-teal-900/30"
-                impactLabelClass="text-teal-900 dark:text-teal-100"
-                impactTextClass="text-teal-800 dark:text-teal-200"
-                benefitBoxClass="bg-blue-50 dark:bg-blue-900/20"
-                benefitIconClass="text-blue-600 dark:text-blue-400"
-                benefitTextClass="text-blue-900 dark:text-blue-100"
-              />
-            ),
-          )}
+          {HIGH_IMPACT_AI_SYSTEMS.filter(
+            (sys) => sys.category === "Healthcare",
+          ).map((system, idx) => (
+            <AISystemCard
+              key={idx}
+              system={system}
+              accentClass="border-teal-200 dark:border-teal-800"
+              impactBoxClass="bg-teal-100 dark:bg-teal-900/30"
+              impactLabelClass="text-teal-900 dark:text-teal-100"
+              impactTextClass="text-teal-800 dark:text-teal-200"
+              benefitBoxClass="bg-blue-50 dark:bg-blue-900/20"
+              benefitIconClass="text-blue-600 dark:text-blue-400"
+              benefitTextClass="text-blue-900 dark:text-blue-100"
+            />
+          ))}
         </div>
 
         {/* VHA AI Workflows */}
@@ -401,9 +415,8 @@ function VaGptStats() {
         VA GPT: Internal AI Assistant
       </h5>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
-        100,000+ VA employees use VA GPT (secure generative AI) to draft
-        emails, summarize documents, and improve efficiency. Survey results
-        show:
+        100,000+ VA employees use VA GPT (secure generative AI) to draft emails,
+        summarize documents, and improve efficiency. Survey results show:
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
@@ -442,21 +455,21 @@ function BenefitsAITab() {
         </p>
 
         <div className="space-y-4">
-          {HIGH_IMPACT_AI_SYSTEMS.filter((sys) => sys.category === "Benefits").map(
-            (system, idx) => (
-              <AISystemCard
-                key={idx}
-                system={system}
-                accentClass="border-blue-200 dark:border-blue-800"
-                impactBoxClass="bg-blue-100 dark:bg-blue-900/30"
-                impactLabelClass="text-blue-900 dark:text-blue-100"
-                impactTextClass="text-blue-800 dark:text-blue-200"
-                benefitBoxClass="bg-green-50 dark:bg-green-900/20"
-                benefitIconClass="text-green-600 dark:text-green-400"
-                benefitTextClass="text-green-900 dark:text-green-100"
-              />
-            ),
-          )}
+          {HIGH_IMPACT_AI_SYSTEMS.filter(
+            (sys) => sys.category === "Benefits",
+          ).map((system, idx) => (
+            <AISystemCard
+              key={idx}
+              system={system}
+              accentClass="border-blue-200 dark:border-blue-800"
+              impactBoxClass="bg-blue-100 dark:bg-blue-900/30"
+              impactLabelClass="text-blue-900 dark:text-blue-100"
+              impactTextClass="text-blue-800 dark:text-blue-200"
+              benefitBoxClass="bg-green-50 dark:bg-green-900/20"
+              benefitIconClass="text-green-600 dark:text-green-400"
+              benefitTextClass="text-green-900 dark:text-green-100"
+            />
+          ))}
         </div>
 
         {/* VBA & VEO AI Workflows */}
@@ -498,8 +511,8 @@ function HighImpactAISafetyRequirements() {
         <div className="flex items-start gap-2">
           <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
           <span>
-            <strong>Impact Assessments:</strong> Required before deployment
-            to identify potential risks
+            <strong>Impact Assessments:</strong> Required before deployment to
+            identify potential risks
           </span>
         </div>
         <div className="flex items-start gap-2">
@@ -519,15 +532,15 @@ function HighImpactAISafetyRequirements() {
         <div className="flex items-start gap-2">
           <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
           <span>
-            <strong>Right to Appeal:</strong> Veterans can challenge
-            AI-assisted decisions through normal VA appeals
+            <strong>Right to Appeal:</strong> Veterans can challenge AI-assisted
+            decisions through normal VA appeals
           </span>
         </div>
         <div className="flex items-start gap-2">
           <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
           <span>
-            <strong>Termination Authority:</strong> Non-compliant AI systems
-            can be shut down immediately
+            <strong>Termination Authority:</strong> Non-compliant AI systems can
+            be shut down immediately
           </span>
         </div>
       </div>
@@ -544,8 +557,8 @@ function GenerativeAIPolicyNotice() {
       </h5>
       <div className="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
         <p>
-          ✅ <strong>Approved Tools:</strong> VA staff use VA GPT and
-          Microsoft Copilot (approved for sensitive data)
+          ✅ <strong>Approved Tools:</strong> VA staff use VA GPT and Microsoft
+          Copilot (approved for sensitive data)
         </p>
         <p>
           ❌ <strong>Prohibited Tools:</strong> Public AI tools (ChatGPT,
@@ -557,8 +570,8 @@ function GenerativeAIPolicyNotice() {
           tools
         </p>
         <p>
-          ✔️ <strong>Human Accountability:</strong> VA staff are responsible
-          for verifying all AI-generated content for accuracy
+          ✔️ <strong>Human Accountability:</strong> VA staff are responsible for
+          verifying all AI-generated content for accuracy
         </p>
       </div>
     </div>
@@ -620,9 +633,9 @@ function InventorySummaryHero() {
           </h5>
           <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
             VA publishes a comprehensive inventory of all artificial
-            intelligence use cases across the department. This includes
-            system descriptions, risk levels, administrations, and
-            governance status. Updated annually as of December 2024.
+            intelligence use cases across the department. This includes system
+            descriptions, risk levels, administrations, and governance status.
+            Updated annually as of December 2024.
           </p>
           <a
             href="https://department.va.gov/ai/ai-use-case-inventory/"
@@ -685,8 +698,8 @@ function InventoryCategories() {
             Administrative Efficiency
           </div>
           <div className="text-sm text-blue-800 dark:text-blue-200">
-            40K+ users on VA GPT, GitHub Copilot for developers, Teams
-            Premium, document summarization
+            40K+ users on VA GPT, GitHub Copilot for developers, Teams Premium,
+            document summarization
           </div>
         </div>
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-300 dark:border-red-700">
@@ -694,8 +707,8 @@ function InventoryCategories() {
             Fraud Detection
           </div>
           <div className="text-sm text-red-800 dark:text-red-200">
-            Payment redirect fraud model identifying 1-2 fraudulent changes
-            per 1,000 transactions
+            Payment redirect fraud model identifying 1-2 fraudulent changes per
+            1,000 transactions
           </div>
         </div>
         <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-300 dark:border-purple-700">
@@ -801,9 +814,8 @@ function InventoryFeedbackLink() {
         Provide Feedback to VA
       </h5>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-        Have concerns or questions about VA&apos;s AI systems? The VA AI
-        team collects feedback to improve transparency and address veteran
-        concerns.
+        Have concerns or questions about VA&apos;s AI systems? The VA AI team
+        collects feedback to improve transparency and address veteran concerns.
       </p>
       <a
         href="https://department.va.gov/ai/ai-use-case-inventory/#connect-and-collaborate-with-us"

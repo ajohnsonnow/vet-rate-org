@@ -195,14 +195,10 @@ const RatingCriteriaToggle = ({ expandedSection, setExpandedSection }) => (
     }
     className="w-full flex justify-between items-center p-4 bg-gradient-to-r from-va-blue to-green-900 hover:from-va-blue-dark hover:to-green-800 rounded-lg border border-va-blue shadow-md transition text-white"
   >
-    <h3 className="text-xl font-bold">
-      📊 Rating Schedules & Criteria
-    </h3>
+    <h3 className="text-xl font-bold">📊 Rating Schedules & Criteria</h3>
     <svg
       className={`w-6 h-6 transition-transform ${
-        expandedSection === "ratingCriteria"
-          ? "transform rotate-180"
-          : ""
+        expandedSection === "ratingCriteria" ? "transform rotate-180" : ""
       }`}
       fill="none"
       stroke="currentColor"
@@ -272,12 +268,8 @@ const RatingCriteriaTable = ({ result }) =>
       <table className="w-full">
         <thead>
           <tr className="bg-va-blue text-white">
-            <th className="px-4 py-3 text-left font-bold w-32">
-              Rating %
-            </th>
-            <th className="px-4 py-3 text-left font-bold">
-              Criteria
-            </th>
+            <th className="px-4 py-3 text-left font-bold w-32">Rating %</th>
+            <th className="px-4 py-3 text-left font-bold">Criteria</th>
           </tr>
         </thead>
         <tbody>
@@ -328,7 +320,11 @@ const RatingCriteriaNotes = ({ result }) =>
     </div>
   );
 
-const RatingCriteriaSection = ({ result, expandedSection, setExpandedSection }) =>
+const RatingCriteriaSection = ({
+  result,
+  expandedSection,
+  setExpandedSection,
+}) =>
   result.ratingCriteria && (
     <div className="mb-8">
       <RatingCriteriaToggle
@@ -345,7 +341,11 @@ const RatingCriteriaSection = ({ result, expandedSection, setExpandedSection }) 
     </div>
   );
 
-const DocumentationSection = ({ result, expandedSection, setExpandedSection }) => (
+const DocumentationSection = ({
+  result,
+  expandedSection,
+  setExpandedSection,
+}) => (
   <div className="mb-8">
     <button
       onClick={() =>
@@ -360,9 +360,7 @@ const DocumentationSection = ({ result, expandedSection, setExpandedSection }) =
       </h3>
       <svg
         className={`w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform ${
-          expandedSection === "documentation"
-            ? "transform rotate-180"
-            : ""
+          expandedSection === "documentation" ? "transform rotate-180" : ""
         }`}
         fill="none"
         stroke="currentColor"
@@ -405,8 +403,8 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
         🔗 Related Secondary Conditions
       </h3>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-        These conditions may arise as a result of your primary
-        service-connected disability:
+        These conditions may arise as a result of your primary service-connected
+        disability:
       </p>
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {result.relatedSecondaryConditions.map((condition, idx) => {
@@ -414,9 +412,7 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
           const conditionName =
             typeof condition === "string" ? condition : condition.name;
           const diagnosticCode =
-            typeof condition === "object"
-              ? condition.diagnosticCode
-              : null;
+            typeof condition === "object" ? condition.diagnosticCode : null;
 
           return (
             <li key={idx} className="flex items-start gap-2">
@@ -426,10 +422,7 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
               {onSecondaryConditionClick && diagnosticCode ? (
                 <button
                   onClick={() =>
-                    onSecondaryConditionClick(
-                      diagnosticCode,
-                      conditionName,
-                    )
+                    onSecondaryConditionClick(diagnosticCode, conditionName)
                   }
                   className="text-left group hover:bg-amber-100 dark:hover:bg-amber-800/50 rounded px-1 -mx-1 transition-colors"
                 >
@@ -456,12 +449,11 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
       </ul>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-4 pt-3 border-t border-amber-200 dark:border-amber-700">
         <strong>Note:</strong> Veterans must provide medical evidence
-        establishing a nexus (medical link) between their
-        service-connected condition and any secondary condition. This
-        requires a medical opinion stating it is &quot;at least as
-        likely as not&quot; (50% or greater probability) that the
-        secondary condition is related to the service-connected
-        disability.
+        establishing a nexus (medical link) between their service-connected
+        condition and any secondary condition. This requires a medical opinion
+        stating it is &quot;at least as likely as not&quot; (50% or greater
+        probability) that the secondary condition is related to the
+        service-connected disability.
       </p>
     </div>
   );
@@ -558,17 +550,15 @@ const GlossarySection = () => (
           Service Connection
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Acknowledgment by the VA that a disability was incurred or
-          aggravated during military service
+          Acknowledgment by the VA that a disability was incurred or aggravated
+          during military service
         </p>
       </div>
       <div>
-        <p className="font-bold text-gray-800 dark:text-gray-100">
-          Nexus
-        </p>
+        <p className="font-bold text-gray-800 dark:text-gray-100">Nexus</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          The mandatory medical link between a current disability and an
-          event, injury, or disease in service
+          The mandatory medical link between a current disability and an event,
+          injury, or disease in service
         </p>
       </div>
     </div>
@@ -580,8 +570,8 @@ const FooterLegalNotice = () => (
     <p className="text-xs text-gray-600 dark:text-gray-400">
       <strong>LEGAL NOTICE:</strong> This information is for educational
       purposes only. It does not constitute legal or medical advice. Please
-      consult with VA officials or qualified professionals for specific
-      guidance regarding your disability claim or rating.
+      consult with VA officials or qualified professionals for specific guidance
+      regarding your disability claim or rating.
     </p>
   </div>
 );

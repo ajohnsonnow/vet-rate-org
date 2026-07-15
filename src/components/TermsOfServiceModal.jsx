@@ -58,10 +58,10 @@ const TosPreamble = () => (
   <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
     <p className="font-semibold text-lg mb-2">IMPORTANT NOTICE</p>
     <p className="text-sm leading-relaxed">
-      Before using Vet-Rate.org, you must understand the limitations and
-      risks of this tool. This agreement protects both you and this
-      service by clearly defining what this platform is-and what it is
-      not. Please read each section carefully.
+      Before using Vet-Rate.org, you must understand the limitations and risks
+      of this tool. This agreement protects both you and this service by clearly
+      defining what this platform is-and what it is not. Please read each
+      section carefully.
     </p>
   </div>
 );
@@ -83,17 +83,17 @@ const TosClauseNonAccreditation = () => (
       </ul>
       <p className="mt-3">
         <strong>What This Tool Is:</strong> Vet-Rate.org is a self-help
-        educational platform designed to help veterans organize their
-        thoughts, understand VA rating criteria, and prepare documentation
-        for their claims.{" "}
+        educational platform designed to help veterans organize their thoughts,
+        understand VA rating criteria, and prepare documentation for their
+        claims.{" "}
         <span className="font-semibold underline">
-          You are ultimately responsible for your own claim filing,
-          accuracy, and legal decisions.
+          You are ultimately responsible for your own claim filing, accuracy,
+          and legal decisions.
         </span>
       </p>
       <p className="mt-3 bg-gray-100 p-3 rounded">
-        <strong>Recommendation:</strong> For complex cases, consider
-        working with an accredited VSO or VA-accredited attorney. Visit{" "}
+        <strong>Recommendation:</strong> For complex cases, consider working
+        with an accredited VSO or VA-accredited attorney. Visit{" "}
         <a
           href="https://www.va.gov/ogc/accreditation.asp"
           target="_blank"
@@ -115,10 +115,9 @@ const TosClauseNotMedicalAdvice = () => (
     </h3>
     <div className="space-y-2 text-sm leading-relaxed">
       <p>
-        The &quot;Nexus Letter Builder,&quot; &quot;Symptom
-        Database,&quot; &quot;Secondary Conditions Scout,&quot; and all
-        other medical-related features are{" "}
-        <strong>organizational tools only</strong>-they are
+        The &quot;Nexus Letter Builder,&quot; &quot;Symptom Database,&quot;
+        &quot;Secondary Conditions Scout,&quot; and all other medical-related
+        features are <strong>organizational tools only</strong>-they are
         <span className="font-semibold underline">
           {" "}
           NOT medical diagnostic instruments
@@ -131,21 +130,19 @@ const TosClauseNotMedicalAdvice = () => (
       <ul className="list-disc list-inside space-y-1 ml-4">
         <li>This tool cannot diagnose medical conditions</li>
         <li>
-          Generated content does not substitute for a licensed
-          physician&apos;s evaluation
+          Generated content does not substitute for a licensed physician&apos;s
+          evaluation
         </li>
         <li>
-          Only qualified healthcare professionals can provide medical
-          opinions for VA claims
+          Only qualified healthcare professionals can provide medical opinions
+          for VA claims
         </li>
-        <li>
-          You must obtain proper medical evidence from licensed providers
-        </li>
+        <li>You must obtain proper medical evidence from licensed providers</li>
       </ul>
       <p className="mt-3 bg-gray-100 p-3 rounded">
         <strong>What We Do:</strong> We help you articulate symptoms in
-        medically-recognized terminology and identify potential
-        connections based on VA medical literature.
+        medically-recognized terminology and identify potential connections
+        based on VA medical literature.
         <strong> What We Don&apos;t Do:</strong> Provide medical opinions,
         diagnoses, or treatment advice.
       </p>
@@ -173,25 +170,21 @@ const TosClauseAiLimitations = () => (
           referenced
         </li>
         <li>
-          Medical terminology may be imprecise or contextually
-          inappropriate
+          Medical terminology may be imprecise or contextually inappropriate
         </li>
         <li>
           Regulatory interpretations may not reflect the most current VA
           guidance
         </li>
-        <li>
-          Logic connections may not apply to your specific situation
-        </li>
+        <li>Logic connections may not apply to your specific situation</li>
       </ul>
       <p className="mt-3 bg-yellow-50 border border-yellow-300 p-3 rounded">
-        <strong className="text-red-700">YOUR RESPONSIBILITY:</strong> You
-        must independently verify all AI-generated content,
-        cross-reference legal citations, and confirm medical information
-        with qualified professionals.{" "}
+        <strong className="text-red-700">YOUR RESPONSIBILITY:</strong> You must
+        independently verify all AI-generated content, cross-reference legal
+        citations, and confirm medical information with qualified professionals.{" "}
         <span className="underline">
-          Do not submit AI-generated content to the VA without thorough
-          human review.
+          Do not submit AI-generated content to the VA without thorough human
+          review.
         </span>
       </p>
     </div>
@@ -205,9 +198,9 @@ const TosClauseDataVolatility = () => (
     </h3>
     <div className="space-y-2 text-sm leading-relaxed">
       <p>
-        <strong>Privacy-First Architecture:</strong> Vet-Rate.org is
-        designed with your privacy as the top priority. We do not store
-        your data on our servers.
+        <strong>Privacy-First Architecture:</strong> Vet-Rate.org is designed
+        with your privacy as the top priority. We do not store your data on our
+        servers.
       </p>
       <p className="mt-2">
         <strong>How Your Data Is Stored:</strong>
@@ -217,9 +210,7 @@ const TosClauseDataVolatility = () => (
           All data is stored locally in your web browser&apos;s{" "}
           <code className="bg-gray-200 px-1 rounded">localStorage</code>
         </li>
-        <li>
-          Data never leaves your device unless you explicitly export it
-        </li>
+        <li>Data never leaves your device unless you explicitly export it</li>
         <li>No cloud backups are created automatically</li>
       </ul>
       <p className="mt-3 bg-red-50 border-2 border-red-500 p-4 rounded">
@@ -236,14 +227,14 @@ const TosClauseDataVolatility = () => (
         . Vet-Rate.org has no way to recover lost data.
         <strong>
           {" "}
-          You must regularly export and back up your work using the
-          built-in export features.
+          You must regularly export and back up your work using the built-in
+          export features.
         </strong>
       </p>
       <p className="mt-3 text-xs text-gray-600">
-        <strong>Best Practice:</strong> After each significant work
-        session, use the &quot;Export&quot; feature to save a backup copy
-        to your computer or cloud storage.
+        <strong>Best Practice:</strong> After each significant work session, use
+        the &quot;Export&quot; feature to save a backup copy to your computer or
+        cloud storage.
       </p>
     </div>
   </section>
@@ -261,28 +252,24 @@ const TosClauseNoGuarantees = () => (
       <ul className="list-disc list-inside space-y-1 ml-4">
         <li>That your VA claim will be approved</li>
         <li>That you will receive a service connection</li>
-        <li>
-          That you will receive a specific disability rating percentage
-        </li>
+        <li>That you will receive a specific disability rating percentage</li>
         <li>
           That your rating will increase upon appeal or supplemental claim
         </li>
-        <li>
-          Any particular outcome from the Department of Veterans Affairs
-        </li>
+        <li>Any particular outcome from the Department of Veterans Affairs</li>
       </ul>
       <p className="mt-3">
-        <strong>Factors Beyond Our Control:</strong> VA claim outcomes
-        depend on the strength of your medical evidence, service records,
-        C&P exam results, VA regional office practices, and current case
-        law-none of which this tool can influence or predict.
+        <strong>Factors Beyond Our Control:</strong> VA claim outcomes depend on
+        the strength of your medical evidence, service records, C&P exam
+        results, VA regional office practices, and current case law-none of
+        which this tool can influence or predict.
       </p>
       <p className="mt-3 bg-gray-100 p-3 rounded">
         <strong>What We Can Help With:</strong> Organizing your argument,
-        identifying relevant medical research, articulating your case
-        clearly, and understanding VA rating criteria.
-        <strong> What We Cannot Control:</strong> How the VA adjudicates
-        your specific claim.
+        identifying relevant medical research, articulating your case clearly,
+        and understanding VA rating criteria.
+        <strong> What We Cannot Control:</strong> How the VA adjudicates your
+        specific claim.
       </p>
     </div>
   </section>
@@ -290,26 +277,23 @@ const TosClauseNoGuarantees = () => (
 
 const TosAdditionalTerms = () => (
   <section className="bg-gray-50 p-4 rounded-lg border border-gray-300">
-    <h3 className="text-lg font-bold text-gray-900 mb-3">
-      Additional Terms
-    </h3>
+    <h3 className="text-lg font-bold text-gray-900 mb-3">Additional Terms</h3>
     <div className="space-y-2 text-sm leading-relaxed">
       <p>
         <strong>No Warranty:</strong> This software is provided &quot;AS
-        IS&quot; without warranty of any kind, express or implied,
-        including but not limited to warranties of merchantability,
-        fitness for a particular purpose, or non-infringement.
+        IS&quot; without warranty of any kind, express or implied, including but
+        not limited to warranties of merchantability, fitness for a particular
+        purpose, or non-infringement.
       </p>
       <p>
         <strong>Limitation of Liability:</strong> In no event shall
-        Vet-Rate.org, its creators, or contributors be liable for any
-        direct, indirect, incidental, special, consequential, or punitive
-        damages arising from your use of this tool.
+        Vet-Rate.org, its creators, or contributors be liable for any direct,
+        indirect, incidental, special, consequential, or punitive damages
+        arising from your use of this tool.
       </p>
       <p>
-        <strong>Severability:</strong> If any provision of these terms is
-        found unenforceable, the remaining provisions shall remain in full
-        effect.
+        <strong>Severability:</strong> If any provision of these terms is found
+        unenforceable, the remaining provisions shall remain in full effect.
       </p>
       <p>
         <strong>Updates to Terms:</strong> These terms may be updated
@@ -322,16 +306,12 @@ const TosAdditionalTerms = () => (
 const TosFinalStatement = () => (
   <div className="bg-blue-50 border-2 border-blue-600 p-4 rounded-lg">
     <p className="font-semibold text-blue-900 mb-2">
-      By clicking &quot;I Understand & Accept the Risks,&quot; you
-      acknowledge that:
+      By clicking &quot;I Understand & Accept the Risks,&quot; you acknowledge
+      that:
     </p>
     <ul className="list-decimal list-inside space-y-1 text-sm ml-2">
-      <li>
-        You have read and understood all five liability clauses above
-      </li>
-      <li>
-        You accept full responsibility for verifying all information
-      </li>
+      <li>You have read and understood all five liability clauses above</li>
+      <li>You accept full responsibility for verifying all information</li>
       <li>You understand this is not legal or medical advice</li>
       <li>You will back up your data regularly</li>
       <li>You acknowledge no outcomes are guaranteed</li>

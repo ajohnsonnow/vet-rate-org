@@ -105,8 +105,7 @@ export async function detectDeviceCapabilities() {
   const systemRAM = navigator.deviceMemory || (isMobileUA ? 2 : 4); // GB
   const cpuCores = navigator.hardwareConcurrency || 4;
 
-  const { hasWebGPU, gpuMaxBufferSize, gpuDescription } =
-    await _probeWebGPU();
+  const { hasWebGPU, gpuMaxBufferSize, gpuDescription } = await _probeWebGPU();
 
   const gpuTier = _gpuTierFor(hasWebGPU, gpuMaxBufferSize);
 

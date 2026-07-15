@@ -931,15 +931,13 @@ function TDIUSupportCTA() {
         />
         <div className="flex-1">
           <p className="text-green-200 font-semibold mb-1">
-            💰 That statement would cost $500+ from a vocational
-            expert
+            💰 That statement would cost $500+ from a vocational expert
           </p>
           <p className="text-green-300/70 text-sm">
-            TDIU claims are complex. Most veterans hire expensive
-            consultants just to translate their symptoms into
-            &quot;occupational limitations.&quot; You just did it for
-            free. Help keep this tool available for every veteran
-            fighting for 100%.
+            TDIU claims are complex. Most veterans hire expensive consultants
+            just to translate their symptoms into &quot;occupational
+            limitations.&quot; You just did it for free. Help keep this tool
+            available for every veteran fighting for 100%.
           </p>
         </div>
       </div>
@@ -1103,12 +1101,11 @@ function SchedularEligibilityBanner({ savedRatingsTdiu }) {
           ✅ Your saved ratings meet the schedular TDIU threshold
         </h3>
         <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-          Your saved VA ratings ({savedRatingsTdiu.combined}% combined,
-          highest single {savedRatingsTdiu.highest}%) meet the schedular
-          requirement of 38 CFR § 4.16(a). If your service-connected
-          conditions prevent you from maintaining substantially gainful
-          employment, you may qualify for TDIU — speak with a VSO before
-          filing.
+          Your saved VA ratings ({savedRatingsTdiu.combined}% combined, highest
+          single {savedRatingsTdiu.highest}%) meet the schedular requirement of
+          38 CFR § 4.16(a). If your service-connected conditions prevent you
+          from maintaining substantially gainful employment, you may qualify for
+          TDIU — speak with a VSO before filing.
         </p>
       </div>
     );
@@ -1122,8 +1119,8 @@ function SchedularEligibilityBanner({ savedRatingsTdiu }) {
         Your saved VA ratings ({savedRatingsTdiu.combined}% combined, highest
         single {savedRatingsTdiu.highest}%) do not meet the schedular
         requirement of 38 CFR § 4.16(a) (one rating of 60%+, or 70%+ combined
-        with one rating of 40%+). You may still qualify for extraschedular
-        TDIU under § 4.16(b) if you cannot work — speak with a VSO.
+        with one rating of 40%+). You may still qualify for extraschedular TDIU
+        under § 4.16(b) if you cannot work — speak with a VSO.
       </p>
     </div>
   );
@@ -1289,15 +1286,14 @@ function AddDisabilityForm({
       />
 
       {/* Add Button */}
-      {currentDisability.condition &&
-        currentDisability.symptoms.length > 0 && (
-          <button
-            onClick={addDisability}
-            className="w-full px-4 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors"
-          >
-            ✓ Add This Disability
-          </button>
-        )}
+      {currentDisability.condition && currentDisability.symptoms.length > 0 && (
+        <button
+          onClick={addDisability}
+          className="w-full px-4 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors"
+        >
+          ✓ Add This Disability
+        </button>
+      )}
     </div>
   );
 }

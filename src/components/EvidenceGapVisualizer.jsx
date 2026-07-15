@@ -242,9 +242,7 @@ const CompletenessGauge = ({ analysis }) => {
   return (
     <div className="bg-gray-800/50 rounded-xl p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white">
-          Evidence Completeness
-        </h3>
+        <h3 className="text-lg font-bold text-white">Evidence Completeness</h3>
         <span
           className={`text-2xl font-bold ${isReady ? "text-green-400" : "text-yellow-400"}`}
         >
@@ -268,9 +266,7 @@ const CompletenessGauge = ({ analysis }) => {
       {/* Target Info */}
       <p className="text-gray-400 text-sm">
         Target:{" "}
-        <span className="text-white font-semibold">
-          {analysis.ratingLabel}
-        </span>
+        <span className="text-white font-semibold">{analysis.ratingLabel}</span>
       </p>
     </div>
   );
@@ -493,9 +489,7 @@ const BridgeVisual = ({ analysis, targetRating }) => {
                 </div>
                 <span
                   className={`text-xs text-center max-w-[60px] ${
-                    step.status === "found"
-                      ? "text-green-400"
-                      : "text-gray-500"
+                    step.status === "found" ? "text-green-400" : "text-gray-500"
                   }`}
                 >
                   {step.label.split(" ")[0]}
@@ -667,9 +661,7 @@ const EvidenceGapAnalysisResults = ({
     {/* Evidence Checklist */}
     <div className="bg-gray-800/30 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white">
-          📋 Evidence Checklist
-        </h3>
+        <h3 className="text-lg font-bold text-white">📋 Evidence Checklist</h3>
         <span className="text-sm text-gray-400">
           Click items to mark as found
         </span>
@@ -728,8 +720,8 @@ const EvidenceGapBody = ({
     {/* Disclaimer */}
     <div className="px-6 py-4 bg-gray-800/50 border-t border-gray-700">
       <p className="text-xs text-gray-500 text-center">
-        💡 This analysis is based on 38 CFR requirements. Always consult with
-        a VSO or attorney for specific claim advice.
+        💡 This analysis is based on 38 CFR requirements. Always consult with a
+        VSO or attorney for specific claim advice.
       </p>
     </div>
   </div>
@@ -832,9 +824,7 @@ const EvidenceGapVisualizer = ({
       size="xl"
       labelledBy="evidence-gap-title"
       className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"
-      header={
-        <EvidenceGapHeader onClose={onClose} onReportBug={onReportBug} />
-      }
+      header={<EvidenceGapHeader onClose={onClose} onReportBug={onReportBug} />}
     >
       <EvidenceGapBody
         availableConditions={availableConditions}

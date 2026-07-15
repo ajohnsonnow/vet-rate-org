@@ -430,8 +430,8 @@ const PrivacyNoticeBox = () => (
         </h4>
         <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
           <li>
-            ✅ <strong>Only what you type</strong> in the Title and
-            Description fields
+            ✅ <strong>Only what you type</strong> in the Title and Description
+            fields
           </li>
           <li>
             ✅ <strong>The Category</strong> you select
@@ -448,8 +448,8 @@ const PrivacyNoticeBox = () => (
           </li>
         </ul>
         <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 italic">
-          Your submission helps improve Vet-Rate.org for all veterans.
-          Nothing else is collected.
+          Your submission helps improve Vet-Rate.org for all veterans. Nothing
+          else is collected.
         </p>
       </div>
     </div>
@@ -550,8 +550,8 @@ const FeatureFormFields = ({
         className="text-sm text-gray-700 dark:text-gray-300"
       >
         I understand that <strong>only</strong> the title, description, and
-        category I entered will be submitted to help improve Vet-Rate.org
-        for the veteran community.
+        category I entered will be submitted to help improve Vet-Rate.org for
+        the veteran community.
       </label>
     </div>
   </div>
@@ -579,11 +579,7 @@ const SubmitFormActions = ({ onCancel, onSubmit, canSubmit, submitting }) => (
     >
       {submitting ? (
         <>
-          <svg
-            className="w-4 h-4 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -839,8 +835,8 @@ const RoadmapModalFooter = ({ onClose }) => (
         />
       </svg>
       <span>
-        <strong>Privacy-First:</strong> Votes & submissions stored locally
-        on your device only
+        <strong>Privacy-First:</strong> Votes & submissions stored locally on
+        your device only
       </span>
     </div>
     <button

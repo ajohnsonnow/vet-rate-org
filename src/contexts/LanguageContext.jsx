@@ -723,8 +723,11 @@ export const LanguageProvider = ({ children }) => {
   // Also supports interpolation: t('section.key', { param: value })
   const t = useCallback(
     (sectionOrPath, keyOrParams, params) => {
-      const { section, actualKey, interpolationParams } =
-        resolveSectionAndKey(sectionOrPath, keyOrParams, params);
+      const { section, actualKey, interpolationParams } = resolveSectionAndKey(
+        sectionOrPath,
+        keyOrParams,
+        params,
+      );
 
       // Handle empty or invalid keys silently
       if (

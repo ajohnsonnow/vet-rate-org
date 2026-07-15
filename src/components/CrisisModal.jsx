@@ -81,10 +81,7 @@ const CrisisModal = ({ severity = "high", _source = "application" }) => {
         </div>
 
         <CrisisModalCallAction t={t} handleCallClick={handleCallClick} />
-        <CrisisModalAlternateContacts
-          t={t}
-          handleChatClick={handleChatClick}
-        />
+        <CrisisModalAlternateContacts t={t} handleChatClick={handleChatClick} />
 
         {/* Footer Message */}
         <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">

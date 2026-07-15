@@ -295,8 +295,8 @@ function ThemeModeSection() {
       {isAaaContrast && (
         <div className="bg-gray-900 border border-yellow-400 rounded-lg p-2">
           <p className="text-xs text-yellow-400">
-            👁️ <strong>AAA High Contrast Active</strong> - Maximum 7:1
-            contrast ratio for low vision. WCAG 2.2 AAA compliant.
+            👁️ <strong>AAA High Contrast Active</strong> - Maximum 7:1 contrast
+            ratio for low vision. WCAG 2.2 AAA compliant.
           </p>
         </div>
       )}
@@ -787,9 +787,7 @@ function AccessibilityDropdown({
 
         <hr className="border-gray-200 dark:border-gray-600" />
 
-        <AffiliationSection
-          onOpenAffiliationPicker={onOpenAffiliationPicker}
-        />
+        <AffiliationSection onOpenAffiliationPicker={onOpenAffiliationPicker} />
 
         <ResetSettingsButton />
       </div>

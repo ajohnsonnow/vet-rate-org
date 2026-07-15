@@ -337,8 +337,8 @@ const DemoCardVariant = ({
             New to Vet-Rate?
           </h3>
           <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
-            See what a <strong>complete, well-documented claim</strong>{" "}
-            looks like. Load our example packet to learn by example.
+            See what a <strong>complete, well-documented claim</strong> looks
+            like. Load our example packet to learn by example.
           </p>
           <button
             onClick={onLoadDemo}
@@ -460,8 +460,7 @@ const DemoLinkVariant = ({
       <p className="mb-6 text-center text-gray-700 dark:text-gray-300">
         Loading example data will{" "}
         <strong className="text-red-600 dark:text-red-400">overwrite</strong>{" "}
-        your current saved claims and statements. This action cannot be
-        undone.
+        your current saved claims and statements. This action cannot be undone.
       </p>
       <p className="text-center text-sm text-gray-600 dark:text-gray-400">
         💡 Tip: Use the Backup Manager to save your current data first.

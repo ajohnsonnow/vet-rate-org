@@ -490,7 +490,11 @@ const BodySystemsList = ({
 /**
  * Chips for currently selected conditions with a Clear All action
  */
-const SelectedSummary = ({ selectedConditions, onClearAll, onToggleCondition }) => {
+const SelectedSummary = ({
+  selectedConditions,
+  onClearAll,
+  onToggleCondition,
+}) => {
   if (selectedConditions.length === 0) return null;
 
   return (

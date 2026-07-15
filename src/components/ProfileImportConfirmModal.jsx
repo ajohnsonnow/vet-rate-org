@@ -421,11 +421,8 @@ const SelectionControls = ({
 }) => (
   <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
     <div className="text-sm text-gray-600 dark:text-gray-400">
-      <strong className="text-gray-900 dark:text-white">
-        {selectedCount}
-      </strong>{" "}
-      of{" "}
-      <strong className="text-gray-900 dark:text-white">{totalCount}</strong>{" "}
+      <strong className="text-gray-900 dark:text-white">{selectedCount}</strong>{" "}
+      of <strong className="text-gray-900 dark:text-white">{totalCount}</strong>{" "}
       fields selected for import
     </div>
     <div className="flex gap-2">
@@ -496,8 +493,8 @@ const ImportHeader = ({
         <span>
           <strong>Important:</strong> Review the extracted information below.
           Uncheck any fields you don&apos;t want to update. Fields already in
-          your profile that differ from the imported data are pre-selected
-          for your review.
+          your profile that differ from the imported data are pre-selected for
+          your review.
         </span>
       </p>
     </div>

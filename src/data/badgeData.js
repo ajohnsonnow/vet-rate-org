@@ -1019,7 +1019,10 @@ function badgeMatchesText(cleanedText, badge) {
 }
 
 // Records a matched badge into the appropriate group/indicator buckets.
-function recordMatchedBadge(badge, { foundBadges, foundTabs, combatIndicators }) {
+function recordMatchedBadge(
+  badge,
+  { foundBadges, foundTabs, combatIndicators },
+) {
   if (badge.group === BADGE_GROUPS.TAB) {
     foundTabs.push(badge);
   } else {

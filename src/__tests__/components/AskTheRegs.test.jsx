@@ -84,9 +84,7 @@ describe("AskTheRegs", () => {
   it("disables asking and shows a setup hint when no AI mode is configured", () => {
     mockIsAnyAIAvailable.mockReturnValue(false);
     render(<AskTheRegs onClose={vi.fn()} />);
-    expect(
-      screen.getByText(/set one up before asking/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/set one up before asking/i)).toBeInTheDocument();
   });
 
   it("calls legalAnswerer.answer with the question and a generateAI adapter that unwraps {text, mode}", async () => {

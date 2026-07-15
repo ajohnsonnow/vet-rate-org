@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  parseDecisionLetter,
-  extractBigThree,
-} from "./vaDocumentParser";
+import { parseDecisionLetter, extractBigThree } from "./vaDocumentParser";
 
 const SAMPLE_DECISION_LETTER = `
 Dear Mr. Smith,
@@ -48,9 +45,9 @@ describe("vaDocumentParser: parseDecisionLetter", () => {
     expect(result.combinedRating).toBe(70);
 
     const names = result.conditions.map((c) => c.name.toLowerCase());
-    expect(names.some((n) => n.includes("post-traumatic stress disorder"))).toBe(
-      true,
-    );
+    expect(
+      names.some((n) => n.includes("post-traumatic stress disorder")),
+    ).toBe(true);
     expect(names.some((n) => n.includes("tinnitus"))).toBe(true);
 
     const ptsd = result.conditions.find((c) =>

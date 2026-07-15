@@ -125,8 +125,8 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
       <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
         <span aria-hidden="true">🚫</span>
         <span>
-          On-device AI requires a desktop or laptop with a dedicated GPU.
-          Phones and tablets are not supported.
+          On-device AI requires a desktop or laptop with a dedicated GPU. Phones
+          and tablets are not supported.
         </span>
       </div>
     );
@@ -183,10 +183,10 @@ function BlockedNotice({ profile, toolName }) {
             {reason}
           </p>
           <p className="text-red-700 dark:text-red-300 text-xs mt-2">
-            {toolName} still works in <strong>extraction-only mode</strong>{" "}
-            (no AI, text and fields extracted directly from your PDF) or with
-            a <strong>cloud API key</strong> (Gemini). Switch modes using the
-            AI selector at the top of the page.
+            {toolName} still works in <strong>extraction-only mode</strong> (no
+            AI, text and fields extracted directly from your PDF) or with a{" "}
+            <strong>cloud API key</strong> (Gemini). Switch modes using the AI
+            selector at the top of the page.
           </p>
         </div>
       </div>

@@ -546,7 +546,12 @@ function useMultiCloudSharedState() {
 // Owns provider selection/connection state and the handlers that touch it.
 // Split out of the component purely to keep its function body under the
 // line-count limit.
-function useProviderConnection({ setIsLoading, setError, setStatus, setBackups }) {
+function useProviderConnection({
+  setIsLoading,
+  setError,
+  setStatus,
+  setBackups,
+}) {
   const [selectedProvider, setSelectedProvider] = useState("google_drive");
   const [activeTab, setActiveTab] = useState("providers"); // 'providers', 'backups', 'settings'
   const [providerStates, setProviderStates] = useState({
@@ -647,7 +652,10 @@ function useBackupOperationsState() {
 // Builds the backup-creation/restore/delete handlers from the state owned by
 // useBackupOperationsState. Split out of useBackupOperations purely to keep
 // its function body under the line-count limit.
-function useBackupOperationsHandlers(state, { selectedProvider, setIsLoading, setError, setStatus, loadBackups }) {
+function useBackupOperationsHandlers(
+  state,
+  { selectedProvider, setIsLoading, setError, setStatus, loadBackups },
+) {
   const handleCreateBackup = createCreateBackupHandler({
     usePassphrase: state.usePassphrase,
     passphrase: state.passphrase,
@@ -816,8 +824,8 @@ const PrivacyNoticeCard = () => (
     <p className="text-sm text-gray-700 dark:text-gray-300">
       Connect your personal cloud storage. Your data is encrypted{" "}
       <strong>before</strong> it leaves your browser and stored in{" "}
-      <strong>your own</strong> cloud account. We never have access
-      to your data.
+      <strong>your own</strong> cloud account. We never have access to your
+      data.
     </p>
   </div>
 );
@@ -829,33 +837,25 @@ const HipaaPrivacyWarningCard = () => (
     </h3>
     <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
       <p>
-        <strong>This is NOT a HIPAA-covered service.</strong>{" "}
-        Vet-Rate.org is a free educational tool that runs entirely
-        in your browser. We do not store, process, or have access to
-        your health information.
+        <strong>This is NOT a HIPAA-covered service.</strong> Vet-Rate.org is a
+        free educational tool that runs entirely in your browser. We do not
+        store, process, or have access to your health information.
       </p>
       <p>
-        <strong>Cloud storage disclaimer:</strong> When you backup
-        to cloud providers, YOUR data goes to YOUR personal account.
-        The security of that data depends on:
+        <strong>Cloud storage disclaimer:</strong> When you backup to cloud
+        providers, YOUR data goes to YOUR personal account. The security of that
+        data depends on:
       </p>
       <ul className="ml-2 list-inside list-disc space-y-1 text-xs text-gray-600 dark:text-gray-400">
-        <li>
-          Your cloud account&apos;s security settings (enable 2FA!)
-        </li>
-        <li>
-          Whether you enable encryption (strongly recommended)
-        </li>
-        <li>
-          Whether you use a passphrase (for cross-device access)
-        </li>
+        <li>Your cloud account&apos;s security settings (enable 2FA!)</li>
+        <li>Whether you enable encryption (strongly recommended)</li>
+        <li>Whether you use a passphrase (for cross-device access)</li>
         <li>Your cloud provider&apos;s own security practices</li>
       </ul>
       <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-        💡 <strong>Recommendation:</strong> Always enable encryption
-        with a passphrase for sensitive medical data. Consider using
-        Dropbox Business or OneDrive for Business if you need
-        HIPAA-compliant storage.
+        💡 <strong>Recommendation:</strong> Always enable encryption with a
+        passphrase for sensitive medical data. Consider using Dropbox Business
+        or OneDrive for Business if you need HIPAA-compliant storage.
       </p>
     </div>
   </div>
@@ -1249,16 +1249,15 @@ const EncryptionOptions = ({
           className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
         />
         <p className="text-xs text-yellow-700 dark:text-yellow-300">
-          ⚠️ If you forget this passphrase, your backup CANNOT
-          be recovered!
+          ⚠️ If you forget this passphrase, your backup CANNOT be recovered!
         </p>
       </div>
     )}
 
     {encryptionEnabled && !usePassphrase && (
       <p className="ml-6 text-xs text-gray-600 dark:text-gray-400">
-        ℹ️ Encryption key stored locally. Backup can only be
-        restored on this device.
+        ℹ️ Encryption key stored locally. Backup can only be restored on this
+        device.
       </p>
     )}
   </div>
@@ -1433,29 +1432,29 @@ const EncryptionInfoCard = () => (
         <li className="flex items-start gap-2">
           <span className="text-green-600 dark:text-green-400">✓</span>
           <span>
-            <strong>AES-256-GCM</strong> - Same encryption used by
-            the US military for classified data
+            <strong>AES-256-GCM</strong> - Same encryption used by the US
+            military for classified data
           </span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-green-600 dark:text-green-400">✓</span>
           <span>
-            <strong>PBKDF2</strong> - 600,000 iterations for
-            passphrase-based keys (OWASP recommended)
+            <strong>PBKDF2</strong> - 600,000 iterations for passphrase-based
+            keys (OWASP recommended)
           </span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-green-600 dark:text-green-400">✓</span>
           <span>
-            <strong>Client-Side Only</strong> - Encryption happens
-            in YOUR browser, never on a server
+            <strong>Client-Side Only</strong> - Encryption happens in YOUR
+            browser, never on a server
           </span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-green-600 dark:text-green-400">✓</span>
           <span>
-            <strong>Zero Knowledge</strong> - We can&apos;t read
-            your data even if we wanted to
+            <strong>Zero Knowledge</strong> - We can&apos;t read your data even
+            if we wanted to
           </span>
         </li>
       </ul>
@@ -1470,9 +1469,7 @@ const SecurityStatusCard = () => (
     </h4>
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-gray-700 dark:text-gray-300">
-          Web Crypto API
-        </span>
+        <span className="text-gray-700 dark:text-gray-300">Web Crypto API</span>
         <span
           className={
             isCryptoAvailable()
@@ -1494,9 +1491,7 @@ const SecurityStatusCard = () => (
               : "text-yellow-700 dark:text-yellow-400"
           }
         >
-          {location.protocol === "https:"
-            ? "✓ Secure"
-            : "⚠️ Development Mode"}
+          {location.protocol === "https:" ? "✓ Secure" : "⚠️ Development Mode"}
         </span>
       </div>
     </div>
@@ -1526,9 +1521,7 @@ const ProviderComparisonTable = () => (
         <ProviderComparisonTableHead />
         <tbody>
           <tr className="border-b border-gray-200 dark:border-gray-700/50">
-            <td className="py-2 text-gray-900 dark:text-white">
-              Google Drive
-            </td>
+            <td className="py-2 text-gray-900 dark:text-white">Google Drive</td>
             <td className="text-center text-green-600 dark:text-green-400">
               ✓
             </td>
@@ -1583,8 +1576,8 @@ const ProviderComparisonTable = () => (
       </table>
     </div>
     <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
-      ~ Google Drive can be HIPAA compliant with Workspace + BAA.
-      Personal accounts are not.
+      ~ Google Drive can be HIPAA compliant with Workspace + BAA. Personal
+      accounts are not.
     </p>
   </div>
 );
@@ -1597,11 +1590,10 @@ const HipaaComplianceNotice = () => (
     <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
       <p>
         <strong>
-          Vet-Rate.org does NOT store Protected Health Information
-          (PHI).
+          Vet-Rate.org does NOT store Protected Health Information (PHI).
         </strong>{" "}
-        All data remains in your browser&apos;s local storage and/or
-        your personal cloud accounts.
+        All data remains in your browser&apos;s local storage and/or your
+        personal cloud accounts.
       </p>
       <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-900/50">
         <p className="mb-2 font-medium text-amber-700 dark:text-amber-300">
@@ -1609,27 +1601,25 @@ const HipaaComplianceNotice = () => (
         </p>
         <ul className="list-inside list-disc space-y-1 text-xs text-gray-600 dark:text-gray-400">
           <li>
-            <strong>Google:</strong> Requires Google Workspace +
-            Business Associate Agreement (BAA)
+            <strong>Google:</strong> Requires Google Workspace + Business
+            Associate Agreement (BAA)
           </li>
           <li>
-            <strong>Dropbox:</strong> Dropbox Business with signed
+            <strong>Dropbox:</strong> Dropbox Business with signed BAA
+          </li>
+          <li>
+            <strong>OneDrive:</strong> Microsoft 365 Business/Enterprise with
             BAA
-          </li>
-          <li>
-            <strong>OneDrive:</strong> Microsoft 365
-            Business/Enterprise with BAA
           </li>
         </ul>
         <p className="mt-2 text-xs text-gray-600 dark:text-gray-500">
-          Personal/free accounts are NOT HIPAA compliant regardless
-          of provider.
+          Personal/free accounts are NOT HIPAA compliant regardless of provider.
         </p>
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400">
-        <strong>Your responsibility:</strong> If you are a
-        healthcare provider or VSO handling veteran PHI, ensure you
-        use appropriate enterprise accounts with signed BAAs.
+        <strong>Your responsibility:</strong> If you are a healthcare provider
+        or VSO handling veteran PHI, ensure you use appropriate enterprise
+        accounts with signed BAAs.
       </p>
     </div>
   </div>
@@ -1862,8 +1852,16 @@ const MultiCloudTabContent = ({
 
 const MultiCloudManager = ({ onClose }) => {
   const shared = useMultiCloudSharedState();
-  const { backups, isLoading, status, error, setBackups, setIsLoading, setError, setStatus } =
-    shared;
+  const {
+    backups,
+    isLoading,
+    status,
+    error,
+    setBackups,
+    setIsLoading,
+    setError,
+    setStatus,
+  } = shared;
 
   const connection = useProviderConnection({
     setIsLoading,
@@ -1871,7 +1869,8 @@ const MultiCloudManager = ({ onClose }) => {
     setStatus,
     setBackups,
   });
-  const { selectedProvider, activeTab, setActiveTab, providerStates } = connection;
+  const { selectedProvider, activeTab, setActiveTab, providerStates } =
+    connection;
 
   const backupOps = useBackupOperations({
     selectedProvider,

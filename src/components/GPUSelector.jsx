@@ -177,15 +177,14 @@ function SingleGpuGuidance() {
         </p>
         <ol className="list-decimal ml-5 space-y-1 text-gray-300">
           <li>
-            Open Windows <strong>Settings</strong> → <strong>System</strong>{" "}
-            → <strong>Display</strong>
+            Open Windows <strong>Settings</strong> → <strong>System</strong> →{" "}
+            <strong>Display</strong>
           </li>
           <li>
             Scroll down and click <strong>Graphics Settings</strong>
           </li>
           <li>
-            Click <strong>Browse</strong> and find your browser
-            (Chrome/Edge)
+            Click <strong>Browse</strong> and find your browser (Chrome/Edge)
           </li>
           <li>
             Click <strong>Options</strong> and select{" "}
@@ -208,8 +207,8 @@ function SingleGpuGuidance() {
         </div>
       </div>
       <p className="mt-3 text-xs text-gray-500 italic">
-        This is an OS-level limitation - there&apos;s no code workaround.
-        The browser only exposes what Windows allows.
+        This is an OS-level limitation - there&apos;s no code workaround. The
+        browser only exposes what Windows allows.
       </p>
     </div>
   );

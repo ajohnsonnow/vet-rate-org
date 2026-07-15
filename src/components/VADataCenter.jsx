@@ -252,9 +252,7 @@ function buildVaSaveSelectionPayload(selectedApis, apiData) {
       ? apiData.serviceHistory?.raw
       : null,
     rawClaims: selectedApis.claims ? apiData.claims?.raw : null,
-    rawAppeals: selectedApis.appealsStatus
-      ? apiData.appealsStatus?.raw
-      : null,
+    rawAppeals: selectedApis.appealsStatus ? apiData.appealsStatus?.raw : null,
     rawAppealableIssues: selectedApis.appealableIssues
       ? apiData.appealableIssues?.raw
       : null,
@@ -853,8 +851,14 @@ function ConnectionStatusHeader({
   savedRecordsState,
   onDisconnect,
 }) {
-  const { isAuthenticated, userInfo, authLoading, authError, configStatus, login } =
-    auth;
+  const {
+    isAuthenticated,
+    userInfo,
+    authLoading,
+    authError,
+    configStatus,
+    login,
+  } = auth;
   const { loading, fetchAllSelected } = apiState;
   const { rateLimitStatus } = savedRecordsState;
 
@@ -867,7 +871,10 @@ function ConnectionStatusHeader({
       }`}
     >
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <ConnectionIdentity isAuthenticated={isAuthenticated} userInfo={userInfo} />
+        <ConnectionIdentity
+          isAuthenticated={isAuthenticated}
+          userInfo={userInfo}
+        />
 
         <div className="flex gap-2">
           <ConnectionActionButtons
@@ -905,7 +912,12 @@ function ConnectionStatusHeader({
 // ============================================================================
 // TAB NAVIGATION
 // ============================================================================
-function DataCenterTabs({ activeTab, onChangeTab, isAuthenticated, savedRecords }) {
+function DataCenterTabs({
+  activeTab,
+  onChangeTab,
+  isAuthenticated,
+  savedRecords,
+}) {
   const hasSavedData =
     savedRecords &&
     (savedRecords.claims?.length > 0 || savedRecords.serviceHistory);
@@ -1387,9 +1399,7 @@ function SavedDataSummary({ savedRecords }) {
         <div className="text-2xl font-bold text-green-600 dark:text-green-400">
           {savedRecords.claims?.length || 0}
         </div>
-        <div className="text-sm text-green-700 dark:text-green-300">
-          Claims
-        </div>
+        <div className="text-sm text-green-700 dark:text-green-300">Claims</div>
       </div>
       <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
@@ -1421,8 +1431,7 @@ function SavedDataDetails({ savedRecords, onClear }) {
       {savedRecords.lastSyncTime && (
         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
           <Clock className="w-4 h-4" />
-          Last updated:{" "}
-          {new Date(savedRecords.lastSyncTime).toLocaleString()}
+          Last updated: {new Date(savedRecords.lastSyncTime).toLocaleString()}
         </div>
       )}
 
@@ -1435,9 +1444,9 @@ function SavedDataDetails({ savedRecords, onClear }) {
               Data Privacy
             </h4>
             <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-              Your VA data is stored locally on this device only. It is
-              never uploaded to any server. AI tools in this app can use
-              this data to provide personalized assistance.
+              Your VA data is stored locally on this device only. It is never
+              uploaded to any server. AI tools in this app can use this data to
+              provide personalized assistance.
             </p>
           </div>
         </div>
@@ -1471,8 +1480,8 @@ function SavedDataTab({ savedRecords, onClear }) {
             No Saved VA Data
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
-            Connect to VA.gov and import your records. Data is saved locally
-            on your device, available to AI tools, and persists after you
+            Connect to VA.gov and import your records. Data is saved locally on
+            your device, available to AI tools, and persists after you
             disconnect.
           </p>
         </div>
@@ -1486,7 +1495,12 @@ function SavedDataTab({ savedRecords, onClear }) {
 // ============================================================================
 // PERSONAL RECORDS TAB
 // ============================================================================
-function PersonalRecordsContent({ auth, apiState, selectionState, saveActions }) {
+function PersonalRecordsContent({
+  auth,
+  apiState,
+  selectionState,
+  saveActions,
+}) {
   const { saveStatus, handleSaveSelected } = saveActions;
   const { selectedApis } = selectionState;
 
@@ -1557,8 +1571,8 @@ function PersonalRecordsTab({ auth, apiState, selectionState, saveActions }) {
             Sign in to Access Your Records
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
-            Connect to VA.gov to securely access your service history,
-            claims, and appeals information.
+            Connect to VA.gov to securely access your service history, claims,
+            and appeals information.
           </p>
         </div>
       ) : (

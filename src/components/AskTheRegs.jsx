@@ -25,10 +25,10 @@ function AskTheRegsIntro() {
     <div className="flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-900 dark:bg-blue-900/20 dark:text-blue-200">
       <Scale className="mt-0.5 h-4 w-4 shrink-0" />
       <p>
-        Ask a question about VA disability regulations (38 CFR Part 4).
-        Answers cite the specific regulation and when it was last
-        fetched. <strong>Not legal advice</strong> — verify with an
-        accredited VSO or attorney before relying on it.
+        Ask a question about VA disability regulations (38 CFR Part 4). Answers
+        cite the specific regulation and when it was last fetched.{" "}
+        <strong>Not legal advice</strong> — verify with an accredited VSO or
+        attorney before relying on it.
       </p>
     </div>
   );
@@ -82,8 +82,8 @@ function AskTheRegsResult({ aiAvailable, error, result }) {
     <>
       {!aiAvailable && (
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          No AI mode is configured yet — tap the status badge above to set
-          one up before asking.
+          No AI mode is configured yet — tap the status badge above to set one
+          up before asking.
         </p>
       )}
 

@@ -701,7 +701,8 @@ const CLASS_TO_PACKET_TYPE = {
 const archiveDocumentInPacket = async (file, result) => {
   try {
     const packetType =
-      CLASS_TO_PACKET_TYPE[result.classification.type] || PACKET_DOC_TYPES.OTHER;
+      CLASS_TO_PACKET_TYPE[result.classification.type] ||
+      PACKET_DOC_TYPES.OTHER;
 
     await saveDocumentToPacket({
       fileName: file.name,
@@ -936,7 +937,9 @@ const splitMultipleDD214s = (text) => {
 const extractQuickName = (text) => {
   // Clean the text first
   // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 4ms at 100k unmatched "(" (was 9s unbounded)
-  const cleanedText = text.replace(/\([^)]{0,300}\)/g, " ").replace(/\s+/g, " ");
+  const cleanedText = text
+    .replace(/\([^)]{0,300}\)/g, " ")
+    .replace(/\s+/g, " ");
 
   const namePatterns = [
     // "1. NAME" followed by name: WILLIAMS, ROBERT
@@ -1262,9 +1265,7 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
   // Full segmentation for large files
   const segments = segmentCFile(text, { maxSegments: 100 });
   // eslint-disable-next-line no-console
-  console.log(
-    `✅ Segmented C-File into ${segments.segments.length} documents`,
-  );
+  console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
 
   // Build inventory for the user
   const inventory = buildDocumentInventory(text);
@@ -1374,331 +1375,330 @@ const parseDocumentByType = async (
 // Module-level: static DD214 parsing data, hoisted out of parseServiceRecord
 // so it isn't rebuilt on every call and isn't at risk of being captured by
 // only one of the extracted per-box helper functions below.
-    const ocrFixPatterns = [
-      // "CAUTI0N" → "CAUTION"
-      [/CAUTI0N/g, "CAUTION"],
-      [/N0T\s+T0\s+BE/g, "NOT TO BE"],
-      [/IMP0RTANT/g, "IMPORTANT"],
-      // "CERT1FICATE" → "CERTIFICATE"
-      [/CERT1F1CATE/gi, "CERTIFICATE"],
-      [/CERT1FICATE/gi, "CERTIFICATE"],
-      [/CERTIF1CATE/gi, "CERTIFICATE"],
-      // "DISCH4RGE" → "DISCHARGE"
-      [/D1SCHARGE/gi, "DISCHARGE"],
-      [/DISCH4RGE/gi, "DISCHARGE"],
-      [/DISCHARG3/gi, "DISCHARGE"],
-      // "ACT1VE" → "ACTIVE"
-      [/ACT1VE/gi, "ACTIVE"],
-      [/ACTIV3/gi, "ACTIVE"],
-      // "REL3ASE" → "RELEASE"
-      [/REL3ASE/gi, "RELEASE"],
-      [/RELEAS3/gi, "RELEASE"],
-      // "D4TE" → "DATE"
-      [/D4TE/gi, "DATE"],
-      [/DAT3/gi, "DATE"],
-      // "SER1AL" / "SERI4L" → "SERIAL"
-      [/SER1AL/gi, "SERIAL"],
-      [/SERI4L/gi, "SERIAL"],
-      // "S0CIAL" → "SOCIAL"
-      [/S0CIAL/gi, "SOCIAL"],
-      [/SOCI4L/gi, "SOCIAL"],
-      // "SECUR1TY" → "SECURITY"
-      [/SECUR1TY/gi, "SECURITY"],
-      [/S3CURITY/gi, "SECURITY"],
-      // "SEPARAT10N" → "SEPARATION"
-      [/SEPARAT10N/gi, "SEPARATION"],
-      [/S3PARATION/gi, "SEPARATION"],
-      // "GR4DE" → "GRADE"
-      [/GR4DE/gi, "GRADE"],
-      [/GRAD3/gi, "GRADE"],
-      // "N4ME" / "NAM3" → "NAME"
-      [/N4ME/gi, "NAME"],
-      [/NAM3/gi, "NAME"],
-      // "BR4NCH" → "BRANCH"
-      [/BR4NCH/gi, "BRANCH"],
-      [/8RANCH/gi, "BRANCH"],
-      // "SERV1CE" → "SERVICE"
-      [/SERV1CE/gi, "SERVICE"],
-      [/S3RVICE/gi, "SERVICE"],
-      [/SERVIC3/gi, "SERVICE"],
-      // "AUTH0RITY" → "AUTHORITY"
-      [/AUTH0RITY/gi, "AUTHORITY"],
-      [/AUTHORIT¥/gi, "AUTHORITY"],
-      // "DECORAT10NS" → "DECORATIONS"
-      [/DECORAT10NS/gi, "DECORATIONS"],
-      [/DEC0RATIONS/gi, "DECORATIONS"],
-      // "HONORAB1E" → "HONORABLE"
-      [/HONORAB1E/gi, "HONORABLE"],
-      [/H0NORABLE/gi, "HONORABLE"],
-      // General patterns - but be careful with context
-      // Only fix 0→O in words (not numbers)
-      [/\b([A-Z]+)0([A-Z]+)\b/g, "$1O$2"],
-      [/\b0([A-Z]{2,})\b/g, "O$1"],
-      [/\b([A-Z]{2,})0\b/g, "$1O"],
-      // Fix 1→I in words (not numbers)
-      [/\b([A-Z]+)1([A-Z]+)\b/g, "$1I$2"],
-      [/\b1([A-Z]{2,})\b/g, "I$1"],
-      [/\b([A-Z]{2,})1\b/g, "$1I"],
-      // Fix 3→E in words
-      [/\b([A-Z]+)3([A-Z]+)\b/g, "$1E$2"],
-      [/\b([A-Z])3\b/g, "$1E"],
-      // Fix 4→A in words
-      [/\b([A-Z]+)4([A-Z]+)\b/g, "$1A$2"],
-      // Fix 5→S at word boundaries
-      [/\b5([A-Z]{2,})\b/g, "S$1"],
-      // Fix 8→B at word boundaries (but not inside MOS codes)
-      [/\b8([A-Z]{2,})\b/g, "B$1"],
-    ];
-    const INSTRUCTIONAL_PATTERNS = [
-      /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi, // Example awards list
-      /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi, // "Decorations awarded such as"
-      /EXAMPLES?:/gi,
-      /\bE\.?G\.?\b/gi,
-      /FOR\s+EXAMPLE/gi,
-      /INSTRUCTIONS?:/gi,
-      /SUCH\s+AS/gi,
-      /INCLUDING\s+BUT\s+NOT\s+LIMITED/gi,
-      /SEE\s+INSTRUCTIONS/gi,
-      // Mixed case phrases are likely instructions (real data is ALL CAPS)
-      /[a-z]{3,}/g, // Remove any word with 3+ lowercase letters
-    ];
-    const DD214_FIELD_LABELS = [
-      // Field labels
-      "DEPARTMENT",
-      "COMPONENT",
-      "BRANCH",
-      "GRADE",
-      "RANK",
-      "RATE",
-      "SERVICE",
-      "SOCIAL",
-      "SECURITY",
-      "NUMBER",
-      "NAME",
-      "DATE",
-      "BIRTH",
-      "PLACE",
-      "ENTRY",
-      "HOME",
-      "RECORD",
-      "RESERVE",
-      "ACTIVE",
-      "DUTY",
-      "SEPARATION",
-      "AUTHORITY",
-      "CODE",
-      "MEMBER",
-      "COPY",
-      "MILITARY",
-      "COMMAND",
-      "REMARKS",
-      "DECORATIONS",
-      "MEDALS",
-      "BADGES",
-      "CITATIONS",
-      "CAMPAIGN",
-      "RIBBONS",
-      "AWARDED",
-      "EDUCATION",
-      "TRAINING",
-      "PRIMARY",
-      "SPECIALTY",
-      "FOREIGN",
-      "SEA",
-      "LAST",
-      "FIRST",
-      "MIDDLE",
-      "TYPE",
-      "CHARACTER",
-      "NARRATIVE",
-      "REASON",
-      "REENTRY",
-      "MEMBER",
-      "VETERAN",
-      "CERTIFICATE",
-      "RELEASE",
-      "DISCHARGE",
-      // Address components that look like names
-      "COUNTY",
-      "CITY",
-      "STATE",
-      "TOWN",
-      "VILLAGE",
-      "TOWNSHIP",
-      "OREGON",
-      "WASHINGTON",
-      "CALIFORNIA",
-      "TEXAS",
-      "FLORIDA",
-      "LINN",
-      "MARION",
-      "LANE",
-      "POLK",
-      "BENTON",
-      "CLACKAMAS",
-      "MULTNOMAH",
-      "JACKSON",
-      "DOUGLAS",
-      "CLARK",
-      "LEWIS",
-      // Common location words
-      "FORT",
-      "CAMP",
-      "BASE",
-      "AIR",
-      "FORCE",
-      "NAVAL",
-      "STATION",
-    ];
-    const NAME_EXPANSIONS = {
-      CR: ["CRAIG", "CHRISTOPHER", "CRYSTAL"],
-      JR: ["JUNIOR", "JAMES"],
-      WM: ["WILLIAM"],
-      JN: ["JOHN"],
-      JS: ["JAMES"],
-      RB: ["ROBERT"],
-      RD: ["RICHARD"],
-      MD: ["MICHAEL", "DAVID"],
-      TH: ["THOMAS"],
-      ED: ["EDWARD", "EDWIN"],
-      GR: ["GREGORY"],
-      DN: ["DANIEL"],
-      AN: ["ANTHONY"],
-    };
-    const INSTRUCTIONAL_AWARDS = [
-      "SILVER STAR",
-      "BRONZE STAR",
-      "AIR MEDAL",
-      "PURPLE HEART",
-      "DISTINGUISHED FLYING CROSS",
-      "ARMY COMMENDATION",
-    ];
+const ocrFixPatterns = [
+  // "CAUTI0N" → "CAUTION"
+  [/CAUTI0N/g, "CAUTION"],
+  [/N0T\s+T0\s+BE/g, "NOT TO BE"],
+  [/IMP0RTANT/g, "IMPORTANT"],
+  // "CERT1FICATE" → "CERTIFICATE"
+  [/CERT1F1CATE/gi, "CERTIFICATE"],
+  [/CERT1FICATE/gi, "CERTIFICATE"],
+  [/CERTIF1CATE/gi, "CERTIFICATE"],
+  // "DISCH4RGE" → "DISCHARGE"
+  [/D1SCHARGE/gi, "DISCHARGE"],
+  [/DISCH4RGE/gi, "DISCHARGE"],
+  [/DISCHARG3/gi, "DISCHARGE"],
+  // "ACT1VE" → "ACTIVE"
+  [/ACT1VE/gi, "ACTIVE"],
+  [/ACTIV3/gi, "ACTIVE"],
+  // "REL3ASE" → "RELEASE"
+  [/REL3ASE/gi, "RELEASE"],
+  [/RELEAS3/gi, "RELEASE"],
+  // "D4TE" → "DATE"
+  [/D4TE/gi, "DATE"],
+  [/DAT3/gi, "DATE"],
+  // "SER1AL" / "SERI4L" → "SERIAL"
+  [/SER1AL/gi, "SERIAL"],
+  [/SERI4L/gi, "SERIAL"],
+  // "S0CIAL" → "SOCIAL"
+  [/S0CIAL/gi, "SOCIAL"],
+  [/SOCI4L/gi, "SOCIAL"],
+  // "SECUR1TY" → "SECURITY"
+  [/SECUR1TY/gi, "SECURITY"],
+  [/S3CURITY/gi, "SECURITY"],
+  // "SEPARAT10N" → "SEPARATION"
+  [/SEPARAT10N/gi, "SEPARATION"],
+  [/S3PARATION/gi, "SEPARATION"],
+  // "GR4DE" → "GRADE"
+  [/GR4DE/gi, "GRADE"],
+  [/GRAD3/gi, "GRADE"],
+  // "N4ME" / "NAM3" → "NAME"
+  [/N4ME/gi, "NAME"],
+  [/NAM3/gi, "NAME"],
+  // "BR4NCH" → "BRANCH"
+  [/BR4NCH/gi, "BRANCH"],
+  [/8RANCH/gi, "BRANCH"],
+  // "SERV1CE" → "SERVICE"
+  [/SERV1CE/gi, "SERVICE"],
+  [/S3RVICE/gi, "SERVICE"],
+  [/SERVIC3/gi, "SERVICE"],
+  // "AUTH0RITY" → "AUTHORITY"
+  [/AUTH0RITY/gi, "AUTHORITY"],
+  [/AUTHORIT¥/gi, "AUTHORITY"],
+  // "DECORAT10NS" → "DECORATIONS"
+  [/DECORAT10NS/gi, "DECORATIONS"],
+  [/DEC0RATIONS/gi, "DECORATIONS"],
+  // "HONORAB1E" → "HONORABLE"
+  [/HONORAB1E/gi, "HONORABLE"],
+  [/H0NORABLE/gi, "HONORABLE"],
+  // General patterns - but be careful with context
+  // Only fix 0→O in words (not numbers)
+  [/\b([A-Z]+)0([A-Z]+)\b/g, "$1O$2"],
+  [/\b0([A-Z]{2,})\b/g, "O$1"],
+  [/\b([A-Z]{2,})0\b/g, "$1O"],
+  // Fix 1→I in words (not numbers)
+  [/\b([A-Z]+)1([A-Z]+)\b/g, "$1I$2"],
+  [/\b1([A-Z]{2,})\b/g, "I$1"],
+  [/\b([A-Z]{2,})1\b/g, "$1I"],
+  // Fix 3→E in words
+  [/\b([A-Z]+)3([A-Z]+)\b/g, "$1E$2"],
+  [/\b([A-Z])3\b/g, "$1E"],
+  // Fix 4→A in words
+  [/\b([A-Z]+)4([A-Z]+)\b/g, "$1A$2"],
+  // Fix 5→S at word boundaries
+  [/\b5([A-Z]{2,})\b/g, "S$1"],
+  // Fix 8→B at word boundaries (but not inside MOS codes)
+  [/\b8([A-Z]{2,})\b/g, "B$1"],
+];
+const INSTRUCTIONAL_PATTERNS = [
+  /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi, // Example awards list
+  /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi, // "Decorations awarded such as"
+  /EXAMPLES?:/gi,
+  /\bE\.?G\.?\b/gi,
+  /FOR\s+EXAMPLE/gi,
+  /INSTRUCTIONS?:/gi,
+  /SUCH\s+AS/gi,
+  /INCLUDING\s+BUT\s+NOT\s+LIMITED/gi,
+  /SEE\s+INSTRUCTIONS/gi,
+  // Mixed case phrases are likely instructions (real data is ALL CAPS)
+  /[a-z]{3,}/g, // Remove any word with 3+ lowercase letters
+];
+const DD214_FIELD_LABELS = [
+  // Field labels
+  "DEPARTMENT",
+  "COMPONENT",
+  "BRANCH",
+  "GRADE",
+  "RANK",
+  "RATE",
+  "SERVICE",
+  "SOCIAL",
+  "SECURITY",
+  "NUMBER",
+  "NAME",
+  "DATE",
+  "BIRTH",
+  "PLACE",
+  "ENTRY",
+  "HOME",
+  "RECORD",
+  "RESERVE",
+  "ACTIVE",
+  "DUTY",
+  "SEPARATION",
+  "AUTHORITY",
+  "CODE",
+  "MEMBER",
+  "COPY",
+  "MILITARY",
+  "COMMAND",
+  "REMARKS",
+  "DECORATIONS",
+  "MEDALS",
+  "BADGES",
+  "CITATIONS",
+  "CAMPAIGN",
+  "RIBBONS",
+  "AWARDED",
+  "EDUCATION",
+  "TRAINING",
+  "PRIMARY",
+  "SPECIALTY",
+  "FOREIGN",
+  "SEA",
+  "LAST",
+  "FIRST",
+  "MIDDLE",
+  "TYPE",
+  "CHARACTER",
+  "NARRATIVE",
+  "REASON",
+  "REENTRY",
+  "MEMBER",
+  "VETERAN",
+  "CERTIFICATE",
+  "RELEASE",
+  "DISCHARGE",
+  // Address components that look like names
+  "COUNTY",
+  "CITY",
+  "STATE",
+  "TOWN",
+  "VILLAGE",
+  "TOWNSHIP",
+  "OREGON",
+  "WASHINGTON",
+  "CALIFORNIA",
+  "TEXAS",
+  "FLORIDA",
+  "LINN",
+  "MARION",
+  "LANE",
+  "POLK",
+  "BENTON",
+  "CLACKAMAS",
+  "MULTNOMAH",
+  "JACKSON",
+  "DOUGLAS",
+  "CLARK",
+  "LEWIS",
+  // Common location words
+  "FORT",
+  "CAMP",
+  "BASE",
+  "AIR",
+  "FORCE",
+  "NAVAL",
+  "STATION",
+];
+const NAME_EXPANSIONS = {
+  CR: ["CRAIG", "CHRISTOPHER", "CRYSTAL"],
+  JR: ["JUNIOR", "JAMES"],
+  WM: ["WILLIAM"],
+  JN: ["JOHN"],
+  JS: ["JAMES"],
+  RB: ["ROBERT"],
+  RD: ["RICHARD"],
+  MD: ["MICHAEL", "DAVID"],
+  TH: ["THOMAS"],
+  ED: ["EDWARD", "EDWIN"],
+  GR: ["GREGORY"],
+  DN: ["DANIEL"],
+  AN: ["ANTHONY"],
+};
+const INSTRUCTIONAL_AWARDS = [
+  "SILVER STAR",
+  "BRONZE STAR",
+  "AIR MEDAL",
+  "PURPLE HEART",
+  "DISTINGUISHED FLYING CROSS",
+  "ARMY COMMENDATION",
+];
 
 function _preprocessDD214Text(text) {
-    const upperText = text.toUpperCase();
+  const upperText = text.toUpperCase();
 
-    // ============================================================
-    // DD214 FORM STRUCTURE (Critical for parsing):
-    //
-    // 1. FIELD LABELS = BOLD ALL CAPS (e.g., "NAME", "GRADE", "DECORATIONS")
-    // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
-    //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
-    // 3. ACTUAL DATA = ALL CAPS, not bold, NOT in parentheses
-    //    Example: "WILLIAMS, ROBERT LEE"
-    //
-    // Key insight: Remove EVERYTHING in parentheses - that's instructional!
-    // Then look for ALL CAPS text that's NOT a field label.
-    // ============================================================
+  // ============================================================
+  // DD214 FORM STRUCTURE (Critical for parsing):
+  //
+  // 1. FIELD LABELS = BOLD ALL CAPS (e.g., "NAME", "GRADE", "DECORATIONS")
+  // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
+  //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
+  // 3. ACTUAL DATA = ALL CAPS, not bold, NOT in parentheses
+  //    Example: "WILLIAMS, ROBERT LEE"
+  //
+  // Key insight: Remove EVERYTHING in parentheses - that's instructional!
+  // Then look for ALL CAPS text that's NOT a field label.
+  // ============================================================
 
-    let cleanedText = text;
+  let cleanedText = text;
 
-    // ============================================================
-    // OCR ERROR CORRECTION
-    // Common character substitutions from low-quality scans:
-    // - 0 → O (zeros mistaken for letter O)
-    // - 1 → I or L (ones mistaken for I or L)
-    // - 5 → S (fives mistaken for S)
-    // - 8 → B (eights mistaken for B)
-    // - $ → S (dollar sign mistaken for S)
-    // Only apply to specific DD214 field labels, not numeric data!
-    // ============================================================
+  // ============================================================
+  // OCR ERROR CORRECTION
+  // Common character substitutions from low-quality scans:
+  // - 0 → O (zeros mistaken for letter O)
+  // - 1 → I or L (ones mistaken for I or L)
+  // - 5 → S (fives mistaken for S)
+  // - 8 → B (eights mistaken for B)
+  // - $ → S (dollar sign mistaken for S)
+  // Only apply to specific DD214 field labels, not numeric data!
+  // ============================================================
 
-    // Fix common OCR substitutions in DD214 field labels and keywords
+  // Fix common OCR substitutions in DD214 field labels and keywords
 
-    for (const [pattern, replacement] of ocrFixPatterns) {
-      cleanedText = cleanedText.replace(pattern, replacement);
-    }
+  for (const [pattern, replacement] of ocrFixPatterns) {
+    cleanedText = cleanedText.replace(pattern, replacement);
+  }
 
-    // eslint-disable-next-line no-console
-    console.log("🔧 OCR normalization applied to DD214 text");
+  // eslint-disable-next-line no-console
+  console.log("🔧 OCR normalization applied to DD214 text");
 
-    // STEP 1: Remove ALL parenthetical content (instructions/examples)
-    // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
-    // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 59ms at 100k unmatched "(" (was 9.1s unbounded)
-    cleanedText = cleanedText.replace(/\([^)]{0,300}\)/g, " ");
+  // STEP 1: Remove ALL parenthetical content (instructions/examples)
+  // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
+  // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 59ms at 100k unmatched "(" (was 9.1s unbounded)
+  cleanedText = cleanedText.replace(/\([^)]{0,300}\)/g, " ");
 
-    // STEP 2: Remove common instructional phrases (not always in parentheses)
-    for (const pattern of INSTRUCTIONAL_PATTERNS) {
-      cleanedText = cleanedText.replace(pattern, " ");
-    }
+  // STEP 2: Remove common instructional phrases (not always in parentheses)
+  for (const pattern of INSTRUCTIONAL_PATTERNS) {
+    cleanedText = cleanedText.replace(pattern, " ");
+  }
 
-    // STEP 3: Clean up multiple spaces
-    cleanedText = cleanedText.replace(/\s+/g, " ").trim();
+  // STEP 3: Clean up multiple spaces
+  cleanedText = cleanedText.replace(/\s+/g, " ").trim();
   return { cleanedText, upperText };
 }
 
 function _extractNameField(ctx) {
   const { data, cleanedText } = ctx;
-    // === BOX 1: NAME ===
-    // Look for name after "1. NAME" heading - the actual veteran name
-    // Format is typically: LAST, FIRST MIDDLE or LAST; FIRST MIDDLE
-    //
-    // CRITICAL: DD214 forms have field LABELS like "DEPARTMENT, COMPONENT AND BRANCH"
-    // that look like names (LASTNAME, FIRSTNAME MIDDLE) but are NOT names!
-    // Also exclude address components (counties, cities, states) that look like names
+  // === BOX 1: NAME ===
+  // Look for name after "1. NAME" heading - the actual veteran name
+  // Format is typically: LAST, FIRST MIDDLE or LAST; FIRST MIDDLE
+  //
+  // CRITICAL: DD214 forms have field LABELS like "DEPARTMENT, COMPONENT AND BRANCH"
+  // that look like names (LASTNAME, FIRSTNAME MIDDLE) but are NOT names!
+  // Also exclude address components (counties, cities, states) that look like names
 
-    // ============================================================
-    // COMMON NAME ABBREVIATIONS TO EXPAND
-    // OCR often truncates names - expand common abbreviations
-    // ============================================================
+  // ============================================================
+  // COMMON NAME ABBREVIATIONS TO EXPAND
+  // OCR often truncates names - expand common abbreviations
+  // ============================================================
 
-    // === BOX 1 NAME EXTRACTION ===
-    // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
-    // Box 1 is always near the top of the document, before "2. DEPARTMENT"
+  // === BOX 1 NAME EXTRACTION ===
+  // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
+  // Box 1 is always near the top of the document, before "2. DEPARTMENT"
 
-    // First, try to isolate Box 1 content (everything between "1. NAME" and "2. DEPARTMENT")
-    const box1Match = cleanedText.match(
-      /1\.\s*NAME[^2]*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is,
-    );
-    const box1Text = box1Match ? box1Match[0] : cleanedText.substring(0, 500); // Fallback: first 500 chars
+  // First, try to isolate Box 1 content (everything between "1. NAME" and "2. DEPARTMENT")
+  const box1Match = cleanedText.match(
+    /1\.\s*NAME[^2]*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is,
+  );
+  const box1Text = box1Match ? box1Match[0] : cleanedText.substring(0, 500); // Fallback: first 500 chars
 
-    const namePatterns = [
-      // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
-      // Name on line after "1. NAME" label
-      /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
-      // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
-      /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
-    ];
+  const namePatterns = [
+    // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+    // Name on line after "1. NAME" label
+    /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+    // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
+    /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
+  ];
 
-    // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
-    for (const pattern of namePatterns) {
-      const match = box1Text.match(pattern);
-      if (match) {
-        const potentialLastName = match[1]?.trim().toUpperCase();
-        const potentialFirstName = match[2]?.trim().toUpperCase();
-        const potentialMiddleName = match[3]?.trim().toUpperCase() || null;
+  // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
+  for (const pattern of namePatterns) {
+    const match = box1Text.match(pattern);
+    if (match) {
+      const potentialLastName = match[1]?.trim().toUpperCase();
+      const potentialFirstName = match[2]?.trim().toUpperCase();
+      const potentialMiddleName = match[3]?.trim().toUpperCase() || null;
 
-        // === VALIDATION ===
-        // Reject if ANY part matches a DD214 field label
-        const isFieldLabel = DD214_FIELD_LABELS.some(
-          (label) =>
-            potentialLastName === label ||
-            potentialFirstName === label ||
-            potentialMiddleName === label,
+      // === VALIDATION ===
+      // Reject if ANY part matches a DD214 field label
+      const isFieldLabel = DD214_FIELD_LABELS.some(
+        (label) =>
+          potentialLastName === label ||
+          potentialFirstName === label ||
+          potentialMiddleName === label,
+      );
+
+      // Reject garbage: too short, or looks like form text
+      const isGarbage =
+        !potentialLastName ||
+        potentialLastName.length < 3 ||
+        !potentialFirstName ||
+        /^\d+$/.test(potentialLastName) || // Just numbers
+        /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
+
+      if (!isFieldLabel && !isGarbage) {
+        _assignParsedName(
+          data,
+          potentialLastName,
+          potentialFirstName,
+          potentialMiddleName,
         );
-
-        // Reject garbage: too short, or looks like form text
-        const isGarbage =
-          !potentialLastName ||
-          potentialLastName.length < 3 ||
-          !potentialFirstName ||
-          /^\d+$/.test(potentialLastName) || // Just numbers
-          /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
-
-        if (!isFieldLabel && !isGarbage) {
-          _assignParsedName(
-            data,
-            potentialLastName,
-            potentialFirstName,
-            potentialMiddleName,
-          );
-          break;
-        }
+        break;
       }
     }
-
+  }
 }
 
 function _assignParsedName(data, lastName, firstName, middleName) {
@@ -1723,235 +1723,232 @@ function _assignParsedName(data, lastName, firstName, middleName) {
 
 function _extractBranchField(ctx) {
   const { data, cleanedText } = ctx;
-    // === BOX 2: BRANCH/COMPONENT ===
-    // Handle abbreviations like ARNGUS, ORARNG, USMC, etc.
-    const branchPatterns = [
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /2\.\s*DEPARTMENT[^:]*[:\s]+([A-Z0-9/\s]+?)(?:\s+3\.|$)/i,
-      /COMPONENT\s+AND\s+BRANCH[:\s]+([A-Z0-9/\s]+)/i,
-      // Common branch abbreviations
-      /\b(ARMY|ARNGUS|ORARNG|[A-Z]{2}ARNG|USAR|USN|USNR|USMC|USMCR|USAF|USAFR|USCG|USCGR|USSF)\b/i,
-    ];
-    for (const pattern of branchPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const branchText = match[1]?.toUpperCase().trim();
-        // Detect branch from abbreviations
-        if (branchText?.includes("ARMY") || /ARN|USAR/i.test(branchText)) {
-          data.branch = "Army";
-        } else if (branchText?.includes("NAVY") || /USN/i.test(branchText)) {
-          data.branch = "Navy";
-        } else if (
-          branchText?.includes("AIR FORCE") ||
-          /USAF/i.test(branchText)
-        ) {
-          data.branch = "Air Force";
-        } else if (branchText?.includes("MARINE") || /USMC/i.test(branchText)) {
-          data.branch = "Marine Corps";
-        } else if (
-          branchText?.includes("COAST GUARD") ||
-          /USCG/i.test(branchText)
-        ) {
-          data.branch = "Coast Guard";
-        } else if (
-          branchText?.includes("SPACE FORCE") ||
-          /USSF/i.test(branchText)
-        ) {
-          data.branch = "Space Force";
-        }
-
-        // Detect component
-        if (branchText?.includes("RESERVE") || /US[A-Z]R\b/.test(branchText)) {
-          data.component = "Reserve";
-        } else if (
-          branchText?.includes("GUARD") ||
-          /ARNG|[A-Z]{2}ARNG/.test(branchText)
-        ) {
-          data.component = "National Guard";
-        } else {
-          data.component = "Active Duty";
-        }
-        if (data.branch) break;
+  // === BOX 2: BRANCH/COMPONENT ===
+  // Handle abbreviations like ARNGUS, ORARNG, USMC, etc.
+  const branchPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /2\.\s*DEPARTMENT[^:]*[:\s]+([A-Z0-9/\s]+?)(?:\s+3\.|$)/i,
+    /COMPONENT\s+AND\s+BRANCH[:\s]+([A-Z0-9/\s]+)/i,
+    // Common branch abbreviations
+    /\b(ARMY|ARNGUS|ORARNG|[A-Z]{2}ARNG|USAR|USN|USNR|USMC|USMCR|USAF|USAFR|USCG|USCGR|USSF)\b/i,
+  ];
+  for (const pattern of branchPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const branchText = match[1]?.toUpperCase().trim();
+      // Detect branch from abbreviations
+      if (branchText?.includes("ARMY") || /ARN|USAR/i.test(branchText)) {
+        data.branch = "Army";
+      } else if (branchText?.includes("NAVY") || /USN/i.test(branchText)) {
+        data.branch = "Navy";
+      } else if (
+        branchText?.includes("AIR FORCE") ||
+        /USAF/i.test(branchText)
+      ) {
+        data.branch = "Air Force";
+      } else if (branchText?.includes("MARINE") || /USMC/i.test(branchText)) {
+        data.branch = "Marine Corps";
+      } else if (
+        branchText?.includes("COAST GUARD") ||
+        /USCG/i.test(branchText)
+      ) {
+        data.branch = "Coast Guard";
+      } else if (
+        branchText?.includes("SPACE FORCE") ||
+        /USSF/i.test(branchText)
+      ) {
+        data.branch = "Space Force";
       }
-    }
 
+      // Detect component
+      if (branchText?.includes("RESERVE") || /US[A-Z]R\b/.test(branchText)) {
+        data.component = "Reserve";
+      } else if (
+        branchText?.includes("GUARD") ||
+        /ARNG|[A-Z]{2}ARNG/.test(branchText)
+      ) {
+        data.component = "National Guard";
+      } else {
+        data.component = "Active Duty";
+      }
+      if (data.branch) break;
+    }
+  }
 }
 
 function _extractRankField(ctx) {
   const { data, cleanedText } = ctx;
-    // === BOX 4a: RANK/GRADE ===
-    // Look for rank specifically in Box 4a context
-    const rankPatterns = [
-      /4a?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
-      /GRADE.*?RANK[:\s]+([A-Z]{2,4}\d?)/i,
-      // Enlisted ranks
-      /\b(SPC|SGT|SSG|SFC|MSG|1SG|SGM|CSM|CPL|PFC|PV2|PVT)\b/i,
-      // Officer ranks
-      /\b(2LT|1LT|CPT|MAJ|LTC|COL|BG|MG|LTG|GEN)\b/i,
-      // Navy/CG ranks
-      /\b(SN|PO3|PO2|PO1|CPO|SCPO|MCPO|ENS|LTJG|LT|LCDR|CDR|CAPT)\b/i,
-    ];
-    for (const pattern of rankPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const rank = match[1]?.trim().toUpperCase();
-        // Validate it's a real rank, not garbage like "AN" or "oe"
-        const validRanks = [
-          "PVT",
-          "PV2",
-          "PFC",
-          "SPC",
-          "CPL",
-          "SGT",
-          "SSG",
-          "SFC",
-          "MSG",
-          "1SG",
-          "SGM",
-          "CSM",
-          "2LT",
-          "1LT",
-          "CPT",
-          "MAJ",
-          "LTC",
-          "COL",
-          "BG",
-          "MG",
-          "LTG",
-          "GEN",
-          "SN",
-          "SA",
-          "SR",
-          "AA",
-          "AN",
-          "PO3",
-          "PO2",
-          "PO1",
-          "CPO",
-          "SCPO",
-          "MCPO",
-          "ENS",
-          "LTJG",
-          "LT",
-          "LCDR",
-          "CDR",
-          "CAPT",
-        ];
-        if (validRanks.includes(rank)) {
-          data.rank = rank;
-          break;
-        }
+  // === BOX 4a: RANK/GRADE ===
+  // Look for rank specifically in Box 4a context
+  const rankPatterns = [
+    /4a?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
+    /GRADE.*?RANK[:\s]+([A-Z]{2,4}\d?)/i,
+    // Enlisted ranks
+    /\b(SPC|SGT|SSG|SFC|MSG|1SG|SGM|CSM|CPL|PFC|PV2|PVT)\b/i,
+    // Officer ranks
+    /\b(2LT|1LT|CPT|MAJ|LTC|COL|BG|MG|LTG|GEN)\b/i,
+    // Navy/CG ranks
+    /\b(SN|PO3|PO2|PO1|CPO|SCPO|MCPO|ENS|LTJG|LT|LCDR|CDR|CAPT)\b/i,
+  ];
+  for (const pattern of rankPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const rank = match[1]?.trim().toUpperCase();
+      // Validate it's a real rank, not garbage like "AN" or "oe"
+      const validRanks = [
+        "PVT",
+        "PV2",
+        "PFC",
+        "SPC",
+        "CPL",
+        "SGT",
+        "SSG",
+        "SFC",
+        "MSG",
+        "1SG",
+        "SGM",
+        "CSM",
+        "2LT",
+        "1LT",
+        "CPT",
+        "MAJ",
+        "LTC",
+        "COL",
+        "BG",
+        "MG",
+        "LTG",
+        "GEN",
+        "SN",
+        "SA",
+        "SR",
+        "AA",
+        "AN",
+        "PO3",
+        "PO2",
+        "PO1",
+        "CPO",
+        "SCPO",
+        "MCPO",
+        "ENS",
+        "LTJG",
+        "LT",
+        "LCDR",
+        "CDR",
+        "CAPT",
+      ];
+      if (validRanks.includes(rank)) {
+        data.rank = rank;
+        break;
       }
     }
-
+  }
 }
 
 function _extractPayGrade(ctx) {
   const { data, cleanedText } = ctx;
-    // Box 4b: Pay Grade - Handle OCR garbling like "Ed" for "E4"
-    const payGradePatterns = [
-      /4b?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
-      /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
-      /\b([EO]-?\d)\b/,
-      // OCR might garble E4 as "Ed" or similar
-      /\b(E[a-z])\b/gi, // Lowercase letter after E might be garbled number
-    ];
-    for (const pattern of payGradePatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        let grade = match[1]?.toUpperCase();
-        // Attempt to fix OCR garbling: Ed->E4, Eb->E8, etc.
-        grade = grade
-          ?.replace(/ED$/i, "E4")
-          .replace(/EB$/i, "E8")
-          .replace(/EG$/i, "E6")
-          .replace(/ES$/i, "E5");
-        if (grade && /^[EO]-?\d$/.test(grade)) {
-          data.payGrade = grade.replace(/([EO])(\d)/, "$1-$2"); // Normalize E4 to E-4
-          break;
-        }
+  // Box 4b: Pay Grade - Handle OCR garbling like "Ed" for "E4"
+  const payGradePatterns = [
+    /4b?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+    /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+    /\b([EO]-?\d)\b/,
+    // OCR might garble E4 as "Ed" or similar
+    /\b(E[a-z])\b/gi, // Lowercase letter after E might be garbled number
+  ];
+  for (const pattern of payGradePatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      let grade = match[1]?.toUpperCase();
+      // Attempt to fix OCR garbling: Ed->E4, Eb->E8, etc.
+      grade = grade
+        ?.replace(/ED$/i, "E4")
+        .replace(/EB$/i, "E8")
+        .replace(/EG$/i, "E6")
+        .replace(/ES$/i, "E5");
+      if (grade && /^[EO]-?\d$/.test(grade)) {
+        data.payGrade = grade.replace(/([EO])(\d)/, "$1-$2"); // Normalize E4 to E-4
+        break;
       }
     }
+  }
 
-    // ============================================================
+  // ============================================================
 }
 
 function _extractDateOfBirth(ctx) {
   const { data, cleanedText } = ctx;
-    // BOX 5: DATE OF BIRTH (NOT Box 6! Box 6 is Reserve Obligation)
-    // Common formats: YYYYMMDD, MM/DD/YYYY, DD-MMM-YYYY
-    // ============================================================
-    const dobPatterns = [
-      // Explicit Box 5 reference
-      /5\.\s*(?:DATE\s+OF\s+)?BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // "DATE OF BIRTH" label (near start of doc, not near service dates)
-      /DATE\s+OF\s+BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // DOB abbreviation
-      /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // Box 5 with compact YYYYMMDD format
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /5\.\s*\D*(\d{8})\b/i,
-    ];
-    for (const pattern of dobPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        let dob = match[1];
-        // Convert compact YYYYMMDD to readable format
-        if (/^\d{8}$/.test(dob)) {
-          const year = dob.substring(0, 4);
-          const month = dob.substring(4, 6);
-          const day = dob.substring(6, 8);
-          // Validate it's a reasonable DOB (year 1940-2010)
-          if (parseInt(year) >= 1940 && parseInt(year) <= 2010) {
-            dob = `${month}/${day}/${year}`;
-          } else {
-            // Might be MMDDYYYY format instead
-            const altYear = dob.substring(4, 8);
-            const altMonth = dob.substring(0, 2);
-            const altDay = dob.substring(2, 4);
-            if (parseInt(altYear) >= 1940 && parseInt(altYear) <= 2010) {
-              dob = `${altMonth}/${altDay}/${altYear}`;
-            }
+  // BOX 5: DATE OF BIRTH (NOT Box 6! Box 6 is Reserve Obligation)
+  // Common formats: YYYYMMDD, MM/DD/YYYY, DD-MMM-YYYY
+  // ============================================================
+  const dobPatterns = [
+    // Explicit Box 5 reference
+    /5\.\s*(?:DATE\s+OF\s+)?BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "DATE OF BIRTH" label (near start of doc, not near service dates)
+    /DATE\s+OF\s+BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // DOB abbreviation
+    /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 5 with compact YYYYMMDD format
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /5\.\s*\D*(\d{8})\b/i,
+  ];
+  for (const pattern of dobPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      let dob = match[1];
+      // Convert compact YYYYMMDD to readable format
+      if (/^\d{8}$/.test(dob)) {
+        const year = dob.substring(0, 4);
+        const month = dob.substring(4, 6);
+        const day = dob.substring(6, 8);
+        // Validate it's a reasonable DOB (year 1940-2010)
+        if (parseInt(year) >= 1940 && parseInt(year) <= 2010) {
+          dob = `${month}/${day}/${year}`;
+        } else {
+          // Might be MMDDYYYY format instead
+          const altYear = dob.substring(4, 8);
+          const altMonth = dob.substring(0, 2);
+          const altDay = dob.substring(2, 4);
+          if (parseInt(altYear) >= 1940 && parseInt(altYear) <= 2010) {
+            dob = `${altMonth}/${altDay}/${altYear}`;
           }
         }
-        data.dateOfBirth = dob;
-        break;
       }
+      data.dateOfBirth = dob;
+      break;
     }
+  }
 
-    // ============================================================
+  // ============================================================
 }
 
 function _extractServiceStartDate(ctx) {
   const { data, cleanedText } = ctx;
-    // BOX 12a: DATE ENTERED AD THIS PERIOD (NOT Box 7!)
-    // Box 7 is Place of Entry, NOT date!
-    // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
-    // ============================================================
-    const entryPatterns = [
-      // Explicit Box 12a reference
-      /12a\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // "DATE ENTERED AD" or "ENTERED ACTIVE DUTY" label
-      /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // Box 12a with compact YYYYMMDD
-      /12a\.?\D*(\d{8})\b/i,
-      // Table format: "2004 | 06 | 22" or "04 06 22"
-      /12a\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
-      // Fallback: "DATE ENTERED" followed by date anywhere
-      /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-    ];
-    for (const pattern of entryPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const dateStr = _normalizeDateMatch(match);
-        // Sanity check: Entry date should NOT be same as DOB
-        if (dateStr !== data.dateOfBirth) {
-          data.serviceStartDate = dateStr;
-          break;
-        }
+  // BOX 12a: DATE ENTERED AD THIS PERIOD (NOT Box 7!)
+  // Box 7 is Place of Entry, NOT date!
+  // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+  // ============================================================
+  const entryPatterns = [
+    // Explicit Box 12a reference
+    /12a\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "DATE ENTERED AD" or "ENTERED ACTIVE DUTY" label
+    /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 12a with compact YYYYMMDD
+    /12a\.?\D*(\d{8})\b/i,
+    // Table format: "2004 | 06 | 22" or "04 06 22"
+    /12a\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
+    // Fallback: "DATE ENTERED" followed by date anywhere
+    /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+  ];
+  for (const pattern of entryPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const dateStr = _normalizeDateMatch(match);
+      // Sanity check: Entry date should NOT be same as DOB
+      if (dateStr !== data.dateOfBirth) {
+        data.serviceStartDate = dateStr;
+        break;
       }
     }
-
+  }
 }
 
 // Normalizes a date regex match to MM/DD/YYYY. Handles two shapes: a
@@ -1982,409 +1979,401 @@ function _normalizeDateMatch(match) {
 
 function _extractPlaceOfEntryAndMOS(ctx) {
   const { data, cleanedText } = ctx;
-    // Box 8: Place of Entry
-    const placeMatch = cleanedText.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Z\s,]+?)(?:\s+9\.|$)/i,
-    );
-    if (placeMatch) {
-      data.placeOfEntry = placeMatch[1]?.trim();
-    }
+  // Box 8: Place of Entry
+  const placeMatch = cleanedText.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Z\s,]+?)(?:\s+9\.|$)/i,
+  );
+  if (placeMatch) {
+    data.placeOfEntry = placeMatch[1]?.trim();
+  }
 
-    // Box 11: Primary MOS/Specialty (mos) - Handle various formats
-    // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
-    const mosPatterns = [
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Z\s-]+?)(?:\s+12\.|$)/i,
-      // MOS followed by title: "92Y10 UNIT SUPPLY SP" or "92Y UNIT SUPPLY SPECIALIST"
-      /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
-      // Marine MOS: 0311, 0341, etc.
-      /\b(0[1-9]\d{2})\s+([A-Z][A-Z\s]+)/i,
-      // Air Force AFSC: 2A3X1, etc.
-      /\b(\d[A-Z]\d[A-Z]\d[A-Z]?)\s+([A-Z][A-Z\s]+)?/i,
-      // Navy Rate: BM2, IT1, etc.
-      /\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i,
-      // Generic fallback
-      /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Z\s-]*)/i,
-      /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
-    ];
-    for (const pattern of mosPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        data.mos = match[1]?.trim();
-        // Clean up MOS title - remove trailing garbage
-        let title = match[2]?.trim();
-        if (title) {
-          // Remove numbers and noise at end, keep just the job title.
-          // \s{1,50} not \s+: title is capped to 50 chars below anyway, and
-          // unbounded \s+ before a digit that might never appear is O(n²)
-          // on adversarial input (confirmed 3.5s+ at 80k chars).
-          // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-          title = title.replace(/\s{1,50}\d+.*$/, "").trim();
-          if (title.length >= 5 && title.length <= 50) {
-            data.mosTitle = title;
-          }
+  // Box 11: Primary MOS/Specialty (mos) - Handle various formats
+  // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
+  const mosPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Z\s-]+?)(?:\s+12\.|$)/i,
+    // MOS followed by title: "92Y10 UNIT SUPPLY SP" or "92Y UNIT SUPPLY SPECIALIST"
+    /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
+    // Marine MOS: 0311, 0341, etc.
+    /\b(0[1-9]\d{2})\s+([A-Z][A-Z\s]+)/i,
+    // Air Force AFSC: 2A3X1, etc.
+    /\b(\d[A-Z]\d[A-Z]\d[A-Z]?)\s+([A-Z][A-Z\s]+)?/i,
+    // Navy Rate: BM2, IT1, etc.
+    /\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i,
+    // Generic fallback
+    /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Z\s-]*)/i,
+    /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
+  ];
+  for (const pattern of mosPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      data.mos = match[1]?.trim();
+      // Clean up MOS title - remove trailing garbage
+      let title = match[2]?.trim();
+      if (title) {
+        // Remove numbers and noise at end, keep just the job title.
+        // \s{1,50} not \s+: title is capped to 50 chars below anyway, and
+        // unbounded \s+ before a digit that might never appear is O(n²)
+        // on adversarial input (confirmed 3.5s+ at 80k chars).
+        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+        title = title.replace(/\s{1,50}\d+.*$/, "").trim();
+        if (title.length >= 5 && title.length <= 50) {
+          data.mosTitle = title;
         }
-        break;
       }
+      break;
     }
+  }
 
-    // ============================================================
+  // ============================================================
 }
 
 function _extractServiceEndDate(ctx) {
   const { data, cleanedText } = ctx;
-    // BOX 12b: SEPARATION DATE THIS PERIOD (NOT Box 12a!)
-    // Box 12a is Entry Date, Box 12b is Separation Date!
-    // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
-    // ============================================================
-    const separationPatterns = [
-      // Explicit Box 12b reference
-      /12b\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // "SEPARATION DATE" or "DATE OF SEPARATION" label
-      /SEPARATION\s+DATE\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      /DATE\s+OF\s+(?:SEPARATION|RELEASE)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-      // Box 12b with compact YYYYMMDD
-      /12b\.?\D*(\d{8})\b/i,
-      // Table format: "2007 | 06 | 29" or "07 06 29"
-      /12b\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
-    ];
-    for (const pattern of separationPatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const dateStr = _normalizeDateMatch(match);
-        // Sanity check: Separation date should be AFTER entry date
-        // And should NOT be same as DOB
-        if (dateStr !== data.dateOfBirth && dateStr !== data.serviceStartDate) {
-          data.serviceEndDate = dateStr;
-          break;
-        }
+  // BOX 12b: SEPARATION DATE THIS PERIOD (NOT Box 12a!)
+  // Box 12a is Entry Date, Box 12b is Separation Date!
+  // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+  // ============================================================
+  const separationPatterns = [
+    // Explicit Box 12b reference
+    /12b\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "SEPARATION DATE" or "DATE OF SEPARATION" label
+    /SEPARATION\s+DATE\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    /DATE\s+OF\s+(?:SEPARATION|RELEASE)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 12b with compact YYYYMMDD
+    /12b\.?\D*(\d{8})\b/i,
+    // Table format: "2007 | 06 | 29" or "07 06 29"
+    /12b\.?\D*(\d{2,4})\s*[|/-]\s*(\d{2})\s*[|/-]\s*(\d{2})/i,
+  ];
+  for (const pattern of separationPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const dateStr = _normalizeDateMatch(match);
+      // Sanity check: Separation date should be AFTER entry date
+      // And should NOT be same as DOB
+      if (dateStr !== data.dateOfBirth && dateStr !== data.serviceStartDate) {
+        data.serviceEndDate = dateStr;
+        break;
       }
     }
-
+  }
 }
 
 function _extractServiceTime(ctx) {
   const { data, cleanedText } = ctx;
-    // === BOX 12b-d: SERVICE TIME ===
-    // CRITICAL: Box 12b is "NET ACTIVE SERVICE THIS PERIOD" - the actual active duty time
-    // Box 12c is "TOTAL PRIOR ACTIVE SERVICE" - previous active duty
-    // Box 12d is "TOTAL PRIOR INACTIVE SERVICE" - reserve/guard time (not active duty)
-    // Box 12e is "FOREIGN SERVICE" - overseas time
-    // We need to be VERY specific about which box we're reading
+  // === BOX 12b-d: SERVICE TIME ===
+  // CRITICAL: Box 12b is "NET ACTIVE SERVICE THIS PERIOD" - the actual active duty time
+  // Box 12c is "TOTAL PRIOR ACTIVE SERVICE" - previous active duty
+  // Box 12d is "TOTAL PRIOR INACTIVE SERVICE" - reserve/guard time (not active duty)
+  // Box 12e is "FOREIGN SERVICE" - overseas time
+  // We need to be VERY specific about which box we're reading
 
-    // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
-    const netActivePatterns = [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /12b\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
-      /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
-      // Look for pattern: "12b. XX YY ZZ" (years months days)
-      /12b\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
-    ];
-    for (const pattern of netActivePatterns) {
-      const match = cleanedText.match(pattern);
-      if (match) {
-        const years = parseInt(match[1]) || 0;
-        const months = parseInt(match[2]) || 0;
-        const days = parseInt(match[3]) || 0;
-        // Sanity check: active duty period should be reasonable (< 40 years)
-        if (years < 40 && months <= 12) {
-          data.totalActiveService =
-            days > 0
-              ? `${years} years, ${months} months, ${days} days`
-              : `${years} years, ${months} months`;
-          break;
-        }
+  // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
+  const netActivePatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /12b\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
+    /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
+    // Look for pattern: "12b. XX YY ZZ" (years months days)
+    /12b\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
+  ];
+  for (const pattern of netActivePatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const years = parseInt(match[1]) || 0;
+      const months = parseInt(match[2]) || 0;
+      const days = parseInt(match[3]) || 0;
+      // Sanity check: active duty period should be reasonable (< 40 years)
+      if (years < 40 && months <= 12) {
+        data.totalActiveService =
+          days > 0
+            ? `${years} years, ${months} months, ${days} days`
+            : `${years} years, ${months} months`;
+        break;
       }
     }
+  }
 
-    // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
-    const priorActiveMatch = cleanedText.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /12c\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
-    );
-    if (priorActiveMatch) {
-      const years = parseInt(priorActiveMatch[1]) || 0;
-      const months = parseInt(priorActiveMatch[2]) || 0;
-      if (years > 0 || months > 0) {
-        data.totalPriorActiveService = `${years} years, ${months} months`;
-      }
+  // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
+  const priorActiveMatch = cleanedText.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /12c\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+  );
+  if (priorActiveMatch) {
+    const years = parseInt(priorActiveMatch[1]) || 0;
+    const months = parseInt(priorActiveMatch[2]) || 0;
+    if (years > 0 || months > 0) {
+      data.totalPriorActiveService = `${years} years, ${months} months`;
     }
+  }
 
-    // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
-    const priorInactiveMatch = cleanedText.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /12d\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
-    );
-    if (priorInactiveMatch) {
-      const years = parseInt(priorInactiveMatch[1]) || 0;
-      const months = parseInt(priorInactiveMatch[2]) || 0;
-      if (years > 0 || months > 0) {
-        data.totalPriorInactiveService = `${years} years, ${months} months`;
-      }
+  // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
+  const priorInactiveMatch = cleanedText.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /12d\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+  );
+  if (priorInactiveMatch) {
+    const years = parseInt(priorInactiveMatch[1]) || 0;
+    const months = parseInt(priorInactiveMatch[2]) || 0;
+    if (years > 0 || months > 0) {
+      data.totalPriorInactiveService = `${years} years, ${months} months`;
     }
-
+  }
 }
 
 function _extractAwardsFromBlock13(ctx) {
   const { data, cleanedText } = ctx;
-    // === BOX 13: DECORATIONS/MEDALS/AWARDS ===
-    // CRITICAL: Only parse Block 13 section, NOT instructional text
-    // DD214 forms have INSTRUCTIONAL TEXT listing example awards on the blank form
-    // Common instructional awards: Silver Star, Bronze Star, Air Medal, Purple Heart
-    // These are NOT the veteran's awards unless they appear WITHOUT the instructional context
+  // === BOX 13: DECORATIONS/MEDALS/AWARDS ===
+  // CRITICAL: Only parse Block 13 section, NOT instructional text
+  // DD214 forms have INSTRUCTIONAL TEXT listing example awards on the blank form
+  // Common instructional awards: Silver Star, Bronze Star, Air Medal, Purple Heart
+  // These are NOT the veteran's awards unless they appear WITHOUT the instructional context
 
-    // Awards that commonly appear in DD214 instructions (should be filtered unless clearly real)
+  // Awards that commonly appear in DD214 instructions (should be filtered unless clearly real)
 
-    // Look specifically for Block 13 content
-    const block13Match = cleanedText.match(
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is,
-    );
+  // Look specifically for Block 13 content
+  const block13Match = cleanedText.match(
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is,
+  );
 
-    if (block13Match) {
-      const block13Text = block13Match[1];
+  if (block13Match) {
+    const block13Text = block13Match[1];
 
-      // Check if this looks like instructional text
-      const hasInstructionalPattern =
-        /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(
-          block13Text,
-        );
-      const hasMultipleHighAwards =
-        (
-          block13Text.match(
-            /SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi,
-          ) || []
-        ).length >= 3;
+    // Check if this looks like instructional text
+    const hasInstructionalPattern =
+      /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(
+        block13Text,
+      );
+    const hasMultipleHighAwards =
+      (
+        block13Text.match(
+          /SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi,
+        ) || []
+      ).length >= 3;
 
-      // Only parse if it doesn't look like instructional text
-      if (
-        block13Text &&
-        block13Text.length > 20 &&
-        !hasInstructionalPattern &&
-        !hasMultipleHighAwards
-      ) {
-        const parsedAwards = parseDD214Text(block13Text, data.branch || "Army");
-        if (parsedAwards && parsedAwards.length > 0) {
-          // Filter out awards that are likely instructional (high valor awards are rare)
-          data.awards = parsedAwards.filter((award) => {
-            const awardName =
-              award.award?.name?.toUpperCase() ||
-              award.matchedText?.toUpperCase() ||
-              "";
-            // Keep service ribbons, campaign medals, marksmanship - these are common real awards
-            // Be skeptical of high valor awards appearing with other instructional patterns
-            return (
-              !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia)) ||
-              // Unless it's the ONLY high-value award found (might be real)
-              parsedAwards.filter((a) =>
-                INSTRUCTIONAL_AWARDS.some((ia) =>
-                  (a.award?.name?.toUpperCase() || "").includes(ia),
-                ),
-              ).length === 1
-            );
-          });
-        }
+    // Only parse if it doesn't look like instructional text
+    if (
+      block13Text &&
+      block13Text.length > 20 &&
+      !hasInstructionalPattern &&
+      !hasMultipleHighAwards
+    ) {
+      const parsedAwards = parseDD214Text(block13Text, data.branch || "Army");
+      if (parsedAwards && parsedAwards.length > 0) {
+        // Filter out awards that are likely instructional (high valor awards are rare)
+        data.awards = parsedAwards.filter((award) => {
+          const awardName =
+            award.award?.name?.toUpperCase() ||
+            award.matchedText?.toUpperCase() ||
+            "";
+          // Keep service ribbons, campaign medals, marksmanship - these are common real awards
+          // Be skeptical of high valor awards appearing with other instructional patterns
+          return (
+            !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia)) ||
+            // Unless it's the ONLY high-value award found (might be real)
+            parsedAwards.filter((a) =>
+              INSTRUCTIONAL_AWARDS.some((ia) =>
+                (a.award?.name?.toUpperCase() || "").includes(ia),
+              ),
+            ).length === 1
+          );
+        });
       }
     }
-
+  }
 }
 
 function _extractAwardsFallback(ctx) {
   const { data, cleanedText } = ctx;
-    // Fallback: If no awards found in Block 13, look for award patterns in general
-    // but be very conservative about what we accept
-    if (!data.awards || data.awards.length === 0) {
-      // Only parse if we DON'T see ANY classic instructional patterns
-      const hasAnyInstructionalText =
-        /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(
-          cleanedText,
-        );
+  // Fallback: If no awards found in Block 13, look for award patterns in general
+  // but be very conservative about what we accept
+  if (!data.awards || data.awards.length === 0) {
+    // Only parse if we DON'T see ANY classic instructional patterns
+    const hasAnyInstructionalText =
+      /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(
+        cleanedText,
+      );
 
-      if (!hasAnyInstructionalText) {
-        const parsedAwards = parseDD214Text(cleanedText, data.branch || "Army");
-        if (parsedAwards && parsedAwards.length > 0) {
-          // Only keep clearly real awards (service ribbons, qualification badges, etc.)
-          data.awards = parsedAwards.filter((award) => {
-            const awardName = award.award?.name?.toUpperCase() || "";
-            // Service ribbons and campaign medals are almost always real
-            return (
-              awardName.includes("SERVICE RIBBON") ||
-              awardName.includes("CAMPAIGN") ||
-              awardName.includes("QUALIFICATION") ||
-              awardName.includes("MARKSMAN") ||
-              awardName.includes("EXPERT") ||
-              awardName.includes("GOOD CONDUCT") ||
-              // Or it's explicitly NOT an instructional award
-              !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia))
-            );
-          });
-        }
+    if (!hasAnyInstructionalText) {
+      const parsedAwards = parseDD214Text(cleanedText, data.branch || "Army");
+      if (parsedAwards && parsedAwards.length > 0) {
+        // Only keep clearly real awards (service ribbons, qualification badges, etc.)
+        data.awards = parsedAwards.filter((award) => {
+          const awardName = award.award?.name?.toUpperCase() || "";
+          // Service ribbons and campaign medals are almost always real
+          return (
+            awardName.includes("SERVICE RIBBON") ||
+            awardName.includes("CAMPAIGN") ||
+            awardName.includes("QUALIFICATION") ||
+            awardName.includes("MARKSMAN") ||
+            awardName.includes("EXPERT") ||
+            awardName.includes("GOOD CONDUCT") ||
+            // Or it's explicitly NOT an instructional award
+            !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia))
+          );
+        });
       }
     }
-
+  }
 }
 
 function _extractEducationAndRemarks(ctx) {
   const { data, text } = ctx;
-    // Box 14: Military Education - extract ONLY the structured education portion
-    const eduPatterns = [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /14\.\s*MILITARY\s+EDUCATION[^:]*:\s*(.+?)(?=\s*15\s*[.ab]|\s+HIGH\s+SCHOOL)/is,
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /MILITARY\s+EDUCATION[^:]*:\s*([A-Z\s,0-9]+?(?:WEEKS?|WK|MONTHS?)[^15]*)/is,
-    ];
-    for (const pattern of eduPatterns) {
-      const eduMatch = text.match(pattern);
-      if (eduMatch) {
-        // Clean up: remove noise, limit length
-        let edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
-        // Only keep if it looks like actual education (course names, durations)
-        if (
-          edu &&
-          edu.length > 10 &&
-          edu.length < 500 &&
-          // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 2ms worst case at that bound
-          /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)
-        ) {
-          // Remove trailing noise like NOTHING FOLLOWS
-          // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 1ms worst case at that bound
-          edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, "").trim();
-          data.militaryEducation = edu;
-        }
-        break;
+  // Box 14: Military Education - extract ONLY the structured education portion
+  const eduPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /14\.\s*MILITARY\s+EDUCATION[^:]*:\s*(.+?)(?=\s*15\s*[.ab]|\s+HIGH\s+SCHOOL)/is,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /MILITARY\s+EDUCATION[^:]*:\s*([A-Z\s,0-9]+?(?:WEEKS?|WK|MONTHS?)[^15]*)/is,
+  ];
+  for (const pattern of eduPatterns) {
+    const eduMatch = text.match(pattern);
+    if (eduMatch) {
+      // Clean up: remove noise, limit length
+      let edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
+      // Only keep if it looks like actual education (course names, durations)
+      if (
+        edu &&
+        edu.length > 10 &&
+        edu.length < 500 &&
+        // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 2ms worst case at that bound
+        /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)
+      ) {
+        // Remove trailing noise like NOTHING FOLLOWS
+        // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 1ms worst case at that bound
+        edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, "").trim();
+        data.militaryEducation = edu;
       }
+      break;
     }
+  }
 
-    // Box 18: Remarks - Extract only key deployment/service info, not entire text
-    // Look for specific valuable info in remarks rather than dumping entire section
-    const remarksKeyInfo = [];
+  // Box 18: Remarks - Extract only key deployment/service info, not entire text
+  // Look for specific valuable info in remarks rather than dumping entire section
+  const remarksKeyInfo = [];
 
-    // Check for deployment info
-    const deploymentInfo = text.match(
-      /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
+  // Check for deployment info
+  const deploymentInfo = text.match(
+    /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
+  );
+  if (deploymentInfo) {
+    remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
+  }
+
+  // Check for OEF/OIF/OND service
+  if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(text)) {
+    const opMatch = text.match(
+      /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
     );
-    if (deploymentInfo) {
-      remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
-    }
+    if (opMatch) remarksKeyInfo.push(opMatch[1]);
+  }
 
-    // Check for OEF/OIF/OND service
-    if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(text)) {
-      const opMatch = text.match(
-        /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
-      );
-      if (opMatch) remarksKeyInfo.push(opMatch[1]);
-    }
-
-    // Only store remarks if we found valuable info
-    if (remarksKeyInfo.length > 0) {
-      data.remarks = remarksKeyInfo.join(" | ");
-    }
-
+  // Only store remarks if we found valuable info
+  if (remarksKeyInfo.length > 0) {
+    data.remarks = remarksKeyInfo.join(" | ");
+  }
 }
 
 function _extractSeparationTypeAndCharacter(ctx) {
   const { data, text } = ctx;
-    // Box 23: Type of Separation
-    const sepTypeMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Z\s]+?)(?:\s+24\.|$)/i,
-    );
-    if (sepTypeMatch) {
-      data.separationType = sepTypeMatch[1]?.trim();
-    }
+  // Box 23: Type of Separation
+  const sepTypeMatch = text.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Z\s]+?)(?:\s+24\.|$)/i,
+  );
+  if (sepTypeMatch) {
+    data.separationType = sepTypeMatch[1]?.trim();
+  }
 
-    // Box 24: Character of Service - CRITICAL for benefits (dischargeType)
-    const characterPatterns = [
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+?)(?:\s+25\.|$)/i,
-      /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+)/i,
-      /(HONORABLE|GENERAL|OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT)/i,
-    ];
-    for (const pattern of characterPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        data.dischargeType = match[1]?.trim();
-        break;
-      }
+  // Box 24: Character of Service - CRITICAL for benefits (dischargeType)
+  const characterPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+?)(?:\s+25\.|$)/i,
+    /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s]+)/i,
+    /(HONORABLE|GENERAL|OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT)/i,
+  ];
+  for (const pattern of characterPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.dischargeType = match[1]?.trim();
+      break;
     }
-
+  }
 }
 
 function _extractSeparationAuthorityAndCodes(ctx) {
   const { data, text } = ctx;
-    // Box 25: Separation Authority (regulation)
-    const authMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Z0-9\s.-]+?)(?:\s+26\.|$)/i,
-    );
-    if (authMatch) {
-      data.separationAuthority = authMatch[1]?.trim();
-    }
+  // Box 25: Separation Authority (regulation)
+  const authMatch = text.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Z0-9\s.-]+?)(?:\s+26\.|$)/i,
+  );
+  if (authMatch) {
+    data.separationAuthority = authMatch[1]?.trim();
+  }
 
-    // Box 26: SPD Code
-    const spdMatch =
-      text.match(
-        /26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i,
-      ) || text.match(/SPD[:\s]+([A-Z]{3})/i);
-    if (spdMatch) {
-      data.spdCode = spdMatch[1]?.toUpperCase();
-    }
+  // Box 26: SPD Code
+  const spdMatch =
+    text.match(
+      /26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i,
+    ) || text.match(/SPD[:\s]+([A-Z]{3})/i);
+  if (spdMatch) {
+    data.spdCode = spdMatch[1]?.toUpperCase();
+  }
 
-    // Box 27: Reentry Code - Valid RE codes are: RE-1, RE-2, RE-3, RE-4 (with optional letter suffix)
-    // Also NA for not applicable
-    const rePatterns = [
-      /27\.\s*(?:REENTRY|RE)\s+CODE[:\s]*([A-Z0-9-]{1,4})/i,
-      /RE\s*CODE[:\s]*([A-Z0-9-]{1,4})/i,
-      /\b(RE-?[1-4][A-Z]?|NA)\b/i,
-    ];
-    for (const pattern of rePatterns) {
-      const reMatch = text.match(pattern);
-      if (reMatch) {
-        const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, "");
-        // Validate it's a real RE code format (RE-1, RE-2A, NA, etc) not OCR garbage
-        if (code && /^(?:RE-?[1-4][A-Z]?|NA|[1-4][A-Z]?)$/.test(code)) {
-          // Normalize format
-          if (/^[1-4][A-Z]?$/.test(code)) {
-            data.reentryCode = `RE-${code}`;
-          } else if (code === "NA") {
-            data.reentryCode = "NA";
-          } else {
-            data.reentryCode = code.replace(/RE-?/, "RE-");
-          }
-          break;
+  // Box 27: Reentry Code - Valid RE codes are: RE-1, RE-2, RE-3, RE-4 (with optional letter suffix)
+  // Also NA for not applicable
+  const rePatterns = [
+    /27\.\s*(?:REENTRY|RE)\s+CODE[:\s]*([A-Z0-9-]{1,4})/i,
+    /RE\s*CODE[:\s]*([A-Z0-9-]{1,4})/i,
+    /\b(RE-?[1-4][A-Z]?|NA)\b/i,
+  ];
+  for (const pattern of rePatterns) {
+    const reMatch = text.match(pattern);
+    if (reMatch) {
+      const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+      // Validate it's a real RE code format (RE-1, RE-2A, NA, etc) not OCR garbage
+      if (code && /^(?:RE-?[1-4][A-Z]?|NA|[1-4][A-Z]?)$/.test(code)) {
+        // Normalize format
+        if (/^[1-4][A-Z]?$/.test(code)) {
+          data.reentryCode = `RE-${code}`;
+        } else if (code === "NA") {
+          data.reentryCode = "NA";
+        } else {
+          data.reentryCode = code.replace(/RE-?/, "RE-");
         }
+        break;
       }
     }
-
+  }
 }
 
 function _extractNarrativeAndDeploymentLocations(ctx) {
   const { data, text, upperText } = ctx;
-    // Box 28: Narrative Reason
-    const narrativeMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i,
-    );
-    if (narrativeMatch) {
-      data.narrativeReason = narrativeMatch[1]?.trim();
-    }
+  // Box 28: Narrative Reason
+  const narrativeMatch = text.match(
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    /28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i,
+  );
+  if (narrativeMatch) {
+    data.narrativeReason = narrativeMatch[1]?.trim();
+  }
 
-    // Extract deployments from remarks (Box 18) - common locations
-    const deploymentPatterns = [
-      /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
-      /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
-    ];
-    for (const pattern of deploymentPatterns) {
-      let match;
-      while ((match = pattern.exec(upperText)) !== null) {
-        const deployment = match[1]?.trim();
-        if (deployment && !data.deployments.includes(deployment)) {
-          data.deployments.push(deployment);
-        }
+  // Extract deployments from remarks (Box 18) - common locations
+  const deploymentPatterns = [
+    /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
+    /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
+  ];
+  for (const pattern of deploymentPatterns) {
+    let match;
+    while ((match = pattern.exec(upperText)) !== null) {
+      const deployment = match[1]?.trim();
+      if (deployment && !data.deployments.includes(deployment)) {
+        data.deployments.push(deployment);
       }
     }
-
+  }
 }
 
 export const parseServiceRecord = async (text) => {
@@ -2568,7 +2557,8 @@ export const parseRatingDecision = async (text) => {
     // swallow unrelated prose into the "condition name").
     const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?)[\s-]+(\d+)%/gi;
     // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    const DIAGNOSTIC_CODE_BEFORE_RE = /DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4})\s*$/i;
+    const DIAGNOSTIC_CODE_BEFORE_RE =
+      /DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4})\s*$/i;
     const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
 
     let match;
@@ -2676,9 +2666,7 @@ const parseDBQ = async (text) => {
 
   try {
     // Extract condition name
-    const conditionMatch = text.match(
-      /DBQ\s+FOR\s+([A-Z][A-Z\s]+?)(?:\n|$)/i,
-    );
+    const conditionMatch = text.match(/DBQ\s+FOR\s+([A-Z][A-Z\s]+?)(?:\n|$)/i);
     if (conditionMatch) {
       data.condition = conditionMatch[1].trim();
     }
@@ -3007,7 +2995,8 @@ const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
 const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
   console.log("📬 Found claim letter, extracting data:", extractedData);
-  if (extractedData.claimNumber) updates.claimNumber = extractedData.claimNumber;
+  if (extractedData.claimNumber)
+    updates.claimNumber = extractedData.claimNumber;
 };
 
 /**

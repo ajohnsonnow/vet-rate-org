@@ -513,7 +513,7 @@ const WORKFLOWS = {
         title: "Understand the C&P Process",
         description:
           "Learn what happens during a C&P exam and what the examiner is looking for.",
-        tool: "cp-simulator",
+        tool: "cap-simulator",
         toolName: "C&P Simulator",
         tip: "The examiner uses DBQs - know what they're measuring.",
       },
@@ -566,8 +566,7 @@ const WORKFLOWS = {
         id: "checklist",
         title: "Pre-Exam Checklist",
         description: "Review everything the night before your exam.",
-        tool: "commanders-checklist",
-        toolName: "Commander's Checklist",
+        tool: null,
         tip: "Get good sleep, arrive early, and be honest about your worst days.",
       },
     ],
@@ -680,8 +679,8 @@ const WORKFLOWS = {
         title: "Check PACT Act Eligibility",
         description:
           "Verify your service locations and dates qualify under PACT Act.",
-        tool: "pact-navigator",
-        toolName: "PACT Navigator",
+        tool: "pact-act",
+        toolName: "PACT Act Navigator",
         critical: true,
         tip: "PACT Act covers Gulf War, Post-9/11, Vietnam, and more.",
       },
@@ -710,7 +709,7 @@ const WORKFLOWS = {
         title: "Document Exposure",
         description:
           "Gather evidence of your toxic exposure locations and dates.",
-        tool: "mos-hazard-matcher",
+        tool: "mos-hazard",
         toolName: "MOS Hazard Matcher",
         tip: "Your DD-214 and service records show locations.",
       },
@@ -775,8 +774,8 @@ const WORKFLOWS = {
         id: "calculate",
         title: "Calculate Potential Backpay",
         description: "Use the backpay calculator to see what you may be owed.",
-        tool: "backpay-calculator",
-        toolName: "Backpay Calculator",
+        tool: "retro-pay-hunter",
+        toolName: "Retro Pay Hunter",
         tip: "Backpay can add up to tens of thousands of dollars.",
       },
       {
@@ -999,8 +998,7 @@ const WorkflowDetailHeader = ({ workflow, completion, onBack }) => {
         onClick={onBack}
         className="text-white/80 hover:text-white text-sm flex items-center gap-1 mb-4"
       >
-        <ChevronRight className="w-4 h-4 rotate-180" /> Back to All
-        Workflows
+        <ChevronRight className="w-4 h-4 rotate-180" /> Back to All Workflows
       </button>
 
       <div className="flex items-start gap-4">

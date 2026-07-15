@@ -202,7 +202,13 @@ function applyPermanentTotalRule(isPermanentTotal, rating, warnings, factors) {
  * Rules 2-4: 20/10/5-Year Rules. Returns the new risk level, or null if
  * isPermanentTotal means the existing risk level should be left alone.
  */
-function applyYearsRule(yearsRated, isPermanentTotal, protections, warnings, factors) {
+function applyYearsRule(
+  yearsRated,
+  isPermanentTotal,
+  protections,
+  warnings,
+  factors,
+) {
   // Rule 2: 20-Year Rule (Full Protection)
   if (yearsRated >= 20) {
     protections.push({
@@ -223,7 +229,8 @@ function applyYearsRule(yearsRated, isPermanentTotal, protections, warnings, fac
       status: "PROTECTED",
     });
 
-    const nextRiskLevel = yearsRated >= 5 ? RISK_LEVELS.MODERATE : RISK_LEVELS.HIGH;
+    const nextRiskLevel =
+      yearsRated >= 5 ? RISK_LEVELS.MODERATE : RISK_LEVELS.HIGH;
 
     factors.push({
       type: "info",
@@ -286,7 +293,12 @@ function applyAgeRule(age, riskLevel, isPermanentTotal, protections, factors) {
 /**
  * High rating specific warning: filing while unstabilized triggers review.
  */
-function applyHighRatingWarning(rating, isPermanentTotal, yearsRated, warnings) {
+function applyHighRatingWarning(
+  rating,
+  isPermanentTotal,
+  yearsRated,
+  warnings,
+) {
   if (rating >= 70 && !isPermanentTotal && yearsRated < 5) {
     warnings.push({
       severity: "high",
@@ -348,7 +360,13 @@ export function useRiskAssessment(
     );
     if (yearsRiskLevel) riskLevel = yearsRiskLevel;
 
-    riskLevel = applyAgeRule(age, riskLevel, isPermanentTotal, protections, factors);
+    riskLevel = applyAgeRule(
+      age,
+      riskLevel,
+      isPermanentTotal,
+      protections,
+      factors,
+    );
 
     applyHighRatingWarning(rating, isPermanentTotal, yearsRated, warnings);
     applyTdiuFactor(rating, factors);

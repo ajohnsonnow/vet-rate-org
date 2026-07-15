@@ -92,15 +92,15 @@ const IntroductionSection = () => (
       </p>
       <p className="leading-relaxed text-gray-800 dark:text-gray-200">
         This Terms of Service agreement establishes the legal framework
-        governing your use of this platform. These terms are designed to
-        protect both you (the veteran user) and the operators of this
-        service by clearly defining what Vet-Rate.org is, what it is not,
-        and the inherent limitations of self-help legal technology.
+        governing your use of this platform. These terms are designed to protect
+        both you (the veteran user) and the operators of this service by clearly
+        defining what Vet-Rate.org is, what it is not, and the inherent
+        limitations of self-help legal technology.
       </p>
       <p className="leading-relaxed font-semibold text-gray-900 dark:text-gray-100">
-        Please read these terms carefully. They contain important
-        information about your legal rights, remedies, and obligations,
-        including mandatory liability waivers and disclaimers.
+        Please read these terms carefully. They contain important information
+        about your legal rights, remedies, and obligations, including mandatory
+        liability waivers and disclaimers.
       </p>
     </div>
   </section>
@@ -117,18 +117,18 @@ const NonAccreditationDisclosure = () => (
       </p>
       <ul className="list-disc list-inside space-y-1 mt-2 ml-4 text-gray-800 dark:text-gray-200">
         <li>
-          An accredited Veterans Service Organization (VSO) under 38
-          U.S.C. § 5902
+          An accredited Veterans Service Organization (VSO) under 38 U.S.C. §
+          5902
         </li>
         <li>A licensed attorney or law firm</li>
         <li>A VA-recognized claims agent under 38 C.F.R. § 14.627</li>
         <li>
-          A representative authorized to practice before the Department
-          of Veterans Affairs
+          A representative authorized to practice before the Department of
+          Veterans Affairs
         </li>
         <li>
-          Affiliated with, endorsed by, or operating under the authority
-          of the U.S. Department of Veterans Affairs
+          Affiliated with, endorsed by, or operating under the authority of the
+          U.S. Department of Veterans Affairs
         </li>
       </ul>
     </div>
@@ -138,16 +138,12 @@ const NonAccreditationDisclosure = () => (
         What Vet-Rate.org Is:
       </h3>
       <p>
-        This platform is a <strong>self-help educational tool</strong>{" "}
-        that provides:
+        This platform is a <strong>self-help educational tool</strong> that
+        provides:
       </p>
       <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
-        <li>
-          Access to publicly available VA rating criteria and schedules
-        </li>
-        <li>
-          Organizational tools for documenting symptoms and evidence
-        </li>
+        <li>Access to publicly available VA rating criteria and schedules</li>
+        <li>Organizational tools for documenting symptoms and evidence</li>
         <li>Templates for structuring claims arguments</li>
         <li>Educational resources about VA claims processes</li>
         <li>Research assistance for medical and legal terminology</li>
@@ -166,11 +162,10 @@ const NonAccreditationResponsibility = () => (
         <span className="font-bold underline">
           You remain solely responsible for
         </span>
-        : filing your own claims, verifying the accuracy of all
-        information, making legal decisions, and ensuring compliance
-        with VA regulations. Vet-Rate.org does not file claims on your
-        behalf, represent you before the VA, or make legal
-        determinations about your eligibility.
+        : filing your own claims, verifying the accuracy of all information,
+        making legal decisions, and ensuring compliance with VA regulations.
+        Vet-Rate.org does not file claims on your behalf, represent you before
+        the VA, or make legal determinations about your eligibility.
       </p>
     </div>
 
@@ -190,10 +185,9 @@ const NonAccreditationResponsibility = () => (
         Recommendation for Complex Cases:
       </h3>
       <p className="text-gray-800">
-        For complex claims, appeals to the Board of Veterans&apos;
-        Appeals, or cases involving legal nuances, it is strongly
-        recommended to work with an accredited representative. Find one
-        at:{" "}
+        For complex claims, appeals to the Board of Veterans&apos; Appeals, or
+        cases involving legal nuances, it is strongly recommended to work with
+        an accredited representative. Find one at:{" "}
         <a
           href="https://www.va.gov/ogc/accreditation.asp"
           target="_blank"
@@ -226,10 +220,10 @@ const MedicalAdviceIntro = () => (
         MEDICAL DISCLAIMER:
       </p>
       <p className="text-gray-800">
-        No feature of Vet-Rate.org-including but not limited to the
-        Nexus Letter Builder, Symptom Database, Secondary Conditions
-        Scout, or any AI-generated content-constitutes medical advice,
-        diagnosis, or treatment recommendations.
+        No feature of Vet-Rate.org-including but not limited to the Nexus Letter
+        Builder, Symptom Database, Secondary Conditions Scout, or any
+        AI-generated content-constitutes medical advice, diagnosis, or treatment
+        recommendations.
       </p>
     </div>
 
@@ -243,24 +237,17 @@ const MedicalAdviceIntro = () => (
       </p>
       <ul className="list-disc list-inside space-y-1 ml-4">
         <li>
-          Help you articulate symptoms using medically-recognized
-          terminology
+          Help you articulate symptoms using medically-recognized terminology
         </li>
         <li>
-          Identify potential secondary conditions based on VA medical
-          literature
+          Identify potential secondary conditions based on VA medical literature
         </li>
         <li>
-          Organize your symptom documentation for presentation to
-          healthcare providers
+          Organize your symptom documentation for presentation to healthcare
+          providers
         </li>
-        <li>
-          Provide templates for structuring medical evidence requests
-        </li>
-        <li>
-          Reference publicly available medical research and VA
-          guidelines
-        </li>
+        <li>Provide templates for structuring medical evidence requests</li>
+        <li>Reference publicly available medical research and VA guidelines</li>
       </ul>
     </div>
   </>
@@ -276,8 +263,7 @@ const MedicalAdviceLimits = () => (
         <li>Diagnose medical conditions or diseases</li>
         <li>Provide medical opinions about causation or etiology</li>
         <li>
-          Substitute for examination by a licensed healthcare
-          professional
+          Substitute for examination by a licensed healthcare professional
         </li>
         <li>Offer treatment recommendations or medical care plans</li>
         <li>Determine medical eligibility for VA benefits</li>
@@ -293,20 +279,19 @@ const MedicalAdviceLimits = () => (
           VA claims require medical opinions from licensed healthcare
           professionals.
         </strong>{" "}
-        You must obtain proper diagnoses, nexus opinions, and medical
-        evidence from qualified physicians, nurse practitioners, or
-        other licensed medical providers. AI-generated content or tool
-        suggestions cannot substitute for these requirements.
+        You must obtain proper diagnoses, nexus opinions, and medical evidence
+        from qualified physicians, nurse practitioners, or other licensed
+        medical providers. AI-generated content or tool suggestions cannot
+        substitute for these requirements.
       </p>
     </div>
 
     <div className="bg-gray-100 p-4 rounded-lg">
       <p className="text-sm">
         <strong>Healthcare Provider Relationship:</strong> Nothing in
-        Vet-Rate.org creates a physician-patient relationship,
-        therapist-client relationship, or any professional medical
-        relationship. Always consult with your own healthcare providers
-        for medical advice.
+        Vet-Rate.org creates a physician-patient relationship, therapist-client
+        relationship, or any professional medical relationship. Always consult
+        with your own healthcare providers for medical advice.
       </p>
     </div>
   </>
@@ -330,9 +315,9 @@ const AIWarningBanner = () => (
       AI-GENERATED CONTENT WARNING:
     </p>
     <p className="text-gray-800 dark:text-gray-200">
-      Portions of this application utilize Artificial Intelligence
-      (AI) technologies to generate text, suggest language, organize
-      information, and provide research assistance.{" "}
+      Portions of this application utilize Artificial Intelligence (AI)
+      technologies to generate text, suggest language, organize information, and
+      provide research assistance.{" "}
       <strong>AI systems can and do make errors.</strong>
     </p>
   </div>
@@ -349,9 +334,9 @@ const AIKnownLimitations = () => (
           Legal Citations:
         </p>
         <p className="text-sm text-gray-800 dark:text-gray-200">
-          AI may cite case law that is outdated, overturned,
-          misapplied, or completely fabricated. All legal citations
-          must be independently verified through official sources.
+          AI may cite case law that is outdated, overturned, misapplied, or
+          completely fabricated. All legal citations must be independently
+          verified through official sources.
         </p>
       </div>
 
@@ -360,9 +345,9 @@ const AIKnownLimitations = () => (
           Medical Terminology:
         </p>
         <p className="text-sm text-gray-800 dark:text-gray-200">
-          AI may use medical terms imprecisely, suggest inappropriate
-          diagnostic criteria, or misunderstand symptom relationships.
-          Medical content requires healthcare professional validation.
+          AI may use medical terms imprecisely, suggest inappropriate diagnostic
+          criteria, or misunderstand symptom relationships. Medical content
+          requires healthcare professional validation.
         </p>
       </div>
 
@@ -371,9 +356,9 @@ const AIKnownLimitations = () => (
           Regulatory Interpretation:
         </p>
         <p className="text-sm text-gray-800 dark:text-gray-200">
-          VA regulations and policies change frequently. AI training
-          data may not reflect the most current guidance, policy
-          memos, or regulatory amendments.
+          VA regulations and policies change frequently. AI training data may
+          not reflect the most current guidance, policy memos, or regulatory
+          amendments.
         </p>
       </div>
 
@@ -382,9 +367,9 @@ const AIKnownLimitations = () => (
           Contextual Misunderstanding:
         </p>
         <p className="text-sm text-gray-800">
-          AI may fail to understand the unique context of your
-          situation, leading to suggestions that are technically
-          correct but practically inapplicable to your specific case.
+          AI may fail to understand the unique context of your situation,
+          leading to suggestions that are technically correct but practically
+          inapplicable to your specific case.
         </p>
       </div>
 
@@ -393,9 +378,9 @@ const AIKnownLimitations = () => (
           &quot;Hallucinations&quot;:
         </p>
         <p className="text-sm text-gray-800">
-          AI can generate plausible-sounding but entirely false
-          information, including fake statistics, non-existent
-          studies, or fabricated legal precedents.
+          AI can generate plausible-sounding but entirely false information,
+          including fake statistics, non-existent studies, or fabricated legal
+          precedents.
         </p>
       </div>
     </div>
@@ -422,18 +407,16 @@ const AIResponsibilityBanner = () => (
           ? Review all VA form submissions for accuracy
         </p>
         <p className="font-semibold">
-          ? Never submit AI-generated content without thorough human
-          review
+          ? Never submit AI-generated content without thorough human review
         </p>
       </div>
     </div>
 
     <div className="bg-gray-100 p-4 rounded-lg">
       <p className="text-sm">
-        <strong>No Liability for AI Errors:</strong> Vet-Rate.org and
-        its operators disclaim all liability for errors, omissions, or
-        inaccuracies in AI-generated content. You use AI-assisted
-        features at your own risk.
+        <strong>No Liability for AI Errors:</strong> Vet-Rate.org and its
+        operators disclaim all liability for errors, omissions, or inaccuracies
+        in AI-generated content. You use AI-assisted features at your own risk.
       </p>
     </div>
   </>
@@ -461,8 +444,8 @@ const DataStorageIntro = () => (
       <p className="text-gray-800">
         Vet-Rate.org is intentionally designed as a{" "}
         <strong>serverless, browser-based application</strong>
-        to protect your privacy. Vet-Rate.org does not store your data
-        on any servers, in cloud databases, or in any remote location.
+        to protect your privacy. Vet-Rate.org does not store your data on any
+        servers, in cloud databases, or in any remote location.
       </p>
     </div>
 
@@ -483,9 +466,7 @@ const DataStorageIntro = () => (
           Data is not transmitted to Vet-Rate.org servers (the webapp
           doesn&apos;t have data servers)
         </li>
-        <li>
-          Export functionality allows you to save data to your own files
-        </li>
+        <li>Export functionality allows you to save data to your own files</li>
       </ul>
     </div>
   </>
@@ -516,13 +497,9 @@ const DataLossWarning = () => (
           <li>Clear your browser cache or browsing data</li>
           <li>Use browser &quot;Clear All History&quot; features</li>
           <li>Uninstall or reset your web browser</li>
+          <li>Use private/incognito browsing mode (data won&apos;t persist)</li>
           <li>
-            Use private/incognito browsing mode (data won&apos;t
-            persist)
-          </li>
-          <li>
-            Use browser cleaning tools or privacy extensions that
-            clear storage
+            Use browser cleaning tools or privacy extensions that clear storage
           </li>
           <li>Switch to a different browser or device</li>
         </ul>
@@ -542,36 +519,35 @@ const DataProtectionTips = () => (
       </h3>
       <div className="space-y-2 text-gray-800">
         <p>
-          <strong>1. Export Regularly:</strong> Use the built-in export
-          features after each work session
+          <strong>1. Export Regularly:</strong> Use the built-in export features
+          after each work session
         </p>
         <p>
-          <strong>2. Multiple Backups:</strong> Save exported files to
-          multiple locations (computer, USB drive, cloud storage)
+          <strong>2. Multiple Backups:</strong> Save exported files to multiple
+          locations (computer, USB drive, cloud storage)
         </p>
         <p>
-          <strong>3. Before Browser Maintenance:</strong> Always export
-          your data before clearing cache or updating browsers
+          <strong>3. Before Browser Maintenance:</strong> Always export your
+          data before clearing cache or updating browsers
         </p>
         <p>
-          <strong>4. Document Version Control:</strong> Date your
-          exports to track different versions
+          <strong>4. Document Version Control:</strong> Date your exports to
+          track different versions
         </p>
         <p>
-          <strong>5. Test Imports:</strong> Periodically test that your
-          exported files can be successfully re-imported
+          <strong>5. Test Imports:</strong> Periodically test that your exported
+          files can be successfully re-imported
         </p>
       </div>
     </div>
 
     <div className="bg-gray-100 p-4 rounded-lg">
       <p className="text-sm">
-        <strong>No Liability for Data Loss:</strong> By using
-        Vet-Rate.org, you acknowledge and accept full responsibility for
-        backing up your data. We are not liable for any data loss,
-        regardless of cause, including but not limited to browser
-        issues, technical failures, user error, or circumstances beyond
-        our control.
+        <strong>No Liability for Data Loss:</strong> By using Vet-Rate.org, you
+        acknowledge and accept full responsibility for backing up your data. We
+        are not liable for any data loss, regardless of cause, including but not
+        limited to browser issues, technical failures, user error, or
+        circumstances beyond our control.
       </p>
     </div>
   </>
@@ -597,10 +573,10 @@ const NoGuaranteesList = () => (
         NO OUTCOME GUARANTEES:
       </p>
       <p className="text-gray-800">
-        Use of Vet-Rate.org, completion of any tools or forms, or
-        implementation of any suggestions does
-        <strong> NOT guarantee, promise, or predict</strong> any
-        specific outcome from the Department of Veterans Affairs.
+        Use of Vet-Rate.org, completion of any tools or forms, or implementation
+        of any suggestions does
+        <strong> NOT guarantee, promise, or predict</strong> any specific
+        outcome from the Department of Veterans Affairs.
       </p>
     </div>
 
@@ -615,16 +591,12 @@ const NoGuaranteesList = () => (
         <li>Rating increases on appeal or supplemental claims</li>
         <li>Faster processing times for your claim</li>
         <li>
-          Favorable decisions from Rating Veterans Service
-          Representatives (RVSR)
+          Favorable decisions from Rating Veterans Service Representatives
+          (RVSR)
         </li>
+        <li>Successful outcomes at Board of Veterans&apos; Appeals hearings</li>
         <li>
-          Successful outcomes at Board of Veterans&apos; Appeals
-          hearings
-        </li>
-        <li>
-          Total Disability Individual Unemployability (TDIU)
-          determinations
+          Total Disability Individual Unemployability (TDIU) determinations
         </li>
         <li>Special Monthly Compensation (SMC) awards</li>
       </ul>
@@ -644,8 +616,8 @@ const FactorsBeyondControl = () => (
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
         <p className="font-semibold text-sm">Evidence Quality</p>
         <p className="text-xs text-gray-600">
-          Strength and completeness of medical evidence, service
-          records, and lay statements
+          Strength and completeness of medical evidence, service records, and
+          lay statements
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
@@ -655,28 +627,21 @@ const FactorsBeyondControl = () => (
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
-        <p className="font-semibold text-sm">
-          Service Connection Nexus
-        </p>
+        <p className="font-semibold text-sm">Service Connection Nexus</p>
         <p className="text-xs text-gray-600">
-          Medical opinions establishing causation link to military
-          service
+          Medical opinions establishing causation link to military service
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
-        <p className="font-semibold text-sm">
-          Regional Office Practices
-        </p>
+        <p className="font-semibold text-sm">Regional Office Practices</p>
         <p className="text-xs text-gray-600">
-          Variations in how different VA regional offices interpret
-          evidence
+          Variations in how different VA regional offices interpret evidence
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
         <p className="font-semibold text-sm">Current Case Law</p>
         <p className="text-xs text-gray-600">
-          Evolving legal precedents from Court of Appeals for Veterans
-          Claims
+          Evolving legal precedents from Court of Appeals for Veterans Claims
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
@@ -708,12 +673,11 @@ const NoGuaranteesHelp = () => (
 
     <div className="bg-gray-100 p-4 rounded-lg">
       <p className="text-sm">
-        <strong>Realistic Expectations:</strong> The VA disability
-        claims process is complex, time-consuming, and often
-        unpredictable. While Vet-Rate.org provides tools to help you
-        present the strongest possible case, ultimate decisions rest
-        with VA adjudicators applying legal and medical criteria to your
-        specific evidence.
+        <strong>Realistic Expectations:</strong> The VA disability claims
+        process is complex, time-consuming, and often unpredictable. While
+        Vet-Rate.org provides tools to help you present the strongest possible
+        case, ultimate decisions rest with VA adjudicators applying legal and
+        medical criteria to your specific evidence.
       </p>
     </div>
   </>
@@ -740,12 +704,11 @@ const LegalTermsPartOne = () => (
         No Warranty
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        THIS SOFTWARE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
-        AVAILABLE&quot; WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
-        NON-INFRINGEMENT. THE WEBAPP DOES NOT WARRANT THAT THE SOFTWARE
-        WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR VIRUS-FREE.
+        THIS SOFTWARE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;
+        WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+        LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE, TITLE, AND NON-INFRINGEMENT. THE WEBAPP DOES NOT WARRANT THAT
+        THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR VIRUS-FREE.
       </p>
     </div>
 
@@ -755,13 +718,13 @@ const LegalTermsPartOne = () => (
         Limitation of Liability
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        TO THE MAXIMUM EXTENT PERMITTED BY LAW, VET-RATE.ORG, ITS
-        CREATORS, CONTRIBUTORS, AND OPERATORS SHALL NOT BE LIABLE FOR
-        ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
-        EXEMPLARY, OR PUNITIVE DAMAGES (INCLUDING BUT NOT LIMITED TO
-        LOSS OF DATA, LOSS OF BENEFITS, CLAIM DENIALS, OR LOST
-        OPPORTUNITIES) ARISING FROM OR RELATED TO YOUR USE OF THIS
-        PLATFORM, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+        TO THE MAXIMUM EXTENT PERMITTED BY LAW, VET-RATE.ORG, ITS CREATORS,
+        CONTRIBUTORS, AND OPERATORS SHALL NOT BE LIABLE FOR ANY DIRECT,
+        INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE
+        DAMAGES (INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF BENEFITS,
+        CLAIM DENIALS, OR LOST OPPORTUNITIES) ARISING FROM OR RELATED TO YOUR
+        USE OF THIS PLATFORM, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+        DAMAGES.
       </p>
     </div>
 
@@ -771,11 +734,11 @@ const LegalTermsPartOne = () => (
         Indemnification
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        You agree to indemnify, defend, and hold harmless Vet-Rate.org
-        and its operators from any claims, damages, liabilities, costs,
-        and expenses (including reasonable attorneys&apos; fees) arising
-        from your use of the platform, your violation of these terms, or
-        your violation of any third-party rights.
+        You agree to indemnify, defend, and hold harmless Vet-Rate.org and its
+        operators from any claims, damages, liabilities, costs, and expenses
+        (including reasonable attorneys&apos; fees) arising from your use of the
+        platform, your violation of these terms, or your violation of any
+        third-party rights.
       </p>
     </div>
 
@@ -785,10 +748,9 @@ const LegalTermsPartOne = () => (
         Severability
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        If any provision of these Terms of Service is found to be
-        invalid, illegal, or unenforceable by a court of competent
-        jurisdiction, the remaining provisions shall continue in full
-        force and effect.
+        If any provision of these Terms of Service is found to be invalid,
+        illegal, or unenforceable by a court of competent jurisdiction, the
+        remaining provisions shall continue in full force and effect.
       </p>
     </div>
   </>
@@ -802,10 +764,9 @@ const LegalTermsPartTwo = () => (
         Entire Agreement
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        These Terms of Service, together with the Privacy Policy,
-        constitute the entire agreement between you and Vet-Rate.org
-        regarding use of this platform and supersede all prior
-        agreements and understandings.
+        These Terms of Service, together with the Privacy Policy, constitute the
+        entire agreement between you and Vet-Rate.org regarding use of this
+        platform and supersede all prior agreements and understandings.
       </p>
     </div>
 
@@ -818,8 +779,7 @@ const LegalTermsPartTwo = () => (
         The webapp reserves the right to modify these terms at any time.
         Material changes will be indicated by updating the &quot;Last
         Updated&quot; date at the top of this document. Continued use of
-        Vet-Rate.org after changes constitutes acceptance of the
-        modified terms.
+        Vet-Rate.org after changes constitutes acceptance of the modified terms.
       </p>
     </div>
 
@@ -829,10 +789,10 @@ const LegalTermsPartTwo = () => (
         Governing Law & Jurisdiction
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        These terms shall be governed by and construed in accordance
-        with the laws of the United States. Any disputes shall be
-        resolved in accordance with applicable law, without giving
-        effect to any principles of conflicts of law.
+        These terms shall be governed by and construed in accordance with the
+        laws of the United States. Any disputes shall be resolved in accordance
+        with applicable law, without giving effect to any principles of
+        conflicts of law.
       </p>
     </div>
 
@@ -842,9 +802,9 @@ const LegalTermsPartTwo = () => (
         Accessibility Commitment
       </h3>
       <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
-        I strive to make Vet-Rate.org accessible to veterans with
-        disabilities. If you encounter accessibility barriers, please
-        contact me through the app so I can work to address them.
+        I strive to make Vet-Rate.org accessible to veterans with disabilities.
+        If you encounter accessibility barriers, please contact me through the
+        app so I can work to address them.
       </p>
     </div>
   </>
@@ -869,15 +829,15 @@ const ContactSection = () => (
       Questions About These Terms?
     </h2>
     <p className="leading-relaxed mb-3 text-gray-800">
-      If you have questions about these Terms of Service, need
-      clarification on any provisions, or wish to report issues with the
-      platform, please use the &quot;Contact Us&quot; feature within the
-      application or visit our support resources.
+      If you have questions about these Terms of Service, need clarification on
+      any provisions, or wish to report issues with the platform, please use the
+      &quot;Contact Us&quot; feature within the application or visit our support
+      resources.
     </p>
     <p className="text-sm text-blue-800">
       <strong>Remember:</strong> I cannot provide legal advice about your
-      specific claim. For legal guidance, consult with an accredited VSO
-      or VA-accredited attorney.
+      specific claim. For legal guidance, consult with an accredited VSO or
+      VA-accredited attorney.
     </p>
   </section>
 );
@@ -888,18 +848,14 @@ const AcceptanceSection = () => (
       Your Acceptance
     </h2>
     <p className="leading-relaxed mb-3 text-gray-800">
-      By using Vet-Rate.org, you acknowledge that you have read,
-      understood, and agree to be bound by these Terms of Service. You
-      specifically acknowledge understanding of:
+      By using Vet-Rate.org, you acknowledge that you have read, understood, and
+      agree to be bound by these Terms of Service. You specifically acknowledge
+      understanding of:
     </p>
     <ul className="list-decimal list-inside space-y-1 ml-4 text-gray-800">
-      <li>
-        The non-accreditation status and limitations of this platform
-      </li>
+      <li>The non-accreditation status and limitations of this platform</li>
       <li>That no medical advice or diagnosis is provided</li>
-      <li>
-        AI content limitations and your verification responsibilities
-      </li>
+      <li>AI content limitations and your verification responsibilities</li>
       <li>Data storage volatility and your backup obligations</li>
       <li>That no claim outcomes are guaranteed</li>
     </ul>

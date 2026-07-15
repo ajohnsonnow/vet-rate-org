@@ -84,8 +84,8 @@ function AnalyzerHeader({ onBack }) {
             </span>
           </h1>
           <p className="text-gray-400 mt-2">
-            The &quot;Red Team&quot; for your story. Find contradictions
-            before the VA does.
+            The &quot;Red Team&quot; for your story. Find contradictions before
+            the VA does.
           </p>
         </div>
         {onBack && (
@@ -245,9 +245,7 @@ function ScoreHeader({ mode, analysis }) {
           <div className={`text-3xl font-black ${getScoreColor(score)}`}>
             {score}/100
           </div>
-          <span className="text-xs text-gray-500">
-            {getScoreLabel(score)}
-          </span>
+          <span className="text-xs text-gray-500">{getScoreLabel(score)}</span>
         </div>
       </div>
     </div>
@@ -313,7 +311,11 @@ function IssuesPanel({ analysis }) {
 }
 
 function StrengthsSection({ mode, analysis }) {
-  if (mode !== "solo" || !analysis.strengths || analysis.strengths.length === 0) {
+  if (
+    mode !== "solo" ||
+    !analysis.strengths ||
+    analysis.strengths.length === 0
+  ) {
     return null;
   }
 
@@ -345,8 +347,8 @@ function WhyThisMattersBox() {
       </h4>
       <ul className="text-sm text-blue-200 space-y-2">
         <li>
-          • VA raters are trained to find{" "}
-          <strong>credibility issues</strong> as grounds for denial
+          • VA raters are trained to find <strong>credibility issues</strong> as
+          grounds for denial
         </li>
         <li>
           • Inconsistencies between your statement and medical records are
@@ -470,9 +472,7 @@ async function performConsistencyCheck(
           },
         ],
       },
-    }).catch((err) =>
-      console.warn("Failed to save consistency results:", err),
-    );
+    }).catch((err) => console.warn("Failed to save consistency results:", err));
   } catch (err) {
     console.error("AI Consistency Check Failed:", err);
     setError(`Analysis failed: ${err.message}. Please try again.`);
@@ -554,7 +554,11 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 
       {/* Results Dashboard */}
       {analysis && (
-        <ResultsDashboard mode={mode} analysis={analysis} targetText={targetText} />
+        <ResultsDashboard
+          mode={mode}
+          analysis={analysis}
+          targetText={targetText}
+        />
       )}
     </div>
   );

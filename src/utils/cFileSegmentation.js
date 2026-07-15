@@ -445,7 +445,9 @@ export function quickScanCFile(text) {
   };
 
   for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
-    const isDetected = signature.patterns.some((pattern) => text.match(pattern));
+    const isDetected = signature.patterns.some((pattern) =>
+      text.match(pattern),
+    );
     if (isDetected) {
       _markDetectedType(scan, typeName);
     }

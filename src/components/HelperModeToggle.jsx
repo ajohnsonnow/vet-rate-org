@@ -285,7 +285,7 @@ function HelperModeInfoPanel({ showHelperTooltips, setShowHelperTooltips }) {
         <div className="flex flex-wrap gap-1">
           {[
             "Witness Bench",
-            "State Benefits",
+            "State Benefit Hunter",
             "Symptom Logger",
             "Forms Helper",
             "VSO Finder",
@@ -308,9 +308,7 @@ function HelperModeInfoPanel({ showHelperTooltips, setShowHelperTooltips }) {
         <button
           onClick={() => setShowHelperTooltips(!showHelperTooltips)}
           className={`relative w-10 h-5 rounded-full transition-colors ${
-            showHelperTooltips
-              ? "bg-pink-500"
-              : "bg-gray-300 dark:bg-gray-600"
+            showHelperTooltips ? "bg-pink-500" : "bg-gray-300 dark:bg-gray-600"
           }`}
           role="switch"
           aria-checked={showHelperTooltips}
@@ -334,8 +332,8 @@ function HelperModeActiveBanner() {
   return (
     <div className="mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg text-center">
       <p className="text-sm font-medium">
-        ✨ Helper Mode Active - Simplified language is now being used
-        throughout the app
+        ✨ Helper Mode Active - Simplified language is now being used throughout
+        the app
       </p>
     </div>
   );
@@ -427,10 +425,9 @@ function ExplainerWhoSection() {
         <span>👥</span> Who Is This For?
       </h3>
       <p className="text-gray-700 dark:text-gray-300">
-        <strong>&quot;I am helping a Veteran.&quot;</strong> Many veterans
-        rely on spouses, adult children, or caregivers to help navigate the
-        VA claims process. This mode makes the site easier for non-veterans
-        to use.
+        <strong>&quot;I am helping a Veteran.&quot;</strong> Many veterans rely
+        on spouses, adult children, or caregivers to help navigate the VA claims
+        process. This mode makes the site easier for non-veterans to use.
       </p>
     </div>
   );
@@ -477,9 +474,7 @@ function LanguageSimplificationFeature() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-400 line-through">
-              Nexus Letter
-            </span>
+            <span className="text-gray-400 line-through">Nexus Letter</span>
             <span className="text-gray-400">→</span>
             <span className="text-pink-600 dark:text-pink-400 font-medium">
               Medical Connection Letter
@@ -510,8 +505,8 @@ function TooltipsFeature() {
           Helpful Tooltips
         </h4>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Hover over terms to see explanations of military acronyms and
-          VA terminology.
+          Hover over terms to see explanations of military acronyms and VA
+          terminology.
         </p>
       </div>
     </div>
@@ -535,7 +530,7 @@ function CaregiverToolsFeature() {
         <div className="flex flex-wrap gap-1">
           {[
             "Witness Bench",
-            "State Benefits",
+            "State Benefit Hunter",
             "Symptom Logger",
             "Forms Helper",
             "VSO Finder",
@@ -566,8 +561,8 @@ function ExplainerPrivacySection() {
         </h3>
       </div>
       <p className="text-sm text-gray-700 dark:text-gray-300">
-        This preference is saved in your browser only. No data is sent to
-        any server. You can turn it on/off anytime.
+        This preference is saved in your browser only. No data is sent to any
+        server. You can turn it on/off anytime.
       </p>
     </div>
   );

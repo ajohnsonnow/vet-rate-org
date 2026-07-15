@@ -117,7 +117,12 @@ async function _saveFeatureRequestLocally(featureId, formData) {
   }
 }
 
-async function _sendFeatureRequestRemote(featureId, formData, generatedReport, t) {
+async function _sendFeatureRequestRemote(
+  featureId,
+  formData,
+  generatedReport,
+  t,
+) {
   // Note: This is best-effort. Local save is the primary success path.
   try {
     const priorityLabel = formData.priority
@@ -141,8 +146,7 @@ async function _sendFeatureRequestRemote(featureId, formData, generatedReport, t
         formData.proposedSolution || t("featureRequest", "notSpecified"),
       ),
       alternatives: scrubText(
-        formData.alternativesConsidered ||
-          t("featureRequest", "noneMentioned"),
+        formData.alternativesConsidered || t("featureRequest", "noneMentioned"),
       ),
       additional_context: scrubText(
         formData.additionalContext || t("common", "none"),
@@ -193,7 +197,13 @@ async function _sendFeatureRequestRemote(featureId, formData, generatedReport, t
 }
 
 // Submit feature request via FormSubmit.co API (no email client needed!) and optionally save locally
-async function _submitFeatureRequest(featureId, formData, generatedReport, t, ctx) {
+async function _submitFeatureRequest(
+  featureId,
+  formData,
+  generatedReport,
+  t,
+  ctx,
+) {
   const { setSubmitting, setSubmitError, setSubmitted, setCopied } = ctx;
   setSubmitting(true);
   setSubmitError("");
@@ -311,7 +321,13 @@ ${t("featureRequest", "thankYouMessage")}
 `.trim();
 }
 
-function _computeFeatureRequestDerivedState(step, formData, emailError, submitted, t) {
+function _computeFeatureRequestDerivedState(
+  step,
+  formData,
+  emailError,
+  submitted,
+  t,
+) {
   const canProceedStep1 = formData.category && formData.priority;
   const canProceedStep2 =
     formData.title.trim().length >= 5 &&
@@ -337,8 +353,7 @@ function _computeFeatureRequestDerivedState(step, formData, emailError, submitte
     step2ValidationMessage = `⚠️ ${t("featureRequest", "validationEmailFix")}`;
   }
 
-  const canProceedCurrentStep =
-    step === 1 ? canProceedStep1 : canProceedStep2;
+  const canProceedCurrentStep = step === 1 ? canProceedStep1 : canProceedStep2;
 
   return {
     canProceedStep1,
@@ -617,8 +632,7 @@ function FeatureRequestTitleField({ t, formData, handleInputChange }) {
         placeholder={t("featureRequest", "featureTitlePlaceholder")}
         maxLength={100}
         className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-          formData.title.trim().length > 0 &&
-          formData.title.trim().length < 5
+          formData.title.trim().length > 0 && formData.title.trim().length < 5
             ? "border-red-400 dark:border-red-500"
             : "border-gray-300 dark:border-gray-600"
         }`}
@@ -672,9 +686,7 @@ function FeatureRequestProblemSolvedField({ t, formData, handleInputChange }) {
       </label>
       <textarea
         value={formData.problemSolved}
-        onChange={(e) =>
-          handleInputChange("problemSolved", e.target.value)
-        }
+        onChange={(e) => handleInputChange("problemSolved", e.target.value)}
         placeholder={t("featureRequest", "problemSolvedPlaceholder")}
         rows={3}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -683,7 +695,11 @@ function FeatureRequestProblemSolvedField({ t, formData, handleInputChange }) {
   );
 }
 
-function FeatureRequestProposedSolutionField({ t, formData, handleInputChange }) {
+function FeatureRequestProposedSolutionField({
+  t,
+  formData,
+  handleInputChange,
+}) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -691,9 +707,7 @@ function FeatureRequestProposedSolutionField({ t, formData, handleInputChange })
       </label>
       <textarea
         value={formData.proposedSolution}
-        onChange={(e) =>
-          handleInputChange("proposedSolution", e.target.value)
-        }
+        onChange={(e) => handleInputChange("proposedSolution", e.target.value)}
         placeholder={t("featureRequest", "proposedSolutionPlaceholder")}
         rows={3}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -721,7 +735,11 @@ function FeatureRequestAlternativesField({ t, formData, handleInputChange }) {
   );
 }
 
-function FeatureRequestAdditionalContextField({ t, formData, handleInputChange }) {
+function FeatureRequestAdditionalContextField({
+  t,
+  formData,
+  handleInputChange,
+}) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -729,9 +747,7 @@ function FeatureRequestAdditionalContextField({ t, formData, handleInputChange }
       </label>
       <textarea
         value={formData.additionalContext}
-        onChange={(e) =>
-          handleInputChange("additionalContext", e.target.value)
-        }
+        onChange={(e) => handleInputChange("additionalContext", e.target.value)}
         placeholder={t("featureRequest", "additionalContextPlaceholder")}
         rows={2}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -740,7 +756,12 @@ function FeatureRequestAdditionalContextField({ t, formData, handleInputChange }
   );
 }
 
-function FeatureRequestPrivacySection({ t, formData, handleInputChange, emailError }) {
+function FeatureRequestPrivacySection({
+  t,
+  formData,
+  handleInputChange,
+  emailError,
+}) {
   return (
     <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 space-y-4">
       <h4 className="text-sm font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
@@ -776,9 +797,7 @@ function FeatureRequestPrivacySection({ t, formData, handleInputChange, emailErr
         <input
           type="email"
           value={formData.veteranEmail}
-          onChange={(e) =>
-            handleInputChange("veteranEmail", e.target.value)
-          }
+          onChange={(e) => handleInputChange("veteranEmail", e.target.value)}
           placeholder="email@example.com"
           className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${
             emailError
@@ -800,7 +819,13 @@ function FeatureRequestPrivacySection({ t, formData, handleInputChange, emailErr
   );
 }
 
-function FeatureRequestStep2({ step, t, formData, handleInputChange, emailError }) {
+function FeatureRequestStep2({
+  step,
+  t,
+  formData,
+  handleInputChange,
+  emailError,
+}) {
   if (step !== 2) return null;
   return (
     <div className="space-y-6">
@@ -883,7 +908,13 @@ function FeatureRequestRoadmapCta({ onClose, onOpenRoadmap }) {
   );
 }
 
-function FeatureRequestSuccessView({ t, formData, featureId, onClose, onOpenRoadmap }) {
+function FeatureRequestSuccessView({
+  t,
+  formData,
+  featureId,
+  onClose,
+  onOpenRoadmap,
+}) {
   return (
     <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-600 rounded-lg p-6 text-center">
       <div className="flex justify-center mb-4">
@@ -934,12 +965,20 @@ function FeatureRequestSuccessView({ t, formData, featureId, onClose, onOpenRoad
       )}
 
       {/* Roadmap CTA */}
-      <FeatureRequestRoadmapCta onClose={onClose} onOpenRoadmap={onOpenRoadmap} />
+      <FeatureRequestRoadmapCta
+        onClose={onClose}
+        onOpenRoadmap={onOpenRoadmap}
+      />
     </div>
   );
 }
 
-function FeatureRequestReportPreview({ t, generatedReport, copied, handleCopyReport }) {
+function FeatureRequestReportPreview({
+  t,
+  generatedReport,
+  copied,
+  handleCopyReport,
+}) {
   return (
     <div className="relative">
       <textarea
@@ -1008,11 +1047,7 @@ function FeatureRequestSubmitButton({ t, submitting, handleSubmitRequest }) {
     >
       {submitting ? (
         <>
-          <svg
-            className="w-6 h-6 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -1285,8 +1320,7 @@ function FeatureRequest({ onClose, appState = {}, onOpenRoadmap }) {
       setCopied,
     });
 
-  const handleCopyReport = () =>
-    _copyReport(generatedReport, { setCopied });
+  const handleCopyReport = () => _copyReport(generatedReport, { setCopied });
 
   const derived = _computeFeatureRequestDerivedState(
     step,

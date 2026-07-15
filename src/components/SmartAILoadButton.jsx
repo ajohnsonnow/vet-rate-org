@@ -61,9 +61,7 @@ const AILoadingNotice = ({ progress }) => (
     <div className="flex items-start gap-3">
       <span className="text-2xl animate-spin">⏳</span>
       <div className="flex-1">
-        <h4 className="text-cyan-300 font-semibold text-sm">
-          {progress.text}
-        </h4>
+        <h4 className="text-cyan-300 font-semibold text-sm">{progress.text}</h4>
         <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"

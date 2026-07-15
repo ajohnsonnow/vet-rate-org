@@ -92,8 +92,8 @@ const RegulationsHeader = ({ onClose, activeTab, setActiveTab }) => (
     {/* Revision Info */}
     <p className="text-blue-300 text-center mt-1 text-xs">
       eCFR data current as of{" "}
-      {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} — Last
-      amended {cfr3Regulations.revisionInfo?.lastAmended || "1/09/2026"}
+      {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} — Last amended{" "}
+      {cfr3Regulations.revisionInfo?.lastAmended || "1/09/2026"}
     </p>
 
     {/* Tabs */}
@@ -214,7 +214,9 @@ const RegulationCategoryCard = ({
           </a>
 
           {category.regulations.map((reg, index) =>
-            !matchesSearch(reg) ? null : <RegulationItem key={index} reg={reg} />,
+            !matchesSearch(reg) ? null : (
+              <RegulationItem key={index} reg={reg} />
+            ),
           )}
         </div>
       )}
@@ -763,8 +765,8 @@ const FormsTab = () => (
       Essential VA Forms for Claims
     </h3>
     <p className="text-gray-600 dark:text-gray-400 mb-6">
-      Using the correct forms is critical for proper claim processing. Here
-      are the key forms referenced in 38 CFR Part 3.
+      Using the correct forms is critical for proper claim processing. Here are
+      the key forms referenced in 38 CFR Part 3.
     </p>
 
     <div className="grid gap-4 sm:grid-cols-2">
@@ -805,8 +807,8 @@ const DeadlinesTab = () => (
       Critical Deadlines & Timelines
     </h3>
     <p className="text-gray-600 dark:text-gray-400 mb-6">
-      Missing deadlines can cost you months or years of back-pay. These are
-      the most important timelines in 38 CFR Part 3.
+      Missing deadlines can cost you months or years of back-pay. These are the
+      most important timelines in 38 CFR Part 3.
     </p>
 
     <div className="space-y-4">
@@ -845,8 +847,8 @@ const MistakesTab = () => (
       Common Mistakes to Avoid
     </h3>
     <p className="text-gray-600 dark:text-gray-400 mb-6">
-      These common mistakes cost veterans time, money, and benefits. Learn
-      from others&apos; experiences.
+      These common mistakes cost veterans time, money, and benefits. Learn from
+      others&apos; experiences.
     </p>
 
     <div className="space-y-4">

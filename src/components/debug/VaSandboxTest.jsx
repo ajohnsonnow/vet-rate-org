@@ -719,7 +719,13 @@ function useVaSandboxUserData(accessToken, isAuthenticated) {
     }
   }, [isAuthenticated, accessToken, fetchUserData]);
 
-  return { serviceHistory, claims, appealableIssues, appealsStatus, fetchUserData };
+  return {
+    serviceHistory,
+    claims,
+    appealableIssues,
+    appealsStatus,
+    fetchUserData,
+  };
 }
 
 // ============================================================================
@@ -926,8 +932,8 @@ function OpenDataSection({
       {/* Info about API registration */}
       <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
         <p className="text-sm text-amber-800 dark:text-amber-200">
-          <strong>Note:</strong> Each VA API requires separate registration.
-          If an API shows &quot;skipped&quot;, register your API key at{" "}
+          <strong>Note:</strong> Each VA API requires separate registration. If
+          an API shows &quot;skipped&quot;, register your API key at{" "}
           <a
             href="https://developer.va.gov/explore"
             target="_blank"
@@ -1054,9 +1060,8 @@ function AuthSection({
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          <strong>Scopes:</strong> openid profile offline_access
-          claim.read service_history.read appealable_issues.read
-          appeals_status.read
+          <strong>Scopes:</strong> openid profile offline_access claim.read
+          service_history.read appealable_issues.read appeals_status.read
         </p>
       </div>
     </section>
@@ -1111,9 +1116,7 @@ function ServiceHistoryContent({ serviceHistory, formatDate: formatDateFn }) {
     );
   }
   if (serviceHistory.status === "pass") {
-    return (
-      <p className="text-sm text-gray-500">No service history records</p>
-    );
+    return <p className="text-sm text-gray-500">No service history records</p>;
   }
   return null;
 }
@@ -1191,7 +1194,10 @@ function ClaimsCard({ claims, showRaw, onToggleRaw }) {
   );
 }
 
-function AppealableIssuesContent({ appealableIssues, formatDate: formatDateFn }) {
+function AppealableIssuesContent({
+  appealableIssues,
+  formatDate: formatDateFn,
+}) {
   if (appealableIssues.data && appealableIssues.data.length > 0) {
     return (
       <div className="space-y-2">
@@ -1518,8 +1524,13 @@ const VaSandboxTest = () => {
   const { facilities, testFacilities } = useFacilitiesApi();
   const { forms, testForms } = useFormsApi();
   const { disabilities, testDisabilities } = useDisabilitiesApi();
-  const { serviceHistory, claims, appealableIssues, appealsStatus, fetchUserData } =
-    useVaSandboxUserData(accessToken, isAuthenticated);
+  const {
+    serviceHistory,
+    claims,
+    appealableIssues,
+    appealsStatus,
+    fetchUserData,
+  } = useVaSandboxUserData(accessToken, isAuthenticated);
 
   return (
     <VaSandboxDashboard

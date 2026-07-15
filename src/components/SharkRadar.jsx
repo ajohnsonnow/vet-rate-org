@@ -248,8 +248,8 @@ const AIModeSection = ({
       <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-2">
         <span>💡</span>
         <span>
-          <strong>Tip:</strong> All AI models work great for contract
-          scanning - even long documents!
+          <strong>Tip:</strong> All AI models work great for contract scanning -
+          even long documents!
         </span>
       </div>
     )}
@@ -412,8 +412,7 @@ const RiskLevelCard = ({ data }) => (
                 : "text-yellow-600 dark:text-yellow-400"
             }`}
           >
-            Recommendation:{" "}
-            {data.recommendation.replace(/_/g, " ")}
+            Recommendation: {data.recommendation.replace(/_/g, " ")}
           </p>
         )}
       </div>
@@ -466,8 +465,8 @@ const RedFlagsList = ({ flags }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="text-red-500">⚠️</span> Red Flags Detected
-        ({flags.length})
+        <span className="text-red-500">⚠️</span> Red Flags Detected (
+        {flags.length})
       </h3>
       <div className="space-y-4">
         {flags.map((flag, index) => (
@@ -510,8 +509,8 @@ const PredatoryWarningActions = ({ riskLevel }) => {
         🚨 Protect Yourself - Take Action
       </h3>
       <p className="mb-4">
-        This contract contains serious red flags. Do NOT sign or share
-        personal information with this company.
+        This contract contains serious red flags. Do NOT sign or share personal
+        information with this company.
       </p>
       <div className="grid sm:grid-cols-2 gap-4">
         <a
@@ -560,8 +559,8 @@ const KnowYourRightsSection = () => (
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>
         <span>
-          <strong>Free Help Exists:</strong> VA-accredited VSOs (like DAV,
-          VFW, American Legion) help veterans for FREE.
+          <strong>Free Help Exists:</strong> VA-accredited VSOs (like DAV, VFW,
+          American Legion) help veterans for FREE.
         </span>
       </li>
       <li className="flex items-start gap-2">
@@ -709,7 +708,10 @@ export default function SharkRadar() {
       <ErrorBanner error={error} />
       <ScanResults results={results} />
       <KnowYourRightsSection />
-      <PrivacyToggle showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} />
+      <PrivacyToggle
+        showPrivacy={showPrivacy}
+        setShowPrivacy={setShowPrivacy}
+      />
     </div>
   );
 }

@@ -51,8 +51,8 @@ const SemanticSearchBar = ({
 
 const SemanticSearchIntro = ({ excludedPageCount }) => (
   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-    Search your full document by meaning, not exact words — for example
-    “ringing in my ears” will find pages that say “tinnitus.”
+    Search your full document by meaning, not exact words — for example “ringing
+    in my ears” will find pages that say “tinnitus.”
     {excludedPageCount > 0 && (
       <>
         {" "}
@@ -67,8 +67,8 @@ const SemanticSearchStatus = ({ isSearching, error }) => (
   <>
     {isSearching && (
       <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-        Searching on your device… the first search may take a moment while
-        the search model loads.
+        Searching on your device… the first search may take a moment while the
+        search model loads.
       </p>
     )}
 
@@ -95,8 +95,8 @@ const SemanticSearchResults = ({ results, lastQuery }) => {
   return (
     <>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-        {results.length} page{results.length === 1 ? "" : "s"} most related to
-        “{lastQuery}”:
+        {results.length} page{results.length === 1 ? "" : "s"} most related to “
+        {lastQuery}”:
       </p>
       <ul className="space-y-2">
         {results.map((r) => (
@@ -123,7 +123,10 @@ const SemanticSearchResults = ({ results, lastQuery }) => {
   );
 };
 
-export default function CFileSemanticSearch({ sessionKey, excludedPageCount = 0 }) {
+export default function CFileSemanticSearch({
+  sessionKey,
+  excludedPageCount = 0,
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null); // null = not searched yet
   const [isSearching, setIsSearching] = useState(false);

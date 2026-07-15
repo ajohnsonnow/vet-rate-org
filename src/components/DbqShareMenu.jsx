@@ -55,10 +55,7 @@ async function downloadDirectDbq(formId, formData, deps) {
     downloadPdfBlob(pdfBlob, buildDraftFilename(formId));
     setStatus({ type: "success", message: "Draft DBQ downloaded!" });
   } catch (error) {
-    const safeMsg = (error.message || "Unknown error").replace(
-      /[<>&"']/g,
-      "",
-    );
+    const safeMsg = (error.message || "Unknown error").replace(/[<>&"']/g, "");
     setStatus({ type: "error", message: `❌ Error: ${safeMsg}` });
   } finally {
     setIsGenerating(false);
@@ -81,7 +78,10 @@ async function downloadZipBundle(formId, formData, deps) {
       throw new Error("Failed to generate PDF");
     }
 
-    const zipBlob = await createDocumentZip(pdfBlob, buildDraftFilename(formId));
+    const zipBlob = await createDocumentZip(
+      pdfBlob,
+      buildDraftFilename(formId),
+    );
 
     if (!zipBlob) {
       throw new Error("Failed to create ZIP");
@@ -243,8 +243,8 @@ function DownloadTabContent({ isGenerating, onDownload }) {
           📥 Direct Download
         </h4>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          Download the draft DBQ as a PDF file. Perfect for printing or
-          saving to your records before your appointment.
+          Download the draft DBQ as a PDF file. Perfect for printing or saving
+          to your records before your appointment.
         </p>
         <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
           <li>✓ Includes &quot;DRAFT&quot; watermark on all pages</li>
@@ -278,8 +278,8 @@ function EmailZipTabContent({ isGenerating, onDownload }) {
           📧 Email Bundle (.zip)
         </h4>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          Bundle the draft DBQ into a single .zip with a short README for
-          your doctor — handy as an email attachment.
+          Bundle the draft DBQ into a single .zip with a short README for your
+          doctor — handy as an email attachment.
         </p>
         <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <li>✓ One file: the DBQ PDF + instructions for your doctor</li>
@@ -289,10 +289,9 @@ function EmailZipTabContent({ isGenerating, onDownload }) {
 
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
         <p className="text-sm text-amber-800 dark:text-amber-200">
-          ⚠️ This ZIP is{" "}
-          <strong>not encrypted or password-protected</strong>. Ordinary
-          email is not secure. For your medical records, send it through
-          your VA patient portal / secure messaging, or hand it off in
+          ⚠️ This ZIP is <strong>not encrypted or password-protected</strong>.
+          Ordinary email is not secure. For your medical records, send it
+          through your VA patient portal / secure messaging, or hand it off in
           person.
         </p>
       </div>
@@ -359,8 +358,8 @@ function MobileShareTabContent({
         <div className="space-y-3">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              📱 Native sharing requires a mobile device with iOS/Android.
-              Use the options below instead:
+              📱 Native sharing requires a mobile device with iOS/Android. Use
+              the options below instead:
             </p>
           </div>
 
@@ -408,8 +407,8 @@ function ShareMenuFooter() {
   return (
     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
       <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-        🔒 Your data never leaves your device. Vet-Rate.org processes
-        everything locally.
+        🔒 Your data never leaves your device. Vet-Rate.org processes everything
+        locally.
       </p>
     </div>
   );

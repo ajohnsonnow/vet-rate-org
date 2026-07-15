@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { partHeading, contextualizeText } from "../../scripts/legal-ingestion/contextualize.mjs";
+import {
+  partHeading,
+  contextualizeText,
+} from "../../scripts/legal-ingestion/contextualize.mjs";
 
 /**
  * S20 — contextual retrieval. The embedding-time prefix is templated (no

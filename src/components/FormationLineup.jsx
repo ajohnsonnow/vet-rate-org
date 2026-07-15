@@ -312,10 +312,10 @@ const RestoredDocsWarning = () => (
           Formation Restored from Previous Session
         </p>
         <p className="text-xs text-yellow-700 dark:text-yellow-300">
-          These documents are from your previous session. They were saved
-          but the actual files are no longer in memory. You can view the
-          lineup and clear it, but you&apos;ll need to re-upload the files
-          to process them again.
+          These documents are from your previous session. They were saved but
+          the actual files are no longer in memory. You can view the lineup and
+          clear it, but you&apos;ll need to re-upload the files to process them
+          again.
         </p>
       </div>
     </div>
@@ -410,8 +410,8 @@ const FormationHelpText = () => (
     <p className="font-semibold mb-2">🎖️ Formation Processing:</p>
     <ul className="space-y-1 text-xs">
       <li>
-        • <strong>Critical documents</strong> (DD214, Rating Decisions)
-        process first
+        • <strong>Critical documents</strong> (DD214, Rating Decisions) process
+        first
       </li>
       <li>• Each document gets inspected individually for accuracy</li>
       <li>• You&apos;ll verify extracted data before it&apos;s saved</li>

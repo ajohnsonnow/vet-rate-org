@@ -7721,8 +7721,17 @@ function useFormsHelperCoreState() {
   const formsContentRef = useRef(null);
 
   return {
-    selectedForm, setSelectedForm, currentStep, setCurrentStep, formData, setFormData,
-    generatedContent, setGeneratedContent, showDownloadMenu, setShowDownloadMenu, formsContentRef,
+    selectedForm,
+    setSelectedForm,
+    currentStep,
+    setCurrentStep,
+    formData,
+    setFormData,
+    generatedContent,
+    setGeneratedContent,
+    showDownloadMenu,
+    setShowDownloadMenu,
+    formsContentRef,
   };
 }
 
@@ -7734,8 +7743,15 @@ function useFormsHelperProfileState() {
   const fileInputRef = useRef(null);
 
   return {
-    showProfileSetup, setShowProfileSetup, veteranProfile, setVeteranProfile,
-    profileSaved, setProfileSaved, importStatus, setImportStatus, fileInputRef,
+    showProfileSetup,
+    setShowProfileSetup,
+    veteranProfile,
+    setVeteranProfile,
+    profileSaved,
+    setProfileSaved,
+    importStatus,
+    setImportStatus,
+    fileInputRef,
   };
 }
 
@@ -7747,8 +7763,16 @@ function useFormsHelperAIState() {
   const [aiError, setAiError] = useState(null);
 
   return {
-    showAIConsent, setShowAIConsent, isEnhancingWithAI, setIsEnhancingWithAI,
-    aiEnhancedContent, setAiEnhancedContent, showAIVersion, setShowAIVersion, aiError, setAiError,
+    showAIConsent,
+    setShowAIConsent,
+    isEnhancingWithAI,
+    setIsEnhancingWithAI,
+    aiEnhancedContent,
+    setAiEnhancedContent,
+    showAIVersion,
+    setShowAIVersion,
+    aiError,
+    setAiError,
   };
 }
 
@@ -7808,7 +7832,8 @@ function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
 }
 
 function _buildFormsHelperProfileEditHandlers(ctx) {
-  const { veteranProfile, setVeteranProfile, setProfileSaved, setFormData } = ctx;
+  const { veteranProfile, setVeteranProfile, setProfileSaved, setFormData } =
+    ctx;
 
   const handleProfileChange = (field, value) => {
     setVeteranProfile((prev) => ({ ...prev, [field]: value }));
@@ -7918,7 +7943,13 @@ function _buildFormsHelperProfileHandlers(ctx) {
 }
 
 function _buildFormsHelperFormDataHandlers(ctx) {
-  const { setFormData, formData, selectedForm, generatedContent, setImportStatus } = ctx;
+  const {
+    setFormData,
+    formData,
+    selectedForm,
+    generatedContent,
+    setImportStatus,
+  } = ctx;
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -8005,8 +8036,13 @@ function _generateFormsHelperContent(selectedForm, formData) {
 
 function _buildFormsHelperGenerationHandlers(ctx) {
   const {
-    selectedForm, formData, setGeneratedContent, setCurrentStep,
-    setAiEnhancedContent, setShowAIVersion, setAiError,
+    selectedForm,
+    formData,
+    setGeneratedContent,
+    setCurrentStep,
+    setAiEnhancedContent,
+    setShowAIVersion,
+    setAiError,
   } = ctx;
 
   const generateContent = () => {
@@ -8029,13 +8065,25 @@ function _buildFormsHelperGenerationHandlers(ctx) {
 
 function _buildFormsHelperAIHandlers(ctx) {
   const {
-    selectedForm, setShowAIConsent, setIsEnhancingWithAI, setAiError, formData,
-    setAiEnhancedContent, setShowAIVersion, showAIVersion, aiEnhancedContent, generatedContent,
+    selectedForm,
+    setShowAIConsent,
+    setIsEnhancingWithAI,
+    setAiError,
+    formData,
+    setAiEnhancedContent,
+    setShowAIVersion,
+    showAIVersion,
+    aiEnhancedContent,
+    generatedContent,
   } = ctx;
 
   // Check if current form type supports AI enhancement
   const isAIEnabledFormType = () => {
-    const aiEnabledForms = ["buddy-statement", "personal-statement", "ptsd-stressor"];
+    const aiEnabledForms = [
+      "buddy-statement",
+      "personal-statement",
+      "ptsd-stressor",
+    ];
     return aiEnabledForms.includes(selectedForm?.id);
   };
 
@@ -8086,17 +8134,30 @@ function _buildFormsHelperAIHandlers(ctx) {
   };
 
   const getDisplayContent = () => {
-    return showAIVersion && aiEnhancedContent ? aiEnhancedContent : generatedContent;
+    return showAIVersion && aiEnhancedContent
+      ? aiEnhancedContent
+      : generatedContent;
   };
 
   return {
-    isAIEnabledFormType, getAIStatementType, handleAIEnhanceClick, handleAIConsent,
-    handleAICancel, toggleAIVersion, getDisplayContent,
+    isAIEnabledFormType,
+    getAIStatementType,
+    handleAIEnhanceClick,
+    handleAIConsent,
+    handleAICancel,
+    toggleAIVersion,
+    getDisplayContent,
   };
 }
 
 function _buildFormsHelperDownloadHandlers(ctx) {
-  const { selectedForm, formData, generatedContent, generateContent, setShowDownloadMenu } = ctx;
+  const {
+    selectedForm,
+    formData,
+    generatedContent,
+    generateContent,
+    setShowDownloadMenu,
+  } = ctx;
 
   const handleDownload = (format) => {
     const content = generatedContent || generateContent();
@@ -8139,10 +8200,24 @@ function _buildFormsHelperDownloadHandlers(ctx) {
 }
 
 function FormsHelperFormSelection({ state, handlers }) {
-  const { t, fileInputRef, showProfileSetup, setShowProfileSetup, importStatus, veteranProfile, profileSaved } =
+  const {
+    t,
+    fileInputRef,
+    showProfileSetup,
+    setShowProfileSetup,
+    importStatus,
+    veteranProfile,
+    profileSaved,
+  } = state;
+  const {
+    handleFileSelect,
+    handleBackup,
+    handleRestoreClick,
+    handleProfileChange,
+    handleSaveProfile,
+  } = handlers;
+  const { setSelectedForm, setFormData, setCurrentStep, setGeneratedContent } =
     state;
-  const { handleFileSelect, handleBackup, handleRestoreClick, handleProfileChange, handleSaveProfile } = handlers;
-  const { setSelectedForm, setFormData, setCurrentStep, setGeneratedContent } = state;
 
   return (
     <div className="space-y-4">
@@ -8212,13 +8287,32 @@ function FormsHelperFormSelection({ state, handlers }) {
 }
 
 function FormsHelperReviewStep({ state, handlers }) {
-  const { generatedContent, t, aiStatus, aiEnhancedContent, isEnhancingWithAI, showAIVersion, aiError } = state;
-  const { onOpenAISettings, importStatus, selectedForm } = state;
-  const { setCurrentStep, setGeneratedContent, setAiEnhancedContent, setShowAIVersion, setSelectedForm, setFormData } =
-    state;
   const {
-    isAIEnabledFormType, handleAIEnhanceClick, toggleAIVersion, handleDownloadOfficialPdf, handleDownload,
-    handleSaveToPacket, getDisplayContent,
+    generatedContent,
+    t,
+    aiStatus,
+    aiEnhancedContent,
+    isEnhancingWithAI,
+    showAIVersion,
+    aiError,
+  } = state;
+  const { onOpenAISettings, importStatus, selectedForm } = state;
+  const {
+    setCurrentStep,
+    setGeneratedContent,
+    setAiEnhancedContent,
+    setShowAIVersion,
+    setSelectedForm,
+    setFormData,
+  } = state;
+  const {
+    isAIEnabledFormType,
+    handleAIEnhanceClick,
+    toggleAIVersion,
+    handleDownloadOfficialPdf,
+    handleDownload,
+    handleSaveToPacket,
+    getDisplayContent,
   } = handlers;
 
   if (!generatedContent) return null;
@@ -8289,8 +8383,16 @@ function FormsHelperReviewStep({ state, handlers }) {
 }
 
 function FormsHelperContent({ state, handlers }) {
-  const { selectedForm, currentStep, generatedContent, setCurrentStep, setSelectedForm, formData } = state;
-  const { handleFieldChange, handleChecklistChange, handleFinishWizard } = handlers;
+  const {
+    selectedForm,
+    currentStep,
+    generatedContent,
+    setCurrentStep,
+    setSelectedForm,
+    formData,
+  } = state;
+  const { handleFieldChange, handleChecklistChange, handleFinishWizard } =
+    handlers;
   const steps = _getFormStepsForForm(selectedForm);
 
   // No form selected - show form selection
@@ -8330,7 +8432,13 @@ function FormsHelperContent({ state, handlers }) {
   return <FormsHelperReviewStep state={state} handlers={handlers} />;
 }
 
-function FormsHelperHeader({ onClose, onReportBug, onOpenAISettings, formsContentRef, t }) {
+function FormsHelperHeader({
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+  formsContentRef,
+  t,
+}) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
       <div className="flex items-center justify-between">
@@ -8384,7 +8492,14 @@ function FormsHelperHeader({ onClose, onReportBug, onOpenAISettings, formsConten
 }
 
 function FormsHelperView({ state, handlers }) {
-  const { onClose, onReportBug, onOpenAISettings, formsContentRef, t, showAIConsent } = state;
+  const {
+    onClose,
+    onReportBug,
+    onOpenAISettings,
+    formsContentRef,
+    t,
+    showAIConsent,
+  } = state;
   const { handleAIConsent, handleAICancel, getAIStatementType } = handlers;
 
   return (
@@ -8451,12 +8566,21 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   // Load veteran profile on mount
   useEffect(
-    () => _runFormsHelperProfilePrefillEffect(profileState.setVeteranProfile, coreState.setFormData),
+    () =>
+      _runFormsHelperProfilePrefillEffect(
+        profileState.setVeteranProfile,
+        coreState.setFormData,
+      ),
     [profileState.setVeteranProfile, coreState.setFormData],
   );
 
   const state = {
-    t, onClose, onReportBug, onOpenAISettings, aiStatus, setAIStatus,
+    t,
+    onClose,
+    onReportBug,
+    onOpenAISettings,
+    aiStatus,
+    setAIStatus,
     ...coreState,
     ...profileState,
     ...aiState,

@@ -266,8 +266,8 @@ const VoicePrivacyTooltip = () => (
           Speak instead of typing
         </p>
         <p className="text-gray-300 leading-relaxed">
-          Click to talk. Your voice is processed by your browser - nothing
-          is sent to our servers. 100% private.
+          Click to talk. Your voice is processed by your browser - nothing is
+          sent to our servers. 100% private.
         </p>
       </div>
     </div>
@@ -358,8 +358,8 @@ const VoiceSafetyPromptBody = () => (
           />
         </svg>
         <span>
-          Your voice is processed by your browser only - we never hear or
-          store your audio.
+          Your voice is processed by your browser only - we never hear or store
+          your audio.
         </span>
       </p>
     </div>
@@ -372,7 +372,9 @@ const VoiceSafetyPromptModal = ({ onConfirm, onDecline }) => (
     onClose={onDecline}
     size="sm"
     labelledBy="voice-safety-title"
-    footer={<VoiceSafetyPromptFooter onConfirm={onConfirm} onDecline={onDecline} />}
+    footer={
+      <VoiceSafetyPromptFooter onConfirm={onConfirm} onDecline={onDecline} />
+    }
   >
     <VoiceSafetyPromptBody />
   </ResponsiveModal>
@@ -576,7 +578,9 @@ export const VoiceTextArea = ({
 
   return (
     <div className="relative">
-      {label && <VoiceTextAreaLabel id={id} label={label} required={required} />}
+      {label && (
+        <VoiceTextAreaLabel id={id} label={label} required={required} />
+      )}
 
       <div className="relative">
         <textarea

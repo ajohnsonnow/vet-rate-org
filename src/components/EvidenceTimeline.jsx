@@ -109,8 +109,7 @@ function drawTimelineGapWarnings(
       padding +
       ((gapStartDate - firstDate) / (lastDate - firstDate)) * lineWidth;
     const endX =
-      padding +
-      ((gapEndDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+      padding + ((gapEndDate - firstDate) / (lastDate - firstDate)) * lineWidth;
 
     // Draw red warning section
     ctx.strokeStyle = gap.severity === "CRITICAL" ? "#dc2626" : "#f59e0b";
@@ -140,8 +139,7 @@ function drawTimelineEventMarkers(
   sortedEvents.forEach((event, index) => {
     const eventDate = new Date(event.date);
     const x =
-      padding +
-      ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+      padding + ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
 
     // Draw event marker
     const eventColor = EVENT_TYPES[event.type]?.color || "#6b7280";
@@ -244,8 +242,7 @@ async function performImportFromRecords({
     );
     const fresh = vkbEvents
       .filter(
-        (e) =>
-          !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
+        (e) => !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
       )
       .map((e, i) => ({
         id: `vkb_${Date.now()}_${i}`,
@@ -415,9 +412,7 @@ function GapWarningsList({ gaps }) {
           <div className="flex items-center justify-between mb-2">
             <h4
               className={`font-bold ${
-                gap.severity === "CRITICAL"
-                  ? "text-red-400"
-                  : "text-yellow-400"
+                gap.severity === "CRITICAL" ? "text-red-400" : "text-yellow-400"
               }`}
             >
               {gap.years}-Year Evidence Gap
@@ -443,8 +438,7 @@ function GapWarningsList({ gaps }) {
             </span>
           </p>
           <p className="text-gray-300 text-xs mb-2">
-            <span className="font-semibold">From:</span>{" "}
-            {gap.start.description}
+            <span className="font-semibold">From:</span> {gap.start.description}
           </p>
           <p className="text-gray-300 text-xs mb-3">
             <span className="font-semibold">To:</span> {gap.end.description}
@@ -543,9 +537,7 @@ function EventTypeSelector({ newEvent, setNewEvent }) {
             aria-label={info.description}
           >
             <div className="text-lg mb-1">{info.icon}</div>
-            <div className="text-xs text-white font-semibold">
-              {info.label}
-            </div>
+            <div className="text-xs text-white font-semibold">{info.label}</div>
           </button>
         ))}
       </div>
@@ -569,9 +561,7 @@ function AddEventForm({ newEvent, setNewEvent, setIsAddingEvent, onAdd }) {
         <input
           type="date"
           value={newEvent.date}
-          onChange={(e) =>
-            setNewEvent({ ...newEvent, date: e.target.value })
-          }
+          onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
           className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:border-blue-500 focus:outline-none"
         />
       </div>
@@ -663,9 +653,7 @@ function TimelineHelpSection() {
         </li>
         <li>
           •{" "}
-          <span className="text-yellow-400 font-semibold">
-            Yellow sections
-          </span>{" "}
+          <span className="text-yellow-400 font-semibold">Yellow sections</span>{" "}
           = Moderate gaps (5-10 years) - Needs explanation
         </li>
         <li>
@@ -810,7 +798,11 @@ const EvidenceTimeline = ({
   }, [timelineEvents]);
 
   const importFromRecords = () =>
-    performImportFromRecords({ timelineEvents, setTimelineEvents, onEventsUpdate });
+    performImportFromRecords({
+      timelineEvents,
+      setTimelineEvents,
+      onEventsUpdate,
+    });
 
   const addEvent = () =>
     performAddEvent({
@@ -823,7 +815,12 @@ const EvidenceTimeline = ({
     });
 
   const removeEvent = (id) =>
-    performRemoveEvent({ id, timelineEvents, setTimelineEvents, onEventsUpdate });
+    performRemoveEvent({
+      id,
+      timelineEvents,
+      setTimelineEvents,
+      onEventsUpdate,
+    });
 
   return (
     <TimelineModalBody

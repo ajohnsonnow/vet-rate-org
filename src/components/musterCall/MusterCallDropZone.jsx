@@ -44,8 +44,8 @@ function PrivacyAssurance() {
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
         Your documents are <strong>never uploaded</strong> anywhere. All
-        processing happens right here in your browser. Your records stay on
-        YOUR device - we never see them.
+        processing happens right here in your browser. Your records stay on YOUR
+        device - we never see them.
       </p>
     </div>
   );

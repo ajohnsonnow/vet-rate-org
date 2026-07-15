@@ -211,11 +211,7 @@ const syncBigThreeFromChecklist = (conditionName, evidenceChecklist) => {
     setBigThreeStatus(conditionName, "diagnosis", evidenceChecklist.diagnosis);
   }
   if (evidenceChecklist.inServiceEvent !== undefined) {
-    setBigThreeStatus(
-      conditionName,
-      "event",
-      evidenceChecklist.inServiceEvent,
-    );
+    setBigThreeStatus(conditionName, "event", evidenceChecklist.inServiceEvent);
   }
   if (evidenceChecklist.nexus !== undefined) {
     setBigThreeStatus(conditionName, "nexus", evidenceChecklist.nexus);
@@ -483,10 +479,7 @@ const NavigatorHeader = ({
     <div className="flex items-center gap-3">
       <Map className="w-6 h-6 text-amber-500" />
       <div>
-        <h1
-          id="claim-navigator-title"
-          className="text-lg font-bold text-white"
-        >
+        <h1 id="claim-navigator-title" className="text-lg font-bold text-white">
           Claim Navigator
         </h1>
         <p className="text-xs text-slate-400">
@@ -766,8 +759,8 @@ const MissionReadinessPanel = ({ milestoneProgress }) => {
         />
       </div>
       <p className="text-slate-400 text-xs">
-        {milestoneProgress.completedCount} of {milestoneProgress.totalCount}{" "}
-        key milestones completed across Vet-Rate tools
+        {milestoneProgress.completedCount} of {milestoneProgress.totalCount} key
+        milestones completed across Vet-Rate tools
       </p>
     </div>
   );
@@ -1217,9 +1210,7 @@ const TriageResultStep = ({
       <h3 className="text-xl font-bold text-white">
         {CLAIM_TYPES[determinedType]?.label}
       </h3>
-      <p className="text-slate-300 mt-2">
-        {CLAIM_TYPES[determinedType]?.info}
-      </p>
+      <p className="text-slate-300 mt-2">{CLAIM_TYPES[determinedType]?.info}</p>
     </div>
 
     <div className="bg-slate-900/50 rounded-lg p-4">
@@ -1295,8 +1286,7 @@ const TriageWizardCard = ({
           conditionName={conditionName}
           setConditionName={setConditionName}
           onContinue={() =>
-            conditionName.trim() &&
-            setTriageState({ ...triageState, step: 1 })
+            conditionName.trim() && setTriageState({ ...triageState, step: 1 })
           }
         />
       )}
@@ -1612,7 +1602,10 @@ const ClaimNextStepsList = ({ actions }) => (
       {actions?.map((action, idx) => {
         const UrgencyIcon = UrgencyIcons[action.urgency] || Circle;
         return (
-          <div key={idx} className="p-4 hover:bg-slate-700/30 transition-colors">
+          <div
+            key={idx}
+            className="p-4 hover:bg-slate-700/30 transition-colors"
+          >
             <div className="flex items-start gap-3">
               <UrgencyIcon
                 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${URGENCY_LEVELS[action.urgency]?.textColor || "text-slate-400"}`}
@@ -1866,7 +1859,13 @@ const DateCardEditForm = ({ inputValue, setInputValue, onSave, onCancel }) => (
   </div>
 );
 
-const DateCardDisplay = ({ date, isDeadline, daysLeft, isPassed, isUrgent }) => {
+const DateCardDisplay = ({
+  date,
+  isDeadline,
+  daysLeft,
+  isPassed,
+  isUrgent,
+}) => {
   if (!date) {
     return <p className="text-slate-500 text-sm">Not set</p>;
   }
@@ -2207,16 +2206,14 @@ const BigThreeHelpSection = () => (
 
 const DeadlinesHelpSection = () => (
   <section>
-    <h3 className="text-amber-400 font-semibold mb-2">
-      ⚠️ Critical Deadlines
-    </h3>
+    <h3 className="text-amber-400 font-semibold mb-2">⚠️ Critical Deadlines</h3>
     <p className="text-slate-300 text-sm">
       The Claim Navigator tracks two critical 1-year deadlines:
     </p>
     <ul className="mt-2 space-y-1 text-slate-400 text-sm list-disc list-inside">
       <li>
-        <strong className="text-white">Intent to File (ITF)</strong> - You
-        have 1 year to submit your full claim after filing an ITF
+        <strong className="text-white">Intent to File (ITF)</strong> - You have
+        1 year to submit your full claim after filing an ITF
       </li>
       <li>
         <strong className="text-white">Appeal Deadline</strong> - You have 1
@@ -2234,24 +2231,24 @@ const ClaimTypesHelpSection = () => (
     <h3 className="text-amber-400 font-semibold mb-2">🛤️ Claim Types</h3>
     <ul className="space-y-2 text-slate-400 text-sm">
       <li>
-        <strong className="text-white">Original</strong> - First time filing
-        for this condition
+        <strong className="text-white">Original</strong> - First time filing for
+        this condition
       </li>
       <li>
-        <strong className="text-white">Increase</strong> - Your rated
-        condition got worse
+        <strong className="text-white">Increase</strong> - Your rated condition
+        got worse
       </li>
       <li>
-        <strong className="text-white">Secondary</strong> - New condition
-        caused by a rated condition
+        <strong className="text-white">Secondary</strong> - New condition caused
+        by a rated condition
       </li>
       <li>
         <strong className="text-white">Supplemental</strong> - Denied but have
         new evidence
       </li>
       <li>
-        <strong className="text-white">HLR</strong> - VA made an error (no
-        new evidence)
+        <strong className="text-white">HLR</strong> - VA made an error (no new
+        evidence)
       </li>
     </ul>
   </section>
@@ -2261,8 +2258,8 @@ const DataHelpSection = () => (
   <section>
     <h3 className="text-amber-400 font-semibold mb-2">💾 Your Data</h3>
     <p className="text-slate-300 text-sm">
-      All your claim data is stored locally on your device. Nothing is sent
-      to any server. Use the Export/Import buttons to back up your data.
+      All your claim data is stored locally on your device. Nothing is sent to
+      any server. Use the Export/Import buttons to back up your data.
     </p>
   </section>
 );

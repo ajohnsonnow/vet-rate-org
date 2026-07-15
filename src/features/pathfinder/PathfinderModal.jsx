@@ -27,9 +27,7 @@ function PathfinderModalHeader({ onClose, onReportBug }) {
                 BETA
               </span>
             </h2>
-            <p className="text-sm text-teal-100">
-              Strategic Claims Analysis
-            </p>
+            <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -98,9 +98,7 @@ function filterDbqForms(forms) {
     const title = form.title?.toLowerCase() || "";
 
     // Check if it's a DBQ (21-0960 prefix) or contains "questionnaire"
-    const isDbq = DBQ_PREFIXES.some((prefix) =>
-      formNumber.startsWith(prefix),
-    );
+    const isDbq = DBQ_PREFIXES.some((prefix) => formNumber.startsWith(prefix));
     const isQuestionnaire =
       title.includes("questionnaire") || title.includes("dbq");
 
@@ -426,7 +424,13 @@ function DbqResultsList({ results, t }) {
   );
 }
 
-function DbqCategoryCard({ category, isExpanded, onToggle, onCategorySearch, t }) {
+function DbqCategoryCard({
+  category,
+  isExpanded,
+  onToggle,
+  onCategorySearch,
+  t,
+}) {
   return (
     <div className="border-2 border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
       <button

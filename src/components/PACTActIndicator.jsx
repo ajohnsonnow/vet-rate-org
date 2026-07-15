@@ -240,8 +240,7 @@ function PACTActServiceRequirement({ expKey, expData, details }) {
       className={`p-3 rounded-lg ${details.bgColor} ${details.borderColor} border`}
     >
       <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-        <span>{details.icon}</span> {expData.name} - Service
-        Requirements
+        <span>{details.icon}</span> {expData.name} - Service Requirements
       </h4>
 
       {expData.serviceRequirements?.locations && (
@@ -250,11 +249,9 @@ function PACTActServiceRequirement({ expKey, expData, details }) {
             Qualifying Locations:
           </span>
           <ul className="text-sm text-gray-600 ml-4 mt-1 list-disc">
-            {expData.serviceRequirements.locations
-              .slice(0, 5)
-              .map((loc, i) => (
-                <li key={i}>{loc}</li>
-              ))}
+            {expData.serviceRequirements.locations.slice(0, 5).map((loc, i) => (
+              <li key={i}>{loc}</li>
+            ))}
             {expData.serviceRequirements.locations.length > 5 && (
               <li className="text-gray-500">...and more</li>
             )}
@@ -264,9 +261,7 @@ function PACTActServiceRequirement({ expKey, expData, details }) {
 
       {expData.serviceRequirements?.dateRange && (
         <div className="text-sm">
-          <span className="font-medium text-gray-700">
-            Service Dates:{" "}
-          </span>
+          <span className="font-medium text-gray-700">Service Dates: </span>
           <span className="text-gray-600">
             {typeof expData.serviceRequirements.dateRange === "string"
               ? expData.serviceRequirements.dateRange
@@ -310,12 +305,11 @@ function PACTActFilingTips() {
       </h4>
       <ul className="text-sm text-gray-700 space-y-1">
         <li>
-          • File your claim as a <strong>presumptive condition</strong>{" "}
-          related to your qualifying service
+          • File your claim as a <strong>presumptive condition</strong> related
+          to your qualifying service
         </li>
         <li>
-          • You&apos;ll still need medical evidence of your current
-          diagnosis
+          • You&apos;ll still need medical evidence of your current diagnosis
         </li>
         <li>
           • Include your DD-214 showing qualifying service locations/dates
@@ -386,7 +380,10 @@ export const PACTActInfoCard = ({ diagnosticCode, _conditionName }) => {
       />
 
       {/* Summary - Always visible */}
-      <PACTActSummary claimTip={pactInfo.claimTip} exposures={pactInfo.exposures} />
+      <PACTActSummary
+        claimTip={pactInfo.claimTip}
+        exposures={pactInfo.exposures}
+      />
 
       {/* Expanded details */}
       {isExpanded && (

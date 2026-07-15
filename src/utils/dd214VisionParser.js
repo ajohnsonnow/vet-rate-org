@@ -395,11 +395,7 @@ const BRANCHES = {
   NAVY: { name: "Navy", components: ["Active Navy", "Navy Reserve"] },
   "AIR FORCE": {
     name: "Air Force",
-    components: [
-      "Active Air Force",
-      "Air Force Reserve",
-      "Air National Guard",
-    ],
+    components: ["Active Air Force", "Air Force Reserve", "Air National Guard"],
   },
   MARINE: {
     name: "Marine Corps",

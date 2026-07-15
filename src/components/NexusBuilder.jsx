@@ -55,7 +55,12 @@ const AGGRAVATION_OPTIONS = [
 // Pure statement generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
 // order of operations, same text.
-function generateStatement({ answers, condition, primaryCondition, isSecondary }) {
+function generateStatement({
+  answers,
+  condition,
+  primaryCondition,
+  isSecondary,
+}) {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -125,7 +130,12 @@ function generateStatement({ answers, condition, primaryCondition, isSecondary }
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
 // order of operations, same text.
-function generateDoctorNote({ answers, condition, primaryCondition, isSecondary }) {
+function generateDoctorNote({
+  answers,
+  condition,
+  primaryCondition,
+  isSecondary,
+}) {
   return `Dear Healthcare Provider,
 
 I am filing a VA disability claim for ${condition}${isSecondary ? ` as secondary to my service-connected ${primaryCondition}` : ""}.
@@ -145,7 +155,8 @@ Sincerely,
 // Pure txt-download helper, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits.
 function downloadAsTxt(statement, doctorNote, fileName) {
-  const content = statement + "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" + doctorNote;
+  const content =
+    statement + "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" + doctorNote;
   const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -454,7 +465,13 @@ const NexusStepTimeline = ({ answers, updateAnswer, condition, t }) => (
 // Aggravation-mechanism radio list, split out of NexusStepBridge purely to
 // keep its function body under the line-count limit. Same markup, same
 // behavior.
-const NexusMechanismList = ({ answers, updateAnswer, condition, primaryCondition, t }) => (
+const NexusMechanismList = ({
+  answers,
+  updateAnswer,
+  condition,
+  primaryCondition,
+  t,
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
       {t("nexusBuilder.howCausesAggravates", {
@@ -800,7 +817,12 @@ const NexusReviewEnhanceButton = ({
         onClick={handleRequestAIEnhance}
         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1070,7 +1092,12 @@ const NexusDoctorsPacketPrompt = ({
           onClick={() => setShowDoctorsPacket(true)}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-500 hover:to-indigo-500 transition-all shadow-md hover:shadow-lg"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1271,7 +1298,12 @@ function createFieldHelpHandler({
 // Owns the AI-enhancement/field-help state and the handlers that touch it.
 // Split out of NexusBuilder purely to keep its function body under the
 // line-count/complexity limits. Same logic, same order of operations.
-function useNexusAIEnhancement({ answers, condition, primaryCondition, updateAnswer }) {
+function useNexusAIEnhancement({
+  answers,
+  condition,
+  primaryCondition,
+  updateAnswer,
+}) {
   const [showAIConsent, setShowAIConsent] = useState(false);
   const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -1335,7 +1367,12 @@ const NexusDownloadFormatMenu = ({ handleDownload, t }) => (
       onClick={() => handleDownload("txt")}
       className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 rounded-t-lg"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -1349,7 +1386,12 @@ const NexusDownloadFormatMenu = ({ handleDownload, t }) => (
       onClick={() => handleDownload("docx")}
       className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -1363,7 +1405,12 @@ const NexusDownloadFormatMenu = ({ handleDownload, t }) => (
       onClick={() => handleDownload("pdf")}
       className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -1402,7 +1449,12 @@ const NexusFinishControls = ({
         className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
       >
         {t("nexusBuilder.downloadStatement")}
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1468,7 +1520,13 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
 // Bottom-of-tree modals (BuyMeCoffee nudge, AI-consent modal, Doctor's
 // Packet modal), split out of NexusBuilder purely to keep its function body
 // under the line-count limit. Same markup, same behavior.
-const NexusBottomModals = ({ modalState, condition, ai, primaryCondition, onOpenAISettings }) => (
+const NexusBottomModals = ({
+  modalState,
+  condition,
+  ai,
+  primaryCondition,
+  onOpenAISettings,
+}) => (
   <div className="relative z-[70]">
     {/* BuyMeCoffee - shows after download */}
     <BuyMeCoffee
@@ -1538,12 +1596,22 @@ function useNexusDocumentOutput({
     if (useAIVersion && aiEnhancedStatement) {
       return aiEnhancedStatement;
     }
-    return generateStatement({ answers, condition, primaryCondition, isSecondary });
+    return generateStatement({
+      answers,
+      condition,
+      primaryCondition,
+      isSecondary,
+    });
   };
 
   const handleFinish = () => {
     const statement = getCurrentStatement();
-    const doctorNote = generateDoctorNote({ answers, condition, primaryCondition, isSecondary });
+    const doctorNote = generateDoctorNote({
+      answers,
+      condition,
+      primaryCondition,
+      isSecondary,
+    });
 
     onSave({
       condition,
@@ -1557,7 +1625,12 @@ function useNexusDocumentOutput({
 
   const handleDownload = (format = "txt") => {
     const statement = getCurrentStatement();
-    const doctorNote = generateDoctorNote({ answers, condition, primaryCondition, isSecondary });
+    const doctorNote = generateDoctorNote({
+      answers,
+      condition,
+      primaryCondition,
+      isSecondary,
+    });
     const fileName = `VA-Statement-${condition.replace(/\s+/g, "-")}`;
 
     switch (format) {
@@ -1592,7 +1665,15 @@ function useNexusDocumentOutput({
 // Renders the active wizard step. Split out of NexusBuilder purely to keep
 // its function body under the line-count/complexity limits. Same markup,
 // same behavior.
-const NexusStepContent = ({ wizard, ai, output, condition, primaryCondition, setShowDoctorsPacket, t }) => (
+const NexusStepContent = ({
+  wizard,
+  ai,
+  output,
+  condition,
+  primaryCondition,
+  setShowDoctorsPacket,
+  t,
+}) => (
   <>
     {/* Step 1: Timeline */}
     {wizard.step === 1 && (

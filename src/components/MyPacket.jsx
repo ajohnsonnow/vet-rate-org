@@ -4622,7 +4622,12 @@ function MyPacketTabContent(props) {
 
 function useMyPacketCoreState() {
   const [claims, setClaims] = useState([]);
-  const [stats, setStats] = useState({ total: 0, drafting: 0, statementGenerated: 0, filed: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    drafting: 0,
+    statementGenerated: 0,
+    filed: 0,
+  });
   const [viewingStatement, setViewingStatement] = useState(null);
   const [viewingClaimId, setViewingClaimId] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(null);
@@ -4636,11 +4641,29 @@ function useMyPacketCoreState() {
   const packetContentRef = useRef(null);
 
   return {
-    claims, setClaims, stats, setStats, viewingStatement, setViewingStatement,
-    viewingClaimId, setViewingClaimId, showDownloadMenu, setShowDownloadMenu,
-    importStatus, setImportStatus, showImportConfirm, setShowImportConfirm,
-    backupCreated, setBackupCreated, isCertified, setIsCertified,
-    showBackupGuide, setShowBackupGuide, setHasExternalBackup, fileInputRef, packetContentRef,
+    claims,
+    setClaims,
+    stats,
+    setStats,
+    viewingStatement,
+    setViewingStatement,
+    viewingClaimId,
+    setViewingClaimId,
+    showDownloadMenu,
+    setShowDownloadMenu,
+    importStatus,
+    setImportStatus,
+    showImportConfirm,
+    setShowImportConfirm,
+    backupCreated,
+    setBackupCreated,
+    isCertified,
+    setIsCertified,
+    showBackupGuide,
+    setShowBackupGuide,
+    setHasExternalBackup,
+    fileInputRef,
+    packetContentRef,
   };
 }
 
@@ -4653,8 +4676,18 @@ function useMyPacketTabsState() {
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
   return {
-    activeTab, setActiveTab, savedForms, setSavedForms, viewingForm, setViewingForm,
-    myRatings, setMyRatings, editingRating, setEditingRating, showVAGovPaster, setShowVAGovPaster,
+    activeTab,
+    setActiveTab,
+    savedForms,
+    setSavedForms,
+    viewingForm,
+    setViewingForm,
+    myRatings,
+    setMyRatings,
+    editingRating,
+    setEditingRating,
+    showVAGovPaster,
+    setShowVAGovPaster,
   };
 }
 
@@ -4663,20 +4696,42 @@ function useMyPacketTimelinePainState() {
   const [painMaps, setPainMaps] = useState([]);
   const [viewingPainMap, setViewingPainMap] = useState(null);
 
-  return { timelineEvents, setTimelineEvents, painMaps, setPainMaps, viewingPainMap, setViewingPainMap };
+  return {
+    timelineEvents,
+    setTimelineEvents,
+    painMaps,
+    setPainMaps,
+    viewingPainMap,
+    setViewingPainMap,
+  };
 }
 
 function useMyPacketServiceHistoryState() {
-  const [serviceHistory, setServiceHistory] = useState({ deployments: [], awards: [], dd214Data: null });
+  const [serviceHistory, setServiceHistory] = useState({
+    deployments: [],
+    awards: [],
+    dd214Data: null,
+  });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
   const [showAwardForm, setShowAwardForm] = useState(false);
   const [showRibbonRack, setShowRibbonRack] = useState(false);
   const [showDD214Processor, setShowDD214Processor] = useState(false);
   const [newDeployment, setNewDeployment] = useState({
-    theater: "", location: "", startDate: "", endDate: "", unit: "", notes: "", hazardous: false, combat: false,
+    theater: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+    unit: "",
+    notes: "",
+    hazardous: false,
+    combat: false,
   });
   const [newAward, setNewAward] = useState({
-    name: "", abbreviation: "", dateReceived: "", notes: "", isCombat: false,
+    name: "",
+    abbreviation: "",
+    dateReceived: "",
+    notes: "",
+    isCombat: false,
   });
   const [dd214Text, setDD214Text] = useState("");
   const [isProcessingDD214, setIsProcessingDD214] = useState(false);
@@ -4685,11 +4740,29 @@ function useMyPacketServiceHistoryState() {
   const dd214FileInputRef = useRef(null);
 
   return {
-    serviceHistory, setServiceHistory, showDeploymentForm, setShowDeploymentForm,
-    showAwardForm, setShowAwardForm, showRibbonRack, setShowRibbonRack,
-    showDD214Processor, setShowDD214Processor, newDeployment, setNewDeployment, newAward, setNewAward,
-    dd214Text, setDD214Text, isProcessingDD214, setIsProcessingDD214,
-    aiStatus, setAIStatus, isDraggingDD214, setIsDraggingDD214, dd214FileInputRef,
+    serviceHistory,
+    setServiceHistory,
+    showDeploymentForm,
+    setShowDeploymentForm,
+    showAwardForm,
+    setShowAwardForm,
+    showRibbonRack,
+    setShowRibbonRack,
+    showDD214Processor,
+    setShowDD214Processor,
+    newDeployment,
+    setNewDeployment,
+    newAward,
+    setNewAward,
+    dd214Text,
+    setDD214Text,
+    isProcessingDD214,
+    setIsProcessingDD214,
+    aiStatus,
+    setAIStatus,
+    isDraggingDD214,
+    setIsDraggingDD214,
+    dd214FileInputRef,
   };
 }
 
@@ -4704,9 +4777,22 @@ function useMyPacketVaState() {
     accessToken: vaAccessToken,
     error: _vaAuthError,
   } = useVaAuth();
-  const [vaImportStatus, setVaImportStatus] = useState({ loading: false, success: null, message: "", counts: {} });
+  const [vaImportStatus, setVaImportStatus] = useState({
+    loading: false,
+    success: null,
+    message: "",
+    counts: {},
+  });
 
-  return { vaRecords, setVaRecords, isVaAuthenticated, vaLogout, vaAccessToken, vaImportStatus, setVaImportStatus };
+  return {
+    vaRecords,
+    setVaRecords,
+    isVaAuthenticated,
+    vaLogout,
+    vaAccessToken,
+    vaImportStatus,
+    setVaImportStatus,
+  };
 }
 
 function _buildPacketLoaders(state) {
@@ -4758,7 +4844,12 @@ function _buildPacketPainTimelineHandlers(ctx) {
 }
 
 function _buildPacketFormsRatingsHandlers(ctx) {
-  const { loadSavedForms, loadMyRatings, setEditingRating, setShowVAGovPaster } = ctx;
+  const {
+    loadSavedForms,
+    loadMyRatings,
+    setEditingRating,
+    setShowVAGovPaster,
+  } = ctx;
 
   const handleRemoveForm = (formId) =>
     _removeFormAndReload(formId, { loadSavedForms });
@@ -4784,7 +4875,13 @@ function _buildPacketFormsRatingsHandlers(ctx) {
 }
 
 function _buildPacketVaHandlers(ctx) {
-  const { loadVARecordsData, loadClaims, vaAccessToken, setVaImportStatus, vaLogout } = ctx;
+  const {
+    loadVARecordsData,
+    loadClaims,
+    vaAccessToken,
+    setVaImportStatus,
+    vaLogout,
+  } = ctx;
 
   const _handleClearVARecords = () =>
     _clearVARecordsAndReload({ loadVARecordsData });
@@ -4874,7 +4971,8 @@ function _buildPacketDD214DropHandlers(ctx) {
 
 function _buildPacketClaimsHandlers(ctx) {
   const { loadClaims } = ctx;
-  const handleRemove = (claimId) => _removeClaimAndReload(claimId, { loadClaims });
+  const handleRemove = (claimId) =>
+    _removeClaimAndReload(claimId, { loadClaims });
   const handleClearAll = () => _clearAllClaimsAndReload({ loadClaims });
   const handleStatusChange = (claimId, newStatus) =>
     _changeClaimStatus(claimId, newStatus, { loadClaims });
@@ -4936,8 +5034,14 @@ function _buildPacketBackupRestoreHandlers(ctx) {
 }
 
 function _buildPacketStatementHandlers(ctx) {
-  const { setViewingStatement, setViewingClaimId, setShowDownloadMenu, viewingClaimId, claims, onResume } =
-    ctx;
+  const {
+    setViewingStatement,
+    setViewingClaimId,
+    setShowDownloadMenu,
+    viewingClaimId,
+    claims,
+    onResume,
+  } = ctx;
 
   const handleViewStatement = (claimId) =>
     _viewStatementForClaim(claimId, { setViewingStatement, setViewingClaimId });
@@ -4979,7 +5083,12 @@ function _runPacketInitLoadEffect(setters) {
 
 // Auto-import VA records after fresh OAuth connection
 function _runPacketVaAutoImportEffect(ctx) {
-  const { isVaAuthenticated, vaAccessToken, vaImportStatus, handleVaDataImport } = ctx;
+  const {
+    isVaAuthenticated,
+    vaAccessToken,
+    vaImportStatus,
+    handleVaDataImport,
+  } = ctx;
   const justConnected = sessionStorage.getItem("va_auth_just_connected");
   if (
     justConnected &&
@@ -5012,7 +5121,11 @@ function _runPacketClickOutsideEffect(showDownloadMenu, setShowDownloadMenu) {
 }
 
 // Check if user needs backup guidance on mount / when claims change
-function _runPacketBackupGuideEffect(claimsLength, setHasExternalBackup, setShowBackupGuide) {
+function _runPacketBackupGuideEffect(
+  claimsLength,
+  setHasExternalBackup,
+  setShowBackupGuide,
+) {
   const hasBackedUp = localStorage.getItem("vetrate_external_backup_created");
   setHasExternalBackup(!!hasBackedUp);
   // Show guide if they have claims but haven't downloaded a backup
@@ -5040,7 +5153,8 @@ function MyPacketExtraModals({ state, handlers }) {
     setShowVAGovPaster,
     t,
   } = state;
-  const { handleEditStatement, handleConfirmImport, handlePastedRatings } = handlers;
+  const { handleEditStatement, handleConfirmImport, handlePastedRatings } =
+    handlers;
 
   return (
     <>
@@ -5086,8 +5200,20 @@ function MyPacketExtraModals({ state, handlers }) {
 }
 
 function MyPacketBackupSection({ state, handlers }) {
-  const { showBackupGuide, claims, onOpenGoogleDriveSync, onAnalyzeStrategy, fileInputRef, t } = state;
-  const { dismissBackupGuide, handleBackupPacket, handleRestoreClick, handleFileSelect } = handlers;
+  const {
+    showBackupGuide,
+    claims,
+    onOpenGoogleDriveSync,
+    onAnalyzeStrategy,
+    fileInputRef,
+    t,
+  } = state;
+  const {
+    dismissBackupGuide,
+    handleBackupPacket,
+    handleRestoreClick,
+    handleFileSelect,
+  } = handlers;
 
   return (
     <>
@@ -5171,7 +5297,11 @@ function MyPacketView({ state, handlers }) {
             t={t}
           />
 
-          <MyPacketTabContent {...state} {...handlers} getStatusColor={getStatusColor} />
+          <MyPacketTabContent
+            {...state}
+            {...handlers}
+            getStatusColor={getStatusColor}
+          />
         </div>
       </ResponsiveModal>
 
@@ -5198,9 +5328,17 @@ const MyPacket = ({
   const vaState = useMyPacketVaState();
 
   const state = {
-    t, onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync, onOpenAISettings, onOpenDD214Analyzer,
+    t,
+    onResume,
+    onClose,
+    onReportBug,
+    onAnalyzeStrategy,
+    onOpenGoogleDriveSync,
+    onOpenAISettings,
+    onOpenDD214Analyzer,
     ...coreState,
-    veteranProfile, setVeteranProfile,
+    veteranProfile,
+    setVeteranProfile,
     ...tabsState,
     ...timelinePainState,
     ...serviceHistoryState,
@@ -5224,16 +5362,27 @@ const MyPacket = ({
   useEffect(
     () =>
       _runPacketInitLoadEffect({
-        setClaims: coreState.setClaims, setStats: coreState.setStats,
-        setSavedForms: tabsState.setSavedForms, setMyRatings: tabsState.setMyRatings,
+        setClaims: coreState.setClaims,
+        setStats: coreState.setStats,
+        setSavedForms: tabsState.setSavedForms,
+        setMyRatings: tabsState.setMyRatings,
         setServiceHistory: serviceHistoryState.setServiceHistory,
-        setTimelineEvents: timelinePainState.setTimelineEvents, setPainMaps: timelinePainState.setPainMaps,
-        setVeteranProfile, setVaRecords: vaState.setVaRecords, setAIStatus: serviceHistoryState.setAIStatus,
+        setTimelineEvents: timelinePainState.setTimelineEvents,
+        setPainMaps: timelinePainState.setPainMaps,
+        setVeteranProfile,
+        setVaRecords: vaState.setVaRecords,
+        setAIStatus: serviceHistoryState.setAIStatus,
       }),
     [
-      coreState.setClaims, coreState.setStats, tabsState.setSavedForms, tabsState.setMyRatings,
-      serviceHistoryState.setServiceHistory, timelinePainState.setTimelineEvents, timelinePainState.setPainMaps,
-      serviceHistoryState.setAIStatus, vaState.setVaRecords,
+      coreState.setClaims,
+      coreState.setStats,
+      tabsState.setSavedForms,
+      tabsState.setMyRatings,
+      serviceHistoryState.setServiceHistory,
+      timelinePainState.setTimelineEvents,
+      timelinePainState.setPainMaps,
+      serviceHistoryState.setAIStatus,
+      vaState.setVaRecords,
     ],
   );
 
@@ -5250,7 +5399,11 @@ const MyPacket = ({
   );
 
   useEffect(
-    () => _runPacketClickOutsideEffect(coreState.showDownloadMenu, coreState.setShowDownloadMenu),
+    () =>
+      _runPacketClickOutsideEffect(
+        coreState.showDownloadMenu,
+        coreState.setShowDownloadMenu,
+      ),
     [coreState.showDownloadMenu, coreState.setShowDownloadMenu],
   );
   useEffect(
@@ -5260,7 +5413,11 @@ const MyPacket = ({
         coreState.setHasExternalBackup,
         coreState.setShowBackupGuide,
       ),
-    [coreState.claims.length, coreState.setHasExternalBackup, coreState.setShowBackupGuide],
+    [
+      coreState.claims.length,
+      coreState.setHasExternalBackup,
+      coreState.setShowBackupGuide,
+    ],
   );
 
   return <MyPacketView state={state} handlers={handlers} />;

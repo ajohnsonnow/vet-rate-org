@@ -142,7 +142,8 @@ describe("sanitizeLegalHtml — table -> Markdown", () => {
 //     control that applied to prose must still apply inside <td>/<th>.
 // ─────────────────────────────────────────────────────────────────────────
 describe("sanitizeLegalHtml — adversarial table cells", () => {
-  const clean = (s) => !/script|onclick|onerror|alert\(|evil\.com|<style/i.test(s);
+  const clean = (s) =>
+    !/script|onclick|onerror|alert\(|evil\.com|<style/i.test(s);
 
   it("neutralizes a <script> inside a table cell, keeping the safe text", () => {
     const out = sanitizeLegalHtml(
@@ -218,7 +219,8 @@ describe("chunkRecord — tables are atomic (never split)", () => {
     // naive word-window WOULD split it. It must not.
     const rows = Array.from(
       { length: 60 },
-      (_, i) => `<tr><td>DC ${5000 + i} condition</td><td>${(i % 10) * 10}</td></tr>`,
+      (_, i) =>
+        `<tr><td>DC ${5000 + i} condition</td><td>${(i % 10) * 10}</td></tr>`,
     ).join("");
     const html =
       "<p>Intro paragraph before the schedule.</p>" +
@@ -358,7 +360,8 @@ describe("chunkRecord / packProse — prose splits on paragraph boundaries", () 
 // ─────────────────────────────────────────────────────────────────────────
 describe("segmentBody — table vs prose classification", () => {
   it("splits a body into ordered table and prose blocks", () => {
-    const body = "Intro prose.\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nMore prose.";
+    const body =
+      "Intro prose.\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nMore prose.";
     const blocks = segmentBody(body);
     expect(blocks.map((b) => b.type)).toEqual(["prose", "table", "prose"]);
   });

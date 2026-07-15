@@ -376,9 +376,9 @@ const ConsentIntro = () => (
           <span className="font-medium text-purple-600 dark:text-purple-300">
             medical mechanism
           </span>{" "}
-          linking your service-connected condition to a claimed
-          secondary condition. It creates a comprehensive research brief
-          that you can present to your private physician.
+          linking your service-connected condition to a claimed secondary
+          condition. It creates a comprehensive research brief that you can
+          present to your private physician.
         </p>
       </div>
     </div>
@@ -393,27 +393,19 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">
-            •
-          </span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
           Medical mechanism explanation
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">
-            •
-          </span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
           Pathophysiological pathways
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">
-            •
-          </span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
           Literature/study references
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">
-            •
-          </span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
           Physician template letter
         </li>
       </ul>
@@ -425,27 +417,19 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">
-            •
-          </span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
           This is <strong>research</strong>, not a diagnosis
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">
-            •
-          </span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
           Doctor must review and sign
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">
-            •
-          </span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
           Uses your free Gemini API key
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">
-            •
-          </span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
           No personal data is sent
         </li>
       </ul>
@@ -478,21 +462,25 @@ const ConsentActions = ({ onClose, handleConsent }) => (
     >
       Cancel
     </button>
-    <ToolCardButton
-      className="flex-1"
-      type="button"
-      onClick={handleConsent}
-    >
+    <ToolCardButton className="flex-1" type="button" onClick={handleConsent}>
       <CheckIcon /> I Understand, Continue
     </ToolCardButton>
   </div>
 );
 
-const ConsentStep = ({ onClose, showPrivacy, setShowPrivacy, handleConsent }) => (
+const ConsentStep = ({
+  onClose,
+  showPrivacy,
+  setShowPrivacy,
+  handleConsent,
+}) => (
   <div className="space-y-6">
     <ConsentIntro />
     <ConsentFeatureGrid />
-    <ConsentPrivacyToggle showPrivacy={showPrivacy} setShowPrivacy={setShowPrivacy} />
+    <ConsentPrivacyToggle
+      showPrivacy={showPrivacy}
+      setShowPrivacy={setShowPrivacy}
+    />
     <ConsentActions onClose={onClose} handleConsent={handleConsent} />
   </div>
 );
@@ -504,9 +492,8 @@ const InputAINotice = () => (
       <div className="text-sm text-amber-800 dark:text-amber-100">
         <p className="mb-1 font-semibold">AI Required for Analysis</p>
         <p className="text-amber-700 dark:text-amber-200">
-          Click the <strong>AI Status button</strong> in the header
-          above to load your secure Local AI (100% private) or enter
-          your Gemini API key.
+          Click the <strong>AI Status button</strong> in the header above to
+          load your secure Local AI (100% private) or enter your Gemini API key.
         </p>
       </div>
     </div>
@@ -597,9 +584,7 @@ const InputStep = ({
         type="button"
         onClick={handleGenerate}
         disabled={
-          !apiKey ||
-          !primaryCondition.trim() ||
-          !secondaryCondition.trim()
+          !apiKey || !primaryCondition.trim() || !secondaryCondition.trim()
         }
       >
         <SparklesIcon /> Generate Doctor&apos;s Packet
@@ -837,11 +822,10 @@ const ResultNotesAndDisclaimer = ({ packetData }) => (
 
     {/* Disclaimer */}
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-400 print:border-black print:text-gray-600">
-      <strong>Disclaimer:</strong> This document is provided for
-      informational purposes only and does not constitute medical advice,
-      diagnosis, or treatment. A qualified physician must review this
-      information and make their own independent medical determination.
-      Generated by Vet-Rate.org.
+      <strong>Disclaimer:</strong> This document is provided for informational
+      purposes only and does not constitute medical advice, diagnosis, or
+      treatment. A qualified physician must review this information and make
+      their own independent medical determination. Generated by Vet-Rate.org.
     </div>
   </>
 );
@@ -1081,7 +1065,10 @@ export default function DoctorsPacket({
     downloadPacketTxt(packetData, primaryCondition, secondaryCondition);
 
   const header = (
-    <DoctorsPacketHeader onClose={onClose} onOpenAISettings={onOpenAISettings} />
+    <DoctorsPacketHeader
+      onClose={onClose}
+      onOpenAISettings={onOpenAISettings}
+    />
   );
 
   return (

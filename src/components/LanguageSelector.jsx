@@ -81,13 +81,9 @@ const CompactGroupedLanguageList = ({
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
-                  {lang.nativeName}
-                </span>
+                <span className="text-sm font-medium">{lang.nativeName}</span>
                 {lang.name !== lang.nativeName && (
-                  <span className="text-xs text-gray-500">
-                    ({lang.name})
-                  </span>
+                  <span className="text-xs text-gray-500">({lang.name})</span>
                 )}
               </div>
               {lang.note && (
@@ -130,19 +126,11 @@ const CompactFlatLanguageList = ({
                  transition-colors ${language === lang.code ? "bg-cyan-900/30 text-cyan-400" : "text-gray-300"}`}
       aria-label={lang.note || `Switch to ${lang.name}`}
     >
-      <FlagIcon
-        langCode={lang.code}
-        size="sm"
-        fallbackEmoji={lang.flag}
-      />
+      <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />
       <div className="flex-1 flex items-center gap-2">
-        <span className="text-sm font-medium">
-          {lang.nativeName}
-        </span>
+        <span className="text-sm font-medium">{lang.nativeName}</span>
         {lang.name !== lang.nativeName && (
-          <span className="text-xs text-gray-500">
-            ({lang.name})
-          </span>
+          <span className="text-xs text-gray-500">({lang.name})</span>
         )}
       </div>
       {language === lang.code && (
@@ -238,8 +226,8 @@ const CompactDropdownFooter = ({
       <span>Suggest a Language</span>
     </button>
     <p className="text-[10px] text-gray-500 text-center">
-      🌍 {availableLanguages.length}+ languages supported • NATO &
-      Coalition Forces included • VA forms remain in English
+      🌍 {availableLanguages.length}+ languages supported • NATO & Coalition
+      Forces included • VA forms remain in English
     </p>
   </div>
 );
@@ -528,11 +516,7 @@ const DefaultLanguageButton = ({ lang, language, handleLanguageChange }) => (
     className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-800
                transition-colors ${language === lang.code ? "bg-cyan-900/20" : ""}`}
   >
-    <FlagIcon
-      langCode={lang.code}
-      size="lg"
-      fallbackEmoji={lang.flag}
-    />
+    <FlagIcon langCode={lang.code} size="lg" fallbackEmoji={lang.flag} />
     <div className="flex-1">
       <div
         className={`font-medium ${language === lang.code ? "text-cyan-400" : "text-white"}`}
@@ -540,14 +524,10 @@ const DefaultLanguageButton = ({ lang, language, handleLanguageChange }) => (
         {lang.nativeName}
       </div>
       {lang.name !== lang.nativeName && (
-        <div className="text-xs text-gray-500">
-          {lang.name}
-        </div>
+        <div className="text-xs text-gray-500">{lang.name}</div>
       )}
       {lang.note && (
-        <div className="text-xs text-amber-400/70 mt-0.5">
-          💡 {lang.note}
-        </div>
+        <div className="text-xs text-amber-400/70 mt-0.5">💡 {lang.note}</div>
       )}
     </div>
     {language === lang.code && (
@@ -655,9 +635,8 @@ const DefaultDropdownFooter = ({
       </button>
     </div>
     <p className="text-xs text-gray-500 text-center">
-      🎖️ Supporting {availableLanguages.length}+ languages for ALL
-      service members • NATO & Coalition Forces • Built by veterans, for
-      veterans
+      🎖️ Supporting {availableLanguages.length}+ languages for ALL service
+      members • NATO & Coalition Forces • Built by veterans, for veterans
     </p>
   </div>
 );
@@ -886,8 +865,14 @@ const LanguageSelector = ({
   className = "",
   onReportBug,
 }) => {
-  const { SUPPORTED_LANGUAGES, isOpen, setIsOpen, sharedVariantProps, language, handleLanguageChange } =
-    useLanguageSelectorState({ className, showFlag, onReportBug });
+  const {
+    SUPPORTED_LANGUAGES,
+    isOpen,
+    setIsOpen,
+    sharedVariantProps,
+    language,
+    handleLanguageChange,
+  } = useLanguageSelectorState({ className, showFlag, onReportBug });
 
   if (variant === "compact") {
     return (

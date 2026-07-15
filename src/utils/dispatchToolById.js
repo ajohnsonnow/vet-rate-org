@@ -41,6 +41,10 @@ const TOOL_EVENT_MAP = {
   "remand-checker": "openRemandRiskChecker",
   "appeals-advisor": "openAppealsLaneAdvisor",
   "bdd-builder": "openBDDBuilder",
+  "the-tribunal": "openTheTribunal",
+  "denial-decoder": "openDenialDecoder",
+  "pact-act": "openPACTActNavigator",
+  "symptom-logger": "openSymptomLogger",
 };
 
 export function dispatchToolById(toolId) {

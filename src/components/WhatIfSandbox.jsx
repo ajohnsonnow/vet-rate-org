@@ -105,10 +105,7 @@ const hasMatchingConditionPair = (currentConditions, bodyPart) => {
 // bilateral factor, via vaCalculator. Bilateral detection (knees/shoulders
 // by L/R name) stays here; the arithmetic is the canonical VA-table engine.
 const computeScenarioResult = (currentConditions, compensationRates) => {
-  const hasBilateralKnees = hasMatchingConditionPair(
-    currentConditions,
-    "Knee",
-  );
+  const hasBilateralKnees = hasMatchingConditionPair(currentConditions, "Knee");
   const hasBilateralShoulders = hasMatchingConditionPair(
     currentConditions,
     "Shoulder",
@@ -133,7 +130,10 @@ const computeScenarioResult = (currentConditions, compensationRates) => {
     // The bilateral group (combined + 10% factor) becomes one rating, then
     // combines with the rest. Handles >2 paired conditions too — the old
     // code silently dropped everything unless exactly two were present.
-    groupRatings = [calculateBilateralFactor(bilateralRatings), ...otherRatings];
+    groupRatings = [
+      calculateBilateralFactor(bilateralRatings),
+      ...otherRatings,
+    ];
   } else {
     groupRatings = currentConditions.map((c) => c.rating);
   }
@@ -285,7 +285,11 @@ const SandboxHeader = ({
   </div>
 );
 
-const ConditionLibrary = ({ availableConditions, onDragStart, onAddCondition }) => (
+const ConditionLibrary = ({
+  availableConditions,
+  onDragStart,
+  onAddCondition,
+}) => (
   // Scrollable region must be keyboard-focusable (axe
   // scrollable-region-focusable), hence the intentional tabIndex
   <div
@@ -368,8 +372,7 @@ const ScenarioConditions = ({
           Build Your Scenario
         </h4>
         <p className="text-gray-600 dark:text-gray-400">
-          Tap a condition in the library to add it (or drag it here on
-          desktop).
+          Tap a condition in the library to add it (or drag it here on desktop).
         </p>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
           Watch the combined rating and monthly pay update in real-time!
@@ -429,8 +432,7 @@ const BilateralBonusIndicator = ({ hasMatchingBilateral }) => {
         <span>🎖️</span> Bilateral Factor Applied!
       </h4>
       <p className="text-sm text-green-700 dark:text-green-300">
-        {hasMatchingBilateral("Knee") &&
-          "Both knees rated: 10% bonus applied."}
+        {hasMatchingBilateral("Knee") && "Both knees rated: 10% bonus applied."}
         {hasMatchingBilateral("Shoulder") &&
           " Both shoulders rated: 10% bonus applied."}
       </p>
