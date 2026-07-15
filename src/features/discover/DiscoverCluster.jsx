@@ -117,7 +117,7 @@ function SecondaryScoutHeader({
           />
           <button
             onClick={onViewPacket}
-            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-gray-900 rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5"

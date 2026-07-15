@@ -31,7 +31,7 @@ function PDFButton({ result, searchTerm }) {
         className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition ${
           isLoading
             ? "bg-gray-400 text-white cursor-not-allowed"
-            : "bg-va-gold text-va-blue hover:bg-yellow-400 active:scale-95"
+            : "bg-va-gold text-gray-900 hover:bg-yellow-400 active:scale-95"
         }`}
         aria-label="Generate PDF with disability details"
       >

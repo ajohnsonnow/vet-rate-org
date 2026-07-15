@@ -44,6 +44,7 @@ async function bootWithPacket(page: Page): Promise<void> {
       localStorage.setItem("vet_rate_last_seen_version", version);
       localStorage.setItem("vetrate-tour-completed", "true");
       localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       localStorage.setItem("vet_rate_saved_claims", JSON.stringify(claims));
     },
     { version: APP_VERSION, claims: FIXTURE_CLAIMS },
@@ -55,16 +56,19 @@ async function bootWithPacket(page: Page): Promise<void> {
 }
 
 // ── Tool dispatch + wait ──────────────────────────────────────────────────────
-// Mirrors the modalIsVisible() helper in tool-launch-matrix.spec.ts:
-// polls 14 × 500 ms (7 s total) before giving up. isVisible() returns
-// immediately (no wait); this loop is the wait mechanism.
+// Polls 30 × 500 ms (15 s total) before giving up — matches the 15s
+// webServer/lazy-chunk budget established in mobile.spec.ts's Atomic Wipe
+// test. isVisible() returns immediately (no wait); this loop is the wait
+// mechanism. Heavier tools (PDF generation, adversarial-testing bundle) can
+// exceed a tighter budget under the 6-parallel-worker local dev-server
+// contention this suite runs with (CI runs workers: 1, serial, no contention).
 async function openTool(page: Page, eventName: string): Promise<boolean> {
   await page.evaluate((evt) => {
     window.dispatchEvent(new CustomEvent(evt));
   }, eventName);
 
   const selectors = ['[role="dialog"]', '[aria-modal="true"]'];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 30; i++) {
     for (const sel of selectors) {
       const visible = await page
         .locator(sel)
@@ -188,30 +192,11 @@ test.describe("Discover cluster — with 9-condition packet", () => {
     page,
   }) => {
     await bootWithPacket(page);
-    await page.evaluate(() => {
-      window.dispatchEvent(new CustomEvent("openClaimNavigator"));
-    });
-    await page.waitForTimeout(2000);
-
-    // After Sprint 6 fix, ClaimNavigator has role="dialog"
-    const dialog = page.locator('[role="dialog"]').first();
-    const isVisible = await dialog
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
-
-    // If the fixed role is present, great. If not, the fixed overlay should be there.
-    const overlay = await page
-      .locator(".fixed.inset-0")
-      .first()
-      .isVisible({ timeout: 1000 })
-      .catch(() => false);
-
-    expect(
-      isVisible || overlay,
-      "Claim Navigator should be visible after event",
-    ).toBe(true);
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
+    const opened = await openTool(page, "openClaimNavigator");
+    expect(opened, "Claim Navigator should be visible after event").toBe(
+      true,
+    );
+    await closeTool(page);
   });
 });
 
@@ -266,7 +251,7 @@ test.describe("QC cluster — with 9-condition packet", () => {
 
     // After Sprint 6 fix, DenialDecoder has role="dialog"
     const dialog = page.locator('[role="dialog"]').first();
-    await expect(dialog).toBeVisible({ timeout: 6000 });
+    await expect(dialog).toBeVisible({ timeout: 15000 });
     await closeTool(page);
   });
 

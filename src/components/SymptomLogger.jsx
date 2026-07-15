@@ -289,15 +289,6 @@ const SYMPTOM_TYPES = {
   },
 };
 
-const SYMPTOM_PROMPT_BUILDERS = {
-  migraine: buildMigrainePrompts,
-  ibs: buildIbsPrompts,
-  pain: buildPainPrompts,
-  mental: buildMentalPrompts,
-  fatigue: buildFatiguePrompts,
-  sleep: buildSleepPrompts,
-};
-
 const buildMigrainePrompts = (contextData) => ({
   triggers: `Help a veteran document migraine triggers for VA disability evidence. Current context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, weather: ${contextData.weather || "not specified"}, stress level: ${contextData.stressLevel}/10.
         
@@ -424,6 +415,15 @@ Generate 2-3 sentences describing typical activity limitations for documentation
       
 Write a 2-3 sentence clinical-style note suitable for VA disability documentation.`,
 });
+
+const SYMPTOM_PROMPT_BUILDERS = {
+  migraine: buildMigrainePrompts,
+  ibs: buildIbsPrompts,
+  pain: buildPainPrompts,
+  mental: buildMentalPrompts,
+  fatigue: buildFatiguePrompts,
+  sleep: buildSleepPrompts,
+};
 
 const addPDFTitleSection = (doc, config, totalEntries, margin, startY) => {
   let y = startY;
