@@ -24,10 +24,7 @@ const ModalHeader = ({ onClose }) => (
     <div className="flex items-center gap-3">
       <div className="text-3xl">🔍</div>
       <div>
-        <h1
-          id="record-search-title"
-          className="text-xl font-bold text-white"
-        >
+        <h1 id="record-search-title" className="text-xl font-bold text-white">
           The Needle in the Haystack
         </h1>
         <p className="text-blue-100 text-sm">
@@ -54,14 +51,13 @@ const Explainer = () => (
           Find Evidence Instantly
         </h2>
         <p className="text-gray-300 mb-3">
-          Your Service Treatment Record (STR) or C-File might be thousands
-          of pages. You know you hurt your back in 2006, but which page
-          documents it?
+          Your Service Treatment Record (STR) or C-File might be thousands of
+          pages. You know you hurt your back in 2006, but which page documents
+          it?
         </p>
         <p className="text-gray-300 font-semibold">
           This tool searches the entire PDF in seconds and shows you{" "}
-          <span className="text-white">exact page numbers + context</span>
-          .
+          <span className="text-white">exact page numbers + context</span>.
         </p>
       </div>
     </div>
@@ -95,8 +91,7 @@ const FileUploadZone = ({
     </p>
     <p className="text-sm text-gray-400 mb-4">or click to browse</p>
     <p className="text-xs text-gray-500">
-      All processing happens locally in your browser. No upload to
-      servers.
+      All processing happens locally in your browser. No upload to servers.
     </p>
     <input
       ref={fileInputRef}
@@ -231,8 +226,7 @@ const ErrorDisplay = ({ error }) => (
 const ResultsList = ({ results, totalMatches, searchTerm }) => (
   <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
     <h3 className="text-lg font-bold text-green-400 mb-4">
-      ✅ Found {totalMatches}{" "}
-      {totalMatches === 1 ? "match" : "matches"} across{" "}
+      ✅ Found {totalMatches} {totalMatches === 1 ? "match" : "matches"} across{" "}
       {results.length} locations
     </h3>
     <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -281,23 +275,22 @@ const CitationHelper = ({ results }) => (
       <li className="flex items-start gap-2">
         <span className="text-green-400">✓</span>
         <span>
-          <strong>In your personal statement:</strong> &quot;As
-          documented on Page {results[0].page} of my Service Treatment
-          Records...&quot;
+          <strong>In your personal statement:</strong> &quot;As documented on
+          Page {results[0].page} of my Service Treatment Records...&quot;
         </span>
       </li>
       <li className="flex items-start gap-2">
         <span className="text-green-400">✓</span>
         <span>
-          <strong>For your VSO:</strong> Give them the page numbers to
-          attach as evidence
+          <strong>For your VSO:</strong> Give them the page numbers to attach as
+          evidence
         </span>
       </li>
       <li className="flex items-start gap-2">
         <span className="text-green-400">✓</span>
         <span>
-          <strong>In your nexus letter:</strong> Ask your doctor to
-          reference these specific pages
+          <strong>In your nexus letter:</strong> Ask your doctor to reference
+          these specific pages
         </span>
       </li>
     </ul>
@@ -358,7 +351,10 @@ const FileLoadedPanel = ({
   </div>
 );
 
-const doLoadFile = async (pdfFile, { setError, setFile, setResults, setFileData }) => {
+const doLoadFile = async (
+  pdfFile,
+  { setError, setFile, setResults, setFileData },
+) => {
   setError(null);
   setFile(pdfFile);
   setResults([]);
@@ -372,7 +368,13 @@ const doLoadFile = async (pdfFile, { setError, setFile, setResults, setFileData 
 };
 
 const doKeywordSearch = async (fileData, searchTerm, options, setters) => {
-  const { setIsSearching, setError, setResults, setSearchProgress, setTotalMatches } = setters;
+  const {
+    setIsSearching,
+    setError,
+    setResults,
+    setSearchProgress,
+    setTotalMatches,
+  } = setters;
 
   setIsSearching(true);
   setError(null);
@@ -404,7 +406,13 @@ const doKeywordSearch = async (fileData, searchTerm, options, setters) => {
 };
 
 const doQuickSearch = async (fileData, category, setters) => {
-  const { setIsSearching, setError, setResults, setSearchProgress, setTotalMatches } = setters;
+  const {
+    setIsSearching,
+    setError,
+    setResults,
+    setSearchProgress,
+    setTotalMatches,
+  } = setters;
 
   if (!fileData) {
     setError("Please drop in a PDF file first.");
@@ -420,18 +428,14 @@ const doQuickSearch = async (fileData, category, setters) => {
   setSearchProgress(0);
 
   try {
-    const resultsMap = await searchPdfForMultipleKeywords(
-      fileData,
-      keywords,
-      {
-        caseSensitive: false,
-        wholeWord: false,
-        contextLength: 200,
-        onProgress: (current, total) => {
-          setSearchProgress(Math.round((current / total) * 100));
-        },
+    const resultsMap = await searchPdfForMultipleKeywords(fileData, keywords, {
+      caseSensitive: false,
+      wholeWord: false,
+      contextLength: 200,
+      onProgress: (current, total) => {
+        setSearchProgress(Math.round((current / total) * 100));
       },
-    );
+    });
 
     // Combine all results
     const allResults = [];
@@ -517,7 +521,12 @@ const useRecordSearchState = () => {
   // Search execution
   const handleSearch = async () => {
     if (!fileData || !searchTerm.trim()) return;
-    await doKeywordSearch(fileData, searchTerm, { caseSensitive, wholeWord }, searchSetters);
+    await doKeywordSearch(
+      fileData,
+      searchTerm,
+      { caseSensitive, wholeWord },
+      searchSetters,
+    );
   };
 
   const handleQuickSearch = async (category) => {

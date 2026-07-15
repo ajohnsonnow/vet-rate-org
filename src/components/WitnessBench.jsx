@@ -924,7 +924,15 @@ function useWitnessBench(t) {
     output.setGeneratedStatement("");
   };
 
-  return { wizard, interview, ai, output, startInterview, generateStatement, startOver };
+  return {
+    wizard,
+    interview,
+    ai,
+    output,
+    startInterview,
+    generateStatement,
+    startOver,
+  };
 }
 
 const WitnessBenchHeader = ({
@@ -1706,10 +1714,7 @@ const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
           downloadWitnessPDF(wb.output.generatedStatement, wb.wizard.condition)
         }
         onDownloadDOCX={() =>
-          downloadWitnessDOCX(
-            wb.output.generatedStatement,
-            wb.wizard.condition,
-          )
+          downloadWitnessDOCX(wb.output.generatedStatement, wb.wizard.condition)
         }
         onStartOver={wb.startOver}
       />

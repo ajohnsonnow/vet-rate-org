@@ -57,8 +57,7 @@ const SubtleExit = ({
         Exit Now?
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">
-        This will immediately redirect you to a neutral website
-        (weather.com).
+        This will immediately redirect you to a neutral website (weather.com).
       </p>
     </ResponsiveModal>
   </>
@@ -77,7 +76,13 @@ const VisibleExit = ({ posClass, className, handleClick }) => (
   </button>
 );
 
-const FloatingExit = ({ posClass, className, isHovered, setIsHovered, handleClick }) => (
+const FloatingExit = ({
+  posClass,
+  className,
+  isHovered,
+  setIsHovered,
+  handleClick,
+}) => (
   <button
     onClick={handleClick}
     onMouseEnter={() => setIsHovered(true)}
@@ -159,7 +164,11 @@ const QuickExitButton = ({
   // Visible variant
   if (variant === "visible") {
     return (
-      <VisibleExit posClass={posClass} className={className} handleClick={handleClick} />
+      <VisibleExit
+        posClass={posClass}
+        className={className}
+        handleClick={handleClick}
+      />
     );
   }
 

@@ -66,7 +66,11 @@ const getQualityGrantRateSummary = (quality) => {
   return `Only ${NEXUS_QUALITY_OUTCOMES.weak.grantRate}% grant rate for weak opinions`;
 };
 
-const ProviderTypeSelector = ({ providerType, onSelectProvider, providerData }) => (
+const ProviderTypeSelector = ({
+  providerType,
+  onSelectProvider,
+  providerData,
+}) => (
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -101,13 +105,13 @@ const ProviderTypeSelector = ({ providerType, onSelectProvider, providerData }) 
       <div
         className={`mt-3 p-3 rounded-lg ${getProviderCalloutClass(providerData.grantRate)}`}
       >
-        <strong>BVA Data:</strong> {providerData.label} nexus opinions
-        have a {providerData.grantRate}% grant rate (
-        {providerData.grantPlusRemand}% when including remands).
+        <strong>BVA Data:</strong> {providerData.label} nexus opinions have a{" "}
+        {providerData.grantRate}% grant rate ({providerData.grantPlusRemand}%
+        when including remands).
         {providerType === "vaExaminer" && (
           <span className="block mt-1 text-sm">
-            💡 Consider supplementing with a private opinion - they grant
-            at 2.5x the rate.
+            💡 Consider supplementing with a private opinion - they grant at
+            2.5x the rate.
           </span>
         )}
       </div>
@@ -119,8 +123,8 @@ const NexusTextInput = ({ nexusText, onChangeText }) => (
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-      Paste your nexus opinion text (we analyze it locally - nothing is
-      sent anywhere):
+      Paste your nexus opinion text (we analyze it locally - nothing is sent
+      anywhere):
     </label>
     <textarea
       value={nexusText}
@@ -170,17 +174,12 @@ const AnalysisResults = ({ analysis }) => (
           >
             <span>{passed ? "✓" : "✗"}</span>
             <span>
-              {check === "hasLikelyAsNot" &&
-                'Uses "at least as likely as not"'}
-              {check === "citesMedicalLit" &&
-                "Cites medical literature"}
-              {check === "explainsMechanism" &&
-                "Explains medical mechanism"}
-              {check === "referencesRecords" &&
-                "References service records"}
+              {check === "hasLikelyAsNot" && 'Uses "at least as likely as not"'}
+              {check === "citesMedicalLit" && "Cites medical literature"}
+              {check === "explainsMechanism" && "Explains medical mechanism"}
+              {check === "referencesRecords" && "References service records"}
               {check === "rulesOutOther" && "Rules out other causes"}
-              {check === "hasRationale" &&
-                "Detailed rationale provided"}
+              {check === "hasRationale" && "Detailed rationale provided"}
             </span>
           </div>
         ))}
@@ -215,8 +214,8 @@ const JudgeQuotesSection = ({ showJudgeQuotes, onToggle }) => (
       onClick={onToggle}
       className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium"
     >
-      {showJudgeQuotes ? "▼ Hide" : "▶ Show"} What BVA Judges Say About
-      Nexus Opinions
+      {showJudgeQuotes ? "▼ Hide" : "▶ Show"} What BVA Judges Say About Nexus
+      Opinions
     </button>
 
     {showJudgeQuotes && (
@@ -276,8 +275,7 @@ const ProviderComparisonChart = () => (
       ))}
     </div>
     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-      Based on analysis of 8,167 BVA decisions with nexus opinions
-      (2023-2025)
+      Based on analysis of 8,167 BVA decisions with nexus opinions (2023-2025)
     </p>
   </div>
 );

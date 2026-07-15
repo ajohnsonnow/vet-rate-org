@@ -185,7 +185,10 @@ const LLMRecommendationPanelPrimary = ({ recommendation, onModelSelect }) => (
 /**
  * Alternative models list for the full panel
  */
-const LLMRecommendationPanelAlternatives = ({ alternatives, onModelSelect }) => (
+const LLMRecommendationPanelAlternatives = ({
+  alternatives,
+  onModelSelect,
+}) => (
   <div className="mb-3">
     <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
       Alternative Models

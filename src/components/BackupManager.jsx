@@ -285,8 +285,7 @@ function StatusMessage({ status }) {
         <div className="mt-2 text-sm space-y-1">
           {Object.entries(status.details).map(([key, value]) => (
             <p key={key}>
-              <span className="font-medium capitalize">{key}:</span>{" "}
-              {value}
+              <span className="font-medium capitalize">{key}:</span> {value}
             </p>
           ))}
         </div>
@@ -304,8 +303,8 @@ function CloudSyncSection({ onOpenCloudSync }) {
             ☁️ Google Drive Sync
           </h3>
           <p className="text-gray-600 dark:text-gray-300">
-            <strong>Encrypted backup to YOUR Google Drive.</strong> We
-            never see your data.
+            <strong>Encrypted backup to YOUR Google Drive.</strong> We never see
+            your data.
           </p>
         </div>
         <button
@@ -322,16 +321,16 @@ function CloudSyncSection({ onOpenCloudSync }) {
         </h4>
         <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
           <li>
-            🔐 <strong>Your Cloud, Your Keys:</strong> Data goes to YOUR
-            Google Drive, not ours
+            🔐 <strong>Your Cloud, Your Keys:</strong> Data goes to YOUR Google
+            Drive, not ours
           </li>
           <li>
-            🔄 <strong>Auto-Backup:</strong> Never lose progress again
-            (computer crashes, cache clears)
+            🔄 <strong>Auto-Backup:</strong> Never lose progress again (computer
+            crashes, cache clears)
           </li>
           <li>
-            📱 <strong>Cross-Device:</strong> Start on desktop, continue
-            on mobile
+            📱 <strong>Cross-Device:</strong> Start on desktop, continue on
+            mobile
           </li>
           <li>
             🏠 <strong>Always Available:</strong> Access your claims from
@@ -356,8 +355,7 @@ function ExportSection({ onExport }) {
             📦 Export Your Data
           </h3>
           <p className="text-gray-600 dark:text-gray-300">
-            Download a complete backup of all your claims, forms, and
-            settings.
+            Download a complete backup of all your claims, forms, and settings.
           </p>
         </div>
         <button
@@ -443,24 +441,22 @@ function DossierExportSection({ setStatus }) {
         </h4>
         <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
           <li>
-            📄 <strong>Human Readable:</strong> Formatted report, not
-            technical JSON
+            📄 <strong>Human Readable:</strong> Formatted report, not technical
+            JSON
           </li>
           <li>
-            🌐 <strong>Works Offline:</strong> Opens in any browser
-            without internet
+            🌐 <strong>Works Offline:</strong> Opens in any browser without
+            internet
           </li>
           <li>
-            🏛️ <strong>VSO Ready:</strong> Share with your Veterans
-            Service Officer
+            🏛️ <strong>VSO Ready:</strong> Share with your Veterans Service
+            Officer
           </li>
           <li>
-            ♿ <strong>Printable:</strong> Print directly from your
-            browser
+            ♿ <strong>Printable:</strong> Print directly from your browser
           </li>
           <li>
-            🔒 <strong>You Own It:</strong> Your data, independent of
-            Vet-Rate
+            🔒 <strong>You Own It:</strong> Your data, independent of Vet-Rate
           </li>
         </ul>
       </div>
@@ -529,24 +525,23 @@ function DbqLibrarySection({ dbqCacheStats, onOpenDbqBrowser }) {
         </h4>
         <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
           <li>
-            📱 <strong>Works Offline:</strong> Access forms without
-            internet
+            📱 <strong>Works Offline:</strong> Access forms without internet
           </li>
           <li>
-            ✏️ <strong>Pre-Fill Drafts:</strong> Enter subjective info
-            before appointments
+            ✏️ <strong>Pre-Fill Drafts:</strong> Enter subjective info before
+            appointments
           </li>
           <li>
-            🔐 <strong>Secure Sharing:</strong> Download, encrypt, or
-            AirDrop to doctor
+            🔐 <strong>Secure Sharing:</strong> Download, encrypt, or AirDrop to
+            doctor
           </li>
           <li>
             📋 <strong>69+ DBQs:</strong> All official VA questionnaires
             available
           </li>
           <li>
-            ⚠️ <strong>Draft Watermarks:</strong> All pre-filled docs
-            clearly marked
+            ⚠️ <strong>Draft Watermarks:</strong> All pre-filled docs clearly
+            marked
           </li>
         </ul>
       </div>
@@ -780,9 +775,7 @@ function BunkerInfoBox() {
       </h4>
       <ul className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
         <li>• Export your data regularly (weekly recommended)</li>
-        <li>
-          • Store backups in cloud storage (Dropbox, Google Drive, etc.)
-        </li>
+        <li>• Store backups in cloud storage (Dropbox, Google Drive, etc.)</li>
         <li>• You can transfer backups between computers and browsers</li>
         <li>
           • Your backup file is plain JSON - you can inspect it in any text
@@ -800,13 +793,11 @@ function ImportComparisonGrid({ pendingImport }) {
         <p className="font-semibold text-gray-800 dark:text-white mb-1">
           Backup file
         </p>
-        {countItems((k) => pendingImport.data[k]).map(
-          ({ label, count }) => (
-            <p key={label} className="text-gray-600 dark:text-gray-300">
-              {label}: {count}
-            </p>
-          ),
-        )}
+        {countItems((k) => pendingImport.data[k]).map(({ label, count }) => (
+          <p key={label} className="text-gray-600 dark:text-gray-300">
+            {label}: {count}
+          </p>
+        ))}
         <p className="text-gray-600 dark:text-gray-300">
           Total items: {Object.keys(pendingImport.data).length}
         </p>
@@ -815,13 +806,11 @@ function ImportComparisonGrid({ pendingImport }) {
         <p className="font-semibold text-gray-800 dark:text-white mb-1">
           On this device
         </p>
-        {countItems((k) => localStorage.getItem(k)).map(
-          ({ label, count }) => (
-            <p key={label} className="text-gray-600 dark:text-gray-300">
-              {label}: {count}
-            </p>
-          ),
-        )}
+        {countItems((k) => localStorage.getItem(k)).map(({ label, count }) => (
+          <p key={label} className="text-gray-600 dark:text-gray-300">
+            {label}: {count}
+          </p>
+        ))}
       </div>
     </div>
   );
@@ -926,8 +915,8 @@ function ConfirmRestoreDialog({
       </h3>
       <p className="text-gray-700 dark:text-gray-300 mb-4">
         This rolls your data back to the restore point saved on{" "}
-        {new Date(restorePoint.savedAt).toLocaleString()} — right before
-        your last import.
+        {new Date(restorePoint.savedAt).toLocaleString()} — right before your
+        last import.
       </p>
       <p className="text-gray-700 dark:text-gray-300 font-semibold">
         Anything imported or changed since then will be replaced.

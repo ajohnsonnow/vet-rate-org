@@ -42,8 +42,7 @@ function getIcon(type, isNew) {
 }
 
 function getTypeBadgeColor(type, isNew) {
-  if (isNew)
-    return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
+  if (isNew) return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
   const colors = {
     feature:
       "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
@@ -303,8 +302,7 @@ function MissionSection() {
       <p className="text-gray-700 dark:text-gray-300 mb-3">
         <strong>Vet-Rate.org</strong> {t("about", "missionDescription")} (
         {getTotalToolCount()}+{" "}
-        {t("about", "professionalTools")?.toLowerCase() ||
-          "professional tools"}
+        {t("about", "professionalTools")?.toLowerCase() || "professional tools"}
         )
       </p>
     </section>
@@ -327,8 +325,7 @@ function ClaimsArsenalSection() {
         {TOOLKIT_CATEGORIES.map((category) => (
           <div key={category.id}>
             <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">
-              {category.emoji} {category.title} ({category.tools.length}{" "}
-              tools)
+              {category.emoji} {category.title} ({category.tools.length} tools)
             </h4>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
               {category.tools.map((tool, index) => (
@@ -391,8 +388,7 @@ function DataSourcesSection() {
         </li>
       </ul>
       <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 italic">
-        {t("about", "lastValidated")} January 2026{" "}
-        {t("about", "againstEcfr")}
+        {t("about", "lastValidated")} January 2026 {t("about", "againstEcfr")}
       </p>
     </section>
   );
@@ -530,9 +526,7 @@ function MidnightCard() {
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-2xl">🖥️</span>
-        <h4 className="font-bold text-gray-800 dark:text-gray-200">
-          Midnight
-        </h4>
+        <h4 className="font-bold text-gray-800 dark:text-gray-200">Midnight</h4>
         <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
           {t("about", "theWorkstation")}
         </span>
@@ -552,20 +546,19 @@ function MidnightCard() {
             <strong>Cooler:</strong> Asus ProArt LC 420 107 CFM Liquid
           </p>
           <p>
-            <strong>Motherboard:</strong> Asus ProArt X670E-CREATOR WIFI ATX
-            AM5
+            <strong>Motherboard:</strong> Asus ProArt X670E-CREATOR WIFI ATX AM5
           </p>
           <p>
             <strong>Memory:</strong> Corsair Vengeance 128 GB (4 x 32 GB)
             DDR5-5600 CL40
           </p>
           <p>
-            <strong>Primary SSD:</strong> MSI SPATIUM M570 HS 2 TB PCIe 5.0
-            X4 NVMe
+            <strong>Primary SSD:</strong> MSI SPATIUM M570 HS 2 TB PCIe 5.0 X4
+            NVMe
           </p>
           <p>
-            <strong>Storage:</strong> 2 x Silicon Power UD90 4 TB PCIe 4.0
-            X4 NVMe
+            <strong>Storage:</strong> 2 x Silicon Power UD90 4 TB PCIe 4.0 X4
+            NVMe
           </p>
           <p>
             <strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB
@@ -575,8 +568,7 @@ function MidnightCard() {
             <strong>Case:</strong> Asus ProArt PA602 ATX Mid Tower
           </p>
           <p>
-            <strong>PSU:</strong> be quiet! Dark Power Pro 13 1300W 80+
-            Titanium
+            <strong>PSU:</strong> be quiet! Dark Power Pro 13 1300W 80+ Titanium
           </p>
           <p>
             <strong>Displays:</strong> Asus ProArt PA329CV 32&quot; 4K +
@@ -587,8 +579,8 @@ function MidnightCard() {
             Sonnet Breakaway Box 850 T5
           </p>
           <p>
-            <strong>eGPU:</strong> Asus Dual RTX 4060 Ti EVO OC 16 GB in
-            Sonnet Breakaway Box 750ex
+            <strong>eGPU:</strong> Asus Dual RTX 4060 Ti EVO OC 16 GB in Sonnet
+            Breakaway Box 750ex
           </p>
         </div>
       </details>
@@ -603,8 +595,7 @@ function ProjectScaleBlock() {
         📐 Project Scale
       </p>
       <p>
-        <strong>Total Files:</strong> {FORMATTED_STATS.totalFiles} project
-        files
+        <strong>Total Files:</strong> {FORMATTED_STATS.totalFiles} project files
       </p>
       <p>
         <strong>Lines of Code:</strong> {FORMATTED_STATS.linesOfCode} lines
@@ -714,8 +705,7 @@ function WarrantCouncilBlock() {
         🎖️ The Warrant Council
       </p>
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-        Our specialized 3-agent AI architecture, each with military
-        expertise:
+        Our specialized 3-agent AI architecture, each with military expertise:
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
         <div className="bg-blue-50 dark:bg-blue-900/30 rounded p-2">
@@ -723,8 +713,8 @@ function WarrantCouncilBlock() {
             🔍 CW5 Auditor
           </p>
           <p className="text-gray-600 dark:text-gray-400">
-            Reviews claims for accuracy, compliance, and completeness
-            against 38 CFR
+            Reviews claims for accuracy, compliance, and completeness against 38
+            CFR
           </p>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/30 rounded p-2">
@@ -745,8 +735,7 @@ function WarrantCouncilBlock() {
         </div>
       </div>
       <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-        🎖️ Fine-tuned on official VA regulations for Diamond Standard
-        accuracy
+        🎖️ Fine-tuned on official VA regulations for Diamond Standard accuracy
       </p>
     </div>
   );
@@ -776,12 +765,11 @@ function DevelopmentTimeEstimate() {
         {FORMATTED_STATS.traditionalHours}
       </p>
       <p className="text-xs mt-1 italic">
-        • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding (128k
-        lines @ 9.77 LOC/hr blended team rate)
-        <br />• {PROJECT_STATS.breakdown.dataValidation} hrs data validation
-        ({PROJECT_STATS.disabilitiesValidated} disabilities against 38 CFR)
-        <br />•{" "}
-        {formatNumber(PROJECT_STATS.breakdown.testing)} hrs testing & QA
+        • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding (128k lines
+        @ 9.77 LOC/hr blended team rate)
+        <br />• {PROJECT_STATS.breakdown.dataValidation} hrs data validation (
+        {PROJECT_STATS.disabilitiesValidated} disabilities against 38 CFR)
+        <br />• {formatNumber(PROJECT_STATS.breakdown.testing)} hrs testing & QA
         (15% of dev time)
         <br />• {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations
         <br />• {PROJECT_STATS.breakdown.documentation} hrs documentation &
@@ -814,9 +802,9 @@ function ActualTimeInvested() {
         <br />• {FORMATTED_STATS.linesChanged}
       </p>
       <p className="text-xs mt-1 text-amber-600 dark:text-amber-400 italic">
-        📚 Plot twist: I spent 5 days before that first commit figuring out
-        how to do it <em>wrong</em> before I figured out how to do it right.
-        The clock starts AFTER the learning curve! 😅
+        📚 Plot twist: I spent 5 days before that first commit figuring out how
+        to do it <em>wrong</em> before I figured out how to do it right. The
+        clock starts AFTER the learning curve! 😅
       </p>
       <p className="text-xs mt-1 font-medium text-green-600 dark:text-green-400">
         🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted
@@ -824,18 +812,16 @@ function ActualTimeInvested() {
       </p>
       <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
         <strong>Traditional Cost:</strong> The{" "}
-        {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would
-        cost $
-        {(PROJECT_STATS.professionalTeamCostMin / 1000000).toFixed(1)}
+        {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost
+        ${(PROJECT_STATS.professionalTeamCostMin / 1000000).toFixed(1)}
         M-$
-        {(PROJECT_STATS.professionalTeamCostMax / 1000000).toFixed(1)}
-        M with a professional team (12-24 months).{" "}
-        <strong>AI-Assisted Reality:</strong> Built in{" "}
-        {PROJECT_STATS.actualHours} hours @ ${PROJECT_STATS.hourlyRate}/hour
-        = ${formatNumber(PROJECT_STATS.actualCost)} total investment using
+        {(PROJECT_STATS.professionalTeamCostMax / 1000000).toFixed(1)}M with a
+        professional team (12-24 months). <strong>AI-Assisted Reality:</strong>{" "}
+        Built in {PROJECT_STATS.actualHours} hours @ ${PROJECT_STATS.hourlyRate}
+        /hour = ${formatNumber(PROJECT_STATS.actualCost)} total investment using
         Visual Studio Code with Claude 4.5 (Opus &amp; Sonnet), Gemini 3 for
-        planning &amp; prompt generation, and Roo Code - enabling us to
-        offer everything FREE to veterans forever.
+        planning &amp; prompt generation, and Roo Code - enabling us to offer
+        everything FREE to veterans forever.
       </p>
     </>
   );
@@ -972,8 +958,8 @@ function ComponentBreakdownDetails() {
             <ComponentBreakdownListPart2 />
           </div>
           <p className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
-            Plus 200 hours validating 15,000 lines of disability data
-            against 38 CFR
+            Plus 200 hours validating 15,000 lines of disability data against 38
+            CFR
           </p>
         </div>
       </details>
@@ -1068,16 +1054,16 @@ function HowThisWasBuiltSection() {
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">🛠️</span>
             <span>
-              <strong>{t("about", "developmentEnvironment")}</strong>{" "}
-              Visual Studio Code with Claude 4.5 integration
+              <strong>{t("about", "developmentEnvironment")}</strong> Visual
+              Studio Code with Claude 4.5 integration
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-green-600 mt-1">🤖</span>
             <span>
-              <strong>{t("about", "aiAssistedDevelopment")}</strong>{" "}
-              Claude 4.5 (Opus &amp; Sonnet), Gemini 3 (planning &amp;
-              prompt generation), Roo Code
+              <strong>{t("about", "aiAssistedDevelopment")}</strong> Claude 4.5
+              (Opus &amp; Sonnet), Gemini 3 (planning &amp; prompt generation),
+              Roo Code
             </span>
           </li>
           <li className="flex items-start gap-2">

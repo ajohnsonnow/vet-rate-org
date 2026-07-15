@@ -144,7 +144,11 @@ async function runScreenshotCapture(
   element.style.position = originalPosition;
 
   // Add watermark
-  const watermarkedCanvas = drawWatermark(canvas, watermarkText, watermarkColor);
+  const watermarkedCanvas = drawWatermark(
+    canvas,
+    watermarkText,
+    watermarkColor,
+  );
 
   // Convert to blob and data URL
   const dataUrl = watermarkedCanvas.toDataURL("image/png", 1.0);

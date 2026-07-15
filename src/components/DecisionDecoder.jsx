@@ -468,7 +468,13 @@ function updateCombinedText({ setUploadedFiles, setDenialText }) {
 
 async function processFile(
   file,
-  { setUploadedFiles, setOcrProgress, setCurrentProcessingFile, setFileError, setDenialText },
+  {
+    setUploadedFiles,
+    setOcrProgress,
+    setCurrentProcessingFile,
+    setFileError,
+    setDenialText,
+  },
 ) {
   // Determine file type
   let fileType = null;
@@ -823,10 +829,8 @@ const UploadedFilesSummary = ({
           <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
             <span className="text-green-500">✓</span>
             <span className="text-sm font-medium">
-              Combined text ready - {denialText.length} total
-              characters from{" "}
-              {uploadedFiles.filter((f) => f.extractedText).length}{" "}
-              file(s)
+              Combined text ready - {denialText.length} total characters from{" "}
+              {uploadedFiles.filter((f) => f.extractedText).length} file(s)
             </span>
           </div>
         </div>
@@ -869,8 +873,8 @@ function FileDropInPanel({ fileDropIn, denialText }) {
 
       {/* Privacy Note */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-        🔒 All files processed locally in your browser - nothing is sent to
-        any server.
+        🔒 All files processed locally in your browser - nothing is sent to any
+        server.
       </p>
     </div>
   );
@@ -1103,10 +1107,7 @@ const ResultsErrorNotice = ({ error }) => {
 };
 
 const PatternMatchFallbackNotice = ({ results }) => {
-  if (
-    !results._usedFallback ||
-    results._fallbackReason !== "pattern_match"
-  ) {
+  if (!results._usedFallback || results._fallbackReason !== "pattern_match") {
     return null;
   }
 
@@ -1169,8 +1170,8 @@ const TruncationNotice = ({ results }) => {
               "Your document was condensed to fit within AI limits. The beginning and end were analyzed (where key decisions are usually found)."}
           </p>
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            💡 Tip: For more complete analysis, paste only the
-            &quot;Reasons for Decision&quot; section.
+            💡 Tip: For more complete analysis, paste only the &quot;Reasons for
+            Decision&quot; section.
           </p>
         </div>
       </div>
@@ -1236,8 +1237,8 @@ const FavorableFindingsSection = ({ results }) => {
         <span>🏆</span> Favorable Findings (Already Established)
       </h4>
       <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-2 italic">
-        The VA has already accepted these facts - you do NOT need to prove
-        them again!
+        The VA has already accepted these facts - you do NOT need to prove them
+        again!
       </p>
       <ul className="space-y-2">
         {results.favorable_findings.map((finding, index) => (
@@ -1405,16 +1406,13 @@ const DecodingLoadingState = () => (
       </p>
       <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500">
         <p className="flex items-center justify-center gap-2">
-          <span className="animate-pulse">📝</span> Identifying decision
-          type...
+          <span className="animate-pulse">📝</span> Identifying decision type...
         </p>
         <p className="flex items-center justify-center gap-2">
-          <span className="animate-pulse">🔍</span> Finding missing
-          elements...
+          <span className="animate-pulse">🔍</span> Finding missing elements...
         </p>
         <p className="flex items-center justify-center gap-2">
-          <span className="animate-pulse">📋</span> Building your action
-          plan...
+          <span className="animate-pulse">📋</span> Building your action plan...
         </p>
       </div>
       <p className="text-xs text-amber-600 dark:text-amber-400 mt-4">
@@ -1430,8 +1428,7 @@ const DecoderEmptyState = () => (
       <div className="text-6xl mb-4">🔓</div>
       <p className="text-lg font-medium">Ready to Decode</p>
       <p className="text-sm mt-2">
-        Paste your VA decision letter and click &quot;Decode&quot; to
-        translate
+        Paste your VA decision letter and click &quot;Decode&quot; to translate
       </p>
     </div>
   </div>

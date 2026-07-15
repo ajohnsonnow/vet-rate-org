@@ -90,7 +90,13 @@ function pdfAddTitleHeader(doc, layout, pos, conditionName, diagnosticCode) {
   pos.y = 55;
 }
 
-function pdfAddPredictedRatingBox(doc, layout, pos, predictedRating, ratingRationale) {
+function pdfAddPredictedRatingBox(
+  doc,
+  layout,
+  pos,
+  predictedRating,
+  ratingRationale,
+) {
   doc.setFillColor(240, 253, 244); // Light green background
   doc.setDrawColor(45, 80, 22);
   doc.setLineWidth(1);
@@ -211,7 +217,10 @@ function pdfAddWarningsSection(doc, layout, pos, warnings) {
     doc.setTextColor(127, 29, 29);
 
     // Use simple bullet instead of emoji which doesn't render in PDF
-    const wLines = doc.splitTextToSize(`>> ${warning}`, layout.contentWidth - 15);
+    const wLines = doc.splitTextToSize(
+      `>> ${warning}`,
+      layout.contentWidth - 15,
+    );
     wLines.forEach((line) => {
       pdfCheckPageBreak(doc, layout, pos, 7);
       doc.text(line, layout.margin + 5, pos.y);
@@ -361,10 +370,7 @@ function pdfAddPageNumbers(doc, layout) {
 }
 
 function pdfSaveFile(doc, conditionName) {
-  const safeName = (conditionName || "Condition").replace(
-    /[^a-zA-Z0-9]/g,
-    "_",
-  );
+  const safeName = (conditionName || "Condition").replace(/[^a-zA-Z0-9]/g, "_");
   const fileName = `CP_Exam_Report_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(fileName);
 }
@@ -417,9 +423,7 @@ const PredictedRatingCard = ({
         <TrendingUp className="h-6 w-6 text-amber-600" />
         Predicted Rating
       </h3>
-      <div
-        className={`text-4xl font-bold px-6 py-2 rounded-lg ${ratingColor}`}
-      >
+      <div className={`text-4xl font-bold px-6 py-2 rounded-lg ${ratingColor}`}>
         {predictedRating}%
       </div>
     </div>
@@ -466,8 +470,8 @@ const GapAnalysisSection = ({ gaps }) => {
             Gap Analysis: What You Need to Know
           </h3>
           <p className="text-gray-600 mb-4">
-            This analysis shows what would be required to qualify for a
-            higher rating, based on 38 CFR Part 4 criteria.
+            This analysis shows what would be required to qualify for a higher
+            rating, based on 38 CFR Part 4 criteria.
           </p>
         </div>
       </div>
@@ -527,17 +531,17 @@ const EducationalNote = () => (
             criteria in 38 CFR Part 4.
           </p>
           <p>
-            • The actual rating decision will be made by the VA rater based
-            on the C&P examiner&apos;s report and all evidence in your file.
+            • The actual rating decision will be made by the VA rater based on
+            the C&P examiner&apos;s report and all evidence in your file.
           </p>
           <p>
-            • The C&P exam is NOT an adversarial process - the
-            examiner&apos;s job is to document your condition accurately,
-            not to deny your claim.
+            • The C&P exam is NOT an adversarial process - the examiner&apos;s
+            job is to document your condition accurately, not to deny your
+            claim.
           </p>
           <p>
-            • <strong>Always tell the truth</strong> during your exam.
-            Describe your worst days, not your best days.
+            • <strong>Always tell the truth</strong> during your exam. Describe
+            your worst days, not your best days.
           </p>
         </div>
       </div>
@@ -594,11 +598,11 @@ const ActionButtons = ({
 const DisclaimerFooter = () => (
   <div className="bg-gray-100 border-l-4 border-gray-400 p-4 rounded">
     <p className="text-sm text-gray-600 italic">
-      <strong>Disclaimer:</strong> This is a training and preparation tool,
-      not legal advice. It does not guarantee any specific rating outcome.
-      Always consult with an accredited VSO or VA-accredited attorney for
-      personalized advice. The information provided is based on 38 CFR Part 4
-      as of January 2026.
+      <strong>Disclaimer:</strong> This is a training and preparation tool, not
+      legal advice. It does not guarantee any specific rating outcome. Always
+      consult with an accredited VSO or VA-accredited attorney for personalized
+      advice. The information provided is based on 38 CFR Part 4 as of January
+      2026.
     </p>
   </div>
 );
@@ -636,7 +640,13 @@ const SimulatorFeedback = ({
     const pos = { y: 20 };
 
     pdfAddTitleHeader(doc, layout, pos, conditionName, diagnosticCode);
-    pdfAddPredictedRatingBox(doc, layout, pos, predictedRating, ratingRationale);
+    pdfAddPredictedRatingBox(
+      doc,
+      layout,
+      pos,
+      predictedRating,
+      ratingRationale,
+    );
     pdfAddResponsesSection(doc, layout, pos, questions, answers);
     pdfAddWarningsSection(doc, layout, pos, warnings);
     pdfAddGapAnalysisSection(doc, layout, pos, gaps);

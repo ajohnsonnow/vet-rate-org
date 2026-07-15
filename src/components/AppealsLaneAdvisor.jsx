@@ -191,8 +191,8 @@ function NewEvidenceQuestion({ value, onAnswer }) {
         1. Do you have NEW evidence that wasn&apos;t in your original claim?
       </h3>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        NEW means: nexus letter dated after denial, medical records dated
-        after denial, buddy statements not previously submitted
+        NEW means: nexus letter dated after denial, medical records dated after
+        denial, buddy statements not previously submitted
       </p>
       <div className="flex gap-3">
         <button
@@ -492,12 +492,9 @@ function WithinYearExample() {
       </h5>
       <div className="text-sm text-green-600 dark:text-green-400 space-y-1">
         <div>
-          Original:{" "}
-          {EFFECTIVE_DATE_RULES.withinOneYear.example.originalFiled}
+          Original: {EFFECTIVE_DATE_RULES.withinOneYear.example.originalFiled}
         </div>
-        <div>
-          Denied: {EFFECTIVE_DATE_RULES.withinOneYear.example.denied}
-        </div>
+        <div>Denied: {EFFECTIVE_DATE_RULES.withinOneYear.example.denied}</div>
         <div>
           Supplemental:{" "}
           {EFFECTIVE_DATE_RULES.withinOneYear.example.supplementalFiled}
@@ -542,8 +539,7 @@ function EffectiveDateSection({ showEffectiveDate, onToggle }) {
         onClick={onToggle}
         className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
       >
-        {showEffectiveDate ? "▼ Hide" : "▶ Show"} Critical: Effective Date
-        Rules
+        {showEffectiveDate ? "▼ Hide" : "▶ Show"} Critical: Effective Date Rules
       </button>
 
       {showEffectiveDate && (

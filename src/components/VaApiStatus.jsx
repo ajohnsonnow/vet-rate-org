@@ -223,8 +223,7 @@ const BADGE_STATUS_COLORS = {
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
   partial_outage:
     "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  major_outage:
-    "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  major_outage: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   under_maintenance:
     "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
 };
@@ -505,8 +504,8 @@ function VaInfoBox() {
           </p>
           <p className="text-blue-700 dark:text-blue-300 mt-1">
             Vet-Rate.org uses official VA APIs for some features. When the
-            VA&apos;s systems are down or under maintenance, those features
-            may not work - but{" "}
+            VA&apos;s systems are down or under maintenance, those features may
+            not work - but{" "}
             <strong>it&apos;s not a problem with Vet-Rate.org</strong>. This
             status page helps you know when VA APIs are experiencing issues.
           </p>

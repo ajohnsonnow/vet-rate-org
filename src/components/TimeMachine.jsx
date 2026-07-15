@@ -66,8 +66,7 @@ function TimeMachineWidget({ countdown, onExpand }) {
                 {countdown.daysRemaining} Days
               </p>
               <p className="text-xs opacity-90">
-                ${countdown.potentialBackpay.toLocaleString()} potential
-                backpay
+                ${countdown.potentialBackpay.toLocaleString()} potential backpay
               </p>
             </>
           )}
@@ -206,8 +205,7 @@ function TimeMachineExpiredBanner({ countdown }) {
         ITF EXPIRED
       </h3>
       <p className="text-xl text-red-600 dark:text-red-300 mb-4">
-        Your Intent to File expired{" "}
-        {Math.abs(countdown.daysRemaining)} days ago
+        Your Intent to File expired {Math.abs(countdown.daysRemaining)} days ago
       </p>
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-md mx-auto">
         <p className="text-gray-800 dark:text-white font-semibold mb-2">
@@ -251,7 +249,8 @@ function TimeMachineCountdownBox({ countdown }) {
     <div
       className={`rounded-lg p-8 text-center ${_urgencyClass(countdown, {
         expired: "bg-red-100 dark:bg-red-900/30 border-4 border-red-600",
-        critical: "bg-red-50 dark:bg-red-900/20 border-4 border-red-500 animate-pulse",
+        critical:
+          "bg-red-50 dark:bg-red-900/20 border-4 border-red-500 animate-pulse",
         urgent: "bg-yellow-50 dark:bg-yellow-900/20 border-4 border-yellow-500",
         normal: "bg-blue-50 dark:bg-blue-900/20 border-4 border-blue-500",
       })}`}
@@ -289,8 +288,7 @@ function TimeMachineFinancialImpact({ countdown, estimatedRating }) {
               "Calculating..."}
             <br />
             <em>
-              (First of month following effective date per 38 CFR §
-              3.400)
+              (First of month following effective date per 38 CFR § 3.400)
             </em>
           </p>
         </div>
@@ -332,20 +330,17 @@ function TimeMachineUrgencyWarnings({ countdown }) {
         </div>
       )}
 
-      {countdown.isUrgent &&
-        !countdown.isCritical &&
-        !countdown.isExpired && (
-          <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-600 p-4 rounded">
-            <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              ⚠️ URGENT: Less than 60 Days Remaining
-            </h4>
-            <p className="text-yellow-700 dark:text-yellow-300">
-              Time is running out. Prioritize completing your claim
-              packet. Use all the tools in Vet-Rate to expedite your
-              preparation.
-            </p>
-          </div>
-        )}
+      {countdown.isUrgent && !countdown.isCritical && !countdown.isExpired && (
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-600 p-4 rounded">
+          <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+            ⚠️ URGENT: Less than 60 Days Remaining
+          </h4>
+          <p className="text-yellow-700 dark:text-yellow-300">
+            Time is running out. Prioritize completing your claim packet. Use
+            all the tools in Vet-Rate to expedite your preparation.
+          </p>
+        </div>
+      )}
     </>
   );
 }
@@ -358,9 +353,7 @@ function TimeMachineTimeline({ countdown, itfDate }) {
       </h4>
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-300">
-            ITF Filed:
-          </span>
+          <span className="text-gray-600 dark:text-gray-300">ITF Filed:</span>
           <span className="font-semibold text-gray-800 dark:text-white">
             {new Date(itfDate).toLocaleDateString()}
           </span>
@@ -402,20 +395,23 @@ function TimeMachineTimeline({ countdown, itfDate }) {
       <div className="mt-4">
         <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4">
           <div
-            className={`h-4 rounded-full transition-all ${_urgencyClass(countdown, {
-              expired: "bg-red-600",
-              critical: "bg-red-600",
-              urgent: "bg-yellow-500",
-              normal: "bg-blue-600",
-            })}`}
+            className={`h-4 rounded-full transition-all ${_urgencyClass(
+              countdown,
+              {
+                expired: "bg-red-600",
+                critical: "bg-red-600",
+                urgent: "bg-yellow-500",
+                normal: "bg-blue-600",
+              },
+            )}`}
             style={{
               width: `${Math.max(0, (countdown.daysRemaining / 365) * 100)}%`,
             }}
           />
         </div>
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-1">
-          {Math.round((countdown.daysRemaining / 365) * 100)}% of ITF
-          period remaining
+          {Math.round((countdown.daysRemaining / 365) * 100)}% of ITF period
+          remaining
         </p>
       </div>
     </div>
@@ -455,7 +451,10 @@ function TimeMachineCountdownDisplay({
       <TimeMachineCountdownBox countdown={countdown} />
 
       {/* Financial Impact */}
-      <TimeMachineFinancialImpact countdown={countdown} estimatedRating={estimatedRating} />
+      <TimeMachineFinancialImpact
+        countdown={countdown}
+        estimatedRating={estimatedRating}
+      />
 
       {/* Urgency Warning */}
       <TimeMachineUrgencyWarnings countdown={countdown} />
@@ -464,7 +463,10 @@ function TimeMachineCountdownDisplay({
       <TimeMachineTimeline countdown={countdown} itfDate={itfDate} />
 
       {/* Actions */}
-      <TimeMachineActions setIsEditing={setIsEditing} handleClearITF={handleClearITF} />
+      <TimeMachineActions
+        setIsEditing={setIsEditing}
+        handleClearITF={handleClearITF}
+      />
     </>
   );
 }
@@ -477,13 +479,12 @@ function TimeMachineInfoBox({ countdown, isEditing }) {
         💡 What is an Intent to File?
       </h4>
       <p className="text-blue-700 dark:text-blue-300 text-sm mb-2">
-        An Intent to File (ITF) establishes your effective date for VA
-        benefits. You have 365 days from the ITF date to submit your
-        complete claim.
+        An Intent to File (ITF) establishes your effective date for VA benefits.
+        You have 365 days from the ITF date to submit your complete claim.
       </p>
       <p className="text-blue-700 dark:text-blue-300 text-sm font-semibold">
-        Your backpay is calculated from your ITF date, not when you submit
-        your claim!
+        Your backpay is calculated from your ITF date, not when you submit your
+        claim!
       </p>
     </div>
   );
@@ -538,7 +539,10 @@ function _computeCountdown(itfDate, estimatedRating) {
   // Calculate months remaining until 1 year from ITF
   const maxBackpayDate = new Date(itf);
   maxBackpayDate.setFullYear(maxBackpayDate.getFullYear() + 1);
-  const maxBackpayMonths = calculateBackpayMonths(itf, maxBackpayDate).totalMonths;
+  const maxBackpayMonths = calculateBackpayMonths(
+    itf,
+    maxBackpayDate,
+  ).totalMonths;
   const atRiskBackpay =
     monthlyRate * Math.max(0, maxBackpayMonths - actualBackpayMonths);
 
@@ -581,7 +585,8 @@ export default function TimeMachine({
       return;
     }
 
-    const tick = () => setCountdown(_computeCountdown(itfDate, estimatedRating));
+    const tick = () =>
+      setCountdown(_computeCountdown(itfDate, estimatedRating));
 
     tick();
     // Auto-persist whenever the date/rating changes so the countdown

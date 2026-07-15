@@ -54,18 +54,13 @@ async function runStorageMigration(setIsMigrating) {
         // eslint-disable-next-line no-console
         console.log("   Migrated keys:", migrationResult.keysProcessed);
       } else {
-        console.error(
-          "⚠️ IndexedDB Migration: Failed",
-          migrationResult.errors,
-        );
+        console.error("⚠️ IndexedDB Migration: Failed", migrationResult.errors);
       }
 
       setIsMigrating(false);
     } else {
       // eslint-disable-next-line no-console
-      console.log(
-        "✅ IndexedDB Migration: Already complete, using IndexedDB",
-      );
+      console.log("✅ IndexedDB Migration: Already complete, using IndexedDB");
     }
   } catch (error) {
     console.error("❌ IndexedDB Migration: Critical error", error);
@@ -183,7 +178,11 @@ export function useBootSequence() {
   }, []);
 
   useEffect(() => {
-    initializeApp({ setMaintenanceMode, setMaintenanceMessage, setIsMigrating });
+    initializeApp({
+      setMaintenanceMode,
+      setMaintenanceMessage,
+      setIsMigrating,
+    });
   }, []);
 
   return { isMigrating, maintenanceMode, maintenanceMessage };

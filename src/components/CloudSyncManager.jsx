@@ -67,8 +67,8 @@ const CloudSyncExplainer = () => (
           <li className="flex items-start gap-2">
             <span className="text-green-400">✓</span>
             <span>
-              We never see your data-it goes directly from your browser to
-              your cloud
+              We never see your data-it goes directly from your browser to your
+              cloud
             </span>
           </li>
           <li className="flex items-start gap-2">
@@ -301,7 +301,12 @@ const formatDate = (isoString) => new Date(isoString).toLocaleString();
 
 // Mutating backup actions (create/restore/delete), split out of
 // useCloudSync purely to keep that hook under the line-count limit.
-const useBackupActions = ({ setIsLoading, setError, setStatus, loadBackups }) => {
+const useBackupActions = ({
+  setIsLoading,
+  setError,
+  setStatus,
+  loadBackups,
+}) => {
   const handleCreateBackup = async () => {
     try {
       setIsLoading(true);

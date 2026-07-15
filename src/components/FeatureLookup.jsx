@@ -453,8 +453,7 @@ function RequestDetailHeader({
             {selectedRequest.title}
           </p>
           <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
-            Created:{" "}
-            {new Date(selectedRequest.created_at).toLocaleString()}
+            Created: {new Date(selectedRequest.created_at).toLocaleString()}
           </p>
         </div>
         <div className="flex flex-shrink-0 flex-col items-end gap-2">
@@ -536,33 +535,25 @@ function RequestDetailCoreSections({ selectedRequest }) {
       <DetailSection title="Client Environment" icon={Monitor}>
         <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
           <div>
-            <span className="text-gray-500 dark:text-slate-500">
-              Browser:
-            </span>
+            <span className="text-gray-500 dark:text-slate-500">Browser:</span>
             <span className="ml-2 break-all text-gray-700 dark:text-slate-300">
               {selectedRequest.systemInfo?.browser}
             </span>
           </div>
           <div>
-            <span className="text-gray-500 dark:text-slate-500">
-              Screen:
-            </span>
+            <span className="text-gray-500 dark:text-slate-500">Screen:</span>
             <span className="ml-2 text-gray-700 dark:text-slate-300">
               {selectedRequest.systemInfo?.screenResolution}
             </span>
           </div>
           <div>
-            <span className="text-gray-500 dark:text-slate-500">
-              Module:
-            </span>
+            <span className="text-gray-500 dark:text-slate-500">Module:</span>
             <span className="ml-2 text-gray-700 dark:text-slate-300">
               {selectedRequest.module}
             </span>
           </div>
           <div>
-            <span className="text-gray-500 dark:text-slate-500">
-              Category:
-            </span>
+            <span className="text-gray-500 dark:text-slate-500">Category:</span>
             <span className="ml-2 text-gray-700 dark:text-slate-300">
               {selectedRequest.category}
             </span>
@@ -583,8 +574,7 @@ function RequestDetailReviewAndAudit({ selectedRequest, auditLog }) {
             {selectedRequest.review_notes}
           </p>
           <p className="mt-2 text-xs text-gray-500 dark:text-slate-500">
-            Reviewed:{" "}
-            {new Date(selectedRequest.reviewed_at).toLocaleString()}
+            Reviewed: {new Date(selectedRequest.reviewed_at).toLocaleString()}
           </p>
         </DetailSection>
       )}
@@ -785,22 +775,38 @@ function useFeatureLookupState() {
   const [storageAvailable, setStorageAvailable] = useState(true);
 
   return {
-    searchQuery, setSearchQuery,
-    selectedRequest, setSelectedRequest,
-    requests, setRequests,
-    statistics, setStatistics,
-    auditLog, setAuditLog,
-    loading, setLoading,
-    error, setError,
-    view, setView,
-    filters, setFilters,
-    showFilters, setShowFilters,
-    copied, setCopied,
-    updating, setUpdating,
-    newStatus, setNewStatus,
-    reviewNotes, setReviewNotes,
-    showStatusModal, setShowStatusModal,
-    storageAvailable, setStorageAvailable,
+    searchQuery,
+    setSearchQuery,
+    selectedRequest,
+    setSelectedRequest,
+    requests,
+    setRequests,
+    statistics,
+    setStatistics,
+    auditLog,
+    setAuditLog,
+    loading,
+    setLoading,
+    error,
+    setError,
+    view,
+    setView,
+    filters,
+    setFilters,
+    showFilters,
+    setShowFilters,
+    copied,
+    setCopied,
+    updating,
+    setUpdating,
+    newStatus,
+    setNewStatus,
+    reviewNotes,
+    setReviewNotes,
+    showStatusModal,
+    setShowStatusModal,
+    storageAvailable,
+    setStorageAvailable,
   };
 }
 
@@ -1263,19 +1269,49 @@ export default function FeatureLookup({ onClose }) {
   useLanguage();
 
   const {
-    searchQuery, setSearchQuery, selectedRequest, setSelectedRequest,
-    requests, setRequests, statistics, setStatistics,
-    auditLog, setAuditLog, loading, setLoading,
-    error, setError, view, setView,
-    filters, setFilters, showFilters, setShowFilters,
-    copied, setCopied, updating, setUpdating,
-    newStatus, setNewStatus, reviewNotes, setReviewNotes,
-    showStatusModal, setShowStatusModal, storageAvailable, setStorageAvailable,
+    searchQuery,
+    setSearchQuery,
+    selectedRequest,
+    setSelectedRequest,
+    requests,
+    setRequests,
+    statistics,
+    setStatistics,
+    auditLog,
+    setAuditLog,
+    loading,
+    setLoading,
+    error,
+    setError,
+    view,
+    setView,
+    filters,
+    setFilters,
+    showFilters,
+    setShowFilters,
+    copied,
+    setCopied,
+    updating,
+    setUpdating,
+    newStatus,
+    setNewStatus,
+    reviewNotes,
+    setReviewNotes,
+    showStatusModal,
+    setShowStatusModal,
+    storageAvailable,
+    setStorageAvailable,
   } = useFeatureLookupState();
 
   const {
-    loadRequests, loadStatistics, handleSearch, handleViewRequest,
-    handleUpdateStatus, handleDelete, handleExport, handleCopyRequest,
+    loadRequests,
+    loadStatistics,
+    handleSearch,
+    handleViewRequest,
+    handleUpdateStatus,
+    handleDelete,
+    handleExport,
+    handleCopyRequest,
   } = createFeatureLookupHandlers({
     filters,
     searchQuery,

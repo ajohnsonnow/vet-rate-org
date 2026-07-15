@@ -354,9 +354,9 @@ const InfoBanner = () => (
         </h3>
         <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
           Many veterans miss out on <strong>thousands of dollars</strong> in
-          state benefits each year. These include property tax exemptions,
-          free vehicle registration, hunting/fishing licenses, and education
-          benefits that &quot;Claim Sharks&quot; never tell you about.
+          state benefits each year. These include property tax exemptions, free
+          vehicle registration, hunting/fishing licenses, and education benefits
+          that &quot;Claim Sharks&quot; never tell you about.
         </p>
       </div>
     </div>
@@ -716,13 +716,13 @@ const PendingVerificationNotice = () => (
   <>
     <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
       <strong>Template-Generated:</strong> This data was auto-generated from
-      state profiles and needs manual verification. Benefits shown are
-      typical for this state but may not reflect current laws.
+      state profiles and needs manual verification. Benefits shown are typical
+      for this state but may not reflect current laws.
     </p>
     <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mt-2">
-      <strong>Always verify</strong> with your state&apos;s official
-      Department of Veterans Affairs before applying. We&apos;re working to
-      manually verify all 48 remaining states.
+      <strong>Always verify</strong> with your state&apos;s official Department
+      of Veterans Affairs before applying. We&apos;re working to manually verify
+      all 48 remaining states.
     </p>
   </>
 );
@@ -804,8 +804,7 @@ const LoadingState = ({ isLoading, selectedState }) => {
           exemptions...
         </p>
         <p className="flex items-center justify-center gap-2">
-          <span className="animate-pulse">🚗</span> Finding vehicle
-          benefits...
+          <span className="animate-pulse">🚗</span> Finding vehicle benefits...
         </p>
         <p className="flex items-center justify-center gap-2">
           <span className="animate-pulse">🎓</span> Discovering education
@@ -916,11 +915,7 @@ const fetchAIAdvice = async (aiQuestion, selectedState, selectedRating) => {
     );
   });
 
-  const prompt = buildAIAdvicePrompt(
-    aiQuestion,
-    selectedState,
-    selectedRating,
-  );
+  const prompt = buildAIAdvicePrompt(aiQuestion, selectedState, selectedRating);
 
   // Race between AI call and timeout
   const response = await Promise.race([generateAI(prompt), timeoutPromise]);

@@ -65,8 +65,7 @@ const getNexusChecklistIcon = (nexusStrength) => {
 
 const getNexusChecklistTextClass = (nexusStrength) => {
   if (nexusStrength === "strong") return "text-green-700 dark:text-green-300";
-  if (nexusStrength === "moderate")
-    return "text-amber-600 dark:text-amber-400";
+  if (nexusStrength === "moderate") return "text-amber-600 dark:text-amber-400";
   return "text-red-600 dark:text-red-400";
 };
 
@@ -140,7 +139,13 @@ const ClaimCardQuickStats = ({ claim, nexusStyle }) => (
   </div>
 );
 
-const ClaimCardHeader = ({ claim, style, nexusStyle, isExpanded, onToggle }) => (
+const ClaimCardHeader = ({
+  claim,
+  style,
+  nexusStyle,
+  isExpanded,
+  onToggle,
+}) => (
   // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
   <div className="p-4 cursor-pointer" onClick={onToggle}>
     <div className="flex items-start justify-between gap-3">
@@ -220,7 +225,9 @@ const ClaimBigThreeChecklist = ({ claim }) => (
       </div>
       <div className="flex items-center gap-2">
         {getChecklistDiagnosisIcon(claim.currentDiagnosis)}
-        <span className={getChecklistDiagnosisTextClass(claim.currentDiagnosis)}>
+        <span
+          className={getChecklistDiagnosisTextClass(claim.currentDiagnosis)}
+        >
           Current Diagnosis
         </span>
       </div>
@@ -300,12 +307,12 @@ const ClaimsInfoBox = () => (
     </h4>
     <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
       <li>
-        <strong>High:</strong> Strong evidence for all three pillars
-        (in-service event, current diagnosis, nexus)
+        <strong>High:</strong> Strong evidence for all three pillars (in-service
+        event, current diagnosis, nexus)
       </li>
       <li>
-        <strong>Medium:</strong> Has 1-2 pillars established, needs
-        additional evidence or nexus letter
+        <strong>Medium:</strong> Has 1-2 pillars established, needs additional
+        evidence or nexus letter
       </li>
       <li>
         <strong>Low:</strong> Significant gaps in evidence, may require
@@ -341,7 +348,11 @@ export default function CFileClaimsCards({ claims = [] }) {
 
   return (
     <div className="p-6">
-      <ClaimSummaryStats counts={counts} filter={filter} setFilter={setFilter} />
+      <ClaimSummaryStats
+        counts={counts}
+        filter={filter}
+        setFilter={setFilter}
+      />
 
       {filter !== "all" && (
         <button

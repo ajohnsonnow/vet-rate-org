@@ -3519,14 +3519,14 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **benefit of the doubt** - When evidence is approximately equal, VA must decide in favor of the veteran (38 CFR 3.102)
 - **Bilateral Factor** - Additional percentage added when you have the same disability affecting both sides of your body
 - **BiPAP** - Bilevel Positive Airway Pressure - Breathing device similar to CPAP that can support 50% sleep apnea rating
-- **Blue Button** - VA\
+- **Blue Button** - VA's online tool to download your VA medical records and health information
 - **Buddy Statement** - A sworn statement from someone who witnessed your condition during or after service, often filed on VA Form 21-10210
 - **Burn Pit** - Open-air waste burning common in Iraq/Afghanistan; PACT Act establishes presumptive conditions
-- **BVA** - Board of Veterans\
+- **BVA** - Board of Veterans' Appeals - The appellate body that reviews claim decisions when higher-level review doesn't resolve...
 - **C-File** - Claims File - Your complete VA claims folder containing all evidence, decisions, and correspondence
 - **C&P** - Compensation & Pension Exam - A medical examination scheduled by the VA to evaluate your claimed disability
 - **Camp Lejeune** - Marine base with contaminated water (1953-1987); presumptive conditions established by PACT Act
-- **CAPRI** - Computerized Patient Record Interface - VA\
+- **CAPRI** - Computerized Patient Record Interface - VA's internal medical records system
 - **CAVC** - Court of Appeals for Veterans Claims - Federal court that reviews BVA decisions
 - **CFR** - Code of Federal Regulations - The legal framework governing VA disability ratings. Title 38 CFR covers veterans benefits
 - **CFS** - Chronic Fatigue Syndrome - Presumptive condition for Gulf War veterans under 38 CFR 3.317
@@ -3534,7 +3534,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **Chapter 31** - Another name for VR&E/Vocational Rehabilitation
 - **Chapter 35** - See DEA - education benefits for dependents
 - **Chronic Disease** - A disease listed in 38 CFR 3.309 that is presumptively service-connected if it manifests within one year of discharge
-- **Combined Rating** - The VA\
+- **Combined Rating** - The VA's unique math formula for combining multiple disability ratings (not simple addition)
 - **competent evidence** - Evidence from a qualified source (medical evidence from doctors, lay evidence from witnesses)
 - **Continuous Pursuit** - Maintaining your appeal through proper review options to preserve your effective date
 - **COPD** - Chronic Obstructive Pulmonary Disease - Progressive lung disease often service-connected from toxic exposures
@@ -3550,7 +3550,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **DD-214** - Certificate of Release or Discharge from Active Duty - Official proof of military service
 - **DD-215** - Correction to DD-214 - Used to correct or add information to your discharge document
 - **De Novo Review** - A fresh look at your claim by a different reviewer (used in Higher-Level Review)
-- **DEA** - Dependents\
+- **DEA** - Dependents' Educational Assistance (Chapter 35) - Education benefits for dependents of 100% P&T veterans
 - **Decision Notice** - Official VA letter informing you of the decision on your claim and your appeal rights
 - **Deferred** - When VA postpones deciding part of your claim pending additional evidence or examination
 - **Development** - The process of gathering evidence for your claim - VA has a duty to assist in this process
@@ -3560,16 +3560,16 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **Direct Service Connection** - A disability directly caused by an event, injury, or disease during military service
 - **DRO** - Decision Review Officer - A senior VA employee who reviews claim decisions during the appeals process
 - **DSM-5** - Diagnostic and Statistical Manual of Mental Disorders, 5th Edition - Mental health diagnosis criteria
-- **duty to assist** - VA\
+- **duty to assist** - VA's legal obligation to help veterans develop evidence for their claims
 - **Duty to Notify** - VA obligation to inform you what evidence is needed to substantiate your claim (38 CFR 3.159(b))
-- **Ebenefits** - VA\
+- **Ebenefits** - VA's online portal for managing claims and viewing disability ratings (being replaced by VA.gov)
 - **EED** - Earliest Effective Date - The date VA uses to calculate when benefits begin, usually the claim filing date
 - **Effective Date** - The date from which VA compensation payments begin
 - **EPTS** - Existed Prior to Service - A condition that existed before military service that may have been aggravated
 - **Evidence Submission Docket** - Board appeal option allowing 90 days to submit new evidence after filing the NOD, but no hearing
 - **Ex Parte** - The nature of VA proceedings meaning VA is supposed to help develop your claim, not act as an adversary
 - **Extraschedular Rating** - A rating above the schedule maximum for exceptional cases (38 CFR 3.321)
-- **favorable finding** - Evidence or testimony that supports the veteran\
+- **favorable finding** - Evidence or testimony that supports the veteran's claim
 - **Favorable Finding** - A determination in your favor by VA that becomes binding on future adjudicators and cannot be reversed without CUE
 - **FDC** - Fully Developed Claim - A claim submitted with all evidence upfront for faster processing
 - **FEV-1** - Forced Expiratory Volume in 1 Second - A key PFT measurement used in asthma and COPD ratings
@@ -3611,12 +3611,12 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 ## N-S
 
 - **New and Relevant Evidence** - Evidence not previously submitted that tends to prove an unestablished element of your claim - required for supplemen...
-- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as 
+- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as "at ...
 - **Nexus Letter** - A medical opinion letter from a doctor establishing the connection between your service/service-connected condition a...
 - **NOD** - Notice of Disagreement - The initial appeal filed when you disagree with a VA decision
-- **NOVA** - National Organization of Veterans\
+- **NOVA** - National Organization of Veterans' Advocates - Professional association of VA-accredited attorneys
 - **NSC** - Non-Service-Connected - A disability not related to military service
-- **OGC** - Office of General Counsel - VA\
+- **OGC** - Office of General Counsel - VA's legal department
 - **OSA** - Obstructive Sleep Apnea - The most common type of sleep apnea rated under DC 6847
 - **P&T** - Permanent and Total - A 100% disability rating that VA considers permanent and unlikely to improve
 - **PACT Act** - Promise to Address Comprehensive Toxics Act - Expands VA benefits for veterans exposed to burn pits, Agent Orange, an...
@@ -3657,7 +3657,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **SMC(k)** - Special Monthly Compensation for loss of use of one hand, foot, eye, or creative organ - paid in addition to schedula...
 - **SMC(l)** - Special Monthly Compensation for veterans needing aid and attendance of another person
 - **SMC(s)** - Special Monthly Compensation for being housebound OR having 100% rating plus additional 60% disability
-- **SOC** - Statement of the Case - The VA\
+- **SOC** - Statement of the Case - The VA's detailed explanation of their decision on your claim
 - **Southwest Asia** - Iraq, Kuwait, Saudi Arabia, and surrounding areas - location for Gulf War presumptives
 - **SSOC** - Supplemental Statement of the Case - Additional VA explanation issued after new evidence or arguments
 - **Staged Rating** - Different rating percentages for different time periods based on changing severity
@@ -3695,13 +3695,13 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **VA Form 21-534EZ** - Application for DIC, Death Pension, and Accrued Benefits by Surviving Spouse or Child
 - **VA Form 21-686c** - Declaration of Status of Dependents - Used to add dependents for additional compensation
 - **VA Form 21-8940** - Veterans Application for Increased Compensation Based on Unemployability - The form to apply for TDIU
-- **VA Math** - The VA\
+- **VA Math** - The VA's unique method of combining disability percentages (uses efficiency of function, not simple addition)
 - **VA Pension** - Non-service-connected pension for low-income wartime veterans
 - **VA Treatment Records** - Medical records from VA healthcare facilities automatically in your claims file
 - **VARO** - VA Regional Office - The local VA office that processes disability claims for your region
 - **VASRD** - VA Schedule for Rating Disabilities - The rating criteria in 38 CFR Part 4 used to evaluate all disabilities
 - **VBA** - Veterans Benefits Administration - The VA division that handles disability compensation, pension, and other benefits
-- **VBMS** - Veterans Benefits Management System - The VA\
+- **VBMS** - Veterans Benefits Management System - The VA's electronic claims processing system
 - **VCAA** - Veterans Claims Assistance Act - Law requiring VA to notify veterans of evidence needed and assist in gathering evide...
 - **VES** - Veterans Evaluation Services - Another VA contractor for C&P exams
 - **VHA** - Veterans Health Administration - The VA division that provides healthcare services to veterans
@@ -4098,104 +4098,104 @@ const renderContent = (content, onClose) => {
 };
 
 const NAV_KEY_MAP = {
-      home: "navHome",
-      "getting-started": "navGettingStarted",
-      "first-visit": "navFirstVisit",
-      "interface-overview": "navInterfaceOverview",
-      accessibility: "navAccessibility",
-      search: "navSearchExplore",
-      "how-to-search": "navHowToSearch",
-      "search-results": "navSearchResults",
-      "disability-details": "navDisabilityDetails",
-      "rating-criteria": "navRatingCriteria",
-      "tactical-calculator": "navTacticalCalculator",
-      "calc-overview": "navCalcOverview",
-      "calc-bilateral": "navCalcBilateral",
-      "calc-dependents": "navCalcDependents",
-      "calc-what-if": "navCalcWhatIf",
-      "secondary-scout": "navSecondaryScout",
-      "scout-launching": "navScoutLaunching",
-      "scout-results": "navScoutResults",
-      "scout-add-to-packet": "navScoutAddToPacket",
-      "cp-exam-simulator": "navCPExamSimulator",
-      "simulator-getting-started": "navSimulatorGettingStarted",
-      "condition-selection": "navConditionSelection",
-      "taking-simulation": "navTakingSimulation",
-      "simulator-results": "navSimulatorResults",
-      flashcards: "navFlashcards",
-      "dbq-library": "navDBQLibrary",
-      "dbq-overview": "navDBQOverview",
-      "dbq-browse": "navDBQBrowse",
-      "dbq-usage": "navDBQUsage",
-      pathfinder: "navPathfinder",
-      "workflow-guide": "navWorkflowGuide",
-      "workflow-overview": "navWorkflowOverview",
-      "workflow-progress": "navWorkflowProgress",
-      "cfile-analyzer": "navCFileAnalyzer",
-      "cfile-what-is": "navCFileWhatIs",
-      "cfile-upload": "navCFileUpload",
-      "cfile-analysis": "navCFileAnalysis",
-      "blue-button": "navBlueButtonXRay",
-      "blue-overview": "navBlueOverview",
-      "blue-extract": "navBlueExtract",
-      "witness-bench": "navWitnessBench",
-      "witness-overview": "navWitnessOverview",
-      "witness-interview": "navWitnessInterview",
-      "witness-output": "navWitnessOutput",
-      "nexus-builder": "navNexusBuilder",
-      "what-is-nexus": "navWhatIsNexus",
-      "building-statement": "navBuildingStatement",
-      "doctor-cheat-sheet": "navDoctorCheatSheet",
-      "download-options": "navDownloadOptions",
-      "forms-helper": "navFormsHelper",
-      "available-forms": "navAvailableForms",
-      "buddy-statements": "navBuddyStatements",
-      "intent-to-file": "navIntentToFile",
-      "ptsd-stressor": "navPTSDStressor",
-      "veteran-profile": "navVeteranProfile",
-      "red-team": "navRedTeamSimulator",
-      "red-overview": "navRedOverview",
-      "red-analysis": "navRedAnalysis",
-      "decision-decoder": "navDecisionDecoder",
-      "decoder-overview": "navDecoderOverview",
-      "decoder-upload": "navDecoderUpload",
-      "decoder-appeal": "navDecoderAppeal",
-      "shark-radar": "navSharkRadar",
-      "tdiu-builder": "navTDIUBuilder",
-      "tdiu-overview": "navTDIUOverview",
-      "tdiu-eligibility": "navTDIUEligibility",
-      "risk-assessment": "navRiskAssessment",
-      "symptom-logger": "navSymptomLogger",
-      "symptom-overview": "navSymptomOverview",
-      "symptom-logging": "navSymptomLogging",
-      "symptom-reports": "navSymptomReports",
-      "pact-act": "navPACTActNavigator",
-      "pact-overview": "navPACTOverview",
-      "pact-conditions": "navPACTConditions",
-      "pact-locations": "navPACTLocations",
-      "foia-generator": "navFOIAKeysmith",
-      "million-dollar": "navMillionDollar",
-      "mos-matcher": "navMOSHazardMatcher",
-      "web-conditions": "navWebOfConditions",
-      "vso-finder": "navVSOFinder",
-      "state-benefits": "navStateBenefitHunter",
-      "my-packet": "navMyPacket",
-      "managing-claims": "navManagingClaims",
-      "saved-forms": "navSavedForms",
-      "backup-restore": "navBackupRestore",
-      "exporting-data": "navExportingData",
-      "va-resources": "navVAResources",
-      "online-portals": "navOnlinePortals",
-      "phone-numbers": "navPhoneNumbers",
-      "external-resources": "navExternalResources",
-      settings: "navSettings",
-      "display-mode": "navDisplayMode",
-      "accessibility-options": "navAccessibilityOptions",
-      "data-management": "navDataManagement",
-      "ai-settings": "navAISettings",
-      "local-ai-overview": "navLocalAIOverview",
-      "model-selection": "navModelSelection",
-      "cloud-vs-local": "navCloudVsLocal",
+  home: "navHome",
+  "getting-started": "navGettingStarted",
+  "first-visit": "navFirstVisit",
+  "interface-overview": "navInterfaceOverview",
+  accessibility: "navAccessibility",
+  search: "navSearchExplore",
+  "how-to-search": "navHowToSearch",
+  "search-results": "navSearchResults",
+  "disability-details": "navDisabilityDetails",
+  "rating-criteria": "navRatingCriteria",
+  "tactical-calculator": "navTacticalCalculator",
+  "calc-overview": "navCalcOverview",
+  "calc-bilateral": "navCalcBilateral",
+  "calc-dependents": "navCalcDependents",
+  "calc-what-if": "navCalcWhatIf",
+  "secondary-scout": "navSecondaryScout",
+  "scout-launching": "navScoutLaunching",
+  "scout-results": "navScoutResults",
+  "scout-add-to-packet": "navScoutAddToPacket",
+  "cp-exam-simulator": "navCPExamSimulator",
+  "simulator-getting-started": "navSimulatorGettingStarted",
+  "condition-selection": "navConditionSelection",
+  "taking-simulation": "navTakingSimulation",
+  "simulator-results": "navSimulatorResults",
+  flashcards: "navFlashcards",
+  "dbq-library": "navDBQLibrary",
+  "dbq-overview": "navDBQOverview",
+  "dbq-browse": "navDBQBrowse",
+  "dbq-usage": "navDBQUsage",
+  pathfinder: "navPathfinder",
+  "workflow-guide": "navWorkflowGuide",
+  "workflow-overview": "navWorkflowOverview",
+  "workflow-progress": "navWorkflowProgress",
+  "cfile-analyzer": "navCFileAnalyzer",
+  "cfile-what-is": "navCFileWhatIs",
+  "cfile-upload": "navCFileUpload",
+  "cfile-analysis": "navCFileAnalysis",
+  "blue-button": "navBlueButtonXRay",
+  "blue-overview": "navBlueOverview",
+  "blue-extract": "navBlueExtract",
+  "witness-bench": "navWitnessBench",
+  "witness-overview": "navWitnessOverview",
+  "witness-interview": "navWitnessInterview",
+  "witness-output": "navWitnessOutput",
+  "nexus-builder": "navNexusBuilder",
+  "what-is-nexus": "navWhatIsNexus",
+  "building-statement": "navBuildingStatement",
+  "doctor-cheat-sheet": "navDoctorCheatSheet",
+  "download-options": "navDownloadOptions",
+  "forms-helper": "navFormsHelper",
+  "available-forms": "navAvailableForms",
+  "buddy-statements": "navBuddyStatements",
+  "intent-to-file": "navIntentToFile",
+  "ptsd-stressor": "navPTSDStressor",
+  "veteran-profile": "navVeteranProfile",
+  "red-team": "navRedTeamSimulator",
+  "red-overview": "navRedOverview",
+  "red-analysis": "navRedAnalysis",
+  "decision-decoder": "navDecisionDecoder",
+  "decoder-overview": "navDecoderOverview",
+  "decoder-upload": "navDecoderUpload",
+  "decoder-appeal": "navDecoderAppeal",
+  "shark-radar": "navSharkRadar",
+  "tdiu-builder": "navTDIUBuilder",
+  "tdiu-overview": "navTDIUOverview",
+  "tdiu-eligibility": "navTDIUEligibility",
+  "risk-assessment": "navRiskAssessment",
+  "symptom-logger": "navSymptomLogger",
+  "symptom-overview": "navSymptomOverview",
+  "symptom-logging": "navSymptomLogging",
+  "symptom-reports": "navSymptomReports",
+  "pact-act": "navPACTActNavigator",
+  "pact-overview": "navPACTOverview",
+  "pact-conditions": "navPACTConditions",
+  "pact-locations": "navPACTLocations",
+  "foia-generator": "navFOIAKeysmith",
+  "million-dollar": "navMillionDollar",
+  "mos-matcher": "navMOSHazardMatcher",
+  "web-conditions": "navWebOfConditions",
+  "vso-finder": "navVSOFinder",
+  "state-benefits": "navStateBenefitHunter",
+  "my-packet": "navMyPacket",
+  "managing-claims": "navManagingClaims",
+  "saved-forms": "navSavedForms",
+  "backup-restore": "navBackupRestore",
+  "exporting-data": "navExportingData",
+  "va-resources": "navVAResources",
+  "online-portals": "navOnlinePortals",
+  "phone-numbers": "navPhoneNumbers",
+  "external-resources": "navExternalResources",
+  settings: "navSettings",
+  "display-mode": "navDisplayMode",
+  "accessibility-options": "navAccessibilityOptions",
+  "data-management": "navDataManagement",
+  "ai-settings": "navAISettings",
+  "local-ai-overview": "navLocalAIOverview",
+  "model-selection": "navModelSelection",
+  "cloud-vs-local": "navCloudVsLocal",
 };
 
 const CATEGORY_KEY_MAP = {
@@ -4458,7 +4458,13 @@ function UserManualNavExpandableSection({
   );
 }
 
-function UserManualNavLeaf({ section, currentSection, getNavTitle, setCurrentSection, setSidebarOpen }) {
+function UserManualNavLeaf({
+  section,
+  currentSection,
+  getNavTitle,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
   return (
     <button
       onClick={() => {
@@ -4491,7 +4497,10 @@ function UserManualNavSection({
   let sectionContent;
   if (section.isCategory) {
     sectionContent = (
-      <UserManualNavCategoryLabel section={section} getCategoryTitle={getCategoryTitle} />
+      <UserManualNavCategoryLabel
+        section={section}
+        getCategoryTitle={getCategoryTitle}
+      />
     );
   } else if (section.children) {
     sectionContent = (
@@ -4649,7 +4658,13 @@ function UserManualSidebar({ s }) {
   );
 }
 
-function UserManualBreadcrumb({ t, currentSection, currentContent, getNavTitle, setCurrentSection }) {
+function UserManualBreadcrumb({
+  t,
+  currentSection,
+  currentContent,
+  getNavTitle,
+  setCurrentSection,
+}) {
   return (
     <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4">
       <button
@@ -4690,7 +4705,14 @@ function UserManualContentNavButtons({ t, setCurrentSection, onClose }) {
 }
 
 function UserManualContentArea({ s }) {
-  const { t, currentSection, currentContent, getNavTitle, setCurrentSection, onClose } = s;
+  const {
+    t,
+    currentSection,
+    currentContent,
+    getNavTitle,
+    setCurrentSection,
+    onClose,
+  } = s;
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-4xl mx-auto p-6 md:p-8">
@@ -4714,7 +4736,11 @@ function UserManualContentArea({ s }) {
         </div>
 
         {/* Navigation buttons */}
-        <UserManualContentNavButtons t={t} setCurrentSection={setCurrentSection} onClose={onClose} />
+        <UserManualContentNavButtons
+          t={t}
+          setCurrentSection={setCurrentSection}
+          onClose={onClose}
+        />
       </div>
     </div>
   );

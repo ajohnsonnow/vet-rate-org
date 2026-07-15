@@ -207,8 +207,7 @@ const checkFunctionalImpact = (text, lowerText) => {
     weakness: {
       type: "Missing Functional Impact",
       severity: "HIGH",
-      description:
-        "Does not describe how condition affects daily life or work",
+      description: "Does not describe how condition affects daily life or work",
       impact: "VA rates based on functional impairment, not just diagnosis",
     },
     question: {
@@ -533,8 +532,7 @@ const StressTestInputSection = ({
     <button
       onClick={runStressTest}
       disabled={
-        isAnalyzing ||
-        (!selectedClaim && Object.keys(claimData).length === 0)
+        isAnalyzing || (!selectedClaim && Object.keys(claimData).length === 0)
       }
       className={`mt-4 w-full py-3 font-bold rounded transition ${
         isAnalyzing
@@ -542,9 +540,7 @@ const StressTestInputSection = ({
           : "bg-red-500 hover:bg-red-600 text-white"
       }`}
     >
-      {isAnalyzing
-        ? "🔄 Analyzing Your Claim..."
-        : "⚔️ Run Red Team Analysis"}
+      {isAnalyzing ? "🔄 Analyzing Your Claim..." : "⚔️ Run Red Team Analysis"}
     </button>
   </div>
 );
@@ -561,9 +557,7 @@ const WeaknessesPanel = ({ weaknesses, getSeverityColor }) => (
           className={`border-l-4 ${getSeverityColor(weakness.severity)} rounded bg-gray-100 p-4 dark:bg-gray-800`}
         >
           <div className="flex items-center justify-between mb-2">
-            <h4
-              className={`font-bold ${getSeverityColor(weakness.severity)}`}
-            >
+            <h4 className={`font-bold ${getSeverityColor(weakness.severity)}`}>
               {weakness.type}
             </h4>
             <span
@@ -576,8 +570,7 @@ const WeaknessesPanel = ({ weaknesses, getSeverityColor }) => (
             {weakness.description}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            <span className="font-semibold">Impact:</span>{" "}
-            {weakness.impact}
+            <span className="font-semibold">Impact:</span> {weakness.impact}
           </p>
         </div>
       ))}
@@ -596,8 +589,7 @@ const PracticeQuestionsPanel = ({
       💬 Mock C&P Examiner Questions:
     </h3>
     <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-      These are the tough questions you might face. Practice your
-      answers below:
+      These are the tough questions you might face. Practice your answers below:
     </p>
     <div className="space-y-4">
       {questions.map((q, idx) => (
@@ -679,8 +671,8 @@ const RecommendedActionsPanel = ({ weaknesses }) => (
         supporting evidence
       </li>
       <li>
-        • Replace vague terms with specific medical terminology (use the
-        Somatic Target tool)
+        • Replace vague terms with specific medical terminology (use the Somatic
+        Target tool)
       </li>
       <li>
         • Ensure your nexus letter includes &quot;at least as likely as

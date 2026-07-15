@@ -589,7 +589,13 @@ const applyCenterGravity = (nodes, positions, velocities, centerX, centerY) => {
   });
 };
 
-const applyVelocitiesWithDamping = (nodes, positions, velocities, width, height) => {
+const applyVelocitiesWithDamping = (
+  nodes,
+  positions,
+  velocities,
+  width,
+  height,
+) => {
   // Apply velocities with damping, clamp to bounds, and track total motion
   let totalMotion = 0;
   nodes.forEach((node) => {
@@ -752,8 +758,7 @@ const buildGraphData = (filterCategory) => {
     });
 
     filteredNodes = filteredNodes.filter(
-      (n) =>
-        relevantPrimaries.includes(n.id) || relevantSecondaries.has(n.id),
+      (n) => relevantPrimaries.includes(n.id) || relevantSecondaries.has(n.id),
     );
 
     filteredLinks = linkList.filter((l) =>
@@ -764,7 +769,13 @@ const buildGraphData = (filterCategory) => {
   return { nodes: filteredNodes, links: filteredLinks };
 };
 
-const renderGraphLinks = (links, positions, selectedNode, selectedLink, onLinkClick) =>
+const renderGraphLinks = (
+  links,
+  positions,
+  selectedNode,
+  selectedLink,
+  onLinkClick,
+) =>
   links.map((link, i) => {
     const sourcePos = positions[link.source];
     const targetPos = positions[link.target];
@@ -938,7 +949,14 @@ const GraphCanvas = ({
 
       {/* Links - Memoized */}
       {useMemo(
-        () => renderGraphLinks(links, positions, selectedNode, selectedLink, onLinkClick),
+        () =>
+          renderGraphLinks(
+            links,
+            positions,
+            selectedNode,
+            selectedLink,
+            onLinkClick,
+          ),
         [links, positions, selectedNode, selectedLink, onLinkClick],
       )}
 
@@ -954,7 +972,15 @@ const GraphCanvas = ({
             onNodeClick,
             onNodeHover,
           ),
-        [nodes, positions, selectedNode, connections, hoveredNode, onNodeClick, onNodeHover],
+        [
+          nodes,
+          positions,
+          selectedNode,
+          connections,
+          hoveredNode,
+          onNodeClick,
+          onNodeHover,
+        ],
       )}
     </svg>
 
@@ -963,7 +989,11 @@ const GraphCanvas = ({
   </div>
 );
 
-const CategoryFilterBar = ({ categories, filterCategory, onSelectCategory }) => (
+const CategoryFilterBar = ({
+  categories,
+  filterCategory,
+  onSelectCategory,
+}) => (
   <div className="mb-6 flex flex-wrap items-center gap-2">
     <span className="text-purple-300 text-sm mr-2">Filter:</span>
     <button
@@ -1069,12 +1099,8 @@ const LinkDetailsPanel = ({ selectedLink, onSelectCondition }) => (
     </div>
 
     <div className="bg-gray-800/50 rounded-xl p-4">
-      <h4 className="text-sm text-purple-300 uppercase mb-2">
-        Medical Nexus
-      </h4>
-      <p className="text-white text-sm leading-relaxed">
-        {selectedLink.nexus}
-      </p>
+      <h4 className="text-sm text-purple-300 uppercase mb-2">Medical Nexus</h4>
+      <p className="text-white text-sm leading-relaxed">{selectedLink.nexus}</p>
     </div>
 
     <div className="flex items-center justify-between text-sm">
@@ -1105,7 +1131,12 @@ const LinkDetailsPanel = ({ selectedLink, onSelectCondition }) => (
   </div>
 );
 
-const NodeDetailsPanel = ({ selectedNode, nodes, connections, onLinkClick }) => (
+const NodeDetailsPanel = ({
+  selectedNode,
+  nodes,
+  connections,
+  onLinkClick,
+}) => (
   <div className="p-4 space-y-4">
     <div className="flex items-center gap-2">
       <span
@@ -1210,8 +1241,8 @@ const HowToUseGuide = () => (
     <div className="bg-indigo-900/30 border border-indigo-700/50 rounded-xl p-4">
       <p className="text-indigo-200 text-sm">
         <span className="text-lg mr-2">🎯</span>
-        Click any connection to see the{" "}
-        <strong>medical nexus</strong> explaining the relationship.
+        Click any connection to see the <strong>medical nexus</strong>{" "}
+        explaining the relationship.
       </p>
     </div>
   </>

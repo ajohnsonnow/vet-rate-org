@@ -27,7 +27,9 @@ function typeAndSearch(text) {
 describe("CFileSemanticSearch", () => {
   it("shows an unavailable message when no session key exists", () => {
     render(<CFileSemanticSearch sessionKey={null} />);
-    expect(screen.getByText(/not available for this analysis/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/not available for this analysis/i),
+    ).toBeInTheDocument();
   });
 
   it("searches the given session and renders ranked page hits", async () => {
@@ -48,7 +50,9 @@ describe("CFileSemanticSearch", () => {
     expect(screen.getByText("Page 7")).toBeInTheDocument();
     expect(screen.getByText(/91% match/)).toBeInTheDocument();
     // The excluded-page framing appears in the helper copy.
-    expect(screen.getByText(/including the 12 the ai pass skipped/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/including the 12 the ai pass skipped/i),
+    ).toBeInTheDocument();
   });
 
   it("shows a no-results message when nothing matches", async () => {

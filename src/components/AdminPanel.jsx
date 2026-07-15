@@ -81,7 +81,11 @@ function useLoadDashboardDataOnOpen(
   ]);
 }
 
-function useSessionCountdown(showAdminPanel, sessionExpiry, setSessionTimeLeft) {
+function useSessionCountdown(
+  showAdminPanel,
+  sessionExpiry,
+  setSessionTimeLeft,
+) {
   useEffect(() => {
     if (!showAdminPanel || !sessionExpiry) return;
 
@@ -98,8 +102,7 @@ function useSessionCountdown(showAdminPanel, sessionExpiry, setSessionTimeLeft) 
 
 function getActivityDotColor(event) {
   if (event.includes("SUCCESS")) return "bg-green-500";
-  if (event.includes("FAILED") || event.includes("LOCKED"))
-    return "bg-red-500";
+  if (event.includes("FAILED") || event.includes("LOCKED")) return "bg-red-500";
   return "bg-blue-500";
 }
 
@@ -180,9 +183,7 @@ function BugReportsCard({ bugStats, onClick }) {
         </div>
         <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
       </div>
-      <h3 className="text-2xl font-bold text-white">
-        {bugStats?.total || 0}
-      </h3>
+      <h3 className="text-2xl font-bold text-white">{bugStats?.total || 0}</h3>
       <p className="text-slate-400 text-sm">Bug Reports</p>
       <div className="mt-2 flex gap-2">
         <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded">
@@ -269,10 +270,7 @@ function QuickStatsGrid({
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <BugReportsCard
-        bugStats={bugStats}
-        onClick={() => onNavigate("bugs")}
-      />
+      <BugReportsCard bugStats={bugStats} onClick={() => onNavigate("bugs")} />
       <FeatureRequestsCard
         featureStats={featureStats}
         onClick={() => onNavigate("features")}
@@ -374,9 +372,9 @@ function SecurityNoticeBanner() {
             Security Reminder
           </p>
           <p className="text-amber-300/70 text-xs mt-1">
-            You are accessing sensitive admin functions. All actions are
-            logged. Session will automatically expire after 30 minutes of
-            inactivity. Always logout when finished.
+            You are accessing sensitive admin functions. All actions are logged.
+            Session will automatically expire after 30 minutes of inactivity.
+            Always logout when finished.
           </p>
         </div>
       </div>
@@ -433,9 +431,7 @@ function AuditLogEntryRow({ entry }) {
           )}
         </div>
         {entry.reason && (
-          <p className="text-slate-400 text-xs mt-1">
-            Reason: {entry.reason}
-          </p>
+          <p className="text-slate-400 text-xs mt-1">Reason: {entry.reason}</p>
         )}
       </div>
       <span className="text-slate-500 text-xs whitespace-nowrap">
@@ -542,7 +538,9 @@ export default function AdminPanel() {
               auditLog={auditLog}
               currentAdmin={currentAdmin}
               onNavigate={setActiveView}
-              onRefreshStats={() => loadAdminStats(setBugStats, setFeatureStats)}
+              onRefreshStats={() =>
+                loadAdminStats(setBugStats, setFeatureStats)
+              }
             />
           )}
 

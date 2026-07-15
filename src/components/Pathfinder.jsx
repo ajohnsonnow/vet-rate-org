@@ -468,7 +468,12 @@ const PathfinderInputToolbar = ({
   </div>
 );
 
-const PathfinderAnalyzeButton = ({ isAnalyzing, ratings, handleAnalyze, t }) => (
+const PathfinderAnalyzeButton = ({
+  isAnalyzing,
+  ratings,
+  handleAnalyze,
+  t,
+}) => (
   <button
     onClick={handleAnalyze}
     disabled={
@@ -1136,7 +1141,13 @@ function _clearPathfinder({
   setLoadedFromPacket(false);
 }
 
-function _selectDroppedFile({ files, t, setError, setUploadedFile, setShowDropInModal }) {
+function _selectDroppedFile({
+  files,
+  t,
+  setError,
+  setUploadedFile,
+  setShowDropInModal,
+}) {
   const file = files[0];
   if (!file) return;
 
@@ -1201,7 +1212,11 @@ async function _runStrategyAnalysis({
   setResults(null);
 
   try {
-    const result = await analyzeStrategy(apiKey, validRatings, additionalContext);
+    const result = await analyzeStrategy(
+      apiKey,
+      validRatings,
+      additionalContext,
+    );
     setResults(result);
   } catch (err) {
     setError(err.message);
@@ -1347,7 +1362,13 @@ function usePathfinderHandlers({
     removeRating,
     handlePastedRatings,
     handleFileSelect: (files) =>
-      _selectDroppedFile({ files, t, setError, setUploadedFile, setShowDropInModal }),
+      _selectDroppedFile({
+        files,
+        t,
+        setError,
+        setUploadedFile,
+        setShowDropInModal,
+      }),
     handleProcessFile: () =>
       _processUploadedFile({
         uploadedFile,
@@ -1391,7 +1412,11 @@ function _consentToAI(setHasConsented) {
   setHasConsented(true);
 }
 
-function usePathfinderState({ onNavigate, onOpenAISettings, initialConditions }) {
+function usePathfinderState({
+  onNavigate,
+  onOpenAISettings,
+  initialConditions,
+}) {
   const { t } = useLanguage();
 
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
@@ -1608,7 +1633,11 @@ export default function Pathfinder({
   onOpenAISettings,
   initialConditions = null,
 }) {
-  const pf = usePathfinderState({ onNavigate, onOpenAISettings, initialConditions });
+  const pf = usePathfinderState({
+    onNavigate,
+    onOpenAISettings,
+    initialConditions,
+  });
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6">
@@ -1618,10 +1647,7 @@ export default function Pathfinder({
       {!pf.hasConsented ? (
         <PathfinderConsentGate handleConsent={pf.handleConsent} t={pf.t} />
       ) : (
-        <PathfinderAuthenticatedContent
-          {...pf}
-          hasMyRatings={hasMyRatings}
-        />
+        <PathfinderAuthenticatedContent {...pf} hasMyRatings={hasMyRatings} />
       )}
 
       {/* VA.gov Rating Paster Modal */}

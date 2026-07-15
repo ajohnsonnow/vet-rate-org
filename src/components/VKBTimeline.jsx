@@ -56,7 +56,11 @@ const getAllDocumentsFlat = (documentsByCategory, sortOrder) => {
   return allDocs;
 };
 
-const getFilteredDocuments = (documentsByCategory, filterCategory, sortOrder) => {
+const getFilteredDocuments = (
+  documentsByCategory,
+  filterCategory,
+  sortOrder,
+) => {
   if (!documentsByCategory) return [];
 
   if (filterCategory === "all") {
@@ -413,9 +417,7 @@ const ComparisonModalSummary = ({ comparisonResult }) => (
   <div className="grid grid-cols-2 gap-4 mb-6">
     <div className="bg-slate-700 rounded p-3">
       <p className="text-slate-400 text-sm">Document 1</p>
-      <p className="text-white font-medium">
-        {comparisonResult.doc1.fileName}
-      </p>
+      <p className="text-white font-medium">{comparisonResult.doc1.fileName}</p>
       <p className="text-slate-400 text-xs">
         v{comparisonResult.doc1.version} •{" "}
         {formatDate(comparisonResult.doc1.uploadDate)}
@@ -423,9 +425,7 @@ const ComparisonModalSummary = ({ comparisonResult }) => (
     </div>
     <div className="bg-slate-700 rounded p-3">
       <p className="text-slate-400 text-sm">Document 2</p>
-      <p className="text-white font-medium">
-        {comparisonResult.doc2.fileName}
-      </p>
+      <p className="text-white font-medium">{comparisonResult.doc2.fileName}</p>
       <p className="text-slate-400 text-xs">
         v{comparisonResult.doc2.version} •{" "}
         {formatDate(comparisonResult.doc2.uploadDate)}

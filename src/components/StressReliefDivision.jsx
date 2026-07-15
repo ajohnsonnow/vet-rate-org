@@ -65,9 +65,7 @@ const BootSequence = ({ bootText, isBooting }) => (
     {bootText.map((line, i) => (
       <div
         key={i}
-        className={
-          line?.includes?.("READY") ? "text-green-300 font-bold" : ""
-        }
+        className={line?.includes?.("READY") ? "text-green-300 font-bold" : ""}
       >
         {line || ""}
       </div>
@@ -82,9 +80,8 @@ const LegalDisclaimer = () => (
     <p>
       Pursuant to the Articles of Incorporation for Vet-Rate.org, this
       &quot;Stress Reduction Module&quot; is intended for therapeutic
-      demon-slaying only. Vet-Rate.org is not liable for any productivity
-      loss, sudden urges to hunt for blue keycards, or delayed VA form
-      submissions.
+      demon-slaying only. Vet-Rate.org is not liable for any productivity loss,
+      sudden urges to hunt for blue keycards, or delayed VA form submissions.
     </p>
     <p className="mt-2 text-green-400">
       By pressing START, you acknowledge that demon-slaying is a recognized
@@ -246,8 +243,7 @@ const OverlayHeader = ({ gameStarted, fps, onClose }) => (
 const GameInstructions = () => (
   <div className="mt-4 text-green-600 font-mono text-xs text-center max-w-xl">
     <p>
-      CONTROLS: Arrow Keys = Move | Ctrl = Fire | Space = Use/Open | Shift =
-      Run
+      CONTROLS: Arrow Keys = Move | Ctrl = Fire | Space = Use/Open | Shift = Run
     </p>
     <p className="mt-1 text-green-800">
       Press ESC inside game for menu • Click game area to capture input

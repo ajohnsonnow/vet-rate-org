@@ -56,7 +56,8 @@ function _authStatusLabel(authLoading, isAuthenticated) {
 }
 
 async function _fetchServiceHistoryData(accessToken, ctx) {
-  const { setLoading, setErrors, setRawServiceHistory, setServiceHistory } = ctx;
+  const { setLoading, setErrors, setRawServiceHistory, setServiceHistory } =
+    ctx;
   setLoading((prev) => ({ ...prev, serviceHistory: true }));
   setErrors((prev) => ({ ...prev, serviceHistory: null }));
 
@@ -111,7 +112,8 @@ async function _fetchClaimsData(accessToken, ctx) {
 
 // Note: Appeals API is Future Scope - this function is available but not auto-called
 async function _fetchAppealableIssuesData(accessToken, ctx) {
-  const { setLoading, setErrors, setRawAppealableIssues, setAppealableIssues } = ctx;
+  const { setLoading, setErrors, setRawAppealableIssues, setAppealableIssues } =
+    ctx;
   setLoading((prev) => ({ ...prev, appealableIssues: true }));
   setErrors((prev) => ({ ...prev, appealableIssues: null }));
 
@@ -359,7 +361,12 @@ function VaIntegrationHeaderTop({ onClose, setShowSandboxTest }) {
         className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
         aria-label="Close"
       >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -438,7 +445,10 @@ function VaIntegrationHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white p-6">
-      <VaIntegrationHeaderTop onClose={onClose} setShowSandboxTest={setShowSandboxTest} />
+      <VaIntegrationHeaderTop
+        onClose={onClose}
+        setShowSandboxTest={setShowSandboxTest}
+      />
       <VaIntegrationAuthStatusBar
         isAuthenticated={isAuthenticated}
         userInfo={userInfo}
@@ -561,12 +571,22 @@ function ServiceHistoryEntry({ service }) {
   );
 }
 
-function ServiceHistoryList({ loading, errors, serviceHistory, fetchServiceHistory }) {
+function ServiceHistoryList({
+  loading,
+  errors,
+  serviceHistory,
+  fetchServiceHistory,
+}) {
   if (loading.serviceHistory) {
     return <LoadingSpinner text="Fetching service history..." />;
   }
   if (errors.serviceHistory) {
-    return <ErrorMessage message={errors.serviceHistory} onRetry={fetchServiceHistory} />;
+    return (
+      <ErrorMessage
+        message={errors.serviceHistory}
+        onRetry={fetchServiceHistory}
+      />
+    );
   }
   if (!serviceHistory || serviceHistory.length === 0) {
     return (
@@ -663,7 +683,8 @@ function ClaimEntry({ claim, isExpanded, onToggleExpand }) {
           <span
             className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.color}`}
           >
-            Phase {claim.phase?.number || "?"}: {claim.phase?.name || claim.status}
+            Phase {claim.phase?.number || "?"}:{" "}
+            {claim.phase?.name || claim.status}
           </span>
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -677,14 +698,18 @@ function ClaimEntry({ claim, isExpanded, onToggleExpand }) {
         <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Claim ID:</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                Claim ID:
+              </span>
               <span className="ml-2 text-gray-900 dark:text-white font-mono text-xs">
                 {claim.id}
               </span>
             </div>
             {claim.closeDate && (
               <div>
-                <span className="text-gray-500 dark:text-gray-400">Closed:</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Closed:
+                </span>
                 <span className="ml-2 text-gray-900 dark:text-white">
                   {formatDate(claim.closeDate)}
                 </span>
@@ -720,7 +745,14 @@ function ClaimEntry({ claim, isExpanded, onToggleExpand }) {
   );
 }
 
-function ClaimsList({ loading, errors, claims, fetchClaims, expandedClaim, setExpandedClaim }) {
+function ClaimsList({
+  loading,
+  errors,
+  claims,
+  fetchClaims,
+  expandedClaim,
+  setExpandedClaim,
+}) {
   if (loading.claims) {
     return <LoadingSpinner text="Fetching claims..." />;
   }
@@ -744,7 +776,9 @@ function ClaimsList({ loading, errors, claims, fetchClaims, expandedClaim, setEx
             key={claim.id || idx}
             claim={claim}
             isExpanded={isExpanded}
-            onToggleExpand={() => setExpandedClaim(isExpanded ? null : claim.id)}
+            onToggleExpand={() =>
+              setExpandedClaim(isExpanded ? null : claim.id)
+            }
           />
         );
       })}
@@ -785,7 +819,9 @@ function ClaimsTrackerCard({
           className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-800/50 rounded-lg transition-colors disabled:opacity-50"
           aria-label="Refresh"
         >
-          <RefreshCw className={`w-5 h-5 ${loading.claims ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`w-5 h-5 ${loading.claims ? "animate-spin" : ""}`}
+          />
         </button>
       </div>
 
@@ -842,13 +878,21 @@ function AppealableIssueEntry({ issue }) {
   );
 }
 
-function AppealableIssuesList({ loading, errors, appealableIssues, fetchAppealableIssues }) {
+function AppealableIssuesList({
+  loading,
+  errors,
+  appealableIssues,
+  fetchAppealableIssues,
+}) {
   if (loading.appealableIssues) {
     return <LoadingSpinner text="Fetching appealable issues..." />;
   }
   if (errors.appealableIssues) {
     return (
-      <ErrorMessage message={errors.appealableIssues} onRetry={fetchAppealableIssues} />
+      <ErrorMessage
+        message={errors.appealableIssues}
+        onRetry={fetchAppealableIssues}
+      />
     );
   }
   if (!appealableIssues || appealableIssues.length === 0) {
@@ -930,9 +974,9 @@ function VaSandboxNoticeFooter() {
         <div className="text-sm text-blue-800 dark:text-blue-200">
           <p className="font-semibold">Sandbox Environment Notice</p>
           <p className="mt-1">
-            This demo uses VA.gov Sandbox APIs with test data. Production
-            access requires VA approval. All data shown is synthetic test
-            data provided by VA for development purposes.
+            This demo uses VA.gov Sandbox APIs with test data. Production access
+            requires VA approval. All data shown is synthetic test data provided
+            by VA for development purposes.
           </p>
           <a
             href="https://developer.va.gov/explore"
@@ -962,8 +1006,14 @@ function VaAuthenticatedView({ dataState, handlers, fetchAllData }) {
     expandedClaim,
     setExpandedClaim,
   } = dataState;
-  const { fetchServiceHistory, fetchClaims, fetchAppealableIssues, toggleRawJson } = handlers;
-  const anyLoading = loading.serviceHistory || loading.claims || loading.appealableIssues;
+  const {
+    fetchServiceHistory,
+    fetchClaims,
+    fetchAppealableIssues,
+    toggleRawJson,
+  } = handlers;
+  const anyLoading =
+    loading.serviceHistory || loading.claims || loading.appealableIssues;
   return (
     <div className="space-y-6">
       {/* Refresh All Button */}
@@ -973,7 +1023,9 @@ function VaAuthenticatedView({ dataState, handlers, fetchAllData }) {
           disabled={anyLoading}
           className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
         >
-          <RefreshCw className={`w-4 h-4 ${anyLoading ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`w-4 h-4 ${anyLoading ? "animate-spin" : ""}`}
+          />
           Refresh All Data
         </button>
       </div>
@@ -1098,9 +1150,21 @@ const VaIntegrationTest = ({ onClose }) => {
   const [rawAppealableIssues, setRawAppealableIssues] = useState(null);
 
   // UI states
-  const [loading, setLoading] = useState({ serviceHistory: false, claims: false, appealableIssues: false });
-  const [errors, setErrors] = useState({ serviceHistory: null, claims: null, appealableIssues: null });
-  const [showRawJson, setShowRawJson] = useState({ serviceHistory: false, claims: false, appealableIssues: false });
+  const [loading, setLoading] = useState({
+    serviceHistory: false,
+    claims: false,
+    appealableIssues: false,
+  });
+  const [errors, setErrors] = useState({
+    serviceHistory: null,
+    claims: null,
+    appealableIssues: null,
+  });
+  const [showRawJson, setShowRawJson] = useState({
+    serviceHistory: false,
+    claims: false,
+    appealableIssues: false,
+  });
   const [expandedClaim, setExpandedClaim] = useState(null);
 
   // Fetch all data when authenticated

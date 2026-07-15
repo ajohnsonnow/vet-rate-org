@@ -217,9 +217,7 @@ const AnalyzerHeader = ({ isAnalyzing, suggestionCount }) => (
       </h3>
       <AIStatusBadge showLabel={false} />
       {isAnalyzing && (
-        <span className="text-sm text-gray-500 italic">
-          Analyzing tone...
-        </span>
+        <span className="text-sm text-gray-500 italic">Analyzing tone...</span>
       )}
     </div>
     {suggestionCount > 0 && (

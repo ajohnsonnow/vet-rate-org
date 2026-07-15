@@ -9,9 +9,7 @@ function PrivacySection1({ t }) {
       <h3 className="text-xl font-bold text-gray-800 mb-3">
         {t("privacyPolicy", "section1Title")}
       </h3>
-      <p className="text-gray-700 mb-3">
-        {t("privacyPolicy", "section1Text")}
-      </p>
+      <p className="text-gray-700 mb-3">{t("privacyPolicy", "section1Text")}</p>
     </section>
   );
 }
@@ -193,17 +191,17 @@ function PrivacyCriticalWarningBox() {
           </p>
           <p className="text-sm leading-relaxed">
             <strong>
-              Using Google Gemini API with your own key (BYOK) sends your
-              data to Google&apos;s cloud data centers.
+              Using Google Gemini API with your own key (BYOK) sends your data
+              to Google&apos;s cloud data centers.
             </strong>{" "}
-            Your text, documents, and prompts are transmitted over the
-            internet to Google&apos;s servers for processing. While this
-            is a direct connection between you and Google (Vet-Rate.org
-            does not see your data), your information leaves your device
-            and enters Google&apos;s infrastructure.{" "}
+            Your text, documents, and prompts are transmitted over the internet
+            to Google&apos;s servers for processing. While this is a direct
+            connection between you and Google (Vet-Rate.org does not see your
+            data), your information leaves your device and enters Google&apos;s
+            infrastructure.{" "}
             <strong className="underline">
-              For maximum privacy, use Local AI models that run entirely
-              on your device.
+              For maximum privacy, use Local AI models that run entirely on your
+              device.
             </strong>
           </p>
         </div>

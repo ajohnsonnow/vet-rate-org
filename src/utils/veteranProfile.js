@@ -828,10 +828,7 @@ function _sanitizeDd214Data(dd214Data) {
     yearsService: dd214Data.yearsService || null,
     monthsService: dd214Data.monthsService || null,
     separationType: sanitizeString(dd214Data.separationType || "", 100),
-    characterOfService: sanitizeString(
-      dd214Data.characterOfService || "",
-      100,
-    ),
+    characterOfService: sanitizeString(dd214Data.characterOfService || "", 100),
     reenlisted: !!dd214Data.reenlisted,
     foreignService: !!dd214Data.foreignService,
     extractedText: sanitizeString(dd214Data.extractedText || "", 10000),

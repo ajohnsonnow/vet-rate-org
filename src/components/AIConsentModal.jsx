@@ -39,9 +39,7 @@ const ConsentModalHeader = () => (
         <h2 id="ai-consent-title" className="text-xl font-bold">
           ✨ AI Statement Assistant
         </h2>
-        <p className="text-purple-200 text-sm">
-          Powered by Google Gemini
-        </p>
+        <p className="text-purple-200 text-sm">Powered by Google Gemini</p>
       </div>
     </div>
   </div>
@@ -53,12 +51,10 @@ const WhatThisDoesSection = ({ statementType }) => (
       <span className="text-green-500">✓</span> What This Does
     </h3>
     <p className="text-gray-600 dark:text-gray-400 text-sm">
-      The AI assistant uses the{" "}
-      <strong>&quot;Three Pillars&quot;</strong> approach to generate a
-      professionally-written
-      <strong> {STATEMENT_TYPE_LABELS[statementType]}</strong> that
-      follows VA formatting guidelines. You can edit the result before
-      downloading.
+      The AI assistant uses the <strong>&quot;Three Pillars&quot;</strong>{" "}
+      approach to generate a professionally-written
+      <strong> {STATEMENT_TYPE_LABELS[statementType]}</strong> that follows VA
+      formatting guidelines. You can edit the result before downloading.
     </p>
   </div>
 );
@@ -183,18 +179,17 @@ const PrivacyInfoSection = ({ provider }) => (
     <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>
-        Provider: <strong>{provider}</strong> (Google&apos;s
-        AI service)
+        Provider: <strong>{provider}</strong> (Google&apos;s AI service)
       </li>
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>
-        Google&apos;s free API tier does not use your prompts to train
-        their models
+        Google&apos;s free API tier does not use your prompts to train their
+        models
       </li>
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>
-        This feature is optional - you can always use the standard
-        template instead
+        This feature is optional - you can always use the standard template
+        instead
       </li>
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>

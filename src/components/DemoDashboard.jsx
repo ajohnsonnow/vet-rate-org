@@ -68,8 +68,18 @@ import {
 // STATUS HELPERS
 // =============================================================================
 
-const PENDING_ENTRY = { status: "pending", data: null, rawData: null, error: null };
-const SKIPPED_ENTRY = { status: "skipped", data: null, rawData: null, error: null };
+const PENDING_ENTRY = {
+  status: "pending",
+  data: null,
+  rawData: null,
+  error: null,
+};
+const SKIPPED_ENTRY = {
+  status: "skipped",
+  data: null,
+  rawData: null,
+  error: null,
+};
 
 const INITIAL_API_STATUS = {
   // OAuth-protected APIs
@@ -93,13 +103,13 @@ function getStatusCounts(apiStatus) {
       (s) => s.status === "pending" || s.status === "loading",
     ).length,
     skipped: statuses.filter((s) => s.status === "skipped").length,
-    sandbox_limit: statuses.filter((s) => s.status === "sandbox_limit")
-      .length,
+    sandbox_limit: statuses.filter((s) => s.status === "sandbox_limit").length,
   };
 }
 
 function getCardBorderClass(statusValue) {
-  if (statusValue === "success") return "border-green-200 dark:border-green-800";
+  if (statusValue === "success")
+    return "border-green-200 dark:border-green-800";
   if (statusValue === "sandbox_limit")
     return "border-orange-200 dark:border-orange-800";
   if (statusValue === "error") return "border-red-200 dark:border-red-800";
@@ -147,7 +157,12 @@ async function testFacilitiesApi(setApiStatus) {
   } catch (err) {
     setApiStatus((prev) => ({
       ...prev,
-      facilities: { status: "error", data: null, rawData: null, error: err.message },
+      facilities: {
+        status: "error",
+        data: null,
+        rawData: null,
+        error: err.message,
+      },
     }));
   }
 }
@@ -197,7 +212,12 @@ async function testBenefitsRefApi(setApiStatus) {
   } catch (err) {
     setApiStatus((prev) => ({
       ...prev,
-      benefitsRef: { status: "error", data: null, rawData: null, error: err.message },
+      benefitsRef: {
+        status: "error",
+        data: null,
+        rawData: null,
+        error: err.message,
+      },
     }));
   }
 }
@@ -389,9 +409,7 @@ const StatusBadge = ({ status }) => {
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.color}`}
     >
-      <Icon
-        className={`w-3.5 h-3.5 ${config.animate ? "animate-spin" : ""}`}
-      />
+      <Icon className={`w-3.5 h-3.5 ${config.animate ? "animate-spin" : ""}`} />
       {config.label}
     </span>
   );
@@ -440,7 +458,12 @@ const ApiCardHeader = ({ name, icon: Icon, status, isOAuth }) => (
   </div>
 );
 
-const ApiCardSuccessDetail = ({ data, rawData, isExpanded, onToggleRawJson }) => {
+const ApiCardSuccessDetail = ({
+  data,
+  rawData,
+  isExpanded,
+  onToggleRawJson,
+}) => {
   let successMessage;
   if (Array.isArray(data)) {
     successMessage = (
@@ -503,7 +526,14 @@ const ApiCardSuccessDetail = ({ data, rawData, isExpanded, onToggleRawJson }) =>
   );
 };
 
-const ApiCardStatusDetail = ({ status, data, rawData, error, isExpanded, onToggleRawJson }) => {
+const ApiCardStatusDetail = ({
+  status,
+  data,
+  rawData,
+  error,
+  isExpanded,
+  onToggleRawJson,
+}) => {
   if (status.status === "sandbox_limit" && error) {
     return (
       <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border-t border-orange-100 dark:border-orange-800">
@@ -636,7 +666,14 @@ function StatusSummaryBar({ counts }) {
   );
 }
 
-function DemoDashboardHeader({ onClose, isAuthenticated, authLoading, onLogin, onLogout, counts }) {
+function DemoDashboardHeader({
+  onClose,
+  isAuthenticated,
+  authLoading,
+  onLogin,
+  onLogout,
+  counts,
+}) {
   return (
     <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6">
       <div className="flex items-center justify-between">
@@ -702,8 +739,7 @@ function DemoDashboardFooter({ counts, totalApis }) {
       <p>Vet-Rate.org • VA.gov API Integration v1.0</p>
       <p className="flex items-center gap-2">
         <Zap className="w-4 h-4 text-green-500" />
-        {counts.success} of {totalApis - counts.skipped}{" "}
-        APIs Active
+        {counts.success} of {totalApis - counts.skipped} APIs Active
       </p>
     </div>
   );
@@ -732,8 +768,8 @@ function AuthIdentityBlock({ isAuthenticated, userInfo }) {
         {isAuthenticated && userInfo && (
           <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
             <User className="w-3.5 h-3.5" />
-            {userInfo.given_name || userInfo.name || "Veteran"} •
-            Sandbox Test User
+            {userInfo.given_name || userInfo.name || "Veteran"} • Sandbox Test
+            User
           </p>
         )}
       </div>
@@ -798,7 +834,10 @@ function AuthStatusBar({
   return (
     <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
       <div className="flex items-center justify-between">
-        <AuthIdentityBlock isAuthenticated={isAuthenticated} userInfo={userInfo} />
+        <AuthIdentityBlock
+          isAuthenticated={isAuthenticated}
+          userInfo={userInfo}
+        />
         <AuthStatusBarActions
           onRunAllTests={onRunAllTests}
           isRunningTests={isRunningTests}
@@ -874,7 +913,12 @@ function OpenDataApisSection({ apiStatus, showRawJson, onToggleRawJson }) {
   );
 }
 
-function OAuthApisSection({ apiStatus, isAuthenticated, showRawJson, onToggleRawJson }) {
+function OAuthApisSection({
+  apiStatus,
+  isAuthenticated,
+  showRawJson,
+  onToggleRawJson,
+}) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -895,8 +939,7 @@ function OAuthApisSection({ apiStatus, isAuthenticated, showRawJson, onToggleRaw
         <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
           <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Connect your VA.gov account to test Service History and Claims
-            APIs
+            Connect your VA.gov account to test Service History and Claims APIs
           </p>
         </div>
       )}
@@ -984,9 +1027,9 @@ function PrivacyNoticeBanner() {
             Privacy & Security
           </h4>
           <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-            All data is processed client-side only. No veteran data is
-            stored on our servers or in any database. OAuth tokens are
-            stored in browser session storage and cleared on logout.
+            All data is processed client-side only. No veteran data is stored on
+            our servers or in any database. OAuth tokens are stored in browser
+            session storage and cleared on logout.
           </p>
         </div>
       </div>

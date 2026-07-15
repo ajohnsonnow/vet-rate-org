@@ -120,9 +120,7 @@ async function analyzeWithAI(text, ctx) {
     // generateAI returns { text, mode } object - extract the text content
     const aiResponse = response?.text || response;
     const responseStr =
-      typeof aiResponse === "string"
-        ? aiResponse
-        : JSON.stringify(aiResponse);
+      typeof aiResponse === "string" ? aiResponse : JSON.stringify(aiResponse);
 
     // Parse JSON response
     let parsedAnalysis = null;
@@ -331,7 +329,12 @@ const UploadNotices = ({ t, aiStatus, error }) => (
   </>
 );
 
-const UploadDropZone = ({ cameraInputRef, fileInputRef, handleFileUpload, t }) => (
+const UploadDropZone = ({
+  cameraInputRef,
+  fileInputRef,
+  handleFileUpload,
+  t,
+}) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     {/* Camera Button */}
     <button
@@ -452,9 +455,7 @@ const ResultsSummary = ({ t, analysis }) => (
     <div
       className={`border-2 rounded-lg p-6 ${getUrgencyColor(analysis.urgency)}`}
     >
-      <h3 className="text-xl font-bold mb-2">
-        {t("denialDecoder.whyDenied")}
-      </h3>
+      <h3 className="text-xl font-bold mb-2">{t("denialDecoder.whyDenied")}</h3>
       <p className="text-lg font-semibold mb-4">{analysis.denialReason}</p>
 
       <h4 className="font-semibold text-sm uppercase tracking-wide mb-2">
@@ -487,7 +488,12 @@ const ResultsSummary = ({ t, analysis }) => (
   </>
 );
 
-const ResultsRawTextToggle = ({ t, showRawText, setShowRawText, extractedText }) => (
+const ResultsRawTextToggle = ({
+  t,
+  showRawText,
+  setShowRawText,
+  extractedText,
+}) => (
   <div className="text-center">
     <button
       onClick={() => setShowRawText(!showRawText)}

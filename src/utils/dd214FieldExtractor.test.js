@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { extractDD214Fields, detectDD214Documents } from "./dd214FieldExtractor";
+import {
+  extractDD214Fields,
+  detectDD214Documents,
+} from "./dd214FieldExtractor";
 
 // Each block starts with a bare "N." — the leading digit isn't in any
 // field's capture character class, so it naturally terminates the previous
@@ -96,7 +99,8 @@ describe("dd214FieldExtractor: detectDD214Documents", () => {
   });
 
   it("does not hang scanning a long document with no separation date (regression: ReDoS)", () => {
-    const pathological = "SEPARATION DATE" + " \n".repeat(50000) + "no date here";
+    const pathological =
+      "SEPARATION DATE" + " \n".repeat(50000) + "no date here";
     const start = Date.now();
     const documents = detectDD214Documents(pathological);
     const elapsed = Date.now() - start;

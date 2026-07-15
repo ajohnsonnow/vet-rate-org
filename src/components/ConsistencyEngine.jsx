@@ -58,7 +58,9 @@ const HEALTH_BADGE_STYLES = {
 };
 
 function getHealthBadgeStyle(color) {
-  return HEALTH_BADGE_STYLES[color] || "bg-yellow-500/20 hover:bg-yellow-500/40";
+  return (
+    HEALTH_BADGE_STYLES[color] || "bg-yellow-500/20 hover:bg-yellow-500/40"
+  );
 }
 
 export default function ConsistencyEngine({ onClose }) {
@@ -360,8 +362,8 @@ function NoContradictionsState({ refresh }) {
         All Clear!
       </h3>
       <p className="text-gray-600 dark:text-gray-400">
-        No contradictions detected in your data. Your claim packet is
-        internally consistent.
+        No contradictions detected in your data. Your claim packet is internally
+        consistent.
       </p>
       <button
         onClick={refresh}

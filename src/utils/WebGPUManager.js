@@ -494,9 +494,7 @@ class GPUDiscoveryEngine {
           requiredFeatures:
             requiredFeatures.length > 0 ? requiredFeatures : undefined,
           requiredLimits:
-            Object.keys(requiredLimits).length > 0
-              ? requiredLimits
-              : undefined,
+            Object.keys(requiredLimits).length > 0 ? requiredLimits : undefined,
         });
       } else {
         throw deviceErr; // Re-throw if we couldn't get a fresh adapter

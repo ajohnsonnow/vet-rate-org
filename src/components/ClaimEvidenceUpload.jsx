@@ -79,10 +79,7 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024;
 // Validate file before upload
 const validateFile = (file) => {
   // Check file type
-  if (
-    !file.type.includes("pdf") &&
-    !file.name.toLowerCase().endsWith(".pdf")
-  ) {
+  if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
     return { valid: false, error: "Only PDF files are accepted" };
   }
 
@@ -591,9 +588,9 @@ const EvidenceUploadForm = ({
     <div className="mt-4 flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400">
       <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
       <p>
-        Your document will be submitted directly to the VA and attached to
-        claim #{claimId}. Processing typically takes 24-48 hours to appear in
-        your claim status.
+        Your document will be submitted directly to the VA and attached to claim
+        #{claimId}. Processing typically takes 24-48 hours to appear in your
+        claim status.
       </p>
     </div>
   </>

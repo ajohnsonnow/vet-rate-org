@@ -789,10 +789,8 @@ function formatServiceHistorySection(serviceHistory) {
   if (sh.branch) section += `- Branch: ${sh.branch}\n`;
   if (sh.mos) section += `- MOS/Rating: ${sh.mos}\n`;
   if (sh.entryDate) section += `- Entry Date: ${sh.entryDate}\n`;
-  if (sh.separationDate)
-    section += `- Separation Date: ${sh.separationDate}\n`;
-  if (sh.yearsService)
-    section += `- Years of Service: ${sh.yearsService}\n`;
+  if (sh.separationDate) section += `- Separation Date: ${sh.separationDate}\n`;
+  if (sh.yearsService) section += `- Years of Service: ${sh.yearsService}\n`;
   if (sh.combatService?.hasVerifiedCombat)
     section += `- Combat Service: VERIFIED\n`;
   return section;
@@ -1366,11 +1364,7 @@ function scoreTermMatches(entry, queryTerms, query, isDCQuery) {
     if (output.includes(term)) score += 1;
 
     // Boost for diagnostic code matches
-    if (
-      isDCQuery &&
-      entry.metadata?.dc &&
-      query.includes(entry.metadata.dc)
-    ) {
+    if (isDCQuery && entry.metadata?.dc && query.includes(entry.metadata.dc)) {
       score += 10;
     }
 

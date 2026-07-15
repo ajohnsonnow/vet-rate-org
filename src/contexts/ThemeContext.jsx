@@ -209,7 +209,13 @@ export function ThemeProvider({ children }) {
 
   // Apply theme to document
   useEffect(() => {
-    applyThemeToDocument(theme, colorBlindMode, reducedMotion, fontSize, palette);
+    applyThemeToDocument(
+      theme,
+      colorBlindMode,
+      reducedMotion,
+      fontSize,
+      palette,
+    );
   }, [theme, colorBlindMode, reducedMotion, fontSize, palette]);
 
   useSystemThemeSync(setTheme);

@@ -50,7 +50,12 @@
  *   run: (args: Object) => Promise<{answer: string, fields: Object|null, extractRaw: string, injectionAttempt: boolean}>
  * }}
  */
-async function _extractFields(generateAI, untrustedContent, schema, options = {}) {
+async function _extractFields(
+  generateAI,
+  untrustedContent,
+  schema,
+  options = {},
+) {
   const { contentLabel = "UNTRUSTED CONTENT", generateAIOptions = {} } =
     options;
 
@@ -116,14 +121,17 @@ ${sanitizedFacts}`;
   return generateAI(userPrompt, options);
 }
 
-async function _runDualLLM(generateAI, {
-  untrustedContent,
-  schema,
-  synthesizerInstructions,
-  contentLabel = "UNTRUSTED CONTENT",
-  extractOptions = {},
-  synthesizeOptions = {},
-}) {
+async function _runDualLLM(
+  generateAI,
+  {
+    untrustedContent,
+    schema,
+    synthesizerInstructions,
+    contentLabel = "UNTRUSTED CONTENT",
+    extractOptions = {},
+    synthesizeOptions = {},
+  },
+) {
   const { fields, raw, parseError } = await _extractFields(
     generateAI,
     untrustedContent,
@@ -174,7 +182,12 @@ export function createDualLLM(generateAI) {
     extract: (untrustedContent, schema, options) =>
       _extractFields(generateAI, untrustedContent, schema, options),
     synthesize: (structuredFacts, synthesizerInstructions, options) =>
-      _synthesizeAnswer(generateAI, structuredFacts, synthesizerInstructions, options),
+      _synthesizeAnswer(
+        generateAI,
+        structuredFacts,
+        synthesizerInstructions,
+        options,
+      ),
     run: (args) => _runDualLLM(generateAI, args),
   };
 }

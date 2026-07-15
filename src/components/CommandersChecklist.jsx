@@ -415,9 +415,7 @@ function ChecklistModalHeader({ progress, onClose }) {
               {progress.totalMilestones} objectives complete
             </p>
           </div>
-          <div className="text-5xl">
-            {getMissionEmoji(progress.percentage)}
-          </div>
+          <div className="text-5xl">{getMissionEmoji(progress.percentage)}</div>
         </div>
 
         {/* Progress Bar */}

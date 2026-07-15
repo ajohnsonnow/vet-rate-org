@@ -77,9 +77,7 @@ function SuggestionsDropdown({
             index === activeIndex ? "bg-blue-50 dark:bg-gray-700" : ""
           } hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition cursor-pointer text-sm min-h-[44px] flex items-center`}
         >
-          <span className="text-gray-900 dark:text-gray-100">
-            {suggestion}
-          </span>
+          <span className="text-gray-900 dark:text-gray-100">{suggestion}</span>
         </div>
       ))}
       {/* Hint to close dropdown */}
@@ -100,7 +98,10 @@ function computeSuggestionsForTerm(searchTerm) {
   return { suggestions: [], show: false };
 }
 
-function useCloseSuggestionsOnOutsideActivity(containerRef, setShowSuggestions) {
+function useCloseSuggestionsOnOutsideActivity(
+  containerRef,
+  setShowSuggestions,
+) {
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {

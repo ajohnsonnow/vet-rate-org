@@ -120,9 +120,7 @@ const SuggestionModalHeader = ({ onClose, onReportBug }) => (
         <h2 id="language-suggestion-title" className="text-xl font-bold">
           Suggest a Language
         </h2>
-        <p className="text-sm text-cyan-100">
-          Help us be more inclusive!
-        </p>
+        <p className="text-sm text-cyan-100">Help us be more inclusive!</p>
       </div>
     </div>
     <div className="flex items-center gap-2">
@@ -184,9 +182,7 @@ const LanguageEntryRow = ({
         type="text"
         placeholder="Language name (e.g., Bengali)"
         value={lang.name}
-        onChange={(e) =>
-          updateLanguage(index, "name", e.target.value)
-        }
+        onChange={(e) => updateLanguage(index, "name", e.target.value)}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
         required
       />
@@ -194,9 +190,7 @@ const LanguageEntryRow = ({
         type="text"
         placeholder="Native name (e.g., বাংলা)"
         value={lang.nativeName}
-        onChange={(e) =>
-          updateLanguage(index, "nativeName", e.target.value)
-        }
+        onChange={(e) => updateLanguage(index, "nativeName", e.target.value)}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
       />
     </div>
@@ -204,9 +198,7 @@ const LanguageEntryRow = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <select
         value={lang.region}
-        onChange={(e) =>
-          updateLanguage(index, "region", e.target.value)
-        }
+        onChange={(e) => updateLanguage(index, "region", e.target.value)}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
       >
         <option value="">Select region...</option>
@@ -220,9 +212,7 @@ const LanguageEntryRow = ({
         type="text"
         placeholder="Why this language? (optional)"
         value={lang.reason}
-        onChange={(e) =>
-          updateLanguage(index, "reason", e.target.value)
-        }
+        onChange={(e) => updateLanguage(index, "reason", e.target.value)}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
       />
     </div>
@@ -276,8 +266,7 @@ const GeneratedRequestResult = ({
           Feature Request Generated!
         </p>
         <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-          Copy this request and share it with the Vet-Rate development
-          team.
+          Copy this request and share it with the Vet-Rate development team.
         </p>
       </div>
     </div>
@@ -364,10 +353,9 @@ const SuggestionForm = ({
     {/* Intro */}
     <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-4 border border-cyan-200 dark:border-cyan-800">
       <p className="text-sm text-cyan-800 dark:text-cyan-200">
-        🎖️{" "}
-        <strong>Every veteran deserves support in their language.</strong>{" "}
-        Suggest languages for our next update. We especially welcome
-        languages from underserved military communities.
+        🎖️ <strong>Every veteran deserves support in their language.</strong>{" "}
+        Suggest languages for our next update. We especially welcome languages
+        from underserved military communities.
       </p>
     </div>
 

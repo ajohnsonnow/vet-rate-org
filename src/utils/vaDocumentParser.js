@@ -192,7 +192,12 @@ function extractCombinedRating(text) {
 /**
  * Extract the "DECISION" section and the conditions listed within it
  */
-function extractDecisionSection(text, decisionStart, evidenceStart, reasonsStart) {
+function extractDecisionSection(
+  text,
+  decisionStart,
+  evidenceStart,
+  reasonsStart,
+) {
   let decisionEnd;
   if (evidenceStart !== -1) {
     decisionEnd = evidenceStart;
@@ -232,7 +237,12 @@ function extractDecisionSection(text, decisionStart, evidenceStart, reasonsStart
 /**
  * Extract the "EVIDENCE" section and the evidence items listed within it
  */
-function extractEvidenceSection(text, evidenceStart, reasonsStart, appealStart) {
+function extractEvidenceSection(
+  text,
+  evidenceStart,
+  reasonsStart,
+  appealStart,
+) {
   let evidenceEnd;
   if (reasonsStart !== -1) {
     evidenceEnd = reasonsStart;
@@ -308,10 +318,7 @@ function extractEffectiveDatesAndAssociate(text, conditions) {
       effectiveDate = match[1];
     }
     // Associate with conditions if possible
-    const context = text.substring(
-      Math.max(0, match.index - 200),
-      match.index,
-    );
+    const context = text.substring(Math.max(0, match.index - 200), match.index);
     for (const cond of conditions) {
       if (
         context.toLowerCase().includes(cond.name.toLowerCase().substring(0, 20))
@@ -340,7 +347,9 @@ function detectDeniedConditions(text, conditions) {
     );
     if (condMatch) {
       const existingCond = conditions.find((c) =>
-        c.name.toLowerCase().includes(condMatch[1].toLowerCase().substring(0, 15)),
+        c.name
+          .toLowerCase()
+          .includes(condMatch[1].toLowerCase().substring(0, 15)),
       );
       if (existingCond) {
         existingCond.status = "DENIED";

@@ -25,9 +25,7 @@ const SplashHeader = ({ t }) => (
     >
       {t("splash", "welcomeVeteran")} 🎖️
     </h1>
-    <p className="text-green-100 text-lg">
-      {t("splash", "yourClaimsToolkit")}
-    </p>
+    <p className="text-green-100 text-lg">{t("splash", "yourClaimsToolkit")}</p>
   </div>
 );
 
@@ -67,17 +65,17 @@ const SplashBetaWarning = () => (
         </h3>
         <div className="space-y-2 text-sm text-amber-900 dark:text-amber-100">
           <p className="leading-relaxed">
-            &quot;Monty always told me to take care of my guys... and
-            y&apos;all are my guys.&quot;
+            &quot;Monty always told me to take care of my guys... and y&apos;all
+            are my guys.&quot;
           </p>
           <p className="text-xs text-amber-800 dark:text-amber-300 mt-3">
             🏗️ Every tool is marked BETA. Expect improvements, updates, and
-            occasional rough edges as I build this for us. Your feedback
-            helps make it better for everyone.
+            occasional rough edges as I build this for us. Your feedback helps
+            make it better for everyone.
           </p>
           <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 italic">
-            💻 Thanks to Uncle Norb for sending me a 286 desktop computer
-            when I was 12 years old.
+            💻 Thanks to Uncle Norb for sending me a 286 desktop computer when I
+            was 12 years old.
           </p>
         </div>
       </div>
@@ -94,8 +92,7 @@ const SplashPersonalMessage = ({ t }) => (
         {PROJECT_STATS.disabilitiesValidated.toLocaleString()}{" "}
         {t("splash", "ratedConditions")}
       </strong>
-      , {t("splash", "advancedCalculators")}{" "}
-      {t("splash", "allFreeNoTricks")}
+      , {t("splash", "advancedCalculators")} {t("splash", "allFreeNoTricks")}
     </p>
     <p className="text-blue-600 dark:text-blue-100 text-xs mt-2 italic">
       - {t("splash", "fellowDisabledVeteran")}

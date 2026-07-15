@@ -159,8 +159,8 @@ const CrisisLineBanner = () => (
       rel="noopener noreferrer"
       className="hover:underline font-medium"
     >
-      🆘 Veterans Crisis Line: <strong>Call 988, Press 1</strong> | Text
-      838255 | Chat online 24/7
+      🆘 Veterans Crisis Line: <strong>Call 988, Press 1</strong> | Text 838255
+      | Chat online 24/7
     </a>
   </div>
 );
@@ -237,8 +237,7 @@ const QuickActionsRow = ({
       className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm whitespace-nowrap"
       aria-label={t("common", "help")}
     >
-      ❓{" "}
-      <span className="hidden lg:inline">{t("common", "help")}</span>
+      ❓ <span className="hidden lg:inline">{t("common", "help")}</span>
     </button>
 
     {/* Missions */}
@@ -248,10 +247,7 @@ const QuickActionsRow = ({
       className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm flex items-center gap-1 whitespace-nowrap"
       aria-label={t("tools", "missions")}
     >
-      🗺️{" "}
-      <span className="hidden lg:inline">
-        {t("tools", "missions")}
-      </span>
+      🗺️ <span className="hidden lg:inline">{t("tools", "missions")}</span>
       <span className="px-1 py-0.5 bg-va-gold text-gray-900 text-[9px] font-bold rounded">
         {t("common", "new").toUpperCase()}
       </span>
@@ -266,10 +262,7 @@ const MyPacketButton = ({ t, onMyPacketClick }) => (
     className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
     aria-label={t("tools", "myPacket")}
   >
-    📁{" "}
-    <span className="hidden lg:inline">
-      {t("tools", "myPacket")}
-    </span>
+    📁 <span className="hidden lg:inline">{t("tools", "myPacket")}</span>
   </button>
 );
 
@@ -281,10 +274,7 @@ const ToolsMenuTrigger = ({ t, showToolsMenu, setShowToolsMenu }) => (
     aria-expanded={showToolsMenu}
     aria-haspopup="true"
   >
-    🛠️{" "}
-    <span className="hidden lg:inline">
-      {t("common", "tools")}
-    </span>
+    🛠️ <span className="hidden lg:inline">{t("common", "tools")}</span>
     <svg
       className={`w-3 h-3 lg:w-4 lg:h-4 transition-transform ${showToolsMenu ? "rotate-180" : ""}`}
       fill="none"
@@ -980,8 +970,8 @@ const QualityControlButtonsC = ({
 const QualityControlSection = (props) => (
   <div className="bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 rounded-lg p-2 mb-2">
     <p className="text-xs text-rose-700 dark:text-rose-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
-      <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-      ✅ {props.t("toolsMenu", "qualityControl")}
+      <span className="w-2 h-2 bg-rose-500 rounded-full"></span>✅{" "}
+      {props.t("toolsMenu", "qualityControl")}
     </p>
     <QualityControlButtonsA {...props} />
     <QualityControlButtonsB {...props} />
@@ -1284,7 +1274,11 @@ const OfficialVaLinks = ({ t }) => (
   </>
 );
 
-const VaResourcesHubButton = ({ t, setShowResourcesMenu, onVAResourcesClick }) => (
+const VaResourcesHubButton = ({
+  t,
+  setShowResourcesMenu,
+  onVAResourcesClick,
+}) => (
   <button
     onClick={() => {
       setShowResourcesMenu(false);
@@ -1359,10 +1353,7 @@ const ResourcesMenuTrigger = ({
     aria-expanded={showResourcesMenu}
     aria-haspopup="true"
   >
-    🎖️{" "}
-    <span className="hidden lg:inline">
-      {t("header", "resources")}
-    </span>
+    🎖️ <span className="hidden lg:inline">{t("header", "resources")}</span>
     <svg
       className={`w-3 h-3 lg:w-4 lg:h-4 transition-transform ${showResourcesMenu ? "rotate-180" : ""}`}
       fill="none"
@@ -1768,9 +1759,7 @@ const MobileMenuResourcesSection = ({
       className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
     >
       <span className="text-xl">🎖️</span>
-      <span className="font-medium">
-        {t("resources", "vaResources")}
-      </span>
+      <span className="font-medium">{t("resources", "vaResources")}</span>
     </button>
 
     <button
@@ -1781,9 +1770,7 @@ const MobileMenuResourcesSection = ({
       className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
     >
       <span className="text-xl">💾</span>
-      <span className="font-medium">
-        {t("tools", "backupManager")}
-      </span>
+      <span className="font-medium">{t("tools", "backupManager")}</span>
     </button>
 
     <button
@@ -1794,9 +1781,7 @@ const MobileMenuResourcesSection = ({
       className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
     >
       <span className="text-xl">☁️</span>
-      <span className="font-medium">
-        {t("tools", "cloudSync")}
-      </span>
+      <span className="font-medium">{t("tools", "cloudSync")}</span>
     </button>
 
     <button
@@ -1807,9 +1792,7 @@ const MobileMenuResourcesSection = ({
       className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
     >
       <span className="text-xl">⚙️</span>
-      <span className="font-medium">
-        {t("tools", "aiSettings")}
-      </span>
+      <span className="font-medium">{t("tools", "aiSettings")}</span>
     </button>
   </div>
 );

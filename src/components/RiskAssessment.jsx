@@ -279,10 +279,9 @@ function RiskInputForm({
             </h3>
             <p className="text-red-700 dark:text-red-300 text-sm mt-1">
               <strong>Predatory &quot;consultants&quot;</strong> push veterans
-              at 90% to file frivolous claims for 10%, triggering
-              re-evaluations that can{" "}
-              <strong>DROP their rating to 70% or lower</strong>. This tool
-              helps you understand the REAL risks before filing.
+              at 90% to file frivolous claims for 10%, triggering re-evaluations
+              that can <strong>DROP their rating to 70% or lower</strong>. This
+              tool helps you understand the REAL risks before filing.
             </p>
           </div>
         </div>
@@ -388,13 +387,9 @@ function WarningCard({ warning, tone }) {
         <span className="text-3xl">{icon}</span>
         <div>
           <h3 className={titleClass}>{warning.rule?.name || defaultTitle}</h3>
-          {warning.rule?.cfr && (
-            <p className={cfrClass}>{warning.rule.cfr}</p>
-          )}
+          {warning.rule?.cfr && <p className={cfrClass}>{warning.rule.cfr}</p>}
           <p className={messageClass}>{warning.message}</p>
-          {warning.action && (
-            <p className={actionClass}>➜ {warning.action}</p>
-          )}
+          {warning.action && <p className={actionClass}>➜ {warning.action}</p>}
         </div>
       </div>
     </div>
@@ -511,9 +506,7 @@ function SummaryCard({ rating, yearsRated, isPermanentTotal, financialGain }) {
           </p>
         </div>
         <div className="bg-white dark:bg-gray-700 rounded-lg p-3 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            P&T Status
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">P&T Status</p>
           <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             {isPermanentTotal ? "Yes" : "No"}
           </p>
@@ -749,7 +742,10 @@ function RiskResultsPanel({
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <RiskOverviewSection riskLevel={riskLevel} financialGain={financialGain} />
+      <RiskOverviewSection
+        riskLevel={riskLevel}
+        financialGain={financialGain}
+      />
 
       {warnings
         .filter((w) => w.severity === "critical")
@@ -888,10 +884,9 @@ function RiskAssessmentNotices({ showResults, savedRatings }) {
               Know Your Rights
             </h3>
             <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-              VA ratings have legal protections under{" "}
-              <strong>38 CFR</strong>. The longer your rating has been in
-              effect, the harder it is to reduce. This tool checks your
-              protection status before you file.
+              VA ratings have legal protections under <strong>38 CFR</strong>.
+              The longer your rating has been in effect, the harder it is to
+              reduce. This tool checks your protection status before you file.
             </p>
           </div>
         </div>
@@ -907,9 +902,9 @@ function RiskAssessmentNotices({ showResults, savedRatings }) {
                 AI Required for Analysis
               </h3>
               <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                Click the <strong>AI Status button</strong> in the header
-                above to load your secure Local AI (100% private) or enter
-                your Gemini API key.
+                Click the <strong>AI Status button</strong> in the header above
+                to load your secure Local AI (100% private) or enter your Gemini
+                API key.
               </p>
             </div>
           </div>
@@ -926,8 +921,8 @@ function RiskAssessmentNotices({ showResults, savedRatings }) {
                 Loaded from My Packet
               </h3>
               <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-                Found {savedRatings.length} saved ratings. Your conditions
-                have been auto-populated below.
+                Found {savedRatings.length} saved ratings. Your conditions have
+                been auto-populated below.
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
                 {savedRatings.slice(0, 5).map((r, i) => (

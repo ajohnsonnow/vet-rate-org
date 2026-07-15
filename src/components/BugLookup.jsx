@@ -527,7 +527,10 @@ const BugClientMetadataSection = ({ t, selectedReport }) => (
 const BugReportEvidenceSections = ({ t, selectedReport }) => (
   <>
     {/* Description */}
-    <DetailSection title={t("bugLookup", "sectionUserDescription")} icon={FileText}>
+    <DetailSection
+      title={t("bugLookup", "sectionUserDescription")}
+      icon={FileText}
+    >
       <p className="whitespace-pre-wrap text-gray-700 dark:text-slate-300">
         {selectedReport.user_description ||
           t("bugLookup", "noDescriptionProvided")}
@@ -600,10 +603,7 @@ const BugReportAuditLogSection = ({ t, auditLog }) => {
     <DetailSection title={t("bugLookup", "sectionAuditLog")} icon={History}>
       <div className="space-y-2">
         {auditLog.map((entry, idx) => (
-          <div
-            key={idx}
-            className="flex items-center justify-between text-sm"
-          >
+          <div key={idx} className="flex items-center justify-between text-sm">
             <span className="text-gray-600 dark:text-slate-400">
               <span className="font-medium text-gray-900 dark:text-white">
                 {entry.action}
@@ -694,7 +694,9 @@ const BugResolveModal = ({
           disabled={resolving}
           className="rounded-lg bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-500 disabled:opacity-50"
         >
-          {resolving ? t("bugLookup", "saving") : t("bugLookup", "markResolved")}
+          {resolving
+            ? t("bugLookup", "saving")
+            : t("bugLookup", "markResolved")}
         </button>
       </div>
     }
@@ -785,14 +787,16 @@ const makeLoadReports =
     setLoading(false);
   };
 
-const makeLoadStatistics = ({ setStatistics }) => async () => {
-  try {
-    const stats = await getBugStatistics();
-    setStatistics(stats);
-  } catch (err) {
-    console.error("Failed to load statistics:", err);
-  }
-};
+const makeLoadStatistics =
+  ({ setStatistics }) =>
+  async () => {
+    try {
+      const stats = await getBugStatistics();
+      setStatistics(stats);
+    } catch (err) {
+      console.error("Failed to load statistics:", err);
+    }
+  };
 
 // Check storage availability and load data on mount
 const useBugLookupInit = ({
@@ -939,21 +943,23 @@ const makeHandleDelete =
     }
   };
 
-const makeHandleExport = ({ setError, t }) => async () => {
-  try {
-    const exportData = await exportBugReports();
-    const blob = new Blob([exportData], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vetrate-bug-reports-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error("Export failed:", err);
-    setError(t("bugLookup", "errorExport"));
-  }
-};
+const makeHandleExport =
+  ({ setError, t }) =>
+  async () => {
+    try {
+      const exportData = await exportBugReports();
+      const blob = new Blob([exportData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vetrate-bug-reports-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+      setError(t("bugLookup", "errorExport"));
+    }
+  };
 
 const makeHandleCopyReport =
   ({ selectedReport, setCopied }) =>
@@ -1038,8 +1044,14 @@ const useBugLookupHandlers = (state, t, loadReports, loadStatistics) => {
 
 const useBugLookupData = (t) => {
   const state = useBugLookupState();
-  const { filters, setLoading, setError, setReports, setStatistics, setStorageAvailable } =
-    state;
+  const {
+    filters,
+    setLoading,
+    setError,
+    setReports,
+    setStatistics,
+    setStorageAvailable,
+  } = state;
 
   const loadReports = makeLoadReports({
     filters,

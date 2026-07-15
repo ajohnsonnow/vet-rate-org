@@ -422,12 +422,7 @@ const UpdateCardAIAnalysis = ({
 );
 
 // Single update card in the updates list
-const UpdateCard = ({
-  update,
-  analyzingDoc,
-  aiAnalysis,
-  handleAIAnalysis,
-}) => (
+const UpdateCard = ({ update, analyzingDoc, aiAnalysis, handleAIAnalysis }) => (
   <div
     className={`border-l-4 rounded-lg p-4 ${URGENCY_COLORS[update.urgency] || URGENCY_COLORS.low}`}
   >
@@ -609,8 +604,8 @@ const WhyTrackRuleChanges = () => (
           Why Track VA Rule Changes?
         </h3>
         <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-          When the VA <strong>proposes changes to rating criteria</strong>{" "}
-          (like Tinnitus or Sleep Apnea), veterans who file{" "}
+          When the VA <strong>proposes changes to rating criteria</strong> (like
+          Tinnitus or Sleep Apnea), veterans who file{" "}
           <strong>BEFORE the change</strong> often keep their current rating.
           Don&apos;t get caught off guard-
           <strong>file early if you see changes coming</strong>.
@@ -822,9 +817,8 @@ async function loadFederalRegisterAlerts({
 function computeAlertCounts(allUpdates) {
   return {
     urgentCount: allUpdates.filter((u) => u.urgency === "high").length,
-    commentPeriodCount: allUpdates.filter(
-      (u) => u.status === "comment_period",
-    ).length,
+    commentPeriodCount: allUpdates.filter((u) => u.status === "comment_period")
+      .length,
   };
 }
 
@@ -844,7 +838,11 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
   // Fetch from Federal Register API
   const fetchFederalRegister = useCallback(
     () =>
-      loadFederalRegisterAlerts({ setFederalRegisterDocs, setLastUpdated, setError }),
+      loadFederalRegisterAlerts({
+        setFederalRegisterDocs,
+        setLastUpdated,
+        setError,
+      }),
     [],
   );
 
@@ -852,7 +850,13 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
   const loadStaticAlerts = useCallback(() => loadStaticAlertsSnapshot(), []);
 
   useEffect(() => {
-    loadLegislativeAlerts({ loadStaticAlerts, fetchFederalRegister, setLoading, setFederalRegisterDocs, setLastUpdated });
+    loadLegislativeAlerts({
+      loadStaticAlerts,
+      fetchFederalRegister,
+      setLoading,
+      setFederalRegisterDocs,
+      setLastUpdated,
+    });
   }, [loadStaticAlerts, fetchFederalRegister]);
 
   // AI Analysis Handler

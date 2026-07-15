@@ -34,8 +34,7 @@ const IOSInstallInstructions = ({ onClose }) => (
             2.
           </span>
           <span>
-            Scroll down and tap{" "}
-            <strong>&quot;Add to Home Screen&quot;</strong>{" "}
+            Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong>{" "}
             <span className="text-xl">➕</span>
           </span>
         </li>
@@ -51,8 +50,8 @@ const IOSInstallInstructions = ({ onClose }) => (
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 dark:border-blue-800 dark:bg-blue-950/40">
         <p className="text-xs text-blue-900 dark:text-blue-200">
-          <strong>Note:</strong> This only works in Safari browser, not
-          Chrome or other browsers on iOS.
+          <strong>Note:</strong> This only works in Safari browser, not Chrome
+          or other browsers on iOS.
         </p>
       </div>
     </div>
@@ -252,9 +251,7 @@ const PWAInstallButton = ({ className = "" }) => {
   // iOS Instructions Modal
   if (showIOSInstructions) {
     return (
-      <IOSInstallInstructions
-        onClose={() => setShowIOSInstructions(false)}
-      />
+      <IOSInstallInstructions onClose={() => setShowIOSInstructions(false)} />
     );
   }
 

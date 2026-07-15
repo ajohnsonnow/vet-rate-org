@@ -548,8 +548,7 @@ const exampleProfiles = [
   },
   {
     name: "Agent Orange Exposure",
-    description:
-      "Presumptive conditions from herbicide exposure (Vietnam era)",
+    description: "Presumptive conditions from herbicide exposure (Vietnam era)",
     conditions: [
       "Diabetes Mellitus Type II",
       "Ischemic Heart Disease",
@@ -674,8 +673,7 @@ const exampleProfiles = [
   },
   {
     name: "Infantry/Airborne - Joint Cascade",
-    description:
-      "Multiple weight-bearing joint issues from rucking and jumps",
+    description: "Multiple weight-bearing joint issues from rucking and jumps",
     conditions: [
       "Right Knee Degenerative Arthritis",
       "Left Knee Degenerative Arthritis",
@@ -919,7 +917,12 @@ export function parseConditionsFromText(text) {
 }
 
 async function _processPdfFile(file, ctx) {
-  const { setPdfFile, setPdfError, setExtractedPdfConditions, setPdfOcrProgress } = ctx;
+  const {
+    setPdfFile,
+    setPdfError,
+    setExtractedPdfConditions,
+    setPdfOcrProgress,
+  } = ctx;
 
   setPdfFile(file);
   setPdfError(null);
@@ -975,7 +978,12 @@ function usePdfDropIn(onLaunch) {
   const [pdfError, setPdfError] = useState(null);
   const pdfFileInputRef = useRef(null);
 
-  const ctx = { setPdfFile, setPdfError, setExtractedPdfConditions, setPdfOcrProgress };
+  const ctx = {
+    setPdfFile,
+    setPdfError,
+    setExtractedPdfConditions,
+    setPdfOcrProgress,
+  };
 
   // PDF Drop-In handlers
   const handlePdfDragOver = (e) => {
@@ -1070,8 +1078,16 @@ function _extractDisplayCondition(condition, getDCCode) {
   return { displayDCCode, displayCondition };
 }
 
-function ConditionCheckboxRow({ condition, selectedConditions, toggleCondition, getDCCode }) {
-  const { displayDCCode, displayCondition } = _extractDisplayCondition(condition, getDCCode);
+function ConditionCheckboxRow({
+  condition,
+  selectedConditions,
+  toggleCondition,
+  getDCCode,
+}) {
+  const { displayDCCode, displayCondition } = _extractDisplayCondition(
+    condition,
+    getDCCode,
+  );
   const isSelected = selectedConditions.includes(condition);
 
   return (
@@ -1116,8 +1132,7 @@ function ConditionSystemGroup({
   toggleCondition,
   getDCCode,
 }) {
-  const isExpanded =
-    expandedSystems.has(system) || searchFilter.trim();
+  const isExpanded = expandedSystems.has(system) || searchFilter.trim();
   const selectedInSystem = conditions.filter((c) =>
     selectedConditions.includes(c),
   ).length;
@@ -1199,7 +1214,8 @@ function ManualInputPanel({ manualInput, setManualInput, handleManualSubmit }) {
 function _pdfProgressLabel(pdfOcrProgress) {
   if (!pdfOcrProgress) return "Processing...";
   if (pdfOcrProgress.state === OCR_STATES.LOADING) return "Loading PDF...";
-  if (pdfOcrProgress.state === OCR_STATES.EXTRACTING) return "Extracting text...";
+  if (pdfOcrProgress.state === OCR_STATES.EXTRACTING)
+    return "Extracting text...";
   if (pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING) {
     return "Running OCR on scanned pages...";
   }
@@ -1264,8 +1280,8 @@ function PdfDropZone({
           </p>
         </div>
         <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-          Supports: VA Rating Decision, Decision Letter, Benefits Summary
-          Letter (PDF)
+          Supports: VA Rating Decision, Decision Letter, Benefits Summary Letter
+          (PDF)
         </div>
       </div>
     </div>
@@ -1332,7 +1348,12 @@ function PdfFileHeader({ pdfFile, handleRemovePdf }) {
         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
         aria-label="Remove file"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -1345,7 +1366,10 @@ function PdfFileHeader({ pdfFile, handleRemovePdf }) {
   );
 }
 
-function PdfExtractedConditionsList({ extractedPdfConditions, handlePdfConditionsSubmit }) {
+function PdfExtractedConditionsList({
+  extractedPdfConditions,
+  handlePdfConditionsSubmit,
+}) {
   return (
     <div>
       <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -1446,8 +1470,8 @@ function PdfDropInPanel({
             </h3>
             <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
               Drop in a PDF of your VA Rating Decision, Decision Letter, or
-              Benefits Summary to automatically extract your
-              service-connected conditions.
+              Benefits Summary to automatically extract your service-connected
+              conditions.
             </p>
           </div>
         </div>
@@ -1466,7 +1490,9 @@ function PdfDropInPanel({
       )}
 
       {/* OCR Progress */}
-      {pdfOcrProgress && <PdfOcrProgressIndicator pdfOcrProgress={pdfOcrProgress} />}
+      {pdfOcrProgress && (
+        <PdfOcrProgressIndicator pdfOcrProgress={pdfOcrProgress} />
+      )}
 
       {/* File Selected + Results */}
       {pdfFile && !pdfOcrProgress && (
@@ -1481,8 +1507,8 @@ function PdfDropInPanel({
 
       {/* Privacy Note */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-        🔒 Your PDF is processed locally in your browser - nothing is sent
-        to any server.
+        🔒 Your PDF is processed locally in your browser - nothing is sent to
+        any server.
       </p>
     </div>
   );
@@ -1517,7 +1543,12 @@ function ConditionSearchFilter({ searchFilter, setSearchFilter }) {
             onClick={() => setSearchFilter("")}
             className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -1594,19 +1625,21 @@ function ConditionGroupsList({
           <p className="text-sm mt-1">Try a different search term</p>
         </div>
       ) : (
-        Object.entries(filteredConditionsBySystem).map(([system, conditions]) => (
-          <ConditionSystemGroup
-            key={system}
-            system={system}
-            conditions={conditions}
-            expandedSystems={expandedSystems}
-            searchFilter={searchFilter}
-            selectedConditions={selectedConditions}
-            toggleSystem={toggleSystem}
-            toggleCondition={toggleCondition}
-            getDCCode={getDCCode}
-          />
-        ))
+        Object.entries(filteredConditionsBySystem).map(
+          ([system, conditions]) => (
+            <ConditionSystemGroup
+              key={system}
+              system={system}
+              conditions={conditions}
+              expandedSystems={expandedSystems}
+              searchFilter={searchFilter}
+              selectedConditions={selectedConditions}
+              toggleSystem={toggleSystem}
+              toggleCondition={toggleCondition}
+              getDCCode={getDCCode}
+            />
+          ),
+        )
       )}
     </div>
   );
@@ -1677,7 +1710,10 @@ function CheckboxSelectionPanel({
         (organized by body system per 38 CFR Part 4, Subpart B):
       </p>
 
-      <ConditionSearchFilter searchFilter={searchFilter} setSearchFilter={setSearchFilter} />
+      <ConditionSearchFilter
+        searchFilter={searchFilter}
+        setSearchFilter={setSearchFilter}
+      />
 
       <ExpandCollapseControls
         expandAll={expandAll}
@@ -1717,8 +1753,7 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
   return (
     <div>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-        Choose a sample veteran profile to see how Secondary Scout
-        works:
+        Choose a sample veteran profile to see how Secondary Scout works:
       </p>
       <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
         {exampleProfiles.map((profile, index) => (
@@ -1809,7 +1844,9 @@ function SavedRatingRow({ rating }) {
     <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className={`px-2 py-1 text-xs font-bold rounded ${ratingBadgeClass}`}>
+          <span
+            className={`px-2 py-1 text-xs font-bold rounded ${ratingBadgeClass}`}
+          >
             {rating.rating}%
           </span>
           <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -1920,7 +1957,12 @@ function SecondaryScoutHeader({ onClose, onReportBug }) {
   );
 }
 
-function SecondaryScoutTabs({ inputMethod, setInputMethod, savedRatings, setShowVAGovPaster }) {
+function SecondaryScoutTabs({
+  inputMethod,
+  setInputMethod,
+  savedRatings,
+  setShowVAGovPaster,
+}) {
   return (
     <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
       <button
@@ -1994,7 +2036,11 @@ function SecondaryScoutInfoBox() {
     <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded">
       <div className="flex">
         <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+          <svg
+            className="h-5 w-5 text-yellow-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
             <path
               fillRule="evenodd"
               d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -2004,10 +2050,10 @@ function SecondaryScoutInfoBox() {
         </div>
         <div className="ml-3">
           <p className="text-sm text-yellow-700 dark:text-yellow-100">
-            <strong>Important:</strong> This tool is educational and based on
-            38 CFR § 3.310 (Secondary Service Connection). Suggestions
-            should be reviewed with a VA-accredited representative and
-            require a medical nexus opinion.
+            <strong>Important:</strong> This tool is educational and based on 38
+            CFR § 3.310 (Secondary Service Connection). Suggestions should be
+            reviewed with a VA-accredited representative and require a medical
+            nexus opinion.
           </p>
         </div>
       </div>
@@ -2070,7 +2116,12 @@ function _importPastedRatings(ratings, ctx) {
 }
 
 function _buildSecondaryScoutSelectionHandlers(state) {
-  const { conditionToDCCode, setSelectedConditions, setExpandedSystems, setInputMethod } = state;
+  const {
+    conditionToDCCode,
+    setSelectedConditions,
+    setExpandedSystems,
+    setInputMethod,
+  } = state;
 
   // Helper function to get DC code for a condition
   const getDCCode = (conditionName) => {
@@ -2121,7 +2172,14 @@ function _buildSecondaryScoutSelectionHandlers(state) {
     setInputMethod("checkbox");
   };
 
-  return { getDCCode, toggleCondition, toggleSystem, expandAll, collapseAll, loadExampleProfile };
+  return {
+    getDCCode,
+    toggleCondition,
+    toggleSystem,
+    expandAll,
+    collapseAll,
+    loadExampleProfile,
+  };
 }
 
 function _buildSecondaryScoutSubmitHandlers(state) {
@@ -2135,7 +2193,11 @@ function _buildSecondaryScoutSubmitHandlers(state) {
   } = state;
 
   const handlePastedRatings = (ratings) => {
-    _importPastedRatings(ratings, { setSavedRatings, setShowVAGovPaster, onLaunch });
+    _importPastedRatings(ratings, {
+      setSavedRatings,
+      setShowVAGovPaster,
+      onLaunch,
+    });
   };
 
   const handleManualSubmit = () => {
@@ -2230,7 +2292,14 @@ function SecondaryScoutCheckboxPanel({ state, handlers }) {
     setExpandedSystems,
     filteredConditionsBySystem,
   } = state;
-  const { expandAll, collapseAll, toggleSystem, toggleCondition, getDCCode, handleCheckboxSubmit } = handlers;
+  const {
+    expandAll,
+    collapseAll,
+    toggleSystem,
+    toggleCondition,
+    getDCCode,
+    handleCheckboxSubmit,
+  } = handlers;
 
   return (
     <CheckboxSelectionPanel
@@ -2252,8 +2321,14 @@ function SecondaryScoutCheckboxPanel({ state, handlers }) {
 }
 
 function SecondaryScoutInputPanels({ state, handlers }) {
-  const { inputMethod, manualInput, setManualInput, pdfDropIn, savedRatings } = state;
-  const { handleManualSubmit, handleMyRatingsSubmit, loadExampleProfile, calculateCombinedRating } = handlers;
+  const { inputMethod, manualInput, setManualInput, pdfDropIn, savedRatings } =
+    state;
+  const {
+    handleManualSubmit,
+    handleMyRatingsSubmit,
+    loadExampleProfile,
+    calculateCombinedRating,
+  } = handlers;
 
   return (
     <>
@@ -2267,7 +2342,9 @@ function SecondaryScoutInputPanels({ state, handlers }) {
       )}
 
       {/* PDF Drop-In Method */}
-      {inputMethod === "pdf" && <SecondaryScoutPdfPanel pdfDropIn={pdfDropIn} />}
+      {inputMethod === "pdf" && (
+        <SecondaryScoutPdfPanel pdfDropIn={pdfDropIn} />
+      )}
 
       {/* Checkbox Selection Method */}
       {inputMethod === "checkbox" && (
@@ -2292,8 +2369,15 @@ function SecondaryScoutInputPanels({ state, handlers }) {
 }
 
 function SecondaryScoutLauncherView({ state, handlers }) {
-  const { onClose, onReportBug, inputMethod, setInputMethod, savedRatings, showVAGovPaster, setShowVAGovPaster } =
-    state;
+  const {
+    onClose,
+    onReportBug,
+    inputMethod,
+    setInputMethod,
+    savedRatings,
+    showVAGovPaster,
+    setShowVAGovPaster,
+  } = state;
   const { handlePastedRatings } = handlers;
 
   return (
@@ -2303,7 +2387,9 @@ function SecondaryScoutLauncherView({ state, handlers }) {
         onClose={onClose}
         size="xl"
         labelledBy="secondary-scout-launcher-title"
-        header={<SecondaryScoutHeader onClose={onClose} onReportBug={onReportBug} />}
+        header={
+          <SecondaryScoutHeader onClose={onClose} onReportBug={onReportBug} />
+        }
       >
         <div>
           <SecondaryScoutTabs

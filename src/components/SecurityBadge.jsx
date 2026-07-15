@@ -328,9 +328,9 @@ const GoatCounterNotice = () => (
       </li>
     </ul>
     <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 italic">
-      📱 Fun fact: GoatCounter helped us realize how many veterans use
-      mobile devices - sorry for the early UI struggles, small screen folks!
-      We&apos;re on it! 🫡
+      📱 Fun fact: GoatCounter helped us realize how many veterans use mobile
+      devices - sorry for the early UI struggles, small screen folks! We&apos;re
+      on it! 🫡
     </p>
   </div>
 );
@@ -347,8 +347,8 @@ const SuspiciousTrafficWarning = () => (
       <li>Any unknown API</li>
     </ul>
     <p className="mt-2 text-red-800 dark:text-red-300 font-semibold">
-      → Report it immediately via Bug Squasher. That would mean we&apos;ve
-      been compromised.
+      → Report it immediately via Bug Squasher. That would mean we&apos;ve been
+      compromised.
     </p>
   </div>
 );
@@ -510,9 +510,8 @@ const VerifyTab = () => (
 const FAQFreeAnswer = () => (
   <div className="space-y-2 text-sm">
     <p>
-      <strong>Not here.</strong> That business model requires collecting
-      your data to sell or monetize. We can&apos;t sell what we don&apos;t
-      have.
+      <strong>Not here.</strong> That business model requires collecting your
+      data to sell or monetize. We can&apos;t sell what we don&apos;t have.
     </p>
     <p>
       <strong>Why it&apos;s free:</strong>
@@ -525,8 +524,8 @@ const FAQFreeAnswer = () => (
       <li>Open source - community can verify everything</li>
     </ul>
     <p className="font-semibold mt-2">
-      The &quot;product&quot; is helping veterans get what they deserve
-      without predatory claim sharks taking 20-30% of your backpay.
+      The &quot;product&quot; is helping veterans get what they deserve without
+      predatory claim sharks taking 20-30% of your backpay.
     </p>
   </div>
 );
@@ -534,8 +533,7 @@ const FAQFreeAnswer = () => (
 const FAQMoneyAnswer = () => (
   <div className="space-y-2 text-sm">
     <p>
-      <strong>I don&apos;t.</strong> This is a passion project, not a
-      business.
+      <strong>I don&apos;t.</strong> This is a passion project, not a business.
     </p>
     <p>
       There&apos;s a donation link for those who want to support
@@ -543,8 +541,8 @@ const FAQMoneyAnswer = () => (
       paywalled. No subscriptions. No upsells.
     </p>
     <p className="font-semibold">
-      Veterans shouldn&apos;t have to pay to understand their benefits.
-      Full stop.
+      Veterans shouldn&apos;t have to pay to understand their benefits. Full
+      stop.
     </p>
   </div>
 );
@@ -552,8 +550,7 @@ const FAQMoneyAnswer = () => (
 const FAQTrainingAnswer = () => (
   <div className="space-y-2 text-sm">
     <p>
-      <strong>We don&apos;t train any models.</strong> When you use AI
-      features:
+      <strong>We don&apos;t train any models.</strong> When you use AI features:
     </p>
     <ul className="list-disc ml-5 space-y-1">
       <li>You provide your own API key (Google Gemini - free tier)</li>
@@ -563,8 +560,8 @@ const FAQTrainingAnswer = () => (
       <li>100% optional - everything works without AI</li>
     </ul>
     <p className="font-semibold mt-2">
-      Google&apos;s privacy policy applies to their API, not ours (because
-      we don&apos;t have servers).
+      Google&apos;s privacy policy applies to their API, not ours (because we
+      don&apos;t have servers).
     </p>
   </div>
 );
@@ -576,19 +573,16 @@ const FAQRegulationsAnswer = () => (
       change. Here&apos;s how we handle it:
     </p>
     <ul className="list-disc ml-5 space-y-1">
-      <li>
-        All disability data comes from public CFR sources (ecfr.gov)
-      </li>
+      <li>All disability data comes from public CFR sources (ecfr.gov)</li>
       <li>We update the static JSON files when regulations change</li>
       <li>
-        You download the updated files when you visit (like any website
-        update)
+        You download the updated files when you visit (like any website update)
       </li>
       <li>No continuous sync required - the data is the site itself</li>
     </ul>
     <p className="font-semibold mt-2">
-      Think of it like downloading a phone app update - new data replaces
-      old, but your personal info stays local.
+      Think of it like downloading a phone app update - new data replaces old,
+      but your personal info stays local.
     </p>
   </div>
 );
@@ -619,8 +613,8 @@ const FAQBreachAnswer = () => (
       <strong>Can&apos;t breach what doesn&apos;t exist.</strong>
     </p>
     <p>
-      Traditional breaches happen when companies store your data on
-      servers and those servers get hacked. We have:
+      Traditional breaches happen when companies store your data on servers and
+      those servers get hacked. We have:
     </p>
     <ul className="list-disc ml-5 space-y-1">
       <li>❌ No user database</li>
@@ -630,8 +624,8 @@ const FAQBreachAnswer = () => (
       <li>✅ Just static files (HTML/CSS/JS)</li>
     </ul>
     <p className="font-semibold mt-2">
-      The ONLY way your data could leak is if YOUR device is compromised -
-      which is true for any website you use.
+      The ONLY way your data could leak is if YOUR device is compromised - which
+      is true for any website you use.
     </p>
   </div>
 );
@@ -719,8 +713,7 @@ const FAQComparisonAnswer = () => (
     </p>
     <VetRateComparisonTable />
     <p className="font-semibold mt-2">
-      But don&apos;t take this table as truth - verify each claim
-      yourself.
+      But don&apos;t take this table as truth - verify each claim yourself.
     </p>
   </div>
 );

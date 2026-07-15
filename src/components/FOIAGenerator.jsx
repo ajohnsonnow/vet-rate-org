@@ -435,9 +435,8 @@ const DataPrivacyNotice = () => (
           Your Data Stays Local
         </h3>
         <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-          None of your personal information leaves your device. Everything
-          is processed locally and goes directly into your downloadable
-          document.
+          None of your personal information leaves your device. Everything is
+          processed locally and goes directly into your downloadable document.
         </p>
       </div>
     </div>
@@ -692,14 +691,12 @@ const RecordSelectionTip = () => (
     <div className="flex items-start gap-3">
       <span className="text-2xl">💡</span>
       <div>
-        <h3 className="font-bold text-blue-800 dark:text-blue-200">
-          Pro Tip
-        </h3>
+        <h3 className="font-bold text-blue-800 dark:text-blue-200">Pro Tip</h3>
         <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-          Request your <strong>complete C-File</strong> - it contains
-          everything and reveals what VA actually considered when making
-          their decisions. You&apos;re entitled to{" "}
-          <strong>one free copy</strong> under 38 CFR § 1.555.
+          Request your <strong>complete C-File</strong> - it contains everything
+          and reveals what VA actually considered when making their decisions.
+          You&apos;re entitled to <strong>one free copy</strong> under 38 CFR §
+          1.555.
         </p>
       </div>
     </div>
@@ -1022,9 +1019,7 @@ const RequestSummaryCard = ({ formData, selectedRecords }) => (
         </p>
       </div>
       <div>
-        <p className="text-gray-500 dark:text-gray-400">
-          Records Requested
-        </p>
+        <p className="text-gray-500 dark:text-gray-400">Records Requested</p>
         <p className="font-medium text-gray-800 dark:text-gray-100">
           {selectedRecords.length} types
         </p>
@@ -1107,9 +1102,7 @@ const DownloadOptionsCard = ({ formData, selectedRecords }) => (
         <p className="font-semibold text-gray-800 dark:text-gray-100">
           Copy Text
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          To clipboard
-        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">To clipboard</p>
       </button>
     </div>
   </div>
@@ -1167,9 +1160,7 @@ const SubmissionInstructions = () => (
         </p>
       </div>
       <div>
-        <p className="font-semibold">
-          Option 2: Submit with VA Form 20-10206
-        </p>
+        <p className="font-semibold">Option 2: Submit with VA Form 20-10206</p>
         <p>
           Download official form from{" "}
           <a
@@ -1214,12 +1205,11 @@ const TimelineInfo = () => (
         longer)
       </li>
       <li>
-        • <strong>NPRC (Service Records):</strong> 2-6 months (backlog
-        varies)
+        • <strong>NPRC (Service Records):</strong> 2-6 months (backlog varies)
       </li>
       <li>
-        • <strong>Expedited requests:</strong> If you have a pending claim
-        or appeal, mention it!
+        • <strong>Expedited requests:</strong> If you have a pending claim or
+        appeal, mention it!
       </li>
     </ul>
   </div>
@@ -1237,7 +1227,10 @@ const ReviewDownloadStep = ({
 
     <RequestSummaryCard formData={formData} selectedRecords={selectedRecords} />
 
-    <DownloadOptionsCard formData={formData} selectedRecords={selectedRecords} />
+    <DownloadOptionsCard
+      formData={formData}
+      selectedRecords={selectedRecords}
+    />
 
     <RequestPreviewPanel
       showPreview={showPreview}
@@ -1364,10 +1357,9 @@ const DownloadSupportCTA = () => (
           🔐 Knowledge is power - now you&apos;re unlocking yours
         </p>
         <p className="text-amber-300/70 text-sm">
-          Your C-File contains everything VA used to decide your
-          claim - and everything they may have
-          &quot;overlooked.&quot; This tool helps every veteran see
-          their own file. Transparency tools like this take time to
+          Your C-File contains everything VA used to decide your claim - and
+          everything they may have &quot;overlooked.&quot; This tool helps every
+          veteran see their own file. Transparency tools like this take time to
           build. Help keep them free.
         </p>
       </div>

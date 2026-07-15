@@ -249,7 +249,8 @@ function _verdictSummary(flags, highCount) {
   }
   const flagWord = flags.length > 1 ? "s" : "";
   const highWord = highCount > 1 ? "s" : "";
-  const highNote = highCount > 0 ? `${highCount} HIGH-severity issue${highWord} found.` : "";
+  const highNote =
+    highCount > 0 ? `${highCount} HIGH-severity issue${highWord} found.` : "";
   return `Detected ${flags.length} red flag${flagWord} using keyword analysis. ${highNote} Load the Warrant Council AI for a complete, clause-level review.`;
 }
 

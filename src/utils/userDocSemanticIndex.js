@@ -219,9 +219,9 @@ export async function createIdbStore() {
         if (sessionKey == null) {
           store.clear();
         } else {
-          const req = store.index(SESSION_INDEX).openCursor(
-            IDBKeyRange.only(sessionKey),
-          );
+          const req = store
+            .index(SESSION_INDEX)
+            .openCursor(IDBKeyRange.only(sessionKey));
           req.onsuccess = () => {
             const cursor = req.result;
             if (cursor) {

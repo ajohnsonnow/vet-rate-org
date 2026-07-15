@@ -203,7 +203,11 @@ export function cosineQ8(queryVec, bin, idx) {
  * @returns {string[]}
  */
 export function tokenize(text) {
-  return String(text || "").toLowerCase().match(/[a-z0-9]+/g) || [];
+  return (
+    String(text || "")
+      .toLowerCase()
+      .match(/[a-z0-9]+/g) || []
+  );
 }
 
 /**
@@ -243,7 +247,11 @@ export function buildBM25Index(texts) {
  * @param {{k1?:number, b?:number}} [params]
  * @returns {Float64Array}
  */
-export function bm25ScoreAll(index, queryTokens, { k1 = BM25_K1, b = BM25_B } = {}) {
+export function bm25ScoreAll(
+  index,
+  queryTokens,
+  { k1 = BM25_K1, b = BM25_B } = {},
+) {
   const { N, avgdl, docLen, tf, df } = index;
   const scores = new Float64Array(N);
   const avg = avgdl || 1;
@@ -254,7 +262,8 @@ export function bm25ScoreAll(index, queryTokens, { k1 = BM25_K1, b = BM25_B } = 
     for (let i = 0; i < N; i++) {
       const f = tf[i].get(t);
       if (!f) continue;
-      scores[i] += (idf * (f * (k1 + 1))) / (f + k1 * (1 - b + (b * docLen[i]) / avg));
+      scores[i] +=
+        (idf * (f * (k1 + 1))) / (f + k1 * (1 - b + (b * docLen[i]) / avg));
     }
   }
   return scores;

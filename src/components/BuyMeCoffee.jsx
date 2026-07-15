@@ -45,9 +45,7 @@ function pluralize(count) {
 // Focus on encouragement and celebrating progress
 function buildSearchMessages(context) {
   const querySuffix = context.query ? ` for "${context.query}"` : "";
-  const ratingSuffix = context.rating
-    ? ` - targeting ${context.rating}%`
-    : "";
+  const ratingSuffix = context.rating ? ` - targeting ${context.rating}%` : "";
   const conditionNameSuffix = context.conditionName
     ? ` on ${context.conditionName}`
     : "";

@@ -190,8 +190,8 @@ function SandboxConfigWarning({ configStatus }) {
             VA OAuth Not Configured
           </p>
           <p className="text-sm text-yellow-200 mt-1">
-            Missing environment variables. Set these in your Render Dashboard
-            or .env.local:
+            Missing environment variables. Set these in your Render Dashboard or
+            .env.local:
           </p>
           <ul className="text-xs text-yellow-300 mt-2 space-y-1 font-mono">
             {!configStatus.hasOAuth && (
@@ -797,8 +797,7 @@ function PowerUserFeatures({
       </div>
 
       <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
-        Advanced tools for managing your VA claim directly through official
-        APIs
+        Advanced tools for managing your VA claim directly through official APIs
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1542,8 +1541,7 @@ function buildOpenDataFetchers({
     testDisabilitiesApi: () =>
       runSandboxFetch({
         ...shared,
-        fetchFn: () =>
-          getBenefitsReferenceDisabilities(VA_FACILITIES_API_KEY),
+        fetchFn: () => getBenefitsReferenceDisabilities(VA_FACILITIES_API_KEY),
         formatFn: formatBenefitsDisabilities,
         setRaw: setRawDisabilities,
         setFormatted: setDisabilities,
@@ -1785,7 +1783,12 @@ function useConsentFlow(isAuthenticated, sandboxData) {
     setTimeout(() => setSaveSuccessMessage(null), 3000);
   };
 
-  return { showConsentPrompt, saveSuccessMessage, handleConsent, handleSkipConsent };
+  return {
+    showConsentPrompt,
+    saveSuccessMessage,
+    handleConsent,
+    handleSkipConsent,
+  };
 }
 
 /**
@@ -1871,8 +1874,12 @@ const VaSandboxTest = ({ onClose }) => {
 
   const sandboxData = useVaSandboxData(isAuthenticated, accessToken);
 
-  const { showConsentPrompt, saveSuccessMessage, handleConsent, handleSkipConsent } =
-    useConsentFlow(isAuthenticated, sandboxData);
+  const {
+    showConsentPrompt,
+    saveSuccessMessage,
+    handleConsent,
+    handleSkipConsent,
+  } = useConsentFlow(isAuthenticated, sandboxData);
 
   // =========================================================================
   // RENDER

@@ -69,8 +69,7 @@ const getTypeLabel = (type, isNew, t) => {
 };
 
 const getTypeBadgeColor = (type, isNew) => {
-  if (isNew)
-    return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
+  if (isNew) return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
   const colors = {
     feature:
       "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",

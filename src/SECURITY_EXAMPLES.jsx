@@ -15,7 +15,9 @@ function _MyTextAreaWithDictation() {
 
   return (
     <div className="space-y-2">
-      <label htmlFor="personal-statement" className="block text-sm font-medium">Personal Statement</label>
+      <label htmlFor="personal-statement" className="block text-sm font-medium">
+        Personal Statement
+      </label>
 
       {/* The textarea container needs to be relative */}
       <div className="relative">
@@ -275,7 +277,10 @@ function _FormWithMultipleDictationFields() {
     <form className="space-y-6">
       {/* Field 1: Personal Statement */}
       <div className="relative">
-        <label htmlFor="ex6-personal-statement" className="block text-sm font-medium mb-2">
+        <label
+          htmlFor="ex6-personal-statement"
+          className="block text-sm font-medium mb-2"
+        >
           Personal Statement
         </label>
         <textarea
@@ -296,7 +301,12 @@ function _FormWithMultipleDictationFields() {
 
       {/* Field 2: Symptoms */}
       <div className="relative">
-        <label htmlFor="ex6-symptoms" className="block text-sm font-medium mb-2">Symptoms</label>
+        <label
+          htmlFor="ex6-symptoms"
+          className="block text-sm font-medium mb-2"
+        >
+          Symptoms
+        </label>
         <textarea
           id="ex6-symptoms"
           value={symptoms}

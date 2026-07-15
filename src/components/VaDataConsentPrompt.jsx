@@ -22,8 +22,8 @@ const ConsentHeader = () => (
       </h2>
     </div>
     <p className="text-gray-600 dark:text-gray-300">
-      We successfully fetched your data from VA.gov. Would you like to save
-      it locally?
+      We successfully fetched your data from VA.gov. Would you like to save it
+      locally?
     </p>
   </div>
 );

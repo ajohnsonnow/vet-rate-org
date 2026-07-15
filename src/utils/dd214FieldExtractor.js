@@ -1025,7 +1025,12 @@ export function extractDD214Fields(rawText, options = {}) {
  * values, and correct regex-preferred structured fields when the AI
  * value doesn't look like a valid date. Mutates `merged` and `mergeNotes`.
  */
-function fillMissingFieldsFromRegex(merged, regexFields, regexPreferred, mergeNotes) {
+function fillMissingFieldsFromRegex(
+  merged,
+  regexFields,
+  regexPreferred,
+  mergeNotes,
+) {
   for (const [key, value] of Object.entries(regexFields)) {
     if (value === null || value === undefined) continue;
     if (typeof value === "string" && value.trim() === "") continue;

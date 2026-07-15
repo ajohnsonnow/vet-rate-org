@@ -180,7 +180,9 @@ const ZonkButton = ({ className = "" }) => {
   return (
     <div className={className}>
       {/* The Button */}
-      {!showZonk && <ZonkPrompt onClick={triggerZonk} clickCount={clickCount} />}
+      {!showZonk && (
+        <ZonkPrompt onClick={triggerZonk} clickCount={clickCount} />
+      )}
 
       {/* The Zonk Modal */}
       {showZonk && zonkData && (

@@ -30,11 +30,7 @@ async function processVaCallback({
 
   // Check for OAuth error
   if (errorParam) {
-    console.error(
-      "[VA Callback] OAuth error:",
-      errorParam,
-      errorDescription,
-    );
+    console.error("[VA Callback] OAuth error:", errorParam, errorDescription);
     const errMsg = errorDescription || errorParam;
     setError(errMsg);
     setStatus("error");

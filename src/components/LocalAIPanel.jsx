@@ -343,7 +343,10 @@ const LocalAIPanelHeader = ({ onClose, onReportBug }) => (
           <span className="text-4xl">🛡️</span>
         </div>
         <div>
-          <h2 id="local-ai-panel-title" className="text-2xl font-bold sm:text-3xl">
+          <h2
+            id="local-ai-panel-title"
+            className="text-2xl font-bold sm:text-3xl"
+          >
             Faraday Cage Protocol{" "}
             <span className="rounded bg-amber-500 px-1.5 py-0.5 align-middle text-[10px] font-bold text-white">
               BETA
@@ -375,7 +378,12 @@ const LocalAIPanelHeader = ({ onClose, onReportBug }) => (
           className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           aria-label="Close dialog"
         >
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -500,14 +508,12 @@ const ExperimentalWarningPanel = ({ webGPUStatus, onEnable, onCancel }) => (
         <h4 className="font-bold text-red-400 text-sm">IMPORTANT WARNINGS</h4>
         <ul className="text-xs text-gray-300 mt-2 space-y-1 list-disc list-inside">
           <li>
-            This enables <strong>experimental browser features</strong> not
-            yet standardized
+            This enables <strong>experimental browser features</strong> not yet
+            standardized
           </li>
           <li>
             May cause{" "}
-            <strong>
-              browser crashes, GPU errors, or system instability
-            </strong>
+            <strong>browser crashes, GPU errors, or system instability</strong>
           </li>
           <li>
             Requires launching Chrome with special flags (see instructions
@@ -518,8 +524,7 @@ const ExperimentalWarningPanel = ({ webGPUStatus, onEnable, onCancel }) => (
             only
           </li>
           <li>
-            Your browser may not support these features even with flags
-            enabled
+            Your browser may not support these features even with flags enabled
           </li>
         </ul>
       </div>
@@ -576,8 +581,8 @@ const ExperimentalModeActiveNotice = () => (
           Experimental Mode Active
         </p>
         <p className="text-xs text-gray-400 mt-0.5">
-          The AI will attempt to use experimental WebGPU features if
-          available. If you encounter errors, disable this option.
+          The AI will attempt to use experimental WebGPU features if available.
+          If you encounter errors, disable this option.
         </p>
       </div>
     </div>
@@ -943,9 +948,8 @@ const getLunaCompletionMessage = (loadedModelId, selectedModel) => {
  */
 const runKnowledgeTestGeneration = async (testPrompt, signal, onStream) => {
   const { generateWithSwarm } = await import("../utils/diamondSwarm");
-  const { isLocalServerAvailable, generateText } = await import(
-    "../utils/unifiedAIService"
-  );
+  const { isLocalServerAvailable, generateText } =
+    await import("../utils/unifiedAIService");
 
   if (signal.aborted) throw new Error("Aborted");
 
@@ -990,7 +994,13 @@ const showLunaMessageWithAutoDismiss = (
 const executeKnowledgeTest = async (
   testPrompt,
   { loadedModelId, selectedModel, lunaDisabled },
-  { setStreamedResponse, setTestResponse, setIsTestGenerating, lunaTimerRef, setLunaTestMessage },
+  {
+    setStreamedResponse,
+    setTestResponse,
+    setIsTestGenerating,
+    lunaTimerRef,
+    setLunaTestMessage,
+  },
   signal,
 ) => {
   try {
@@ -1168,7 +1178,11 @@ const TestGenerateControls = ({
   </div>
 );
 
-const TestResponseDisplay = ({ isTestGenerating, streamedResponse, testResponse }) => (
+const TestResponseDisplay = ({
+  isTestGenerating,
+  streamedResponse,
+  testResponse,
+}) => (
   <div
     className="mt-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800/50"
     aria-live="polite"
@@ -1825,13 +1839,17 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     <ResponsiveModal
       isOpen
       onClose={onClose}
-      header={<LocalAIPanelHeader onClose={onClose} onReportBug={onReportBug} />}
+      header={
+        <LocalAIPanelHeader onClose={onClose} onReportBug={onReportBug} />
+      }
       labelledBy="local-ai-panel-title"
       size="lg"
       footer={
         <div className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400">
           <span>🔒</span>
-          <span>Military-grade privacy: Your data never leaves your device</span>
+          <span>
+            Military-grade privacy: Your data never leaves your device
+          </span>
         </div>
       }
       className="border border-gray-200 dark:border-gray-700"

@@ -229,8 +229,13 @@ async function _runConsentAndProcess(file, t, ctx) {
   }
 }
 
-
-function CFileDashboardHeader({ t, file, extractedText, analysisMetadata, onReset }) {
+function CFileDashboardHeader({
+  t,
+  file,
+  extractedText,
+  analysisMetadata,
+  onReset,
+}) {
   return (
     <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 mb-6 text-white">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -321,7 +326,6 @@ function CFileDashboardWarnings({
           </div>
         </div>
       )}
-
     </>
   );
 }
@@ -330,7 +334,10 @@ function CFileDashboardWarnings({
 // were NOT read by the AI, but ARE in the semantic search index — so the
 // veteran can still find evidence on them. Making this visible fixes the
 // previous silent drop (console-only).
-function CFileExcludedPagesWarning({ analysisMetadata, setShowSemanticSearch }) {
+function CFileExcludedPagesWarning({
+  analysisMetadata,
+  setShowSemanticSearch,
+}) {
   if ((analysisMetadata?.pagesExcludedFromAI || 0) <= 0) return null;
   return (
     <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
@@ -811,7 +818,6 @@ function CFileDashboard({
   );
 }
 
-
 // Render the drop zone form
 function CFileDropZone({
   t,
@@ -826,8 +832,10 @@ function CFileDropZone({
 }) {
   let dropZoneClass =
     "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500";
-  if (isDragging) dropZoneClass = "border-blue-500 bg-blue-50 dark:bg-blue-900/30";
-  else if (file) dropZoneClass = "border-green-500 bg-green-50 dark:bg-green-900/30";
+  if (isDragging)
+    dropZoneClass = "border-blue-500 bg-blue-50 dark:bg-blue-900/30";
+  else if (file)
+    dropZoneClass = "border-green-500 bg-green-50 dark:bg-green-900/30";
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
@@ -994,8 +1002,11 @@ function CFileUploadForm({
   );
 }
 
-
-function CFileExtractionProgressBar({ t, extractionProgress, processingStage }) {
+function CFileExtractionProgressBar({
+  t,
+  extractionProgress,
+  processingStage,
+}) {
   if (!(extractionProgress.total > 0 && processingStage.includes("Extracting")))
     return null;
   return (
@@ -1147,8 +1158,6 @@ function CFileProcessingState({
     </div>
   );
 }
-
-
 
 function _runElapsedSecondsTimer(isProcessing, setElapsedSeconds) {
   if (!isProcessing) {
@@ -1333,7 +1342,6 @@ function CFilePrivacyConsentModal({
   );
 }
 
-
 function useCFileDropHandlers(ctx) {
   const { t, setIsDragging, setError, setFile, setAnalysisResult } = ctx;
 
@@ -1454,12 +1462,25 @@ function useCFileAnalysisHandlers(ctx) {
       setShowSemanticSearch,
     });
   }, [
-    setFile, setAnalysisResult, setExtractedText, setError, setStorageWarning,
-    setProcessingStage, setExtractionProgress, setChunkProgress,
-    setAnalysisMetadata, setHasConsented, setShowSemanticSearch,
+    setFile,
+    setAnalysisResult,
+    setExtractedText,
+    setError,
+    setStorageWarning,
+    setProcessingStage,
+    setExtractionProgress,
+    setChunkProgress,
+    setAnalysisMetadata,
+    setHasConsented,
+    setShowSemanticSearch,
   ]);
 
-  return { handleStopAnalysis, handleStartAnalysis, handleConsentAndProcess, handleReset };
+  return {
+    handleStopAnalysis,
+    handleStartAnalysis,
+    handleConsentAndProcess,
+    handleReset,
+  };
 }
 
 function CFileAnalyzerMainContent({ state }) {
@@ -1609,9 +1630,16 @@ export default function CFileAnalyzer({
     () => _runElapsedSecondsTimer(isProcessing, setElapsedSeconds),
     [isProcessing],
   );
-  const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
+  const [extractionProgress, setExtractionProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const [chunkProgress, setChunkProgress] = useState({
-    current: 0, total: 0, phase: "", startPage: 0, endPage: 0,
+    current: 0,
+    total: 0,
+    phase: "",
+    startPage: 0,
+    endPage: 0,
   });
   const [error, setError] = useState(null);
   const [storageWarning, setStorageWarning] = useState(null);
@@ -1632,39 +1660,74 @@ export default function CFileAnalyzer({
   const [showSemanticSearch, setShowSemanticSearch] = useState(false);
 
   const { handleDrop, handleDragOver, handleDragLeave, handleFileSelect } =
-    useCFileDropHandlers({ t, setIsDragging, setError, setFile, setAnalysisResult });
-
-  const { handleStopAnalysis, handleStartAnalysis, handleConsentAndProcess, handleReset } =
-    useCFileAnalysisHandlers({
+    useCFileDropHandlers({
       t,
-      file,
-      onOpenAISettings,
-      abortControllerRef,
+      setIsDragging,
       setError,
       setFile,
       setAnalysisResult,
-      setProcessingStage,
-      setShowPrivacyConsent,
-      setHasConsented,
-      setIsProcessing,
-      setStorageWarning,
-      setChunkProgress,
-      setExtractionProgress,
-      setExtractedText,
-      setAnalysisMetadata,
-      setShowSemanticSearch,
     });
+
+  const {
+    handleStopAnalysis,
+    handleStartAnalysis,
+    handleConsentAndProcess,
+    handleReset,
+  } = useCFileAnalysisHandlers({
+    t,
+    file,
+    onOpenAISettings,
+    abortControllerRef,
+    setError,
+    setFile,
+    setAnalysisResult,
+    setProcessingStage,
+    setShowPrivacyConsent,
+    setHasConsented,
+    setIsProcessing,
+    setStorageWarning,
+    setChunkProgress,
+    setExtractionProgress,
+    setExtractedText,
+    setAnalysisMetadata,
+    setShowSemanticSearch,
+  });
 
   return (
     <CFileAnalyzerView
       state={{
-        t, onClose, onOpenAISettings, onReportBug,
-        isDragging, file, setFile, error, fileInputRef,
-        handleDrop, handleDragOver, handleDragLeave, handleFileSelect, handleStartAnalysis,
-        isProcessing, processingStage, elapsedSeconds, extractionProgress, chunkProgress, handleStopAnalysis,
-        analysisResult, extractedText, analysisMetadata, storageWarning,
-        activeTab, setActiveTab, showSemanticSearch, setShowSemanticSearch, handleReset,
-        showPrivacyConsent, setShowPrivacyConsent, handleConsentAndProcess,
+        t,
+        onClose,
+        onOpenAISettings,
+        onReportBug,
+        isDragging,
+        file,
+        setFile,
+        error,
+        fileInputRef,
+        handleDrop,
+        handleDragOver,
+        handleDragLeave,
+        handleFileSelect,
+        handleStartAnalysis,
+        isProcessing,
+        processingStage,
+        elapsedSeconds,
+        extractionProgress,
+        chunkProgress,
+        handleStopAnalysis,
+        analysisResult,
+        extractedText,
+        analysisMetadata,
+        storageWarning,
+        activeTab,
+        setActiveTab,
+        showSemanticSearch,
+        setShowSemanticSearch,
+        handleReset,
+        showPrivacyConsent,
+        setShowPrivacyConsent,
+        handleConsentAndProcess,
       }}
     />
   );

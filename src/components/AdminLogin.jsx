@@ -44,7 +44,13 @@ function useFocusOnOpen(showAdminLogin, inputRef) {
 }
 
 // Clear state when modal closes
-function useClearOnClose(showAdminLogin, setPin, setShowPin, setError, setIsLoading) {
+function useClearOnClose(
+  showAdminLogin,
+  setPin,
+  setShowPin,
+  setError,
+  setIsLoading,
+) {
   useEffect(() => {
     if (!showAdminLogin) {
       setPin("");

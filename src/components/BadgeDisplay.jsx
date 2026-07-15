@@ -476,7 +476,12 @@ BelowRibbonBadgesSection.propTypes = {
   showLabels: PropTypes.bool,
 };
 
-const SleeveElementsSection = ({ overseasBars, serviceStripes, branch, size }) => {
+const SleeveElementsSection = ({
+  overseasBars,
+  serviceStripes,
+  branch,
+  size,
+}) => {
   if (overseasBars.count === 0 && serviceStripes.count === 0) return null;
   return (
     <div className="sleeve-elements flex gap-8 justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -554,7 +559,11 @@ export const BadgeDisplay = ({
   return (
     <div className="badge-display flex flex-col gap-4">
       {/* TABS (Shoulder display) */}
-      <BadgeDisplayTabsSection tabs={tabs} size={size} showLabels={showLabels} />
+      <BadgeDisplayTabsSection
+        tabs={tabs}
+        size={size}
+        showLabels={showLabels}
+      />
 
       {/* BADGES ABOVE RIBBONS */}
       <AboveRibbonBadgesSection

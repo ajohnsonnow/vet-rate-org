@@ -450,8 +450,7 @@ function CloudAIOptionCard({ selectedMode, onSelect }) {
             )}
           </div>
           <p className="text-sm text-gray-400 mt-1">
-            Google&apos;s Gemini AI - faster, more capable, requires
-            internet
+            Google&apos;s Gemini AI - faster, more capable, requires internet
           </p>
           <div className="flex flex-wrap gap-2 mt-2">
             <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">
@@ -492,9 +491,7 @@ function AutoModeOptionCard({ selectedMode, onSelect }) {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white">
-              Auto (Privacy First)
-            </span>
+            <span className="font-bold text-white">Auto (Privacy First)</span>
             {isSelected && (
               <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-400 rounded-full">
                 ACTIVE

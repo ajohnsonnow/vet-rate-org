@@ -13,7 +13,11 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AI_PRESETS } from "../utils/unifiedAIService";
 
-const CurrentPresetDetails = ({ currentPreset, showDetails, onToggleDetails }) => (
+const CurrentPresetDetails = ({
+  currentPreset,
+  showDetails,
+  onToggleDetails,
+}) => (
   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
     <div className="flex items-start justify-between">
       <div className="flex-1">
@@ -90,9 +94,9 @@ const PresetExplanations = () => (
             LEGAL (Jag Advocate):
           </strong>
           <p className="ml-2">
-            Temperature 0.1 = Maximum precision, zero creativity. Perfect
-            for analyzing C-Files, regulations, and PACT Act provisions
-            where accuracy is critical.
+            Temperature 0.1 = Maximum precision, zero creativity. Perfect for
+            analyzing C-Files, regulations, and PACT Act provisions where
+            accuracy is critical.
           </p>
         </div>
 
@@ -102,8 +106,8 @@ const PresetExplanations = () => (
           </strong>
           <p className="ml-2">
             Temperature 0.7 = Natural, human-like writing. Ideal for nexus
-            letters, personal statements, and persuasive narratives that
-            need emotional resonance.
+            letters, personal statements, and persuasive narratives that need
+            emotional resonance.
           </p>
         </div>
 
@@ -123,8 +127,8 @@ const PresetExplanations = () => (
             BALANCED (Standard):
           </strong>
           <p className="ml-2">
-            Temperature 0.7 = Good for most tasks. Balanced between accuracy
-            and natural language.
+            Temperature 0.7 = Good for most tasks. Balanced between accuracy and
+            natural language.
           </p>
         </div>
       </div>

@@ -264,25 +264,19 @@ const ContactUsFaq = ({ t }) => (
         <p className="font-semibold text-gray-800">
           {t("contactUs", "faq1Question")}
         </p>
-        <p className="text-gray-700 text-sm">
-          {t("contactUs", "faq1Answer")}
-        </p>
+        <p className="text-gray-700 text-sm">{t("contactUs", "faq1Answer")}</p>
       </div>
       <div>
         <p className="font-semibold text-gray-800">
           {t("contactUs", "faq2Question")}
         </p>
-        <p className="text-gray-700 text-sm">
-          {t("contactUs", "faq2Answer")}
-        </p>
+        <p className="text-gray-700 text-sm">{t("contactUs", "faq2Answer")}</p>
       </div>
       <div>
         <p className="font-semibold text-gray-800">
           {t("contactUs", "faq3Question")}
         </p>
-        <p className="text-gray-700 text-sm">
-          {t("contactUs", "faq3Answer")}
-        </p>
+        <p className="text-gray-700 text-sm">{t("contactUs", "faq3Answer")}</p>
       </div>
     </div>
   </section>

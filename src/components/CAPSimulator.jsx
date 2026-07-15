@@ -276,14 +276,12 @@ function _qAnkylosis() {
     options: [
       {
         value: "unfavorable",
-        label:
-          "Yes - joint is fixed in an unfavorable/non-functional position",
+        label: "Yes - joint is fixed in an unfavorable/non-functional position",
         weight: 4,
       },
       {
         value: "favorable",
-        label:
-          "Yes - joint is fixed but in a favorable/functional position",
+        label: "Yes - joint is fixed but in a favorable/functional position",
         weight: 3,
       },
       {
@@ -374,14 +372,12 @@ function _qOccupational() {
       },
       {
         value: "severe",
-        label:
-          "Severe - can rarely sustain employment, major deficiencies",
+        label: "Severe - can rarely sustain employment, major deficiencies",
         weight: 3,
       },
       {
         value: "reduced",
-        label:
-          "Reduced reliability - frequent missed work, poor performance",
+        label: "Reduced reliability - frequent missed work, poor performance",
         weight: 2,
       },
       {
@@ -461,8 +457,7 @@ function _qSymptomsMental() {
       },
       {
         value: "mild",
-        label:
-          "Depressed mood, anxiety, mild memory loss, sleep disturbance",
+        label: "Depressed mood, anxiety, mild memory loss, sleep disturbance",
         weight: 1,
       },
       {
@@ -486,14 +481,12 @@ function _qGafMH() {
     options: [
       {
         value: "gross",
-        label:
-          "Cannot perform basic self-care or activities of daily living",
+        label: "Cannot perform basic self-care or activities of daily living",
         weight: 4,
       },
       {
         value: "major",
-        label:
-          "Major impairment - neglect hygiene, unable to manage affairs",
+        label: "Major impairment - neglect hygiene, unable to manage affairs",
         weight: 3,
       },
       {
@@ -523,8 +516,7 @@ function _mentalHealthQuestions(_conditionName, _allCriteriaText) {
 function _qBreathing() {
   return {
     id: "q_breathing",
-    question:
-      "How severely does your breathing affect your daily activities?",
+    question: "How severely does your breathing affect your daily activities?",
     intent:
       "Functional impairment from respiratory conditions is assessed alongside PFT results.",
     definition:
@@ -543,8 +535,7 @@ function _qBreathing() {
       },
       {
         value: "moderate",
-        label:
-          "Moderate - dyspnea with moderate exertion (climbing stairs)",
+        label: "Moderate - dyspnea with moderate exertion (climbing stairs)",
         weight: 2,
       },
       {
@@ -652,8 +643,7 @@ function _qNerveFunction() {
     options: [
       {
         value: "complete",
-        label:
-          "Complete paralysis - total loss of function in affected area",
+        label: "Complete paralysis - total loss of function in affected area",
         weight: 4,
       },
       {
@@ -663,8 +653,7 @@ function _qNerveFunction() {
       },
       {
         value: "moderate",
-        label:
-          "Moderate incomplete - noticeable impairment but some function",
+        label: "Moderate incomplete - noticeable impairment but some function",
         weight: 2,
       },
       {
@@ -686,8 +675,7 @@ function _qSymptomsNeuro() {
   return {
     id: "q_symptoms_neuro",
     question: "Which symptoms do you experience?",
-    intent:
-      "Document specific neurological symptoms for accurate assessment.",
+    intent: "Document specific neurological symptoms for accurate assessment.",
     definition:
       "Common symptoms include numbness, tingling, weakness, pain radiating along nerve path, and loss of reflexes.",
     options: [
@@ -785,8 +773,7 @@ function _qFrequencyHeadache() {
 function _qEconomic() {
   return {
     id: "q_economic",
-    question:
-      "Do these attacks cause you to miss work or affect your income?",
+    question: "Do these attacks cause you to miss work or affect your income?",
     intent:
       '"Economic inadaptability" is required for 50% rating - attacks prevent gainful employment.',
     definition:
@@ -949,14 +936,12 @@ function _qSymptomsGi() {
       },
       {
         value: "considerable",
-        label:
-          "Considerable - frequent symptoms affecting diet and daily life",
+        label: "Considerable - frequent symptoms affecting diet and daily life",
         weight: 3,
       },
       {
         value: "moderate",
-        label:
-          "Moderate - regular symptoms requiring medication/diet changes",
+        label: "Moderate - regular symptoms requiring medication/diet changes",
         weight: 2,
       },
       {
@@ -987,8 +972,7 @@ function _qNutrition() {
       },
       {
         value: "impaired",
-        label:
-          "Yes - definite impairment of health or moderate weight loss",
+        label: "Yes - definite impairment of health or moderate weight loss",
         weight: 3,
       },
       {
@@ -1018,8 +1002,7 @@ function _qGerd() {
     options: [
       {
         value: "persistent",
-        label:
-          "Persistent - symptoms despite medication, with complications",
+        label: "Persistent - symptoms despite medication, with complications",
         weight: 4,
       },
       {
@@ -1057,8 +1040,7 @@ function _skinQuestions(_conditionName, _allCriteriaText) {
   questions = [
     {
       id: "q_body_area",
-      question:
-        "What percentage of your body or exposed areas are affected?",
+      question: "What percentage of your body or exposed areas are affected?",
       intent:
         "Skin ratings often based on percentage of body affected per 38 CFR § 4.118.",
       definition:
@@ -1159,8 +1141,7 @@ function _qTinnitusImpact() {
     options: [
       {
         value: "severe",
-        label:
-          "Severely affects sleep, concentration, and mental health",
+        label: "Severely affects sleep, concentration, and mental health",
         weight: 3,
       },
       {
@@ -1182,8 +1163,7 @@ function _qTinnitusImpact() {
 function _qHearing() {
   return {
     id: "q_hearing",
-    question:
-      "Have you had an audiometry test? What were your results?",
+    question: "Have you had an audiometry test? What were your results?",
     intent:
       "Hearing loss is rated based on audiometry (pure tone thresholds and speech discrimination).",
     definition:
@@ -1191,8 +1171,7 @@ function _qHearing() {
     options: [
       {
         value: "profound",
-        label:
-          "Profound hearing loss - 91+ dB average or cannot hear speech",
+        label: "Profound hearing loss - 91+ dB average or cannot hear speech",
         weight: 4,
       },
       {
@@ -1223,8 +1202,7 @@ function _qHearing() {
 function _qSpeech() {
   return {
     id: "q_speech",
-    question:
-      "What is your speech discrimination (word recognition) score?",
+    question: "What is your speech discrimination (word recognition) score?",
     intent:
       "Speech discrimination is combined with pure tone average for rating calculation.",
     definition:
@@ -1283,8 +1261,7 @@ function _qFrequencyGen() {
     id: "q_frequency_gen",
     question: "How often do you experience symptoms?",
     intent: "Symptom frequency is a key factor in VA ratings.",
-    definition:
-      "Consider how often symptoms occur and their consistency.",
+    definition: "Consider how often symptoms occur and their consistency.",
     options: [
       {
         value: "constant",
@@ -1334,15 +1311,13 @@ function _qTreatmentGen() {
   return {
     id: "q_treatment_gen",
     question: "What level of treatment do you require?",
-    intent:
-      "Treatment intensity often correlates with condition severity.",
+    intent: "Treatment intensity often correlates with condition severity.",
     definition:
       "Higher ratings often require more intensive ongoing treatment.",
     options: [
       {
         value: "intensive",
-        label:
-          "Intensive - hospitalizations, surgery, or continuous therapy",
+        label: "Intensive - hospitalizations, surgery, or continuous therapy",
         weight: 4,
       },
       {
@@ -1420,7 +1395,12 @@ const generateGenericQuestions = (condition) => {
   return questions.slice(0, 5);
 };
 
-function _computePredictedRating(answers, avgWeight, ratingKeys, conditionNameLower) {
+function _computePredictedRating(
+  answers,
+  avgWeight,
+  ratingKeys,
+  conditionNameLower,
+) {
   // Special case: Tinnitus is always max 10% per 38 CFR § 4.87a
   if (conditionNameLower.includes("tinnitus")) {
     // If any answer indicates recurrent tinnitus, it's 10%; otherwise 0%
@@ -1601,9 +1581,7 @@ function _buildExamActionItems(conditionNameLower) {
     "List all medications you take for this condition and note any side effects",
   ];
 
-  const group = CONDITION_ACTION_GROUPS.find((g) =>
-    g.test(conditionNameLower),
-  );
+  const group = CONDITION_ACTION_GROUPS.find((g) => g.test(conditionNameLower));
   if (group) actionItems.push(...group.items);
 
   actionItems.push(
@@ -1613,7 +1591,12 @@ function _buildExamActionItems(conditionNameLower) {
   return actionItems;
 }
 
-function _buildRatingWarnings(condition, ratingSchedule, diagnosticCode, conditionName) {
+function _buildRatingWarnings(
+  condition,
+  ratingSchedule,
+  diagnosticCode,
+  conditionName,
+) {
   const warnings = [
     `Rating based on ${ratingSchedule}, Diagnostic Code ${diagnosticCode} (${conditionName}).`,
     "Your actual rating will depend on the C&P examiner's objective medical findings and ALL evidence in your claim file.",
@@ -1679,7 +1662,6 @@ const calculateGenericRating = (answers, condition) => {
   };
 };
 
-
 function CAPIntroHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
@@ -1701,10 +1683,7 @@ function CAPIntroHeader({ onClose, onReportBug }) {
       </div>
       <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
         <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
-        <h2
-          id="cap-simulator-title"
-          className="text-xl sm:text-3xl font-bold"
-        >
+        <h2 id="cap-simulator-title" className="text-xl sm:text-3xl font-bold">
           C&P Exam Simulator{" "}
           <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
             BETA
@@ -1712,8 +1691,7 @@ function CAPIntroHeader({ onClose, onReportBug }) {
         </h2>
       </div>
       <p className="text-emerald-100 text-sm sm:text-lg pr-8">
-        Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book
-        Test
+        Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book Test
       </p>
     </div>
   );
@@ -1790,8 +1768,8 @@ function CAPIntroFeatureGrid() {
           2. Gap Analysis
         </h4>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
-          See exactly what rating your answers align with and what&apos;s
-          needed for higher ratings
+          See exactly what rating your answers align with and what&apos;s needed
+          for higher ratings
         </p>
       </div>
 
@@ -1803,8 +1781,8 @@ function CAPIntroFeatureGrid() {
           3. Preparation
         </h4>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Get specific action items: what documents to bring, what to say,
-          what NOT to say
+          Get specific action items: what documents to bring, what to say, what
+          NOT to say
         </p>
       </div>
     </div>
@@ -1821,15 +1799,14 @@ function CAPIntroROMTip() {
             The &quot;Stop When It Hurts&quot; Principle
           </h4>
           <p className="text-amber-800 dark:text-amber-100 text-sm">
-            For conditions like back pain or knee pain, the simulator will
-            teach you the most important exam tip:{" "}
+            For conditions like back pain or knee pain, the simulator will teach
+            you the most important exam tip:{" "}
             <strong>
-              Range of Motion is measured to the point where pain STOPS
-              you
+              Range of Motion is measured to the point where pain STOPS you
             </strong>{" "}
-            - not where you can force yourself to go. Many veterans
-            unknowingly lower their ratings by &quot;pushing through&quot;
-            during ROM testing.
+            - not where you can force yourself to go. Many veterans unknowingly
+            lower their ratings by &quot;pushing through&quot; during ROM
+            testing.
           </p>
         </div>
       </div>
@@ -1867,9 +1844,7 @@ function CAPIntroCoverageStats({ conditionCount }) {
           <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
             100%
           </div>
-          <div className="text-sm text-gray-700 dark:text-gray-300">
-            FREE
-          </div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">FREE</div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Always, no premium tiers
           </div>
@@ -1878,10 +1853,10 @@ function CAPIntroCoverageStats({ conditionCount }) {
       <p className="text-sm text-gray-600 dark:text-gray-400">
         <strong>Body System-Specific Questions:</strong> Each simulation
         generates questions tailored to the specific body system
-        (musculoskeletal, mental health, respiratory, neurological, etc.)
-        based on actual DBQ criteria and 38 CFR Part 4 rating schedules.
-        Questions target the specific symptoms, measurements, and
-        functional limitations examiners assess for your condition.
+        (musculoskeletal, mental health, respiratory, neurological, etc.) based
+        on actual DBQ criteria and 38 CFR Part 4 rating schedules. Questions
+        target the specific symptoms, measurements, and functional limitations
+        examiners assess for your condition.
       </p>
     </div>
   );
@@ -1891,11 +1866,11 @@ function CAPIntroDisclaimer() {
   return (
     <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
       <p className="text-xs text-gray-600 dark:text-gray-400 italic">
-        <strong>Disclaimer:</strong> This is a training tool, not legal
-        advice. Always tell the truth during your exam. The C&P
-        examiner&apos;s job is to document your condition accurately - be
-        honest about your worst days, not just your best days. This tool
-        is based on 38 CFR Part 4 as of January 2026.
+        <strong>Disclaimer:</strong> This is a training tool, not legal advice.
+        Always tell the truth during your exam. The C&P examiner&apos;s job is
+        to document your condition accurately - be honest about your worst days,
+        not just your best days. This tool is based on 38 CFR Part 4 as of
+        January 2026.
       </p>
     </div>
   );
@@ -1946,7 +1921,6 @@ function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
   );
 }
 
-
 function CAPExamPrepListHeader({ onClose, setMode }) {
   return (
     <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
@@ -1960,10 +1934,7 @@ function CAPExamPrepListHeader({ onClose, setMode }) {
         </button>
         <FileText className="h-8 w-8 text-white" />
         <div>
-          <h1
-            id="exam-prep-title"
-            className="text-xl font-bold text-white"
-          >
+          <h1 id="exam-prep-title" className="text-xl font-bold text-white">
             Exam Prep Room
           </h1>
           <p className="text-cyan-100 text-sm">
@@ -1992,8 +1963,8 @@ function CAPExamPrepIntroBox() {
             The Open Book Test
           </h2>
           <p className="text-gray-300 text-lg mb-4">
-            Your C&P examiner isn&apos;t improvising - they&apos;re
-            checking boxes on a standardized form called a{" "}
+            Your C&P examiner isn&apos;t improvising - they&apos;re checking
+            boxes on a standardized form called a{" "}
             <span className="font-bold text-white">
               Disability Benefits Questionnaire (DBQ)
             </span>
@@ -2001,14 +1972,10 @@ function CAPExamPrepIntroBox() {
           </p>
           <p className="text-gray-300">
             This tool shows you the{" "}
-            <span className="font-bold text-cyan-300">
-              exact questions
-            </span>{" "}
+            <span className="font-bold text-cyan-300">exact questions</span>{" "}
             they&apos;ll ask and{" "}
-            <span className="font-bold text-cyan-300">
-              strategic tips
-            </span>{" "}
-            on how to answer honestly without underselling your symptoms.
+            <span className="font-bold text-cyan-300">strategic tips</span> on
+            how to answer honestly without underselling your symptoms.
           </p>
         </div>
       </div>
@@ -2140,7 +2107,6 @@ function CAPExamPrepListView({
   );
 }
 
-
 function CAPSelectConditionHeader({
   onClose,
   setMode,
@@ -2186,8 +2152,7 @@ function CAPSelectConditionHeader({
 
 function CAPSelectConditionCard({ condition, onSelect }) {
   const dbqKey = Object.keys(dbqLogicMap).find(
-    (key) =>
-      dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
+    (key) => dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
   );
   const isPremium = !!dbqKey;
 
@@ -2227,8 +2192,7 @@ function CAPSelectConditionList({
   return (
     <>
       <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Showing {filteredConditions.length} of {totalConditionCount}{" "}
-        conditions
+        Showing {filteredConditions.length} of {totalConditionCount} conditions
       </div>
       <div className="space-y-3 max-h-[500px] overflow-y-auto">
         {filteredConditions.slice(0, 100).map((condition) => (
@@ -2282,7 +2246,6 @@ function CAPSelectConditionView({
     </ResponsiveModal>
   );
 }
-
 
 const TERM_CATEGORIES = [
   {
@@ -3000,9 +2963,7 @@ function CAPExamPrepQuestionDetail({ q }) {
         <h4 className="text-sm font-bold text-yellow-300 mb-2">
           🎯 What They&apos;re Really Looking For:
         </h4>
-        <p className="text-gray-300 text-sm leading-relaxed">
-          {q.intent}
-        </p>
+        <p className="text-gray-300 text-sm leading-relaxed">{q.intent}</p>
       </div>
 
       {/* Definition */}
@@ -3125,17 +3086,15 @@ function CAPExamPrepTipsSection({ examPrepTips }) {
             Strategic Tips for This Condition
           </h3>
           <p className="text-gray-300 text-sm">
-            These tips help you answer honestly while ensuring the
-            examiner understands the full impact of your condition.
+            These tips help you answer honestly while ensuring the examiner
+            understands the full impact of your condition.
           </p>
         </div>
       </div>
       <div className="space-y-3">
         {examPrepTips.map((tip) => (
           <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
-            <h4 className="font-bold text-yellow-200 mb-2">
-              ⚠️ {tip.title}
-            </h4>
+            <h4 className="font-bold text-yellow-200 mb-2">⚠️ {tip.title}</h4>
             <p className="text-gray-300 text-sm leading-relaxed">
               {tip.content}
             </p>
@@ -3160,8 +3119,8 @@ function CAPExamPrepQuestionsSection({
         📋 Questions the Examiner Will Ask
       </h3>
       <p className="text-gray-400 text-sm mb-6">
-        These are the actual questions from the DBQ form. Click each
-        one to see what the examiner is really looking for.
+        These are the actual questions from the DBQ form. Click each one to see
+        what the examiner is really looking for.
       </p>
       <div className="space-y-3">
         {examPrepDBQ.tipping_points.map((q, index) => (
@@ -3195,9 +3154,9 @@ function CAPExamPrepBottomCTA({ setMode, setExpandedQuestion }) {
         Ready for Your Exam
       </h3>
       <p className="text-gray-300 mb-4">
-        Now you know exactly what questions are coming. Walk in prepared,
-        answer honestly, and don&apos;t undersell your symptoms. The
-        examiner is checking boxes - make sure they check the right ones.
+        Now you know exactly what questions are coming. Walk in prepared, answer
+        honestly, and don&apos;t undersell your symptoms. The examiner is
+        checking boxes - make sure they check the right ones.
       </p>
       <div className="flex flex-wrap gap-3">
         <button
@@ -3267,7 +3226,6 @@ function CAPExamPrepDetailView({
     </ResponsiveModal>
   );
 }
-
 
 function CAPFlashcardHeader({
   setMode,
@@ -3400,22 +3358,22 @@ function CAPFlashcardTips() {
     <>
       <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-5 mt-6">
         <p className="text-blue-900 dark:text-blue-100 text-sm">
-          <strong>💡 Pro Tip:</strong> Using the exact terminology from
-          the CFR during your C&P exam helps ensure the examiner documents
-          your condition correctly. For example, saying &quot;I have
-          prostrating migraines that cause economic inadaptability&quot;
-          is much more precise than &quot;I have really bad headaches that
-          make me miss work.&quot;
+          <strong>💡 Pro Tip:</strong> Using the exact terminology from the CFR
+          during your C&P exam helps ensure the examiner documents your
+          condition correctly. For example, saying &quot;I have prostrating
+          migraines that cause economic inadaptability&quot; is much more
+          precise than &quot;I have really bad headaches that make me miss
+          work.&quot;
         </p>
       </div>
 
       <div className="bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
         <p className="text-emerald-900 dark:text-emerald-100 text-sm">
           <strong>📚 Study Tip:</strong> Focus on terms relevant to YOUR
-          conditions first. If you have a back condition, master ROM,
-          flexion, flare-ups, and functional loss. If you have PTSD, focus
-          on occupational/social impairment and the specific symptoms in
-          the rating criteria.
+          conditions first. If you have a back condition, master ROM, flexion,
+          flare-ups, and functional loss. If you have PTSD, focus on
+          occupational/social impairment and the specific symptoms in the rating
+          criteria.
         </p>
       </div>
     </>
@@ -3434,9 +3392,16 @@ function _toggleCategory(category, ctx) {
   }));
 }
 
-function _setAllCategoriesExpanded(termCategories, setExpandedCategories, value) {
+function _setAllCategoriesExpanded(
+  termCategories,
+  setExpandedCategories,
+  value,
+) {
   setExpandedCategories(
-    termCategories.reduce((acc, cat) => ({ ...acc, [cat.category]: value }), {}),
+    termCategories.reduce(
+      (acc, cat) => ({ ...acc, [cat.category]: value }),
+      {},
+    ),
   );
 }
 
@@ -3514,8 +3479,7 @@ function CAPFlashcardView({
         <div className="-mx-4 -my-4 bg-gray-50 dark:bg-gray-900 p-6 space-y-4">
           {searchTerm && (
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              Showing {filteredTermsCount} of {totalTerms} terms matching
-              &quot;
+              Showing {filteredTermsCount} of {totalTerms} terms matching &quot;
               {searchTerm}&quot;
             </div>
           )}
@@ -3543,7 +3507,6 @@ function CAPFlashcardView({
     </>
   );
 }
-
 
 function CAPSimulationHeader({
   setMode,
@@ -3688,13 +3651,12 @@ function CAPSimulationCrisisAlert() {
             Veterans Crisis Line
           </p>
           <p className="text-red-700 dark:text-red-300 text-sm mt-1">
-            If you or a Veteran you know is in crisis, free,
-            confidential support is available 24/7:
+            If you or a Veteran you know is in crisis, free, confidential
+            support is available 24/7:
           </p>
           <ul className="mt-2 space-y-1 text-sm text-red-800 dark:text-red-200 font-semibold">
             <li>
-              📞 Call <strong>988</strong>, then Press{" "}
-              <strong>1</strong>
+              📞 Call <strong>988</strong>, then Press <strong>1</strong>
             </li>
             <li>
               💬 Text <strong>838255</strong>
@@ -3812,7 +3774,6 @@ function CAPSimulationView({
   );
 }
 
-
 function CAPResultsView({
   onClose,
   currentCondition,
@@ -3884,7 +3845,6 @@ function CAPResultsView({
   );
 }
 
-
 function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
   const stored = localStorage.getItem("vet_rate_saved_claims");
   if (stored) {
@@ -3902,7 +3862,11 @@ function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
   }
 }
 
-function _computeSimulationResult(currentCondition, selectedCondition, answers) {
+function _computeSimulationResult(
+  currentCondition,
+  selectedCondition,
+  answers,
+) {
   if (!currentCondition && !selectedCondition) return null;
 
   if (currentCondition) {
@@ -4134,7 +4098,8 @@ function CAPSimulatorRouter(props) {
   s.handleNext = () => _goToNextQuestion(s);
   s.handlePrevious = () => _goToPreviousQuestion(s);
   s.handleRestart = () => _restartSimulation(props);
-  s.getProgress = () => _computeProgress(s.currentQuestionIndex, s.currentQuestions);
+  s.getProgress = () =>
+    _computeProgress(s.currentQuestionIndex, s.currentQuestions);
 
   const route = CAP_MODE_ROUTES.find((r) => r.test(s));
   return route ? route.render(s) : null;

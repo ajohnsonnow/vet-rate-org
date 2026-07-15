@@ -464,7 +464,13 @@ function _performCommandSearch(searchQuery, setResults, setSelectedIndex) {
   setSelectedIndex(0);
 }
 
-function _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose) {
+function _selectSearchResult(
+  index,
+  results,
+  onToolSelect,
+  onConditionSelect,
+  onClose,
+) {
   const toolsCount = results.tools.length;
 
   if (index < toolsCount) {
@@ -526,8 +532,7 @@ function SearchResultsList({
   isTbiComfort,
   onSelect,
 }) {
-  const isEmpty =
-    results.tools.length === 0 && results.conditions.length === 0;
+  const isEmpty = results.tools.length === 0 && results.conditions.length === 0;
 
   return (
     <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto">
@@ -572,7 +577,13 @@ function GlobalCommandSearchPalette({
   onConditionSelect,
 }) {
   const handleSelect = (index) => {
-    _selectSearchResult(index, results, onToolSelect, onConditionSelect, onClose);
+    _selectSearchResult(
+      index,
+      results,
+      onToolSelect,
+      onConditionSelect,
+      onClose,
+    );
   };
 
   const handleKeyDown = (e) => {

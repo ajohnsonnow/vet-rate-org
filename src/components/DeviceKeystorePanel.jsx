@@ -331,9 +331,8 @@ const KeystoreEnableSection = ({
         Restore from a recovery bundle
       </h5>
       <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-        Importing a bundle you exported elsewhere puts its wrapped keys on
-        this device. You will then unlock with that bundle&apos;s
-        passphrase.
+        Importing a bundle you exported elsewhere puts its wrapped keys on this
+        device. You will then unlock with that bundle&apos;s passphrase.
       </p>
       <label htmlFor="ks-import" className="sr-only">
         Recovery bundle file
@@ -439,8 +438,8 @@ const KeystoreRotateSection = ({
         autoComplete="new-password"
       />
       <p className="text-xs text-gray-600 dark:text-gray-400">
-        Re-wraps every saved key under the new passphrase. Your cloud
-        backups are not re-uploaded or changed.
+        Re-wraps every saved key under the new passphrase. Your cloud backups
+        are not re-uploaded or changed.
       </p>
       <button
         type="button"
@@ -461,8 +460,8 @@ const KeystoreExportSection = ({ unlocked, busy, onExport }) => (
       Recovery bundle
     </h5>
     <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-      Download a passphrase-protected copy of this device&apos;s wrapped
-      keys so you can restore them on another device or after a wipe.
+      Download a passphrase-protected copy of this device&apos;s wrapped keys so
+      you can restore them on another device or after a wipe.
       {!unlocked && " Unlock first to include every key."}
     </p>
     <button
@@ -512,8 +511,7 @@ const KeystoreDeauthConfirm = ({
         type="button"
         onClick={onDeauthorize}
         disabled={
-          busy ||
-          deauthText.trim().toUpperCase() !== DEAUTH_CONFIRM_WORD
+          busy || deauthText.trim().toUpperCase() !== DEAUTH_CONFIRM_WORD
         }
         className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:bg-gray-300 dark:disabled:bg-gray-600"
       >
@@ -542,16 +540,15 @@ const KeystoreDeauthSection = ({
     <p className="text-sm text-gray-700 dark:text-gray-300">
       Erases every encryption key this browser holds and signs out your
       connected cloud providers. This is enforced on{" "}
-      <strong>this device only</strong> — it cannot delete files already
-      in your cloud or recall backups that were already synced.
+      <strong>this device only</strong> — it cannot delete files already in your
+      cloud or recall backups that were already synced.
     </p>
     {keyIds.length > 0 && (
       <p className="mt-2 rounded bg-red-100 p-2 text-xs text-red-800 dark:bg-red-500/20 dark:text-red-200">
-        ⚠️ {keyIds.length} backup key{keyIds.length === 1 ? "" : "s"} live
-        only on this device. Any passphrase-less backup whose only key is
-        here becomes <strong>permanently unrecoverable everywhere</strong>{" "}
-        after deauthorization. Export a recovery bundle first if you might
-        need them.
+        ⚠️ {keyIds.length} backup key{keyIds.length === 1 ? "" : "s"} live only
+        on this device. Any passphrase-less backup whose only key is here
+        becomes <strong>permanently unrecoverable everywhere</strong> after
+        deauthorization. Export a recovery bundle first if you might need them.
       </p>
     )}
 

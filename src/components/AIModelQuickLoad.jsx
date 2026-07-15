@@ -204,16 +204,14 @@ function QuickLoadInfoCard({ recommendedAgent, error }) {
 
       {/* Capabilities */}
       <div className="flex flex-wrap gap-1 mb-3">
-        {recommendedAgent.capabilities
-          .slice(0, 3)
-          .map((capability, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded-full"
-            >
-              {capability}
-            </span>
-          ))}
+        {recommendedAgent.capabilities.slice(0, 3).map((capability, idx) => (
+          <span
+            key={idx}
+            className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs rounded-full"
+          >
+            {capability}
+          </span>
+        ))}
       </div>
 
       {error && (

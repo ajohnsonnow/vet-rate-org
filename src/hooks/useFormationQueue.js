@@ -64,7 +64,12 @@ function logInitializeFormationSaved(count) {
  * entry in formation forward. Shared by completeCurrentAndNext,
  * skipCurrentAndNext, and errorCurrentAndNext.
  */
-function advanceToNext(currentEntry, formation, updateEntry, currentEntryUpdate) {
+function advanceToNext(
+  currentEntry,
+  formation,
+  updateEntry,
+  currentEntryUpdate,
+) {
   if (!currentEntry) return null;
 
   updateEntry(currentEntry.id, currentEntryUpdate);
@@ -89,7 +94,12 @@ function buildStatusUpdate(status, extra) {
   };
 }
 
-function completeCurrentAndNextImpl(currentEntry, formation, updateEntry, result) {
+function completeCurrentAndNextImpl(
+  currentEntry,
+  formation,
+  updateEntry,
+  result,
+) {
   return advanceToNext(
     currentEntry,
     formation,
@@ -112,7 +122,9 @@ function errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error) {
     currentEntry,
     formation,
     updateEntry,
-    buildStatusUpdate(FORMATION_STATUS.ERROR, { error: error.message || error }),
+    buildStatusUpdate(FORMATION_STATUS.ERROR, {
+      error: error.message || error,
+    }),
   );
 }
 
@@ -168,7 +180,12 @@ function addFilesToFormation(formation, setFormation, files) {
   return sorted;
 }
 
-function applyCurrentStatusUpdate(currentEntry, updateEntry, status, additionalData) {
+function applyCurrentStatusUpdate(
+  currentEntry,
+  updateEntry,
+  status,
+  additionalData,
+) {
   if (!currentEntry) {
     console.warn("No current entry to update");
     return;
@@ -193,7 +210,12 @@ function startFormationImpl(formation, updateEntry) {
   return null;
 }
 
-function reorderFormationDocuments(formation, setFormation, fromIndex, toIndex) {
+function reorderFormationDocuments(
+  formation,
+  setFormation,
+  fromIndex,
+  toIndex,
+) {
   const reordered = reorderFormation(formation, fromIndex, toIndex);
   setFormation(reordered);
   // eslint-disable-next-line no-console
@@ -253,14 +275,23 @@ export const useFormationQueue = () => {
   /**
    * Update a document entry
    */
-  const updateEntry = useCallback((entryId, updates) => setFormation((prev) => updateFormationEntry(prev, entryId, updates)), []);
+  const updateEntry = useCallback(
+    (entryId, updates) =>
+      setFormation((prev) => updateFormationEntry(prev, entryId, updates)),
+    [],
+  );
 
   /**
    * Update current entry status
    */
   const updateCurrentStatus = useCallback(
     (status, additionalData = {}) =>
-      applyCurrentStatusUpdate(currentEntry, updateEntry, status, additionalData),
+      applyCurrentStatusUpdate(
+        currentEntry,
+        updateEntry,
+        status,
+        additionalData,
+      ),
     [currentEntry, updateEntry],
   );
 
@@ -327,12 +358,18 @@ export const useFormationQueue = () => {
   /**
    * Check if formation is complete
    */
-  const isComplete = useCallback(() => isFormationComplete(formation), [formation]);
+  const isComplete = useCallback(
+    () => isFormationComplete(formation),
+    [formation],
+  );
 
   /**
    * Get progress percentage
    */
-  const getProgress = useCallback(() => getFormationProgress(formation), [formation]);
+  const getProgress = useCallback(
+    () => getFormationProgress(formation),
+    [formation],
+  );
 
   return {
     // State

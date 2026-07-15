@@ -107,7 +107,12 @@ const RatingPasterFooter = ({
     />
   );
 
-const ConfirmFooter = ({ parsedResult, handleConfirm, setParsedResult, setPasteText }) => (
+const ConfirmFooter = ({
+  parsedResult,
+  handleConfirm,
+  setParsedResult,
+  setPasteText,
+}) => (
   <div className="flex gap-3">
     <button
       onClick={handleConfirm}
@@ -200,20 +205,14 @@ const SupportedFormatsList = () => (
       ✅ Supported Formats
     </h4>
     <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-      <li className="font-mono">
-        • Full page copy (CTRL+A, CTRL+C, CTRL+V)
-      </li>
-      <li className="font-mono">
-        • Automatically extracts combined rating
-      </li>
+      <li className="font-mono">• Full page copy (CTRL+A, CTRL+C, CTRL+V)</li>
+      <li className="font-mono">• Automatically extracts combined rating</li>
       <li className="font-mono">
         • 20% rating for radiculopathy, left lower extremity
       </li>
       <li className="font-mono">• 50% PTSD</li>
       <li className="font-mono">• Tinnitus - 10%</li>
-      <li className="font-mono">
-        • Filters non-service-connected conditions
-      </li>
+      <li className="font-mono">• Filters non-service-connected conditions</li>
     </ul>
   </div>
 );
@@ -231,8 +230,7 @@ const ServiceConnectedRatingList = ({ ratings }) => (
           </div>
           {rating.effectiveDate && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Effective:{" "}
-              {new Date(rating.effectiveDate).toLocaleDateString()}
+              Effective: {new Date(rating.effectiveDate).toLocaleDateString()}
             </div>
           )}
         </div>
@@ -255,20 +253,16 @@ const ServiceConnectedRatingList = ({ ratings }) => (
 const NotServiceConnectedWarning = ({ notServiceConnected }) => (
   <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-lg">
     <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-2">
-      <strong>⚠️ Note:</strong> Found{" "}
-      {notServiceConnected.length}{" "}
+      <strong>⚠️ Note:</strong> Found {notServiceConnected.length}{" "}
       non-service-connected condition
-      {notServiceConnected.length === 1 ? "" : "s"}{" "}
-      that will NOT be imported:
+      {notServiceConnected.length === 1 ? "" : "s"} that will NOT be imported:
     </p>
     <ul className="text-xs text-yellow-700 dark:text-yellow-400 ml-4 space-y-1">
       {notServiceConnected.slice(0, 5).map((condition, index) => (
         <li key={index}>• {condition.condition}</li>
       ))}
       {notServiceConnected.length > 5 && (
-        <li>
-          • ...and {notServiceConnected.length - 5} more
-        </li>
+        <li>• ...and {notServiceConnected.length - 5} more</li>
       )}
     </ul>
   </div>
@@ -282,9 +276,7 @@ const ParsedRatingsResults = ({ parsedResult }) => (
         <div className="text-sm opacity-90 mb-1">
           Combined VA Disability Rating
         </div>
-        <div className="text-4xl font-bold">
-          {parsedResult.combinedRating}%
-        </div>
+        <div className="text-4xl font-bold">{parsedResult.combinedRating}%</div>
       </div>
     )}
 
@@ -297,8 +289,7 @@ const ParsedRatingsResults = ({ parsedResult }) => (
         {parsedResult.serviceConnected.length === 1 ? "" : "s"}
       </h3>
       <p className="text-sm text-green-700 dark:text-green-300">
-        Review the conditions below and click &quot;Import&quot; to add
-        them.
+        Review the conditions below and click &quot;Import&quot; to add them.
       </p>
     </div>
 
@@ -405,9 +396,7 @@ export default function VAGovRatingPaster({
       <div className="space-y-6">
         {/* Instructions */}
         {showInstructions && (
-          <RatingPasterInstructions
-            onHide={() => setShowInstructions(false)}
-          />
+          <RatingPasterInstructions onHide={() => setShowInstructions(false)} />
         )}
 
         {!parsedResult ? (
