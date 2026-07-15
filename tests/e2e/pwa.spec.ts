@@ -148,8 +148,10 @@ test.describe("SEO + social meta", () => {
       "https://vet-rate.org/images/Vet-Rate-org-logo-official.png",
     );
 
+    // index.html:48-49: the brand logo is square (1644×1645), which the
+    // "summary" card fits better than "summary_large_image" (a wide-crop card).
     expect(await metaContent(page, 'meta[name="twitter:card"]')).toBe(
-      "summary_large_image",
+      "summary",
     );
     expect(await metaContent(page, 'meta[name="twitter:title"]')).toBeTruthy();
     expect(

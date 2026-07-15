@@ -422,6 +422,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -524,6 +525,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", "0.0.0");
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       });
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -559,6 +561,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);

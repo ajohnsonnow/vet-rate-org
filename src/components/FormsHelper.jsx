@@ -5065,7 +5065,7 @@ function ReviewActionButtons({
         href={selectedForm?.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="px-4 py-2 bg-va-gold hover:bg-yellow-400 text-va-blue rounded-lg font-bold flex items-center gap-2"
+        className="px-4 py-2 bg-va-gold hover:bg-yellow-400 text-gray-900 rounded-lg font-bold flex items-center gap-2"
       >
         {t("formsHelper", "submitAtVA")}
         <svg

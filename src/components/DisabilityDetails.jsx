@@ -286,7 +286,7 @@ const RatingCriteriaTable = ({ result }) =>
                 }
               >
                 <td className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-                  <span className="inline-block bg-va-gold text-va-blue font-bold px-3 py-1 rounded-lg text-lg">
+                  <span className="inline-block bg-va-gold text-gray-900 font-bold px-3 py-1 rounded-lg text-lg">
                     {percentage}%
                   </span>
                 </td>

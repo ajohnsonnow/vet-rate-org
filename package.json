@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.24.1",
+  "version": "1.24.2",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",

@@ -172,6 +172,7 @@ async function bootWithPacket(page: Page): Promise<void> {
       localStorage.setItem("vet_rate_last_seen_version", version);
       localStorage.setItem("vetrate-tour-completed", "true");
       localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       localStorage.setItem("vet_rate_saved_claims", JSON.stringify(claims));
     },
     { version: APP_VERSION, claims },
@@ -182,14 +183,20 @@ async function bootWithPacket(page: Page): Promise<void> {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Modal detection — polls up to 7 s (14 × 500 ms) for a dialog
-// to appear. Uses isVisible() snapshots rather than
-// expect().toBeVisible() to avoid Playwright's web-first retry
-// machinery interfering with back-to-back dispatches.
+// Modal detection — polls up to 15 s (30 × 500 ms) for a dialog to
+// appear (matches the budget established in tool-with-packet.spec.ts
+// and mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet,
+// Retro Pay Hunter, C&P Exam Simulator) can exceed a tighter budget
+// under the 6-parallel-worker local dev-server contention this suite
+// runs with — a 48-step test has ~48x the exposure to that per-tool
+// risk of a single-tool test, so it needs the same generous margin.
+// Uses isVisible() snapshots rather than expect().toBeVisible() to
+// avoid Playwright's web-first retry machinery interfering with
+// back-to-back dispatches.
 // ──────────────────────────────────────────────────────────────
 async function modalIsVisible(page: Page): Promise<boolean> {
   const selectors = ['[role="dialog"]', '[aria-modal="true"]'];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 30; i++) {
     for (const sel of selectors) {
       const visible = await page
         .locator(sel)
@@ -234,8 +241,14 @@ async function closeModal(page: Page): Promise<void> {
     await anyDialog.waitFor({ state: "hidden", timeout: 1500 }).catch(() => {});
   }
   // Give React's unmount/cleanup effects (focus restoration, scroll-lock
-  // removal) time to settle before dispatching the next tool event.
-  await page.waitForTimeout(300);
+  // removal) time to settle before dispatching the next tool event. Widened
+  // from 300ms: under the 6-parallel-worker local dev-server contention this
+  // suite runs with, a shorter wait let the next tool's dispatch fire while
+  // the previous tool's async cleanup was still in flight, producing a
+  // delayed React error #299 that got misattributed to whichever tool
+  // happened to be "current" when pageerror fired (a timing/attribution
+  // artifact, not a bug in that tool's own code).
+  await page.waitForTimeout(800);
 }
 
 // ──────────────────────────────────────────────────────────────
