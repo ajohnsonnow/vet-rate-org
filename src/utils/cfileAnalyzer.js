@@ -23,13 +23,15 @@ import {
   reloadSwarmEngine,
   AI_MODES,
 } from "./unifiedAIService";
-import { validateDiagnosticCode } from "./hallucinationTrap";
+import {
+  validateDiagnosticCode,
+  lookupDiagnosticCodeByName,
+} from "./hallucinationTrap";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
-import { indexDocumentPages } from "./userDocSemanticIndex";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -109,59 +111,6 @@ export function computeAiExclusion(
     }
   }
   return { floorIndices, capIndices };
-}
-
-/**
- * Stream-embed every content page of the document into the user-doc semantic
- * index. Best-effort by contract: any failure (embedder can't load, IndexedDB
- * unavailable) is swallowed so it can NEVER break the analysis result the
- * veteran depends on, or regress the 313 MB streaming stress guarantee. Memory
- * stays flat because `indexDocumentPages` flushes vectors to IndexedDB per
- * bounded batch and never holds the whole corpus's vectors at once.
- *
- * @param {string} fullText
- * @param {Object} opts
- * @returns {Promise<Object>} metadata describing the built index
- */
-async function buildDocSemanticIndex(fullText, opts) {
-  const {
-    sessionKey,
-    onProgress = () => {},
-    signal,
-    embed,
-    store,
-    enabled = true,
-  } = opts || {};
-  if (!enabled) return { indexed: false, reason: "disabled", sessionKey };
-  try {
-    const res = await indexDocumentPages({
-      fullText,
-      sessionKey,
-      embed,
-      store,
-      signal,
-      onProgress: (done, total) =>
-        onProgress(`Building semantic search index (${done}/${total} pages)…`, {
-          phase: "semantic-index",
-          current: done,
-          total,
-        }),
-    });
-    return {
-      indexed: true,
-      sessionKey: res.sessionKey,
-      pageCount: res.pageCount,
-      indexedPages: res.indexedPages,
-      emptyPages: res.emptyPages,
-      vectorCount: res.vectorCount,
-    };
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `Semantic index build skipped (search unavailable): ${err?.message || err}`,
-    );
-    return { indexed: false, error: String(err?.message || err), sessionKey };
-  }
 }
 
 // Maximum characters per chunk based on AI mode.
@@ -1472,6 +1421,38 @@ export function surfaceDocumentedConditions(merged, fullText) {
   return added;
 }
 
+/**
+ * Fill diagnostic codes for model-extracted claims that arrive without one.
+ * The compact chunk prompt (CFILE_SYSTEM_PROMPT_COMPACT) omits the
+ * diagnosticCode field to save decode tokens, so every LLM claim is code-less
+ * and renders no DC badge. This restores a code ONLY via a grounded,
+ * normalized-exact name match against the 38 CFR Part 4 schedule
+ * (lookupDiagnosticCodeByName) — never a fuzzy guess: a claim with no confident
+ * match, or a multi-condition free-text list, keeps its null code.
+ * enforceValidDiagnosticCodes still runs afterward as the final gate, so even a
+ * theoretically bad code cannot reach the veteran. Mutates in place; returns
+ * the count enriched.
+ */
+export function enrichClaimsWithDiagnosticCodes(analysis) {
+  if (!analysis || !Array.isArray(analysis.potential_claims)) return 0;
+  let enriched = 0;
+  for (const claim of analysis.potential_claims) {
+    if (!claim || claim.diagnosticCode) continue;
+    const code = lookupDiagnosticCodeByName(claim.condition);
+    if (code) {
+      claim.diagnosticCode = code;
+      enriched++;
+    }
+  }
+  if (enriched > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔖 Enriched ${enriched} extracted condition(s) with grounded diagnostic codes`,
+    );
+  }
+  return enriched;
+}
+
 // ============================================================================
 // MAIN ANALYSIS FUNCTION
 // ============================================================================
@@ -1581,13 +1562,18 @@ async function _analyzeSingleChunkPath(
   });
   const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
   surfaceDocumentedConditions(result, fullText);
+  enrichClaimsWithDiagnosticCodes(result);
   const rejectedCodes = enforceValidDiagnosticCodes(result);
   result.failedChunks = [];
 
   // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
   // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
   // Built on-demand when the user triggers semantic search instead.
-  const semanticIndex = { indexed: false, reason: "deferred", sessionKey: semanticOpts.sessionKey };
+  const semanticIndex = {
+    indexed: false,
+    reason: "deferred",
+    sessionKey: semanticOpts.sessionKey,
+  };
 
   onProgress("Analysis complete!", { phase: "complete" });
 
@@ -1733,20 +1719,89 @@ function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
   return false;
 }
 
+// Classify a chunk-analysis failure and perform its recovery side effects.
+// Returns a directive the retry loop acts on, keeping _runChunkWithRetries
+// under the cognitive-complexity limit:
+//   "retry-free" — recovered (circuit cooldown or GPU rebuild); retry the SAME
+//                  chunk WITHOUT consuming a content retry
+//   "empty"      — deterministic context-window overflow; record an empty
+//                  result (not a failedChunk) and stop retrying
+//   "retry"      — ordinary malformed-output error; let the loop consume a retry
+// Throws to abort the whole run (GPU recovery exhausted, or user cancellation).
+async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
+  // Message inlined in the string: the console capture wrapper only records the
+  // first argument, so a bare error object logs as blank.
+  console.error(
+    `Error analyzing chunk ${chunkNum} (attempt ${state.attempt + 1}): ${error?.message || error}`,
+  );
+
+  if (error.message?.includes("AI_CIRCUIT_OPEN") && state.circuitWaits < 3) {
+    state.circuitWaits++;
+    ctx.onProgress(
+      `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
+      { phase: "circuit-wait", current: chunkNum, total: ctx.totalChunks },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 31000));
+    resetAICircuitBreaker();
+    return "retry-free";
+  }
+
+  // Context window errors are deterministic — retrying cannot help.
+  // unifiedAIService transforms the raw ContextWindowSizeExceededError into
+  // "📏 Document is too large for Local AI" before it reaches this catch, so
+  // the check covers both forms. Use an empty result (not a failedChunks entry)
+  // so the Partial Analysis banner does not fire for this skip, and the circuit
+  // breaker does not open on a single overflowing chunk.
+  if (
+    error.message?.includes("context window") ||
+    error.message?.includes("ContextWindowSizeExceededError") ||
+    error.message?.includes("too large for Local AI")
+  ) {
+    return "empty";
+  }
+
+  // GPU-level hang: the WebGPU compute pipeline stopped signalling completion
+  // and the Promise.race timeout fired. The engine's GPU device is now in a
+  // degraded state, so every subsequent chunk would hang the same way. We MUST
+  // NOT skip this chunk — its pages may hold claim-critical evidence. Rebuild
+  // the engine on a fresh GPU adapter, then retry the SAME chunk without
+  // consuming a normal retry. Bounded so a physically dead GPU still aborts
+  // loudly (a false "analysis complete" on missing data is worse than a hard
+  // failure the veteran can see and re-run).
+  if (error.message?.includes("timed out")) {
+    if (state.gpuRecoveries < MAX_GPU_RECOVERIES) {
+      state.gpuRecoveries++;
+      ctx.onProgress(
+        `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} — rebuilding the AI engine and retrying (recovery ${state.gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
+        { phase: "gpu-recovery", current: chunkNum, total: ctx.totalChunks },
+      );
+      await reloadSwarmEngine();
+      return "retry-free";
+    }
+    throw new Error(
+      `GPU could not process chunk ${chunkNum}/${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage}) after ${MAX_GPU_RECOVERIES} engine rebuilds. Analysis aborted to avoid silently dropping medical evidence.`,
+    );
+  }
+
+  if (error.message === "Analysis cancelled by user") {
+    throw error;
+  }
+
+  return "retry";
+}
+
 async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
   let result = null;
   let lastError = null;
-  // The circuit breaker protects interactive callers, but this batch loop
-  // is the legitimate retry owner: when the circuit opens mid-batch, wait
-  // out the cooldown and resume instead of letting every remaining chunk
-  // fail instantly. Bounded so a genuinely dead engine still aborts.
-  let circuitWaits = 0;
-  // GPU-hang recoveries are tracked separately from content retries: a stalled
-  // GPU is an environmental fault, not a bad chunk, so recovering it must not
-  // burn the retries reserved for genuinely malformed model output.
-  let gpuRecoveries = 0;
+  // circuitWaits: the circuit breaker protects interactive callers, but this
+  // batch loop is the legitimate retry owner — wait out the cooldown and resume
+  // instead of failing every remaining chunk. gpuRecoveries: a stalled GPU is
+  // an environmental fault, tracked apart from content retries so recovering it
+  // never burns the retries reserved for genuinely malformed model output.
+  const state = { attempt: 0, circuitWaits: 0, gpuRecoveries: 0 };
 
   for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
+    state.attempt = attempt;
     if (abortController?.signal.aborted) {
       throw new Error("Analysis cancelled by user");
     }
@@ -1777,70 +1832,20 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
       break;
     } catch (error) {
       lastError = error;
-      // Message inlined in the string: the console capture wrapper only
-      // records the first argument, so a bare error object logs as blank
-      console.error(
-        `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
+      const directive = await _handleChunkFailure(
+        error,
+        chunk,
+        chunkNum,
+        ctx,
+        state,
       );
-
-      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
-        circuitWaits++;
-        ctx.onProgress(
-          `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
-          { phase: "circuit-wait", current: chunkNum, total: ctx.totalChunks },
-        );
-        await new Promise((resolve) => setTimeout(resolve, 31000));
-        resetAICircuitBreaker();
-        attempt--; // circuit downtime doesn't consume a retry
-        continue;
-      }
-
-      // Context window errors are deterministic — retrying cannot help.
-      // unifiedAIService transforms the raw ContextWindowSizeExceededError into
-      // "📏 Document is too large for Local AI" before it reaches this catch, so
-      // the check covers both forms. Use an empty result (not a failedChunks
-      // entry) so the Partial Analysis banner does not fire for this skip, and
-      // the circuit breaker does not open on a single overflowing chunk.
-      if (
-        error.message?.includes("context window") ||
-        error.message?.includes("ContextWindowSizeExceededError") ||
-        error.message?.includes("too large for Local AI")
-      ) {
+      if (directive === "retry-free") {
+        attempt--; // recovery does not consume a content retry
+      } else if (directive === "empty") {
         result = createEmptyChunkResult();
         break;
       }
-
-      // GPU-level hang: the WebGPU compute pipeline stopped signalling completion
-      // and the Promise.race timeout fired. The engine's GPU device is now in a
-      // degraded state, so every subsequent chunk would hang the same way. We
-      // MUST NOT skip this chunk — its pages may hold claim-critical evidence.
-      // Rebuild the engine on a fresh GPU adapter, then retry the SAME chunk
-      // without consuming a normal retry. Bounded so a physically dead GPU still
-      // aborts loudly (a false "analysis complete" on missing data is worse than
-      // a hard failure the veteran can see and re-run).
-      if (error.message?.includes("timed out")) {
-        if (gpuRecoveries < MAX_GPU_RECOVERIES) {
-          gpuRecoveries++;
-          ctx.onProgress(
-            `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} — rebuilding the AI engine and retrying (recovery ${gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
-            { phase: "gpu-recovery", current: chunkNum, total: ctx.totalChunks },
-          );
-          await reloadSwarmEngine();
-          attempt--; // GPU recovery does not consume a content retry
-          continue;
-        }
-        // Recovery exhausted. Do NOT fall through to a silent failedChunks
-        // entry: that would ship the analysis as "complete" while pages
-        // ${chunk.startPage}-${chunk.endPage} were never read. Abort the whole
-        // run so the veteran sees a hard, honest failure and can re-run.
-        throw new Error(
-          `GPU could not process chunk ${chunkNum}/${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage}) after ${MAX_GPU_RECOVERIES} engine rebuilds. Analysis aborted to avoid silently dropping medical evidence.`,
-        );
-      }
-
-      if (error.message === "Analysis cancelled by user") {
-        throw error;
-      }
+      // "retry" → fall through; the loop consumes an ordinary content retry.
     }
   }
 
@@ -1938,6 +1943,10 @@ async function _finalizeMultiChunkResult(
   // in the text, with null DC — so it runs BEFORE the hallucination gate.
   surfaceDocumentedConditions(mergedResult, fullText);
 
+  // Restore diagnostic codes the compact chunk prompt strips from LLM claims —
+  // grounded, normalized-exact schedule matches only (no guessing).
+  enrichClaimsWithDiagnosticCodes(mergedResult);
+
   // Anti-hallucination gate on the MERGED result: any diagnostic code not in
   // the 38 CFR Part 4 database is stripped before the veteran ever sees it
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
@@ -1952,7 +1961,11 @@ async function _finalizeMultiChunkResult(
   // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
   // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
   // Built on-demand when the user triggers semantic search instead.
-  const semanticIndex = { indexed: false, reason: "deferred", sessionKey: semanticOpts.sessionKey };
+  const semanticIndex = {
+    indexed: false,
+    reason: "deferred",
+    sessionKey: semanticOpts.sessionKey,
+  };
 
   ctx.onProgress("Analysis complete!", { phase: "complete" });
 
