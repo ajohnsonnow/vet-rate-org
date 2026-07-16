@@ -28,6 +28,7 @@ import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
 import {
   saveAnalysisResults,
+  buildVkbMergeFromCFile,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
 import { getStorageStats } from "../utils/storage";
@@ -142,31 +143,7 @@ async function _saveCFileResults(file, extractionResult, result) {
         extractedData: analysis,
         source: "CFileAnalyzer",
       },
-      vkbMergeData: {
-        claims: (analysis.potential_claims || []).map((c) => ({
-          condition: c.condition || c.name || "Unknown",
-          status: "identified",
-          source: "C-File Analysis",
-          evidence: c.evidence || c.description || "",
-          diagnosticCode: c.diagnosticCode || "",
-        })),
-        evidence: (analysis.timeline || []).map((e) => ({
-          date: e.date,
-          type: "c_file_event",
-          description: e.event || e.description || "",
-          source: "C-File",
-        })),
-        aiInsights: {
-          cfileAnalysisSummary: analysis.summary || "",
-          cfileExposures: analysis.exposures || [],
-          cfileActionItems: analysis.actionItems || [],
-          cfileExtraction: {
-            ocrMethod: extractionResult.method,
-            ocrUsed: extractionResult.ocrUsed,
-            confidence: extractionResult.confidence,
-          },
-        },
-      },
+      vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
     });
   } catch (saveErr) {
     console.warn("Failed to save C-File results to VKB/Packet:", saveErr);

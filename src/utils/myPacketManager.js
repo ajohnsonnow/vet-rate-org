@@ -888,6 +888,55 @@ function _formatServiceRecordSection(grouped, options) {
   return out;
 }
 
+// Structured C-File formatter — replaces the 500-char JSON blob for C-Files.
+// The extractedData is the C-File analysis object (potential_claims, timeline,
+// summary, exposures), so emit readable condition/evidence lines an AI tool can
+// actually use. Conditions are AI SUGGESTIONS (not filed claims) — labelled so.
+function _formatCFileDoc(doc) {
+  const data = doc.extractedData || {};
+  let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
+  if (data.summary) {
+    out += `  Summary: ${String(data.summary).slice(0, 400)}\n`;
+  }
+  const claims = Array.isArray(data.potential_claims)
+    ? data.potential_claims
+    : [];
+  if (claims.length > 0) {
+    out += "  Identified conditions (AI suggestions, not yet filed):\n";
+    claims.slice(0, 25).forEach((c) => {
+      const name = c.condition || c.name || "Unknown";
+      const dc = c.diagnosticCode ? ` [DC ${c.diagnosticCode}]` : "";
+      out += `    • ${name}${dc}`;
+      if (c.missing_element) out += ` — missing: ${c.missing_element}`;
+      out += "\n";
+    });
+    if (claims.length > 25) {
+      out += `    ... and ${claims.length - 25} more\n`;
+    }
+  }
+  const exposures = Array.isArray(data.exposures) ? data.exposures : [];
+  const exposureNames = exposures
+    .map((e) => (typeof e === "string" ? e : e?.type))
+    .filter(Boolean);
+  if (exposureNames.length > 0) {
+    out += `  Exposures: ${exposureNames.join(", ")}\n`;
+  }
+  out += "\n";
+  return out;
+}
+
+function _formatCFileSection(grouped) {
+  const cFiles = grouped[PACKET_DOC_TYPES.C_FILE];
+  if (!cFiles || cFiles.length === 0) return "";
+  let out = `--- ${PACKET_DOC_LABELS[PACKET_DOC_TYPES.C_FILE]} ---\n`;
+  for (const doc of cFiles) {
+    out += _formatCFileDoc(doc);
+  }
+  // Remove so it does NOT also fall through to the truncated JSON blob below.
+  delete grouped[PACKET_DOC_TYPES.C_FILE];
+  return out;
+}
+
 function _formatOtherDocsSection(grouped) {
   let out = "";
   for (const [type, docs] of Object.entries(grouped)) {
@@ -918,6 +967,10 @@ export const generatePacketContext = async (options = {}) => {
 
     // DD214s first (most important for claims)
     context += _formatServiceRecordSection(grouped, options);
+
+    // C-Files get a structured formatter (conditions + missing evidence +
+    // summary) instead of the truncated JSON blob used for other types.
+    context += _formatCFileSection(grouped);
 
     // Other document types
     context += _formatOtherDocsSection(grouped);
