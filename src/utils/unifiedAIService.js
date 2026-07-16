@@ -33,6 +33,7 @@ import {
   getSwarmStatus,
   generateWithSwarm,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 } from "./diamondSwarm";
@@ -1096,6 +1097,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     temperature = 0.7,
     scrubPIIEnabled = true,
     useDKB = true, // Enable DKB by default
+    timeout = null,
   } = options;
 
   const scrubbedPrompt = scrubPromptForWarrantCouncil(prompt, scrubPIIEnabled);
@@ -1116,7 +1118,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     swarmGenerating = true;
 
     // 💎 Use enhanced prompt with DKB context
-    const result = await generateWithSwarm(enhancedPrompt, {
+    const inferencePromise = generateWithSwarm(enhancedPrompt, {
       agentId,
       toolId,
       maxTokens,
@@ -1129,6 +1131,26 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
         ? { responseFormat: options.responseFormat }
         : {}),
     });
+
+    // Guard against GPU-level hangs (WebGPU compute never signals completion).
+    // Without this, a hung engine.chat.completions.create() blocks indefinitely
+    // because JavaScript Promises wrapping GPU fence waits cannot be cancelled.
+    const result = timeout
+      ? await Promise.race([
+          inferencePromise,
+          new Promise((_, reject) =>
+            setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    `WebGPU inference timed out after ${timeout / 1000}s`,
+                  ),
+                ),
+              timeout,
+            ),
+          ),
+        ])
+      : await inferencePromise;
 
     swarmGenerating = false;
     return result.text;
@@ -2629,6 +2651,7 @@ export {
   getCurrentAgent,
   getSwarmStatus,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 } from "./diamondSwarm";
@@ -2671,6 +2694,7 @@ export default {
   getCurrentAgent,
   getSwarmStatus,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 };
