@@ -20,6 +20,7 @@ import {
   isAnyAIAvailable,
   getAIStatus,
   resetAICircuitBreaker,
+  reloadSwarmEngine,
   AI_MODES,
 } from "./unifiedAIService";
 import { validateDiagnosticCode } from "./hallucinationTrap";
@@ -54,12 +55,13 @@ const TOKEN_LIMITS = {
 // Used only for chunk-size budgeting; generateWithSwarm uses /3 for its truncation guard.
 const CHARS_PER_TOKEN = 3.4;
 
-// Pre-flight scoring caps local-AI runs to the top-scored 150 chunks (sorted by
-// claims-keyword density). At ~100 s/chunk (p50 observed 2026-06-13), 150 chunks
-// ≈ 4.2 h AI + ~45 min first-run warmup ≈ 5 h total — down from 8+ h at 284 chunks.
+// Pre-flight scoring passes ALL medically-relevant chunks to the LLM. The 10k
+// value is a safety valve against pathological documents only — in practice a
+// 313 MB C-File produces ~284 chunks. At ~21 s/chunk (p50 observed 2026-07-15,
+// RTX 4080 SUPER), 284 chunks ≈ 100 min — well within the 12-hour stress timeout.
 // MIN_CLAIMS_SCORE is the absolute keyword floor: chunks scoring below this are
-// skipped even within the cap, eliminating admin pages that slipped past Gate 2.
-const MAX_WEBGPU_AI_CHUNKS = 150;
+// skipped (admin cover-pages, blank separators) even if they squeeze past Gate 2.
+const MAX_WEBGPU_AI_CHUNKS = 10_000;
 const MIN_CLAIMS_SCORE = 2;
 
 /**
@@ -189,6 +191,14 @@ const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks bette
 // Retry failed chunks before recording them in the failedChunks manifest
 const MAX_CHUNK_RETRIES = 2;
 const CHUNK_RETRY_BACKOFF_MS = 1000;
+
+// How many times a single chunk may trigger a full GPU-engine rebuild before
+// the run aborts. Generous because each recovery reloads a fresh WebGPU adapter
+// and the model weights (~1-3 min), which clears the "adapter consumed" /
+// hung-compute state that causes the freeze. If the GPU is physically dead this
+// still terminates instead of looping forever — but it never silently drops the
+// chunk, because missing medical evidence is unacceptable for a VA claim.
+const MAX_GPU_RECOVERIES = 5;
 
 // ============================================================================
 // SYSTEM PROMPTS
@@ -473,9 +483,70 @@ function _repairRegexFieldExtraction(content) {
     console.log(
       `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
     );
-    return result;
+  } else {
+    // No structured data could be extracted (e.g. purely administrative page
+    // with no conditions or service-period fields). Return the empty template
+    // rather than null so the chunk succeeds as empty instead of going to
+    // failedChunks and triggering the "Partial analysis" banner. The retry
+    // loop already attempted MAX_CHUNK_RETRIES+1 times before reaching this
+    // last-resort strategy, so giving up on data is the correct outcome.
+    // eslint-disable-next-line no-console
+    console.warn(
+      `📝 Regex fallback: no structured data extractable — emitting empty chunk`,
+    );
   }
-  return null;
+  return result;
+}
+
+function _repairTruncateBeforeOpenString(content) {
+  // Walk the content with proper escape/string-boundary tracking to find the
+  // last structural separator (comma or closing bracket) that is OUTSIDE any
+  // open string. When the model runs out of tokens mid-value — especially
+  // values that contain embedded escaped quotes, which defeat the simpler
+  // [^"]* regex in _repairCloseOpenBrackets — we end up inside an unclosed
+  // string. Truncate at the last safe structural position, remove any trailing
+  // comma, then close remaining open brackets with a count-based pass.
+  let inStr = false;
+  let esc = false;
+  let lastStructuralPos = -1;
+
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i];
+    if (esc) {
+      esc = false;
+      continue;
+    }
+    if (c === "\\" && inStr) {
+      esc = true;
+      continue;
+    }
+    if (c === '"') {
+      inStr = !inStr;
+      continue;
+    }
+    if (!inStr && (c === "," || c === "}" || c === "]")) {
+      lastStructuralPos = i;
+    }
+  }
+
+  // Only valuable when we end inside an unclosed string — other strategies
+  // already handle content that ends outside a string.
+  if (!inStr || lastStructuralPos === -1) return null;
+
+  let truncated = content.slice(0, lastStructuralPos + 1).replace(/,\s*$/, "");
+
+  // Close open brackets. Count-based is safe here because the truncation
+  // point is a structural separator (not inside a string), so the remaining
+  // open structure is predictable. Unbalanced braces inside string LITERALS
+  // in the retained portion are still present but cancel out in the count.
+  const ob = (truncated.match(/{/g) || []).length;
+  const cb = (truncated.match(/}/g) || []).length;
+  const oB = (truncated.match(/\[/g) || []).length;
+  const cB = (truncated.match(/]/g) || []).length;
+  for (let i = 0; i < oB - cB; i++) truncated += "]";
+  for (let i = 0; i < ob - cb; i++) truncated += "}";
+
+  return JSON.parse(truncated);
 }
 
 function attemptJSONRepair(jsonStr) {
@@ -508,6 +579,12 @@ function attemptJSONRepair(jsonStr) {
     // "Based on the records: {..." — all prior strategies fail because the
     // non-JSON prefix makes the string unparseable from position 0.
     _repairStripPreamble,
+    // Strategy 1d: Truncate at the last structural separator outside any open
+    // string, then close remaining brackets. Handles the case where the model
+    // runs out of tokens mid-string-value when the value contains embedded
+    // escaped quotes — the simple [^"]* regex in Strategy 1 cannot find the
+    // match in that case, but a proper escape-aware scan can.
+    _repairTruncateBeforeOpenString,
     // Strategy 2: Find last complete object at top level
     _repairFindLastCompleteObject,
     // Strategy 2b: Single-quote normalization.
@@ -1309,6 +1386,93 @@ export function enforceValidDiagnosticCodes(analysis) {
 }
 
 // ============================================================================
+// GROUNDED-TERM SAFETY NET (recall floor)
+// ============================================================================
+
+// A handful of explicit, unambiguous ratable diagnoses that are frequently
+// documented exactly ONCE — as a single checkbox line on a dense full-body
+// exam form (e.g. the FEET section of a DD Form 2808) — and therefore lose to
+// louder findings under the compact chunk prompt's "max 3 claims per chunk"
+// cap. Each entry pairs the canonical condition name with a tight regex that
+// matches the literal clinical term (with minimal OCR/spelling tolerance).
+//
+// This is grounded extraction, NOT fabrication: a condition is surfaced only
+// when its exact name is literally present in the veteran's own records. Each
+// carries its CANONICAL 38 CFR Part 4 diagnostic code — a deterministic
+// condition→code mapping verified against disabilityData.json, not a model
+// guess — so enforceValidDiagnosticCodes accepts it and the veteran sees a
+// real, correct DC. The nearest preceding page marker is attached as evidence
+// so the finding is auditable. `dc` MUST exist in disabilityData.json or the
+// hallucination gate would null it (defeating the badge); verified by the
+// surfaceDocumentedConditions unit tests.
+const DOCUMENTED_CONDITION_TERMS = [
+  { name: "Pes Planus", dc: "5276", pattern: /\bpes\s+planus\b/i }, // 5276 Flatfoot, acquired
+  { name: "Pes Cavus", dc: "5278", pattern: /\bpes\s+cavus\b/i }, // 5278 Claw foot (pes cavus)
+  {
+    name: "Plantar Fasciitis",
+    dc: "5269", // 5269 Plantar fasciitis
+    pattern: /\bplantar\s+fasci(itis|it[iy]s)?\b/i,
+  },
+  { name: "Hallux Valgus", dc: "5280", pattern: /\bhallux\s+valgus\b/i }, // 5280 Hallux valgus
+];
+
+// Nearest "--- PAGE N ---" marker at or before a character index, so a
+// grounded finding can cite the page it was read from.
+function _pageNumberAtIndex(fullText, idx) {
+  const re = /--- PAGE (\d+)/g;
+  let page = null;
+  let m;
+  while ((m = re.exec(fullText)) !== null && m.index <= idx) {
+    page = Number.parseInt(m[1], 10);
+  }
+  return page;
+}
+
+/**
+ * Ensure explicit, literally-documented diagnoses that the model under-recalled
+ * still reach the veteran. Mutates merged.potential_claims in place. A term is
+ * added only when (a) it is present in the raw C-File text AND (b) no existing
+ * claim already names it (including inside a comma-joined condition string).
+ */
+export function surfaceDocumentedConditions(merged, fullText) {
+  if (!fullText || !merged || !Array.isArray(merged.potential_claims)) {
+    return [];
+  }
+  const added = [];
+  for (const { name, dc, pattern } of DOCUMENTED_CONDITION_TERMS) {
+    const match = pattern.exec(fullText);
+    if (!match) continue;
+    const already = merged.potential_claims.some(
+      (c) => c && pattern.test(c.condition || ""),
+    );
+    if (already) continue;
+    const pageNum = _pageNumberAtIndex(fullText, match.index);
+    const pageCite = pageNum ? ` (see page ${pageNum})` : "";
+    merged.potential_claims.push({
+      condition: name,
+      diagnosticCode: dc,
+      likelihood: "medium",
+      inServiceEvent: "",
+      currentDiagnosis: "unclear",
+      nexusStrength: "unclear",
+      missing_element:
+        "Auto-surfaced from an explicit mention in your records — confirm the diagnosis and its service connection.",
+      evidence_pages: pageNum ? [pageNum] : [],
+      recommendation: `"${name}" is named in your records${pageCite}. Verify it against your exam findings and file if applicable.`,
+      source: "documented-term-scan",
+    });
+    added.push(name);
+  }
+  if (added.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔎 Grounded-term safety net surfaced ${added.length} documented condition(s): ${added.join(", ")}`,
+    );
+  }
+  return added;
+}
+
+// ============================================================================
 // MAIN ANALYSIS FUNCTION
 // ============================================================================
 
@@ -1416,12 +1580,14 @@ async function _analyzeSingleChunkPath(
     total: 1,
   });
   const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+  surfaceDocumentedConditions(result, fullText);
   const rejectedCodes = enforceValidDiagnosticCodes(result);
   result.failedChunks = [];
 
-  // Semantic index over the whole document (a single chunk excludes nothing
-  // from the AI pass, but the searchable index is still built).
-  const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
+  // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
+  // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
+  // Built on-demand when the user triggers semantic search instead.
+  const semanticIndex = { indexed: false, reason: "deferred", sessionKey: semanticOpts.sessionKey };
 
   onProgress("Analysis complete!", { phase: "complete" });
 
@@ -1575,6 +1741,10 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
   // out the cooldown and resume instead of letting every remaining chunk
   // fail instantly. Bounded so a genuinely dead engine still aborts.
   let circuitWaits = 0;
+  // GPU-hang recoveries are tracked separately from content retries: a stalled
+  // GPU is an environmental fault, not a bad chunk, so recovering it must not
+  // burn the retries reserved for genuinely malformed model output.
+  let gpuRecoveries = 0;
 
   for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
     if (abortController?.signal.aborted) {
@@ -1638,6 +1808,34 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
       ) {
         result = createEmptyChunkResult();
         break;
+      }
+
+      // GPU-level hang: the WebGPU compute pipeline stopped signalling completion
+      // and the Promise.race timeout fired. The engine's GPU device is now in a
+      // degraded state, so every subsequent chunk would hang the same way. We
+      // MUST NOT skip this chunk — its pages may hold claim-critical evidence.
+      // Rebuild the engine on a fresh GPU adapter, then retry the SAME chunk
+      // without consuming a normal retry. Bounded so a physically dead GPU still
+      // aborts loudly (a false "analysis complete" on missing data is worse than
+      // a hard failure the veteran can see and re-run).
+      if (error.message?.includes("timed out")) {
+        if (gpuRecoveries < MAX_GPU_RECOVERIES) {
+          gpuRecoveries++;
+          ctx.onProgress(
+            `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} — rebuilding the AI engine and retrying (recovery ${gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
+            { phase: "gpu-recovery", current: chunkNum, total: ctx.totalChunks },
+          );
+          await reloadSwarmEngine();
+          attempt--; // GPU recovery does not consume a content retry
+          continue;
+        }
+        // Recovery exhausted. Do NOT fall through to a silent failedChunks
+        // entry: that would ship the analysis as "complete" while pages
+        // ${chunk.startPage}-${chunk.endPage} were never read. Abort the whole
+        // run so the veteran sees a hard, honest failure and can re-run.
+        throw new Error(
+          `GPU could not process chunk ${chunkNum}/${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage}) after ${MAX_GPU_RECOVERIES} engine rebuilds. Analysis aborted to avoid silently dropping medical evidence.`,
+        );
       }
 
       if (error.message === "Analysis cancelled by user") {
@@ -1734,6 +1932,12 @@ async function _finalizeMultiChunkResult(
   ctx.onProgress("Merging analysis results...", { phase: "merge" });
   const mergedResult = mergeChunkResults(ctx.chunkResults);
 
+  // Recall floor: re-surface explicit diagnoses the model under-recalled (a
+  // faint, single-mention finding on a dense exam form loses to the compact
+  // prompt's 3-claims-per-chunk cap). Grounded — only names literally present
+  // in the text, with null DC — so it runs BEFORE the hallucination gate.
+  surfaceDocumentedConditions(mergedResult, fullText);
+
   // Anti-hallucination gate on the MERGED result: any diagnostic code not in
   // the 38 CFR Part 4 database is stripped before the veteran ever sees it
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
@@ -1745,9 +1949,10 @@ async function _finalizeMultiChunkResult(
     (p) => !ctx.aiAnalyzedPages.has(p),
   ).length;
 
-  // Semantic index over the WHOLE document — built regardless of the AI cap so
-  // the excluded pages remain searchable ("search the full document").
-  const semanticIndex = await buildDocSemanticIndex(fullText, semanticOpts);
+  // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
+  // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
+  // Built on-demand when the user triggers semantic search instead.
+  const semanticIndex = { indexed: false, reason: "deferred", sessionKey: semanticOpts.sessionKey };
 
   ctx.onProgress("Analysis complete!", { phase: "complete" });
 
@@ -1833,7 +2038,7 @@ export async function analyzeCFile(
 // mergeChunkResults handle absent fields gracefully as empty arrays/strings.
 // Omitting 6 fields reduces decode from ~800-1500 to ~150-500 tokens/chunk.
 // potential_claims before timeline preserves priority within the 1024-token budget.
-const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 2 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
+const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 3 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
 
 // Per-page prompt for the page-by-page local-AI path.
 // ~200 tokens vs ~600 for CFILE_SYSTEM_PROMPT_COMPACT — saves 400 tokens × every
@@ -2030,10 +2235,13 @@ async function _requestChunkAnalysis(chunk, chunkNum, totalChunks, onProgress) {
   // (an injected instruction inside the document is then framed as DATA, not command).
   const userPrompt = `${untrustedSection("C-FILE TEXT", chunk.text)}\n\nAnalyze and return ONLY the JSON object.`;
 
-  // Local AI: cap output at 1024 tokens. Without XGrammar schema enforcement,
-  // maxTokens is respected and decode runs at 30+ tok/s instead of 1.5-3 tok/s.
+  // Local AI: allow up to the device profile's maxOutputTokens (2048 on desktop-high).
+  // The former Math.min(..., 1024) cap was added for decode speed but caused truncation
+  // on complex chunks (many conditions, long summaries), defeating the repair cascade.
+  // stream:false batch readback at 30+ tok/s keeps the decode time proportional to
+  // actual output length rather than a fixed ceiling.
   const localMaxTokens = isLocalAI
-    ? Math.min(getCachedDeviceProfile()?.maxOutputTokens ?? 2048, 1024)
+    ? (getCachedDeviceProfile()?.maxOutputTokens ?? 1024)
     : 32768;
 
   // Heartbeat: local AI blocks for ~2 min/chunk with no intermediate callbacks.

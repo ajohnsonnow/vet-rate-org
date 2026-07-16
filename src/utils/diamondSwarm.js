@@ -271,8 +271,12 @@ export const registerSwarmEngine = (
   );
 };
 
-// WebLLM engine reference for real inference
+// WebLLM engine reference for real inference. The engine is a
+// WebWorkerMLCEngine proxy — the actual model and WebGPU device live in
+// swarmWorker, so a wedged GPU decode can never block the main thread and
+// worker.terminate() is always able to kill a hung inference.
 let webllmEngine = null;
+let swarmWorker = null;
 
 // Default model list used before device probe completes. The device profile
 // (detectDeviceCapabilities) overrides this in initializeSwarm at runtime.
@@ -408,8 +412,9 @@ async function _loadModelFromList(
   onProgress,
 ) {
   for (const modelId of modelList) {
+    let worker = null;
     try {
-      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
 
       onProgress?.({
         stage: "download",
@@ -417,7 +422,16 @@ async function _loadModelFromList(
         progress: 10,
       });
 
-      const engine = await CreateMLCEngine(
+      // Model + WebGPU device live in a dedicated worker so a wedged decode
+      // blocks only the worker thread; reloadSwarmEngine can then terminate()
+      // it from the (still responsive) main thread and retry the chunk.
+      worker = new Worker(
+        new URL("../workers/webllm-swarm-worker.js", import.meta.url),
+        { type: "module" },
+      );
+
+      const engine = await CreateWebWorkerMLCEngine(
+        worker,
         modelId,
         {
           initProgressCallback: (report) => {
@@ -437,10 +451,11 @@ async function _loadModelFromList(
 
       // eslint-disable-next-line no-console
       console.log(
-        `🎖️ WebLLM loaded: ${modelId} | context: ${contextWindowSize} | tier: ${tier}`,
+        `🎖️ WebLLM loaded in worker: ${modelId} | context: ${contextWindowSize} | tier: ${tier}`,
       );
-      return { modelId, engine }; // Success!
+      return { modelId, engine, worker }; // Success!
     } catch (modelError) {
+      worker?.terminate();
       console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
 
       // If cache error, try to clear and retry once
@@ -535,6 +550,7 @@ export const initializeSwarm = async (
     }
 
     webllmEngine = loadResult.engine;
+    swarmWorker = loadResult.worker;
     loadedModelId = loadResult.modelId; // Store globally for status reporting
 
     // Mark as ready only when a model actually loaded
@@ -557,6 +573,63 @@ export const initializeSwarm = async (
     console.error("🎖️ Warrant Council initialization failed:", error);
     throw error;
   }
+};
+
+/**
+ * Rebuild the WebLLM engine after a GPU-level hang.
+ *
+ * When a WebGPU compute pipeline stops signalling completion (the "adapter
+ * consumed" / hung-decode state seen on long C-File runs), the only reliable
+ * recovery is to destroy the engine and request a brand-new GPU adapter. The
+ * caller (cfileAnalyzer chunk loop) invokes this on an inference timeout and
+ * then retries the SAME chunk, so no medical evidence is dropped.
+ *
+ * worker.terminate() is the one teardown a wedged GPU cannot hang: the browser
+ * kills the worker thread even mid-decode, destroying its WebGPU device with
+ * it. No unload() handshake is attempted — a blocked worker never replies.
+ */
+export const reloadSwarmEngine = async () => {
+  const agentToRestore = currentAgent || "auditor";
+
+  // eslint-disable-next-line no-console
+  console.warn("🎖️ Rebuilding Warrant Council engine after GPU stall…");
+
+  if (swarmWorker) {
+    swarmWorker.terminate();
+    swarmWorker = null;
+  }
+
+  // Drop all engine state so initializeSwarm rebuilds from a fresh adapter.
+  webllmEngine = null;
+  swarmEngine = null;
+  swarmReady = false;
+  swarmInitializing = false;
+  loadedAgents.clear();
+  currentAgent = null;
+
+  // Bounded rebuild: if even a FRESH worker cannot obtain a GPU adapter and
+  // load cached weights within 5 minutes, the GPU process itself is wedged —
+  // fail loudly instead of hanging the run (chunk callers abort on throw).
+  const ok = await Promise.race([
+    initializeSwarm(agentToRestore),
+    new Promise((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "Warrant Council engine rebuild stalled for 300s — the GPU process appears wedged; reload the page to recover",
+            ),
+          ),
+        300_000,
+      ),
+    ),
+  ]);
+  if (!ok) {
+    throw new Error(
+      "Warrant Council engine could not be rebuilt after GPU stall",
+    );
+  }
+  return true;
 };
 
 /**
@@ -1027,7 +1100,15 @@ export const processClaimWithSwarm = async (claimData, callbacks = {}) => {
  */
 export const unloadSwarm = async () => {
   try {
-    // Unload WebLLM engine
+    // Worker-hosted engine: terminate() frees the GPU device instantly and
+    // cannot hang; unload() would await a reply a dead worker never sends.
+    if (swarmWorker) {
+      swarmWorker.terminate();
+      swarmWorker = null;
+      webllmEngine = null;
+    }
+
+    // Unload WebLLM engine (legacy main-thread engine path)
     if (webllmEngine) {
       if (typeof webllmEngine.unload === "function") {
         await webllmEngine.unload();
