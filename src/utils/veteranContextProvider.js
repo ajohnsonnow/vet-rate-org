@@ -148,7 +148,19 @@ export const getVeteranAIContext = async (options = {}) => {
     // 1) VKB — structured knowledge graph (service history, conditions, etc.)
     if (includeVKB) {
       const vkb = await loadVKB();
-      if (vkb && vkb.personal?.fullName) {
+      // Content gate (not a fullName gate): include VKB context whenever the
+      // knowledge base holds anything an AI tool can use — document-derived
+      // conditions, filed claims, a timeline, or a stored C-File — even before
+      // the veteran has typed their name. generateLLMContext guards each
+      // section, so a partially-populated VKB renders only what it has.
+      const hasVkbContent =
+        !!vkb &&
+        ((vkb.medicalConditions?.current?.length ?? 0) > 0 ||
+          (vkb.vaClaimsHistory?.claims?.length ?? 0) > 0 ||
+          (vkb.evidenceTimeline?.length ?? 0) > 0 ||
+          (vkb.documentation?.cFiles?.length ?? 0) > 0 ||
+          !!vkb.personal?.fullName);
+      if (hasVkbContent) {
         ctx += generateLLMContext(vkb);
       }
     }
@@ -175,6 +187,138 @@ export const getVeteranAIContext = async (options = {}) => {
 // ============================================================
 // SAVE HELPERS  —  "File documents into the veteran's record"
 // ============================================================
+
+// C-File analysis output → VKB merge shape. Pure and unit-testable.
+//
+// Emits BOTH the legacy off-schema arrays (`claims`, `evidence`, `aiInsights`)
+// that current readers like getLoadableConditions still depend on AND the
+// canonical VKB schema fields, so the write is ADDITIVE (dual-write) and no
+// existing reader breaks. See veteranKnowledgeBase.js VKB_SCHEMA for the
+// canonical shapes.
+//
+// PRODUCT RULE: C-File potential_claims are AI SUGGESTIONS, not filed claims —
+// they land in medicalConditions.current tagged source:"C-File Analysis"
+// (read-only, no rating so calculators exclude them). They are NEVER written to
+// vaClaimsHistory.claims, which is reserved for FILED claims from decision /
+// denial letters.
+const CFILE_SUGGESTION_SOURCE = "C-File Analysis";
+
+const _cfileConditionName = (c) => c.condition || c.name || "";
+
+// Suggested conditions → medicalConditions.current (source-tagged, unrated so
+// buildConditionCandidates() excludes them from calculator input).
+function _cfileCurrentConditions(claims, mhDiagnoses) {
+  return [
+    ...claims.map((c) => ({
+      name: _cfileConditionName(c) || "Unknown",
+      source: CFILE_SUGGESTION_SOURCE,
+      serviceConnected: false,
+      diagnosticCode: c.diagnosticCode || "",
+      likelihood: c.likelihood || "",
+      evidence: c.evidence || c.inServiceEvent || c.description || "",
+    })),
+    ...mhDiagnoses
+      .map((d) => (typeof d === "string" ? d : d?.name || d?.condition || ""))
+      .filter(Boolean)
+      .map((name) => ({
+        name,
+        source: CFILE_SUGGESTION_SOURCE,
+        serviceConnected: false,
+      })),
+  ].filter((c) => c.name);
+}
+
+function _cfileMissingEvidence(claims) {
+  return claims
+    .filter((c) => c.missing_element || c.recommendation)
+    .map((c) => ({
+      condition: _cfileConditionName(c) || "Unknown",
+      evidenceType: c.missing_element || "",
+      howToObtain: c.recommendation || "",
+      priority: c.likelihood || "medium",
+    }));
+}
+
+function _cfileEvidenceTimeline(timeline) {
+  return timeline.map((e) => ({
+    date: e.date || "",
+    eventType: e.category || "c_file_event",
+    description: e.description || e.event || e.quote || "",
+    source: CFILE_SUGGESTION_SOURCE,
+    significance: e.significance || "",
+  }));
+}
+
+function _cfileEnvironmentalExposures(exposures) {
+  return exposures
+    .map((ex) =>
+      typeof ex === "string"
+        ? { type: ex, location: "", dates: "", documentation: "" }
+        : {
+            type: ex.type || "",
+            location: ex.location || "",
+            dates: ex.timeframe || ex.dates || "",
+            documentation: "",
+          },
+    )
+    .filter((e) => e.type);
+}
+
+function _cfilePresumptiveConditions(exposures) {
+  return exposures.flatMap((ex) =>
+    typeof ex === "object" && Array.isArray(ex.presumptive_conditions)
+      ? ex.presumptive_conditions.filter(Boolean).map((cond) => ({
+          condition: cond,
+          exposureType: ex.type || "",
+          eligibleUnder: ex.type || "",
+        }))
+      : [],
+  );
+}
+
+export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
+  const claims = Array.isArray(analysis.potential_claims)
+    ? analysis.potential_claims
+    : [];
+  const timeline = Array.isArray(analysis.timeline) ? analysis.timeline : [];
+  const exposures = Array.isArray(analysis.exposures) ? analysis.exposures : [];
+  const mhDiagnoses = Array.isArray(analysis.mentalHealth?.diagnoses)
+    ? analysis.mentalHealth.diagnoses
+    : [];
+
+  return {
+    // ── Legacy off-schema (dual-write; kept until Wave 2 repoints readers) ──
+    claims: claims.map((c) => ({
+      condition: _cfileConditionName(c) || "Unknown",
+      status: "identified",
+      source: CFILE_SUGGESTION_SOURCE,
+      evidence: c.evidence || c.description || "",
+      diagnosticCode: c.diagnosticCode || "",
+    })),
+    evidence: timeline.map((e) => ({
+      date: e.date,
+      type: "c_file_event",
+      description: e.event || e.description || "",
+      source: "C-File",
+    })),
+    aiInsights: {
+      cfileAnalysisSummary: analysis.summary || "",
+      cfileExposures: analysis.exposures || [],
+      cfileActionItems: analysis.actionItems || [],
+      cfileExtraction: {
+        ocrMethod: extraction.method,
+        ocrUsed: extraction.ocrUsed,
+        confidence: extraction.confidence,
+      },
+    },
+    // ── Canonical VKB schema fields (new; merged by dedicated helpers) ──
+    medicalConditionsCurrent: _cfileCurrentConditions(claims, mhDiagnoses),
+    missingEvidence: _cfileMissingEvidence(claims),
+    evidenceTimeline: _cfileEvidenceTimeline(timeline),
+    environmentalExposures: _cfileEnvironmentalExposures(exposures),
+    presumptiveConditions: _cfilePresumptiveConditions(exposures),
+  };
+};
 
 /**
  * Save an AI analysis result to BOTH VKB and My Packet in one call.
@@ -266,6 +410,93 @@ function _mergeMedical(vkb, vkbMergeData) {
   }
 }
 
+// ── Canonical VKB schema merges (parallel to the legacy _mergeClaims /
+// _mergeEvidence above). Each is dedup-guarded and no-ops when its field is
+// absent, so the write stays additive and idempotent across re-saves. ──
+
+function _mergeMedicalConditionsCurrent(vkb, vkbMergeData) {
+  if (!Array.isArray(vkbMergeData.medicalConditionsCurrent)) return;
+  vkb.medicalConditions = vkb.medicalConditions || {};
+  vkb.medicalConditions.current = vkb.medicalConditions.current || [];
+  const existing = new Set(
+    vkb.medicalConditions.current.map((c) =>
+      normalizeConditionName(c.name || c.condition),
+    ),
+  );
+  vkbMergeData.medicalConditionsCurrent.forEach((cond) => {
+    const key = normalizeConditionName(cond.name);
+    if (key && !existing.has(key)) {
+      existing.add(key);
+      vkb.medicalConditions.current.push(cond);
+    }
+  });
+}
+
+function _mergePresumptiveConditions(vkb, vkbMergeData) {
+  if (!Array.isArray(vkbMergeData.presumptiveConditions)) return;
+  vkb.medicalConditions = vkb.medicalConditions || {};
+  vkb.medicalConditions.presumptive = vkb.medicalConditions.presumptive || [];
+  const existing = new Set(
+    vkb.medicalConditions.presumptive.map((p) =>
+      normalizeConditionName(p.condition),
+    ),
+  );
+  vkbMergeData.presumptiveConditions.forEach((p) => {
+    const key = normalizeConditionName(p.condition);
+    if (key && !existing.has(key)) {
+      existing.add(key);
+      vkb.medicalConditions.presumptive.push(p);
+    }
+  });
+}
+
+function _mergeEvidenceTimeline(vkb, vkbMergeData) {
+  if (!Array.isArray(vkbMergeData.evidenceTimeline)) return;
+  vkb.evidenceTimeline = vkb.evidenceTimeline || [];
+  const timelineKey = (e) =>
+    `${e.date || ""}|${(e.eventType || "").toLowerCase()}|${normalizeConditionName(e.description || "")}`;
+  const existing = new Set(vkb.evidenceTimeline.map(timelineKey));
+  vkbMergeData.evidenceTimeline.forEach((e) => {
+    const key = timelineKey(e);
+    if (!existing.has(key)) {
+      existing.add(key);
+      vkb.evidenceTimeline.push(e);
+    }
+  });
+}
+
+function _mergeMissingEvidence(vkb, vkbMergeData) {
+  if (!Array.isArray(vkbMergeData.missingEvidence)) return;
+  vkb.aiInsights = vkb.aiInsights || {};
+  vkb.aiInsights.missingEvidence = vkb.aiInsights.missingEvidence || [];
+  const missingKey = (m) =>
+    `${normalizeConditionName(m.condition)}|${(m.evidenceType || "").toLowerCase()}`;
+  const existing = new Set(vkb.aiInsights.missingEvidence.map(missingKey));
+  vkbMergeData.missingEvidence.forEach((m) => {
+    const key = missingKey(m);
+    if (!existing.has(key)) {
+      existing.add(key);
+      vkb.aiInsights.missingEvidence.push(m);
+    }
+  });
+}
+
+function _mergeEnvironmentalExposures(vkb, vkbMergeData) {
+  if (!Array.isArray(vkbMergeData.environmentalExposures)) return;
+  vkb.exposures = vkb.exposures || {};
+  vkb.exposures.environmental = vkb.exposures.environmental || [];
+  const exposureKey = (e) =>
+    `${(e.type || "").toLowerCase()}|${(e.location || "").toLowerCase()}`;
+  const existing = new Set(vkb.exposures.environmental.map(exposureKey));
+  vkbMergeData.environmentalExposures.forEach((e) => {
+    const key = exposureKey(e);
+    if (!existing.has(key)) {
+      existing.add(key);
+      vkb.exposures.environmental.push(e);
+    }
+  });
+}
+
 async function _saveToPacket({
   toolName,
   classification,
@@ -335,6 +566,14 @@ async function _saveToVkb({
     // the source document like claims above)
     _mergeEvidence(vkb, vkbMergeData, sourceDocumentId);
     _mergeMedical(vkb, vkbMergeData);
+
+    // Canonical VKB schema (additive dual-write alongside the legacy arrays):
+    // populate the fields the AI-context builders and future readers consume.
+    _mergeMedicalConditionsCurrent(vkb, vkbMergeData);
+    _mergePresumptiveConditions(vkb, vkbMergeData);
+    _mergeEvidenceTimeline(vkb, vkbMergeData);
+    _mergeMissingEvidence(vkb, vkbMergeData);
+    _mergeEnvironmentalExposures(vkb, vkbMergeData);
 
     vkb.lastUpdated = timestamp;
     await saveVKB(vkb);
