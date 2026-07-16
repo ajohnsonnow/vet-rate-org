@@ -17,6 +17,8 @@ import {
 import jsPDF from "jspdf";
 import ShareButton from "./ShareButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
+import CFileClaimsCards from "./CFileClaimsCards";
+import CFileTimeline from "./CFileTimeline";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getSavedClaims,
@@ -60,6 +62,10 @@ import {
   clearVARecords,
   saveVADataWithConsent,
 } from "../utils/vaDataPersistence";
+import {
+  loadVKB,
+  getAllDocumentsByCategory,
+} from "../utils/veteranKnowledgeBase";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { triggerBlobDownload } from "../utils/sanitize";
 import { useVaAuth } from "../hooks/useVaAuth";
@@ -796,6 +802,52 @@ function MyPacketTabNavPrimary({
   );
 }
 
+function VaRecordsTabButton({ activeTab, setActiveTab, vaRecords }) {
+  return (
+    <button
+      onClick={() => setActiveTab("varecords")}
+      className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+        activeTab === "varecords"
+          ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+      }`}
+    >
+      🏛️ <span className="hidden sm:inline">VA Records</span>
+      {vaRecords && (
+        <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+          {[
+            vaRecords.claims?.length || 0,
+            vaRecords.appeals?.length || 0,
+          ].reduce((a, b) => a + b, 0)}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
+  const documentCount = documents
+    ? Object.values(documents).reduce((sum, cat) => sum + (cat?.count || 0), 0)
+    : 0;
+  return (
+    <button
+      onClick={() => setActiveTab("documents")}
+      className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+        activeTab === "documents"
+          ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+      }`}
+    >
+      📁 <span className="hidden sm:inline">Documents</span>
+      {documentCount > 0 && (
+        <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 text-xs px-1.5 py-0.5 rounded-full">
+          {documentCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function MyPacketTabNavSecondary({
   activeTab,
   setActiveTab,
@@ -803,6 +855,7 @@ function MyPacketTabNavSecondary({
   veteranProfile,
   savedForms,
   vaRecords,
+  documents,
   t,
 }) {
   return (
@@ -859,24 +912,17 @@ function MyPacketTabNavSecondary({
         </span>
       </button>
 
-      <button
-        onClick={() => setActiveTab("varecords")}
-        className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-          activeTab === "varecords"
-            ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
-        }`}
-      >
-        🏛️ <span className="hidden sm:inline">VA Records</span>
-        {vaRecords && (
-          <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
-            {[
-              vaRecords.claims?.length || 0,
-              vaRecords.appeals?.length || 0,
-            ].reduce((a, b) => a + b, 0)}
-          </span>
-        )}
-      </button>
+      <VaRecordsTabButton
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        vaRecords={vaRecords}
+      />
+
+      <DocumentsTabButton
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        documents={documents}
+      />
     </>
   );
 }
@@ -892,6 +938,7 @@ function MyPacketTabNav({
   veteranProfile,
   savedForms,
   vaRecords,
+  documents,
   t,
 }) {
   return (
@@ -916,6 +963,7 @@ function MyPacketTabNav({
           veteranProfile={veteranProfile}
           savedForms={savedForms}
           vaRecords={vaRecords}
+          documents={documents}
           t={t}
         />
       </nav>
@@ -3006,8 +3054,49 @@ function ClaimEntry({
   );
 }
 
+// Read-only, source-tagged C-File suggestions. Deliberately SEPARATE from the
+// filed-claim list and NOT counted in the stats dashboard (getClaimStats reads
+// the localStorage claim store; these come from VKB medicalConditions.current).
+function CFileSuggestionsSection({ conditions }) {
+  return (
+    <section className="mt-2 mb-6 border border-teal-200 dark:border-teal-800 rounded-lg p-4 bg-teal-50/60 dark:bg-teal-900/10">
+      <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1">
+        🔎 Identified in your C-File (not yet filed)
+      </h3>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+        AI suggestions from your analyzed records. These are NOT filed claims and
+        are not counted in the totals above — review and file the ones that
+        apply.
+      </p>
+      <ul className="space-y-2">
+        {conditions.map((c, i) => (
+          <li
+            key={`${c.name}-${i}`}
+            className="flex flex-wrap items-center gap-2 text-sm"
+          >
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              {c.name}
+            </span>
+            {c.diagnosticCode && (
+              <span className="text-xs font-mono bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
+                DC {c.diagnosticCode}
+              </span>
+            )}
+            {c.likelihood && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+                {c.likelihood}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ClaimsTab({
   claims,
+  cfileConditions = [],
   onClose,
   onResume,
   handleViewStatement,
@@ -3021,38 +3110,48 @@ function ClaimsTab({
   getStatusColor,
   t,
 }) {
-  if (claims.length === 0) {
+  const hasClaims = claims.length > 0;
+  const hasSuggestions = cfileConditions.length > 0;
+  if (!hasClaims && !hasSuggestions) {
     return <ClaimsEmptyState onClose={onClose} t={t} />;
   }
   return (
     <>
-      <div className="space-y-4 mb-6">
-        {claims.map((claim) => (
-          <ClaimEntry
-            key={claim.id}
-            claim={claim}
-            getStatusColor={getStatusColor}
-            handleStatusChange={handleStatusChange}
-            onResume={onResume}
-            handleViewStatement={handleViewStatement}
-            showDownloadMenu={showDownloadMenu}
-            setShowDownloadMenu={setShowDownloadMenu}
-            isCertified={isCertified}
-            handleDownloadStatement={handleDownloadStatement}
-            handleRemove={handleRemove}
-            t={t}
-          />
-        ))}
-      </div>
+      {hasClaims && (
+        <div className="space-y-4 mb-6">
+          {claims.map((claim) => (
+            <ClaimEntry
+              key={claim.id}
+              claim={claim}
+              getStatusColor={getStatusColor}
+              handleStatusChange={handleStatusChange}
+              onResume={onResume}
+              handleViewStatement={handleViewStatement}
+              showDownloadMenu={showDownloadMenu}
+              setShowDownloadMenu={setShowDownloadMenu}
+              isCertified={isCertified}
+              handleDownloadStatement={handleDownloadStatement}
+              handleRemove={handleRemove}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
 
-      <div className="flex justify-center pt-4 border-t dark:border-gray-700">
-        <button
-          onClick={handleClearAll}
-          className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-        >
-          {t("myPacketSection.clearAllClaims")}
-        </button>
-      </div>
+      {hasSuggestions && (
+        <CFileSuggestionsSection conditions={cfileConditions} />
+      )}
+
+      {hasClaims && (
+        <div className="flex justify-center pt-4 border-t dark:border-gray-700">
+          <button
+            onClick={handleClearAll}
+            className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+          >
+            {t("myPacketSection.clearAllClaims")}
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -3172,14 +3271,52 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
   );
 }
 
+// Read-only VKB evidence-timeline events, merged into the DISPLAY only (never
+// the store) so handleClearTimelineEvents keeps clearing user events alone.
+function VkbTimelineSection({ events }) {
+  const sorted = [...events].sort((a, b) => new Date(b.date) - new Date(a.date));
+  return (
+    <section className="mt-6 border-t dark:border-gray-700 pt-4">
+      <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1">
+        📎 From your analyzed documents ({events.length})
+      </h3>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+        Read-only events extracted from your C-File. Clearing your timeline above
+        does not remove these.
+      </p>
+      <ul className="space-y-2">
+        {sorted.map((e, i) => (
+          <li
+            key={`${e.date}-${i}`}
+            className="text-sm text-gray-700 dark:text-gray-300 flex flex-wrap gap-2"
+          >
+            <span className="font-mono text-gray-500 dark:text-gray-400">
+              {e.date || "—"}
+            </span>
+            <span>{e.description}</span>
+            {e.source && (
+              <span className="text-xs text-teal-700 dark:text-teal-300">
+                [{e.source}]
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function TimelineTab({
   timelineEvents,
   setTimelineEvents,
   handleClearTimelineEvents,
+  vkbTimeline = [],
   onClose,
   t,
 }) {
-  if (timelineEvents.length === 0) {
+  const hasUserEvents = timelineEvents.length > 0;
+  const hasVkbEvents = vkbTimeline.length > 0;
+  if (!hasUserEvents && !hasVkbEvents) {
     return <TimelineEmptyState onClose={onClose} t={t} />;
   }
   const sortedEvents = [...timelineEvents].sort(
@@ -3187,36 +3324,42 @@ function TimelineTab({
   );
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {timelineEvents.length}{" "}
-          {timelineEvents.length !== 1
-            ? t("myPacketSection.eventsTracked")
-            : t("myPacketSection.eventTracked")}
-        </p>
-        <button
-          onClick={handleClearTimelineEvents}
-          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-        >
-          {t("myPacketSection.clearAll")}
-        </button>
-      </div>
+      {hasUserEvents && (
+        <>
+          <div className="mb-4 flex justify-between items-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {timelineEvents.length}{" "}
+              {timelineEvents.length !== 1
+                ? t("myPacketSection.eventsTracked")
+                : t("myPacketSection.eventTracked")}
+            </p>
+            <button
+              onClick={handleClearTimelineEvents}
+              className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+            >
+              {t("myPacketSection.clearAll")}
+            </button>
+          </div>
 
-      <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-400 via-slate-300 to-slate-200 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700"></div>
+          <div className="relative">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-400 via-slate-300 to-slate-200 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700"></div>
 
-        <div className="space-y-4">
-          {sortedEvents.map((event) => (
-            <TimelineEventEntry
-              key={event.id}
-              event={event}
-              timelineEvents={timelineEvents}
-              setTimelineEvents={setTimelineEvents}
-              t={t}
-            />
-          ))}
-        </div>
-      </div>
+            <div className="space-y-4">
+              {sortedEvents.map((event) => (
+                <TimelineEventEntry
+                  key={event.id}
+                  event={event}
+                  timelineEvents={timelineEvents}
+                  setTimelineEvents={setTimelineEvents}
+                  t={t}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {hasVkbEvents && <VkbTimelineSection events={vkbTimeline} />}
 
       <div className="mt-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
         <p className="text-sm text-slate-700 dark:text-slate-300">
@@ -4096,6 +4239,43 @@ function _loadClaimsData(ctx) {
   setStats(getClaimStats());
 }
 
+// An IndexedDB open blocked by another connection's pending upgrade never
+// settles; race it so a slow/unavailable VKB never blocks the modal — the
+// document tabs just render empty. Same 3s guard as getLoadableConditions.
+const _raceVkb = (promise) =>
+  Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
+  ]);
+
+async function _loadVkbDocuments(ctx) {
+  const { setDocuments } = ctx;
+  try {
+    setDocuments(await _raceVkb(getAllDocumentsByCategory()));
+  } catch {
+    setDocuments(null);
+  }
+}
+
+async function _loadVkbEnrichment(ctx) {
+  const { setCfileConditions, setVkbTimeline } = ctx;
+  try {
+    const vkb = await _raceVkb(loadVKB());
+    if (!vkb) return;
+    const current = Array.isArray(vkb.medicalConditions?.current)
+      ? vkb.medicalConditions.current
+      : [];
+    setCfileConditions(
+      current.filter((c) => c?.source === "C-File Analysis"),
+    );
+    setVkbTimeline(
+      Array.isArray(vkb.evidenceTimeline) ? vkb.evidenceTimeline : [],
+    );
+  } catch {
+    // Best-effort read-only enrichment — leave defaults on failure.
+  }
+}
+
 function _deletePainMapAndReload(mapId, ctx) {
   const { loadPainMaps } = ctx;
   if (window.confirm("Delete this pain map?")) {
@@ -4583,6 +4763,98 @@ function _editViewedStatement(viewingClaimId, claims, ctx) {
   }
 }
 
+function DocumentsEmptyState({ onClose, t }) {
+  return (
+    <div className="text-center py-12">
+      <span className="text-5xl">📁</span>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-4 mb-2">
+        No analyzed documents yet
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+        When you analyze a C-File or other record, its findings are saved here
+        for reference.
+      </p>
+      <button
+        onClick={onClose}
+        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+      >
+        {t("common.close") || "Close"}
+      </button>
+    </div>
+  );
+}
+
+function CFileDocumentCard({ doc }) {
+  const data = doc.extractedData || {};
+  const claims = Array.isArray(data.potential_claims)
+    ? data.potential_claims
+    : [];
+  const timeline = Array.isArray(data.timeline) ? data.timeline : [];
+  return (
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+          📋 {doc.fileName}
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Analyzed {(doc.uploadDate || "").split("T")[0]} · read-only
+        </p>
+      </div>
+      {data.summary && (
+        <p className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+          {data.summary}
+        </p>
+      )}
+      {claims.length > 0 && <CFileClaimsCards claims={claims} />}
+      {timeline.length > 0 && <CFileTimeline events={timeline} />}
+    </div>
+  );
+}
+
+// Read-only view of the VKB document archive. `documents` is the
+// getAllDocumentsByCategory() shape (null until loaded / on slow VKB). C-Files
+// render their extracted findings via the same cards the analyzer uses.
+function DocumentsTab({ documents, onClose, t }) {
+  const cFileDocs = documents?.cFiles?.documents || [];
+  const totalDocs = documents
+    ? Object.values(documents).reduce((sum, cat) => sum + (cat?.count || 0), 0)
+    : 0;
+
+  if (totalDocs === 0) {
+    return <DocumentsEmptyState onClose={onClose} t={t} />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {cFileDocs.length > 0 && (
+        <section>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
+            📋 C-Files &amp; VA Decisions ({cFileDocs.length})
+          </h3>
+          <div className="space-y-4">
+            {cFileDocs.map((doc) => (
+              <CFileDocumentCard key={doc.id} doc={doc} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="text-sm text-gray-600 dark:text-gray-400 border-t dark:border-gray-700 pt-4">
+        <p className="font-medium mb-1">All documents on file: {totalDocs}</p>
+        <ul className="space-y-0.5">
+          {Object.values(documents)
+            .filter((cat) => (cat?.count || 0) > 0)
+            .map((cat) => (
+              <li key={cat.label}>
+                {cat.icon} {cat.label}: {cat.count}
+              </li>
+            ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
 function MyPacketTabContent(props) {
   const { activeTab, viewingPainMap, viewingForm } = props;
   return (
@@ -4598,6 +4870,9 @@ function MyPacketTabContent(props) {
 
       {/* VA RECORDS TAB - Full VA Data Center */}
       {activeTab === "varecords" && <VADataCenter embeddedMode={true} />}
+
+      {/* DOCUMENTS TAB - read-only VKB document archive (Wave 2a) */}
+      {activeTab === "documents" && <DocumentsTab {...props} />}
 
       {/* SERVICE HISTORY TAB */}
       {activeTab === "service" && <ServiceTab {...props} />}
@@ -4637,6 +4912,12 @@ function useMyPacketCoreState() {
   const [isCertified, setIsCertified] = useState(false); // Certification for downloads
   const [showBackupGuide, setShowBackupGuide] = useState(false); // Ground Guide - first-time backup guidance
   const [_hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
+  // VKB-derived, READ-ONLY document-flow state (Wave 2a). Additive: these never
+  // feed getClaimStats or the counters. `documents` is null until the async VKB
+  // read resolves (or stays null if VKB is slow/unavailable — tabs render empty).
+  const [documents, setDocuments] = useState(null);
+  const [cfileConditions, setCfileConditions] = useState([]);
+  const [vkbTimeline, setVkbTimeline] = useState([]);
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
 
@@ -4645,6 +4926,12 @@ function useMyPacketCoreState() {
     setClaims,
     stats,
     setStats,
+    documents,
+    setDocuments,
+    cfileConditions,
+    setCfileConditions,
+    vkbTimeline,
+    setVkbTimeline,
     viewingStatement,
     setViewingStatement,
     viewingClaimId,
@@ -4807,6 +5094,9 @@ function _buildPacketLoaders(state) {
     setVaRecords,
     setClaims,
     setStats,
+    setDocuments,
+    setCfileConditions,
+    setVkbTimeline,
   } = state;
 
   const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
@@ -4820,6 +5110,9 @@ function _buildPacketLoaders(state) {
   const loadMyRatings = () => _loadMyRatings({ setMyRatings });
   const loadVARecordsData = () => _loadVARecordsData({ setVaRecords });
   const loadClaims = () => _loadClaimsData({ setClaims, setStats });
+  const loadDocuments = () => _loadVkbDocuments({ setDocuments });
+  const loadVkbEnrichment = () =>
+    _loadVkbEnrichment({ setCfileConditions, setVkbTimeline });
 
   return {
     loadVeteranProfile,
@@ -4831,6 +5124,8 @@ function _buildPacketLoaders(state) {
     loadMyRatings,
     loadVARecordsData,
     loadClaims,
+    loadDocuments,
+    loadVkbEnrichment,
   };
 }
 
@@ -5069,6 +5364,9 @@ function _runPacketInitLoadEffect(setters) {
     setVeteranProfile,
     setVaRecords,
     setAIStatus,
+    setDocuments,
+    setCfileConditions,
+    setVkbTimeline,
   } = setters;
   _loadClaimsData({ setClaims, setStats });
   _loadSavedForms({ setSavedForms });
@@ -5079,6 +5377,9 @@ function _runPacketInitLoadEffect(setters) {
   _loadVeteranProfile({ setVeteranProfile });
   _loadVARecordsData({ setVaRecords });
   _checkAIStatus({ setAIStatus });
+  // Read-only VKB document flow (best-effort, never blocks the modal).
+  _loadVkbDocuments({ setDocuments });
+  _loadVkbEnrichment({ setCfileConditions, setVkbTimeline });
 }
 
 // Auto-import VA records after fresh OAuth connection
@@ -5258,6 +5559,7 @@ function MyPacketView({ state, handlers }) {
     veteranProfile,
     savedForms,
     vaRecords,
+    documents,
   } = state;
 
   return (
@@ -5294,6 +5596,7 @@ function MyPacketView({ state, handlers }) {
             veteranProfile={veteranProfile}
             savedForms={savedForms}
             vaRecords={vaRecords}
+            documents={documents}
             t={t}
           />
 
@@ -5307,6 +5610,86 @@ function MyPacketView({ state, handlers }) {
 
       <MyPacketExtraModals state={state} handlers={handlers} />
     </>
+  );
+}
+
+// All MyPacket lifecycle effects, extracted so the component stays legible.
+function _useMyPacketEffects({
+  coreState,
+  tabsState,
+  serviceHistoryState,
+  timelinePainState,
+  vaState,
+  setVeteranProfile,
+  handleVaDataImport,
+}) {
+  useEffect(
+    () =>
+      _runPacketInitLoadEffect({
+        setClaims: coreState.setClaims,
+        setStats: coreState.setStats,
+        setSavedForms: tabsState.setSavedForms,
+        setMyRatings: tabsState.setMyRatings,
+        setServiceHistory: serviceHistoryState.setServiceHistory,
+        setTimelineEvents: timelinePainState.setTimelineEvents,
+        setPainMaps: timelinePainState.setPainMaps,
+        setVeteranProfile,
+        setVaRecords: vaState.setVaRecords,
+        setAIStatus: serviceHistoryState.setAIStatus,
+        setDocuments: coreState.setDocuments,
+        setCfileConditions: coreState.setCfileConditions,
+        setVkbTimeline: coreState.setVkbTimeline,
+      }),
+    [
+      coreState.setClaims,
+      coreState.setStats,
+      tabsState.setSavedForms,
+      tabsState.setMyRatings,
+      serviceHistoryState.setServiceHistory,
+      timelinePainState.setTimelineEvents,
+      timelinePainState.setPainMaps,
+      serviceHistoryState.setAIStatus,
+      vaState.setVaRecords,
+      coreState.setDocuments,
+      coreState.setCfileConditions,
+      coreState.setVkbTimeline,
+      setVeteranProfile,
+    ],
+  );
+
+  useEffect(
+    () =>
+      _runPacketVaAutoImportEffect({
+        isVaAuthenticated: vaState.isVaAuthenticated,
+        vaAccessToken: vaState.vaAccessToken,
+        vaImportStatus: vaState.vaImportStatus,
+        handleVaDataImport,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [vaState.isVaAuthenticated, vaState.vaAccessToken],
+  );
+
+  useEffect(
+    () =>
+      _runPacketClickOutsideEffect(
+        coreState.showDownloadMenu,
+        coreState.setShowDownloadMenu,
+      ),
+    [coreState.showDownloadMenu, coreState.setShowDownloadMenu],
+  );
+
+  useEffect(
+    () =>
+      _runPacketBackupGuideEffect(
+        coreState.claims.length,
+        coreState.setHasExternalBackup,
+        coreState.setShowBackupGuide,
+      ),
+    [
+      coreState.claims.length,
+      coreState.setHasExternalBackup,
+      coreState.setShowBackupGuide,
+    ],
   );
 }
 
@@ -5359,66 +5742,15 @@ const MyPacket = ({
     ..._buildPacketStatementHandlers(ctx),
   };
 
-  useEffect(
-    () =>
-      _runPacketInitLoadEffect({
-        setClaims: coreState.setClaims,
-        setStats: coreState.setStats,
-        setSavedForms: tabsState.setSavedForms,
-        setMyRatings: tabsState.setMyRatings,
-        setServiceHistory: serviceHistoryState.setServiceHistory,
-        setTimelineEvents: timelinePainState.setTimelineEvents,
-        setPainMaps: timelinePainState.setPainMaps,
-        setVeteranProfile,
-        setVaRecords: vaState.setVaRecords,
-        setAIStatus: serviceHistoryState.setAIStatus,
-      }),
-    [
-      coreState.setClaims,
-      coreState.setStats,
-      tabsState.setSavedForms,
-      tabsState.setMyRatings,
-      serviceHistoryState.setServiceHistory,
-      timelinePainState.setTimelineEvents,
-      timelinePainState.setPainMaps,
-      serviceHistoryState.setAIStatus,
-      vaState.setVaRecords,
-    ],
-  );
-
-  useEffect(
-    () =>
-      _runPacketVaAutoImportEffect({
-        isVaAuthenticated: vaState.isVaAuthenticated,
-        vaAccessToken: vaState.vaAccessToken,
-        vaImportStatus: vaState.vaImportStatus,
-        handleVaDataImport: handlers.handleVaDataImport,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [vaState.isVaAuthenticated, vaState.vaAccessToken],
-  );
-
-  useEffect(
-    () =>
-      _runPacketClickOutsideEffect(
-        coreState.showDownloadMenu,
-        coreState.setShowDownloadMenu,
-      ),
-    [coreState.showDownloadMenu, coreState.setShowDownloadMenu],
-  );
-  useEffect(
-    () =>
-      _runPacketBackupGuideEffect(
-        coreState.claims.length,
-        coreState.setHasExternalBackup,
-        coreState.setShowBackupGuide,
-      ),
-    [
-      coreState.claims.length,
-      coreState.setHasExternalBackup,
-      coreState.setShowBackupGuide,
-    ],
-  );
+  _useMyPacketEffects({
+    coreState,
+    tabsState,
+    serviceHistoryState,
+    timelinePainState,
+    vaState,
+    setVeteranProfile,
+    handleVaDataImport: handlers.handleVaDataImport,
+  });
 
   return <MyPacketView state={state} handlers={handlers} />;
 };
