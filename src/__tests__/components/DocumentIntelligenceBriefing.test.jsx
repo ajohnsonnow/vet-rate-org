@@ -8,8 +8,9 @@
  * screen indefinitely.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import DocumentIntelligenceBriefing from "../../components/DocumentIntelligenceBriefing.jsx";
+import { detectConflicts } from "../../utils/conflictDetector";
 
 vi.mock("../../utils/conflictDetector", () => ({
   detectConflicts: vi.fn().mockResolvedValue([]),
@@ -151,6 +152,89 @@ describe("DocumentIntelligenceBriefing — falsy primitive field verification", 
     }
 
     await waitFor(() => expect(saveBtn).toBeEnabled());
+  });
+});
+
+describe("DocumentIntelligenceBriefing — stale async detectConflicts race", () => {
+  it("does not let a slow-resolving detectConflicts from document N clobber document N+1's state", async () => {
+    let resolveDoc1 = null;
+    detectConflicts.mockImplementation((data, type, filename) => {
+      if (filename === "doc1.pdf") {
+        return new Promise((resolve) => {
+          resolveDoc1 = () => resolve([]);
+        });
+      }
+      return Promise.resolve([]);
+    });
+
+    const { rerender } = render(
+      <DocumentIntelligenceBriefing
+        conflicts={[]}
+        extractionResult={{
+          filename: "doc1.pdf",
+          size: 1024,
+          classification: { type: "dd214", confidence: 90 },
+          extractedData: { firstName: "John" },
+          pageCount: 1,
+          method: "vision",
+          visionUsed: true,
+          confidence: 90,
+        }}
+        onVerify={vi.fn()}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    // doc1's detectConflicts is now in-flight and NOT yet resolved.
+    rerender(
+      <DocumentIntelligenceBriefing
+        conflicts={[]}
+        extractionResult={{
+          filename: "doc2.pdf",
+          size: 1024,
+          classification: { type: "dd214", confidence: 90 },
+          extractedData: { status: "approved" },
+          pageCount: 1,
+          method: "vision",
+          visionUsed: true,
+          confidence: 90,
+        }}
+        onVerify={vi.fn()}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const saveBtn = await screen.findByRole("button", {
+      name: /Verify & Save/,
+    });
+
+    const fieldCheckboxes = await waitFor(() => {
+      const boxes = screen.getAllByRole("checkbox").filter((cb) => !cb.checked);
+      expect(boxes.length).toBeGreaterThanOrEqual(1);
+      return boxes;
+    });
+    for (const cb of fieldCheckboxes) {
+      fireEvent.click(cb);
+    }
+
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+
+    // NOW doc1's stale detectConflicts resolves, AFTER doc2 was already
+    // fully checked off and Verify & Save was enabled — this is the race:
+    // does it clobber doc2's state with doc1's stale field set?
+    await act(async () => {
+      resolveDoc1();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // Exact match — a static OCR-hint panel elsewhere always renders
+    // "Box 1: First Name Only", which is unrelated to whether doc1's
+    // firstName field itself got reintroduced into doc2's field list.
+    expect(screen.queryByText("First Name")).not.toBeInTheDocument();
+    expect(saveBtn).toBeEnabled();
   });
 });
 
