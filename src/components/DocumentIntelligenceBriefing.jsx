@@ -816,6 +816,7 @@ function useDocumentBriefingData({
       for (const [field, value] of Object.entries(currentData)) {
         if (EXCLUDED_METADATA_FIELDS.includes(field)) continue;
         if (value === null || value === undefined || value === "") continue;
+        if (Array.isArray(value) && value.length === 0) continue;
         if (shouldCollectField(field, classification.type)) {
           filtered[field] = value;
         }

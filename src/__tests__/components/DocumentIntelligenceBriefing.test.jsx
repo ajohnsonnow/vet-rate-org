@@ -153,3 +153,29 @@ describe("DocumentIntelligenceBriefing — falsy primitive field verification", 
     await waitFor(() => expect(saveBtn).toBeEnabled());
   });
 });
+
+describe("DocumentIntelligenceBriefing — empty-array field verification", () => {
+  it("enables Verify & Save when a field's value is an empty array", async () => {
+    renderBriefing({
+      firstName: "John",
+      // DD214 vision extraction defaults this to [] when nothing is found —
+      // it must never enter filteredData if it renders no checkbox to match.
+      foreignServiceLocations: [],
+    });
+
+    const saveBtn = await screen.findByRole("button", {
+      name: /Verify & Save/,
+    });
+
+    const fieldCheckboxes = await waitFor(() => {
+      const boxes = screen.getAllByRole("checkbox").filter((cb) => !cb.checked);
+      expect(boxes.length).toBeGreaterThan(0);
+      return boxes;
+    });
+    for (const cb of fieldCheckboxes) {
+      fireEvent.click(cb);
+    }
+
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+  });
+});
