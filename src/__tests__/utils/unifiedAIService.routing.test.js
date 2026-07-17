@@ -29,7 +29,7 @@ vi.mock("../../utils/diamondSwarm", async (importOriginal) => {
 
 // ── Mock wllamaService (no WASM in test env) ──────────────────────────────────
 vi.mock("../../utils/wllamaService", () => ({
-  initializeWllama: vi.fn().mockResolvedValue({ success: false }),
+  initializeWllama: vi.fn().mockResolvedValue(false),
   isWllamaAvailable: vi.fn().mockReturnValue(false),
   generateWithModel: vi.fn(),
   getWllamaStatus: vi.fn().mockReturnValue({ ready: false }),
@@ -39,13 +39,11 @@ vi.mock("../../utils/wllamaService", () => ({
 
 // ── Mock deviceCapabilityDetector (skip the real GPU/tier probing) ───────────
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
-  detectDeviceCapabilities: vi
-    .fn()
-    .mockResolvedValue({
-      tier: "desktop",
-      hasWebGPU: true,
-      canUseWebLLM: true,
-    }),
+  detectDeviceCapabilities: vi.fn().mockResolvedValue({
+    tier: "desktop",
+    hasWebGPU: true,
+    canUseWebLLM: true,
+  }),
 }));
 
 // ── Mock localServerClient (no llama.cpp in CI) ───────────────────────────────
@@ -293,7 +291,7 @@ describe("getEffectiveAIMode — routing contract", () => {
 // silently keeping wasm-mode permanently unavailable.
 describe("initializeWllama — wllamaService call shape", () => {
   it("passes onProgress wrapped in an options object, not positionally", async () => {
-    wllamaServiceInitialize.mockResolvedValueOnce({ success: true });
+    wllamaServiceInitialize.mockResolvedValueOnce(true);
     await initializeWllama("auditor");
     expect(wllamaServiceInitialize).toHaveBeenCalledWith("auditor", {
       onProgress: null,
@@ -301,11 +299,27 @@ describe("initializeWllama — wllamaService call shape", () => {
   });
 
   it("forwards a caller-supplied onProgress inside the options object", async () => {
-    wllamaServiceInitialize.mockResolvedValueOnce({ success: true });
+    wllamaServiceInitialize.mockResolvedValueOnce(true);
     const onProgress = vi.fn();
     await initializeWllama("writer", onProgress);
     expect(wllamaServiceInitialize).toHaveBeenCalledWith("writer", {
       onProgress,
     });
+  });
+});
+
+// Regression: wllamaService.initializeWllama resolves a plain boolean (or
+// throws), never a { success, error } object. initializeWllama() here read
+// result.success, which is undefined on a boolean — always falsy — so
+// success was never detected even when the model loaded correctly.
+describe("initializeWllama — return value shape", () => {
+  it("returns true when wllamaService resolves true", async () => {
+    wllamaServiceInitialize.mockResolvedValueOnce(true);
+    await expect(initializeWllama("auditor")).resolves.toBe(true);
+  });
+
+  it("returns false when wllamaService resolves false", async () => {
+    wllamaServiceInitialize.mockResolvedValueOnce(false);
+    await expect(initializeWllama("auditor")).resolves.toBe(false);
   });
 });
