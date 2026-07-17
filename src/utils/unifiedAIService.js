@@ -52,6 +52,22 @@ const getAISystemPrompts = async () => {
   return aiSystemPromptsModule;
 };
 
+// Some engine rejections aren't Error instances (e.g. an OpenAI-style
+// {error:{message}} payload from the WebLLM engine) — `.message` on those
+// is undefined and silently swallows the real failure reason in our
+// wrapped error text. Normalize before interpolating.
+const _describeThrown = (err) => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  if (typeof err?.message === "string") return err.message;
+  if (typeof err?.error?.message === "string") return err.error.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+};
+
 // Storage keys
 const AI_MODE_KEY = "vet_rate_ai_mode"; // 'cloud' | 'local' | 'swarm'
 const GEMINI_KEY = "vetrate_gemini_key";
@@ -243,7 +259,7 @@ export const checkWebGPUSupport = async () => {
     } catch (err) {
       webGPUSupported = {
         supported: false,
-        reason: `WebGPU initialization failed: ${err.message}. Try using Chrome or Edge.`,
+        reason: `WebGPU initialization failed: ${_describeThrown(err)}. Try using Chrome or Edge.`,
       };
       return webGPUSupported;
     }
@@ -1156,7 +1172,9 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     return result.text;
   } catch (err) {
     swarmGenerating = false;
-    throw new Error(`Warrant Council error (${agentId}): ${err.message}`);
+    throw new Error(
+      `Warrant Council error (${agentId}): ${_describeThrown(err)}`,
+    );
   }
 };
 
@@ -1227,7 +1245,7 @@ const generateWithWllama = async (prompt, options = {}) => {
 
     return result.text;
   } catch (err) {
-    throw new Error(`Wllama error: ${err.message}`);
+    throw new Error(`Wllama error: ${_describeThrown(err)}`);
   }
 };
 
@@ -1303,7 +1321,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
 
     return result.text;
   } catch (err) {
-    throw new Error(`Local Server error: ${err.message}`);
+    throw new Error(`Local Server error: ${_describeThrown(err)}`);
   }
 };
 
@@ -2323,7 +2341,7 @@ async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
       }
     } catch (fallbackErr) {
       throw new Error(
-        `All AI modes failed. Primary: ${err.message}. Fallback: ${fallbackErr.message}`,
+        `All AI modes failed. Primary: ${_describeThrown(err)}. Fallback: ${_describeThrown(fallbackErr)}`,
       );
     }
   }
