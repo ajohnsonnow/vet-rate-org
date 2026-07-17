@@ -43,7 +43,7 @@ export const WLLAMA_MODELS = {
     url: "/models/vetrate-auditor-7b-v2-Q4_K_M.gguf",
     // Fallback to HuggingFace or other CDN
     fallbackUrl:
-      "https://huggingface.co/ajohnsonnow/vetrate-auditor-7b-v2-gguf/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf",
+      "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Auditor-7B-GGUF/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claims reviewer.
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
@@ -55,7 +55,7 @@ Be thorough but compassionate - veterans deserve accurate guidance.`,
     description: "Creates compelling personal statements",
     url: "/models/vetrate-writer-7b-v2-Q4_K_M.gguf",
     fallbackUrl:
-      "https://huggingface.co/ajohnsonnow/vetrate-writer-7b-v2-gguf/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf",
+      "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Writer-7B-GGUF/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW4 Writer, a Chief Warrant Officer Four specializing in VA claims documentation.
 Write compelling, truthful personal statements from the veteran's perspective.
@@ -67,7 +67,7 @@ Use medical terminology correctly. Balance emotional resonance with factual accu
     description: "Calculates VA disability ratings",
     url: "/models/vetrate-rater-7b-v2-Q4_K_M.gguf",
     fallbackUrl:
-      "https://huggingface.co/ajohnsonnow/vetrate-rater-7b-v2-gguf/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf",
+      "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Rater-7B-GGUF/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW3 Rater, a Chief Warrant Officer Three expert in VA disability calculations.
 Calculate combined ratings using the official VA bilateral factor formula.
