@@ -575,7 +575,9 @@ export const initializeWllama = async (
     // eslint-disable-next-line no-console
     console.log(`🌐 Initializing Wllama with ${modelName}...`);
 
-    const result = await wllamaService.initializeWllama(modelName, onProgress);
+    const result = await wllamaService.initializeWllama(modelName, {
+      onProgress,
+    });
 
     if (result.success) {
       wllamaReady = true;

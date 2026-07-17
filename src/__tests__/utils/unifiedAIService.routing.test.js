@@ -37,6 +37,17 @@ vi.mock("../../utils/wllamaService", () => ({
   WLLAMA_MODELS: {},
 }));
 
+// ── Mock deviceCapabilityDetector (skip the real GPU/tier probing) ───────────
+vi.mock("../../utils/deviceCapabilityDetector", () => ({
+  detectDeviceCapabilities: vi
+    .fn()
+    .mockResolvedValue({
+      tier: "desktop",
+      hasWebGPU: true,
+      canUseWebLLM: true,
+    }),
+}));
+
 // ── Mock localServerClient (no llama.cpp in CI) ───────────────────────────────
 vi.mock("../../utils/localServerClient", () => ({
   checkServerHealth: vi.fn().mockResolvedValue({ available: false }),
@@ -65,7 +76,9 @@ import {
   isDiamondSwarmReady,
   registerSwarmEngine,
   getAIPreset,
+  initializeWllama,
 } from "../../utils/unifiedAIService";
+import { initializeWllama as wllamaServiceInitialize } from "../../utils/wllamaService";
 
 // Keys mirror the private constants in the module
 const AI_MODE_KEY = "vet_rate_ai_mode";
@@ -267,5 +280,32 @@ describe("getEffectiveAIMode — routing contract", () => {
     registerReadySwarm();
     localStorage.setItem(GEMINI_KEY, VALID_GEMINI_KEY);
     expect(getEffectiveAIMode()).toBe(AI_MODES.SWARM);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Regression: initializeWllama() called wllamaService.initializeWllama(model,
+// onProgress) — a raw callback (or null, with no caller-supplied progress
+// handler) — positionally, where wllamaService destructures its second arg
+// as an options object ({ onProgress, useCache } = options). A null/function
+// second arg made every no-progress-callback init throw
+// "Cannot destructure property 'onProgress' of 'options' as it is null",
+// silently keeping wasm-mode permanently unavailable.
+describe("initializeWllama — wllamaService call shape", () => {
+  it("passes onProgress wrapped in an options object, not positionally", async () => {
+    wllamaServiceInitialize.mockResolvedValueOnce({ success: true });
+    await initializeWllama("auditor");
+    expect(wllamaServiceInitialize).toHaveBeenCalledWith("auditor", {
+      onProgress: null,
+    });
+  });
+
+  it("forwards a caller-supplied onProgress inside the options object", async () => {
+    wllamaServiceInitialize.mockResolvedValueOnce({ success: true });
+    const onProgress = vi.fn();
+    await initializeWllama("writer", onProgress);
+    expect(wllamaServiceInitialize).toHaveBeenCalledWith("writer", {
+      onProgress,
+    });
   });
 });
