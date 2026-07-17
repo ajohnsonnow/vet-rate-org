@@ -191,7 +191,7 @@ describe("analyzeCFile — excluded-page metadata", () => {
   );
 
   it(
-    "surfaces pages the AI skipped because a chunk fell below the score floor",
+    "analyzes low-score medically-flagged pages instead of skipping them (full-coverage policy)",
     { timeout: 20000 },
     async () => {
       const engine = makeEngine(() => OK_JSON);
@@ -199,7 +199,10 @@ describe("analyzeCFile — excluded-page metadata", () => {
       registerLegacyEngine(engine);
 
       // Pages 1-4 highly relevant; pages 5-8 medically-flagged (Gate 2 passes on
-      // "pain") but score 0 (no scored terms) → their chunk is floor-excluded.
+      // "pain") but score 0 (no scored terms). With the relevance floor (Gate 3,
+      // MIN_CLAIMS_SCORE=0) disabled for full coverage, their chunk is now
+      // ANALYZED rather than floor-excluded — no page carrying a medical signal
+      // is dropped for a low keyword score.
       let text = "";
       for (let p = 1; p <= 4; p++) {
         text += page(
@@ -218,10 +221,9 @@ describe("analyzeCFile — excluded-page metadata", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.metadata.chunksExcludedFromAI).toBeGreaterThanOrEqual(1);
-      expect(result.metadata.pagesExcludedFromAI).toBeGreaterThanOrEqual(1);
-      // The excluded count must never exceed the document's page count.
-      expect(result.metadata.pagesExcludedFromAI).toBeLessThanOrEqual(8);
+      // Full-coverage: the low-score chunk is no longer floor-excluded.
+      expect(result.metadata.chunksExcludedFromAI).toBe(0);
+      expect(result.metadata.pagesExcludedFromAI).toBe(0);
     },
   );
 
