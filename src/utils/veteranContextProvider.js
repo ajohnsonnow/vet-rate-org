@@ -30,29 +30,16 @@ import {
 } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
 import { getMyRatings } from "./veteranProfile";
+import { normalizeConditionName } from "./conditionName";
 
 // ============================================================
 // CONDITION NORMALIZATION + RECORD AGGREGATION
 // ============================================================
 
-/**
- * Normalize a condition name for duplicate detection.
- * "Tinnitus (Service Connected)" / "TINNITUS" / " tinnitus. " all collapse
- * to "tinnitus" so analyzer output, saved claims, and manual entries merge
- * instead of stacking duplicates.
- */
-export const normalizeConditionName = (name) => {
-  if (typeof name !== "string") return "";
-  return (
-    name
-      .toLowerCase()
-      // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
-      .replace(/\([^)]*\)/g, " ")
-      .replace(/[^a-z0-9\s]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-  );
-};
+// Re-exported from the shared leaf module so existing importers
+// (TacticalCalculator, tests) keep their `veteranContextProvider` entry-point,
+// while veteranKnowledgeBase's migration path shares the exact same normalizer.
+export { normalizeConditionName };
 
 /**
  * Pure candidate builder (unit-testable): merges rated conditions from the
@@ -86,10 +73,15 @@ export const buildConditionCandidates = ({
   claims.forEach((c) =>
     push(c.conditionName, c.selectedRating ?? c.ratingPercent, "claims"),
   );
+  // vkbClaims unions two shapes during the schema transition: legacy
+  // off-schema claims ({condition, rating/ratingPercent/selectedRating}) and
+  // canonical medicalConditions.current ({name, ratedPercentage}). Unrated
+  // C-File suggestions carry no rating and are dropped by push()'s finite-rating
+  // guard, so they never reach the calculator.
   vkbClaims.forEach((c) =>
     push(
-      c.condition || c.conditionName,
-      c.selectedRating ?? c.ratingPercent ?? c.rating,
+      c.condition || c.conditionName || c.name,
+      c.selectedRating ?? c.ratingPercent ?? c.rating ?? c.ratedPercentage,
       "vkb",
     ),
   );
@@ -112,7 +104,16 @@ export const getLoadableConditions = async () => {
       loadVKB(),
       new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
     ]);
-    vkbClaims = Array.isArray(vkb?.claims) ? vkb.claims : [];
+    // Dual-read during the schema transition: canonical
+    // medicalConditions.current is the source of truth, but legacy vkb.claims
+    // may still hold pre-migration data on VKBs that haven't been re-loaded
+    // (loadVKB migrates on load, but a racing/timed-out load can return null).
+    // buildConditionCandidates dedups the union by normalized name.
+    const canonicalCurrent = Array.isArray(vkb?.medicalConditions?.current)
+      ? vkb.medicalConditions.current
+      : [];
+    const legacyClaims = Array.isArray(vkb?.claims) ? vkb.claims : [];
+    vkbClaims = [...canonicalCurrent, ...legacyClaims];
   } catch {
     // VKB unavailable (e.g. private browsing) — claims store still works
   }

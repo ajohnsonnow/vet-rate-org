@@ -17,6 +17,7 @@
  */
 
 import { ensureQuota } from "./storage";
+import { normalizeConditionName } from "./conditionName";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
@@ -202,6 +203,127 @@ export const initializeVKB = () => {
 };
 
 /**
+ * Move a legacy off-schema `vkb.claims[]` entry into `medicalConditions.current`
+ * unless a same-named condition is already there. Returns true if it inserted.
+ */
+function _migrateLegacyClaim(claim, current, existing) {
+  const name = claim.condition || claim.conditionName || claim.name;
+  const key = normalizeConditionName(name);
+  if (!key || existing.has(key)) return false;
+  existing.add(key);
+  const rating = Number(
+    claim.selectedRating ??
+      claim.ratingPercent ??
+      claim.rating ??
+      claim.ratedPercentage,
+  );
+  const entry = {
+    name,
+    source: claim.source || "Migrated (legacy claim)",
+    serviceConnected: claim.serviceConnected ?? false,
+  };
+  if (Number.isFinite(rating)) entry.ratedPercentage = rating;
+  if (claim.diagnosticCode) entry.diagnosticCode = claim.diagnosticCode;
+  current.push(entry);
+  return true;
+}
+
+/**
+ * Move a legacy off-schema `vkb.evidence[]` entry into `evidenceTimeline`
+ * unless a same date+type+description event is already there.
+ */
+function _migrateLegacyEvidence(item, timeline, existing) {
+  const timelineKey = (e) =>
+    `${e.date || ""}|${(e.eventType || e.type || "").toLowerCase()}|${normalizeConditionName(e.description || e.text || "")}`;
+  const key = timelineKey(item);
+  if (existing.has(key)) return false;
+  existing.add(key);
+  timeline.push({
+    date: item.date || "",
+    eventType: item.eventType || item.type || "legacy_event",
+    description: item.description || item.text || "",
+    source: item.source || "Migrated (legacy evidence)",
+    significance: item.significance || "",
+  });
+  return true;
+}
+
+/**
+ * One-time, idempotent migration of legacy off-schema VKB fields into the
+ * canonical schema, so readers repointed at the schema (getLoadableConditions,
+ * the AI-context builders) see data written before the schema existed.
+ *
+ * - `vkb.claims[]`   → `medicalConditions.current[]` (dedup by normalized name)
+ * - `vkb.evidence[]` → `evidenceTimeline[]`          (dedup by date+type+desc)
+ *
+ * The legacy arrays are LEFT IN PLACE so transition-release readers can
+ * dual-read; a later release drops them. Guarded by
+ * `metadata.migratedOffSchema` so it runs exactly once per VKB.
+ *
+ * Pure (no IndexedDB); the caller persists when `changed` is true.
+ *
+ * @returns {{ vkb: object, changed: boolean }}
+ */
+export const migrateOffSchemaVKB = (vkb) => {
+  if (!vkb || typeof vkb !== "object") return { vkb, changed: false };
+  vkb.metadata = vkb.metadata || {};
+  if (vkb.metadata.migratedOffSchema) return { vkb, changed: false };
+
+  let changed = false;
+
+  if (Array.isArray(vkb.claims) && vkb.claims.length > 0) {
+    vkb.medicalConditions = vkb.medicalConditions || {};
+    vkb.medicalConditions.current = vkb.medicalConditions.current || [];
+    const current = vkb.medicalConditions.current;
+    const existing = new Set(
+      current.map((c) => normalizeConditionName(c.name || c.condition)),
+    );
+    vkb.claims.forEach((claim) => {
+      if (_migrateLegacyClaim(claim, current, existing)) changed = true;
+    });
+  }
+
+  if (Array.isArray(vkb.evidence) && vkb.evidence.length > 0) {
+    vkb.evidenceTimeline = vkb.evidenceTimeline || [];
+    const timeline = vkb.evidenceTimeline;
+    const existing = new Set(
+      timeline.map(
+        (e) =>
+          `${e.date || ""}|${(e.eventType || e.type || "").toLowerCase()}|${normalizeConditionName(e.description || e.text || "")}`,
+      ),
+    );
+    vkb.evidence.forEach((item) => {
+      if (_migrateLegacyEvidence(item, timeline, existing)) changed = true;
+    });
+  }
+
+  vkb.metadata.migratedOffSchema = true;
+  return { vkb, changed };
+};
+
+/**
+ * Apply the one-time off-schema migration to a freshly loaded VKB and persist
+ * it. Returns the in-memory migrated VKB synchronously (via the async wrapper)
+ * so readers never wait on a full VKB write; the persist runs in the background
+ * and, being idempotent, is safe to re-run if a reload beats the write.
+ */
+async function _migrateAndPersist(vkb) {
+  if (vkb?.metadata?.migratedOffSchema) return vkb;
+  try {
+    migrateOffSchemaVKB(vkb);
+  } catch (err) {
+    console.error("Off-schema VKB migration failed:", err);
+    return vkb;
+  }
+  // Fire-and-forget: record the moved data + migratedOffSchema flag without
+  // blocking the load. saveVKB catches its own errors, so this is defensive.
+  saveVKB(vkb).catch((err) =>
+    console.error("Off-schema VKB persist failed:", err),
+  );
+  return vkb;
+}
+
+/**
  * Load VKB from IndexedDB (primary) or localStorage (legacy fallback)
  */
 export const loadVKB = async () => {
@@ -222,7 +344,8 @@ export const loadVKB = async () => {
             metadata: request.result.metadata,
             source: "indexeddb",
           });
-          resolve(request.result);
+          // One-time off-schema → canonical migration (persists in background).
+          _migrateAndPersist(request.result).then(resolve);
         } else {
           // Try localStorage for legacy data
           // eslint-disable-next-line no-console
@@ -242,6 +365,9 @@ export const loadVKB = async () => {
                 console.log(
                   "📂 Migrating legacy localStorage VKB to IndexedDB",
                 );
+                // Fold in the off-schema → canonical migration before the
+                // single write that moves this VKB into IndexedDB.
+                migrateOffSchemaVKB(parsed);
                 saveVKB(parsed).then(() => resolve(parsed));
               }
             } else {

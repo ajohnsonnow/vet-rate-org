@@ -81,6 +81,33 @@ describe("buildConditionCandidates", () => {
   it("handles empty input", () => {
     expect(buildConditionCandidates()).toEqual([]);
   });
+
+  it("reads canonical medicalConditions.current shape (name + ratedPercentage)", () => {
+    // getLoadableConditions unions medicalConditions.current into vkbClaims.
+    // Rated migrated/decision conditions carry {name, ratedPercentage}; unrated
+    // C-File suggestions carry {name, source} and must be excluded.
+    const out = buildConditionCandidates({
+      vkbClaims: [
+        { name: "Migrated Knee Strain", ratedPercentage: 20, source: "x" },
+        { name: "Tinnitus", source: "C-File Analysis" }, // suggestion, no rating
+      ],
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: "Migrated Knee Strain", rating: 20 });
+  });
+
+  it("dedups a rated legacy claim against the canonical copy of the same name", () => {
+    // Post-migration a rated condition lives in BOTH current (canonical) and
+    // the still-present legacy claims array; the union must yield one candidate.
+    const out = buildConditionCandidates({
+      vkbClaims: [
+        { name: "Lumbar Strain", ratedPercentage: 20 }, // canonical (listed first)
+        { condition: "Lumbar Strain", ratingPercent: 20 }, // legacy dual-read
+      ],
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: "Lumbar Strain", rating: 20 });
+  });
 });
 
 const CFILE_ANALYSIS_FIXTURE = {
@@ -176,10 +203,12 @@ describe("buildVkbMergeFromCFile — C-File → canonical VKB merge shape", () =
     expect(types).toEqual(
       expect.arrayContaining(["Burn Pits", "Noise exposure"]),
     );
-    expect(merge.environmentalExposures.find((e) => e.type === "Burn Pits")).toMatchObject(
-      { location: "Balad", dates: "2004" },
+    expect(
+      merge.environmentalExposures.find((e) => e.type === "Burn Pits"),
+    ).toMatchObject({ location: "Balad", dates: "2004" });
+    const presumptiveConds = merge.presumptiveConditions.map(
+      (p) => p.condition,
     );
-    const presumptiveConds = merge.presumptiveConditions.map((p) => p.condition);
     expect(presumptiveConds).toEqual(
       expect.arrayContaining(["Asthma", "Rhinitis"]),
     );
