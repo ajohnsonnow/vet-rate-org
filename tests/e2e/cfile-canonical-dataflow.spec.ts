@@ -1,5 +1,5 @@
 /**
- * C-File → canonical VKB dataflow (Wave 1 + 2a regression spec).
+ * C-File → canonical VKB dataflow (Wave 1 + 2a + 2b regression spec).
  *
  * Drives the app's REAL write path — saveAnalysisResults() with the exact
  * vkbMergeData the production CFileAnalyzer builds via buildVkbMergeFromCFile()
@@ -16,6 +16,9 @@
  *  4. The MyPacket Documents tab shows the marker; the Claims tab shows the
  *     read-only "Identified in your C-File" section; the claim-stat counters
  *     are unchanged (C-File suggestions are never counted).
+ *  5. (Wave 2b) getLoadableConditions() unions a RATED canonical condition with
+ *     a RATED legacy claim (dual-read) for the calculator, while the unrated
+ *     C-File suggestion is excluded — suggestions never feed the calculator.
  *
  * Marker: ZZMARKERTINNITUS (synthetic, no PII).
  *
@@ -54,6 +57,14 @@ interface TabReport {
   hasMarker: boolean;
   hasIdentifiedSection: boolean;
 }
+
+interface LoadableReport {
+  names: string[];
+  ratings: Record<string, number>;
+}
+
+const RATED_CANONICAL = "ZZRATEDKNEE";
+const RATED_LEGACY = "ZZLEGACYBACK";
 
 async function boot(page: Page): Promise<void> {
   await page.addInitScript(
@@ -273,6 +284,41 @@ async function readClaimStatTotal(page: Page): Promise<number> {
   });
 }
 
+// Seed one RATED condition into the canonical field and one RATED legacy claim
+// into the off-schema array, so getLoadableConditions must union both shapes.
+async function seedRatedConditions(page: Page): Promise<void> {
+  await page.evaluate(
+    async ({ canonical, legacy }) => {
+      const { vkbMod } = window.__verifyMods;
+      const vkb: Record<string, unknown> = await vkbMod.loadVKB();
+      const mc = (vkb.medicalConditions || {}) as { current?: unknown[] };
+      mc.current = Array.isArray(mc.current) ? mc.current : [];
+      mc.current.push({
+        name: canonical,
+        ratedPercentage: 20,
+        source: "Decision Letter",
+        serviceConnected: true,
+      });
+      vkb.medicalConditions = mc;
+      const claims = Array.isArray(vkb.claims) ? vkb.claims : [];
+      claims.push({ condition: legacy, ratingPercent: 30 });
+      vkb.claims = claims;
+      await vkbMod.saveVKB(vkb);
+    },
+    { canonical: RATED_CANONICAL, legacy: RATED_LEGACY },
+  );
+}
+
+async function readLoadableConditions(page: Page): Promise<LoadableReport> {
+  return page.evaluate(async () => {
+    const list: Array<{ name: string; rating: number }> =
+      await window.__verifyMods.provider.getLoadableConditions();
+    const ratings: Record<string, number> = {};
+    for (const c of list) ratings[c.name] = c.rating;
+    return { names: list.map((c) => c.name), ratings };
+  });
+}
+
 async function walkMyPacketTabs(page: Page): Promise<TabReport[]> {
   await page.goto("/", { waitUntil: "domcontentloaded", timeout: 90_000 });
   await page
@@ -373,5 +419,28 @@ test.describe("C-File canonical dataflow (Wave 1 + 2a)", () => {
     // Counter unchanged after browsing the UI.
     const claimTotalAfter = await readClaimStatTotal(page);
     expect(claimTotalAfter).toBe(claimTotalBefore);
+
+    // ── Assertion 5 (Wave 2b): getLoadableConditions dual-read union.
+    // Seed a RATED canonical condition + a RATED legacy claim, then confirm the
+    // calculator loader surfaces BOTH shapes and still excludes the unrated
+    // C-File suggestion (the marker) — suggestions must never feed the calc.
+    // walkMyPacketTabs navigated the page, so re-inject the util modules.
+    await injectMods(page);
+    await seedRatedConditions(page);
+    const loadable = await readLoadableConditions(page);
+    expect(
+      loadable.names,
+      "canonical rated condition must be loadable",
+    ).toContain(RATED_CANONICAL);
+    expect(
+      loadable.names,
+      "legacy rated claim must be loadable (dual-read)",
+    ).toContain(RATED_LEGACY);
+    expect(loadable.ratings[RATED_CANONICAL]).toBe(20);
+    expect(loadable.ratings[RATED_LEGACY]).toBe(30);
+    expect(
+      loadable.names,
+      "unrated C-File suggestion must NOT be loadable into the calculator",
+    ).not.toContain(MARKER);
   });
 });
