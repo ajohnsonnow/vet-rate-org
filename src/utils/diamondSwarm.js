@@ -21,6 +21,21 @@ import {
   getCachedDeviceProfile,
 } from "./deviceCapabilityDetector";
 
+// Errors crossing the WebLLM worker boundary aren't guaranteed to survive as
+// real Error instances — a rejection can arrive with .message undefined,
+// silently swallowing the real failure reason (and defeating the Cache-error
+// retry check below, which also reads .message).
+const _describeThrown = (err) => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  if (typeof err?.message === "string") return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+};
+
 // Storage keys
 const SWARM_CONFIG_KEY = "vetrate_diamond_swarm_config";
 const _SWARM_STATUS_KEY = "vetrate_diamond_swarm_status";
@@ -456,10 +471,11 @@ async function _loadModelFromList(
       return { modelId, engine, worker }; // Success!
     } catch (modelError) {
       worker?.terminate();
-      console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
+      const reason = _describeThrown(modelError);
+      console.warn(`💎 Failed to load ${modelId}:`, reason);
 
       // If cache error, try to clear and retry once
-      if (modelError.message?.includes("Cache") && modelId === modelList[0]) {
+      if (reason.includes("Cache") && modelId === modelList[0]) {
         // eslint-disable-next-line no-console
         console.log("💎 Attempting to clear corrupted cache...");
         await clearCorruptedCache();
