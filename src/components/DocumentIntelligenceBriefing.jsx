@@ -1360,37 +1360,9 @@ function getAwardsDisplayData(fieldKey, value, filteredData) {
   };
 }
 
-function ArrayValueField({
-  fieldKey,
-  value,
-  filteredData,
-  getTooltip,
-  onArrayItemDelete,
-}) {
-  const {
-    sortedVisualAwards,
-    badges,
-    tabs,
-    combatIndicators,
-    branchForBadges,
-  } = getAwardsDisplayData(fieldKey, value, filteredData);
-
+function ArrayValueVisuals({ sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges, value }) {
   return (
-    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-        {fieldKey.charAt(0).toUpperCase() +
-          fieldKey.slice(1).replace(/([A-Z])/g, " $1")}
-        {getTooltip(fieldKey) && (
-          <span
-            className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
-            aria-label={getTooltip(fieldKey)}
-          >
-            💡
-          </span>
-        )}
-      </label>
-
-      {/* Combat Indicator Alert */}
+    <>
       {combatIndicators.length > 0 && (
         <CombatIndicatorSummary
           badges={badges.filter((b) => b.combatIndicator)}
@@ -1398,7 +1370,6 @@ function ArrayValueField({
         />
       )}
 
-      {/* Badges Display (above ribbons) */}
       {badges.length > 0 && (
         <div className="mb-4">
           <BadgeDisplay
@@ -1411,7 +1382,6 @@ function ArrayValueField({
         </div>
       )}
 
-      {/* Visual Ribbon Rack for awards */}
       {sortedVisualAwards.length > 0 && (
         <div className="mb-4 flex justify-center">
           <RibbonRackDisplay
@@ -1422,25 +1392,72 @@ function ArrayValueField({
           />
         </div>
       )}
+    </>
+  );
+}
 
-      {/* Text list of awards with delete buttons */}
-      <ul className="space-y-1 text-sm">
-        {value.map((item, idx) => (
-          <li
-            key={idx}
-            className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
+function ArrayValueList({ fieldKey, value, onArrayItemDelete }) {
+  return (
+    <ul className="space-y-1 text-sm">
+      {value.map((item, idx) => (
+        <li
+          key={idx}
+          className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
+        >
+          <span>• {formatArrayItem(item)}</span>
+          <button
+            onClick={() => onArrayItemDelete(fieldKey, idx)}
+            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
+            aria-label="Remove this item (OCR error?)"
           >
-            <span>• {formatArrayItem(item)}</span>
-            <button
-              onClick={() => onArrayItemDelete(fieldKey, idx)}
-              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
-              aria-label="Remove this item (OCR error?)"
+            🗑️
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ArrayValueField({
+  fieldKey,
+  value,
+  filteredData,
+  getTooltip,
+  onArrayItemDelete,
+  checked,
+  onCheckChange,
+}) {
+  const awardsDisplay = getAwardsDisplayData(fieldKey, value, filteredData);
+
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onCheckChange(e.target.checked)}
+        className="mt-1 w-4 h-4"
+      />
+      <div className="flex-1 min-w-0">
+        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+          {fieldKey.charAt(0).toUpperCase() +
+            fieldKey.slice(1).replace(/([A-Z])/g, " $1")}
+          {getTooltip(fieldKey) && (
+            <span
+              className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
+              aria-label={getTooltip(fieldKey)}
             >
-              🗑️
-            </button>
-          </li>
-        ))}
-      </ul>
+              💡
+            </span>
+          )}
+        </label>
+
+        <ArrayValueVisuals {...awardsDisplay} value={value} />
+        <ArrayValueList
+          fieldKey={fieldKey}
+          value={value}
+          onArrayItemDelete={onArrayItemDelete}
+        />
+      </div>
     </div>
   );
 }
@@ -1476,6 +1493,8 @@ function FieldGroup({
                 filteredData={filteredData}
                 getTooltip={getTooltip}
                 onArrayItemDelete={onArrayItemDelete}
+                checked={verifiedFields[key] || false}
+                onCheckChange={(checked) => onFieldCheck(key, checked)}
               />
             );
           }
