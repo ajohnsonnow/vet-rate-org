@@ -5,8 +5,10 @@ import {
   STRESS_MODE,
   assertTelemetryVerdict,
   bootStressPage,
+  injectStressMods,
   listMusterCorpus,
   openToolByEvent,
+  readDocCategoryCounts,
   shuffled,
   skipUnlessStress,
   startTelemetry,
@@ -121,6 +123,32 @@ test.describe("WS-1 stress: Muster Call randomized batch", () => {
       .filter((name) => statusByName.get(name) !== "SAVED")
       .map((name) => `${name} → ${statusByName.get(name) ?? "MISSING"}`);
     expect(notSaved, "documents that never reached SAVED").toEqual([]);
+
+    // Per-type PLACEMENT: every doc must land in the CORRECT VKB documentation
+    // bucket, not just reach SAVED. addDocumentToVKB routes DD214/service_record
+    // → dd214s and rating_decision/claim_letter → cFiles. The corpus has 4
+    // DD214s + 31 claim/decision letters, so both buckets must be non-empty;
+    // zero in either means a whole document type was misrouted.
+    await injectStressMods(page);
+    const counts = await readDocCategoryCounts(page);
+    expect(
+      counts.dd214s,
+      "DD214 service records not archived to documentation.dd214s",
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      counts.cFiles,
+      "claim/decision letters not archived to documentation.cFiles",
+    ).toBeGreaterThanOrEqual(1);
+
+    // Honest per-type coverage: unlike the C-File, the 35 letters/DD214s have no
+    // ground-truth fixture, and their structured fields route to the separate
+    // veteran-profile store — so we report routing + archived counts as the
+    // recall proxy rather than claiming a field-level recall percentage.
+    const coverage = { submitted: submittedNames.length, byCategory: counts };
+    await testInfo.attach("per-type-doc-coverage", {
+      body: JSON.stringify(coverage, null, 2),
+      contentType: "application/json",
+    });
 
     const report = await telemetry.stop(testInfo);
     assertTelemetryVerdict(report);
