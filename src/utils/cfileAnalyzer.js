@@ -427,24 +427,30 @@ function _repairRegexFieldExtraction(content) {
     };
   }
 
-  if (result.potential_claims.length > 0 || result.servicePeriod.branch) {
+  const hasServiceData = Object.values(result.servicePeriod).some(
+    (v) => typeof v === "string" && v.trim() !== "",
+  );
+  if (result.potential_claims.length > 0 || hasServiceData) {
     // eslint-disable-next-line no-console
     console.log(
       `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
     );
-  } else {
-    // No structured data could be extracted (e.g. purely administrative page
-    // with no conditions or service-period fields). Return the empty template
-    // rather than null so the chunk succeeds as empty instead of going to
-    // failedChunks and triggering the "Partial analysis" banner. The retry
-    // loop already attempted MAX_CHUNK_RETRIES+1 times before reaching this
-    // last-resort strategy, so giving up on data is the correct outcome.
-    // eslint-disable-next-line no-console
-    console.warn(
-      `📝 Regex fallback: no structured data extractable — emitting empty chunk`,
-    );
+    return result;
   }
-  return result;
+
+  // Nothing recoverable from this malformed response. Return null (NOT an empty
+  // template) so _parseChunkAiResponse re-throws, _runChunkWithRetries requests
+  // a fresh response, and — only if the chunk stays unrecoverable across every
+  // retry — it lands in failedChunks and fires the Partial-analysis banner.
+  // Emitting an empty template here would silently drop the chunk's pages with
+  // no signal, the one failure this pipeline must never hide. A genuinely empty
+  // administrative page returns VALID empty JSON that parses without ever
+  // reaching this last-resort strategy, so this cannot suppress real empties.
+  // eslint-disable-next-line no-console
+  console.warn(
+    `📝 Regex fallback: no structured data extractable — signalling failure so the chunk retries instead of dropping`,
+  );
+  return null;
 }
 
 function _repairTruncateBeforeOpenString(content) {
