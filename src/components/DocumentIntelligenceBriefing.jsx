@@ -1462,6 +1462,61 @@ function ArrayValueField({
   );
 }
 
+function formatObjectEntry(key, value) {
+  const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1");
+  if (typeof value === "boolean") return `${label}: ${value ? "Yes" : "No"}`;
+  if (Array.isArray(value)) {
+    return value.length > 0 ? `${label}: ${value.join(", ")}` : null;
+  }
+  if (value === null || value === undefined || value === "") return null;
+  return `${label}: ${value}`;
+}
+
+// Renders a plain-object field (e.g. DD214 combatService: {hasVerifiedCombat,
+// indicators, deployments}) as a readable summary instead of the useless
+// "[object Object]" String(value) produces for anything non-primitive.
+function ObjectValueField({ fieldKey, value, getTooltip, checked, onCheckChange }) {
+  const entries = Object.entries(value)
+    .map(([k, v]) => formatObjectEntry(k, v))
+    .filter(Boolean);
+
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onCheckChange(e.target.checked)}
+        className="mt-1 w-4 h-4"
+      />
+      <div className="flex-1 min-w-0">
+        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+          {fieldKey.charAt(0).toUpperCase() +
+            fieldKey.slice(1).replace(/([A-Z])/g, " $1")}
+          {getTooltip(fieldKey) && (
+            <span
+              className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
+              aria-label={getTooltip(fieldKey)}
+            >
+              💡
+            </span>
+          )}
+        </label>
+        {entries.length > 0 ? (
+          <ul className="space-y-1 text-sm text-gray-900 dark:text-white">
+            {entries.map((line) => (
+              <li key={line}>• {line}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+            No details extracted
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FieldGroup({
   category,
   fields,
@@ -1493,6 +1548,19 @@ function FieldGroup({
                 filteredData={filteredData}
                 getTooltip={getTooltip}
                 onArrayItemDelete={onArrayItemDelete}
+                checked={verifiedFields[key] || false}
+                onCheckChange={(checked) => onFieldCheck(key, checked)}
+              />
+            );
+          }
+
+          if (typeof value === "object") {
+            return (
+              <ObjectValueField
+                key={key}
+                fieldKey={key}
+                value={value}
+                getTooltip={getTooltip}
                 checked={verifiedFields[key] || false}
                 onCheckChange={(checked) => onFieldCheck(key, checked)}
               />

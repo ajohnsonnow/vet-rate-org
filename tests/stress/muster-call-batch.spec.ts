@@ -98,7 +98,11 @@ test.describe("WS-1 stress: Muster Call randomized batch", () => {
         await unchecked.first().check();
       }
 
-      await verifyBtn.click();
+      // Explicit (short relative to PER_DOC_TIMEOUT_MS) timeout so a click
+      // that's stuck on actionability (covered, unstable, still disabled)
+      // fails fast with Playwright's own diagnostic instead of silently
+      // retrying for the rest of the 2h test budget.
+      await verifyBtn.click({ timeout: 30_000 });
 
       // Wait for this document's SAVED to land in the persisted ledger before
       // re-matching the (re-mounted) briefing for the next document.

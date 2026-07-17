@@ -81,3 +81,48 @@ describe("DocumentIntelligenceBriefing — array-field verification", () => {
     await waitFor(() => expect(saveBtn).toBeEnabled());
   });
 });
+
+describe("DocumentIntelligenceBriefing — object-field verification", () => {
+  it("renders a readable summary for an object-valued field instead of [object Object]", async () => {
+    renderBriefing({
+      firstName: "John",
+      combatService: {
+        hasVerifiedCombat: true,
+        indicators: ["Combat Action Badge"],
+        deployments: ["Afghanistan 2010-2011"],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("[object Object]")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/Combat Action Badge/)).toBeInTheDocument();
+    expect(screen.getByText(/Has Verified Combat: Yes/)).toBeInTheDocument();
+  });
+
+  it("enables Verify & Save once an object-valued field is checked", async () => {
+    renderBriefing({
+      combatService: {
+        hasVerifiedCombat: true,
+        indicators: ["Combat Action Badge"],
+        deployments: [],
+      },
+    });
+
+    const saveBtn = await screen.findByRole("button", {
+      name: /Verify & Save/,
+    });
+    expect(saveBtn).toBeDisabled();
+
+    const fieldCheckboxes = await waitFor(() => {
+      const boxes = screen.getAllByRole("checkbox").filter((cb) => !cb.checked);
+      expect(boxes.length).toBeGreaterThan(0);
+      return boxes;
+    });
+    for (const cb of fieldCheckboxes) {
+      fireEvent.click(cb);
+    }
+
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+  });
+});
