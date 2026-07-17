@@ -1915,6 +1915,13 @@ async function _processOneChunk(chunk, i, ctx, abortController) {
       error: lastError?.message || "Unknown error",
     });
 
+    // Page range + error type only (never document content) — pairs with
+    // the "failedChunk" console filter in tests/stress/cfile-313mb.spec.ts
+    // eslint-disable-next-line no-console -- forensic
+    console.log(
+      `failedChunk: pages ${chunk.startPage}-${chunk.endPage} (chunk ${chunkNum}/${ctx.totalChunks}) — ${lastError?.message || "Unknown error"}`,
+    );
+
     ctx.onProgress(
       `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
       {
