@@ -212,8 +212,12 @@ export default function CFileTimeline({ events = [] }) {
   const [showHighSignificanceOnly, setShowHighSignificanceOnly] =
     useState(false);
 
-  // Get unique categories for filter
-  const categories = [...new Set(events.map((e) => e.category))];
+  // Get unique categories for filter. Some analyzer timeline entries omit
+  // category entirely — those events still show under "All Events" but
+  // don't get their own (crash-prone, undefined) filter option.
+  const categories = [...new Set(events.map((e) => e.category))].filter(
+    Boolean,
+  );
 
   // Filter events
   const filteredEvents = events.filter((event) => {
