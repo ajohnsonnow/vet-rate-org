@@ -160,6 +160,13 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
       modelUrl = modelConfig.fallbackUrl;
     }
 
+    // wllama's internal download worker is spawned from a blob: URL, whose
+    // base isn't the page origin — a path-relative modelUrl (the local/
+    // self-hosted case) fails to parse inside it ("Failed to parse URL from
+    // /models/..."). Resolve to an absolute URL before crossing into the
+    // worker; already-absolute fallbackUrls pass through unchanged.
+    modelUrl = new URL(modelUrl, window.location.origin).href;
+
     // Load the model. n_gpu_layers: all layers on WebGPU when available (v3.1+
     // enables WebGPU automatically; 0 forces CPU-only for iOS/WASM fallback).
     await wllamaInstance.loadModelFromUrl(modelUrl, {
