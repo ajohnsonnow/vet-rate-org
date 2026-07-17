@@ -18,6 +18,7 @@
 
 import { ensureQuota } from "./storage";
 import { normalizeConditionName } from "./conditionName";
+import { DOCUMENT_TYPES } from "./documentClassifier";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
@@ -473,34 +474,48 @@ export const saveVKB = async (vkb) => {
   }
 };
 
+// Maps a document classification to its VKB documentation bucket. Covers two
+// independent calling conventions that both feed categorizeDocument: the
+// lowercase/snake_case labels hardcoded by DD214Analyzer/BlueButtonXRay's
+// call sites, and the DOCUMENT_TYPES enum values (documentClassifier.js)
+// that Muster Call passes via result.classification.type.
+const DOCUMENT_CATEGORY_BY_CLASSIFICATION = {
+  DD214: "dd214s",
+  service_record: "dd214s",
+  [DOCUMENT_TYPES.DD214]: "dd214s",
+  [DOCUMENT_TYPES.DD215]: "dd214s",
+  [DOCUMENT_TYPES.NGB22]: "dd214s",
+  [DOCUMENT_TYPES.DD256]: "dd214s",
+  [DOCUMENT_TYPES.DD257]: "dd214s",
+
+  blue_button: "blueButtonReports",
+  medical_record: "blueButtonReports",
+  [DOCUMENT_TYPES.MEDICAL_RECORD]: "blueButtonReports",
+
+  c_file: "cFiles",
+  rating_decision: "cFiles",
+  claim_letter: "cFiles",
+  va_decision: "cFiles",
+  [DOCUMENT_TYPES.RATING_DECISION]: "cFiles",
+  [DOCUMENT_TYPES.CLAIM_LETTER]: "cFiles",
+  [DOCUMENT_TYPES.C_FILE_MEDICAL]: "cFiles",
+  [DOCUMENT_TYPES.VA_CORRESPONDENCE]: "cFiles",
+  [DOCUMENT_TYPES.DBQ]: "cFiles",
+  [DOCUMENT_TYPES.EXAM_REPORT]: "cFiles",
+
+  private_medical: "privateRecords",
+  provider_letter: "privateRecords",
+  nexus_letter: "privateRecords",
+  [DOCUMENT_TYPES.NEXUS_LETTER]: "privateRecords",
+  [DOCUMENT_TYPES.PERSONAL_STATEMENT]: "privateRecords",
+};
+
 /**
  * Determine which VKB documentation category a document classification
  * belongs to.
  */
-function categorizeDocument(classification) {
-  let category = "otherEvidence";
-  switch (classification) {
-    case "DD214":
-    case "service_record":
-      category = "dd214s";
-      break;
-    case "blue_button":
-    case "medical_record":
-      category = "blueButtonReports";
-      break;
-    case "c_file":
-    case "rating_decision":
-    case "claim_letter":
-    case "va_decision":
-      category = "cFiles";
-      break;
-    case "private_medical":
-    case "provider_letter":
-    case "nexus_letter":
-      category = "privateRecords";
-      break;
-  }
-  return category;
+export function categorizeDocument(classification) {
+  return DOCUMENT_CATEGORY_BY_CLASSIFICATION[classification] || "otherEvidence";
 }
 
 /**
@@ -508,33 +523,8 @@ function categorizeDocument(classification) {
  * bucket based on its classification.
  */
 function routeDocumentToVKB(vkb, classification, docEntry) {
-  switch (classification) {
-    case "DD214":
-    case "service_record":
-      vkb.documentation.dd214s.push(docEntry);
-      break;
-
-    case "blue_button":
-    case "medical_record":
-      vkb.documentation.blueButtonReports.push(docEntry);
-      break;
-
-    case "c_file":
-    case "rating_decision":
-    case "claim_letter":
-    case "va_decision":
-      vkb.documentation.cFiles.push(docEntry);
-      break;
-
-    case "private_medical":
-    case "provider_letter":
-    case "nexus_letter":
-      vkb.documentation.privateRecords.push(docEntry);
-      break;
-
-    default:
-      vkb.documentation.otherEvidence.push(docEntry);
-  }
+  const category = categorizeDocument(classification);
+  vkb.documentation[category].push(docEntry);
 }
 
 /**
