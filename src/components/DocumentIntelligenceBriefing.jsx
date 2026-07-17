@@ -754,6 +754,21 @@ function useDocumentNavigation(totalDocuments) {
   return { currentDocIndex, goToNextDocument, goToPrevDocument };
 }
 
+// Filter raw extracted fields down to collectible ones and group by category.
+function filterAndGroupFields(currentData, classification) {
+  const filtered = {};
+  for (const [field, value] of Object.entries(currentData)) {
+    if (EXCLUDED_METADATA_FIELDS.includes(field)) continue;
+    if (value === null || value === undefined || value === "") continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    if (shouldCollectField(field, classification.type)) {
+      filtered[field] = value;
+    }
+  }
+  const grouped = groupFieldsByCategory(filtered, classification.type);
+  return { filtered, grouped };
+}
+
 /**
  * Owns the per-document verification state: detects conflicts, filters the
  * raw extracted fields down to collectible ones, and groups them by category.
@@ -788,6 +803,8 @@ function useDocumentBriefingData({
 
   // Detect conflicts on mount and when document changes
   useEffect(() => {
+    let cancelled = false;
+
     const loadConflicts = async () => {
       if (!currentData || !classification?.type) return;
 
@@ -809,31 +826,31 @@ function useDocumentBriefingData({
         classification.type,
         filename,
       );
+      // A newer document's effect may have already superseded this one
+      // while detectConflicts was in flight (its latency varies per
+      // document). Applying this stale result now would silently revert
+      // filteredData/groupedFields to the PREVIOUS document's fields while
+      // verifiedFields still reflects the current one — permanently
+      // breaking allFieldsVerified with no checkbox left to unblock it.
+      if (cancelled) return;
       setConflicts(detected.length > 0 ? detected : providedConflicts);
 
-      // Filter fields by collection rules - include ALL non-null fields for DD214
-      const filtered = {};
-      for (const [field, value] of Object.entries(currentData)) {
-        if (EXCLUDED_METADATA_FIELDS.includes(field)) continue;
-        if (value === null || value === undefined || value === "") continue;
-        if (Array.isArray(value) && value.length === 0) continue;
-        if (shouldCollectField(field, classification.type)) {
-          filtered[field] = value;
-        }
-      }
-
+      const { filtered, grouped } = filterAndGroupFields(
+        currentData,
+        classification,
+      );
       // eslint-disable-next-line no-console
       console.log("🛡️ Filtered fields:", Object.keys(filtered));
       setFilteredData(filtered);
-
-      // Group by category
-      const grouped = groupFieldsByCategory(filtered, classification.type);
       // eslint-disable-next-line no-console
       console.log("🛡️ Grouped fields:", grouped);
       setGroupedFields(grouped);
     };
 
     loadConflicts();
+    return () => {
+      cancelled = true;
+    };
   }, [
     currentData,
     currentDocIndex,
