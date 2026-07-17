@@ -12,6 +12,13 @@ import FormationLineup from "../FormationLineup";
 import PlatoonSergeantReview from "../PlatoonSergeantReview";
 import DocumentIntelligenceBriefing from "../DocumentIntelligenceBriefing";
 
+// Conflict detection is not yet implemented for Muster Call, so this is
+// always empty — but it MUST be a stable reference. DocumentIntelligenceBriefing's
+// per-document effect depends on this prop; a fresh `[]` literal on every
+// render (this component re-renders on every AI progress tick) would refire
+// that effect and silently reset the user's in-progress field verification.
+const NO_CONFLICTS = [];
+
 export default function MusterCallFormationSection({
   shouldShowFormation,
   showProcessingView,
@@ -82,7 +89,7 @@ export default function MusterCallFormationSection({
         <DocumentIntelligenceBriefing
           document={activeEntry.file}
           extractionResult={extractionResult}
-          conflicts={[]} // NOTE: Conflict detection not yet implemented; always passing empty array
+          conflicts={NO_CONFLICTS}
           onVerify={handleVerifyAndSave}
           onSkip={handleSkipDocument}
           onClose={() => setShowIntelBriefing(false)}
