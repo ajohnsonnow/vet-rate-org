@@ -22,3 +22,19 @@ describe("WLLAMA_MODELS.fallbackUrl", () => {
     },
   );
 });
+
+/**
+ * Regression: wllama's loadModelFromUrl caps single-file loads at 2GB
+ * ("Invalid typed array length" — ArrayBuffer size restriction). The
+ * monolithic 4.4GB GGUFs were split into 512MB shards via llama-gguf-split;
+ * url/fallbackUrl must point at shard 00001 so wllama auto-follows the rest.
+ */
+describe("WLLAMA_MODELS url/fallbackUrl — 2GB shard split", () => {
+  it.each(Object.entries(WLLAMA_MODELS))(
+    "%s's url and fallbackUrl point at the first of multiple shards",
+    (_agentId, config) => {
+      expect(config.url).toMatch(/-00001-of-000\d\d\.gguf$/);
+      expect(config.fallbackUrl).toMatch(/-00001-of-000\d\d\.gguf$/);
+    },
+  );
+});
