@@ -54,6 +54,7 @@ export async function bootStressPage(page: Page): Promise<void> {
       localStorage.setItem("vet_rate_last_seen_version", appVersion);
       localStorage.setItem("vetrate-tour-completed", "true");
       localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       // Belt-and-braces: a leftover formation ledger from a previous run sets
       // hasRestoredDocs, which disables Begin Formation and would pollute the
       // final ledger assertion in muster-call-batch.spec.ts.
@@ -105,6 +106,92 @@ export async function initWllamaViaDevServer(page: Page): Promise<void> {
   await page.evaluate(
     `import("/src/utils/unifiedAIService.js").then((m) => m.initializeWllama("auditor"))`,
   );
+}
+
+export interface VkbSnapshot {
+  medicalConditionsCurrent: number;
+  evidenceTimeline: number;
+  cFiles: number;
+  missingEvidence: number;
+  environmental: number;
+  legacyClaims: number;
+  conditionNames: string[];
+}
+
+/**
+ * Inject the VKB + My Packet modules into the running app page so a spec can
+ * read persisted state through the app's OWN loaders. In Vite dev the injected
+ * module resolves to the same URL the app imports, so it shares the module
+ * singletons (one IndexedDB connection). Mirrors cfile-canonical-dataflow.spec.
+ */
+export async function injectStressMods(page: Page): Promise<void> {
+  await page.addScriptTag({
+    type: "module",
+    content: `
+      import * as vkbMod from "/src/utils/veteranKnowledgeBase.js";
+      import * as pktMod from "/src/utils/myPacketManager.js";
+      window.__stressMods = { vkbMod, pktMod };
+    `,
+  });
+  await page.waitForFunction(() => Boolean(window.__stressMods), null, {
+    timeout: 60_000,
+  });
+}
+
+/** Read canonical-schema counts + condition names through the app's loadVKB. */
+export async function readVkbSnapshot(page: Page): Promise<VkbSnapshot> {
+  return page.evaluate(async () => {
+    const v: Record<string, unknown> =
+      await window.__stressMods.vkbMod.loadVKB();
+    const len = (a: unknown): number => (Array.isArray(a) ? a.length : 0);
+    const mc = v?.medicalConditions as { current?: unknown } | undefined;
+    const current = Array.isArray(mc?.current) ? mc.current : [];
+    const doc = v?.documentation as { cFiles?: unknown } | undefined;
+    const ins = v?.aiInsights as { missingEvidence?: unknown } | undefined;
+    const exp = v?.exposures as { environmental?: unknown } | undefined;
+    return {
+      medicalConditionsCurrent: current.length,
+      evidenceTimeline: len(v?.evidenceTimeline),
+      cFiles: len(doc?.cFiles),
+      missingEvidence: len(ins?.missingEvidence),
+      environmental: len(exp?.environmental),
+      legacyClaims: len(v?.claims),
+      conditionNames: current
+        .map((c) => (c as { name?: unknown })?.name)
+        .filter((n): n is string => typeof n === "string")
+        .map((n) => n.toLowerCase()),
+    };
+  });
+}
+
+/**
+ * Poll the VKB until the analyzed C-File has been archived
+ * (documentation.cFiles >= 1), tolerating the brief gap between the analyzer
+ * showing "Analysis Complete" and the awaited save settling to IndexedDB.
+ */
+export async function waitForCFilePersisted(
+  page: Page,
+  timeoutMs = 30_000,
+): Promise<VkbSnapshot> {
+  let snap: VkbSnapshot = {
+    medicalConditionsCurrent: 0,
+    evidenceTimeline: 0,
+    cFiles: 0,
+    missingEvidence: 0,
+    environmental: 0,
+    legacyClaims: 0,
+    conditionNames: [],
+  };
+  await expect
+    .poll(
+      async () => {
+        snap = await readVkbSnapshot(page);
+        return snap.cFiles;
+      },
+      { timeout: timeoutMs },
+    )
+    .toBeGreaterThanOrEqual(1);
+  return snap;
 }
 
 export interface TelemetrySample {
