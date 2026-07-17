@@ -126,3 +126,30 @@ describe("DocumentIntelligenceBriefing — object-field verification", () => {
     await waitFor(() => expect(saveBtn).toBeEnabled());
   });
 });
+
+describe("DocumentIntelligenceBriefing — falsy primitive field verification", () => {
+  it("renders a checkbox for a false/0-valued field and lets it be verified", async () => {
+    renderBriefing({
+      firstName: "John",
+      combatZoneService: false,
+      dependentCount: 0,
+    });
+
+    const saveBtn = await screen.findByRole("button", {
+      name: /Verify & Save/,
+    });
+    expect(saveBtn).toBeDisabled();
+
+    const fieldCheckboxes = await waitFor(() => {
+      const boxes = screen.getAllByRole("checkbox").filter((cb) => !cb.checked);
+      // firstName + combatZoneService + dependentCount, at minimum.
+      expect(boxes.length).toBeGreaterThanOrEqual(3);
+      return boxes;
+    });
+    for (const cb of fieldCheckboxes) {
+      fireEvent.click(cb);
+    }
+
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+  });
+});

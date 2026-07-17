@@ -1536,8 +1536,14 @@ function FieldGroup({
       </h4>
       <div className="space-y-3">
         {Object.entries(fields).map(([key, value]) => {
-          if (!value || (Array.isArray(value) && value.length === 0))
+          // Must match the upstream filteredData filter (null/undefined/"")
+          // exactly. A narrower `!value` here would also drop legitimate
+          // falsy values (0, false) — rendering nothing for a field that
+          // still counts toward allFieldsVerified, permanently disabling
+          // Verify & Save with no checkbox to unblock it.
+          if (value === null || value === undefined || value === "")
             return null;
+          if (Array.isArray(value) && value.length === 0) return null;
 
           if (Array.isArray(value)) {
             return (
