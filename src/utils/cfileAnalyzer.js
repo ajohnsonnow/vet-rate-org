@@ -2069,6 +2069,15 @@ export async function analyzeCFile(
 // potential_claims before timeline preserves priority within the 1024-token budget.
 const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 3 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
 
+// Last-retry SALVAGE prompt. A chunk only reaches this after its normal-prompt
+// attempts truncated their JSON — the model transcribing garbled OCR into the
+// timeline `description` field until it exhausts the token budget. This schema
+// has NO timeline and NO free-text field, so there is nowhere to put a runaway
+// transcription: the model can only emit short condition names, which cannot
+// truncate. Secondary fields default to empty downstream (analyzeChunk
+// sanitization). A grounded conditions-only capture beats a failed chunk.
+const CFILE_SYSTEM_PROMPT_SALVAGE = `You are a VA Claims Auditor. From the C-File text, output ONLY valid JSON: {"potential_claims":[{"condition":"","likelihood":"high|medium|low"}]}. Rules: list only medical CONDITION NAMES actually present in the text (2 to 5 words each); NO descriptions, NO dates, NO timeline, NEVER transcribe or quote the document text; every string quoted; put a comma between array elements; if no conditions are found output {"potential_claims":[]}.`;
+
 // Per-page prompt for the page-by-page local-AI path.
 // ~200 tokens vs ~600 for CFILE_SYSTEM_PROMPT_COMPACT — saves 400 tokens × every
 // page call (1,200 calls × 400 = 480K fewer prefill tokens per full C-File run).
@@ -2254,10 +2263,17 @@ async function _requestChunkAnalysis(
     effectiveMode === AI_MODES.WLLAMA ||
     effectiveMode === AI_MODES.LOCAL_SERVER;
 
-  // Use compact prompt for local AI to maximize document space
-  let systemPrompt = isLocalAI
-    ? CFILE_SYSTEM_PROMPT_COMPACT
-    : CFILE_SYSTEM_PROMPT;
+  // Use compact prompt for local AI to maximize document space. On the final
+  // retry (a chunk whose earlier attempts truncated their JSON), drop to the
+  // salvage schema — conditions only, no timeline/free-text — so there is no
+  // long field left for the model to run away transcribing.
+  const isSalvage = isLocalAI && attempt >= MAX_CHUNK_RETRIES;
+  let systemPrompt = CFILE_SYSTEM_PROMPT;
+  if (isSalvage) {
+    systemPrompt = CFILE_SYSTEM_PROMPT_SALVAGE;
+  } else if (isLocalAI) {
+    systemPrompt = CFILE_SYSTEM_PROMPT_COMPACT;
+  }
 
   if (totalChunks > 1) {
     const chunkPrefix = `CHUNK ${chunkNum}/${totalChunks} (Pages ${chunk.startPage}-${chunk.endPage}). Extract findings from THIS chunk only.\n\n`;
