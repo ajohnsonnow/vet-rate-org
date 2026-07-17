@@ -575,21 +575,28 @@ export const initializeWllama = async (
     // eslint-disable-next-line no-console
     console.log(`🌐 Initializing Wllama with ${modelName}...`);
 
-    const result = await wllamaService.initializeWllama(modelName, {
+    // wllamaService.initializeWllama resolves a plain boolean (true on
+    // success, false only when already initializing) and throws on real
+    // failure — it never resolves a {success, error} object. Reading
+    // result.success here always evaluated to undefined regardless of the
+    // actual outcome, so this branch never ran and wllamaReady could never
+    // become true even when the model loaded correctly.
+    const success = await wllamaService.initializeWllama(modelName, {
       onProgress,
     });
 
-    if (result.success) {
+    if (success) {
       wllamaReady = true;
       wllamaCurrentModel = modelName;
       // eslint-disable-next-line no-console
       console.log(`🌐 Wllama ready with ${modelName}`);
     } else {
-      console.error("🌐 Wllama init failed:", result.error);
+      // eslint-disable-next-line no-console
+      console.log(`🌐 Wllama init returned false for ${modelName}`);
     }
 
     wllamaInitializing = false;
-    return result.success;
+    return success;
   } catch (err) {
     console.error("🌐 Wllama init error:", err);
     wllamaInitializing = false;
