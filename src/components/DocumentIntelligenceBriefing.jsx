@@ -1812,6 +1812,7 @@ function useUnverifiedFieldWarning(
   allFieldsVerified,
   filteredData,
   verifiedFields,
+  conflicts,
 ) {
   useEffect(() => {
     if (!hasFields || allFieldsVerified) return;
@@ -1824,7 +1825,21 @@ function useUnverifiedFieldWarning(
       "🛡️ Unverified fields blocking Verify & Save:",
       unverified.map((key) => `${key} (${typeof filteredData[key]})`),
     );
-  }, [filteredData, verifiedFields, hasFields, allFieldsVerified]);
+    // Forensic: field NAMES only (never values) — checks whether a real
+    // detectConflicts hit on one of these fields (which renders a
+    // ConflictsSection banner above the checkbox list) correlates with the
+    // multi-second delay observed on some fields in the stress harness.
+    const conflictedUnverifiedFields = unverified.filter((key) =>
+      conflicts.some((c) => c.field === key),
+    );
+    if (conflictedUnverifiedFields.length > 0) {
+      // eslint-disable-next-line no-console -- forensic
+      console.warn(
+        "🛡️ Unverified fields WITH an active conflict:",
+        conflictedUnverifiedFields,
+      );
+    }
+  }, [filteredData, verifiedFields, hasFields, allFieldsVerified, conflicts]);
 }
 
 function buildVerifyAndSaveHandler({
@@ -1929,6 +1944,7 @@ function useDocumentBriefingController({
     allFieldsVerified,
     filteredData,
     verifiedFields,
+    conflicts,
   );
 
   return {
