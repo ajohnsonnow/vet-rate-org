@@ -103,8 +103,15 @@ export async function openToolByEvent(
  * test fails loudly — acceptable for a dev-only harness.
  */
 export async function initWllamaViaDevServer(page: Page): Promise<void> {
-  await page.evaluate(
+  const startedAt = Date.now();
+  const result = await page.evaluate(
     `import("/src/utils/unifiedAIService.js").then((m) => m.initializeWllama("auditor"))`,
+  );
+  // page.evaluate's resolved value never reaches pipeBrowserErrors, which
+  // only pipes console.error.
+  // eslint-disable-next-line no-console -- forensic
+  console.log(
+    `[initWllamaViaDevServer] resolved ${JSON.stringify(result)} after ${Date.now() - startedAt}ms`,
   );
 }
 
