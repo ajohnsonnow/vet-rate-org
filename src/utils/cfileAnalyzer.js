@@ -59,12 +59,15 @@ const CHARS_PER_TOKEN = 3.4;
 
 // Pre-flight scoring passes ALL medically-relevant chunks to the LLM. The 10k
 // value is a safety valve against pathological documents only — in practice a
-// 313 MB C-File produces ~284 chunks. At ~21 s/chunk (p50 observed 2026-07-15,
-// RTX 4080 SUPER), 284 chunks ≈ 100 min — well within the 12-hour stress timeout.
-// MIN_CLAIMS_SCORE is the absolute keyword floor: chunks scoring below this are
-// skipped (admin cover-pages, blank separators) even if they squeeze past Gate 2.
+// 313 MB C-File produces ~284 chunks.
+// MIN_CLAIMS_SCORE = 0 disables the relevance floor (Gate 3): every chunk that
+// clears the blank-page (Gate 1) and any-medical-signal (Gate 2) pre-filters is
+// sent to the AI, so no page carrying potential claim evidence is skipped for a
+// low keyword score. This is the "no missing data" full-coverage policy — it
+// trades longer runtime on large files for completeness. Gates 1/2 still drop
+// genuinely blank / zero-signal pages, which carry nothing to lose.
 const MAX_WEBGPU_AI_CHUNKS = 10_000;
-const MIN_CLAIMS_SCORE = 2;
+const MIN_CLAIMS_SCORE = 0;
 
 /**
  * Pure computation of which local-AI chunks get excluded, and why. This is the
@@ -138,6 +141,12 @@ const CHUNK_OVERLAP_PAGES = 2; // Reduced from 5 to minimize processing time
 const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks better
 
 // Retry failed chunks before recording them in the failedChunks manifest
+// 2 retries (3 attempts): deliberately aligned with CIRCUIT_BREAKER_THRESHOLD
+// (3 consecutive generation failures) so a chunk's retries never trip the
+// breaker mid-recovery and incur its 30s cooldown. Recovery of a chunk that
+// truncated its JSON is driven instead by the per-attempt output-token
+// escalation in _requestChunkAnalysis (2048→4096→6144) — a chunk that still
+// can't parse after all 3 attempts fails loudly (never a silent drop).
 const MAX_CHUNK_RETRIES = 2;
 const CHUNK_RETRY_BACKOFF_MS = 1000;
 
@@ -1833,6 +1842,7 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
         chunkNum,
         ctx.totalChunks,
         ctx.onProgress,
+        attempt,
       );
       lastError = null;
       break;
@@ -2225,7 +2235,13 @@ function scoreChunkRelevance(text) {
   return Math.max(0, score);
 }
 
-async function _requestChunkAnalysis(chunk, chunkNum, totalChunks, onProgress) {
+async function _requestChunkAnalysis(
+  chunk,
+  chunkNum,
+  totalChunks,
+  onProgress,
+  attempt = 0,
+) {
   // Detect if we're using local AI (smaller context). effectiveMode is the
   // resolved routing target — the raw stored mode can disagree with it
   // (e.g. "auto"), which silently gave local generations the short cloud
@@ -2259,8 +2275,14 @@ async function _requestChunkAnalysis(chunk, chunkNum, totalChunks, onProgress) {
   // on complex chunks (many conditions, long summaries), defeating the repair cascade.
   // stream:false batch readback at 30+ tok/s keeps the decode time proportional to
   // actual output length rather than a fixed ceiling.
+  // Per-retry escalation: a JSON that truncated at the ceiling on the previous
+  // attempt is the top cause of an unrecoverable chunk, so grant each retry more
+  // room to finish the object instead of re-truncating. +2048/attempt reaches a
+  // 6144 ceiling by the last of the 3 circuit-safe attempts (2048→4096→6144 on
+  // desktop-high); attempt 0 keeps the fast base.
+  const baseMaxTokens = getCachedDeviceProfile()?.maxOutputTokens ?? 1024;
   const localMaxTokens = isLocalAI
-    ? (getCachedDeviceProfile()?.maxOutputTokens ?? 1024)
+    ? Math.min(baseMaxTokens + attempt * 2048, 6144)
     : 32768;
 
   // Heartbeat: local AI blocks for ~2 min/chunk with no intermediate callbacks.
@@ -2381,12 +2403,19 @@ function _parseChunkAiResponse(contentStr) {
 /**
  * Analyze a single chunk of text
  */
-async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
+async function analyzeChunk(
+  chunk,
+  chunkNum,
+  totalChunks,
+  onProgress,
+  attempt = 0,
+) {
   const contentStr = await _requestChunkAnalysis(
     chunk,
     chunkNum,
     totalChunks,
     onProgress,
+    attempt,
   );
   const analysisResult = _parseChunkAiResponse(contentStr);
 
