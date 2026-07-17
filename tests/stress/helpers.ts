@@ -164,6 +164,48 @@ export async function readVkbSnapshot(page: Page): Promise<VkbSnapshot> {
   });
 }
 
+export interface DocCategoryCounts {
+  dd214s: number;
+  cFiles: number;
+  blueButtonReports: number;
+  privateRecords: number;
+  otherEvidence: number;
+  total: number;
+}
+
+/**
+ * Read per-category archived-document counts through the app's own
+ * getAllDocumentsByCategory(). Used to assert batch imports route each doc TYPE
+ * to the correct VKB documentation bucket (DD214 → dd214s, claim/decision
+ * letters → cFiles).
+ */
+export async function readDocCategoryCounts(
+  page: Page,
+): Promise<DocCategoryCounts> {
+  return page.evaluate(async () => {
+    const byCat: Record<string, unknown> =
+      await window.__stressMods.vkbMod.getAllDocumentsByCategory();
+    const get = (k: string): number => {
+      const entry = byCat?.[k] as { count?: unknown } | undefined;
+      return typeof entry?.count === "number" ? entry.count : 0;
+    };
+    const dd214s = get("dd214s");
+    const cFiles = get("cFiles");
+    const blueButtonReports = get("blueButtonReports");
+    const privateRecords = get("privateRecords");
+    const otherEvidence = get("otherEvidence");
+    return {
+      dd214s,
+      cFiles,
+      blueButtonReports,
+      privateRecords,
+      otherEvidence,
+      total:
+        dd214s + cFiles + blueButtonReports + privateRecords + otherEvidence,
+    };
+  });
+}
+
 /**
  * Poll the VKB until the analyzed C-File has been archived
  * (documentation.cFiles >= 1), tolerating the brief gap between the analyzer
