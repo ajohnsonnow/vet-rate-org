@@ -1785,6 +1785,61 @@ function useDocumentBriefingSourceState({
   };
 }
 
+// Forensic: pairs with the stress harness's Verify & Save click-timeout —
+// names exactly which key(s) never got a matching checkbox, since "no
+// unchecked checkboxes found" and allFieldsVerified can silently disagree
+// if a field's value type isn't handled by the renderer.
+function useUnverifiedFieldWarning(
+  hasFields,
+  allFieldsVerified,
+  filteredData,
+  verifiedFields,
+) {
+  useEffect(() => {
+    if (!hasFields || allFieldsVerified) return;
+    const unverified = Object.keys(filteredData).filter(
+      (key) => !verifiedFields[key],
+    );
+    if (unverified.length === 0) return;
+    // eslint-disable-next-line no-console -- forensic
+    console.warn(
+      "🛡️ Unverified fields blocking Verify & Save:",
+      unverified.map((key) => `${key} (${typeof filteredData[key]})`),
+    );
+  }, [filteredData, verifiedFields, hasFields, allFieldsVerified]);
+}
+
+function buildVerifyAndSaveHandler({
+  verifiedFields,
+  editedData,
+  onVerify,
+  saveToVKB,
+  updateProfile,
+  filename,
+  classification,
+  conflicts,
+}) {
+  return () => {
+    const verifiedData = Object.keys(verifiedFields)
+      .filter((key) => verifiedFields[key])
+      .reduce((acc, key) => ({ ...acc, [key]: editedData[key] }), {});
+
+    onVerify({
+      verifiedData,
+      saveToVKB,
+      updateProfile,
+      filename,
+      classification: classification?.type,
+      resolvedConflicts: conflicts.map((c) => ({
+        ...c,
+        resolvedValue: editedData[c.field],
+        resolvedBy: "user",
+        resolvedAt: Date.now(),
+      })),
+    });
+  };
+}
+
 /**
  * Owns all state, data-loading, and derived values for the Document
  * Intelligence Briefing modal.
@@ -1834,31 +1889,29 @@ function useDocumentBriefingController({
 
   const getTooltip = (field) => getFieldTooltip(field, classification?.type);
 
-  const handleVerifyAndSave = () => {
-    const verifiedData = Object.keys(verifiedFields)
-      .filter((key) => verifiedFields[key])
-      .reduce((acc, key) => ({ ...acc, [key]: editedData[key] }), {});
-
-    onVerify({
-      verifiedData,
-      saveToVKB,
-      updateProfile,
-      filename,
-      classification: classification?.type,
-      resolvedConflicts: conflicts.map((c) => ({
-        ...c,
-        resolvedValue: editedData[c.field],
-        resolvedBy: "user",
-        resolvedAt: Date.now(),
-      })),
-    });
-  };
+  const handleVerifyAndSave = buildVerifyAndSaveHandler({
+    verifiedFields,
+    editedData,
+    onVerify,
+    saveToVKB,
+    updateProfile,
+    filename,
+    classification,
+    conflicts,
+  });
 
   const allFieldsVerified =
     Object.keys(filteredData).length > 0 &&
     Object.keys(filteredData).every((key) => verifiedFields[key]);
 
   const hasFields = Object.keys(filteredData).length > 0;
+
+  useUnverifiedFieldWarning(
+    hasFields,
+    allFieldsVerified,
+    filteredData,
+    verifiedFields,
+  );
 
   return {
     ...sourceState,
