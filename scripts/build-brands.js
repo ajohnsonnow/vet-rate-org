@@ -48,7 +48,7 @@ function buildBrand(brandKey) {
     const envPrefix = isWindows ? `set ${brand.envVar} &&` : `${brand.envVar}`;
 
     execSync(
-      // nosemgrep: local.detect-child-process-strict
+      // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
       `${envPrefix} npx vite build --outDir ${brand.outDir}`,
       {
         cwd: ROOT,

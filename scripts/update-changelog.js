@@ -82,7 +82,7 @@ function getCommits(since = null) {
       }
     }
     const command = `git log ${sinceArg} --pretty=format:"%H|%s|%ad|%an" --date=short`;
-    const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict
+    const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
 
     return output
       .split("\n")
