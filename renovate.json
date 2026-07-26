@@ -9,6 +9,7 @@
   "schedule": ["every weekend"],
   "platformAutomerge": false,
   "automergeType": "pr",
+  "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
     "labels": ["security"],
     "automerge": false
@@ -18,34 +19,41 @@
       "matchUpdateTypes": ["patch", "minor"],
       "matchDepTypes": ["devDependencies"],
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchUpdateTypes": ["major"],
       "automerge": false,
-      "labels": ["dependencies", "breaking-change"]
+      "labels": ["dependencies", "breaking-change"],
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchManagers": ["github-actions"],
       "pinDigests": true,
       "automerge": true,
-      "groupName": "GitHub Actions"
+      "groupName": "GitHub Actions",
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchPackagePatterns": ["^eslint"],
-      "groupName": "ESLint packages"
+      "groupName": "ESLint packages",
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchPackagePatterns": ["^@typescript-eslint"],
-      "groupName": "TypeScript ESLint"
+      "groupName": "TypeScript ESLint",
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchPackagePatterns": ["^vitest|^@vitest"],
-      "groupName": "Vitest packages"
+      "groupName": "Vitest packages",
+      "minimumReleaseAge": "7 days"
     },
     {
       "matchPackagePatterns": ["^playwright|^@playwright"],
-      "groupName": "Playwright packages"
+      "groupName": "Playwright packages",
+      "minimumReleaseAge": "7 days"
     }
   ],
   "ignorePaths": ["**/node_modules/**", "**/vendor/**"],
