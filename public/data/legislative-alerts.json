@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T06:03:36.391Z",
+  "generatedAt": "2026-07-26T23:57:07.754Z",
   "alerts": [
     {
       "id": "2026-03068",
@@ -24,18 +24,6 @@
       "link": "https://www.federalregister.gov/documents/2026/01/22/2026-01188/clarification-of-vas-processing-of-survivors-benefits-claims",
       "source": "Federal Register",
       "urgency": "high"
-    },
-    {
-      "id": "2025-23682",
-      "title": "Servicemembers' Group Life Insurance Traumatic Injury Protection Program Amendments",
-      "type": "final_rule",
-      "status": "active",
-      "publicationDate": "2025-12-23",
-      "commentDeadline": null,
-      "summary": "The Department of Veterans Affairs (VA) is amending its regulations that govern the Servicemembers' Group Life Insurance (SGLI) Traumatic Injury Protection (TSGLI) program to correct an unintended amendment to the TSGLI Schedule of Losses for payments for inability to perform at least two activities of daily living (ADL) for 15, 30, 60, and 90 consecutive day periods as a result of a traumatic injury other than a traumatic brain injury.",
-      "link": "https://www.federalregister.gov/documents/2025/12/23/2025-23682/servicemembers-group-life-insurance-traumatic-injury-protection-program-amendments",
-      "source": "Federal Register",
-      "urgency": "low"
     }
   ]
 }
