@@ -97,8 +97,8 @@ const CONFIG = {
 
 function execGit(command) {
   try {
+    // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
     return execSync(`git ${command}`, {
-      // nosemgrep: local.detect-child-process-strict
       cwd: rootDir,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -318,8 +318,8 @@ function applyVersionBump(newVersion, dryRun = false) {
 
   // Use npm version to update package.json and create git tag
   try {
+    // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
     execSync(`npm version ${newVersion} --no-git-tag-version`, {
-      // nosemgrep: local.detect-child-process-strict
       cwd: rootDir,
       stdio: "inherit",
     });

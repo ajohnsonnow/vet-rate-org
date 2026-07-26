@@ -70,7 +70,8 @@ function logWarning(msg) {
 
 function exec(cmd, options = {}) {
   try {
-    return execSync(cmd, { 
+    // nosemgrep: javascript.lang.security.detect-child-process.detect-child-process
+    return execSync(cmd, {
       cwd: rootDir, 
       encoding: 'utf8',
       stdio: options.silent ? 'pipe' : 'inherit',

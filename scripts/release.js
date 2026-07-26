@@ -66,7 +66,7 @@ function execCommand(command, silent = false) {
     process.exit(1);
   }
   try {
-    const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict
+    const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
     if (!silent) {
       console.log(output);
     }

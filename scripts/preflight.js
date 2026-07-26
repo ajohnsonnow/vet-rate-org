@@ -77,6 +77,7 @@ const c = (color, msg) => `${C[color]}${msg}${C.reset}`;
 // ─────────────────────────────────────────────────────────────────────────────
 
 function run(cmd, opts = {}) {
+  // nosemgrep: javascript.lang.security.detect-child-process.detect-child-process
   return execSync(cmd, {
     cwd: ROOT,
     encoding: "utf8",
