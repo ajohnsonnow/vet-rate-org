@@ -90,6 +90,7 @@
     "@mlc-ai/web-llm": "^0.2.80",
     "@wllama/wllama": "^3.4.1",
     "docx": "^9.5.1",
+    "dompurify": "file:packages/dompurify-noop",
     "driver.js": "^1.4.0",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.1",
@@ -102,6 +103,7 @@
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
     "react-markdown": "^10.1.0",
+    "sharp": "file:packages/sharp-noop",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
@@ -140,8 +142,8 @@
     "vitest-axe": "^0.1.0"
   },
   "overrides": {
-    "dompurify": "file:packages/dompurify-noop",
-    "sharp": "file:packages/sharp-noop",
+    "dompurify": "$dompurify",
+    "sharp": "$sharp",
     "@xmldom/xmldom": "^0.8.13",
     "protobufjs": "^7.6.4",
     "tar": "^7.5.16"
