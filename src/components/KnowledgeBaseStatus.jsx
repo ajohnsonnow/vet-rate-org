@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import disabilityDataJson from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { useColorSchemas } from "../hooks/useColorSchemas";
 import {
   isMobileDevice,
@@ -21,7 +21,7 @@ import {
   FULL_DATABASE_COUNT,
 } from "../utils/dkbIndexedDB";
 
-const disabilityData = disabilityDataJson.disabilities || [];
+const disabilityData = getAllConditions();
 
 /**
  * Knowledge Source Metadata

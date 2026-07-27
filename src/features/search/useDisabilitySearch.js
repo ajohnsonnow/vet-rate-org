@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+import { validateSearchTerm } from "../../utils/searchUtils";
 import {
-  searchDisabilityData,
-  validateSearchTerm,
-} from "../../utils/searchUtils";
-import disabilityData from "../../data/disabilityData.json";
+  searchConditions,
+  getAllConditions,
+} from "../../services/knowledgeQuery";
 
 function runDisabilitySearch(
   searchTerm,
@@ -27,7 +27,7 @@ function runDisabilitySearch(
   setError(null);
 
   try {
-    const foundResults = searchDisabilityData(searchTerm, disabilityData);
+    const foundResults = searchConditions(searchTerm);
     setResults(foundResults);
     setHasSearched(true);
 
@@ -129,7 +129,7 @@ export function useDisabilitySearch() {
 
   const handleSecondaryConditionClick = useCallback(
     (diagnosticCode, conditionName) => {
-      const foundCondition = disabilityData.disabilities.find(
+      const foundCondition = getAllConditions().find(
         (d) => d.diagnosticCode === diagnosticCode,
       );
 

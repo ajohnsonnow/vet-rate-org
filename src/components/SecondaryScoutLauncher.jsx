@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
-import disabilityData from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
@@ -2439,7 +2439,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   // Create a lookup map from condition names (lowercase) to diagnostic codes
   const conditionToDCCode = useMemo(() => {
     const map = {};
-    disabilityData.disabilities.forEach((disability) => {
+    getAllConditions().forEach((disability) => {
       // Map by condition name (lowercase for case-insensitive lookup)
       map[disability.conditionName.toLowerCase()] = disability.diagnosticCode;
       // Also map by aliases

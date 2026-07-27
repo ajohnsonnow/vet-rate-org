@@ -47,6 +47,17 @@ const VKB_STORE_NAME = "knowledge_base";
 
 let vkbDB = null;
 
+// In-memory read cache: detectConflicts() calls loadVKB() once per document
+// during a Muster Call batch, and the VKB grows with every document saved.
+// Re-reading + re-deserializing the whole growing IndexedDB blob on every
+// single document made later documents in a large batch measurably slower
+// than earlier ones — on modest hardware that growth can eat into the
+// checkbox-verification UI's response budget. Cache the loaded object and
+// invalidate it only on a confirmed saveVKB() write; loadVKB() always
+// returns a structuredClone so callers can't mutate the cache by holding
+// onto their own copy.
+let vkbCache = null;
+
 /**
  * Open/Initialize the VKB IndexedDB database
  * @returns {Promise<IDBDatabase>}
@@ -328,6 +339,15 @@ async function _migrateAndPersist(vkb) {
  * Load VKB from IndexedDB (primary) or localStorage (legacy fallback)
  */
 export const loadVKB = async () => {
+  if (vkbCache) {
+    return structuredClone(vkbCache);
+  }
+  const vkb = await loadVKBFromStorage();
+  vkbCache = structuredClone(vkb);
+  return vkb;
+};
+
+const loadVKBFromStorage = async () => {
   try {
     // Try IndexedDB first
     const db = await openVKBDatabase();
@@ -442,6 +462,12 @@ export const saveVKB = async (vkb) => {
         // eslint-disable-next-line no-console
         console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
 
+        // Refresh the read cache from the object that was actually
+        // persisted — clone it so the caller's continued mutation of its
+        // own `vkb` reference (common after a fire-and-forget save) can't
+        // silently drift the cache away from what's on disk.
+        vkbCache = structuredClone(vkb);
+
         // Cache metadata in localStorage for quick access
         cacheVKBMetadata({
           metadata: vkb.metadata,
@@ -490,6 +516,7 @@ const DOCUMENT_CATEGORY_BY_CLASSIFICATION = {
 
   blue_button: "blueButtonReports",
   medical_record: "blueButtonReports",
+  [DOCUMENT_TYPES.BLUE_BUTTON]: "blueButtonReports",
   [DOCUMENT_TYPES.MEDICAL_RECORD]: "blueButtonReports",
 
   c_file: "cFiles",

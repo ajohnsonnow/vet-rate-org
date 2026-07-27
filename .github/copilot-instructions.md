@@ -11,6 +11,7 @@
 5. HTTPS everywhere. Dependencies updated weekly.
 6. Document the *why* (ADRs), not the *what*.
 7. WCAG 2.2 AA accessibility minimum.
+8. Responsive & adaptive UI: design ~320px → 4K, fluid-first, extend (never override) breakpoints + add 3xl/4xl, cap prose ~65ch, scale app shells up on large screens, no `w-screen`/fixed-px overflow; verify at 390px & 3840px. See `responsive-adaptive-ui-best-practices.md`.
 
 ## AI-assistant behavioral rules
 
@@ -54,12 +55,11 @@ Can't test → say so. Guessing → say "I'm guessing." Never fabricate file pat
 
 | Use case | Model ID |
 |---|---|
-| Hardest reasoning, long-horizon agentic | `claude-fable-5` |
 | Complex engineering, architecture | `claude-opus-4-8` |
-| Daily coding, code review | `claude-sonnet-5` |
+| Daily coding, code review | `claude-sonnet-4-6` |
 | Classification, extraction, routing | `claude-haiku-4-5-20251001` |
 
-Opus 4.8 (`claude-opus-4-8`, 2026-05-28) is the default flagship; `claude-opus-4-7` is legacy, not retired. Fable 5 (`claude-fable-5`, 2026-06-09) is the most capable model — Mythos-class, above Opus, thinking always on. Sunsets: Haiku 3 → 2026-04-20; Sonnet 4 / Opus 4 → 2026-06-15 (retired); Opus 4.1 → 2026-08-05.
+Opus 4.8 (`claude-opus-4-8`, 2026-05-28) is the current flagship; `claude-opus-4-7` is now legacy. Sunsets: Haiku 3 → 2026-04-19; Sonnet 4 / Opus 4 → 2026-06-15.
 
 ## Output style
 
@@ -74,5 +74,3 @@ Opus 4.8 (`claude-opus-4-8`, 2026-05-28) is the default flagship; `claude-opus-4
 - [../../best-practices-toolkit/AGENTS.md](../../best-practices-toolkit/AGENTS.md) — task → guide routing map.
 - [../../best-practices-toolkit/docs/best-practices/agentic-development-best-practices.md](../../best-practices-toolkit/docs/best-practices/agentic-development-best-practices.md) — sub-agent patterns, lethal trifecta defenses.
 - [../../best-practices-toolkit/docs/best-practices/ai-prompt-engineering-best-practices.md](../../best-practices-toolkit/docs/best-practices/ai-prompt-engineering-best-practices.md) — Claude 4.x prompting specifics.
-- [../../best-practices-toolkit/docs/best-practices/accessibility-statement-vpat-best-practices.md](../../best-practices-toolkit/docs/best-practices/accessibility-statement-vpat-best-practices.md) — accessibility statement / VPAT (WCAG 2.2 AA, federal/veteran audience).
-- [../../best-practices-toolkit/docs/best-practices/compliance-data-protection-antipatterns.md](../../best-practices-toolkit/docs/best-practices/compliance-data-protection-antipatterns.md) — PII/PHI + data-protection antipatterns.

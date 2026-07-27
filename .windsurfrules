@@ -11,6 +11,7 @@
 5. HTTPS everywhere; deps updated weekly.
 6. Document *why* (ADRs), not *what*.
 7. WCAG 2.2 AA accessibility minimum.
+8. Responsive & adaptive UI: design ~320px → 4K, fluid-first, extend (never override) breakpoints + add 3xl/4xl, cap prose ~65ch, scale app shells up on large screens, no `w-screen`/fixed-px overflow; verify at 390px & 3840px. See `responsive-adaptive-ui-best-practices.md`.
 
 ## AI behavioral rules
 
@@ -28,9 +29,8 @@
 
 ## Claude models (if applicable)
 
-- Hardest reasoning, long-horizon agentic: `claude-fable-5`
 - Complex engineering: `claude-opus-4-8` (current flagship; `claude-opus-4-7` is now legacy)
-- Daily coding: `claude-sonnet-5`
+- Daily coding: `claude-sonnet-4-6`
 - Classification: `claude-haiku-4-5-20251001`
 
 ## Output

@@ -103,8 +103,38 @@ jobs:
             --body "Weekly Federal Register snapshot for the Legislative Watchdog. Review the alert list before merging." \
             --label "dkb-freshness"
 
+      - name: Check shard freshness (S39)
+        id: shard-freshness
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/dkb-sharding/check-shard-freshness.mjs > shard-freshness.log 2>&1
+          CODE=$?
+          echo "exitcode=$CODE" >> "$GITHUB_OUTPUT"
+          echo "=== shard-freshness.md ==="
+          cat shard-freshness.md
+          echo "=== shard-freshness.log ==="
+          cat shard-freshness.log || true
+          exit 0
+
+      - name: Open shard freshness issue on drift
+        if: steps.shard-freshness.outputs.exitcode == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          OPEN=$(gh issue list --label dkb-shard-freshness --state open --json number --jq 'length')
+          if [ "$OPEN" != "0" ]; then
+            echo "An open dkb-shard-freshness issue already exists — skipping duplicate."
+            exit 0
+          fi
+          gh issue create \
+            --title "DKB shard freshness: one or more sources stale/failed ($DATE)" \
+            --label "dkb-shard-freshness" \
+            --body-file shard-freshness.md
+
       - name: File stale issue on failure
-        if: steps.fetch.outcome == 'failure' || steps.hashdiff.outputs.exitcode == '1' || steps.watchdog.outcome == 'failure'
+        if: steps.fetch.outcome == 'failure' || steps.hashdiff.outputs.exitcode == '1' || steps.watchdog.outcome == 'failure' || steps.shard-freshness.outputs.exitcode == '1'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -120,10 +150,11 @@ jobs:
           - eCFR fetch: ${{ steps.fetch.outcome }}
           - hash diff exit code: ${{ steps.hashdiff.outputs.exitcode }}
           - watchdog fetch: ${{ steps.watchdog.outcome }}
+          - shard freshness exit code: ${{ steps.shard-freshness.outputs.exitcode }}
 
-          The eCFR Part 4 hash snapshot and/or the legislative-alerts snapshot
-          may be stale. The app falls back to the live Federal Register API
-          (then the curated list) when legislative-alerts.json ages past 14 days.
+          The eCFR Part 4 hash snapshot, legislative-alerts snapshot, and/or
+          shard freshness check encountered an unexpected error. The app may
+          rely on stale data if the failures persist.
 
           Run ID: ${{ github.run_id }}
           Triggered: ${DATE}
@@ -142,5 +173,7 @@ jobs:
           path: |
             hash-diff.md
             hash-diff.log
+            shard-freshness.md
+            shard-freshness.log
           retention-days: 30
           if-no-files-found: ignore

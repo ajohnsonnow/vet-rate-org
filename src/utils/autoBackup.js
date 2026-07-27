@@ -107,7 +107,7 @@ const gatherAllData = () => {
   MONITORED_STORAGE_KEYS.forEach((key) => {
     try {
       const value = localStorage.getItem(key);
-      if (value) {
+      if (value && value !== "undefined") {
         backup.data[key] = JSON.parse(value);
       }
     } catch (error) {
@@ -320,6 +320,7 @@ export const restoreFromBackup = async (backupId) => {
         try {
           // Restore all data to localStorage
           Object.entries(backup.data.data).forEach(([key, value]) => {
+            if (value === undefined) return;
             localStorage.setItem(key, JSON.stringify(value));
           });
 
@@ -365,6 +366,7 @@ export const importBackupFile = async (file) => {
 
         // Restore data
         Object.entries(backup.data).forEach(([key, value]) => {
+          if (value === undefined) return;
           localStorage.setItem(key, JSON.stringify(value));
         });
 

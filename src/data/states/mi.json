@@ -1,0 +1,208 @@
+{
+  "state": "Michigan",
+  "stateCode": "MI",
+  "officialSource": "https://www.michigan.gov/mvaa",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "mi-property_tax_exemption-disabled-veterans-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veterans Property Tax Exemption",
+      "description": "Real property used and owned as a homestead by a disabled veteran, or their un-remarried surviving spouse, is exempt from property tax collection. A 'disabled veteran' is a Michigan resident who is VA-rated permanently and totally disabled at the 100% rate, rated individually unemployable by the VA, or certified by the VA as receiving assistance for specially adapted housing. Effective January 1, 2025, the exemption no longer requires annual reapplication once granted.",
+      "value": "Full exemption from collection of property taxes on the homestead",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property must be owned and used as the veteran's homestead",
+          "Honorable discharge",
+          "Un-remarried surviving spouse of a qualifying veteran may also claim the exemption",
+          "Affidavit filed with the local assessor; no longer requires annual reapplication as of Jan. 1, 2025"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Department of Treasury / State Tax Commission (administered via local assessor)",
+        "form": "Form 5107 (Affidavit for Disabled Veterans Exemption)",
+        "url": "https://www.michigan.gov/taxes/property/exemptions/veterans/disabled-veterans-exemption",
+        "documentation": [
+          "DD-214 or discharge document",
+          "VA letter confirming 100% P&T rating, individual unemployability, or specially-adapted-housing assistance"
+        ]
+      },
+      "legalCitation": "MCL 211.7b",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-211-7b",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mi-state_veterans_home-michigan-veteran-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Michigan Veteran Homes",
+      "description": "Michigan operates a network of state veterans' long-term care homes under the Michigan Veterans' Facility Authority Act, with locations in Grand Rapids, Chesterfield Township, and Marquette (D.J. Jacobetti). The program's legal existence and name are confirmed by statute, but this research session could not directly retrieve the official eligibility/admission page (michigan.gov/mvh returned access-denied to automated fetching), so specific admission criteria, cost, and application requirements are not independently confirmed here and are intentionally omitted rather than guessed.",
+      "value": null,
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Admission generally requires honorable discharge and eligibility for VA healthcare or long-term nursing care assistance, per secondary sources; not independently confirmed via a directly-read official page this session"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Veteran Homes (state agency; formerly under the Department of Military and Veterans Affairs)",
+        "form": null,
+        "url": null,
+        "documentation": []
+      },
+      "legalCitation": "MCL 36.101 et seq. (Michigan Veterans' Facility Authority Act, 2016 PA 560)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legislature.mi.gov/Laws/MCL?objectName=MCL-36-101",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "unverified"
+    },
+    {
+      "id": "mi-education_tuition-children-of-veterans-tuition-grant",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Children of Veterans Tuition Grant",
+      "description": "Provides an annual tuition grant to the natural or adopted child of a qualifying Michigan veteran. The child must be more than 16 and less than 26 years old, and the veteran parent must have been killed in action or died while serving in war, be VA-rated permanently and totally disabled from a service-connected illness or injury, have been permanently disabled before death (from any cause), or be officially listed as missing in action. The applicant must have resided continuously in Michigan for the 12 months before applying and file a FAFSA annually.",
+      "value": "$2,800 per academic year for a full-time student, or the student's actual eligible tuition for that year if less",
+      "estimatedAnnualValue": 2800,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Child is more than 16 and less than 26 years old",
+          "Continuous Michigan residency for 12 months immediately preceding application and not a resident of any other state",
+          "FAFSA required annually",
+          "Veteran parent killed in action, died in service, VA-rated permanently and totally disabled, or missing in action"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Department of Treasury, Student Financial Services Bureau",
+        "form": null,
+        "url": "https://www.michigan.gov/mistudentaid/programs/children-of-veterans-tuition-grant",
+        "documentation": [
+          "FAFSA",
+          "Proof of veteran parent's death, MIA status, or VA disability rating",
+          "Proof of relationship (birth or adoption record)"
+        ]
+      },
+      "legalCitation": "MCL 390.1341-390.1346 (Children of Veterans Tuition Grant Act, 2005 PA 248)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-390-1344",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mi-hiring_preference-veterans-preference-in-public-employment",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Preference in Public Employment",
+      "description": "Under Act 205 of 1897, an honorably discharged veteran of good moral character who has resided in Michigan for at least 2 years is to be preferred for appointment and employment in every public department and public works of the state, and of every county and municipal corporation in the state. Separately, the Michigan Civil Service Commission operates a veterans' preference program for state civil-service jobs.",
+      "value": "Statutory hiring preference for public-sector positions; does not guarantee appointment",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge",
+          "Good moral character",
+          "Michigan resident for at least 2 years (Act 205 preference)",
+          "Age, loss of limb, or other physical impairment that does not actually incapacitate does not disqualify"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Civil Service Commission / Michigan Veterans Affairs Agency",
+        "form": null,
+        "url": null,
+        "documentation": ["DD-214 or discharge document"]
+      },
+      "legalCitation": "MCL 35.401 (Act 205 of 1897, Preference in Employment)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-35-401",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mi-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Honorably discharged veterans with a VA service-connected disability rating of at least 50% qualify for a standard Disabled Veteran plate that requires no service fee. Veterans with a total or permanent-total VA disability rating for compensation (or who receive military disability retirement pay) qualify for a permanent Disabled Veteran plate that is exempt from the vehicle registration tax. Eligible surviving spouses may use and renew the plate under the same conditions.",
+      "value": "Standard plate: no service fee (50-90% rating). Permanent plate: exempt from registration tax (total/permanent-total rating)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge from the U.S. Armed Forces",
+          "Service-connected disability rating of at least 50% for the standard plate",
+          "Service-connected total or permanent-total disability rating (or receipt of military disability retirement pay) for the permanent, tax-exempt plate",
+          "Surviving spouse of a qualifying veteran with at least a 50% rating may use/renew the plate"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Department of State (Secretary of State)",
+        "form": "Application for Veteran License Plate (BDVR-87)",
+        "url": "https://www.michigan.gov/sos/-/media/Project/Websites/sos/Vehicle/License-Plates/Application-for-Veteran-License-plate-BDVR-87.pdf",
+        "documentation": [
+          "DD-214 or discharge document",
+          "VA disability rating letter"
+        ]
+      },
+      "legalCitation": "MCL 257.803f",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legislature.mi.gov/Laws/MCL?objectName=MCL-257-803F",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mi-recreation-free-hunting-and-fishing-license-for-disabled-ve",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Free Hunting and Fishing License for Disabled Veterans",
+      "description": "Michigan resident veterans who are VA-rated permanently and totally disabled at the 100% rate (for a disability other than blindness), or rated individually unemployable by the VA, may obtain any resident hunting or fishing license that does not require a lottery application, free of charge. Proof of eligibility must be presented at purchase and while using the license. The program has been in effect since March 1, 2013.",
+      "value": "Free resident hunting/fishing licenses (excluding lottery-restricted licenses)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must present documented proof of disabled-veteran status at purchase and while afield/on the water",
+          "Effective March 1, 2013"
+        ]
+      },
+      "application": {
+        "agency": "Michigan Department of Natural Resources (DNR)",
+        "form": null,
+        "url": "https://www.mdnr-elicense.com",
+        "documentation": [
+          "VA letter confirming 100% permanent-and-total rating or individual unemployability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.govdelivery.com/accounts/MIDNR/bulletins/6e8211",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

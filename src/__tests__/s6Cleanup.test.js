@@ -5,23 +5,34 @@ import { join } from "node:path";
 const read = (p) => readFileSync(join(process.cwd(), p), "utf8");
 
 /**
- * C-M05: fetch-m21-1 / fetch-cavc / fetch-fedcir are scaffolds with placeholder
- * selectors but were wired into the weekly legal-ingestion cron — they failed
- * every week (false-alarm noise) and risked scraping unintended content. They
- * now default OFF behind ENABLE_SCAFFOLD_FETCHERS.
+ * C-M05 (historical): fetch-cavc / fetch-fedcir were scaffolds with placeholder
+ * selectors, gated OFF behind ENABLE_SCAFFOLD_FETCHERS so the weekly cron didn't
+ * scrape unverified content. Both were PROMOTED to real fetchers — fetch-m21-1
+ * in S31 (KnowVA v11 JSON API), fetch-cavc + fetch-fedcir in S33 (the CAVC Atom
+ * decisions feed and the CAFC WordPress REST opinions API, both plain-fetchable,
+ * no placeholder selectors). The scaffold gate no longer applies to any of them
+ * — see knowledge-sources.yaml (verified_status: content-verified).
  */
-describe("scaffold fetchers default off (C-M05)", () => {
-  const SCAFFOLDS = [
-    "scripts/legal-ingestion/fetch-m21-1.mjs",
-    "scripts/legal-ingestion/fetch-cavc.mjs",
-    "scripts/legal-ingestion/fetch-fedcir.mjs",
+describe("legal-ingestion fetchers are promoted, not scaffolds (S31/S33)", () => {
+  const PROMOTED = [
+    {
+      file: "scripts/legal-ingestion/fetch-m21-1.mjs",
+      source: "/system/ws/v11/ss/",
+    },
+    {
+      file: "scripts/legal-ingestion/fetch-cavc.mjs",
+      source: "recentdecisions.rss",
+    },
+    {
+      file: "scripts/legal-ingestion/fetch-fedcir.mjs",
+      source: "/wp-json/wp/v2/posts",
+    },
   ];
-  for (const f of SCAFFOLDS) {
-    it(`${f} skips unless ENABLE_SCAFFOLD_FETCHERS is set`, () => {
-      const src = read(f);
-      expect(src).toContain('process.env.ENABLE_SCAFFOLD_FETCHERS !== "1"');
-      // The guard returns before any network/mkdir work.
-      expect(src).toMatch(/ENABLE_SCAFFOLD_FETCHERS[\s\S]{0,200}?return;/);
+  for (const { file, source } of PROMOTED) {
+    it(`${file} is a real fetcher (no scaffold gate) hitting its live source`, () => {
+      const src = read(file);
+      expect(src).not.toContain("ENABLE_SCAFFOLD_FETCHERS");
+      expect(src).toContain(source);
     });
   }
 });

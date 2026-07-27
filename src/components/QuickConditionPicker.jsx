@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import disabilityData from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -61,7 +61,7 @@ const useConditionCatalog = () => {
   const conditionsBySystem = useMemo(() => {
     const systemMap = {};
 
-    disabilityData.disabilities.forEach((disability) => {
+    getAllConditions().forEach((disability) => {
       const schedule = disability.ratingSchedule;
       const systemName = systemNameMap[schedule] || `📋 Other - ${schedule}`;
 

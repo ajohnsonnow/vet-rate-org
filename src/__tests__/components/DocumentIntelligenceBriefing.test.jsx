@@ -8,7 +8,13 @@
  * screen indefinitely.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import DocumentIntelligenceBriefing from "../../components/DocumentIntelligenceBriefing.jsx";
 import { detectConflicts } from "../../utils/conflictDetector";
 

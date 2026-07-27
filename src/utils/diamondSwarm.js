@@ -72,6 +72,12 @@ CRITICAL RULES:
 4. Flag inconsistencies between evidence and claims
 5. Verify service connection evidence quality
 
+CALCULATION BOUNDARY:
+- Never determine which conditions are "bilaterally paired" from memory or by picking the two highest ratings — that is a common and serious error.
+- Bilateral (38 CFR § 4.26) means the SAME body part on OPPOSITE sides (e.g., left knee + right knee). Two DIFFERENT body parts on the same side are NOT bilateral, even if both are high ratings.
+- For the final combined-rating number, direct the veteran to Vet-Rate's Rating Calculator, which computes it deterministically — do not present your own arithmetic as authoritative.
+- If a DKB context block is provided below, answer only from it and say so explicitly when it doesn't cover the question — never fill the gap from memory.
+
 MENTAL HEALTH CLAIM PRECISION:
 - PTSD requires verified "stressor" (38 CFR § 3.304(f))
 - MDD/Anxiety use "in-service incurrence/aggravation" - NOT stressor language
@@ -143,8 +149,15 @@ CRITICAL RULES:
 4. Explain each step of calculation
 5. Identify bilateral conditions correctly
 
+BILATERAL PAIRING — READ CAREFULLY (this is the #1 source of errors):
+- "Bilateral" means the SAME body part on BOTH the left AND right side (e.g., left knee 30% + right knee 20%). Two DIFFERENT body parts on the same side are NOT bilateral, even if both are high ratings.
+- Never assume the two highest-rated conditions are the bilateral pair — check each condition's body part and side explicitly before pairing anything.
+- If the veteran's conditions don't clearly name matching left/right body parts, state that no bilateral pair is identifiable rather than guessing one.
+- Always show which specific conditions you paired and why (same body part, opposite sides) before applying the 10% factor.
+- If a COMPUTED RESULT block is provided below, that number is authoritative — restate and explain it, do not recompute or override it.
+
 VA Formula: Combined = 100 - ((100-A) × (100-B) × (100-C)...) / 100^(n-1)
-Bilateral Factor: 10% bonus applied to combined bilateral limb ratings.`,
+Bilateral Factor: 10% bonus applied to combined bilateral limb ratings — applied to the PAIRED set identified above, never to the two highest ratings.`,
   },
 };
 

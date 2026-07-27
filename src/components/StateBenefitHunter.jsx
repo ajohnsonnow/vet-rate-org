@@ -232,6 +232,16 @@ const _groupBenefitsByCategory = (benefits) => {
 const BenefitCard = ({ benefit, index }) => {
   const config = getCategoryConfig(benefit.category);
 
+  // The scraped-data path (searchStateBenefits) maps benefits to name /
+  // estimatedValue / description / requirements{}; the legacy AI path used
+  // benefit_name / value / requirement. Read both so cards never render blank.
+  const name = benefit.name || benefit.benefit_name;
+  const value = benefit.value || benefit.estimatedValue;
+  const minRating = benefit.requirements?.minRating ?? 0;
+  const requirement =
+    benefit.requirement ||
+    (minRating > 0 ? `${minRating}%+ VA disability rating` : null);
+
   return (
     <div
       key={index}
@@ -246,7 +256,7 @@ const BenefitCard = ({ benefit, index }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="font-semibold text-gray-900 dark:text-white">
-              {benefit.benefit_name}
+              {name}
             </h4>
             {config.highlight && (
               <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full animate-pulse">
@@ -259,13 +269,19 @@ const BenefitCard = ({ benefit, index }) => {
               </span>
             )}
           </div>
-          <p className={`text-sm ${config.textColor} mt-1 font-medium`}>
-            {benefit.value}
-          </p>
-          {benefit.requirement && (
+          {value && (
+            <p className={`text-sm ${config.textColor} mt-1 font-medium`}>
+              {value}
+            </p>
+          )}
+          {benefit.description && (
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              {benefit.description}
+            </p>
+          )}
+          {requirement && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <span className="font-medium">Requirement:</span>{" "}
-              {benefit.requirement}
+              <span className="font-medium">Requirement:</span> {requirement}
             </p>
           )}
         </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getSearchSuggestions } from "../utils/searchUtils";
-import disabilityData from "../data/disabilityData.json";
+import { getConditionSuggestions } from "../services/knowledgeQuery";
 import { useLanguage } from "../contexts/LanguageContext";
 
 function SearchIcon() {
@@ -91,7 +90,7 @@ function SuggestionsDropdown({
 function computeSuggestionsForTerm(searchTerm) {
   if (searchTerm.trim().length >= 2) {
     return {
-      suggestions: getSearchSuggestions(searchTerm, disabilityData, 8),
+      suggestions: getConditionSuggestions(searchTerm, 8),
       show: true,
     };
   }

@@ -42,6 +42,7 @@ import {
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
+import { calculateVARating } from "./vaCalculator";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -1083,6 +1084,39 @@ const injectDKBForWarrantCouncil = async (prompt, options, useDKB) => {
 };
 
 /**
+ * Ground a Rater-agent prompt in the deterministic combined-rating calculator
+ * (38 CFR § 4.25/4.26 — vaCalculator.js) instead of letting the LLM freehand
+ * the bilateral-factor arithmetic, which is the confirmed root cause of the
+ * swarm's bilateral-pairing hallucinations. Only activates when the caller
+ * supplies structured `options.conditions` ({name, rating, side, bodyPart}[]);
+ * free-text-only prompts pass through unchanged — there's no reliable parse
+ * step from prose to structured conditions, and a wrong parse would be worse
+ * than no injection at all.
+ */
+export const injectCalculatorForRater = (prompt, options) => {
+  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
+    return prompt;
+  }
+
+  const result = calculateVARating(options.conditions);
+  const pairSummary = result.bilateralConditions.length
+    ? result.bilateralConditions
+        .map((c) => `${c.name} (${c.side}, ${c.rating}%)`)
+        .join(", ")
+    : "none";
+
+  return (
+    prompt +
+    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 — already calculated, do not recompute) ===
+Bilateral pair: ${pairSummary}
+Bilateral group rating: ${result.bilateralGroupRating || "n/a"}
+Combined rating: ${result.combinedRating}%
+Restate and explain this result. Do not perform your own bilateral-factor arithmetic or invent a different pairing.
+=== END COMPUTED RESULT ===\n`
+  );
+};
+
+/**
  * Determine the right Warrant Council agent based on tool or task type.
  */
 const resolveWarrantCouncilAgent = (toolId, taskType) => {
@@ -1126,13 +1160,17 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
   } = options;
 
   const scrubbedPrompt = scrubPromptForWarrantCouncil(prompt, scrubPIIEnabled);
-  const enhancedPrompt = await injectDKBForWarrantCouncil(
+  const dkbEnhancedPrompt = await injectDKBForWarrantCouncil(
     scrubbedPrompt,
     options,
     useDKB,
   );
 
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
+  const enhancedPrompt =
+    agentId === "rater"
+      ? injectCalculatorForRater(dkbEnhancedPrompt, options)
+      : dkbEnhancedPrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1217,8 +1255,13 @@ const generateWithWllama = async (prompt, options = {}) => {
     }
   }
 
+  // Ground the Rater model in the deterministic calculator before the LLM
+  // ever sees the prompt — see injectCalculatorForRater for why.
+  let enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
+    ? injectCalculatorForRater(scrubbedPrompt, options)
+    : scrubbedPrompt;
+
   // 💎 Inject DKB context for Wllama
-  let enhancedPrompt = scrubbedPrompt;
   if (useDKB) {
     try {
       const { buildDKBContext } = await getAISystemPrompts();
@@ -1227,7 +1270,7 @@ const generateWithWllama = async (prompt, options = {}) => {
         maxChars: options.maxDKBChars || 4000,
       });
       if (dkbContext) {
-        enhancedPrompt = scrubbedPrompt + dkbContext;
+        enhancedPrompt = enhancedPrompt + dkbContext;
         // eslint-disable-next-line no-console
         console.log("[Wllama] 💎 DKB context injected");
       }

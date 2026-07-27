@@ -526,5 +526,665 @@
       "If the knee gives out, describe specific incidents",
       "You may qualify for multiple separate ratings (flexion limitation + instability + arthritis)"
     ]
+  },
+  "mental_disorders_other": {
+    "diagnostic_code": "9434",
+    "condition_name": "Major Depressive Disorder",
+    "cfr_reference": "38 CFR § 4.130",
+    "dbq_form_id": "Mental-Disorders",
+    "dbq_form_path": "/forms/Mental-Disorders.pdf",
+    "category": "Mental Health",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "eating_disorders": {
+    "diagnostic_code": "9520",
+    "condition_name": "Anorexia nervosa",
+    "cfr_reference": "38 CFR § 4.130",
+    "dbq_form_id": "Eating-Disorders",
+    "dbq_form_path": "/forms/Eating-Disorders.pdf",
+    "category": "Mental Health",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hip_thigh": {
+    "diagnostic_code": "5252",
+    "condition_name": "Thigh, limitation of flexion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Hip-Thigh",
+    "dbq_form_path": "/forms/Hip-Thigh.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "shoulder_arm": {
+    "diagnostic_code": "5201",
+    "condition_name": "Arm, limitation of motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Shoulder-Arm",
+    "dbq_form_path": "/forms/Shoulder-Arm.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "neck_cervical": {
+    "diagnostic_code": "5242",
+    "condition_name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Neck-Cervical",
+    "dbq_form_path": "/forms/Neck-Cervical.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "ankle_conditions": {
+    "diagnostic_code": "5271",
+    "condition_name": "Ankle, limited motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Ankle",
+    "dbq_form_path": "/forms/Ankle.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "elbow_forearm": {
+    "diagnostic_code": "5205",
+    "condition_name": "Elbow, ankylosis",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Elbow-Forearm",
+    "dbq_form_path": "/forms/Elbow-Forearm.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "foot_conditions": {
+    "diagnostic_code": "5276",
+    "condition_name": "Flatfoot, acquired",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Foot-Conditions",
+    "dbq_form_path": "/forms/Foot-Conditions.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "wrist_conditions": {
+    "diagnostic_code": "5215",
+    "condition_name": "Wrist, limitation of motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Wrist",
+    "dbq_form_path": "/forms/Wrist.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hand_finger": {
+    "diagnostic_code": "5225",
+    "condition_name": "Index finger, ankylosis",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Hand-Finger",
+    "dbq_form_path": "/forms/Hand-Finger.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "muscle_injuries": {
+    "diagnostic_code": "5301",
+    "condition_name": "Group I: Upward rotation of scapula",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Muscle-Injuries",
+    "dbq_form_path": "/forms/Muscle-Injuries.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "tmj_disorder": {
+    "diagnostic_code": "9905",
+    "condition_name": "Temporomandibular Joint (TMJ) Disorder",
+    "cfr_reference": "38 CFR § 4.150",
+    "dbq_form_id": "TMJ",
+    "dbq_form_path": "/forms/TMJ.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "amputations": {
+    "diagnostic_code": "5120",
+    "condition_name": "Complete amputation, upper extremity",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Amputations",
+    "dbq_form_path": "/forms/Amputations.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "bones_skeletal": {
+    "diagnostic_code": "5015",
+    "condition_name": "Bones, neoplasm, benign",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Bones-Skeletal",
+    "dbq_form_path": "/forms/Bones-Skeletal.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "osteomyelitis": {
+    "diagnostic_code": "5000",
+    "condition_name": "Osteomyelitis (Acute, Subacute, or Chronic)",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Osteomyelitis",
+    "dbq_form_path": "/forms/Osteomyelitis.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "fibromyalgia": {
+    "diagnostic_code": "5025",
+    "condition_name": "Fibromyalgia",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Fibromyalgia",
+    "dbq_form_path": "/forms/Fibromyalgia.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "arthritis_general": {
+    "diagnostic_code": "5003",
+    "condition_name": "Degenerative Joint Disease (Osteoarthritis)",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Arthritis",
+    "dbq_form_path": "/forms/Arthritis.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "cns_neuromuscular": {
+    "diagnostic_code": "8025",
+    "condition_name": "Myasthenia Gravis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "CNS-Neuromuscular",
+    "dbq_form_path": "/forms/CNS-Neuromuscular.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "cranial_nerves": {
+    "diagnostic_code": "8207",
+    "condition_name": "Seventh (facial) nerve, paralysis of",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Cranial-Nerves",
+    "dbq_form_path": "/forms/Cranial-Nerves.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "diabetic_neuropathy": {
+    "diagnostic_code": "8510-8540",
+    "condition_name": "Peripheral Neuropathy",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Diabetic-Neuropathy",
+    "dbq_form_path": "/forms/Diabetic-Neuropathy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "narcolepsy": {
+    "diagnostic_code": "8108",
+    "condition_name": "Narcolepsy",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Narcolepsy",
+    "dbq_form_path": "/forms/Narcolepsy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "peripheral_nerves": {
+    "diagnostic_code": "8520",
+    "condition_name": "Radiculopathy (Sciatic Nerve)",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Peripheral-Nerves",
+    "dbq_form_path": "/forms/Peripheral-Nerves.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "seizure_epilepsy": {
+    "diagnostic_code": "8910",
+    "condition_name": "Epilepsy (Major Seizures)",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Seizure-Epilepsy",
+    "dbq_form_path": "/forms/Seizure-Epilepsy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "als": {
+    "diagnostic_code": "8017",
+    "condition_name": "Amyotrophic lateral sclerosis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "ALS",
+    "dbq_form_path": "/forms/ALS.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "multiple_sclerosis": {
+    "diagnostic_code": "8018",
+    "condition_name": "Multiple Sclerosis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Multiple-Sclerosis",
+    "dbq_form_path": "/forms/Multiple-Sclerosis.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "parkinsons_disease": {
+    "diagnostic_code": "8004",
+    "condition_name": "Paralysis agitans",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Parkinsons",
+    "dbq_form_path": "/forms/Parkinsons.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "respiratory_conditions": {
+    "diagnostic_code": "6604",
+    "condition_name": "Chronic Obstructive Pulmonary Disease (COPD)",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Respiratory",
+    "dbq_form_path": "/forms/Respiratory.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "sleep_apnea": {
+    "diagnostic_code": "6847",
+    "condition_name": "Sleep Apnea Syndrome",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sleep-Apnea",
+    "dbq_form_path": "/forms/Sleep-Apnea.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "tuberculosis": {
+    "diagnostic_code": "6730",
+    "condition_name": "Pulmonary TB, chronic, active",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Tuberculosis",
+    "dbq_form_path": "/forms/Tuberculosis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "sinusitis": {
+    "diagnostic_code": "6510",
+    "condition_name": "Sinusitis (Chronic)",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sinusitis-Rhinitis",
+    "dbq_form_path": "/forms/Sinusitis-Rhinitis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "allergic_rhinitis": {
+    "diagnostic_code": "6522",
+    "condition_name": "Allergic Rhinitis",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sinusitis-Rhinitis",
+    "dbq_form_path": "/forms/Sinusitis-Rhinitis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "heart_conditions": {
+    "diagnostic_code": "7005",
+    "condition_name": "Arteriosclerotic Heart Disease (Coronary Artery Disease)",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Heart",
+    "dbq_form_path": "/forms/Heart.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hypertension": {
+    "diagnostic_code": "7101",
+    "condition_name": "Hypertensive Vascular Disease (Hypertension)",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Hypertension",
+    "dbq_form_path": "/forms/Hypertension.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "artery_vein": {
+    "diagnostic_code": "7120",
+    "condition_name": "Varicose veins",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Artery-Vein",
+    "dbq_form_path": "/forms/Artery-Vein.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "esophageal_conditions": {
+    "diagnostic_code": "7206",
+    "condition_name": "Gastroesophageal reflux disease (GERD)",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Esophageal",
+    "dbq_form_path": "/forms/Esophageal.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "stomach_duodenum": {
+    "diagnostic_code": "7304",
+    "condition_name": "Peptic Ulcer Disease",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Stomach-Duodenum",
+    "dbq_form_path": "/forms/Stomach-Duodenum.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "intestinal_conditions": {
+    "diagnostic_code": "7323",
+    "condition_name": "Ulcerative Colitis",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Intestines",
+    "dbq_form_path": "/forms/Intestines.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "liver_conditions": {
+    "diagnostic_code": "7345",
+    "condition_name": "Chronic liver disease without cirrhosis",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Liver",
+    "dbq_form_path": "/forms/Liver.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "gallbladder_conditions": {
+    "diagnostic_code": "7317",
+    "condition_name": "Gallbladder, injury of",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Gallbladder",
+    "dbq_form_path": "/forms/Gallbladder.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "pancreas_conditions": {
+    "diagnostic_code": "7347",
+    "condition_name": "Pancreatitis, chronic",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Pancreas",
+    "dbq_form_path": "/forms/Pancreas.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "peritoneal_adhesions": {
+    "diagnostic_code": "7301",
+    "condition_name": "Peritoneum, adhesions of",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Peritoneal-Adhesions",
+    "dbq_form_path": "/forms/Peritoneal-Adhesions.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "rectum_anus": {
+    "diagnostic_code": "7332",
+    "condition_name": "Rectum and anus, impairment of sphincter control",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Rectum-Anus",
+    "dbq_form_path": "/forms/Rectum-Anus.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hernias": {
+    "diagnostic_code": "7338",
+    "condition_name": "Hernia (femoral, inguinal, umbilical, ventral, incisional)",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Hernias",
+    "dbq_form_path": "/forms/Hernias.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "ear_vestibular": {
+    "diagnostic_code": "6205",
+    "condition_name": "Meniere's syndrome",
+    "cfr_reference": "38 CFR § 4.87 or § 4.87a",
+    "dbq_form_id": "Ear-Vestibular",
+    "dbq_form_path": "/forms/Ear-Vestibular.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "eye_conditions": {
+    "diagnostic_code": "6027",
+    "condition_name": "Cataract",
+    "cfr_reference": "38 CFR § 4.75-4.84",
+    "dbq_form_id": "Eye-Conditions",
+    "dbq_form_path": "/forms/Eye-Conditions.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "smell_taste_loss": {
+    "diagnostic_code": "6276",
+    "condition_name": "Sense of taste, complete loss",
+    "cfr_reference": "38 CFR § 4.87 or § 4.87a",
+    "dbq_form_id": "Smell-Taste",
+    "dbq_form_path": "/forms/Smell-Taste.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "skin_diseases": {
+    "diagnostic_code": "7806",
+    "condition_name": "Eczema (Atopic Dermatitis)",
+    "cfr_reference": "38 CFR § 4.118",
+    "dbq_form_id": "Skin-Diseases",
+    "dbq_form_path": "/forms/Skin-Diseases.pdf",
+    "category": "Skin",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "scars": {
+    "diagnostic_code": "7804",
+    "condition_name": "Scars, unstable or painful",
+    "cfr_reference": "38 CFR § 4.118",
+    "dbq_form_id": "Scars",
+    "dbq_form_path": "/forms/Scars.pdf",
+    "category": "Skin",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "diabetes_mellitus": {
+    "diagnostic_code": "7913",
+    "condition_name": "Diabetes mellitus",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Diabetes",
+    "dbq_form_path": "/forms/Diabetes.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "endocrine_other": {
+    "diagnostic_code": "7911",
+    "condition_name": "Addison's disease (adrenocortical insufficiency)",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Endocrine-Other",
+    "dbq_form_path": "/forms/Endocrine-Other.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "thyroid_conditions": {
+    "diagnostic_code": "7903",
+    "condition_name": "Hypothyroidism",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Thyroid-Parathyroid",
+    "dbq_form_path": "/forms/Thyroid-Parathyroid.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "parathyroid_conditions": {
+    "diagnostic_code": "7904",
+    "condition_name": "Hyperparathyroidism",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Thyroid-Parathyroid",
+    "dbq_form_path": "/forms/Thyroid-Parathyroid.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "kidney_conditions": {
+    "diagnostic_code": "7502",
+    "condition_name": "Nephritis, chronic",
+    "cfr_reference": "38 CFR § 4.115a or § 4.115b",
+    "dbq_form_id": "Kidney",
+    "dbq_form_path": "/forms/Kidney.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "male_reproductive": {
+    "diagnostic_code": "7528",
+    "condition_name": "Malignant neoplasms of the genitourinary system",
+    "cfr_reference": "38 CFR § 4.115b",
+    "dbq_form_id": "Male-Reproductive",
+    "dbq_form_path": "/forms/Male-Reproductive.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "urinary_tract": {
+    "diagnostic_code": "7512",
+    "condition_name": "Cystitis, chronic",
+    "cfr_reference": "38 CFR § 4.115a or § 4.115b",
+    "dbq_form_id": "Urinary-Tract",
+    "dbq_form_path": "/forms/Urinary-Tract.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "gynecological_conditions": {
+    "diagnostic_code": "7629",
+    "condition_name": "Endometriosis",
+    "cfr_reference": "38 CFR § 4.116",
+    "dbq_form_id": "Gynecological",
+    "dbq_form_path": "/forms/Gynecological.pdf",
+    "category": "Gynecological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "breast_conditions": {
+    "diagnostic_code": "7630",
+    "condition_name": "Malignant Neoplasms of the Breast",
+    "cfr_reference": "38 CFR § 4.116",
+    "dbq_form_id": "Breast",
+    "dbq_form_path": "/forms/Breast.pdf",
+    "category": "Gynecological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hematologic_leukemia": {
+    "diagnostic_code": "7703",
+    "condition_name": "Leukemia",
+    "cfr_reference": "38 CFR § 4.117",
+    "dbq_form_id": "Hematologic-Lymphatic",
+    "dbq_form_path": "/forms/Hematologic-Lymphatic.pdf",
+    "category": "Hematologic",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "lymphatic_conditions": {
+    "diagnostic_code": "7709",
+    "condition_name": "Hodgkin's lymphoma",
+    "cfr_reference": "38 CFR § 4.117",
+    "dbq_form_id": "Hematologic-Lymphatic",
+    "dbq_form_path": "/forms/Hematologic-Lymphatic.pdf",
+    "category": "Hematologic",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hiv_related_illness": {
+    "diagnostic_code": "6351",
+    "condition_name": "HIV-Related Illness",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "HIV",
+    "dbq_form_path": "/forms/HIV.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "infectious_disease_other": {
+    "diagnostic_code": "6320",
+    "condition_name": "Parasitic diseases",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Infectious-Other",
+    "dbq_form_path": "/forms/Infectious-Other.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "persian_gulf_infectious": {
+    "diagnostic_code": "6301",
+    "condition_name": "Visceral Leishmaniasis",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Persian-Gulf-Infectious",
+    "dbq_form_path": "/forms/Persian-Gulf-Infectious.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "oral_dental": {
+    "diagnostic_code": "9913",
+    "condition_name": "Teeth, loss of",
+    "cfr_reference": "38 CFR § 4.150",
+    "dbq_form_id": "Oral-Dental",
+    "dbq_form_path": "/forms/Oral-Dental.pdf",
+    "category": "Dental/Oral",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "chronic_fatigue_syndrome": {
+    "diagnostic_code": "6354",
+    "condition_name": "Chronic Fatigue Syndrome",
+    "cfr_reference": "38 CFR § 4.88",
+    "dbq_form_id": "Chronic-Fatigue",
+    "dbq_form_path": "/forms/Chronic-Fatigue.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "nutritional_deficiencies": {
+    "diagnostic_code": "6313",
+    "condition_name": "Avitaminosis",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Nutritional",
+    "dbq_form_path": "/forms/Nutritional.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "lupus_autoimmune": {
+    "diagnostic_code": "6350",
+    "condition_name": "Systemic Lupus Erythematosus",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Lupus-Autoimmune",
+    "dbq_form_path": "/forms/Lupus-Autoimmune.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
   }
 }

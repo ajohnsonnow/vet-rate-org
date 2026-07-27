@@ -7,7 +7,9 @@
 
 import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import pactActData from "../data/pactActData.json";
+import { getPactActData } from "../services/knowledgeQuery";
+
+const pactActData = getPactActData();
 
 /**
  * PACTActBadge - A small badge to indicate PACT Act presumptive status

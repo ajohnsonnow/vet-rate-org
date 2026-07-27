@@ -1,0 +1,3661 @@
+{
+ "found": [
+  {
+   "dc": "5104",
+   "name": "Anatomical loss of one hand and loss of use of one foot",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5104 Anatomical loss of one hand and loss of use of one foot",
+     "",
+     "1 100"
+    ]
+   ]
+  },
+  {
+   "dc": "5105",
+   "name": "Anatomical loss of one foot and loss of use of one hand",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5105 Anatomical loss of one foot and loss of use of one hand",
+     "",
+     "1 100"
+    ]
+   ]
+  },
+  {
+   "dc": "5121",
+   "name": "Arm amputation above insertion of deltoid",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5121 Above insertion of deltoid",
+     "1 90",
+     "1 80"
+    ]
+   ]
+  },
+  {
+   "dc": "5122",
+   "name": "Arm amputation below insertion of deltoid",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5122 Below insertion of deltoid",
+     "1 80",
+     "1 70"
+    ],
+    [
+     "Forearm, amputation of:",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5123",
+   "name": "Forearm amputation above insertion of pronator teres",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5123 Above insertion of pronator teres",
+     "1 80",
+     "1 70"
+    ]
+   ]
+  },
+  {
+   "dc": "5124",
+   "name": "Forearm amputation below insertion of pronator teres",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5124 Below insertion of pronator teres",
+     "1 70",
+     "1 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5126",
+   "name": "Five digits of one hand",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5126 Five digits of one hand, amputation of",
+     "1 70",
+     "1 60"
+    ],
+    [
+     "Four digits of one hand, amputation of:",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5127",
+   "name": "Four digits: Thumb, index, long and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5127 Thumb, index, long and ring",
+     "1 70",
+     "1 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5128",
+   "name": "Four digits: Thumb, index, long and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5128 Thumb, index, long and little",
+     "1 70",
+     "1 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5129",
+   "name": "Four digits: Thumb, index, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5129 Thumb, index, ring and little",
+     "1 70",
+     "1 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5130",
+   "name": "Four digits: Thumb, long, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5130 Thumb, long, ring and little",
+     "1 70",
+     "1 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5131",
+   "name": "Four digits: Index, long, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5131 Index, long, ring and little",
+     "60",
+     "50"
+    ],
+    [
+     "Three digits of one hand, amputation of:",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5132",
+   "name": "Three digits: Thumb, index and long",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5132 Thumb, index and long",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5133",
+   "name": "Three digits: Thumb, index and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5133 Thumb, index and ring",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5134",
+   "name": "Three digits: Thumb, index and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5134 Thumb, index and little",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5135",
+   "name": "Three digits: Thumb, long and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5135 Thumb, long and ring",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5136",
+   "name": "Three digits: Thumb, long and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5136 Thumb, long and little",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5137",
+   "name": "Three digits: Thumb, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5137 Thumb, ring and little",
+     "60",
+     "50"
+    ]
+   ]
+  },
+  {
+   "dc": "5138",
+   "name": "Three digits: Index, long and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5138 Index, long and ring",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5139",
+   "name": "Three digits: Index, long and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5139 Index, long and little",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5140",
+   "name": "Three digits: Index, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5140 Index, ring and little",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5141",
+   "name": "Three digits: Long, ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5141 Long, ring and little",
+     "40",
+     "30"
+    ],
+    [
+     "Two digits of one hand, amputation of:",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5142",
+   "name": "Two digits: Thumb and index",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5142 Thumb and index",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5143",
+   "name": "Two digits: Thumb and long",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5143 Thumb and long",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5144",
+   "name": "Two digits: Thumb and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5144 Thumb and ring",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5145",
+   "name": "Two digits: Thumb and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5145 Thumb and little",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5146",
+   "name": "Two digits: Index and long",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5146 Index and long",
+     "40",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5147",
+   "name": "Two digits: Index and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5147 Index and ring",
+     "40",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5148",
+   "name": "Two digits: Index and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5148 Index and little",
+     "40",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5149",
+   "name": "Two digits: Long and ring",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5149 Long and ring",
+     "30",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5150",
+   "name": "Two digits: Long and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5150 Long and little",
+     "30",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5151",
+   "name": "Two digits: Ring and little",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5151 Ring and little",
+     "30",
+     "20"
+    ],
+    [
+     "(a) The ratings for multiple finger amputations apply to amputations at the proximal interphalangeal joints or through proximal phalanges.",
+     "",
+     ""
+    ],
+    [
+     "(b) Amputation through middle phalanges will be rated as prescribed for unfavorable ankylosis of the fingers.",
+     "",
+     ""
+    ],
+    [
+     "(c) Amputations at distal joints, or through distal phalanges, other than negligible losses, will be rated as prescribed for favorable ankylosis of the fingers.",
+     "",
+     ""
+    ],
+    [
+     "(d) Amputation or resection of metacarpal bones (more than one-half the bone lost) in multiple fingers injuries will require a rating of 10 percent added to (not combined with) the ratings, multiple finger amputations, subject to the amputation rule applied to the forearm.",
+     "",
+     ""
+    ],
+    [
+     "(e) Combinations of finger amputations at various levels, or finger amputations with ankylosis or limitation of motion of the fingers will be rated on the basis of the grade of disability; i.e. , amputation, unfavorable ankylosis, most representative of the levels or combinations. With an even number of fingers involved, and adjacent grades of disability, select the higher of the two grades.",
+     "",
+     ""
+    ],
+    [
+     "(f) Loss of use of the hand will be held to exist when no effective function remains other than that which would be equally well served by an amputation stump with a suitable prosthetic appliance.",
+     "",
+     ""
+    ],
+    [
+     "single finger amputations"
+    ]
+   ]
+  },
+  {
+   "dc": "5152",
+   "name": "Single finger: Thumb",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5152 Thumb, amputation of:",
+     "",
+     ""
+    ],
+    [
+     "With metacarpal resection",
+     "40",
+     "30"
+    ],
+    [
+     "At metacarpophalangeal joint or through proximal phalanx",
+     "30",
+     "20"
+    ],
+    [
+     "At distal joint or through distal phalanx",
+     "20",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5153",
+   "name": "Single finger: Index finger",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5153 Index finger, amputation of",
+     "",
+     ""
+    ],
+    [
+     "With metacarpal resection (more than one-half the bone lost)",
+     "30",
+     "20"
+    ],
+    [
+     "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto",
+     "20",
+     "20"
+    ],
+    [
+     "Through middle phalanx or at distal joint",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5154",
+   "name": "Single finger: Long finger",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5154 Long finger, amputation of:",
+     "",
+     ""
+    ],
+    [
+     "With metacarpal resection (more than one-half the bone lost)",
+     "20",
+     "20"
+    ],
+    [
+     "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5155",
+   "name": "Single finger: Ring finger",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5155 Ring finger, amputation of:",
+     "",
+     ""
+    ],
+    [
+     "With metacarpal resection (more than one-half the bone lost)",
+     "20",
+     "20"
+    ],
+    [
+     "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5156",
+   "name": "Single finger: Little finger",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5156 Little finger, amputation of:",
+     "",
+     ""
+    ],
+    [
+     "With metacarpal resection (more than one-half the bone lost)",
+     "20",
+     "20"
+    ],
+    [
+     "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto",
+     "10",
+     "10"
+    ],
+    [
+     "Note: The single finger amputation ratings are the only applicable ratings for amputations of whole or part of single fingers.",
+     "",
+     ""
+    ],
+    [
+     "1 Entitled to special monthly compensation."
+    ],
+    [
+     "Amputations: Lower Extremity"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "Thigh, amputation of:",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5161",
+   "name": "Thigh amputation, upper third",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5161 Upper third, one-third of the distance from perineum to knee joint measured from perineum",
+     "2 80"
+    ]
+   ]
+  },
+  {
+   "dc": "5162",
+   "name": "Thigh amputation, middle or lower thirds",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5162 Middle or lower thirds",
+     "2 60"
+    ],
+    [
+     "Leg, amputation of:",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5163",
+   "name": "Leg amputation with defective stump",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5163 With defective stump, thigh amputation recommended",
+     "2 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5164",
+   "name": "Leg amputation not improvable by prosthesis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5164 Amputation not improvable by prosthesis controlled by natural knee action",
+     "2 60"
+    ]
+   ]
+  },
+  {
+   "dc": "5166",
+   "name": "Forefoot amputation, proximal to metatarsal bones",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5166 Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)",
+     "2 40"
+    ]
+   ]
+  },
+  {
+   "dc": "5170",
+   "name": "Toes, all, amputation of, without metatarsal loss",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5170 Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half of metatarsal loss",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5172",
+   "name": "Toes, other than great, with removal of metatarsal head",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5172 Toes, other than great, amputation of, with removal of metatarsal head:",
+     ""
+    ],
+    [
+     "One or two",
+     "20"
+    ],
+    [
+     "Without metatarsal involvement",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5173",
+   "name": "Toes, three or more, without metatarsal involvement",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5173 Toes, three or four, amputation of, without metatarsal involvement:",
+     ""
+    ],
+    [
+     "Including great toe",
+     "20"
+    ],
+    [
+     "Not including great toe",
+     "10"
+    ],
+    [
+     "2 Also entitled to special monthly compensation."
+    ],
+    [
+     "The Shoulder and Arm"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "Major",
+     "Minor"
+    ]
+   ]
+  },
+  {
+   "dc": "5202",
+   "name": "Humerus, other impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5202 Humerus, other impairment of:",
+     "",
+     ""
+    ],
+    [
+     "Loss of head of (flail shoulder)",
+     "80",
+     "70"
+    ],
+    [
+     "Nonunion of (false flail joint)",
+     "60",
+     "50"
+    ],
+    [
+     "Fibrous union of",
+     "50",
+     "40"
+    ],
+    [
+     "Recurrent dislocation of at scapulohumeral joint:",
+     "",
+     ""
+    ],
+    [
+     "With frequent episodes and guarding of all arm movements",
+     "30",
+     "20"
+    ],
+    [
+     "With infrequent episodes and guarding of movement only at shoulder level (flexion and/or abduction at 90 °)",
+     "20",
+     "20"
+    ],
+    [
+     "Malunion of:",
+     "",
+     ""
+    ],
+    [
+     "Marked deformity",
+     "30",
+     "20"
+    ],
+    [
+     "Moderate deformity",
+     "20",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5205",
+   "name": "Elbow, ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5205 Elbow, ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Unfavorable, at an angle of less than 50° or with complete loss of supination or pronation",
+     "60",
+     "50"
+    ],
+    [
+     "Intermediate, at an angle of more than 90°, or between 70° and 50°",
+     "50",
+     "40"
+    ],
+    [
+     "Favorable, at an angle between 90° and 70°",
+     "40",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5206",
+   "name": "Forearm, limitation of flexion",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5206 Forearm, limitation of flexion of:",
+     "",
+     ""
+    ],
+    [
+     "Flexion limited to 45°",
+     "50",
+     "40"
+    ],
+    [
+     "Flexion limited to 55°",
+     "40",
+     "30"
+    ],
+    [
+     "Flexion limited to 70°",
+     "30",
+     "20"
+    ],
+    [
+     "Flexion limited to 90°",
+     "20",
+     "20"
+    ],
+    [
+     "Flexion limited to 100°",
+     "10",
+     "10"
+    ],
+    [
+     "Flexion limited to 110°",
+     "0",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5207",
+   "name": "Forearm, limitation of extension",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5207 Forearm, limitation of extension of:",
+     "",
+     ""
+    ],
+    [
+     "Extension limited to 110°",
+     "50",
+     "40"
+    ],
+    [
+     "Extension limited to 100°",
+     "40",
+     "30"
+    ],
+    [
+     "Extension limited to 90°",
+     "30",
+     "20"
+    ],
+    [
+     "Extension limited to 75°",
+     "20",
+     "20"
+    ],
+    [
+     "Extension limited to 60°",
+     "10",
+     "10"
+    ],
+    [
+     "Extension limited to 45°",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5208",
+   "name": "Forearm, flexion limited",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5208 Forearm, flexion limited to 100° and extension to 45°",
+     "20",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5209",
+   "name": "Elbow, other impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5209 Elbow, other impairment of Flail joint",
+     "60",
+     "50"
+    ],
+    [
+     "Joint fracture, with marked cubitus varus or cubitus valgus deformity or with ununited fracture of head of radius",
+     "20",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5210",
+   "name": "Radius and ulna, nonunion",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5210 Radius and ulna, nonunion of, with flail false joint",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5211",
+   "name": "Ulna, impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5211 Ulna, impairment of:",
+     "",
+     ""
+    ],
+    [
+     "Nonunion in upper half, with false movement:",
+     "",
+     ""
+    ],
+    [
+     "With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity",
+     "40",
+     "30"
+    ],
+    [
+     "Without loss of bone substance or deformity",
+     "30",
+     "20"
+    ],
+    [
+     "Nonunion in lower half",
+     "20",
+     "20"
+    ],
+    [
+     "Malunion of, with bad alignment",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5212",
+   "name": "Radius, impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5212 Radius, impairment of:",
+     "",
+     ""
+    ],
+    [
+     "Nonunion in lower half, with false movement:",
+     "",
+     ""
+    ],
+    [
+     "With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity",
+     "40",
+     "30"
+    ],
+    [
+     "Without loss of bone substance or deformity",
+     "30",
+     "20"
+    ],
+    [
+     "Nonunion in upper half",
+     "20",
+     "20"
+    ],
+    [
+     "Malunion of, with bad alignment",
+     "10",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5213",
+   "name": "Supination and pronation, impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5213 Supination and pronation, impairment of:",
+     "",
+     ""
+    ],
+    [
+     "Loss of (bone fusion):",
+     "",
+     ""
+    ],
+    [
+     "The hand fixed in supination or hyperpronation",
+     "40",
+     "30"
+    ],
+    [
+     "The hand fixed in full pronation",
+     "30",
+     "20"
+    ],
+    [
+     "The hand fixed near the middle of the arc or moderate pronation",
+     "20",
+     "20"
+    ],
+    [
+     "Limitation of pronation:",
+     "",
+     ""
+    ],
+    [
+     "Motion lost beyond middle of arc",
+     "30",
+     "20"
+    ],
+    [
+     "Motion lost beyond last quarter of arc, the hand does not approach full pronation",
+     "20",
+     "20"
+    ],
+    [
+     "Limitation of supination:",
+     "",
+     ""
+    ],
+    [
+     "To 30° or less",
+     "10",
+     "10"
+    ],
+    [
+     "Note: In all the forearm and wrist injuries, codes 5205 through 5213, multiple impaired finger movements due to tendon tie-up, muscle or nerve injury, are to be separately rated and combined not to exceed rating for loss of use of hand.",
+     "",
+     ""
+    ],
+    [
+     "The Wrist"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "Major",
+     "Minor"
+    ]
+   ]
+  },
+  {
+   "dc": "5216",
+   "name": "Five digits unfavorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5216 Five digits of one hand, unfavorable ankylosis of",
+     "60",
+     "50"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5217",
+   "name": "Four digits unfavorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5217 Four digits of one hand, unfavorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any three fingers",
+     "60",
+     "50"
+    ],
+    [
+     "Index, long, ring, and little fingers",
+     "50",
+     "40"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5218",
+   "name": "Three digits unfavorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5218 Three digits of one hand, unfavorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any two fingers",
+     "50",
+     "40"
+    ],
+    [
+     "Index, long, and ring; index, long, and little; or index, ring, and little fingers",
+     "40",
+     "30"
+    ],
+    [
+     "Long, ring, and little fingers",
+     "30",
+     "20"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5219",
+   "name": "Two digits unfavorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5219 Two digits of one hand, unfavorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any finger",
+     "40",
+     "30"
+    ],
+    [
+     "Index and long; index and ring; or index and little fingers",
+     "30",
+     "20"
+    ],
+    [
+     "Long and ring; long and little; or ring and little fingers",
+     "20",
+     "20"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted.",
+     "",
+     ""
+    ],
+    [
+     "II. Multiple Digits: Favorable Ankylosis"
+    ]
+   ]
+  },
+  {
+   "dc": "5220",
+   "name": "Five digits favorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5220 Five digits of one hand, favorable ankylosis of",
+     "50",
+     "40"
+    ]
+   ]
+  },
+  {
+   "dc": "5221",
+   "name": "Four digits favorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5221 Four digits of one hand, favorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any three fingers",
+     "50",
+     "40"
+    ],
+    [
+     "Index, long, ring, and little fingers",
+     "40",
+     "30"
+    ]
+   ]
+  },
+  {
+   "dc": "5222",
+   "name": "Three digits favorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5222 Three digits of one hand, favorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any two fingers",
+     "40",
+     "30"
+    ],
+    [
+     "Index, long, and ring; index, long, and little; or index, ring, and little fingers",
+     "30",
+     "20"
+    ],
+    [
+     "Long, ring and little fingers",
+     "20",
+     "20"
+    ]
+   ]
+  },
+  {
+   "dc": "5223",
+   "name": "Two digits favorable ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5223 Two digits of one hand, favorable ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Thumb and any finger",
+     "30",
+     "20"
+    ],
+    [
+     "Index and long; index and ring; or index and little fingers",
+     "20",
+     "20"
+    ],
+    [
+     "Long and ring; long and little; or ring and little fingers",
+     "10",
+     "10"
+    ],
+    [
+     "III. Ankylosis of Individual Digits"
+    ]
+   ]
+  },
+  {
+   "dc": "5225",
+   "name": "Index finger, ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5225 Index finger, ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Unfavorable or favorable",
+     "10",
+     "10"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted and whether an additional evaluation is warranted for resulting limitation of motion of other digits or interference with overall function of the hand.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5226",
+   "name": "Long finger, ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5226 Long finger, ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Unfavorable or favorable",
+     "10",
+     "10"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted and whether an additional evaluation is warranted for resulting limitation of motion of other digits or interference with overall function of the hand.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5227",
+   "name": "Ring or little finger, ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5227 Ring or little finger, ankylosis of:",
+     "",
+     ""
+    ],
+    [
+     "Unfavorable or favorable",
+     "0",
+     "0"
+    ],
+    [
+     "Note: Also consider whether evaluation as amputation is warranted and whether an additional evaluation is warranted for resulting limitation of motion of other digits or interference with overall function of the hand.",
+     "",
+     ""
+    ],
+    [
+     "IV. Limitation of Motion of Individual Digits"
+    ]
+   ]
+  },
+  {
+   "dc": "5229",
+   "name": "Index or long finger, limitation of motion",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5229 Index or long finger, limitation of motion:",
+     "",
+     ""
+    ],
+    [
+     "With a gap of one inch (2.5 cm.) or more between the fingertip and the proximal transverse crease of the palm, with the finger flexed to the extent possible, or; with extension limited by more than 30 degrees",
+     "10",
+     "10"
+    ],
+    [
+     "With a gap of less than one inch (2.5 cm.) between the fingertip and the proximal transverse crease of the palm, with the finger flexed to the extent possible, and; extension is limited by no more than 30 degrees",
+     "0",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5230",
+   "name": "Ring or little finger, limitation of motion",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5230 Ring or little finger, limitation of motion:",
+     "",
+     ""
+    ],
+    [
+     "Any limitation of motion",
+     "0",
+     "0"
+    ],
+    [
+     "The Spine"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "General Rating Formula for Diseases and Injuries of the Spine",
+     ""
+    ],
+    [
+     "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes):",
+     ""
+    ],
+    [
+     "With or without symptoms such as pain (whether or not it radiates), stiffness, or aching in the area of the spine affected by residuals of injury or disease",
+     ""
+    ],
+    [
+     "Unfavorable ankylosis of the entire spine",
+     "100"
+    ],
+    [
+     "Unfavorable ankylosis of the entire thoracolumbar spine",
+     "50"
+    ],
+    [
+     "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+     "40"
+    ],
+    [
+     "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+     "30"
+    ],
+    [
+     "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+     "20"
+    ],
+    [
+     "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height",
+     "10"
+    ],
+    [
+     "Note (1): Evaluate any associated objective neurologic abnormalities, including, but not limited to, bowel or bladder impairment, separately, under an appropriate diagnostic code.",
+     ""
+    ],
+    [
+     "Note (2): (See also Plate V.) For VA compensation purposes, normal forward flexion of the cervical spine is zero to 45 degrees, extension is zero to 45 degrees, left and right lateral flexion are zero to 45 degrees, and left and right lateral rotation are zero to 80 degrees. Normal forward flexion of the thoracolumbar spine is zero to 90 degrees, extension is zero to 30 degrees, left and right lateral flexion are zero to 30 degrees, and left and right lateral rotation are zero to 30 degrees. The combined range of motion refers to the sum of the range of forward flexion, extension, left and right lateral flexion, and left and right rotation. The normal combined range of motion of the cervical spine is 340 degrees and of the thoracolumbar spine is 240 degrees. The normal ranges of motion for each component of spinal motion provided in this note are the maximum that can be used for calculation of the combined range of motion.",
+     ""
+    ],
+    [
+     "Note (3): In exceptional cases, an examiner may state that because of age, body habitus, neurologic disease, or other factors not the result of disease or injury of the spine, the range of motion of the spine in a particular individual should be considered normal for that individual, even though it does not conform to the normal range of motion stated in Note (2). Provided that the examiner supplies an explanation, the examiner's assessment that the range of motion is normal for that individual will be accepted.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5244",
+   "name": "Traumatic paralysis, complete",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5244 Traumatic paralysis, complete:",
+     ""
+    ],
+    [
+     "Paraplegia: Rate under diagnostic code 5110.",
+     ""
+    ],
+    [
+     "Quadriplegia: Rate separately under diagnostic codes 5109 and 5110 and combine evaluations in accordance with § 4.25 .",
+     ""
+    ],
+    [
+     "Note: If traumatic paralysis does not cause loss of use of both hands or both feet, it is incomplete paralysis. Evaluate residuals of incomplete traumatic paralysis under the appropriate diagnostic code ( e.g., § 4.124a , Diseases of the Peripheral Nerves).",
+     ""
+    ],
+    [
+     "Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes",
+     ""
+    ],
+    [
+     "With incapacitating episodes having a total duration of at least 6 weeks during the past 12 months",
+     "60"
+    ],
+    [
+     "With incapacitating episodes having a total duration of at least 4 weeks but less than 6 weeks during the past 12 months",
+     "40"
+    ],
+    [
+     "With incapacitating episodes having a total duration of at least 2 weeks but less than 4 weeks during the past 12 months",
+     "20"
+    ],
+    [
+     "With incapacitating episodes having a total duration of at least one week but less than 2 weeks during the past 12 months",
+     "10"
+    ],
+    [
+     "Note (1): For purposes of evaluations under diagnostic code 5243, an incapacitating episode is a period of acute signs and symptoms due to intervertebral disc syndrome that requires bed rest prescribed by a physician and treatment by a physician.",
+     ""
+    ],
+    [
+     "Note (2): If intervertebral disc syndrome is present in more than one spinal segment, provided that the effects in each spinal segment are clearly distinct, evaluate each segment on the basis of incapacitating episodes or under the General Rating Formula for Diseases and Injuries of the Spine, whichever method results in a higher evaluation for that segment.",
+     ""
+    ],
+    [
+     "The Hip and Thigh"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5255",
+   "name": "Femur, impairment",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5255 Femur, impairment of:",
+     ""
+    ],
+    [
+     "Fracture of shaft or anatomical neck of:",
+     ""
+    ],
+    [
+     "With nonunion, with loose motion (spiral or oblique fracture)",
+     "80"
+    ],
+    [
+     "With nonunion, without loose motion, weight bearing preserved with aid of brace",
+     "60"
+    ],
+    [
+     "Fracture of surgical neck of, with false joint",
+     "60"
+    ],
+    [
+     "Malunion of:",
+     ""
+    ],
+    [
+     "Evaluate under diagnostic codes 5256, 5257, 5260, or 5261 for the knee, or 5250-5254 for the hip, whichever results in the highest evaluation.",
+     ""
+    ],
+    [
+     "3 Entitled to special monthly compensation."
+    ],
+    [
+     "The Knee and Leg"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5272",
+   "name": "Subastragalar or tarsal joint, ankylosis",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5272 Subastragalar or tarsal joint, ankylosis of:",
+     ""
+    ],
+    [
+     "In poor weight-bearing position",
+     "20"
+    ],
+    [
+     "In good weight-bearing position",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5273",
+   "name": "Os calcis or astragalus, malunion",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5273 Os calcis or astragalus, malunion of:",
+     ""
+    ],
+    [
+     "Marked deformity",
+     "20"
+    ],
+    [
+     "Moderate deformity",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5274",
+   "name": "Astragalectomy",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5274 Astragalectomy",
+     "20"
+    ],
+    [
+     "Shortening of the Lower Extremity"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5275",
+   "name": "Bones of lower extremity, shortening",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5275 Bones, of the lower extremity, shortening of:",
+     ""
+    ],
+    [
+     "Over 4 inches (10.2 cms.)",
+     "3 60"
+    ],
+    [
+     "3 1 ⁄ 2 to 4 inches (8.9 cms. to 10.2 cms.)",
+     "3 50"
+    ],
+    [
+     "3 to 3 1 ⁄ 2 inches (7.6 cms. to 8.9 cms.)",
+     "40"
+    ],
+    [
+     "2 1 ⁄ 2 to 3 inches (6.4 cms. to 7.6 cms.)",
+     "30"
+    ],
+    [
+     "2 to 2 1 ⁄ 2 inches (5.1 cms. to 6.4 cms.)",
+     "20"
+    ],
+    [
+     "1 1 ⁄ 4 to 2 inches (3.2 cms. to 5.1 cms.)",
+     "10"
+    ],
+    [
+     "Note: Measure both lower extremities from anterior superior spine of the ilium to the internal malleolus of the tibia. Not to be combined with other ratings for fracture or faulty union in the same extremity.",
+     ""
+    ],
+    [
+     "3 Also entitled to special monthly compensation."
+    ],
+    [
+     "The Foot"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5277",
+   "name": "Weak foot, bilateral",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5277 Weak foot, bilateral:",
+     ""
+    ],
+    [
+     "A symptomatic condition secondary to many constitutional conditions, characterized by atrophy of the musculature, disturbed circulation, and weakness:",
+     ""
+    ],
+    [
+     "Rate the underlying condition, minimum rating",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5278",
+   "name": "Claw foot (pes cavus), acquired",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5278 Claw foot (pes cavus), acquired:",
+     ""
+    ],
+    [
+     "Marked contraction of plantar fascia with dropped forefoot, all toes hammer toes, very painful callosities, marked varus deformity:",
+     ""
+    ],
+    [
+     "Bilateral",
+     "50"
+    ],
+    [
+     "Unilateral",
+     "30"
+    ],
+    [
+     "All toes tending to dorsiflexion, limitation of dorsiflexion at ankle to right angle, shortened plantar fascia, and marked tenderness under metatarsal heads:",
+     ""
+    ],
+    [
+     "Bilateral",
+     "30"
+    ],
+    [
+     "Unilateral",
+     "20"
+    ],
+    [
+     "Great toe dorsiflexed, some limitation of dorsiflexion at ankle, definite tenderness under metatarsal heads:",
+     ""
+    ],
+    [
+     "Bilateral",
+     "10"
+    ],
+    [
+     "Unilateral",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5279",
+   "name": "Metatarsalgia, anterior (Morton's disease)",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5279 Metatarsalgia, anterior (Morton's disease), unilateral, or bilateral",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5280",
+   "name": "Hallux valgus",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5280 Hallux valgus, unilateral:",
+     ""
+    ],
+    [
+     "Operated with resection of metatarsal head",
+     "10"
+    ],
+    [
+     "Severe, if equivalent to amputation of great toe",
+     "10"
+    ]
+   ]
+  },
+  {
+   "dc": "5281",
+   "name": "Hallux rigidus",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5281 Hallux rigidus, unilateral, severe:",
+     ""
+    ],
+    [
+     "Rate as hallux valgus, severe.",
+     ""
+    ],
+    [
+     "Note: Not to be combined with claw foot ratings.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5282",
+   "name": "Hammer toe",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5282 Hammer toe:",
+     ""
+    ],
+    [
+     "All toes, unilateral without claw foot",
+     "10"
+    ],
+    [
+     "Single toes",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5283",
+   "name": "Tarsal or metatarsal bones",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5283 Tarsal, or metatarsal bones, malunion of, or nonunion of:",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Note: With actual loss of use of the foot, rate 40 percent.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5284",
+   "name": "Foot injuries, other",
+   "section": "§ 4.71a",
+   "rows": [
+    [
+     "5284 Foot injuries, other:",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Note: With actual loss of use of the foot, rate 40 percent.",
+     ""
+    ],
+    [
+     "The Skull"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5309",
+   "name": "Group IX: Forearm muscles",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5309 Group IX. Function: The forearm muscles act in strong grasping movements and are supplemented by the intrinsic muscles in delicate manipulative movements. Intrinsic muscles of hand: Thenar eminence; short flexor, opponens, abductor and adductor of thumb; hypothenar eminence; short flexor, opponens and abductor of little finger; 4 lumbricales; 4 dorsal and 3 palmar interossei",
+     "",
+     ""
+    ],
+    [
+     "Note: The hand is so compact a structure that isolated muscle injuries are rare, being nearly always complicated with injuries of bones, joints, tendons, etc. Rate on limitation of motion, minimum 10 percent.",
+     "",
+     ""
+    ],
+    [
+     "The Foot and Leg"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5310",
+   "name": "Group X: Movement of forefoot and toes",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5310 Group X. Function: Movements of forefoot and toes; propulsion thrust in walking. Intrinsic muscles of the foot: Plantar: (1) Flexor digitorum brevis; (2) abductor hallucis; (3) abductor digiti minimi; (4) quadratus plantae; (5) lumbricales; (6) flexor hallucis brevis; (7) adductor hallucis; (8) flexor digiti minimi brevis; (9) dorsal and plantar interossei. Other important plantar structures: Plantar aponeurosis, long plantar and calcaneonavicular ligament, tendons of posterior tibial, peroneus longus, and long flexors of great and little toes",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "Dorsal: (1) Extensor hallucis brevis; (2) extensor digitorum brevis. Other important dorsal structures: cruciate, crural, deltoid, and other ligaments; tendons of long extensors of toes and peronei muscles",
+     ""
+    ],
+    [
+     "Severe",
+     "20"
+    ],
+    [
+     "Moderately Severe",
+     "10"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "Note: Minimum rating for through-and-through wounds of the foot—10.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5311",
+   "name": "Group XI: Propulsion of foot",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5311 Group XI. Function: Propulsion, plantar flexion of foot (1); stabilization of arch (2, 3); flexion of toes (4, 5); Flexion of knee (6). Posterior and lateral crural muscles, and muscles of the calf: (1) Triceps surae (gastrocnemius and soleus); (2) tibialis posterior; (3) peroneus longus; (4) peroneus brevis; (5) flexor hallucis longus; (6) flexor digitorum longus; (7) popliteus; (8) plantaris",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5312",
+   "name": "Group XII: Dorsiflexion",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5312 Group XII. Function: Dorsiflexion (1); extension of toes (2); stabilization of arch (3). Anterior muscles of the leg: (1) Tibialis anterior; (2) extensor digitorum longus; (3) extensor hallucis longus; (4) peroneus tertius",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "The Pelvic Girdle and Thigh"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5313",
+   "name": "Group XIII: Extension of hip and flexion of knee",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5313 Group XIII. Function: Extension of hip and flexion of knee; outward and inward rotation of flexed knee; acting with rectus femoris and sartorius (see XIV, 1, 2) synchronizing simultaneous flexion of hip and knee and extension of hip and knee by belt-over-pulley action at knee joint. Posterior thigh group, Hamstring complex of 2-joint muscles: (1) Biceps femoris; (2) semimembranosus; (3) semitendinosus",
+     ""
+    ],
+    [
+     "Severe",
+     "40"
+    ],
+    [
+     "Moderately Severe",
+     "30"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5314",
+   "name": "Group XIV: Extension of knee",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5314 Group XIV. Function: Extension of knee (2, 3, 4, 5); simultaneous flexion of hip and flexion of knee (1); tension of fascia lata and iliotibial (Maissiat's) band, acting with XVII (1) in postural support of body (6); acting with hamstrings in synchronizing hip and knee (1, 2). Anterior thigh group: (1) Sartorius; (2) rectus femoris; (3) vastus externus; (4) vastus intermedius; (5) vastus internus; (6) tensor vaginae femoris",
+     ""
+    ],
+    [
+     "Severe",
+     "40"
+    ],
+    [
+     "Moderately Severe",
+     "30"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5315",
+   "name": "Group XV: Adduction of hip",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5315 Group XV. Function: Adduction of hip (1, 2, 3, 4); flexion of hip (1, 2); flexion of knee (4). Mesial thigh group: (1) Adductor longus; (2) adductor brevis; (3) adductor magnus; (4) gracilis",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5316",
+   "name": "Group XVI: Flexion of hip",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5316 Group XVI. Function: Flexion of hip (1, 2, 3). Pelvic girdle group 1: (1) Psoas; (2) iliacus; (3) pectineus",
+     ""
+    ],
+    [
+     "Severe",
+     "40"
+    ],
+    [
+     "Moderately Severe",
+     "30"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5318",
+   "name": "Group XVIII: Outward rotation of thigh",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5318 Group XVIII. Function: Outward rotation of thigh and stabilization of hip joint. Pelvic girdle group 3: (1) Pyriformis; (2) gemellus (superior or inferior); (3) obturator (external or internal); (4) quadratus femoris",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "* If bilateral, see § 3.350(a)(3) of this chapter to determine whether the veteran may be entitled to special monthly compensation."
+    ],
+    [
+     "The Torso and Neck"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5319",
+   "name": "Group XIX: Abdominal wall and lower thorax",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5319 Group XIX. Function: Support and compression of abdominal wall and lower thorax; flexion and lateral motions of spine; synergists in strong downward movements of arm (1). Muscles of the abdominal wall: (1) Rectus abdominis; (2) external oblique; (3) internal oblique; (4) transversalis; (5) quadratus lumborum",
+     ""
+    ],
+    [
+     "Severe",
+     "50"
+    ],
+    [
+     "Moderately Severe",
+     "30"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5320",
+   "name": "Group XX: Postural support of body",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5320 Group XX. Function: Postural support of body; extension and lateral movements of spine. Spinal muscles: Sacrospinalis (erector spinae and its prolongations in thoracic and cervical regions)",
+     ""
+    ],
+    [
+     "Cervical and thoracic region:",
+     ""
+    ],
+    [
+     "Severe",
+     "40"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "Lumbar region:",
+     ""
+    ],
+    [
+     "Severe",
+     "60"
+    ],
+    [
+     "Moderately Severe",
+     "40"
+    ],
+    [
+     "Moderate",
+     "20"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5321",
+   "name": "Group XXI: Respiration",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5321 Group XXI. Function: Respiration. Muscles of respiration: Thoracic muscle group",
+     ""
+    ],
+    [
+     "Severe or Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5322",
+   "name": "Group XXII: Rotary and forward movements, head",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5322 Group XXII. Function: Rotary and forward movements of the head; respiration; deglutition. Muscles of the front of the neck: (Lateral, supra-, and infrahyoid group.) (1) Trapezius I (clavicular insertion); (2) sternocleidomastoid; (3) the “hyoid” muscles; (4) sternothyroid; (5) digastric",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "5323",
+   "name": "Group XXIII: Movements of head",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5323 Group XXIII. Function: Movements of the head; fixation of shoulder movements. Muscles of the side and back of the neck: Suboccipital; lateral vertebral and anterior vertebral muscles",
+     ""
+    ],
+    [
+     "Severe",
+     "30"
+    ],
+    [
+     "Moderately Severe",
+     "20"
+    ],
+    [
+     "Moderate",
+     "10"
+    ],
+    [
+     "Slight",
+     "0"
+    ],
+    [
+     "Miscellaneous"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "5325",
+   "name": "Muscle injury, facial muscles",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5325 Muscle injury, facial muscles. Evaluate functional impairment as seventh (facial) cranial nerve neuropathy (diagnostic code 8207), disfiguring scar (diagnostic code 7800), etc. Minimum, if interfering to any extent with mastication—10",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5326",
+   "name": "Muscle hernia",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5326 Muscle hernia, extensive. Without other injury to the muscle—10",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5327",
+   "name": "Muscle, neoplasm of, malignant",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5327 Muscle, neoplasm of, malignant (excluding soft tissue sarcoma)—100",
+     ""
+    ],
+    [
+     "Note: A rating of 100 percent shall continue beyond the cessation of any surgery, radiation treatment, antineoplastic chemotherapy or other therapeutic procedures. Six months after discontinuance of such treatment, the appropriate disability rating shall be determined by mandatory VA examination. Any change in evaluation based upon that or any subsequent examination shall be subject to the provisions of § 3.105(e) of this chapter . If there has been no local recurrence or metastasis, rate on residual impairment of function.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5328",
+   "name": "Muscle, neoplasm of, benign",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5328 Muscle, neoplasm of, benign, postoperative. Rate on impairment of function, i.e. , limitation of motion, or scars, diagnostic code 7805, etc",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5329",
+   "name": "Sarcoma, soft tissue",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5329 Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)—100",
+     ""
+    ],
+    [
+     "Note: A rating of 100 percent shall continue beyond the cessation of any surgery, radiation treatment, antineoplastic chemotherapy or other therapeutic procedures. Six months after discontinuance of such treatment, the appropriate disability rating shall be determined by mandatory VA examination. Any change in evaluation based upon that or any subsequent examination shall be subject to the provisions of § 3.105(e) of this chapter . If there has been no local recurrence or metastasis, rate on residual impairment of function.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5330",
+   "name": "Rhabdomyolysis, residuals of",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5330 Rhabdomyolysis, residuals of:",
+     ""
+    ],
+    [
+     "Rate each affected muscle group separately and combine in accordance with § 4.25",
+     ""
+    ],
+    [
+     "Note: Separately evaluate any chronic renal complications within the appropriate body system.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "5331",
+   "name": "Compartment syndrome",
+   "section": "§ 4.73",
+   "rows": [
+    [
+     "5331 Compartment syndrome:",
+     ""
+    ],
+    [
+     "Rate each affected muscle group separately and combine in accordance with § 4.25",
+     ""
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "DISEASES OF THE NOSE AND THROAT"
+    ]
+   ]
+  },
+  {
+   "dc": "6723",
+   "name": "Pulmonary TB, inactive, minimal",
+   "section": "§ 4.97",
+   "rows": [
+    [
+     "6723 Tuberculosis, pulmonary, chronic, minimal, inactive",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "6724",
+   "name": "Pulmonary TB, inactive, advancement unspecified",
+   "section": "§ 4.97",
+   "rows": [
+    [
+     "6724 Tuberculosis, pulmonary, chronic, inactive, advancement unspecified",
+     ""
+    ],
+    [
+     "General Rating Formula for Inactive Pulmonary Tuberculosis: For two years after date of inactivity, following active tuberculosis, which was clinically identified during service or subsequently",
+     "100"
+    ],
+    [
+     "Thereafter for four years, or in any event, to six years after date of inactivity",
+     "50"
+    ],
+    [
+     "Thereafter, for five years, or to eleven years after date of inactivity",
+     "30"
+    ],
+    [
+     "Following far advanced lesions diagnosed at any time while the disease process was active, minimum",
+     "30"
+    ],
+    [
+     "Following moderately advanced lesions, provided there is continued disability, emphysema, dyspnea on exertion, impairment of health, etc",
+     "20"
+    ],
+    [
+     "Otherwise",
+     "0"
+    ],
+    [
+     "Note (1): The 100-percent rating under codes 6701 through 6724 is not subject to a requirement of precedent hospital treatment. It will be reduced to 50 percent for failure to submit to examination or to follow prescribed treatment upon report to that effect from the medical authorities. When a veteran is placed on the 100-percent rating for inactive tuberculosis, the medical authorities will be appropriately notified of the fact, and of the necessity, as given in footnote 1 to 38 U.S.C. 1156 (and formerly in 38 U.S.C. 356 , which has been repealed by Public Law 90-493), to notify the Veterans Service Center in the event of failure to submit to examination or to follow treatment.",
+     ""
+    ],
+    [
+     "Note (2): The graduated 50-percent and 30-percent ratings and the permanent 30 percent and 20 percent ratings for inactive pulmonary tuberculosis are not to be combined with ratings for other respiratory disabilities. Following thoracoplasty the rating will be for removal of ribs combined with the rating for collapsed lung. Resection of the ribs incident to thoracoplasty will be rated as removal.",
+     ""
+    ],
+    [
+     "Ratings for Pulmonary Tuberculosis Initially Evaluated After August 19, 1968"
+    ]
+   ]
+  },
+  {
+   "dc": "7124",
+   "name": "Raynaud's disease (primary Raynaud's)",
+   "section": "§ 4.104",
+   "rows": [
+    [
+     "7124 Raynaud's disease (also known as primary Raynaud's):",
+     ""
+    ],
+    [
+     "Characteristic attacks associated with trophic change(s), such as tight, shiny skin",
+     "10"
+    ],
+    [
+     "Characteristic attacks without trophic change(s)",
+     "0"
+    ],
+    [
+     "Note (1): For purposes of this section, characteristic attacks consist of intermittent and episodic color changes of the digits of one or more extremities, lasting minutes or longer, with occasional pain and paresthesias, and precipitated by exposure to cold or by emotional upsets. These evaluations are for the disease as a whole, regardless of the number of extremities involved or whether the nose and ears are involved.",
+     ""
+    ],
+    [
+     "Note (2): Trophic changes include, but are not limited to, skin changes (thinning, atrophy, fissuring, ulceration, scarring, absence of hair) as well as nail changes (clubbing, deformities).",
+     ""
+    ],
+    [
+     "Note (3): This section is for evaluating Raynaud's disease (primary Raynaud's). For evaluation of Raynaud's syndrome (also known as secondary Raynaud's phenomenon, or secondary Raynaud's), see DC 7117.",
+     ""
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "7352",
+   "name": "Pancreas transplant",
+   "section": "§ 4.114",
+   "rows": [
+    [
+     "7352 Pancreas transplant:",
+     ""
+    ],
+    [
+     "For an indefinite period from the date of hospital admission for transplant surgery",
+     "100"
+    ],
+    [
+     "Minimum rating",
+     "30"
+    ],
+    [
+     "Note: Assign a rating of 100% as of the date of hospital admission for transplant surgery. One year following discharge, determine the appropriate disability rating by mandatory VA examination. Apply the provisions of § 3.105(e) of this chapter to any change in evaluation based upon that or any subsequent examination.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7354",
+   "name": "Hepatitis C",
+   "section": "§ 4.114",
+   "rows": [
+    [
+     "7354 Hepatitis C (or non-A, non-B hepatitis):",
+     ""
+    ],
+    [
+     "Rate under DC 7345 (Chronic liver disease without cirrhosis).",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7355",
+   "name": "Celiac disease",
+   "section": "§ 4.114",
+   "rows": [
+    [
+     "7355 Celiac disease:",
+     ""
+    ],
+    [
+     "Malabsorption syndrome with weakness which interferes with activities of daily living; and weight loss resulting in wasting and nutritional deficiencies; and with systemic manifestations including but not limited to, weakness and fatigue, dermatitis, lymph node enlargement, hypocalcemia, low vitamin levels; and anemia related to malabsorption; and episodes of abdominal pain and diarrhea due to lactase deficiency or pancreatic insufficiency",
+     "80"
+    ],
+    [
+     "Malabsorption syndrome with chronic diarrhea managed by medically-prescribed dietary intervention such as prescribed gluten-free diet, with nutritional deficiencies due to lactase and pancreatic insufficiency; and with systemic manifestations including, but not limited to, weakness and fatigue, dermatitis, lymph node enlargement, hypocalcemia, low vitamin levels, or atrophy of the inner intestinal lining shown on biopsy",
+     "50"
+    ],
+    [
+     "Malabsorption syndrome with chronic diarrhea managed by medically-prescribed dietary intervention such as prescribed gluten-free diet; and without nutritional deficiencies",
+     "30"
+    ],
+    [
+     "Note (1): An appropriate serum antibody test or endoscopy with biopsy must confirm the diagnosis.",
+     ""
+    ],
+    [
+     "Note (2): For evaluation of celiac disease with the predominant disability of malabsorption, use the greater evaluation between DC 7328 or celiac disease under DC 7355.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7356",
+   "name": "Gastrointestinal dysmotility syndrome",
+   "section": "§ 4.114",
+   "rows": [
+    [
+     "7356 Gastrointestinal dysmotility syndrome:",
+     ""
+    ],
+    [
+     "Requiring complete dependence on total parenteral nutrition (TPN) or continuous tube feeding for nutritional support",
+     "80"
+    ],
+    [
+     "Requiring intermittent tube feeding for nutritional support; with recurrent emergency treatment for episodes of intestinal obstruction or regurgitation due to poor gastric emptying, abdominal pain, recurrent nausea, or recurrent vomiting",
+     "50"
+    ],
+    [
+     "With symptoms of chronic intestinal pseudo-obstruction (CIPO) or symptoms of intestinal motility disorder, including but not limited to, abdominal pain, bloating, feeling of epigastric fullness, dyspepsia, nausea and vomiting, regurgitation, constipation, and diarrhea, managed by ambulatory care; and requiring prescribed dietary management or manipulation",
+     "30"
+    ],
+    [
+     "Intermittent abdominal pain with epigastric fullness associated with bloating; and without evidence of a structural gastrointestinal disease",
+     "10"
+    ],
+    [
+     "Note: Use this diagnostic code for illnesses associated with § 3.317(a)(2)(i)(B)( 3 ) of this chapter , other than those which can be evaluated under DC 7319.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7357",
+   "name": "Post pancreatectomy syndrome",
+   "section": "§ 4.114",
+   "rows": [
+    [
+     "7357 Post pancreatectomy syndrome:",
+     ""
+    ],
+    [
+     "Following total or partial pancreatectomy, evaluate under Pancreatitis, chronic (DC 7347), Chronic complications of upper gastrointestinal surgery (DC 7303), or based on residuals such as malabsorption (Intestine, small, resection of, DC 7328), diarrhea (Irritable bowel syndrome, DC 7319, or Crohn's disease or undifferentiated form of inflammatory bowel disease, DC 7326), or diabetes (DC 7913), whichever provides the highest evaluation",
+     ""
+    ],
+    [
+     "Minimum",
+     "30"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "Note: When evaluating any claim involving loss or loss of use of one or more creative organs, refer to § 3.350 of this chapter to determine whether the veteran may be entitled to special monthly compensation. Footnotes in the schedule indicate conditions which potentially establish entitlement to special monthly compensation; however, there are other conditions in this section which under certain circumstances also establish entitlement to special monthly compensation.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7533",
+   "name": "Cystic diseases of the kidneys",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7533 Cystic diseases of the kidneys:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ],
+    [
+     "Note: Cystic diseases of the kidneys include, but are not limited to, polycystic disease, uremic medullary cystic disease, medullary sponge kidney, and similar conditions such as Alport's syndrome, cystinosis, primary oxalosis, and Fabry's disease.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7534",
+   "name": "Atherosclerotic renal disease",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7534 Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel disease, unspecified):",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7535",
+   "name": "Toxic nephropathy",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7535 Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy metals, and similar agents):",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7536",
+   "name": "Glomerulonephritis",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7536 Glomerulonephritis:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7537",
+   "name": "Interstitial nephritis",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7537 Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7538",
+   "name": "Papillary necrosis",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7538 Papillary necrosis:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7539",
+   "name": "Renal amyloid disease",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7539 Renal amyloid disease:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ],
+    [
+     "Note: This diagnostic code pertains to renal involvement secondary to all glomerulonephritis conditions, all vasculitis conditions and their derivatives, and other renal conditions caused by systemic diseases, such as Lupus erythematosus, systemic lupus erythematosus nephritis, Henoch-Schonlein syndrome, scleroderma, hemolytic uremic syndrome, polyarthritis, Wegener's granulomatosis, Goodpasture's syndrome, and sickle cell disease.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7543",
+   "name": "Varicocele/Hydrocele",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7543 Varicocele/Hydrocele",
+     "1 0"
+    ]
+   ]
+  },
+  {
+   "dc": "7544",
+   "name": "Renal disease caused by viral infection",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7544 Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and Hepatitis C:",
+     ""
+    ],
+    [
+     "Rate as renal dysfunction.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "7545",
+   "name": "Bladder, diverticulum of",
+   "section": "§ 4.115b",
+   "rows": [
+    [
+     "7545 Bladder, diverticulum of:",
+     ""
+    ],
+    [
+     "Rate as voiding dysfunction or urinary tract infection, whichever is predominant.",
+     ""
+    ],
+    [
+     "1 Review for entitlement to special monthly compensation under § 3.350 of this chapter ."
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "7831",
+   "name": "Alopecia areata",
+   "section": "§ 4.118",
+   "rows": [
+    [
+     "7831 Alopecia areata:",
+     ""
+    ],
+    [
+     "With loss of all body hair",
+     "10"
+    ],
+    [
+     "With loss of hair limited to scalp and face",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "7832",
+   "name": "Hyperhidrosis",
+   "section": "§ 4.118",
+   "rows": [
+    [
+     "7832 Hyperhidrosis:",
+     ""
+    ],
+    [
+     "Unable to handle paper or tools because of moisture, and unresponsive to therapy",
+     "30"
+    ],
+    [
+     "Able to handle paper or tools after therapy",
+     "0"
+    ]
+   ]
+  },
+  {
+   "dc": "7833",
+   "name": "Malignant melanoma",
+   "section": "§ 4.118",
+   "rows": [
+    [
+     "7833 Malignant melanoma:",
+     ""
+    ],
+    [
+     "Rate as scars (DC's 7801, 7802, 7803, 7804, or 7805), disfigurement of the head, face, or neck (DC 7800), or impairment of function (under the appropriate body system)",
+     ""
+    ],
+    [
+     "Note: If a skin malignancy requires therapy that is comparable to that used for systemic malignancies, i.e. , systemic chemotherapy, X-ray therapy more extensive than to the skin, or surgery more extensive than wide local excision, a 100-percent evaluation will be assigned from the date of onset of treatment, and will continue, with a mandatory VA examination six months following the completion of such antineoplastic treatment, and any change in evaluation based upon that or any subsequent examination will be subject to the provisions of § 3.105(e) . If there has been no local recurrence or metastasis, evaluation will then be made on residuals. If treatment is confined to the skin, the provisions for a 100-percent evaluation do not apply.",
+     ""
+    ],
+    [
+     "Organic Diseases of the Central Nervous System"
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ]
+   ]
+  },
+  {
+   "dc": "8610",
+   "name": "Neuritis, upper radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8610 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8611",
+   "name": "Neuritis, middle radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8611 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8612",
+   "name": "Neuritis, lower radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8612 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8613",
+   "name": "Neuritis, all radicular groups",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8613 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8614",
+   "name": "Neuritis, musculospiral nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8614 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8615",
+   "name": "Neuritis, median nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8615 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8616",
+   "name": "Neuritis, ulnar nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8616 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8617",
+   "name": "Neuritis, musculocutaneous nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8617 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8618",
+   "name": "Neuritis, circumflex nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8618 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8619",
+   "name": "Neuritis, long thoracic nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8619 Neuritis.",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8621",
+   "name": "Neuritis, external popliteal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8621 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8622",
+   "name": "Neuritis, musculocutaneous nerve (superficial peroneal)",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8622 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8623",
+   "name": "Neuritis, anterior tibial nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8623 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8624",
+   "name": "Neuritis, internal popliteal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8624 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8625",
+   "name": "Neuritis, posterior tibial nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8625 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8626",
+   "name": "Neuritis, anterior crural nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8626 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8627",
+   "name": "Neuritis, internal saphenous nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8627 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8628",
+   "name": "Neuritis, obturator nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8628 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8629",
+   "name": "Neuritis, external cutaneous nerve of thigh",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8629 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8630",
+   "name": "Neuritis, ilio-inguinal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8630 Neuritis.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8710",
+   "name": "Neuralgia, upper radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8710 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Middle radicular group",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8711",
+   "name": "Neuralgia, middle radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8711 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Lower radicular group",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8712",
+   "name": "Neuralgia, lower radicular group",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8712 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "All radicular groups",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8713",
+   "name": "Neuralgia, all radicular groups",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8713 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "The musculospiral nerve (radial nerve)",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8714",
+   "name": "Neuralgia, musculospiral nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8714 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Note: Lesions involving only “dissociation of extensor communis digitorum” and “paralysis below the extensor communis digitorum,” will not exceed the moderate rating under code 8514."
+    ],
+    [
+     "The median nerve",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8715",
+   "name": "Neuralgia, median nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8715 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "The ulnar nerve",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8716",
+   "name": "Neuralgia, ulnar nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8716 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Musculocutaneous nerve",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8717",
+   "name": "Neuralgia, musculocutaneous nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8717 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Circumflex nerve",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8718",
+   "name": "Neuralgia, circumflex nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8718 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Long thoracic nerve",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8719",
+   "name": "Neuralgia, long thoracic nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8719 Neuralgia.",
+     "",
+     ""
+    ],
+    [
+     "Note: Combined nerve injuries should be rated by reference to the major involvement, or if sufficient in extent, consider radicular group ratings."
+    ],
+    [
+     "",
+     "Rating"
+    ],
+    [
+     "---",
+     "---"
+    ],
+    [
+     "Sciatic nerve",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8720",
+   "name": "Neuralgia, sciatic nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8720 Neuralgia.",
+     ""
+    ],
+    [
+     "External popliteal nerve (common peroneal)",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8721",
+   "name": "Neuralgia, external popliteal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8721 Neuralgia.",
+     ""
+    ],
+    [
+     "Musculocutaneous nerve (superficial peroneal)",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8722",
+   "name": "Neuralgia, musculocutaneous nerve (superficial peroneal)",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8722 Neuralgia.",
+     ""
+    ],
+    [
+     "Anterior tibial nerve (deep peroneal)",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8723",
+   "name": "Neuralgia, anterior tibial nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8723 Neuralgia.",
+     ""
+    ],
+    [
+     "Internal popliteal nerve (tibial)",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8724",
+   "name": "Neuralgia, internal popliteal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8724 Neuralgia.",
+     ""
+    ],
+    [
+     "Posterior tibial nerve",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8725",
+   "name": "Neuralgia, posterior tibial nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8725 Neuralgia.",
+     ""
+    ],
+    [
+     "Anterior crural nerve (femoral)",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8726",
+   "name": "Neuralgia, anterior crural nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8726 Neuralgia.",
+     ""
+    ],
+    [
+     "Internal saphenous nerve",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8727",
+   "name": "Neuralgia, internal saphenous nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8727 Neuralgia.",
+     ""
+    ],
+    [
+     "Obturator nerve",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8728",
+   "name": "Neuralgia, obturator nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8728 Neuralgia.",
+     ""
+    ],
+    [
+     "External cutaneous nerve of thigh",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8729",
+   "name": "Neuralgia, external cutaneous nerve of thigh",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8729 Neuralgia.",
+     ""
+    ],
+    [
+     "Ilio-inguinal nerve",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8730",
+   "name": "Neuralgia, ilio-inguinal nerve",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8730 Neuralgia.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8910",
+   "name": "Epilepsy (Major Seizures)",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8910 Epilepsy, grand mal.",
+     ""
+    ],
+    [
+     "Rate under the general rating formula for major seizures.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8911",
+   "name": "Petit mal epilepsy",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8911 Epilepsy, petit mal.",
+     ""
+    ],
+    [
+     "Rate under the general rating formula for minor seizures.",
+     ""
+    ],
+    [
+     "Note (1): A major seizure is characterized by the generalized tonic-clonic convulsion with unconsciousness.",
+     ""
+    ],
+    [
+     "Note (2): A minor seizure consists of a brief interruption in consciousness or conscious control associated with staring or rhythmic blinking of the eyes or nodding of the head (“pure” petit mal), or sudden jerking movements of the arms, trunk, or head (myoclonic type) or sudden loss of postural control (akinetic type).",
+     ""
+    ],
+    [
+     "General Rating Formula for Major and Minor Epileptic Seizures:",
+     ""
+    ],
+    [
+     "Averaging at least 1 major seizure per month over the last year",
+     "100"
+    ],
+    [
+     "Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+     "80"
+    ],
+    [
+     "Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+     "60"
+    ],
+    [
+     "At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+     "40"
+    ],
+    [
+     "At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+     "20"
+    ],
+    [
+     "A confirmed diagnosis of epilepsy with a history of seizures",
+     "10"
+    ],
+    [
+     "Note (1): When continuous medication is shown necessary for the control of epilepsy, the minimum evaluation will be 10 percent. This rating will not be combined with any other rating for epilepsy.",
+     ""
+    ],
+    [
+     "Note (2): In the presence of major and minor seizures, rate the predominating type.",
+     ""
+    ],
+    [
+     "Note (3): There will be no distinction between diurnal and nocturnal major seizures.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8912",
+   "name": "Jacksonian and focal motor or sensory epilepsy",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8912 Epilepsy, Jacksonian and focal motor or sensory.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8913",
+   "name": "Diencephalic epilepsy",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8913 Epilepsy, diencephalic.",
+     ""
+    ],
+    [
+     "Rate as minor seizures, except in the presence of major and minor seizures, rate the predominating type.",
+     ""
+    ]
+   ]
+  },
+  {
+   "dc": "8914",
+   "name": "Psychomotor epilepsy",
+   "section": "§ 4.124a",
+   "rows": [
+    [
+     "8914 Epilepsy, psychomotor.",
+     ""
+    ],
+    [
+     "Major seizures:",
+     ""
+    ],
+    [
+     "Psychomotor seizures will be rated as major seizures under the general rating formula when characterized by automatic states and/or generalized convulsions with unconsciousness.",
+     ""
+    ],
+    [
+     "Minor seizures:",
+     ""
+    ],
+    [
+     "Psychomotor seizures will be rated as minor seizures under the general rating formula when characterized by brief transient episodes of random motor movements, hallucinations, perceptual illusions, abnormalities of thinking, memory or mood, or autonomic disturbances.",
+     ""
+    ],
+    [
+     "Mental Disorders in Epilepsies: A nonpsychotic organic brain syndrome will be rated separately under the appropriate diagnostic code (e.g., 9304 or 9326). In the absence of a diagnosis of non-psychotic organic psychiatric disturbance (psychotic, psychoneurotic or personality disorder) if diagnosed and shown to be secondary to or directly associated with epilepsy will be rated separately. The psychotic or psychroneurotic disorder will be rated under the appropriate diagnostic code. The personality disorder will be rated as a dementia (e.g., diagnostic code 9304 or 9326)."
+    ],
+    [
+     "Epilepsy and Unemployability: (1) Rating specialists must bear in mind that the epileptic, although his or her seizures are controlled, may find employment and rehabilitation difficult of attainment due to employer reluctance to the hiring of the epileptic."
+    ],
+    [
+     "(2) Where a case is encountered with a definite history of unemployment, full and complete development should be undertaken to ascertain whether the epilepsy is the determining factor in his or her inability to obtain employment."
+    ],
+    [
+     "(3) The assent of the claimant should first be obtained for permission to conduct this economic and social survey. The purpose of this survey is to secure all the relevant facts and data necessary to permit of a true judgment as to the reason for his or her unemployment and should include information as to:"
+    ],
+    [
+     "(a) Education;"
+    ],
+    [
+     "(b) Occupations prior and subsequent to service;"
+    ],
+    [
+     "(c) Places of employment and reasons for termination;"
+    ],
+    [
+     "(d) Wages received;"
+    ],
+    [
+     "(e) Number of seizures."
+    ],
+    [
+     "(4) Upon completion of this survey and current examination, the case should have rating board consideration. Where in the judgment of the rating board the veteran's unemployability is due to epilepsy and jurisdiction is not vested in that body by reason of schedular evaluations, the case should be submitted to the Compensation Service or the Director, Pension and Fiduciary Service."
+    ],
+    [
+     "General Rating Formula for Mental Disorders"
+    ],
+    [
+     "",
+     "Rating"
+    ]
+   ]
+  }
+ ],
+ "notfound": [
+  {
+   "dc": "9520",
+   "name": "Anorexia nervosa"
+  },
+  {
+   "dc": "9521",
+   "name": "Bulimia nervosa"
+  },
+  {
+   "dc": "5250-5259",
+   "name": "Hip Conditions (Various)"
+  },
+  {
+   "dc": "5256-5262",
+   "name": "Knee Conditions (Various)"
+  },
+  {
+   "dc": "5270-5276",
+   "name": "Ankle and Foot Conditions"
+  },
+  {
+   "dc": "8510-8540",
+   "name": "Peripheral Neuropathy"
+  }
+ ]
+}

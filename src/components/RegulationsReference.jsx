@@ -16,8 +16,13 @@ import {
   Gavel,
   DollarSign,
 } from "lucide-react";
-import cfr3Regulations from "../data/cfr3Regulations.json";
-import title38Regulations from "../data/title38Regulations.json";
+import {
+  getCfr3Regulations,
+  getTitle38Regulations,
+} from "../services/knowledgeQuery";
+
+const cfr3Regulations = getCfr3Regulations();
+const title38Regulations = getTitle38Regulations();
 import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl } from "../utils/sanitize";
 import ResponsiveModal from "./common/ResponsiveModal";
