@@ -19,7 +19,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import { useHelperMode } from "../contexts/HelperModeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getTotalToolCount } from "../data/toolkitData";
-import { getDisabilityCount } from "../utils/disabilityCount";
+import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";

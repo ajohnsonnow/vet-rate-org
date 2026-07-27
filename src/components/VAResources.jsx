@@ -530,40 +530,41 @@ const ResourceLinkCard = ({ resource, onInternalClick }) => {
   }
 
   return (
-    <a
-      href={resource.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={resourceCardClassName(resource)}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <h4
-          className={`font-semibold ${
-            resource.urgent
-              ? "text-red-700 dark:text-red-100"
-              : "text-gray-900 dark:text-gray-100"
-          }`}
-        >
-          {resource.name}
-        </h4>
-        <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-      </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-        {resource.description}
-      </p>
+    <div className={resourceCardClassName(resource)}>
+      <a
+        href={resource.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <h4
+            className={`font-semibold ${
+              resource.urgent
+                ? "text-red-700 dark:text-red-100"
+                : "text-gray-900 dark:text-gray-100"
+            }`}
+          >
+            {resource.name}
+          </h4>
+          <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {resource.description}
+        </p>
+      </a>
       {resource.phone && (
         <div className="flex items-center gap-1 mt-2 text-sm">
           <Phone className="h-3 w-3 text-gray-500" />
           <a
             href={`tel:${resource.phone.replace(/\D/g, "")}`}
             className="text-blue-600 dark:text-blue-400 hover:underline"
-            onClick={(e) => e.stopPropagation()}
           >
             {resource.phone}
           </a>
         </div>
       )}
-    </a>
+    </div>
   );
 };
 

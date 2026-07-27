@@ -1,0 +1,279 @@
+{
+  "state": "South Carolina",
+  "stateCode": "SC",
+  "officialSource": "https://scdva.sc.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "sc-property_tax_exemption-disabled-veteran-property-tax-exemption-homestea",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Property Tax Exemption (Homestead)",
+      "description": "A veteran of the U.S. Armed Forces who is permanently and totally disabled as a result of a service-connected disability, and who files a certificate signed by the county service officer certifying the disability, is exempt from property tax on their dwelling house and the land on which it sits, up to five acres. Qualified surviving spouses (unremarried, residing in and owning the house) may claim the same exemption. A 2024 law (Act 116, formerly Bill 3116) lets a veteran or surviving spouse claim the exemption immediately for the entire year in which the disability occurs, rather than waiting until the following tax year, and applies to tax years beginning after 2023. Separately, a bill (H.4700) that would let veterans with a partial (less than total) service-connected disability rating claim a proportional exemption equal to their disability percentage was still only 'introduced' and pending in the House as of this session's check (January 2026) — it is NOT yet law, so this file does not treat partial-rating exemptions as available. The statute itself does not state a specific percentage threshold beyond 'permanently and totally disabled.'",
+      "value": "Full exemption from property tax on primary residence and up to 5 acres",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability certified as permanent and total",
+          "Certificate signed by county service officer filed with SC Dept. of Revenue",
+          "Qualified surviving spouses (unremarried, residing in and owning the home) may also claim"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Revenue",
+        "form": null,
+        "url": "https://dor.sc.gov/tax-tips/veterans-learn-more-about-sc-property-tax-exemptions",
+        "documentation": [
+          "County service officer certification of permanent and total service-connected disability",
+          "Proof of home ownership"
+        ]
+      },
+      "legalCitation": "S.C. Code Ann. §12-37-220(B)(1)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.scstatehouse.gov/code/t12c037.php",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-state_veterans_home-south-carolina-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "South Carolina State Veterans Homes",
+      "description": "South Carolina operates six State Veterans Homes offering skilled or intermediate nursing home care: E. Roy Stone Veterans Pavilion (Columbia), Veterans' Victory House (Walterboro), Richard Michael Campbell Veterans Home (Anderson), Veteran Village (Florence), Palmetto Patriots Home (Gaffney), and Patriot's Village (Sumter). Admission is limited to veterans separated under general or honorable conditions who qualify as South Carolina citizens and are in need of skilled or intermediate nursing home care.",
+      "value": "Skilled or intermediate nursing home care at state veterans homes",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Separated from U.S. Armed Forces under general or honorable conditions",
+          "South Carolina residency",
+          "Meets medical admission criteria for skilled or intermediate nursing care"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Veterans' Affairs",
+        "form": null,
+        "url": "https://scdva.sc.gov/state-veterans-homes",
+        "documentation": [
+          "DD-214 or other proof of discharge status",
+          "Medical records for admission review"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://scdva.sc.gov/state-veterans-homes",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-education_tuition-free-tuition-program-for-children-of-certain-war",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Free Tuition Program for Children of Certain War Veterans",
+      "description": "Under S.C. Code §59-111-20, children age 26 or younger of a wartime veteran may attend any South Carolina state-supported college, university, or technical college tuition-free if the veteran was killed in action, died from other causes while in service, died of disease or disability resulting from service, was a prisoner of war, is permanently and totally disabled as determined by the VA from any cause, was awarded the Congressional Medal of Honor, is missing in action, or was awarded the Purple Heart for combat wounds. Both the student and the veteran (if living) generally must have established South Carolina residency for at least the 12 continuous months before application, though a later amendment also allows a child who has been a South Carolina resident since birth to qualify regardless of the veteran's current residence. The waiver covers tuition only, not fees, room, board, or books.",
+      "value": "Free tuition at SC state-supported colleges, universities, and technical colleges",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Child of qualifying veteran, age 26 or under",
+          "Veteran served during an officially recognized war period",
+          "Qualifies via any of several disjunctive paths (KIA, died of service-connected causes, POW, permanently/totally disabled, Medal of Honor, MIA, or Purple Heart) — not solely a disability-rating gate",
+          "Residency requirements for student and/or veteran",
+          "Covers tuition only, not fees/room/board/books"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Veterans' Affairs, Education Office",
+        "form": null,
+        "url": "https://scdva.sc.gov/education",
+        "documentation": [
+          "VA determination of permanent and total disability (or other qualifying veteran status documentation)",
+          "Proof of South Carolina residency"
+        ]
+      },
+      "legalCitation": "S.C. Code Ann. §59-111-20",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.scstatehouse.gov/code/t59c111.php",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-hiring_preference-state-employment-veteran-s-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veteran's Preference",
+      "description": "Effective January 1, 2021, honorably discharged members of the U.S. Armed Forces who are given employment preference by the federal government receive preference for appointment and employment in every South Carolina state government agency and higher education institution. Hiring agencies and institutions must interview at least one qualified veteran applicant for every full-time-equivalent position posted, unless no veteran applicant meets the position's training and experience requirements. Applicants must submit a DD-214 with their state employment application; those claiming veteran status without a DD-214 do not receive preference.",
+      "value": "Hiring preference and guaranteed-interview requirement for state government and higher-education jobs",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge with federal employment preference eligibility",
+          "Must meet the position's minimum training/experience requirements",
+          "DD-214 must accompany the state employment application"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Administration",
+        "form": null,
+        "url": "https://scdva.sc.gov/news/new-veterans-hiring-preference",
+        "documentation": [
+          "DD-214 / Certificate of Release or Discharge from Active Duty"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://scdva.sc.gov/news/new-veterans-hiring-preference",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-license_plate-disabled-veteran-license-plate-fee-waived",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate (Fee-Waived)",
+      "description": "South Carolina's SCDMV issues a Disabled Veteran license plate at no registration fee to veterans discharged honorably or under general-under-honorable-conditions who provide a letter from the county or U.S. Department of Veterans Affairs office documenting the loss of, or loss of use of, a leg, arm, or vision, or a total-and-permanent service-connected disability rating. This standard Disabled Veteran plate does not carry handicap-parking privileges. A separate 'Disabled Veteran (wheelchair)' plate is also free, includes free metered/timed parking and handicap-parking privileges, and additionally requires Form RG-007A signed by a licensed physician. Applications (Form MV-37) must be mailed to SCDMV Headquarters; plates are not issued in person or online. A registrant may hold up to three military-related plates.",
+      "value": "License plate registration fee waived for qualifying disabled veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Discharge status of honorable or general under honorable conditions",
+          "Letter from county or VA office documenting qualifying disability",
+          "Wheelchair variant additionally requires Form RG-007A signed by a physician",
+          "Registration by mail only to SCDMV Headquarters"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Motor Vehicles",
+        "form": "MV-37",
+        "url": "https://dmv.sc.gov/Vehicle-Owners/Registration/License-Plates/Military-Plates",
+        "documentation": [
+          "Letter from County or US Department of Veterans Affairs Office documenting qualifying disability",
+          "Form RG-007A (wheelchair variant only)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dmv.sc.gov/sites/scdmv/files/2026-02/MV-37%20Application%20for%20Military%20License%20Plate_sub.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-vehicle_registration-property-tax-exemption-on-two-vehicles-for-disab",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Property Tax Exemption on Two Vehicles for Disabled Veterans",
+      "description": "Under S.C. Code §12-37-220(B)(3), a veteran who is permanently and totally disabled as a result of a service-connected disability is exempt from property tax on up to two private passenger vehicles owned or leased by the veteran; the exemption also extends to a vehicle titled to the veteran's spouse if the spouse resides with the veteran. This is a property-tax exemption administered via the county auditor/treasurer and SC Department of Revenue (Form PT-401I), distinct from the SCDMV's separate no-fee Disabled Veteran license plate. This session could not confirm, on an official source, any additional waiver of the SCDMV's biennial vehicle registration/renewal fee itself beyond the free Disabled Veteran plate documented in the license_plate entry — that specific claim is not made here.",
+      "value": "Exemption from property tax on up to two private passenger vehicles",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability certified as permanent and total",
+          "Applies to up to two vehicles owned or leased by the veteran (or the veteran's co-resident spouse)",
+          "Form PT-401I filed with SC Department of Revenue after DMV registration"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Revenue",
+        "form": "PT-401I",
+        "url": "https://dor.sc.gov/tax-tips/veterans-learn-more-about-sc-property-tax-exemptions",
+        "documentation": [
+          "County service officer certification of permanent and total service-connected disability",
+          "Vehicle registration/title information"
+        ]
+      },
+      "legalCitation": "S.C. Code Ann. §12-37-220(B)(3)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.scstatehouse.gov/code/t12c037.php",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-recreation-disability-hunting-and-fishing-license",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disability Hunting and Fishing License",
+      "description": "South Carolina residents of at least 365 days who are certified disabled and receiving disability benefits from a qualifying program (including the U.S. Department of Veterans Affairs) are entitled to a free statewide hunting and fishing license through the SC Department of Natural Resources. This Disability License is valid for 3 years from the date of issue, and disability recertification is required to renew — it is not a lifetime license by default. Veterans who are paraplegic, quadriplegic, or legally blind and provide a doctor's statement are instead issued a Lifetime Disability License.",
+      "value": "Free 3-year disability hunting/fishing license (or a Lifetime Disability License for paraplegic, quadriplegic, or legally blind applicants)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "South Carolina resident for at least 365 days",
+          "Current (within 12 months) disability certification from a qualifying program, including VA disability benefits",
+          "Recertification required every 3 years unless issued a Lifetime Disability License for paraplegia, quadriplegia, or legal blindness"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Natural Resources",
+        "form": null,
+        "url": "https://www.dnr.sc.gov/disabled.html",
+        "documentation": [
+          "Current disability certification from VA (or other qualifying program) dated within the past 12 months",
+          "Doctor's statement for the Lifetime Disability License variant"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.dnr.sc.gov/disabled.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sc-other-military-retirement-pay-state-income-tax-exempti",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Military Retirement Pay State Income Tax Exemption",
+      "description": "South Carolina fully exempts military retirement pay from state income tax, with no age requirement and no earned-income cap, for tax years after 2021. Survivor Benefit Plan (SBP), Reserve Component SBP (RCSBP), and Retired Serviceman's Family Protection Plan (RSFPP) payments are also fully exempt. This benefit applies to all retired servicemembers regardless of VA disability rating and is separate from VA disability compensation, which is already untaxed at the federal and state level.",
+      "value": "100% exemption of military retirement pay (and SBP/RCSBP/RSFPP payments) from SC state income tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applies to military retirement pay for tax years after 2021",
+          "No age or income cap"
+        ]
+      },
+      "application": {
+        "agency": "South Carolina Department of Revenue",
+        "form": null,
+        "url": "https://scdva.sc.gov/news/claiming-military-retiree-state-income-tax-exemption-sc",
+        "documentation": ["1099-R or other proof of military retirement pay"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://scdva.sc.gov/news/claiming-military-retiree-state-income-tax-exemption-sc",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

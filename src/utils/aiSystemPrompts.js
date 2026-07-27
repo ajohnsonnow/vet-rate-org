@@ -14,7 +14,7 @@
  *     prompt that extends it inherits the defense.
  */
 import { getTotalToolCount } from "../data/toolkitData";
-import { getDisabilityCount } from "./disabilityCount";
+import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { getFormsCount } from "./formsCount";
 import { spotlight as _spotlight } from "./piiScrubber";
 
@@ -1490,7 +1490,9 @@ export async function buildDKBContext(query, options = {}) {
   let context = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
 The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
-Use this data to provide accurate, regulation-based answers.
+Use this data to provide accurate, regulation-based answers. If none of the
+entries below address the question, say so explicitly instead of answering
+from memory — do not cite a regulation that isn't backed by an entry here.
 
 `;
 

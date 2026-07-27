@@ -1289,13 +1289,22 @@ export const searchStateBenefits = async (state, rating) => {
     }
 
     // Format the response to match the expected structure
+    const stateName = benefits[0]?.state || state;
+    const count = benefits.length;
+    const plural = count === 1 ? "" : "s";
+    const summary =
+      count === 0
+        ? `No benefits found for a ${ratingNum}% rating in ${stateName}.`
+        : `${count} benefit${plural} found for a ${ratingNum}% rating in ${stateName}.`;
     const formattedData = {
-      state: benefits[0]?.state || state,
+      state: stateName,
       stateCode: stateCode,
       disabilityRating: `${ratingNum}%`,
       lastUpdated: benefits[0]?.lastUpdated || "2026-01-24",
       dataSource: "scraped",
       verified: benefits[0]?.verified || false,
+      summary,
+      link: benefits[0]?.officialSource || benefits[0]?.sourceUrl || null,
       benefits: benefits.map((b) => ({
         category: b.category,
         name: b.name || b.benefitName,

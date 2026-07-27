@@ -1,0 +1,201 @@
+{
+  "state": "Utah",
+  "stateCode": "UT",
+  "officialSource": "https://veterans.utah.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "ut-property_tax_exemption-disabled-veteran-and-surviving-spouse-property-t",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran and Surviving Spouse Property Tax Exemption",
+      "description": "Utah exempts a portion of a disabled veteran's primary residence (and/or tangible personal property such as motor vehicles held exclusively for personal use) from property tax. The exemption is available to veterans disabled in military service (at least 10 percent disability), and to their unmarried surviving spouse or minor orphans. The exempt amount is prorated by the veteran's disability percentage and unemployability classification, up to a maximum taxable value of $535,459 for tax year 2026 (a 100%-rated veteran receives the full $535,459 exempt; a 50%-rated veteran receives half). An application with proof of military service and proof of disability (or death) must be on file with the county assessor where the property is located.",
+      "value": "Up to $535,459 of taxable value exempt (2026), prorated by disability percentage; no exemption below 10% disability",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property limited to primary residence with up to 1 acre of land, and/or tangible personal property held exclusively for personal (non-business) use",
+          "Application with proof of military service and disability must be on file with the county assessor"
+        ]
+      },
+      "application": {
+        "agency": "Utah State Tax Commission / County Assessor",
+        "form": "PT-025",
+        "url": "https://tax.utah.gov/forms-pubs/pub-36/",
+        "documentation": [
+          "Proof of military service",
+          "Proof of disability rating or, for surviving spouses/orphans, proof of the veteran's death"
+        ]
+      },
+      "legalCitation": "Utah Code Title 59, Chapter 2a, Part 5",
+      "authorityTier": "reference",
+      "sourceUrl": "https://tax.utah.gov/forms-pubs/pub-36/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ut-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Utah resident disabled veterans may obtain a Disabled Veteran license plate recognizing their military service, upon providing a letter from the Utah Department of Veterans' and Military Affairs or other U.S. military entity certifying disabled status. The plate itself does not include a registration-fee waiver (only Purple Heart recipients receive a registration fee waiver in Utah); disabled veterans pay standard plate fees ($8.25 standard / $6.75 motorcycle, plus a $5.00 Special Group plate fee and $4.00 registration certificate fee) and standard annual registration fees. The plate does not grant handicapped parking privileges — a separate placard is required. The plate may transfer to an unmarried surviving spouse.",
+      "value": "$8.25 standard plate fee ($6.75 motorcycle) plus $5.00 special-group and $4.00 registration-certificate fees; standard annual registration fees still apply",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Letter from Utah Department of Veterans' and Military Affairs or other U.S. military entity certifying disabled status",
+          "Separate disabled parking placard required for handicap parking privileges",
+          "May transfer to an unmarried surviving spouse"
+        ]
+      },
+      "application": {
+        "agency": "Utah Division of Motor Vehicles",
+        "form": null,
+        "url": "https://dmv.utah.gov/plates/license-plates/disabledveteran/",
+        "documentation": [
+          "Letter from Utah Department of Veterans' and Military Affairs or other U.S. military entity certifying disabled veteran status"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dmv.utah.gov/plates/license-plates/disabledveteran/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ut-recreation-disabled-veteran-discounted-hunting-fishing-lice",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Discounted Hunting/Fishing License",
+      "description": "Utah residents with a service-connected disability of 20% or greater, verified by a letter, statement, or card from the VA or a branch of the Armed Forces, may purchase a discounted hunting license for $25.50 (instead of $34), a discounted fishing license, or a discounted combination license for $28.50 (instead of $38). Once approved for the discount, veterans automatically qualify for renewal at the discounted rate without reapplying each year.",
+      "value": "Discounted hunting license $25.50 (vs. $34 full price); discounted combination license $28.50 (vs. $38 full price)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 20,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Utah residency required",
+          "Verification of 20%+ service-connected disability required at first application; automatic renewal thereafter"
+        ]
+      },
+      "application": {
+        "agency": "Utah Division of Wildlife Resources",
+        "form": null,
+        "url": "https://wildlife.utah.gov/accessibility/veteran",
+        "documentation": [
+          "Official written letter, statement, or card from the VA or a branch of the U.S. Armed Forces certifying a service-connected disability rating of 20% or higher"
+        ]
+      },
+      "legalCitation": "Utah Code §23-19-38.3",
+      "authorityTier": "reference",
+      "sourceUrl": "https://wildlife.utah.gov/accessibility/veteran",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ut-education_tuition-purple-heart-tuition-waiver",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Purple Heart Tuition Waiver",
+      "description": "The Purple Heart Tuition Waiver provides Purple Heart recipients with a tuition waiver at all public institutions of higher learning in Utah, usable toward a degree up to and including a Master's Degree. To receive the benefit, the veteran must submit proof of Purple Heart recipient status to the state institution they are attending.",
+      "value": "Full tuition waiver at Utah public institutions of higher learning, up to and including a Master's Degree",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Must submit proof of Purple Heart recipient status to the attending institution's admissions office"
+        ]
+      },
+      "application": {
+        "agency": "Utah Department of Veterans and Military Affairs / Utah System of Higher Education",
+        "form": null,
+        "url": "https://veterans.utah.gov/education/",
+        "documentation": ["Proof of Purple Heart award"]
+      },
+      "legalCitation": "Utah Code 53B-8e-103",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.utah.gov/wp-content/uploads/2026/04/benefitBook_2026.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ut-education_tuition-veterans-tuition-gap-program",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Veterans Tuition Gap Program",
+      "description": "The Veterans Tuition Gap Program is a supplemental grant provided by the State of Utah that can cover tuition, fees, books, supplies, and housing for veterans attending institutions of higher education in Utah whose federal education benefits have been exhausted or are not available.",
+      "value": "Supplemental grant covering tuition, fees, books, supplies, and housing when federal education benefits are exhausted or unavailable",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Federal education benefits (e.g., GI Bill) must be exhausted or unavailable"
+        ]
+      },
+      "application": {
+        "agency": "Utah Department of Veterans and Military Affairs",
+        "form": null,
+        "url": "https://veterans.utah.gov/education/",
+        "documentation": [
+          "Proof that federal education benefits are exhausted or unavailable"
+        ]
+      },
+      "legalCitation": "Utah Code 53B-13b-104",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.utah.gov/wp-content/uploads/2026/04/benefitBook_2026.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ut-recreation-utah-state-parks-veterans-with-disabilities-hono",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Utah State Parks Veterans With Disabilities Honor Pass",
+      "description": "The Utah Division of State Parks offers a Veterans With Disabilities Honor Pass to qualifying veterans who are (1) a Utah resident, (2) were honorably discharged from their military service, and (3) have a service-related disability, with a current summary of benefits letter issued by the Department of Veterans Affairs. Pickup locations include Utah State Parks Region Offices and all state parks except Flight Park, Piute State Park, Jordan River OHV State Park, Utahraptor State Park, Lost Creek State Park, and This is the Place Heritage Park.",
+      "value": "Access to Utah State Parks via the Veterans With Disabilities Honor Pass",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Utah resident",
+          "Honorably discharged from military service",
+          "Current summary of benefits letter from the VA documenting a service-related disability",
+          "Excludes Flight Park, Piute State Park, Jordan River OHV State Park, Utahraptor State Park, Lost Creek State Park, and This is the Place Heritage Park"
+        ]
+      },
+      "application": {
+        "agency": "Utah Division of State Parks",
+        "form": null,
+        "url": "https://veterans.utah.gov/recreation",
+        "documentation": [
+          "Current summary of benefits letter issued by the Department of Veterans Affairs"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.utah.gov/wp-content/uploads/2026/04/benefitBook_2026.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

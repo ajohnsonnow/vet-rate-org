@@ -1,0 +1,262 @@
+{
+  "state": "Maryland",
+  "stateCode": "MD",
+  "officialSource": "https://veterans.maryland.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "md-property_tax_exemption-disabled-veteran-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Property Tax Exemption",
+      "description": "Maryland provides a full exemption from real property tax on the dwelling (principal residence) of a veteran whose disability the VA has determined to be 100% service-connected, permanent, and total. The exemption can also apply where the VA finds the veteran permanently unemployable at a lower rating. The official pages reviewed did not state a home-value cap or income test.",
+      "value": "Full exemption of property tax on the veteran's dwelling",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Dwelling must be the veteran's principal residence",
+          "Veteran must own the dwelling",
+          "VA letter must state 100% service-connected permanent and total rating, or a permanently-unemployable determination"
+        ]
+      },
+      "application": {
+        "agency": "Maryland State Department of Assessments and Taxation (SDAT)",
+        "form": "100 Percent Disabled Veteran Exemption Application",
+        "url": "https://dat.maryland.gov/sdat%20forms/disabled-veteran.pdf",
+        "documentation": [
+          "VA disability rating letter (100% service-connected, permanent and total)",
+          "DD-214 showing honorable discharge or release under honorable circumstances"
+        ]
+      },
+      "legalCitation": "Md. Code Ann., Tax-Property § 7-208",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dat.maryland.gov/realproperty/Pages/Property-Tax-Exemptions.aspx",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-state_veterans_home-charlotte-hall-veterans-home",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Charlotte Hall Veterans Home",
+      "description": "Maryland's state veterans home offers assisted living, skilled nursing, and memory care to eligible Maryland veterans who are 62 or older or deemed disabled by the VA or Social Security Administration. VA per-diem subsidies reduce cost, and veterans rated 70% or greater service-connected may be entitled to the full cost of nursing home care.",
+      "value": "VA per diem subsidy of $148.71/day (nursing home) or $64.19/day (assisted living) as of Oct 1, 2025; full cost coverage possible at 70%+ service-connected rating",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Maryland veteran who served full-time active duty (other than active duty for training) and was discharged/released under honorable conditions",
+          "Age 62+ OR deemed disabled by the VA or Social Security Administration",
+          "Certain non-veteran spouses of eligible veterans may also be admitted"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Department of Veterans and Military Families",
+        "form": null,
+        "url": null,
+        "documentation": [
+          "DD-214 or discharge documentation",
+          "VA or SSA disability determination if under age 62"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.maryland.gov/benefits-services/healthcare/charlotte-hall-veterans-home",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-education_tuition-edward-t-and-mary-a-conroy-memorial-scholarship",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Edward T. and Mary A. Conroy Memorial Scholarship",
+      "description": "Maryland scholarship providing tuition assistance to veterans with a service-connected disability rating of 25% or greater who have exhausted or are no longer eligible for federal VA education benefits. Limited to 15 veteran awards per year statewide; separate eligibility exists for children/stepchildren of service members who died in service or became 100% permanently disabled.",
+      "value": "Maximum award of $13,689 for the 2025-2026 academic year",
+      "estimatedAnnualValue": 13689,
+      "requirements": {
+        "minRating": 25,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability of 25% or greater",
+          "Exhausted or no longer eligible for federal veterans' educational benefits",
+          "Limited to 15 scholarships/year for the veteran eligibility category",
+          "Enrolled at an eligible Maryland institution of higher education"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Higher Education Commission (MHEC)",
+        "form": null,
+        "url": null,
+        "documentation": ["Proof of service-connected disability rating"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://mhec.maryland.gov/preparing/pages/financialaid/programdescriptions/prog_conroy.aspx",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-hiring_preference-veteran-s-credit-for-state-employment",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veteran's Credit for State Employment",
+      "description": "Maryland state government adds a 10-point credit to passing selection-test scores for eligible veterans, spouses of veterans with a service-connected disability, and surviving spouses of deceased eligible veterans applying for state jobs; an additional 2 points apply for former prisoners of war.",
+      "value": "10 points added to selection test score (12 for former POWs)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Applying for a Maryland state government position using a selection test",
+          "Honorable discharge or certificate of satisfactory completion of service",
+          "DD-214 (copy) must be submitted and verified before credit is approved"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Department of Budget and Management (DBM)",
+        "form": null,
+        "url": "https://dbm.maryland.gov/jobseekers/pages/determineeligibilityveteranscredit.aspx",
+        "documentation": ["DD-214 (copy, not original)"]
+      },
+      "legalCitation": "Md. Code Ann., State Personnel and Pensions § 7-207",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dbm.maryland.gov/jobseekers/pages/determineeligibilityveteranscredit.aspx",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "The Maryland MVA issues free disabled veteran license plates to veterans rated 100% disabled or compensated at the 100% rate based on individual unemployability, permanent and total in nature. Plates are available printed with or without the universal wheelchair symbol.",
+      "value": "Free plate issuance (no plate fee)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Proof of 100% VA disability rating or 100% rate based on individual unemployability",
+          "Eligible vehicle classes: passenger cars, multi-purpose vehicles, trucks of one-ton capacity or less"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Motor Vehicle Administration (MVA)",
+        "form": "Application for Maryland Parking Placard/License Plates for Individuals with a Disability (for plates with wheelchair symbol)",
+        "url": null,
+        "documentation": [
+          "Proof of 100% VA disability rating or individual-unemployability determination"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.maryland.gov/benefits-services/motor-vehicles",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-vehicle_registration-complimentary-vehicle-registration-and-initial-p",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Complimentary Vehicle Registration and Initial Plates",
+      "description": "Maryland veterans rated 100% disabled by the VA may receive complimentary lifetime vehicle registration; veterans rated 50% or greater may receive complimentary initial vehicle plates. This appears in the state's summary of service-connected veteran benefits; a full fee schedule was not published on the page reviewed.",
+      "value": "Complimentary lifetime registration (100% rating); complimentary initial plates (50%+ rating)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": ["VA disability rating documentation"]
+      },
+      "application": {
+        "agency": "Maryland Motor Vehicle Administration (MVA)",
+        "form": null,
+        "url": null,
+        "documentation": ["VA disability rating letter"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.maryland.gov/benefits-services/benefits-service-connected-veterans",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-recreation-complimentary-lifetime-hunting-fishing-license",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Complimentary Lifetime Hunting & Fishing License",
+      "description": "Maryland residents who are 100% service-connected disabled veterans, former POWs, or deemed unemployable by the VA can receive a complimentary lifetime hunting and fishing license covering the non-tidal angler's license, trout stamp, Chesapeake Bay sport fishing license, recreational oyster license, bow stamp, muzzleloader stamp, sika deer stamp, and furbearer permit. A related Universal Disability Pass permits qualifying individuals to hunt from a vehicle under the ADA/504 program.",
+      "value": "Free lifetime hunting and fishing license package",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Maryland resident",
+          "100% service-connected disability, former-POW status, or VA unemployability determination"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Department of Natural Resources (DNR)",
+        "form": null,
+        "url": null,
+        "documentation": [
+          "Letter of disability or certification from the Veterans Administration",
+          "Completed/signed license application"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dnr.maryland.gov/pages/military-one-stop-shop.aspx",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "md-financial_bonus-maryland-veterans-trust-fund",
+      "benefitType": "financial_bonus",
+      "category": "Other",
+      "name": "Maryland Veterans Trust Fund",
+      "description": "A 501(c)(3) nonprofit core program of the Maryland Department of Veterans and Military Families that provides one-time grant awards to help veterans, surviving spouses, and Maryland National Guard members overcome financial hardship. As of the research date, the fund is temporarily pausing acceptance of new applications while it processes a backlog of requests, so current availability should be confirmed directly with the agency.",
+      "value": "One-time grant award; specific dollar amount not published on the official page",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Demonstrated financial hardship",
+          "Applications temporarily paused as of research date pending backlog processing"
+        ]
+      },
+      "application": {
+        "agency": "Maryland Department of Veterans and Military Families (Maryland Veterans Trust Fund)",
+        "form": null,
+        "url": null,
+        "documentation": []
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.maryland.gov/benefits-services/financial-support",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

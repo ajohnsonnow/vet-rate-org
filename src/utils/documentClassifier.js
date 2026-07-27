@@ -32,6 +32,7 @@ export const DOCUMENT_TYPES = {
   NEXUS_LETTER: "NEXUS_LETTER",
   PERSONAL_STATEMENT: "PERSONAL_STATEMENT",
   VA_CORRESPONDENCE: "VA_CORRESPONDENCE",
+  BLUE_BUTTON: "BLUE_BUTTON",
   MEDICAL_RECORD: "MEDICAL_RECORD",
   EXAM_REPORT: "EXAM_REPORT",
   UNKNOWN: "UNKNOWN",
@@ -278,6 +279,27 @@ const CLASSIFICATION_PATTERNS = {
       /PENDING\s+CLAIM/i,
       /EVIDENCE\s+NEEDED/i,
     ],
+  },
+
+  // VA.gov's "Blue Button" self-service records export (My HealtheVet). Its
+  // cover-page boilerplate is unique to this export and otherwise reads like
+  // a generic medical record (lab results, clinical notes), which is why it
+  // needs its own high-weight, high-priority block instead of falling into
+  // C_FILE_MEDICAL by default.
+  [DOCUMENT_TYPES.BLUE_BUTTON]: {
+    patterns: [
+      /VA\s+BLUE\s+BUTTON/i,
+      /BLUE\s+BUTTON\s*(?:®|\(R\))?\s+REPORT/i,
+      /THIS\s+REPORT\s+INCLUDES\s+KEY\s+INFORMATION\s+FROM\s+YOUR\s+VA\s+MEDICAL\s+RECORDS/i,
+      /WHAT\s+TO\s+KNOW\s+ABOUT\s+YOUR\s+BLUE\s+BUTTON\s+REPORT/i,
+      /MY\s+HEALTHEVET/i,
+      /RECORDS\s+IN\s+THIS\s+REPORT/i,
+      /RECORDS\s+NOT\s+IN\s+THIS\s+REPORT/i,
+      /THE\s+FOLLOWING\s+RECORDS\s+HAVE\s+BEEN\s+DOWNLOADED/i,
+    ],
+    weight: 6,
+    category: "self_service_records",
+    priority: 11,
   },
 
   [DOCUMENT_TYPES.NEXUS_LETTER]: {
@@ -734,6 +756,7 @@ export const getDocumentTypeLabel = (type) => {
     [DOCUMENT_TYPES.NEXUS_LETTER]: "Nexus Letter",
     [DOCUMENT_TYPES.PERSONAL_STATEMENT]: "Personal Statement",
     [DOCUMENT_TYPES.VA_CORRESPONDENCE]: "VA Correspondence",
+    [DOCUMENT_TYPES.BLUE_BUTTON]: "VA Blue Button Report",
     [DOCUMENT_TYPES.MEDICAL_RECORD]: "Medical Record",
     [DOCUMENT_TYPES.EXAM_REPORT]: "Examination Report",
     [DOCUMENT_TYPES.UNKNOWN]: "Unknown Document",

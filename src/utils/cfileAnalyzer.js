@@ -29,6 +29,7 @@ import {
 } from "./hallucinationTrap";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
+import { scrubText } from "./piiScrubber";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
@@ -2396,7 +2397,10 @@ function _parseChunkAiResponse(contentStr) {
     return JSON.parse(cleanContent);
   } catch (parseError) {
     console.error("JSON Parse Error:", parseError);
-    console.error("Content to parse:", cleanContent.substring(0, 500));
+    console.error(
+      "Content to parse (PII-scrubbed):",
+      scrubText(cleanContent.substring(0, 500)),
+    );
 
     // Attempt to repair truncated JSON
     const repaired = attemptJSONRepair(cleanContent);

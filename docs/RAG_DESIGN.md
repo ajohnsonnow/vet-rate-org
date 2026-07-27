@@ -12,12 +12,16 @@ Replace the manually-curated legal JSON in [src/data/](../src/data/) ([disabilit
 
 ## 2. Sources of truth
 
-| Source | Status | What we ingest | Update cadence | Fetcher |
-|---|---|---|---|---|
-| eCFR (Title 38, Parts 3, 4, 19, 20) | **Live** — 1,060 chunks, 2.6 MB | Adjudication, rating schedules, appeals | Weekly | `scripts/legal-ingestion/fetch-ecfr.mjs` |
-| VA M21-1 manual | Scaffold (not yet ingested) | Adjudication procedure | TBD | `scripts/legal-ingestion/fetch-m21-1.mjs` |
-| CAVC precedential decisions | Scaffold (not yet ingested) | Veterans-court precedent | TBD | `scripts/legal-ingestion/fetch-cavc.mjs` |
-| Federal Circuit veteran-law opinions | Scaffold (not yet ingested) | Higher-court precedent | TBD | `scripts/legal-ingestion/fetch-fedcir.mjs` |
+| Source                               | Status                                                         | What we ingest                          | Update cadence | Fetcher                                    |
+| ------------------------------------ | -------------------------------------------------------------- | --------------------------------------- | -------------- | ------------------------------------------ |
+| eCFR (Title 38, Parts 3, 4, 19, 20)  | **Live, verified** — 1,060 chunks, 2.6 MB                       | Adjudication, rating schedules, appeals | Weekly         | `scripts/legal-ingestion/fetch-ecfr.mjs`   |
+| VA M21-1 manual                      | **Live** — shard populated (S44), 4,720 chunks, `content-verified` status | Adjudication procedure                  | Monthly        | `scripts/legal-ingestion/fetch-m21-1.mjs`  |
+| VA M21-4 manual                      | **Live** — shard populated (S44), 341 chunks, `content-verified` status  | RO workload / national quality review   | Monthly        | `scripts/legal-ingestion/fetch-m21-4.mjs`  |
+| VA M21-5 manual                      | **Live** — shard populated (S44), 453 chunks, `content-verified` status  | Appeals and reviews                     | Monthly        | `scripts/legal-ingestion/fetch-m21-5.mjs`  |
+| CAVC precedential decisions          | **Live** — shard populated (S44), 11,920 chunks, `content-verified` status | Veterans-court precedent                | Weekly         | `scripts/legal-ingestion/fetch-cavc.mjs`   |
+| Federal Circuit veteran-law opinions | **Live** — shard populated (S44), 7,233 chunks, `content-verified` status | Higher-court precedent                  | Weekly         | `scripts/legal-ingestion/fetch-fedcir.mjs` |
+| OGC precedent opinions               | **Live** — shard populated (S44), 893 chunks, `content-verified` status  | VA policy precedent (1987-2019)         | Quarterly      | `scripts/legal-ingestion/fetch-ogc.mjs`    |
+| VA compensation + SMC rate tables    | **Live** — structured (not a shard), `content-verified` status (S44)    | Current-year comp + SMC rates           | Annual         | `scripts/legal-ingestion/fetch-rate-tables.mjs` |
 
 See [knowledge-sources.yaml](../knowledge-sources.yaml) for detailed API endpoints, last-verified dates, and status of each source.
 
@@ -27,14 +31,14 @@ See [knowledge-sources.yaml](../knowledge-sources.yaml) for detailed API endpoin
 
 ```jsonc
 {
-  "source": "ecfr",             // ecfr | m21-1 | cavc | fedcir
+  "source": "ecfr", // ecfr | m21-1 | cavc | fedcir
   "jurisdiction": "federal",
   "citation": "38 CFR § 4.71a", // canonical citation string
   "title": "Schedule of Ratings — Musculoskeletal System",
-  "body": "…",                  // sanitized plain text; HTML/script stripped
+  "body": "…", // sanitized plain text; HTML/script stripped
   "fetched_at": "2026-05-14T04:00:00Z",
   "source_url": "https://www.ecfr.gov/current/title-38/...",
-  "content_hash": "sha256:…"    // for diff detection between runs
+  "content_hash": "sha256:…", // for diff detection between runs
 }
 ```
 
@@ -91,12 +95,14 @@ user question
 ## 7. Lethal-trifecta posture
 
 The pipeline combines:
+
 1. **Private data** — user's PII embedded in their claim questions.
 2. **Untrusted content** — fetched legal text could in principle be poisoned at fetch time (eCFR is official, but defense in depth).
 3. **External rendering** — model output reaches the DOM and is read by the veteran.
 
 Mitigations (implemented in Sprint 3 and applied here in Sprint 7):
-- PII scrubbed *before* embedding and retrieval — PII must not influence which chunks are retrieved.
+
+- PII scrubbed _before_ embedding and retrieval — PII must not influence which chunks are retrieved.
 - All fetched HTML/markdown stripped of `<script>` / `<style>` / `<iframe>` and inline event handlers during ingestion.
 - URLs in body replaced with text-only citations at chunking time; URL allow-list applied at render time.
 - Spotlight delimiters wrap any chunk text the retriever LLM sees.
@@ -123,14 +129,14 @@ The legal-index RAG pipeline described here covers **authoritative sources only*
 
 ## 10. Migration plan for existing static data
 
-Sprint 7 cross-validates [disabilityData.json](../src/data/disabilityData.json), [cfr3Regulations.json](../src/data/cfr3Regulations.json), [secondary_conditions_db.json](../src/data/secondary_conditions_db.json) against the live index. Discrepancies become issues; the static files remain as a UI-friendly index of conditions, but legal *content* is sourced from the RAG layer with `fetched_at` dates surfaced to the user.
+Sprint 7 cross-validates [disabilityData.json](../src/data/disabilityData.json), [cfr3Regulations.json](../src/data/cfr3Regulations.json), [secondary_conditions_db.json](../src/data/secondary_conditions_db.json) against the live index. Discrepancies become issues; the static files remain as a UI-friendly index of conditions, but legal _content_ is sourced from the RAG layer with `fetched_at` dates surfaced to the user.
 
 ---
 
 ## 11. Future improvements (beyond S25)
 
 - **Conditional-GET support:** Fetchers currently diff all records post-hoc; sending ETag/If-Modified-Since headers would skip unchanged resources. Requires persistent state across weekly runs.
-- **M21-1 + CAVC + Federal Circuit:** Scaffold fetchers exist but are deferred pending API/scraping solutions (KnowVA's M21-1 is client-side rendered; CAVC/Fed-Cir are PDF-only). See [knowledge-sources.yaml](../knowledge-sources.yaml) notes and [docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md § S26](./SPRINT_PLAN_S18-S26_KB_INGESTION.md) for status.
+- **M21-1/M21-4/M21-5 + CAVC + Federal Circuit + OGC:** Real fetchers shipped in S31/S33/S34/S44 (KnowVA REST API, CAVC Atom-RSS, Federal Circuit WordPress REST, OGC HTML crawl). All sources now have populated, registered shards under `public/dkb-index/` (`registry.json` `shard_count: 8`); promotion from `content-verified` to `verified` status is pending two observed green weekly freshness-cron runs each. CAVC's Single-Judge historical backfill resumed in S44 after a 60s-timeout fix; confirm the registry's chunk count reflects the completed backfill before citing a higher figure. See [docs/DIAMOND_KNOWLEDGE_BASE.md](./DIAMOND_KNOWLEDGE_BASE.md) for current shard population status.
 - **Semantic disambiguation:** Contextual retrieval (section-title prefixes) showed mixed results in S20; further exploration across different corpora is deferred.
 - **Audit log export:** Currently append-only IndexedDB; a veteran transparency feature to export their query history + retrieved chunks is not yet implemented.
 - **Performance on low-end mobile:** Vector search performance on resource-constrained devices was not yet profiled in S18-S25; prioritized higher-value improvements first.

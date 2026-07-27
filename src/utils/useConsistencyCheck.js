@@ -392,26 +392,28 @@ export default function useConsistencyCheck() {
       // pointed at names nothing in the app writes ("savedClaims",
       // "statements", ...), so every rule ran against empty data and the
       // engine could never find a contradiction.
+      // safeParse guards against the literal string "undefined" (some write
+      // paths call localStorage.setItem(key, undefined), which stringifies
+      // to that) so one corrupted key can't abort every rule via the
+      // shared try/catch below.
+      const safeParse = (key, fallback) => {
+        const raw = localStorage.getItem(key);
+        return raw && raw !== "undefined"
+          ? JSON.parse(raw)
+          : JSON.parse(fallback);
+      };
       const data = {
-        profile: JSON.parse(
-          localStorage.getItem("vet_rate_veteran_profile") || "null",
-        ),
-        claims: JSON.parse(
-          localStorage.getItem("vet_rate_saved_claims") || "[]",
-        ),
-        statements: JSON.parse(
-          localStorage.getItem("vet_rate_statements") || "{}",
-        ),
-        forms: JSON.parse(localStorage.getItem("vet_rate_saved_forms") || "[]"),
+        profile: safeParse("vet_rate_veteran_profile", "null"),
+        claims: safeParse("vet_rate_saved_claims", "[]"),
+        statements: safeParse("vet_rate_statements", "{}"),
+        forms: safeParse("vet_rate_saved_forms", "[]"),
         // Rules expect a {conditionName: percent} map; My Ratings stores an array
         ratings: Object.fromEntries(
-          JSON.parse(localStorage.getItem("vet_rate_my_ratings") || "[]")
+          safeParse("vet_rate_my_ratings", "[]")
             .filter((r) => r && r.name)
             .map((r) => [r.name, r.rating]),
         ),
-        symptomLogs: JSON.parse(
-          localStorage.getItem("vetrate_symptom_logs") || "[]",
-        ),
+        symptomLogs: safeParse("vetrate_symptom_logs", "[]"),
       };
 
       // Run all consistency rules

@@ -24,8 +24,13 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getCalculatorFunction } from "../utils/capSimulatorLogic";
 import ResponsiveModal from "./common/ResponsiveModal";
-import dbqLogicMap from "../data/dbq_logic_map.json";
-import disabilityDataFile from "../data/disabilityData.json";
+import {
+  getDbqLogicMap,
+  getConditionDataset,
+} from "../services/knowledgeQuery";
+
+const dbqLogicMap = getDbqLogicMap();
+const disabilityDataFile = getConditionDataset();
 
 /**
  * Strategic tips for specific DBQ question types (from ExamPrepRoom)
@@ -3847,7 +3852,7 @@ function CAPResultsView({
 
 function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
   const stored = localStorage.getItem("vet_rate_saved_claims");
-  if (stored) {
+  if (stored && stored !== "undefined") {
     try {
       const parsed = JSON.parse(stored);
       setSavedPacket(parsed);

@@ -45,8 +45,3 @@
 *.mp4      binary
 *.mp3      binary
 *.wav      binary
-
-# Git LFS — large data blobs that must not be stored in the repo directly.
-# Removing or changing this rule will cause fresh clones to receive LFS
-# pointer text instead of the 135 MB JSON and will break the search index.
-public/data/diamond_knowledge_full.json filter=lfs diff=lfs merge=lfs -text

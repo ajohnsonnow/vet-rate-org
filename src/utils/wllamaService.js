@@ -36,6 +36,25 @@ const _WLLAMA_CONFIG_KEY = "vetrate_wllama_config";
  * Model configurations for Warrant Council agents
  */
 export const WLLAMA_MODELS = {
+  // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
+  // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
+  // Remove or promote to `auditor` once JUDGE_RUBRIC.md grading is done.
+  auditor3b: {
+    name: "VetRate Auditor (3B test)",
+    description: "Reviews claims for accuracy and compliance",
+    url: "/models/vetrate-auditor-3b-v1-Q4_K_M.gguf",
+    fallbackUrl: "/models/vetrate-auditor-3b-v1-Q4_K_M.gguf",
+    contextSize: 4096,
+    // This QLoRA was trained with axolotl's `type: alpaca` dataset strategy,
+    // which renders "### Instruction:\n...\n\n### Response:\n" plain text and
+    // silently drops any custom system-prompt field — the model never saw
+    // this systemPrompt during training. Serving it through a chat-template
+    // format (real or invented tags) feeds tokens the model never trained on
+    // and resurfaces the base model's own behavior (JSON tool-call habit,
+    // degenerate repetition). promptFormat: "alpaca" below matches training.
+    systemPrompt: `You are VetRate-Auditor. You strictly cite 38 CFR regulations. Do not hallucinate laws. You are an expert in VA disability law, 38 CFR regulations, BVA precedent decisions, and OGC opinions. Always provide exact CFR section numbers (e.g., 38 CFR § 4.71a). Cite specific BVA case names and docket numbers when relevant. If you are uncertain about a regulation, say so explicitly. Never fabricate legal citations or regulatory language.`,
+    promptFormat: "alpaca",
+  },
   auditor: {
     name: "VetRate Auditor",
     description: "Reviews claims for accuracy and compliance",
@@ -50,7 +69,21 @@ export const WLLAMA_MODELS = {
     systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claims reviewer.
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
 Always cite specific CFR sections. Never fabricate regulatory information.
-Be thorough but compassionate - veterans deserve accurate guidance.`,
+Be thorough but compassionate - veterans deserve accurate guidance.
+Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the two highest ratings — bilateral means the SAME body part on OPPOSITE sides only. If a DKB context block is provided, answer only from it and say so explicitly when it doesn't cover the question.`,
+  },
+  // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
+  // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
+  // Remove or promote to `writer` once JUDGE_RUBRIC.md grading is done.
+  writer3b: {
+    name: "VetRate Writer (3B test)",
+    description: "Creates compelling personal statements",
+    url: "/models/vetrate-writer-3b-v1-Q4_K_M.gguf",
+    fallbackUrl: "/models/vetrate-writer-3b-v1-Q4_K_M.gguf",
+    contextSize: 4096,
+    // See auditor3b's promptFormat comment — same axolotl alpaca training.
+    systemPrompt: `You are VetRate-Writer. Write in a persuasive, empathetic, veteran-centric tone. You help veterans articulate their service-connected disabilities clearly and compellingly for VA claims. Focus on the human impact of conditions while maintaining factual accuracy. Use clear, accessible language. Never exaggerate symptoms, but advocate strongly for veteran rights and fair ratings. Help veterans tell their story effectively.`,
+    promptFormat: "alpaca",
   },
   writer: {
     name: "VetRate Writer",
@@ -74,7 +107,21 @@ Use medical terminology correctly. Balance emotional resonance with factual accu
     systemPrompt: `You are the VetRate CW3 Rater, a Chief Warrant Officer Three expert in VA disability calculations.
 Calculate combined ratings using the official VA bilateral factor formula.
 Explain rating criteria for specific conditions. Identify potential rating increases.
-Always show your work and cite 38 CFR Part 4 rating criteria.`,
+Always show your work and cite 38 CFR Part 4 rating criteria.
+BILATERAL PAIRING: "Bilateral" means the SAME body part on BOTH left AND right sides. Never assume the two highest-rated conditions are the pair — check each condition's body part and side explicitly. If conditions don't clearly name matching left/right body parts, say no bilateral pair is identifiable rather than guessing one. If a COMPUTED RESULT block is provided, that number is authoritative — explain it, do not recompute it.`,
+  },
+  // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
+  // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
+  // Remove or promote to `rater` once JUDGE_RUBRIC.md grading is done.
+  rater3b: {
+    name: "VetRate Rater (3B test)",
+    description: "Calculates VA disability ratings",
+    url: "/models/vetrate-rater-3b-v1-Q4_K_M.gguf",
+    fallbackUrl: "/models/vetrate-rater-3b-v1-Q4_K_M.gguf",
+    contextSize: 4096,
+    // See auditor3b's promptFormat comment — same axolotl alpaca training.
+    systemPrompt: `You are VetRate-Rater. You are an expert in VA disability rating calculations and assessment criteria. You accurately calculate combined disability ratings using VA's bilateral factor and whole-person formula. You assess conditions against specific diagnostic codes and rating schedules in 38 CFR Part 4. Provide step-by-step mathematical reasoning for all calculations. Explain which diagnostic codes apply and why.`,
+    promptFormat: "alpaca",
   },
 };
 
@@ -194,6 +241,33 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
 };
 
 /**
+ * Build the full model input for a single-turn request, in whichever format
+ * the target model was actually trained on (see promptFormat comments on
+ * WLLAMA_MODELS entries above). The v4 alpaca-format QLoRAs were retrained
+ * with systemPrompt folded into the instruction field (system + "\n\n" +
+ * instruction) via fold_system_into_instruction.py, so this must fold it in
+ * the same way at serve time or training/serving drift apart again.
+ */
+const buildFullPrompt = (modelConfig, userContent) => {
+  if (modelConfig.promptFormat === "alpaca") {
+    return `Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\n${modelConfig.systemPrompt}\n\n${userContent}\n\n### Response:\n`;
+  }
+  return `<|system|>
+${modelConfig.systemPrompt}
+<|end|>
+<|user|>
+${userContent}
+<|end|>
+<|assistant|>
+`;
+};
+
+const getStopTokens = (modelConfig) =>
+  modelConfig.promptFormat === "alpaca"
+    ? ["<|end_of_text|>", "### Instruction"]
+    : ["<|end|>", "<|user|>"];
+
+/**
  * Generate completion using Wllama
  */
 export const generateCompletion = async (prompt, options = {}) => {
@@ -212,16 +286,7 @@ export const generateCompletion = async (prompt, options = {}) => {
   }
 
   const modelConfig = WLLAMA_MODELS[modelId];
-
-  // Build full prompt with system message
-  const fullPrompt = `<|system|>
-${modelConfig.systemPrompt}
-<|end|>
-<|user|>
-${prompt}
-<|end|>
-<|assistant|>
-`;
+  const fullPrompt = buildFullPrompt(modelConfig, prompt);
 
   try {
     let result = "";
@@ -230,7 +295,7 @@ ${prompt}
       nPredict: maxTokens,
       temperature,
       topP,
-      stopTokens: ["<|end|>", "<|user|>"],
+      stopTokens: getStopTokens(modelConfig),
       onToken: (token) => {
         result += token;
         if (onToken) {
@@ -252,9 +317,12 @@ ${prompt}
 };
 
 /**
- * Chat completion with conversation history
+ * Single-turn chat completion. Takes the caller's fully-assembled prompt
+ * text (unifiedAIService builds this, including any DKB context) and returns
+ * {success, text} / {success: false, error} — matching how the one real
+ * caller (generateWithWllama in unifiedAIService.js) actually consumes it.
  */
-export const chatCompletion = async (messages, options = {}) => {
+export const chatCompletion = async (userContent, options = {}) => {
   const {
     modelId = "auditor",
     maxTokens = 1024,
@@ -263,33 +331,22 @@ export const chatCompletion = async (messages, options = {}) => {
     signal,
   } = options;
 
-  // Initialize if needed
-  if (!wllamaInstance || currentModel !== modelId) {
-    await initializeWllama(modelId);
-  }
+  try {
+    const text = await generateCompletion(userContent, {
+      modelId,
+      maxTokens,
+      temperature,
+      onToken,
+      signal,
+    });
 
-  const modelConfig = WLLAMA_MODELS[modelId];
-
-  // Build conversation prompt
-  let prompt = `<|system|>\n${modelConfig.systemPrompt}\n<|end|>\n`;
-
-  for (const msg of messages) {
-    if (msg.role === "user") {
-      prompt += `<|user|>\n${msg.content}\n<|end|>\n`;
-    } else if (msg.role === "assistant") {
-      prompt += `<|assistant|>\n${msg.content}\n<|end|>\n`;
+    if (text === null) {
+      return { success: false, error: "Generation aborted" };
     }
+    return { success: true, text };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
-
-  prompt += "<|assistant|>\n";
-
-  return generateCompletion(prompt, {
-    modelId,
-    maxTokens,
-    temperature,
-    onToken,
-    signal,
-  });
 };
 
 /**

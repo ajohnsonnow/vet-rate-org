@@ -805,22 +805,43 @@ function useDocumentBriefingData({
   useEffect(() => {
     let cancelled = false;
 
+    if (!currentData || !classification?.type) return undefined;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      "🛡️ Processing document",
+      isMultiDocument ? `${currentDocIndex + 1}/${totalDocuments}` : "1/1",
+      "with",
+      Object.keys(currentData).length,
+      "fields",
+    );
+
+    // Reset state for new document
+    setEditedData(currentData || {});
+    setVerifiedFields({});
+
+    // Field filtering only depends on currentData/classification — compute
+    // and render it synchronously so the checkboxes exist immediately.
+    // detectConflicts below is async network/heuristic latency that must
+    // NOT gate field rendering: gating it here left a window, right after
+    // the modal opens, where filteredData/groupedFields were still {} —
+    // zero fields means zero checkboxes, which a "0 unchecked" verification
+    // check reads as vacuously fully-verified. A consumer that acts on that
+    // (e.g. the stress harness's checkbox loop) proceeds to click
+    // Verify & Save before the real fields — and their checkboxes — have
+    // populated, hitting the disabled button and hanging until timeout.
+    const { filtered, grouped } = filterAndGroupFields(
+      currentData,
+      classification,
+    );
+    // eslint-disable-next-line no-console
+    console.log("🛡️ Filtered fields:", Object.keys(filtered));
+    setFilteredData(filtered);
+    // eslint-disable-next-line no-console
+    console.log("🛡️ Grouped fields:", grouped);
+    setGroupedFields(grouped);
+
     const loadConflicts = async () => {
-      if (!currentData || !classification?.type) return;
-
-      // eslint-disable-next-line no-console
-      console.log(
-        "🛡️ Processing document",
-        isMultiDocument ? `${currentDocIndex + 1}/${totalDocuments}` : "1/1",
-        "with",
-        Object.keys(currentData).length,
-        "fields",
-      );
-
-      // Reset state for new document
-      setEditedData(currentData || {});
-      setVerifiedFields({});
-
       const detected = await detectConflicts(
         currentData,
         classification.type,
@@ -828,23 +849,11 @@ function useDocumentBriefingData({
       );
       // A newer document's effect may have already superseded this one
       // while detectConflicts was in flight (its latency varies per
-      // document). Applying this stale result now would silently revert
-      // filteredData/groupedFields to the PREVIOUS document's fields while
-      // verifiedFields still reflects the current one — permanently
-      // breaking allFieldsVerified with no checkbox left to unblock it.
+      // document). Only conflicts are gated on `cancelled` now — the
+      // filtered/grouped fields above always belong to the document that
+      // is currently mounted, so no stale-overwrite risk remains there.
       if (cancelled) return;
       setConflicts(detected.length > 0 ? detected : providedConflicts);
-
-      const { filtered, grouped } = filterAndGroupFields(
-        currentData,
-        classification,
-      );
-      // eslint-disable-next-line no-console
-      console.log("🛡️ Filtered fields:", Object.keys(filtered));
-      setFilteredData(filtered);
-      // eslint-disable-next-line no-console
-      console.log("🛡️ Grouped fields:", grouped);
-      setGroupedFields(grouped);
     };
 
     loadConflicts();
@@ -1378,7 +1387,14 @@ function getAwardsDisplayData(fieldKey, value, filteredData) {
   };
 }
 
-function ArrayValueVisuals({ sortedVisualAwards, badges, tabs, combatIndicators, branchForBadges, value }) {
+function ArrayValueVisuals({
+  sortedVisualAwards,
+  badges,
+  tabs,
+  combatIndicators,
+  branchForBadges,
+  value,
+}) {
   return (
     <>
       {combatIndicators.length > 0 && (
@@ -1481,7 +1497,8 @@ function ArrayValueField({
 }
 
 function formatObjectEntry(key, value) {
-  const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1");
+  const label =
+    key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1");
   if (typeof value === "boolean") return `${label}: ${value ? "Yes" : "No"}`;
   if (Array.isArray(value)) {
     return value.length > 0 ? `${label}: ${value.join(", ")}` : null;
@@ -1493,7 +1510,13 @@ function formatObjectEntry(key, value) {
 // Renders a plain-object field (e.g. DD214 combatService: {hasVerifiedCombat,
 // indicators, deployments}) as a readable summary instead of the useless
 // "[object Object]" String(value) produces for anything non-primitive.
-function ObjectValueField({ fieldKey, value, getTooltip, checked, onCheckChange }) {
+function ObjectValueField({
+  fieldKey,
+  value,
+  getTooltip,
+  checked,
+  onCheckChange,
+}) {
   const entries = Object.entries(value)
     .map(([k, v]) => formatObjectEntry(k, v))
     .filter(Boolean);

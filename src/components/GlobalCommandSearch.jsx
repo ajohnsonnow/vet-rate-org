@@ -18,10 +18,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
-import disabilityData from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 
 // Extract diagnostic codes from disability data for quick search
-const diagnosticCodes = disabilityData.disabilities.map((d) => ({
+const diagnosticCodes = getAllConditions().map((d) => ({
   code: d.diagnosticCode,
   name: d.conditionName,
   aliases: d.aliases || [],

@@ -1,0 +1,23 @@
+{
+  "id": "fedcir",
+  "layout": "shard",
+  "authority_tier": "judicial_federal_circuit",
+  "tier_rank": 2,
+  "embedding_model": "Xenova/bge-small-en-v1.5",
+  "embedding_dim": 384,
+  "entry_count": 7233,
+  "source_entry_count": 7233,
+  "skipped": {
+    "empty_content": 0,
+    "missing_url": 0
+  },
+  "built_at": "2026-07-19T04:01:05.334Z",
+  "parts": [
+    {
+      "chunks": "chunks.part0.jsonl",
+      "vectors": "vectors.part0.bin",
+      "count": 7233,
+      "bytes": 2777472
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "state": "Hawaii",
+  "stateCode": "HI",
+  "officialSource": "https://dod.hawaii.gov/ovs/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "hi-property_tax_exemption-totally-disabled-veteran-real-property-tax-exemp",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Totally Disabled Veteran Real Property Tax Exemption (Honolulu/Oahu)",
+      "description": "The City and County of Honolulu exempts from real property tax (except the minimum tax) a home owned and occupied by a veteran totally disabled due to injuries sustained while on active duty with the U.S. Armed Forces, under Revised Ordinances of Honolulu § 8-10.5. The exemption also extends to the veteran's unmarried surviving widow/widower and continues as long as the veteran remains totally disabled or the surviving spouse remains unmarried. Applicants file Form E-8-10.5 (initial claim, with a physician's certificate of disability) and Form E-8-10.5A (continuance) with the Real Property Assessment Division; the exemption takes effect on the next tax payment date after approval, provided the claim is filed by June 30 (first-half payment) or December 31 (second-half payment). Each Hawaii county (Honolulu, Kauai, Maui, Hawaii) administers its own version of this exemption with its own forms and deadlines — this entry documents Honolulu/Oahu's program specifically; veterans on other islands should contact their county's real property tax office for that county's rules.",
+      "value": "Exemption from real property tax (except minimum tax) on owner-occupied home",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Totally disabled due to injuries sustained while on active duty with the U.S. Armed Forces",
+          "Physician's certificate of disability required with initial claim (Form E-8-10.5)",
+          "Annual continuance form (E-8-10.5A) required",
+          "Claim deadline June 30 or December 31 depending on payment cycle",
+          "Benefit continues to unmarried surviving spouse"
+        ]
+      },
+      "application": {
+        "agency": "Honolulu Real Property Assessment Division (RPAD)",
+        "form": "Form E-8-10.5 (initial); Form E-8-10.5A (continuance)",
+        "url": "https://realproperty.honolulu.gov/tax-relief-and-forms/exemptions/totally-disabled-veterans/",
+        "documentation": [
+          "Physician's certificate of disability",
+          "Proof of active-duty injury/total disability"
+        ]
+      },
+      "legalCitation": "Revised Ordinances of Honolulu § 8-10.5",
+      "authorityTier": "reference",
+      "sourceUrl": "https://realproperty.honolulu.gov/tax-relief-and-forms/exemptions/totally-disabled-veterans/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hi-vehicle_registration-motor-vehicle-registration-fee-exemption-for-100",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Motor Vehicle Registration Fee Exemption for 100% Disabled Veterans",
+      "description": "Hawaii resident veterans with a service-connected 100% VA disability rating and other-than-dishonorable discharge receive a $46 reduction in the state vehicle registration fee for one vehicle, applied for annually with a current VA disability verification letter (enacted via Act 188, HB601). Separately, under HRS § 249-6, a passenger car furnished to a veteran by the federal government due to service-connected disability, and certified by the VA, is exempt from county vehicular (weight) tax; this exemption is limited to one non-commercial vehicle per qualifying disabled veteran and does not apply to vehicles used for commercial purposes. Veterans apply through the Office of Veterans' Services with a Hawaii driver's license, current registration, and current VA verification decision letter; OVS issues a letter to present to the county Department of Motor Vehicles when paying registration fees.",
+      "value": "$46 reduction in state vehicle registration fee (one vehicle, renewed annually); separate county vehicular weight-tax exemption for VA-furnished vehicles under HRS 249-6",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Hawaii residency",
+          "Other-than-dishonorable discharge",
+          "Service-connected 100% VA disability rating",
+          "Current VA disability verification letter required annually",
+          "Limited to one vehicle per qualifying veteran"
+        ]
+      },
+      "application": {
+        "agency": "Hawaii Office of Veterans' Services / county DMV",
+        "form": null,
+        "url": "https://dod.hawaii.gov/ovs/benefits-and-services/motor-vehicle-exemption-for-veterans-with-a-service-connected-disability-rating-of-100/",
+        "documentation": [
+          "Hawaii driver's license",
+          "Current vehicle registration",
+          "Current VA verification decision letter showing 100% disability"
+        ]
+      },
+      "legalCitation": "Act 188, HB601; Haw. Rev. Stat. § 249-6",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dod.hawaii.gov/ovs/benefits-and-services/motor-vehicle-exemption-for-veterans-with-a-service-connected-disability-rating-of-100/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hi-hiring_preference-state-employment-veterans-preference-points",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans' Preference Points",
+      "description": "Hawaii adds preference points to examination scores for open-competitive state civil service recruitments: honorably discharged veterans with qualifying service submit a copy of DD-214 (Member 4) to receive 5 points, while veterans qualifying for 10 points submit an official statement/letter from the VA or armed services dated within the past 12 months confirming eligibility. Some spouses and surviving spouses of disabled veterans may also be eligible for the 10-point preference. These preference points apply only to open-competitive recruitments, not internal promotions.",
+      "value": "5 preference points (veterans with qualifying honorable service) or 10 preference points (disabled veterans and some qualifying spouses/surviving spouses) added to state civil service examination scores",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "DD-214 (Member 4) required for 5-point preference",
+          "Official VA or armed-services letter dated within past 12 months required for 10-point preference",
+          "Applies to open-competitive recruitments only"
+        ]
+      },
+      "application": {
+        "agency": "Hawaii Department of Human Resources Development (DHRD)",
+        "form": null,
+        "url": "https://jobs.hawaii.gov/wp-content/uploads/2019/10/Important-Job-Information.pdf",
+        "documentation": [
+          "DD-214 (Member 4)",
+          "VA or armed-services letter confirming 10-point preference eligibility (if applicable)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://jobs.hawaii.gov/wp-content/uploads/2019/10/Important-Job-Information.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hi-education_tuition-university-of-hawaii-resident-tuition-exemption-",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "University of Hawaii Resident Tuition Exemption for Veterans",
+      "description": "Under University of Hawaii Board of Regents Policy RP 6.208, veterans who are 'covered individuals' under the federal Veterans Choice Act — those who served at least 90 days of active duty since September 10, 2001 and are using Post-9/11 GI Bill, Montgomery GI Bill Active Duty, or Veteran Readiness and Employment (VR&E) benefits — qualify for resident (in-state) tuition rates at UH campuses regardless of formal residency, provided they live in Hawaii while enrolled. Eligible spouses/children using transferred benefits, the Fry Scholarship, or (effective August 1, 2022) Survivors' and Dependents' Educational Assistance also qualify. Active-duty military stationed in Hawaii and Hawaii National Guard/Reserve members separately qualify for resident tuition. Veterans apply through their home campus's Residency Officer.",
+      "value": "Resident (in-state) tuition rate instead of non-resident tuition",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Veteran must have served 90+ days active duty since September 10, 2001 and be using qualifying VA education benefits (Post-9/11 GI Bill, MGIB-AD, VR&E, Fry Scholarship, or DEA)",
+          "Must live in Hawaii while using the benefit",
+          "Apply through home campus Residency Officer"
+        ]
+      },
+      "application": {
+        "agency": "University of Hawaii System",
+        "form": null,
+        "url": "https://manoa.hawaii.edu/veterans/residency-requirements/",
+        "documentation": [
+          "VA Certificate of Eligibility or Statement of Benefits",
+          "DD-214 or proof of qualifying active-duty service"
+        ]
+      },
+      "legalCitation": "UH Board of Regents Policy RP 6.208; federal Veterans Choice Act § 702",
+      "authorityTier": "reference",
+      "sourceUrl": "https://manoa.hawaii.edu/veterans/residency-requirements/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hi-state_veterans_home-yukio-okutsu-daniel-k-akaka-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Yukio Okutsu & Daniel K. Akaka State Veterans Homes",
+      "description": "Hawaii operates two state veterans homes overseen by the Office of Veterans' Services: the 95-bed Yukio Okutsu State Veterans Home in Hilo (opened 2007), providing short-term rehabilitation, long-term residential placement, and 24-hour skilled nursing care; and the 120-bed Daniel K. Akaka State Veterans Home in Kapolei, Oahu (opened 2025), the state's largest post-acute care and rehabilitation facility, offering skilled nursing and intermediate care, geriatric mental health/dementia/Alzheimer's care, rehabilitation therapies, hospice, respite, and adult day care. Both homes are open to veterans living in Hawaii, along with eligible spouses and Gold Star parents. Veterans apply by contacting the facility directly or, for Akaka, via an online application form.",
+      "value": "Skilled nursing, rehabilitative, and long-term care (95 beds in Hilo; 120 beds in Kapolei)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Open to veterans living in Hawaii, and eligible spouses/Gold Star parents",
+          "Detailed medical-admission criteria set by each facility; contact facility directly"
+        ]
+      },
+      "application": {
+        "agency": "Hawaii Office of Veterans' Services",
+        "form": null,
+        "url": "https://dod.hawaii.gov/ovs/advisory-board/state-veteran-homes/",
+        "documentation": ["DD-214 or proof of military service"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dod.hawaii.gov/ovs/advisory-board/state-veteran-homes/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

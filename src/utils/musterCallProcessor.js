@@ -680,6 +680,12 @@ const storeDocumentInVKB = async (file, result) => {
   }
 };
 
+// classifyDocument() (documentClassifier.js) always returns one of the
+// uppercase DOCUMENT_TYPES enum values, never the lowercase/snake_case labels
+// below — those are dead keys kept only because some other caller may still
+// pass them directly. Without the DOCUMENT_TYPES-keyed entries, every
+// classification except the DD214 family (whose enum values happen to equal
+// their own uppercase strings) fell through to PACKET_DOC_TYPES.OTHER.
 const CLASS_TO_PACKET_TYPE = {
   DD214: PACKET_DOC_TYPES.DD214,
   service_record: PACKET_DOC_TYPES.DD214,
@@ -696,6 +702,17 @@ const CLASS_TO_PACKET_TYPE = {
   personal_statement: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
   buddy_statement: PACKET_DOC_TYPES.BUDDY_STATEMENT,
   va_decision: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+  [DOCUMENT_TYPES.DD215]: PACKET_DOC_TYPES.DD215,
+  [DOCUMENT_TYPES.RATING_DECISION]: PACKET_DOC_TYPES.RATING_DECISION,
+  [DOCUMENT_TYPES.CLAIM_LETTER]: PACKET_DOC_TYPES.CLAIM_LETTER,
+  [DOCUMENT_TYPES.C_FILE_MEDICAL]: PACKET_DOC_TYPES.C_FILE,
+  [DOCUMENT_TYPES.BLUE_BUTTON]: PACKET_DOC_TYPES.BLUE_BUTTON,
+  [DOCUMENT_TYPES.MEDICAL_RECORD]: PACKET_DOC_TYPES.MEDICAL_RECORD,
+  [DOCUMENT_TYPES.DBQ]: PACKET_DOC_TYPES.DBQ,
+  [DOCUMENT_TYPES.NEXUS_LETTER]: PACKET_DOC_TYPES.NEXUS_LETTER,
+  [DOCUMENT_TYPES.PERSONAL_STATEMENT]: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+  [DOCUMENT_TYPES.VA_CORRESPONDENCE]: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+  [DOCUMENT_TYPES.EXAM_REPORT]: PACKET_DOC_TYPES.EXAM_REPORT,
 };
 
 const archiveDocumentInPacket = async (file, result) => {

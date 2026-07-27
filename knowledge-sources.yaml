@@ -7,8 +7,8 @@
 # a source drifts.
 #
 # Read by: `.github/workflows/legal-ingestion.yml` (informational — the
-# fetchers hard-code their own URLs for now, but planned freshness CI
-# will compare manifest.fetched_at against `refresh_cadence` here).
+# fetchers hard-code their own URLs for now); also by `.github/workflows/dkb-freshness.yml`
+# (S39 — freshness CI compares `last_verified` against `refresh_cadence`-derived staleness thresholds).
 #
 # Each entry shape:
 #   id:               kebab-case unique key matching the manifest source name
@@ -18,7 +18,12 @@
 #   api_endpoint:     where the fetcher pulls from
 #   refresh_cadence:  weekly | monthly | quarterly | event-driven
 #   fetcher:          path to the script that ingests this source
-#   verified_status:  verified (live and tested) | scaffold (URL needs probing)
+#   verified_status:  verified (live and tested, in the weekly cron) |
+#                     content-verified (fetcher live-tested end-to-end against
+#                     the real source, pending full shard population + two green
+#                     cron runs before promotion to verified) | scaffold
+#                     (fetcher exists, URL needs probing) | not_started (source
+#                     identified, no fetcher built yet)
 #   last_verified:    ISO date of the last successful end-to-end run
 
 version: 1
@@ -40,63 +45,417 @@ sources:
       indexed (fetch-ecfr.mjs's DEFAULT_PARTS already covered all four;
       prior runs had just been explicitly scoped to --part=4). 564 records
       -> 1,060 chunks, 2.6 MB total (well under the 25 MB budget). CAVC and
-      Federal Circuit remain explicitly out of scope (see the sprint plan's
-      Out-of-Scope section — PDF-shaped sources needing a different
-      ingestion path).
+      Federal Circuit are NO LONGER out of scope — S33 (2026-07-15) shipped
+      real fetchers for both into their own shards (see the cavc/fedcir
+      entries below).
+      S35 (2026-07-15): the verified Part 4 rating schedule in this index is
+      the authoritative source for the structured rating criteria backfilled
+      into src/data/disabilityData.json — 176 previously-uncovered diagnostic
+      codes (amputations 51xx, ankylosis/limitation-of-motion 52xx, muscle
+      groups 4.73, peripheral nerves/epilepsy/eating disorders 4.124a/4.130,
+      renal/skin) now carry structured criteria extracted verbatim from these
+      chunks (every percentage re-verified against the source; nerves rate via
+      their paralysis parent per 4.123/4.124 caps). 0 of 748 codes remain
+      prose-only. Guarded by src/__tests__/ratingCriteriaCoverage.test.js.
 
   - id: m21-1
     name: VA M21-1 Adjudication Procedures Manual
     jurisdiction: va
     canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000004049/M21-1-Adjudication-Procedures-Manual
-    api_endpoint: null
+    api_endpoint: https://www.knowva.ebenefits.va.gov/system/ws/v11/ss/
     refresh_cadence: monthly
     fetcher: scripts/legal-ingestion/fetch-m21-1.mjs
-    verified_status: scaffold
-    last_verified: null
+    shard_builder: scripts/dkb-sharding/build-m21-1-shard.mjs
+    shard: public/dkb-index/m21_1/
+    verified_status: content-verified
+    last_verified: 2026-07-18
     notes: |
-      S25 (2026-07-09) verified live against the portal: the scaffold's
-      placeholder ARTICLE_ID URL 404s. The real, current M21-1 Table of
-      Contents (found via search, updated to canonical_url above) returns
-      HTTP 200 but the raw HTML has ZERO <a> hrefs beyond an Angular
-      `{{::faviconUrl}}` binding — KnowVA now serves M21-1 as a
-      client-side-rendered SPA; chapter links and article text load via a
-      JS API call after page load, not present in the fetched HTML at all.
-      A plain fetch()+regex scraper (this scaffold's whole design) cannot
-      work against this architecture — no amount of selector-tuning fixes
-      it. Confirmed no simpler static fallback exists either: the legacy
-      WARMS M21-1 URL (benefits.va.gov/WARMS/M21_1.asp) now redirects into
-      the same SPA shell. Real enablement needs either (a) a headless-
-      browser fetcher (Puppeteer/Playwright — a new dependency this
-      ingestion pipeline doesn't otherwise need) driving the real portal
-      and waiting for client-side render, or (b) reverse-engineering the
-      Angular app's underlying content API (undocumented, could change
-      without notice). Both are open-ended, uncertain-ROI investigations
-      disproportionate to this sprint — deferred to a future cycle, not
-      "hardened." Do not flip ENABLE_SCAFFOLD_FETCHERS=1 until one of those
-      is built; it will only 404/produce zero records with the current
-      fetch()-based approach.
+      S31 (2026-07-15) SOLVED the S25 blocker. KnowVA serves M21-1 as a
+      client-side Angular SPA (a plain fetch of the page HTML returns only a
+      "JavaScript is not enabled" shell — confirmed again), so the old
+      fetch()+regex scaffold got ZERO content. S31 took the plan's PREFERRED
+      path — reverse-engineering the content API instead of adding a headless
+      browser: a one-off Playwright render (Playwright is already a devDep for
+      e2e; NOT a new runtime dependency) sniffed the SPA's XHR calls and
+      revealed a clean, stable KANA/Verint "Self Service v11" JSON REST API
+      that plain fetch() CAN read (no browser, no session cookie):
+        - topic tree:  GET /system/ws/v11/ss/topic/{id}?$level=2&portalId=…
+                       (BFS one level at a time — deep $level is rejected)
+        - article text: GET /system/ws/v11/ss/article?$attribute=…,contentText
+                       &topicId={leaf}&portalId=…  → real HTML body per article
+      fetch-m21-1.mjs now drives that API (root topic 554400000004049 reports
+      articleTotalCount≈785; a bounded live run pulled real Memorandum-of-
+      Changes / adjudication text, sanitized, gov-URL-preserved). Coverage
+      floor M21_MIN_ARTICLES=600 on full runs; M21_MAX_ARTICLES caps bounded
+      verification. Output lands in its OWN shard (public/dkb-index/m21_1/,
+      procedural tier) via build-m21-1-shard.mjs — deliberately NOT the eCFR
+      legal-index monolith, so "Ask the Regs" retrieval stays regression-free
+      (S29). Queryable through knowledgeQuery.queryCorpus (S30) once the shard
+      is populated + registered (npm run refresh:m21-1-shard).
+      REMAINING before verified_status: verified — (1) a full uncapped
+      population run (fetch 785 + real bge-small embed) committed as the shard;
+      (2) the weekly ingestion cron running the M21-1 shard pipeline green
+      end-to-end at least twice (inherently multi-week; the freshness/CI wiring
+      across all shards is S39's scope). ENABLE_SCAFFOLD_FETCHERS no longer
+      applies — this is a real fetcher, not a scaffold.
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+
+  - id: m21-5
+    name: VA M21-5 Appeals and Reviews
+    jurisdiction: va
+    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-us/portal/554400000001018/topic/554400000018297/M21-5-Appeals-and-Reviews
+    api_endpoint: https://www.knowva.ebenefits.va.gov/system/ws/v11/ss/
+    refresh_cadence: monthly
+    fetcher: scripts/legal-ingestion/fetch-m21-5.mjs
+    shard_builder: scripts/dkb-sharding/build-m21-5-shard.mjs
+    shard: public/dkb-index/m21_5/
+    verified_status: content-verified
+    last_verified: 2026-07-20
+    notes: |
+      S44 (2026-07-20): found by directly querying the KnowVA topic API's
+      "Compensation and Pension" parent (topic 554400000001924), which lists
+      M21-1's siblings: 38 CFRs (redundant with our eCFR-sourced shard), M21-1,
+      M21-3 Training Program Manual, M21-4 Manual, M21-5, Rate Tables, Subscribe
+      Here. Only M21-5 was a genuine gap — M21-3/M21-4 are internal VA
+      staff-training and workload/quality-review procedures (not veteran-facing
+      adjudication criteria; sampled their real chapter lists to confirm before
+      excluding, not assumed), and Rate Tables duplicates
+      src/data/vaPayRatesHistorical.js (already VA.gov-sourced, tested).
+      M21-5 is the VA's guide (created 2019) for processing legacy appeals and
+      Higher-Level Reviews (HLR) under the Appeals Modernization Act — directly
+      relevant, distinct from M21-1's core adjudication procedures. Uses the
+      IDENTICAL KnowVA v11 API mechanism as M21-1 (fetch-m21-5.mjs mirrors
+      fetch-m21-1.mjs; only the root topic id and citation-format regex
+      differ — M21-5 articles use "Chapter N, Section X" naming, verified live,
+      not M21-1's Roman-numeral convention). Full run: 36 articles (a small
+      manual — coverage floor M21_5_MIN_ARTICLES=28), 453 chunks after
+      structural chunking, 0 skipped. Shard built, registered, semantically
+      verified (a real HLR/NOD query surfaced the correct Chapter 5/7 content).
+      Weekly freshness CI wired same-day via check-shard-freshness.mjs.
+      UPDATE (2026-07-20, same day): reconsidered "Rate Tables duplicates
+      vaPayRatesHistorical.js" above — see the `rate-tables` entry below. It
+      wasn't a pure duplicate: KnowVA has Special Monthly Compensation (SMC)
+      rates the app had zero data for. M21-3 was re-confirmed excluded (empty
+      stub, 0 articles anywhere in its tree). M21-4 was re-confirmed as RO
+      workload/QA-audit material (not veteran-facing adjudication guidance)
+      but ADDED ANYWAY per an explicit user request for full M21-series
+      coverage — see the `m21-4` entry below for how that's handled.
+
+  - id: m21-4
+    name: VA M21-4 Manual (RO workload management, national quality reviews)
+    jurisdiction: va
+    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000004196/M21-4-Manual
+    api_endpoint: https://www.knowva.ebenefits.va.gov/system/ws/v11/ss/
+    refresh_cadence: monthly
+    fetcher: scripts/legal-ingestion/fetch-m21-4.mjs
+    shard_builder: scripts/dkb-sharding/build-m21-4-shard.mjs
+    shard: public/dkb-index/m21_4/
+    authority_tier: reference
+    verified_status: content-verified
+    last_verified: 2026-07-20
+    notes: |
+      S44 follow-up (2026-07-20, same day as m21-5): added despite the
+      earlier exclusion call — that content read didn't change (10 of 15
+      articles were sampled directly: RO staffing-metric/quality-review-team
+      procedures, End Product/Claim Label/Claim Stage code lookup tables,
+      explicitly cross-referencing M21-1 rather than duplicating it) — the
+      user explicitly asked for FULL M21-series coverage regardless. Tagged
+      `authority_tier: reference` (not `procedural` like M21-1/M21-5, kept in
+      sync across build-shard.mjs's SHARD_TIER and
+      src/services/dkbAuthorityTiers.js) specifically so tier-based ranking
+      never presents internal RO staffing/audit procedure as veteran-facing
+      adjudication authority. Structure is flat — the root topic's 15
+      children (6 appendices + 9 chapters, 2 of which are one-line
+      "Rescinded" stubs, kept as real records) are already leaves, no deep
+      BFS crawl needed (verified live). Citation convention: "Chapter N."
+      or "Appendix X." (different from M21-1's Roman-numeral and M21-5's
+      "Chapter N, Section X" conventions — verified live, not assumed). Full
+      run: 15 articles, 343 chunks (341 kept, 2 empty Rescinded stubs
+      dropped), 0 upstream skips. Registry now has 8 shards. Semantically
+      verified — "End Product code" and "Quality Review Team" queries
+      surfaced the correct Appendix B/C/D and Chapter 6/8 content.
+
+  - id: rate-tables
+    name: VA disability compensation + Special Monthly Compensation (SMC) rates
+    jurisdiction: va
+    canonical_url: https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/topic/554400000005316/Rate-Tables
+    api_endpoint: https://www.knowva.ebenefits.va.gov/system/ws/v11/ss/
+    refresh_cadence: annual
+    fetcher: scripts/legal-ingestion/fetch-rate-tables.mjs
+    shard_builder: null
+    shard: null
+    output: src/data/vaSmcRatesHistorical.js (generated by apply-smc-rates.mjs)
+    authority_tier: primary
+    verified_status: content-verified
+    last_verified: 2026-07-20
+    notes: |
+      S44 (2026-07-20): investigated whether KnowVA's Rate Tables (same
+      portal as M21-1/M21-5) would be better than the app's existing
+      src/data/vaPayRatesHistorical.js. Not a replacement — the app's
+      existing 2020-2026 base compensation numbers are correct and match
+      KnowVA's CURRENT-year article exactly — but KnowVA had one real gap:
+      zero Special Monthly Compensation (SMC) rate data existed in the app
+      before this.
+      SCOPE DECISION — current year only: cross-validating every parsed
+      value against vaPayRatesHistorical.js's existing (already va.gov-
+      verified) entries found the 2025 COLA Rates article (-> app year
+      2026) matches EXACTLY, zero discrepancies. But the SAME check against
+      KnowVA's archived 2017-2024 COLA articles (-> app years 2018-2025)
+      found real discrepancies of up to ~$1 on some cells, in both directly-
+      read values and derived deltas — not a parser bug (checked raw table
+      cells by hand). KnowVA's own historical archive appears to carry small
+      inconsistencies for past years that the app's existing data doesn't
+      have. Given this feeds real compensation-underpayment math shown to
+      veterans, only the current year shipped (user decision). Historical
+      fetch/parse still runs behind RATE_TABLES_INCLUDE_HISTORICAL=1 for a
+      future session to revisit if a second independent source appears.
+      Also out of scope: pre-2014 rates (1933-2014) exist only as PDF
+      attachments with no discoverable download API (probed several
+      plausible REST paths, all 400/404 — would need browser-based network
+      capture); Special Benefit Allowances / Spina Bifida / Birth Defects
+      tables are present in the same articles but their section labels sit
+      in irregularly-nested HTML, skipped rather than risk mislabeling.
+      apply-smc-rates.mjs cross-validates before writing and refuses to
+      generate the output file on any mismatch — this stays load-bearing
+      for future annual COLA updates, not just this one-time check.
 
   - id: cavc
-    name: U.S. Court of Appeals for Veterans Claims — published opinions
+    name: U.S. Court of Appeals for Veterans Claims — recent decisions
     jurisdiction: court
-    canonical_url: https://www.uscourts.cavc.gov/decisions/decisions.php
-    api_endpoint: null
+    canonical_url: https://www.uscourts.cavc.gov/recent_decisions.php
+    api_endpoint: https://www.uscourts.cavc.gov/data/recentdecisions.rss
     refresh_cadence: weekly
     fetcher: scripts/legal-ingestion/fetch-cavc.mjs
-    verified_status: scaffold
-    last_verified: null
+    shard_builder: scripts/dkb-sharding/build-cavc-shard.mjs
+    shard: public/dkb-index/cavc/
+    authority_tier: judicial
+    verified_status: content-verified
+    last_verified: 2026-07-18
+    notes: |
+      S33 (2026-07-15) promoted the old placeholder scaffold to a real fetcher.
+      The recent_decisions.php page renders its decision list client-side (empty
+      <tbody id="decision_feed">), but the same data is served as a plain,
+      fetch()able Atom feed at /data/recentdecisions.rss — no headless browser.
+      fetch-cavc.mjs parses that feed (docket, parties, disposition summary,
+      efiling CaseSummary.jsp link, date) into its OWN shard (public/dkb-index/
+      cavc/, judicial tier) via build-cavc-shard.mjs — NOT the eCFR monolith, so
+      "Ask the Regs" retrieval stays regression-free (S29). Queryable through
+      knowledgeQuery.queryCorpus (S30) once populated (npm run refresh:cavc-shard).
+      SCOPE + REMAINING before verified_status: verified — (1) the RSS is a small
+      rolling window (last few days) of non-precedential MEMORANDUM decisions, so
+      it keeps the shard FRESH but is not the historical archive; the 2007-2023
+      published-opinion backfill (the archive-audit gap) comes from
+      search.uscourts.cavc.gov (POST /search/, IW_DATABASE="USCAVC Opinions") +
+      efiling CaseSummary.jsp bodies and is a separate time/compute-gated job
+      (documented in fetch-cavc.mjs, not built this sprint). (2) weekly cron
+      green end-to-end twice (freshness/CI wiring is S39). The offline corpus
+      already carries 6,422 legacy cavc entries (low-fidelity synthetic guidance
+      blurbs, placeholder homepage URLs) that this real feed supersedes for fresh
+      decisions.
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+      S43 (2026-07-19): built fetch-cavc-historical.mjs against search.uscourts.cavc.gov's real
+      ISYS search server (plain HTTP; IW_DATABASE=PanelDecisions/SingleJudgeDecisions is the
+      site's own precedential/non-precedential split). PanelDecisions backfill COMPLETE — 1,363
+      decisions, fully embedded. SingleJudgeDecisions backfill (~50,700 docs) NOT complete — the
+      archive server had a genuine, confirmed outage mid-run (independently verified with a real
+      browser); paused rather than left retrying unattended. Shard currently carries only 29
+      single_judge-tagged chunks from the small rolling feed. Every chunk is tagged
+      decision_type/precedential/citation_weight (src/services/cavcAuthorityTagging.js) so a
+      memorandum decision can never rank or render as citable precedent. Resume via
+      CAVC_HIST_DATABASES=SingleJudgeDecisions once the server is healthy — see
+      build-cavc-shard.mjs's header for the exact command.
 
   - id: fedcir
-    name: U.S. Court of Appeals for the Federal Circuit — veterans-affairs slip opinions
+    name: U.S. Court of Appeals for the Federal Circuit — veterans-law opinions
     jurisdiction: court
-    canonical_url: https://cafc.uscourts.gov/opinions-orders/
-    api_endpoint: null
+    canonical_url: https://www.cafc.uscourts.gov/home/case-information/opinions-orders/
+    api_endpoint: https://www.cafc.uscourts.gov/wp-json/wp/v2/posts?categories=27
     refresh_cadence: weekly
     fetcher: scripts/legal-ingestion/fetch-fedcir.mjs
-    verified_status: scaffold
-    last_verified: null
+    shard_builder: scripts/dkb-sharding/build-fedcir-shard.mjs
+    shard: public/dkb-index/fedcir/
+    authority_tier: judicial_federal_circuit
+    verified_status: content-verified
+    last_verified: 2026-07-18
+    notes: |
+      S33 (2026-07-15) promoted the old placeholder scaffold to a real fetcher.
+      cafc.uscourts.gov is WordPress; its opinions/orders are posts in category
+      27 ("Opinion-Order", ~18.7K posts) exposed via the standard WP REST API
+      (/wp-json/wp/v2/posts?categories=27) — plain fetch(), no browser. NOTE the
+      host must be www.cafc.uscourts.gov (apex fails SNI). fetch-fedcir.mjs pages
+      the API and keeps only veterans-law appeals via the post's "Origin:" field
+      (CAVC or DVA — a live page-1 sample was 12/100 veterans-origin); default
+      body is a synopsis + PDF link, --with-pdf-text opts into full pdfjs-dist
+      opinion-text extraction (heavy path). The shard (public/dkb-index/fedcir/,
+      judicial_federal_circuit tier) is built by build-fedcir-shard.mjs, which
+      MERGES the live feed with a hand-verified seed of 24 load-bearing
+      veterans-law precedents (scripts/legal-ingestion/fedcir-key-cases.mjs —
+      Procopio, Buchanan, Jandreau, Hodge, Wagner, Martin v. O'Rourke, …) each
+      carrying its real F.3d/F.4th reporter cite, so the shard covers the anchor
+      cases even before a full historical backfill. npm run refresh:fedcir-shard.
+      REMAINING before verified_status: verified — (1) full historical crawl
+      (~188 REST pages) + optional PDF-text extraction committed as the shard;
+      (2) weekly cron green twice (freshness/CI is S39). Replaces the 293
+      low-fidelity synthetic federal_circuit corpus entries (many mis-tagged
+      CAVC cases with search-URL placeholders).
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
 
-# Out-of-scope (intentionally NOT in the index):
-#   - State-level VA benefits (per Sprint 7 plan)
-#   - BVA decisions (non-precedential — would inflate the index 100×)
-#   - VHA clinical guidance (medical, not adjudication)
+  - id: ogc
+    name: VA Office of General Counsel — precedent opinions
+    jurisdiction: va
+    canonical_url: https://www.va.gov/ogc/precedentopinions.asp
+    api_endpoint: https://www.va.gov/OGC/opinions/{year}PrecedentOpinions.asp
+    refresh_cadence: quarterly
+    fetcher: scripts/legal-ingestion/fetch-ogc.mjs
+    shard_builder: scripts/dkb-sharding/build-ogc-shard.mjs
+    shard: public/dkb-index/ogc/
+    authority_tier: policy
+    verified_status: content-verified
+    last_verified: 2026-07-18
+    notes: |
+      S34 (2026-07-15) built the real fetcher (S27 had only registered the
+      source; no fetcher existed). The precedent-opinion archive is a stable
+      plain-fetch two-level crawl — landing precedentopinions.asp → per-year
+      index pages /OGC/opinions/<yyyy>PrecedentOpinions.asp (30 years, 1987-2019
+      confirmed live) → individual opinion PDFs /OGC/docs/<yyyy>/VAOPGCPREC<n>-
+      <yyyy>.pdf. fetch-ogc.mjs crawls it (bounded by OGC_MAX_YEARS; --with-pdf-
+      text opts into pdfjs-dist full-text extraction). The shard
+      (public/dkb-index/ogc/, POLICY tier) is built by build-ogc-shard.mjs from
+      the 891 offline-corpus ogc entries, MERGED with the live feed. Key data-
+      quality fix: 468 of the 891 corpus entries had an EMPTY url (their
+      "VAOPGCPREC n-yyyy" citation lived only in `title`), which build-shard's
+      S28 accuracy floor would have DROPPED; ogc-citation.mjs backfills a
+      canonical per-year-index url (implausible-year guard rejects malformed
+      source cites) so 0 entries are skipped url-less (verified in a bounded
+      build). npm run refresh:ogc-shard. REMAINING before verified_status:
+      verified — (1) full all-years crawl + optional PDF-text committed as the
+      shard; (2) weekly cron green twice (freshness/CI is S39).
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+
+  - id: bva
+    name: Board of Veterans' Appeals — decisions (non-precedential)
+    jurisdiction: va
+    canonical_url: https://www.va.gov/vetapp/
+    api_endpoint: null
+    refresh_cadence: quarterly
+    fetcher: null
+    shard_builder: scripts/dkb-sharding/build-bva-shard.mjs
+    shard: public/dkb-index/bva/
+    authority_tier: administrative_precedent
+    verified_status: content-verified
+    last_verified: 2026-07-18
+    notes: |
+      S32 (2026-07-15): the 116,209 BVA entries already in the offline corpus
+      (source:"bva", individual decisions at va.gov/vetappYY/…txt) are built
+      into their own shard (public/dkb-index/bva/) with per-entry authority
+      tagging (src/services/bvaAuthorityTagging.js). Board decisions are
+      CATEGORICALLY non-precedential under 38 CFR § 20.1303 ("binding only with
+      regard to the specific case decided"), so every entry is tagged
+      precedential:false / binding:false / authority_basis:"38 CFR § 20.1303"
+      (INVARIANT, not inferred) plus a persuasive citation_weight ∈ [0,1]
+      (recency + grounding-in-binding-authority + disposition + substance) for
+      ranking, and a caveat surfaced at citation time. This replaces the old
+      blanket "would inflate the index 100x" exclusion: index everything, never
+      let it read as binding authority (unit-asserted). No live fetcher — the
+      data is corpus-sourced; refresh_cadence tracks corpus regeneration.
+      REMAINING before verified: full 116K bge-small embed committed as the
+      shard (~45 MB, ~2 parts; time/compute-heavy) + build-registry.mjs.
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+
+  - id: state-benefits
+    name: State veteran benefits (per-state programs)
+    jurisdiction: state
+    canonical_url: https://www.va.gov/statedva.htm
+    api_endpoint: null
+    refresh_cadence: annual
+    fetcher: scripts/state-benefits/build-state-benefits.mjs
+    shard_builder: null
+    shard: null
+    authority_tier: reference
+    verified_status: content-verified
+    last_verified: 2026-07-15
+    notes: |
+      S36 (2026-07-15) established the canonical per-state schema
+      (scripts/state-benefits/schema.mjs, docs/STATE_BENEFITS_SCHEMA.md) and a
+      repeatable Node ingestion pipeline (sources/<code>.research.json →
+      normalize.mjs → build-state-benefits.mjs → src/data/states/<code>.json),
+      replacing the ad-hoc Jan-2026 Python scraper whose own FINAL_REPORT flagged
+      48/51 states as unverified "template-generated" data. Every benefit carries
+      the mandatory accuracy fields (sourceUrl + lastVerified + authorityTier
+      "reference"); the validator FAILS the build if a verificationStatus:
+      "verified" benefit lacks an official https sourceUrl + legalCitation, so
+      unverified data cannot masquerade as verified. VERIFIED (15 highest
+      veteran-population states): TX, CA, FL (S36 pilot) + PA, VA, NC, OH, GA,
+      NY, IL, WA, MI, AZ, CO, MD (S37, 2026-07-15) — all verified against
+      official state .gov sources with per-entry citations (85 of 92 S37 benefits
+      verified; the 7 unverified are honest omissions where an agency site
+      bot-blocked, never guessed figures). The remaining 36 legacy _camel.json
+      files stay verificationStatus "template", flagged "Pending Verification" in
+      the StateBenefitHunter UI. npm run build:state-benefits. REMAINING before
+      verified_status: verified — (1) later sprints verify the remaining 36
+      states to the same depth; (2) optional S29 state-benefits shard
+      (authority_tier already set for a mechanical slot-in); (3) S39 annual
+      freshness check (states change programs yearly, different cadence from
+      federal sources).
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+
+  - id: multinational
+    name: Multinational / OCONUS service content (US-veteran benefits for overseas/allied service)
+    jurisdiction: federal
+    canonical_url: https://www.publichealth.va.gov/exposures/
+    api_endpoint: null
+    refresh_cadence: annual
+    fetcher: scripts/multinational/build-multinational.mjs
+    shard_builder: null
+    shard: null
+    authority_tier: reference
+    verified_status: content-verified
+    last_verified: 2026-07-15
+    notes: |
+      S38 (2026-07-15) added US-veteran-benefit content ABOUT overseas/allied
+      service — NOT a comparative reference to other countries' benefit systems
+      (scope confirmed in docs/SPRINT_PLAN_S27-S40_DKB_FULL_COVERAGE.md line 63).
+      Reuses the S36 pipeline shape (scripts/multinational/{schema,normalize,
+      build-multinational}.mjs, docs/MULTINATIONAL_SCHEMA.md): per-category
+      research file sources/<category>.research.json → normalize → validate →
+      src/data/multinational/<category>.json. Four categories, 33 provisions,
+      32 verified: presumptive_exposure_overseas (10 — Hiroshima/Nagasaki,
+      atmospheric tests, Enewetak, Palomares, Thule, Thailand, Korean DMZ,
+      Laos/Cambodia, Guam/Johnston Atoll, each with a 38 CFR 3.307/3.309 cite +
+      eligibility date range), foreign_medical_program (8; 1 honest unverified —
+      the FMP registration mailing address/phone render blank on va.gov, left
+      null not guessed), oconus_filing (6 — Manila RO, online/mail filing,
+      embassy Federal Benefits Units, international direct deposit),
+      allied_service_credit (9 — Philippine Scout/Commonwealth/guerrilla credit,
+      38 U.S.C. 107 $0.50-per-dollar rule, 38 CFR 3.42 full-rate exception, the
+      FVEC Fund $15k/$9k, 38 U.S.C. 109 allied forces). Every verified provision
+      carries an official https sourceUrl + lastVerified + authorityTier
+      "reference"; the validator FAILS the build if a "verified" provision lacks
+      an https sourceUrl. Reached through the unified access layer
+      (src/services/knowledgeQuery.js getMultinationalContent/…Category/
+      queryMultinational, S30). npm run build:multinational. REMAINING before
+      verified_status: verified — (1) optional S29 multinational shard
+      (authority_tier already registered in src/services/dkbAuthorityTiers.js);
+      (2) S39 annual freshness check (VA presumptive locations/date ranges change
+      with new legislation, e.g. future PACT-Act-style expansions).
+      S39 (2026-07-15): weekly freshness CI wired via scripts/dkb-sharding/check-shard-freshness.mjs, .github/workflows/dkb-freshness.yml.
+
+# Out-of-scope for the live eCFR-only legal-index as of S26 (see
+# docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md); S27-S40
+# (docs/SPRINT_PLAN_S27-S40_DKB_FULL_COVERAGE.md) revisits BVA and adds
+# state/multinational sources via a sharded architecture rather than one
+# monolithic index — see that plan before assuming these remain excluded:
+#   - State-level VA benefits — NO LONGER excluded: S36 (2026-07-15) added the
+#     `state-benefits` source above (canonical schema + Node pipeline + 3 pilot
+#     states verified); S37 (2026-07-15) extended verification to the top 15
+#     veteran-population states (added PA/VA/NC/OH/GA/NY/IL/WA/MI/AZ/CO/MD).
+#   - BVA decisions — NO LONGER excluded: S32 (2026-07-15) added the `bva`
+#     source above (own shard + per-entry non-precedential authority tagging),
+#     replacing the old "inflate the index 100x" blanket exclusion.
+#   - Multinational / OCONUS service content — NO LONGER excluded: S38
+#     (2026-07-15) added the `multinational` source above (foreign-service
+#     presumptive exposure, Foreign Medical Program, OCONUS filing, allied/
+#     Commonwealth service credit). Scoped to US-veteran benefits for overseas
+#     service, NOT other countries' benefit systems.
+#   - VHA clinical guidance (medical, not adjudication) — remains out of
+#     scope, not revisited

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <author>
+    <name>US Court of Appeals for Veterans Claims</name>
+  </author>
+  <id>http://www.uscourts.cavc.gov/recent_decisions.rss</id>
+  <title>Recent USCAVC Descisions</title>
+  <updated>2026-07-15T04:10:02-04:00</updated>
+  <entry>
+    <id>https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-1124&amp;incOrigDkt=Y&amp;incDktEntries=Y</id>
+    <link href="https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-1124&amp;incOrigDkt=Y&amp;incDktEntries=Y"/>
+    <summary>Memorandum Decision that the January 13, 2025, Board decision is AFFIRMED. (FALVEY)</summary>
+    <title>25-1124 Rocco David Ross v. Douglas A. Collins</title>
+    <updated>2026-07-15T04:10:02-04:00</updated>
+    <dc:date>2026-07-15T04:10:02-04:00</dc:date>
+  </entry>
+<entry>
+    <id>https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-1749&amp;incOrigDkt=Y&amp;incDktEntries=Y</id>
+    <link href="https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-1749&amp;incOrigDkt=Y&amp;incDktEntries=Y"/>
+    <summary>Memorandum Decision that the appeal of the Board's February 12, 2025, decision that denied service connection for asthma on a direct basis is dismissed. The reasonably raised claim for service connection for asthma as secondary to the appellant's ser</summary>
+    <title>25-1749 Nathaniel Levell King v. Douglas A. Collins</title>
+    <updated>2026-07-15T04:10:02-04:00</updated>
+    <dc:date>2026-07-15T04:10:02-04:00</dc:date>
+  </entry>
+<entry>
+    <id>https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-2440&amp;incOrigDkt=Y&amp;incDktEntries=Y</id>
+    <link href="https://efiling.uscourts.cavc.gov/cmecf/servlet/TransportRoom?servlet=CaseSummary.jsp&amp;caseNum=25-2440&amp;incOrigDkt=Y&amp;incDktEntries=Y"/>
+    <summary>Memorandum Decision that after consideration of the parties' briefs, the governing law, and the record, the Court SETS ASIDE the February 25, 2025, Board decision that (1) denied entitlement to a disability rating greater than 10% for esophageal stri</summary>
+    <title>25-2440 Richard O. Bergan v. Douglas A. Collins</title>
+    <updated>2026-07-15T04:10:02-04:00</updated>
+    <dc:date>2026-07-15T04:10:02-04:00</dc:date>
+  </entry>
+</feed>

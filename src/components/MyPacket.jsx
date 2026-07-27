@@ -3064,8 +3064,8 @@ function CFileSuggestionsSection({ conditions }) {
         🔎 Identified in your C-File (not yet filed)
       </h3>
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-        AI suggestions from your analyzed records. These are NOT filed claims and
-        are not counted in the totals above — review and file the ones that
+        AI suggestions from your analyzed records. These are NOT filed claims
+        and are not counted in the totals above — review and file the ones that
         apply.
       </p>
       <ul className="space-y-2">
@@ -3274,15 +3274,17 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
 // Read-only VKB evidence-timeline events, merged into the DISPLAY only (never
 // the store) so handleClearTimelineEvents keeps clearing user events alone.
 function VkbTimelineSection({ events }) {
-  const sorted = [...events].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sorted = [...events].sort(
+    (a, b) => new Date(b.date) - new Date(a.date),
+  );
   return (
     <section className="mt-6 border-t dark:border-gray-700 pt-4">
       <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1">
         📎 From your analyzed documents ({events.length})
       </h3>
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-        Read-only events extracted from your C-File. Clearing your timeline above
-        does not remove these.
+        Read-only events extracted from your C-File. Clearing your timeline
+        above does not remove these.
       </p>
       <ul className="space-y-2">
         {sorted.map((e, i) => (
@@ -4265,9 +4267,7 @@ async function _loadVkbEnrichment(ctx) {
     const current = Array.isArray(vkb.medicalConditions?.current)
       ? vkb.medicalConditions.current
       : [];
-    setCfileConditions(
-      current.filter((c) => c?.source === "C-File Analysis"),
-    );
+    setCfileConditions(current.filter((c) => c?.source === "C-File Analysis"));
     setVkbTimeline(
       Array.isArray(vkb.evidenceTimeline) ? vkb.evidenceTimeline : [],
     );

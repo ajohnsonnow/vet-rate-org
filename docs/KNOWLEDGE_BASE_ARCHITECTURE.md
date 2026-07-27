@@ -1,5 +1,9 @@
 # VetRate Knowledge Base Architecture
 
+> ⚠️ **DIAMOND KNOWLEDGE BASE (DKB) SECTION SUPERSEDED**
+>
+> The "Diamond Knowledge Base (DKB)" section below describes an early design that was not built this way. The current, authoritative DKB architecture — including sharded index layout, unified access layer, per-source registry, and population status — is documented in [docs/DIAMOND_KNOWLEDGE_BASE.md](./DIAMOND_KNOWLEDGE_BASE.md) (updated S44). **Only the Community Knowledge Base (CKB) section below remains current**: permission tracker, contact templates, legal disclaimers, and integration strategies for copyrighted community content are maintained here.
+
 ## Overview
 
 VetRate uses a **dual knowledge base** architecture to separate regulatory information from community-sourced content. This protects against copyright issues while maintaining comprehensive veteran support.
@@ -9,17 +13,19 @@ VetRate uses a **dual knowledge base** architecture to separate regulatory infor
 ## Knowledge Base Types
 
 ### 1. 💎 Diamond Knowledge Base (DKB)
+
 **Source:** Official VA regulations, public domain government content
 
-| Attribute | Value |
-|-----------|-------|
-| **Legal Status** | Public Domain (38 CFR, VA.gov, eCFR) |
-| **Copyright** | None - Federal government content |
-| **Can Copy** | ✅ Yes, freely |
-| **Liability** | Low - citing official sources |
-| **Update Frequency** | When CFR/M21-1 changes |
+| Attribute            | Value                                |
+| -------------------- | ------------------------------------ |
+| **Legal Status**     | Public Domain (38 CFR, VA.gov, eCFR) |
+| **Copyright**        | None - Federal government content    |
+| **Can Copy**         | ✅ Yes, freely                       |
+| **Liability**        | Low - citing official sources        |
+| **Update Frequency** | When CFR/M21-1 changes               |
 
 **Contents:**
+
 - 38 CFR Part 3 (Adjudication)
 - 38 CFR Part 4 (Rating Schedule)
 - M21-1 Adjudication Procedures Manual
@@ -27,6 +33,7 @@ VetRate uses a **dual knowledge base** architecture to separate regulatory infor
 - Diagnostic codes and rating criteria
 
 **File Locations:**
+
 ```
 src/data/
 ├── diagnosticCodes.json       # Official DC definitions
@@ -38,23 +45,26 @@ src/data/
 ---
 
 ### 2. 🛡️ Community Knowledge Base (CKB)
+
 **Source:** Veteran community, requires permission
 
-| Attribute | Value |
-|-----------|-------|
-| **Legal Status** | Copyrighted by creators |
-| **Copyright** | © respective owners |
-| **Can Copy** | ⚠️ Only with permission |
-| **Liability** | Medium - anecdotal, not official |
-| **Update Frequency** | Community-driven |
+| Attribute            | Value                            |
+| -------------------- | -------------------------------- |
+| **Legal Status**     | Copyrighted by creators          |
+| **Copyright**        | © respective owners              |
+| **Can Copy**         | ⚠️ Only with permission          |
+| **Liability**        | Medium - anecdotal, not official |
+| **Update Frequency** | Community-driven                 |
 
 **Potential Sources (Pending Permission):**
+
 - VeteransBenefitsKB.com (© 2020-2026, all rights reserved)
 - r/VeteransBenefits Reddit community
 - Rater HQ: After Dark YouTube channel
 - Individual veteran experiences
 
 **File Locations:**
+
 ```
 src/data/community/
 ├── README.md                  # Source attribution & permissions
@@ -70,18 +80,19 @@ src/data/community/
 
 ### Current Status (January 2026)
 
-| Source | Status | Contact | Notes |
-|--------|--------|---------|-------|
-| VA.gov/eCFR | ✅ Public Domain | N/A | Free to use |
-| VeteransBenefitsKB | 🟡 Pending | l8tn8, SSG_Rock via Reddit | Email sent |
-| Rater HQ YouTube | 🟡 Pending | YouTube channel contact | Email drafted |
-| r/VeteransBenefits | 🟡 Pending | Reddit API application | Awaiting API key |
+| Source             | Status           | Contact                    | Notes            |
+| ------------------ | ---------------- | -------------------------- | ---------------- |
+| VA.gov/eCFR        | ✅ Public Domain | N/A                        | Free to use      |
+| VeteransBenefitsKB | 🟡 Pending       | l8tn8, SSG_Rock via Reddit | Email sent       |
+| Rater HQ YouTube   | 🟡 Pending       | YouTube channel contact    | Email drafted    |
+| r/VeteransBenefits | 🟡 Pending       | Reddit API application     | Awaiting API key |
 
 ---
 
 ## Data Schema
 
 ### Diamond Knowledge Base Entry
+
 ```json
 {
   "id": "dc-9411-ptsd",
@@ -97,6 +108,7 @@ src/data/community/
 ```
 
 ### Community Knowledge Base Entry
+
 ```json
 {
   "id": "ckb-ptsd-cp-tips-001",
@@ -126,16 +138,19 @@ src/data/community/
 ## UI Display Guidelines
 
 ### Diamond Knowledge Base (Official)
+
 - **Border Color:** Blue/Grey (Institutional)
 - **Badge:** ⚖️ Official VA Regulation
 - **Disclaimer:** None required
 
 ### Community Knowledge Base (Anecdotal)
+
 - **Border Color:** Gold/Green (Grassroots)
 - **Badge:** 🛡️ Community Field Note
 - **Disclaimer Required:**
 
 > ### ⚠️ Community Intelligence
+>
 > This information comes from the veteran community, not official VA sources.
 > While valuable for strategy, it is anecdotal and may not apply to your specific situation.
 > Always verify with current VA regulations.
@@ -147,17 +162,20 @@ src/data/community/
 ### For Copyrighted Content (No Permission Yet)
 
 **Option 1: Link, Don't Copy**
+
 - Store only: title, summary (self-written), source URL
 - User clicks "Read Full Article" to visit source
 - Drives traffic to original creator
 
 **Option 2: Embed (YouTube)**
+
 - Use YouTube embed API
 - Views count for original creator
 - They control ads/content
 - Automatically updates if deleted
 
 **Option 3: Index Only**
+
 - Search index points to external source
 - No content stored locally
 - Pure aggregator model
@@ -167,12 +185,15 @@ src/data/community/
 ## Scraping Scripts
 
 ### VeteransBenefitsKB Scraper (Use After Permission)
+
 Location: `scripts/scrapers/veteransbenefitskb_scraper.py`
 
 ### Reddit Scraper (Requires API Key)
+
 Location: `scripts/scrapers/reddit_veteransbenefits_scraper.py`
 
 ### YouTube Embed Generator (Safe to Use)
+
 Location: `scripts/scrapers/youtube_embed_generator.py`
 
 ---
@@ -180,6 +201,7 @@ Location: `scripts/scrapers/youtube_embed_generator.py`
 ## Legal Disclaimers
 
 ### Required on All Community Content
+
 ```
 This is community-sourced information, not official VA policy.
 Vet-Rate.org does not verify anecdotal claims.
@@ -187,6 +209,7 @@ Always consult with an accredited VSO or attorney for legal advice.
 ```
 
 ### Required on YouTube Embeds
+
 ```
 This video is property of [Channel Name] and embedded with implied permission.
 Views and ad revenue go to the original creator.
@@ -201,14 +224,15 @@ Views and ad revenue go to the original creator.
 **Subject:** Collaboration Request: [Source Name] with Vet-Rate.org (Free Open Source Project)
 
 **Body:**
+
 ```
 Hi [Name/Team],
 
-My name is Anthony Johnson. I am a fellow veteran and the developer behind 
-Vet-Rate.org, a free, open-source project designed to give veterans 
+My name is Anthony Johnson. I am a fellow veteran and the developer behind
+Vet-Rate.org, a free, open-source project designed to give veterans
 professional-grade claim tools completely for free.
 
-I am writing to respectfully ask for permission to reference your material 
+I am writing to respectfully ask for permission to reference your material
 within the Vet-Rate.org "Community Knowledge Base."
 
 About Vet-Rate.org:
@@ -233,23 +257,25 @@ Creator, Vet-Rate.org
 
 ## Permission Status Tracker
 
-| Source | Contact | Status | Sent Date | Response |
-|--------|---------|--------|-----------|----------|
+| Source             | Contact         | Status      | Sent Date  | Response |
+| ------------------ | --------------- | ----------- | ---------- | -------- |
 | VeteransBenefitsKB | l8tn8, SSG_Rock | 📧 **SENT** | 2026-01-23 | Awaiting |
-| Rater HQ (YouTube) | Channel Owner | 📧 **SENT** | 2026-01-23 | Awaiting |
-| r/VeteransBenefits | Mod Team | ⏳ Pending | - | - |
+| Rater HQ (YouTube) | Channel Owner   | 📧 **SENT** | 2026-01-23 | Awaiting |
+| r/VeteransBenefits | Mod Team        | ⏳ Pending  | -          | -        |
 
 ---
 
 ## Changelog
 
-| Date | Change |
-|------|--------|
-| 2026-01-23 | Initial KB architecture documented |
-| 2026-01-23 | Permission emails drafted |
-| 2026-01-23 | DKB/CKB separation implemented |
-| 2026-01-23 | **Permission emails sent** to VeteransBenefitsKB & Rater HQ |
+| Date       | Change                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| 2026-01-23 | Initial KB architecture documented                                                        |
+| 2026-01-23 | Permission emails drafted                                                                 |
+| 2026-01-23 | DKB/CKB separation implemented                                                            |
+| 2026-01-23 | **Permission emails sent** to VeteransBenefitsKB & Rater HQ                               |
+| 2026-07-16 | S40: Added banner clarifying DKB section is superseded; CKB sections remain authoritative |
+| 2026-07-26 | S44: Verified CKB permission tracker still accurate (no responses received since 2026-01-23); updated superseded-banner sprint reference |
 
 ---
 
-*Last Updated: January 23, 2026*
+_Last Updated: July 26, 2026_

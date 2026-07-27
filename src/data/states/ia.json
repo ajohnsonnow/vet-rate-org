@@ -1,0 +1,214 @@
+{
+  "state": "Iowa",
+  "stateCode": "IA",
+  "officialSource": "https://dva.iowa.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "ia-property_tax_exemption-disabled-veteran-homestead-property-tax-credit",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Homestead Property Tax Credit",
+      "description": "Iowa's Disabled Veteran Homestead Property Tax Credit equals the entire amount of property tax levied on a veteran's homestead, for veterans qualifying under Iowa Code § 425.1(2)(b) (generally a 100% service-connected disability rating, or 100% compensation due to individual unemployability), with no income limit. Surviving spouses and children may also qualify. The veteran must own the homestead (leased land is acceptable if the veteran bears the tax liability) and must file both the Disabled Veteran Homestead Tax Credit Application (form 54-049) and the homestead tax exemption form (54-028) with supporting DD-214 and VA Benefit Summary Letter (dated within the past 12 months) by the July 1 annual deadline; no annual reapplication is required once approved, only a notice to the assessor if eligibility changes. Under 2026 Iowa Acts SF 2472, applications filed on or after July 1, 2026 are capped at one-half acre and exclude appurtenances (outbuildings); applications filed before that date retain the prior standard of up to 40 acres outside city limits (one-half acre within city limits) including appurtenances.",
+      "value": "Credit equal to 100% of the property tax levied on the homestead",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must qualify for the Iowa homestead tax exemption under Iowa Code chapter 425",
+          "Veteran must be on title (or bear tax liability on leased land)",
+          "DD-214 and VA Benefit Summary Letter (dated within past 12 months) required",
+          "Application deadline July 1 annually",
+          "For applications on/after July 1, 2026: capped at 1/2 acre, excludes appurtenances"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Revenue / County Assessor",
+        "form": "Form 54-049 (Disabled Veteran Homestead Tax Credit); Form 54-028 (Homestead Tax Exemption)",
+        "url": "https://revenue.iowa.gov/taxes/tax-guidance/tax-credits-deductions-exemption/disabled-veteran-homestead-property-tax-credit",
+        "documentation": [
+          "DD-214 or equivalent discharge papers",
+          "VA Benefit Summary Letter (dated within past 12 months) showing service-connected disability rating"
+        ]
+      },
+      "legalCitation": "Iowa Code §§ 425.1(2)(b), 425.2(3), 425.15; 2026 Iowa Acts SF 2472",
+      "authorityTier": "reference",
+      "sourceUrl": "https://revenue.iowa.gov/taxes/tax-guidance/tax-credits-deductions-exemption/disabled-veteran-homestead-property-tax-credit",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ia-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Iowa issues a Disabled Veteran license plate at no issuance or annual registration cost to a seriously disabled veteran who has received federal financial assistance for the purchase of a vehicle under 38 U.S.C. §§ 3901-3904. The plate is tied to the specific federally-funded vehicle and does not transfer to a replacement vehicle. Applicants submit a copy of their DD-214 and verification from the Iowa Department of Veterans Affairs confirming the vehicle received federal funding, through their county treasurer's office. Vehicles displaying the plate may park free of charge in any city-owned or -operated parking lot or metered space in Iowa (effective July 1, 2022), though the plate does not itself authorize disability parking spaces.",
+      "value": "No issuance or annual registration fee; free parking in city-owned/operated lots and metered spaces statewide",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Vehicle must have received federal financial assistance for purchase under 38 U.S.C. 3901-3904",
+          "Plate tied to that specific vehicle; does not transfer to a replacement vehicle",
+          "Does not authorize Persons with Disabilities (PWD) parking; separate application required for that"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Transportation / County Treasurer",
+        "form": null,
+        "url": "https://ia.iowadot.gov/mvd/vehicleregistration/vehicleregistration/plates/dveteran",
+        "documentation": [
+          "DD-214",
+          "Verification from the Iowa Department of Veterans Affairs that the vehicle received federal purchase funding"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://ia.iowadot.gov/mvd/vehicleregistration/vehicleregistration/plates/dveteran",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ia-recreation-resident-armed-forces-veteran-hunting-fishing-li",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Resident Armed Forces Veteran Hunting/Fishing License",
+      "description": "Iowa residents who served on federal active duty in the U.S. armed forces are eligible for a discounted annual hunting license, fishing license, or hunting-and-fishing combination license for $5 plus a $2 processing fee. Veterans submit a one-time application (the Iowa Hunting/Fishing License for Resident Armed Forces Veteran) with a copy of their DD-214; once approved, the veteran's DNR account is flagged so the discounted license can be purchased at any authorized Iowa vendor in future years.",
+      "value": "$5 annual hunting/fishing/combination license (plus $2 processing fee) for Iowa resident veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must have served on federal active duty in the U.S. armed forces",
+          "One-time application with DD-214 required to flag DNR account"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Natural Resources",
+        "form": "Iowa Hunting/Fishing License for Resident Armed Forces Veteran application",
+        "url": "https://www.iowadnr.gov/things-do/hunting-trapping/hunting-licenses-fees/hunting-applications",
+        "documentation": ["DD-214"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.iowadnr.gov/news-release/2023-04-12/new-veterans-hunting-fishing-licenses-available-april-12",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ia-hiring_preference-state-public-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State/Public Employment Veterans' Preference",
+      "description": "Iowa Code chapter 35C grants veterans' preference for positions in every public department and public works of the state, counties, cities, and school corporations. Honorably discharged veterans (as defined in Iowa Code § 35.1) receive 5 percentage points added to passing civil-service examination scores; veterans with a service-connected disability, or who are receiving VA compensation, disability benefits, or a pension, receive an additional 5 points (10 total). Former Reserve/Iowa National Guard members with at least 20 years of service after January 28, 1973, or those activated for federal duty (other than training) for a minimum of 90 days and honorably discharged or retired under Title 10, also qualify. Documentation (DD-214, service medal/campaign badge listing, VA disability letter, or Purple Heart proof) must be submitted before the job posting closes; any discharge characterized less than honorable is disqualifying.",
+      "value": "5 percentage points (honorably discharged veterans) or 10 percentage points (veterans with service-connected disability, VA compensation/pension, or Purple Heart) added to passing civil service exam scores",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge required (any lesser characterization disqualifies)",
+          "Reserve/National Guard: 20+ years service after Jan 28, 1973, or 90+ days federal activation with honorable discharge/Title 10 retirement",
+          "Documentation must be submitted before the job posting closes"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Administrative Services",
+        "form": null,
+        "url": "https://das.iowa.gov/state-employment/veterans-resources",
+        "documentation": [
+          "DD-214 (copies other than MEMBER 1)",
+          "VA disability documentation or Purple Heart proof (for 10-point preference)"
+        ]
+      },
+      "legalCitation": "Iowa Code Chapter 35C",
+      "authorityTier": "reference",
+      "sourceUrl": "https://das.iowa.gov/state-employment/veterans-resources",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ia-education_tuition-iowa-national-guard-service-scholarship",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Iowa National Guard Service Scholarship",
+      "description": "The Iowa National Guard Service Scholarship provides annual tuition assistance to active members of an Iowa Army or Air National Guard unit pursuing an undergraduate degree at an eligible Iowa college or university. For the 2026-2027 academic year, the maximum award is $9,572 minus federal tuition assistance (or the actual tuition charged minus federal tuition assistance, whichever is less). Recipients are capped at 120 semester credit hours (130 for approved undergraduate STEM majors) and must not already hold a bachelor's degree. Applicants must be Iowa residents, satisfactorily complete required Guard training and maintain satisfactory duty performance and academic progress, file the FAFSA and Iowa Financial Aid Application (IFAA) by the priority deadline (July 1 fall / December 1 spring / April 1 summer), and use all available Federal Tuition Assistance first.",
+      "value": "Up to $9,572/year in tuition assistance (2026-2027), minus federal tuition assistance already received",
+      "estimatedAnnualValue": 9572,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must be an active member of an Iowa Army or Air National Guard unit each term",
+          "Must not already hold a bachelor's degree",
+          "FAFSA and IFAA required by priority deadlines",
+          "Must utilize all available Federal Tuition Assistance first",
+          "Capped at 120 semester credit hours (130 for STEM majors)"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Education / Iowa National Guard",
+        "form": "FAFSA + Iowa Financial Aid Application (IFAA)",
+        "url": "https://educate.iowa.gov/higher-ed/financial-aid/scholarships-grants/iowa-national-guard-service-scholarship",
+        "documentation": [
+          "Proof of active Iowa National Guard membership",
+          "FAFSA and IFAA"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://educate.iowa.gov/higher-ed/financial-aid/scholarships-grants/iowa-national-guard-service-scholarship",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ia-state_veterans_home-iowa-veterans-home-marshalltown",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Iowa Veterans Home (Marshalltown)",
+      "description": "The Iowa Veterans Home in Marshalltown (1301 Summit St.) is a state-operated long-term care facility for honorably discharged veterans, and dependent/surviving spouses or Gold Star parents of honorably discharged veterans, who need residential or nursing care. Applicants must meet Iowa residency requirements by the admission date (verified by the county Commission of Veterans Affairs office) and complete a physical exam with lab work and x-rays verified by a local doctor or VA Medical Center physician. Veterans rated 70% or more disabled by the VA who need nursing care receive that care at no out-of-pocket expense. Spouses must have been married to the veteran for at least one year before applying. Applications go through the county Commission of Veterans Affairs office or VA Medical Centers; a committee determines the appropriate level of care, and applicants may be placed on a waiting list if no bed is available.",
+      "value": "Residential and nursing care; no out-of-pocket cost for nursing care for veterans rated 70%+ disabled",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 70,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge (veteran, spouse, surviving spouse, or Gold Star parent)",
+          "Iowa residency verified by county Commission of Veterans Affairs office",
+          "Physical exam with lab work and x-rays required",
+          "Spouses must have been married to the veteran for 1+ year before applying"
+        ]
+      },
+      "application": {
+        "agency": "Iowa Department of Veterans Affairs",
+        "form": "Veteran Application For Admission To The Iowa Veterans Home",
+        "url": "https://dva.iowa.gov/veterans-home/admissions",
+        "documentation": [
+          "Honorable discharge / DD-214",
+          "Physical exam results (lab work and x-rays)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.iowa.gov/veterans-home/admissions",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

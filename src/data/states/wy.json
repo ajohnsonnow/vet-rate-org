@@ -1,0 +1,166 @@
+{
+  "state": "Wyoming",
+  "stateCode": "WY",
+  "officialSource": "https://www.wyomilitary.wyo.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "wy-property_tax_exemption-veteran-s-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Veteran's Property Tax Exemption",
+      "description": "Wyoming provides a $6,000 reduction in assessed value against real or personal property (e.g., vehicle licensing fees, if not applied to real property) for honorably discharged veterans of WWI, WWII, Korea, or Vietnam, or veterans awarded the Armed Forces Expeditionary Medal or another authorized service/campaign medal for foreign service, provided the veteran is a current Wyoming resident who has lived in the state for three years. Certain disabled veterans may also be eligible per department statutes and rules. Surviving spouses may continue to collect the exemption until remarriage. Application deadline is the fourth Monday in May, filed with the County Assessor, with annual contact required.",
+      "value": "$6,000 reduction in assessed value against real or personal property",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Current Wyoming resident, lived in-state for 3 years",
+          "Honorable discharge from WWI, WWII, Korea, Vietnam, or awarded a qualifying expeditionary/campaign medal for foreign service",
+          "Surviving spouse may continue to collect until remarriage",
+          "Must contact the County Assessor annually"
+        ]
+      },
+      "application": {
+        "agency": "Wyoming Department of Revenue / County Assessor",
+        "form": null,
+        "url": "https://wyo-prop-div.wyo.gov/tax-relief",
+        "documentation": [
+          "DD-214 or proof of honorable discharge and qualifying service/medal"
+        ]
+      },
+      "legalCitation": "W.S. 39-13-105",
+      "authorityTier": "reference",
+      "sourceUrl": "https://wyo-prop-div.wyo.gov/tax-relief",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wy-recreation-purple-heart-recipient-free-lifetime-hunting-fis",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Purple Heart Recipient Free Lifetime Hunting/Fishing License",
+      "description": "Wyoming residents who are U.S. Military Purple Heart Medal recipients receive lifetime game bird, small game, and fish licenses free of charge. Acceptable proof includes an official DD-214, a VA Veterans Identification Card with Purple Heart Medal designation, or a U.S. Purple Heart Medal Recipient certificate.",
+      "value": "Free lifetime game bird, small game, and fish license",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Wyoming residency required",
+          "Proof of Purple Heart award required (DD-214, VA VIC with Purple Heart designation, or Purple Heart certificate)"
+        ]
+      },
+      "application": {
+        "agency": "Wyoming Game and Fish Department",
+        "form": null,
+        "url": "https://wgfd.wyo.gov/licenses-applications/licensing-veterans",
+        "documentation": [
+          "DD-214, VA Veterans Identification Card with Purple Heart designation, or Purple Heart Medal Recipient certificate"
+        ]
+      },
+      "legalCitation": "Wyoming State Statute §23-1-705(d)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://wgfd.wyo.gov/licenses-applications/licensing-veterans",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wy-recreation-100-disabled-veteran-bird-fish-and-small-game-li",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "100% Disabled Veteran Bird, Fish and Small Game License",
+      "description": "Wyoming resident veterans who are honorably discharged and hold a letter from the VA certifying a 100% disability rating (based on actual disability, not compensation level) may obtain a 100% Disabled Veteran Bird, Fish and Small Game License. Holders of this license are exempt from the requirement to purchase a conservation stamp while exercising hunting or fishing privileges under any Wyoming license. Separately, veterans with a 50% or greater VA service-connected disability compensation rating may obtain a 50% Disabled Veteran Fishing License, valid for the holder's lifetime.",
+      "value": "100% disability tier: bird/fish/small game license plus conservation-stamp exemption; 50% disability tier: lifetime fishing license",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged Wyoming resident",
+          "100% tier requires a VA letter certifying actual (not compensation-based) 100% disability",
+          "50% tier requires 50%+ service-connected disability compensation"
+        ]
+      },
+      "application": {
+        "agency": "Wyoming Game and Fish Department",
+        "form": null,
+        "url": "https://wgfd.wyo.gov/licenses-applications/licensing-veterans",
+        "documentation": ["VA letter certifying disability rating"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://wgfd.wyo.gov/licenses-applications/licensing-veterans",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wy-license_plate-disabled-veteran-license-plates",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plates",
+      "description": "Wyoming veterans may apply for military-related license plates through the County Treasurer's Office by providing a DD Form 214 confirming Wyoming residency and veteran status. A separate application exists specifically for disabled veteran plates.",
+      "value": "Disabled Veteran license plate available through the County Treasurer's Office",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": ["Wyoming residency", "DD Form 214 required"]
+      },
+      "application": {
+        "agency": "Wyoming County Treasurer's Office",
+        "form": "MV-100B",
+        "url": "http://www.wyomilitary.wyo.gov/wp-content/uploads/2022/09/MV-100B-DV-PLATE-APP-7-22.pdf",
+        "documentation": ["DD Form 214"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.wyomilitary.wyo.gov/resources/veteran/benefits-resources-military-records/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wy-hiring_preference-public-employment-preference-for-veterans",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Public Employment Preference for Veterans",
+      "description": "Wyoming grants honorably discharged veterans (and eligible surviving spouses) an interview preference in every public department, including the state and its branches, agencies, municipalities, counties, school districts, political subdivisions, special districts, community college districts, and the University of Wyoming. When a public department uses a numerical scoring system prior to its interview process, a veteran or surviving spouse receives a 5% advantage over any non-veteran applicant. Disabled veterans receive preference over able-bodied veterans if the disability does not materially interfere with performance of the duties. No preference is given to a veteran currently employed by the public department.",
+      "value": "Interview preference plus a 5% scoring advantage over non-veteran applicants at Wyoming public departments",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged Wyoming resident of one year or more before applying (or eligible surviving spouse)",
+          "Must possess business capacity, competency, education, or other qualifications required for the position",
+          "No preference for veterans currently employed by the department"
+        ]
+      },
+      "application": {
+        "agency": "State of Wyoming and its political subdivisions",
+        "form": null,
+        "url": "https://www.uwyo.edu/hr/talent-acquisition/veteran-preference-info.html",
+        "documentation": [
+          "Proof of veteran status (DD-214) or, for surviving spouses, proof of marriage and federal survivor benefits"
+        ]
+      },
+      "legalCitation": "W.S. 19-14-102",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.uwyo.edu/hr/talent-acquisition/veteran-preference-info.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}
