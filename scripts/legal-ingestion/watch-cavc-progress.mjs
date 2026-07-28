@@ -9,9 +9,12 @@
  * of times without affecting the actual backfill.
  *
  * Usage:
- *   node scripts/legal-ingestion/watch-cavc-progress.mjs [database-slug]
+ *   node scripts/legal-ingestion/watch-cavc-progress.mjs [database-slug] [mode]
  *   (default slug: singlejudge — the current long-running backfill; pass
  *   "panel" to watch a Panel Decisions run instead)
+ *   mode: "fetch" (default, watches fetch-cavc-historical.mjs's checkpoint)
+ *         or "recover" (watches recover-cavc-wpd.mjs's WPD-recovery pass —
+ *         S46)
  *
  * Ctrl+C to stop watching (does not stop the fetch).
  */
@@ -22,16 +25,15 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const slug = process.argv[2] || "singlejudge";
-const checkpointPath = path.join(
-  __dirname,
-  ".work",
-  `cavc-historical-${slug}.checkpoint.json`,
-);
-const outputPath = path.join(
-  __dirname,
-  ".work",
-  `cavc-historical-${slug}.jsonl`,
-);
+const mode = process.argv[3] === "recover" ? "recover" : "fetch";
+const checkpointPath =
+  mode === "recover"
+    ? path.join(__dirname, ".work", `cavc-wpd-recover-${slug}.checkpoint.json`)
+    : path.join(__dirname, ".work", `cavc-historical-${slug}.checkpoint.json`);
+const outputPath =
+  mode === "recover"
+    ? path.join(__dirname, ".work", `cavc-wpd-manifest-${slug}.jsonl`)
+    : path.join(__dirname, ".work", `cavc-historical-${slug}.jsonl`);
 
 const POLL_MS = 2000;
 const BAR_WIDTH = 40;
@@ -114,11 +116,15 @@ function tick() {
     etaStr = fmtDuration((remaining / smoothedRatePerSec) * 1000);
   }
 
-  const skips = cp.skippedWpd + cp.skippedEmpty + cp.skippedError + cp.skippedPages * 100;
+  const statsStr =
+    mode === "recover"
+      ? `scanned:${cp.scanned}  WPD recovered:${cp.recovered}`
+      : `records:${cp.recordCount}  ` +
+        `skips:${cp.skippedWpd + cp.skippedEmpty + cp.skippedError + cp.skippedPages * 100}  ` +
+        `errors:${cp.skippedError}`;
   const line =
     `\r${bar} ${pct}%  ${cp.lastCompletedEnd}/${TOTAL_HINT}  ` +
-    `records:${cp.recordCount}  skips:${skips}  errors:${cp.skippedError}  ` +
-    `elapsed:${fmtDuration(now - startedAt)}  ETA:${etaStr}   `;
+    `${statsStr}  elapsed:${fmtDuration(now - startedAt)}  ETA:${etaStr}   `;
   process.stdout.write(line);
 }
 

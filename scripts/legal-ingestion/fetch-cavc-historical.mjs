@@ -133,14 +133,14 @@ const WORK_DIR = path.join(__dirname, ".work");
 const workerPath = resolve("node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs");
 GlobalWorkerOptions.workerSrc = new URL(`file:///${workerPath.replaceAll("\\", "/")}`).href;
 
-const BASE = process.env.CAVC_HIST_BASE || "http://search.uscourts.cavc.gov";
+export const BASE = process.env.CAVC_HIST_BASE || "http://search.uscourts.cavc.gov";
 const DATABASES = (process.env.CAVC_HIST_DATABASES || "PanelDecisions,SingleJudgeDecisions")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 const PAGE_SIZE = Number(process.env.CAVC_HIST_PAGE_SIZE) || 100;
 const MAX_RESULTS = Number(process.env.CAVC_HIST_MAX_RESULTS) || 0; // 0 = unlimited, per database
-const THROTTLE_MS = Number(process.env.CAVC_HIST_THROTTLE_MS) || 400;
+export const THROTTLE_MS = Number(process.env.CAVC_HIST_THROTTLE_MS) || 400;
 
 const USER_AGENT =
   "vet-rate-org legal-ingestion/1.0 (anthony.johnson.now@gmail.com)";
@@ -151,7 +151,7 @@ const DECISION_TYPE_LABEL = {
     "Single-Judge Memorandum Decision (non-precedential — U.S. Vet. App. R. 30(a))",
 };
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function decodeAmp(s) {
   return String(s || "").replaceAll("&amp;", "&");
@@ -198,7 +198,7 @@ async function getText(url) {
   return res.text();
 }
 
-async function getBytes(url) {
+export async function getBytes(url) {
   const res = await fetch(url, {
     headers: { "User-Agent": USER_AGENT },
     redirect: "follow",
@@ -378,7 +378,7 @@ export function docketFromText(text) {
 }
 
 /** Open a new search session for one IW_DATABASE value, sorted date-descending. */
-async function openSession(database) {
+export async function openSession(database) {
   const html = await postForm(`${BASE}/search/`, {
     IW_FIELD_WEB_STYLE: "*",
     IW_DATABASE: database,
@@ -407,7 +407,7 @@ const RETRY_BASE_DELAY_MS = 2000;
 // A run past this many CONSECUTIVE fully-retried page failures aborts
 // instead of continuing to skip — see the throw site in fetchDatabase() for
 // why (distinguishing one bad page from a sustained server outage).
-const CONSECUTIVE_FAILURE_LIMIT = 3;
+export const CONSECUTIVE_FAILURE_LIMIT = 3;
 
 /**
  * Run `fn(guid)` against the current session; on failure, back off and open a
@@ -417,7 +417,7 @@ const CONSECUTIVE_FAILURE_LIMIT = 3;
  * attempted on every retry — this is the recovery path, not a silent
  * swallow (exhausting all retries still throws the original error).
  */
-async function withSessionRetry(sessionRef, database, fn) {
+export async function withSessionRetry(sessionRef, database, fn) {
   let lastError;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -467,7 +467,7 @@ function buildBody(docket, hit, database, text) {
   );
 }
 
-const DATABASE_SLUG = {
+export const DATABASE_SLUG = {
   PanelDecisions: "panel",
   SingleJudgeDecisions: "singlejudge",
 };

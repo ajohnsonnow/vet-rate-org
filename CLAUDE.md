@@ -242,7 +242,6 @@ See [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-pr
 | Threat-model a system | [threat-modeling-best-practices.md](../best-practices-toolkit/docs/best-practices/threat-modeling-best-practices.md) |
 | Preflight before commit | [preflight-checks-best-practices.md](../best-practices-toolkit/docs/best-practices/preflight-checks-best-practices.md) |
 | Responsive / adaptive UI (phone → 4K) | [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md) |
-| Naming a fallback plan, diagnosing a stuck/spiraling agent, or writing commander's-intent for a sub-agent | [mission-command-execution-frameworks-best-practices.md](../best-practices-toolkit/docs/best-practices/mission-command-execution-frameworks-best-practices.md) |
 
 ---
 
