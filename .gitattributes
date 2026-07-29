@@ -2,9 +2,7 @@
 # Working-tree files are written as LF on every platform — this prevents
 # the recurring CRLF/LF diff churn that core.autocrlf=true produces on Windows
 # when tools (prettier, eslint, markdownlint --fix, etc.) rewrite files.
-
 * text=auto eol=lf
-
 # Markdown, JSON, YAML, JS/TS, Python — explicit LF
 *.md       text eol=lf
 *.json     text eol=lf
@@ -20,12 +18,10 @@
 *.bash     text eol=lf
 *.zsh      text eol=lf
 *.toml     text eol=lf
-
 # Windows-only scripts — must use CRLF or cmd.exe / PowerShell legacy hosts mis-parse
 *.bat      text eol=crlf
 *.cmd      text eol=crlf
 *.ps1      text eol=crlf
-
 # Binary assets — never diff or merge
 *.png      binary
 *.jpg      binary
@@ -45,3 +41,7 @@
 *.mp4      binary
 *.mp3      binary
 *.wav      binary
+public/dkb-index/**/*.jsonl filter=lfs diff=lfs merge=lfs -text
+public/dkb-index/**/*.bin filter=lfs diff=lfs merge=lfs -text
+public/legal-index/**/*.jsonl filter=lfs diff=lfs merge=lfs -text
+public/legal-index/**/*.bin filter=lfs diff=lfs merge=lfs -text
