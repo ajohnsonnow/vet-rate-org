@@ -43,6 +43,7 @@ User → Selects State + Rating → AI generates benefits → Display results
 **States**: TX, CA, FL, VA, NC, GA, WA, PA, AZ, OH
 
 **Process**:
+
 1. Scrape 10 state websites → 2 weeks
 2. Validate data with official sources → 1 week
 3. Integrate into app (replace AI call) → 1 week
@@ -58,6 +59,7 @@ User → Selects State + Rating → AI generates benefits → Display results
 **Cost**: $25,000 setup + $1,000-$2,000/month maintenance
 
 **Process**:
+
 1. Build scraping infrastructure → 2 weeks
 2. Scrape all 51 states → 6 weeks
 3. Validate all data → 2 weeks
@@ -74,6 +76,7 @@ User → Selects State + Rating → AI generates benefits → Display results
 **Cost**: Minimal
 
 **Process**:
+
 ```javascript
 export const searchStateBenefits = async (stateCode, rating) => {
   // Check for verified data first
@@ -193,12 +196,14 @@ export const searchStateBenefits = async (state, rating) => {
 ## ⚡ Quick Decision Matrix
 
 **When to use AI (current)**:
+
 - ✅ Beta testing / discovery
 - ✅ Low user traffic
 - ✅ Educational purposes only
 - ❌ Official recommendations
 
 **When to use Scraped Data (recommended)**:
+
 - ✅ Production deployment
 - ✅ High user traffic
 - ✅ Veteran trust required

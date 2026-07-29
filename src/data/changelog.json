@@ -1,8 +1,28 @@
 {
-  "version": "1.24.2",
-  "lastUpdated": "2026-07-27",
+  "version": "1.25.1",
+  "lastUpdated": "2026-07-29",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.25.1",
+      "date": "2026-07-29",
+      "isFirstRelease": false,
+      "releaseTitle": "Knowledge Base Accuracy & Security Fixes",
+      "changelog": [
+        {
+          "type": "documentation",
+          "category": "Other",
+          "title": "correct Diamond Knowledge Base docs to match live shard/state data",
+          "description": "DIAMOND_KNOWLEDGE_BASE.md, RAG_DESIGN.md, and KNOWLEDGE_BASE_ARCHITECTURE.md now correctly report all 8 populated semantic shards and 51/51 verified state-benefit datasets, replacing stale numbers that undercounted both"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "patch critical tar dependency vulnerability",
+          "description": "non-breaking patch bump of the transitive tar dependency (via @huggingface/transformers) closes a critical DoS/crash CVE"
+        }
+      ]
+    },
     {
       "version": "1.24.2",
       "date": "2026-07-27",
