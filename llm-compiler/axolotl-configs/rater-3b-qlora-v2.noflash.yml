@@ -1,0 +1,205 @@
+# ==============================================================================
+# LOCAL ENV-WORKAROUND COPY — NOT for commit
+# ==============================================================================
+# Identical to rater-3b-qlora-v2.yml except flash_attention/sample_packing
+# disabled. This machine's installed CUDA toolkit (12.6) doesn't match the
+# torch build axolotl 0.18.0 pulled in (cu130), which breaks flash-attn's
+# build-time version check. Delete this file (or re-point train_and_merge.sh)
+# once flash-attn is fixed for real (matching CUDA 13 toolkit, or a
+# flash-attn wheel prebuilt for torch cu130).
+# ==============================================================================
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  💎 DIAMOND STANDARD: VetRate-Rater LoRA Training Config v2.0               ║
+# ╠══════════════════════════════════════════════════════════════════════════════╣
+# ║  Hardware: NVIDIA RTX 4080 Super OC (16GB VRAM)                             ║
+# ║  Base Model: meta-llama/Llama-3.2-3B-Instruct                               ║
+# ║  Role: VA Disability Rating Calculator & DC Expert                          ║
+# ║  Training Data: 555 examples (v2 prep pipeline)                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# ==============================================================================
+# BASE MODEL CONFIGURATION
+# ==============================================================================
+base_model: meta-llama/Llama-3.2-3B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA: 4-bit quantization
+load_in_8bit: false
+load_in_4bit: true
+adapter: qlora
+
+# 4-bit quantization config
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+
+# ==============================================================================
+# DATASET CONFIGURATION
+# ==============================================================================
+datasets:
+  - path: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/training-data-v2/train_rater.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+val_set_size: 0.0
+test_datasets:
+  - path: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/training-data-v2/val_rater.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+dataset_prepared_path: null
+push_dataset_to_hub: null
+
+# ==============================================================================
+# RTX 4080 SUPER HARDWARE OPTIMIZATION
+# ==============================================================================
+
+flash_attention: false
+sample_packing: false
+eval_sample_packing: false
+pad_to_sequence_len: false
+
+bf16: true
+fp16: false
+tf32: false
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+# ==============================================================================
+# TRAINING HYPERPARAMETERS
+# ==============================================================================
+
+sequence_len: 1024
+
+# Batch sizing
+micro_batch_size: 4
+gradient_accumulation_steps: 4
+eval_batch_size: 2
+
+# Training duration
+# 555 examples ÷ 16 effective batch = ~35 steps/epoch
+# 4 epochs for smaller dataset
+num_epochs: 8
+max_steps: null
+warmup_ratio: 0.1
+
+# Learning rate
+learning_rate: 2.0e-4
+lr_scheduler: cosine
+lr_scheduler_kwargs:
+  num_cycles: 0.5
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_epsilon: 1.0e-8
+
+# ==============================================================================
+# LoRA CONFIGURATION
+# ==============================================================================
+
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+lora_fan_in_fan_out: false
+
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+lora_target_linear: false
+output_dir: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/models/lora-adapters/vetrate-rater-3b-v3
+
+# ==============================================================================
+# CHECKPOINTING & SAVING
+# ==============================================================================
+
+save_strategy: steps
+save_steps: 50
+save_total_limit: 3
+save_safetensors: true
+
+load_best_model_at_end: true
+metric_for_best_model: eval_loss
+greater_is_better: false
+
+# ==============================================================================
+# EVALUATION & LOGGING
+# ==============================================================================
+
+eval_strategy: steps
+eval_steps: 50
+eval_table_size: 5
+eval_max_new_tokens: 256
+
+logging_steps: 10
+report_to: tensorboard
+log_level: info
+
+
+# ==============================================================================
+# TRAINING STABILITY
+# ==============================================================================
+
+max_grad_norm: 1.0
+seed: 42
+data_seed: 42
+early_stopping_patience: 5
+early_stopping_threshold: 0.001
+
+# ==============================================================================
+# SPECIAL TOKENS
+# ==============================================================================
+
+special_tokens:
+  bos_token: "<|begin_of_text|>"
+  eos_token: "<|end_of_text|>"
+  pad_token: "<|end_of_text|>"
+
+chat_template: llama3
+
+# ==============================================================================
+# RESUME & DEBUG
+# ==============================================================================
+
+resume_from_checkpoint: null
+auto_resume_from_checkpoints: true
+debug: false
+
+# ==============================================================================
+# DISTRIBUTED (Disabled for single GPU)
+# ==============================================================================
+
+ddp: false
+fsdp: null
+deepspeed: null
+
+# ==============================================================================
+# POST-TRAINING
+# ==============================================================================
+
+merge_lora: false
+push_to_hub: false
+
+# ==============================================================================
+# EXECUTION NOTES
+# ==============================================================================
+#
+# Training: axolotl train axolotl-configs/rater-3b-qlora-v2.noflash.yml
+# Expected: ~1-2 hours, ~140 total steps, ~25 MB adapter (slower w/o flash-attn)

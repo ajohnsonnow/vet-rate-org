@@ -13,7 +13,8 @@ export const useAIAssistant = () => {
     const tourSeen = localStorage.getItem("vetrate-tour-completed");
     // Auto-open on first visit ONLY if used before AND tour has been seen
     // (prevents Navigator from opening during the tour)
-    return hasUsed && tourSeen ? false : hasUsed ? true : false;
+    if (hasUsed && tourSeen) return false;
+    return Boolean(hasUsed);
   });
 
   // Listen for closeNavigator events (from tour)

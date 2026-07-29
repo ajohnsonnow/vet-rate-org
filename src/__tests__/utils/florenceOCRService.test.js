@@ -283,33 +283,35 @@ describe("event listeners", () => {
   });
 });
 
+/** Resets modules/mocks, stubs WebGPU, imports the service, and initializes it to "ready". */
+async function setupReadyServiceWithWebGPU() {
+  vi.resetModules();
+  vi.stubGlobal("navigator", { ...navigator, gpu: {} });
+  Object.assign(mockWorkerInstance, {
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    onmessage: null,
+    onerror: null,
+  });
+  vi.stubGlobal(
+    "Worker",
+    vi.fn(function () {
+      return mockWorkerInstance;
+    }),
+  );
+  svc = await import("../../utils/florenceOCRService.js");
+
+  const initPromise = svc.initialize();
+  simulateWorkerMessage({ status: "ready" });
+  await initPromise;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 describe("processDocument", () => {
   /** processDocument() should validate file type and send ANALYZE to worker */
-  beforeEach(async () => {
-    vi.resetModules();
-    vi.stubGlobal("navigator", { ...navigator, gpu: {} });
-    Object.assign(mockWorkerInstance, {
-      postMessage: vi.fn(),
-      terminate: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      onmessage: null,
-      onerror: null,
-    });
-    vi.stubGlobal(
-      "Worker",
-      vi.fn(function () {
-        return mockWorkerInstance;
-      }),
-    );
-    svc = await import("../../utils/florenceOCRService.js");
-
-    // Pre-initialize
-    const initPromise = svc.initialize();
-    simulateWorkerMessage({ status: "ready" });
-    await initPromise;
-  });
+  beforeEach(setupReadyServiceWithWebGPU);
 
   it("rejects unsupported file types", async () => {
     const badFile = new File(["data"], "report.docx", {

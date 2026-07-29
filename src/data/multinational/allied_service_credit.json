@@ -1,0 +1,234 @@
+{
+  "category": "allied_service_credit",
+  "displayName": "Allied & Commonwealth Service Credit",
+  "officialSource": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "provisions": [
+    {
+      "id": "allied_service_credit-regular-philippine-scouts-insular-force-samoan-u",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Regular Philippine Scouts, Insular Force & Samoan units (full-rate VA benefits)",
+      "description": "Service in the Regular (\"Old\") Philippine Scouts, the Insular Force of the Navy, and the Samoan Native Guard/Band of the Navy is recognized by VA as qualifying service for the major VA benefit programs and is paid at the full-dollar rate. This is distinct from the reduced-rate treatment given to Commonwealth Army, guerrilla, and New Philippine Scout service.",
+      "keyPoints": [
+        "Counts for pension, compensation, dependency and indemnity compensation (DIC), and burial allowance",
+        "Paid at the full-dollar rate (not the reduced $0.50-per-dollar rate)",
+        "Governed by 38 CFR 3.40(a)"
+      ],
+      "eligibility": "Veterans (and survivors) whose service was in the Regular Philippine Scouts (other than the 'New' Philippine Scouts described in 3.40(b)), the Insular Force of the Navy, the Samoan Native Guard, or the Samoan Native Band of the Navy.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration); claims for Philippine service are typically processed through the VA Regional Office in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 CFR 3.40(a)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-40.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-new-philippine-scouts-service-38-cfr-3-40-b",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "New Philippine Scouts service (38 CFR 3.40(b))",
+      "description": "Service of persons enlisted in the 'New' Philippine Scouts under section 14 of Public Law 190, 79th Congress (Act of October 6, 1945) is credited by VA for compensation and DIC only. By default these benefits are paid at the reduced $0.50-per-dollar rate unless the full-dollar-rate residence/citizenship exception applies.",
+      "keyPoints": [
+        "Credited for compensation and dependency and indemnity compensation (DIC)",
+        "Based on enlistment under section 14, Pub. L. 190, 79th Congress (Act of October 6, 1945)",
+        "Ordinarily paid at $0.50 per dollar authorized; full rate only under the 38 CFR 3.42 exception"
+      ],
+      "eligibility": "Veterans (and survivors) who enlisted in the New Philippine Scouts under section 14 of Public Law 190, 79th Congress.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration); VA Regional Office in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 CFR 3.40(b); 38 U.S.C. 107(b)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-40.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-commonwealth-army-of-the-philippines-service-38-",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Commonwealth Army of the Philippines service (38 CFR 3.40(c))",
+      "description": "Service in the Commonwealth Army of the Philippines is credited by VA for compensation, DIC, and burial allowance, counting from the date and hour the member was called into the service of the U.S. Armed Forces. These benefits are ordinarily paid at the reduced $0.50-per-dollar rate unless the full-dollar-rate exception applies.",
+      "keyPoints": [
+        "Credited for compensation, DIC, and burial allowance",
+        "Counts from and after the date/hour called into service of the U.S. Armed Forces",
+        "Ordinarily paid at $0.50 per dollar authorized; full rate only under the 38 CFR 3.42 exception"
+      ],
+      "eligibility": "Veterans (and survivors) of the Commonwealth Army of the Philippines who were called into the service of the U.S. Armed Forces, as certified by the service department.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration); VA Regional Office in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 CFR 3.40(c); 38 U.S.C. 107(a)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-40.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-recognized-guerrilla-service-38-cfr-3-40-d-3-41",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Recognized guerrilla service (38 CFR 3.40(d), 3.41)",
+      "description": "VA credits service by persons who served as guerrillas under a commissioned officer of the U.S. Army, Navy, or Marine Corps, or under a commissioned officer of the Commonwealth Army recognized by and cooperating with U.S. Forces. Such recognized guerrilla service is treated like Commonwealth Army service for compensation and DIC, with the period of active service determined under 38 CFR 3.41.",
+      "keyPoints": [
+        "Guerrillas under a U.S. commissioned officer, or under a recognized Commonwealth Army commissioned officer, are included",
+        "Unrecognized guerrilla service counts only for former members of the U.S. Armed Forces (incl. Philippine Scouts) or Commonwealth Army; civilians excluded",
+        "Ordinarily paid at $0.50 per dollar authorized; full rate only under the 38 CFR 3.42 exception"
+      ],
+      "eligibility": "Persons who served as recognized guerrillas under a qualifying commissioned officer, as certified by the service department; unrecognized guerrilla service qualifies only for former members of the U.S. Armed Forces or Commonwealth Army.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration); VA Regional Office in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 CFR 3.40(d); 38 CFR 3.41",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-40.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-reduced-0-50-per-dollar-payment-rule-for-philipp",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Reduced $0.50-per-dollar payment rule for Philippine service",
+      "description": "By statute, benefits based on Commonwealth Army service, certain guerrilla service, and New Philippine Scout service are paid at a reduced rate of 50 cents for each dollar otherwise authorized. This is the 'half-rate' rule; it does not apply to Regular Philippine Scout service, which is paid at the full-dollar rate.",
+      "keyPoints": [
+        "Applies to Commonwealth Army, recognized/unrecognized guerrilla, and New Philippine Scout service",
+        "Payments made at $0.50 for each dollar otherwise authorized",
+        "Does not apply to Regular ('Old') Philippine Scout service (full rate)"
+      ],
+      "eligibility": "Veterans/survivors whose entitlement is based on Philippine service described in 38 U.S.C. 107(a) or (b), when the full-dollar-rate exception (38 CFR 3.42) is not met.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration).",
+        "form": null,
+        "url": null,
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 U.S.C. 107",
+      "authorityTier": "reference",
+      "sourceUrl": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title38-section107&num=0&edition=prelim",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-full-dollar-rate-exception-for-filipino-veterans",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Full-dollar-rate exception for Filipino veterans residing in the U.S. (38 CFR 3.42)",
+      "description": "Compensation and DIC based on Commonwealth Army, guerrilla, or New Philippine Scout service (38 CFR 3.40(b), (c), or (d)) is payable at the FULL-dollar rate — not the reduced $0.50-per-dollar rate — when the veteran or survivor resides in the U.S. and is either a U.S. citizen or an alien lawfully admitted for permanent residence. Ongoing physical-presence requirements apply to keep the full rate.",
+      "keyPoints": [
+        "Full-dollar rate for service under 38 CFR 3.40(b), (c), or (d)",
+        "Requires residing in the U.S. AND being a U.S. citizen or lawful permanent resident",
+        "Loss of U.S. residence or status reverts payment to $0.50 per dollar authorized"
+      ],
+      "eligibility": "A veteran or a veteran's survivor with Commonwealth Army, guerrilla, or New Philippine Scout service who is residing in the U.S. and is either a U.S. citizen or an alien lawfully admitted for permanent residence.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration).",
+        "form": null,
+        "url": null,
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 CFR 3.42",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-42.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-filipino-veterans-equity-compensation-fvec-fund",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Filipino Veterans Equity Compensation (FVEC) Fund",
+      "description": "The American Recovery and Reinvestment Act of 2009 (Pub. L. 111-5), signed February 17, 2009, created a one-time, lump-sum FVEC payment for eligible WWII Philippine veterans. The amount is $15,000 for eligible persons who are U.S. citizens and $9,000 for eligible persons who are not U.S. citizens. The payment does not affect other federal benefits.",
+      "keyPoints": [
+        "Authorized by Section 1002 of the American Recovery and Reinvestment Act of 2009 (Pub. L. 111-5)",
+        "$15,000 for eligible persons who are U.S. citizens; $9,000 for non-U.S. citizens",
+        "One-time, lump-sum payment to eligible WWII Philippine veterans"
+      ],
+      "eligibility": "Eligible World War II Philippine veterans (e.g., Commonwealth Army, recognized guerrilla, and New Philippine Scout service) whose qualifying service is verified; amount depends on U.S.-citizenship status.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (VBA), administered through the VA Regional Office in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "American Recovery and Reinvestment Act of 2009, Pub. L. 111-5, Section 1002",
+      "authorityTier": "reference",
+      "sourceUrl": "https://news.va.gov/press-room/stimulus-bill-provides-198-million-for-filipino-veterans/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-benefits-for-discharged-members-of-allied-forces",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "Benefits for discharged members of allied forces (38 U.S.C. 109)",
+      "description": "Federal law authorizes limited VA benefits for veterans of nations allied or associated with the United States in World War I or World War II. Persons who served in the armed forces of a WWII-allied government and who were U.S. citizens at the time they entered that service may be entitled to VA vocational rehabilitation (chapter 31) and home-loan (chapter 37) benefits, provided they are U.S. residents when they file the claim.",
+      "keyPoints": [
+        "Covers veterans of governments allied or associated with the U.S. in WWI or WWII (excluding WWI allies that were U.S. enemies in WWII)",
+        "WWII allied service by persons who were U.S. citizens at entry can confer chapter 31 (vocational rehabilitation) and chapter 37 (home loan) benefits",
+        "Claimant must be a resident of the U.S. at the time of filing the claim"
+      ],
+      "eligibility": "Discharged members of the armed forces of an allied/associated government (WWI or WWII); for chapter 31/37 entitlement, persons who served in a WWII-allied force and were U.S. citizens at time of entrance into that service and are U.S. residents when filing.",
+      "application": {
+        "howToFile": null,
+        "agency": "U.S. Department of Veterans Affairs (Veterans Benefits Administration).",
+        "form": null,
+        "url": null,
+        "phone": "800-827-1000"
+      },
+      "legalCitation": "38 U.S.C. 109",
+      "authorityTier": "reference",
+      "sourceUrl": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title38-section109&num=0&edition=prelim",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "allied_service_credit-va-regional-office-in-manila-claims-for-philippi",
+      "category": "allied_service_credit",
+      "displayCategory": "Allied & Commonwealth Service Credit",
+      "name": "VA Regional Office in Manila (claims for Philippine service)",
+      "description": "The VA Regional Benefit Office at the U.S. Embassy in Manila helps veterans, service members, and families access VA benefits, including for Filipino and Philippine-service claims. It handles disability compensation, education, life insurance, pension, and home-loan benefits.",
+      "keyPoints": [
+        "Located at 1501 Roxas Boulevard, Pasay City, Philippines",
+        "Handles disability compensation, education, life insurance, pension, and home-loan benefits",
+        "General VA benefits hotline: 800-827-1000"
+      ],
+      "eligibility": "Veterans, service members, and their families accessing VA benefits from the Philippines, including Philippine-service claimants.",
+      "application": {
+        "howToFile": "Contact the VA Regional Office in Manila, or call the VA benefits hotline at 800-827-1000, to file or ask about a benefit claim.",
+        "agency": "U.S. Department of Veterans Affairs — VA Regional Benefit Office at the U.S. Embassy in Manila.",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": "800-827-1000"
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

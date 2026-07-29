@@ -501,73 +501,72 @@ const _getMilestonesByPhase = () => {
   return grouped;
 };
 
+function _buildPhaseProgress(phase, milestones, completed) {
+  const phaseMilestones = milestones.filter((m) => m.phase === phase.id);
+  const phaseCompleted = phaseMilestones.filter((pm) =>
+    completed.some((c) => c.id === pm.id),
+  );
+  return {
+    ...phase,
+    milestones: phaseMilestones,
+    completed: phaseCompleted.length,
+    total: phaseMilestones.length,
+    percentage: Math.round(
+      (phaseCompleted.length / phaseMilestones.length) * 100,
+    ),
+  };
+}
+
+function computeProgress() {
+  const completed = [];
+  let completedWeight = 0;
+
+  MILESTONES.forEach((milestone) => {
+    const { completed: isCompleted, source } =
+      checkMilestoneCompletion(milestone);
+    if (isCompleted) {
+      completed.push({ ...milestone, completionSource: source });
+      completedWeight += milestone.weight;
+    }
+  });
+
+  const totalWeight = MILESTONES.reduce((sum, m) => sum + m.weight, 0);
+  const percentage = Math.round((completedWeight / totalWeight) * 100);
+
+  // Calculate Ready-to-File status
+  const readyToFile = calculateReadyToFile(completed);
+
+  // Group by phase with completion status
+  const byPhase = {};
+  Object.values(PHASES).forEach((phase) => {
+    byPhase[phase.id] = _buildPhaseProgress(phase, MILESTONES, completed);
+  });
+
+  return {
+    completedMilestones: completed,
+    totalMilestones: MILESTONES.length,
+    percentage,
+    completedWeight,
+    totalWeight,
+    milestones: MILESTONES,
+    readyToFile,
+    byPhase,
+  };
+}
+
 /**
  * Custom hook to track claim progress across all tools
  */
 export default function useClaimProgress() {
-  const [progress, setProgress] = useState({
-    completedMilestones: [],
-    totalMilestones: MILESTONES.length,
-    percentage: 0,
-    completedWeight: 0,
-    totalWeight: MILESTONES.reduce((sum, m) => sum + m.weight, 0),
-    readyToFile: {
-      ready: false,
-      criticalCompleted: 0,
-      criticalTotal: 0,
-      criticalProgress: 0,
-      missingCritical: [],
-    },
-    byPhase: {},
-  });
+  // Computed synchronously on the initial render (not in an effect after
+  // mount) so the first paint already reflects real data — deferring this to
+  // a post-mount effect caused a second render with different content height,
+  // a measurable layout shift for whatever renders progress (e.g. the home
+  // page's CommandersChecklist).
+  const [progress, setProgress] = useState(computeProgress);
 
   const checkProgress = useCallback(() => {
-    const completed = [];
-    let completedWeight = 0;
-
-    MILESTONES.forEach((milestone) => {
-      const { completed: isCompleted, source } =
-        checkMilestoneCompletion(milestone);
-      if (isCompleted) {
-        completed.push({ ...milestone, completionSource: source });
-        completedWeight += milestone.weight;
-      }
-    });
-
-    const totalWeight = MILESTONES.reduce((sum, m) => sum + m.weight, 0);
-    const percentage = Math.round((completedWeight / totalWeight) * 100);
-
-    // Calculate Ready-to-File status
-    const readyToFile = calculateReadyToFile(completed);
-
-    // Group by phase with completion status
-    const byPhase = {};
-    Object.values(PHASES).forEach((phase) => {
-      const phaseMilestones = MILESTONES.filter((m) => m.phase === phase.id);
-      const phaseCompleted = phaseMilestones.filter((pm) =>
-        completed.some((c) => c.id === pm.id),
-      );
-      byPhase[phase.id] = {
-        ...phase,
-        milestones: phaseMilestones,
-        completed: phaseCompleted.length,
-        total: phaseMilestones.length,
-        percentage: Math.round(
-          (phaseCompleted.length / phaseMilestones.length) * 100,
-        ),
-      };
-    });
-
-    setProgress({
-      completedMilestones: completed,
-      totalMilestones: MILESTONES.length,
-      percentage,
-      completedWeight,
-      totalWeight,
-      milestones: MILESTONES,
-      readyToFile,
-      byPhase,
-    });
+    setProgress(computeProgress());
   }, []);
 
   useEffect(() => {

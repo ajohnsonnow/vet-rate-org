@@ -104,6 +104,10 @@ Authorization stands for the scope specified, not beyond. When in doubt, ask. Ne
 
 If you cannot test a change, say so. If you're guessing, say "I'm guessing." Never fabricate file paths, function names, model IDs, package versions, or URLs.
 
+### 2.12 Responsive & adaptive UI (any front end)
+
+Design for the whole screen continuum (~320px phones → 4K/32" monitors), not the dev's monitor. **Fluid first** (flex/grid, `clamp()`, `min()/max()`, `%`/`fr`); breakpoints only refine. **Extend the breakpoint scale, never override it away** — keep `2xl` and add `3xl`/`4xl` (≥1920/2560) so large screens can be targeted at all. Cap prose at a reading measure (~65ch); give app shells a bounded max-width that *scales up* at large breakpoints so content doesn't strand in a 4K void. No `w-screen`/`100vw`/fixed-px wider than the smallest viewport; `min-w-0` on flex text children; media `max-width:100%`; `overflow-x:hidden` is a safety net, not a fix. Touch targets ≥44px; `viewport-fit=cover` + safe-area insets; never block zoom. **Verify at 390px and 3840px** (the two most-skipped widths) plus one mid-width, with an automated no-horizontal-scroll assertion. Full checklist: [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md).
+
 ---
 
 ## 3. Claude model selection
@@ -237,6 +241,7 @@ See [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-pr
 | Agent security / prompt injection | [ai-agent-security-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-agent-security-best-practices.md) |
 | Threat-model a system | [threat-modeling-best-practices.md](../best-practices-toolkit/docs/best-practices/threat-modeling-best-practices.md) |
 | Preflight before commit | [preflight-checks-best-practices.md](../best-practices-toolkit/docs/best-practices/preflight-checks-best-practices.md) |
+| Responsive / adaptive UI (phone → 4K) | [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md) |
 
 ---
 

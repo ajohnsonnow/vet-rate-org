@@ -11,6 +11,7 @@
 5. HTTPS everywhere. Dependencies updated weekly.
 6. Document the *why* (ADRs), not the *what*.
 7. WCAG 2.2 AA accessibility minimum.
+8. Responsive & adaptive UI: design ~320px → 4K, fluid-first, extend (never override) breakpoints + add 3xl/4xl, cap prose ~65ch, scale app shells up on large screens, no `w-screen`/fixed-px overflow; verify at 390px & 3840px. See `responsive-adaptive-ui-best-practices.md`.
 
 ## AI-assistant behavioral rules
 

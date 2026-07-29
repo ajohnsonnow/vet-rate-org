@@ -37,6 +37,58 @@ const SIZE = {
   full: "sm:max-w-[95vw]",
 };
 
+// Tracks whether the modal body actually overflows so the scroll-region
+// tabIndex is only applied when content overflows (see the tabIndex comment
+// below).
+function useBodyScrollable(bodyRef, isOpen, children) {
+  const [bodyScrollable, setBodyScrollable] = useState(false);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!isOpen || !el) return undefined;
+    const measure = () => setBodyScrollable(el.scrollHeight > el.clientHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, children, bodyRef]);
+
+  return bodyScrollable;
+}
+
+function ModalHeader({ header, title, titleId, showClose, onClose }) {
+  if (header) {
+    // Custom full-bleed bar. `.modal-header` exempts it from the <768px
+    // `.modal-content > div` body-padding rule in index.css; `!p-0` clears
+    // the mobile `.modal-header` padding so the bar reaches every edge.
+    return <div className="modal-header sticky top-0 z-10 !p-0">{header}</div>;
+  }
+
+  if (!title) return null;
+
+  return (
+    <header className="modal-header sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+      <h2
+        id={titleId}
+        className="text-lg font-semibold text-gray-900 dark:text-white"
+      >
+        {title}
+      </h2>
+      {showClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+    </header>
+  );
+}
+
 export default function ResponsiveModal({
   isOpen,
   onClose,
@@ -55,26 +107,15 @@ export default function ResponsiveModal({
 }) {
   const panelRef = useRef(null);
   const bodyRef = useRef(null);
-  const [bodyScrollable, setBodyScrollable] = useState(false);
   const generatedId = useId();
   const titleId = labelledBy || `responsive-modal-${generatedId}`;
+  const bodyScrollable = useBodyScrollable(bodyRef, isOpen, children);
 
   useBodyScrollLock(isOpen);
   useFocusTrap(panelRef, {
     active: isOpen,
     onEscape: dismissable ? onClose : undefined,
   });
-
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (!isOpen || !el) return undefined;
-    const measure = () => setBodyScrollable(el.scrollHeight > el.clientHeight);
-    measure();
-    if (typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isOpen, children]);
 
   if (!isOpen) return null;
 
@@ -98,33 +139,13 @@ export default function ResponsiveModal({
           SIZE[size] || SIZE.lg
         } ${className}`}
       >
-        {header ? (
-          // Custom full-bleed bar. `.modal-header` exempts it from the <768px
-          // `.modal-content > div` body-padding rule in index.css; `!p-0` clears
-          // the mobile `.modal-header` padding so the bar reaches every edge.
-          <div className="modal-header sticky top-0 z-10 !p-0">{header}</div>
-        ) : (
-          title && (
-            <header className="modal-header sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
-              <h2
-                id={titleId}
-                className="text-lg font-semibold text-gray-900 dark:text-white"
-              >
-                {title}
-              </h2>
-              {showClose && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close dialog"
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
-            </header>
-          )
-        )}
+        <ModalHeader
+          header={header}
+          title={title}
+          titleId={titleId}
+          showClose={showClose}
+          onClose={onClose}
+        />
 
         {/* tabIndex=0 gives keyboard users arrow-key access to the scroll region
             even when a modal's body holds no focusable control (axe

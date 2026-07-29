@@ -27,12 +27,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
 const INDEX_ROOT = path.join(ROOT, "public", "legal-index");
 
-const FETCHERS = [
-  { name: "ecfr", script: "fetch-ecfr.mjs" },
-  { name: "m21-1", script: "fetch-m21-1.mjs" },
-  { name: "cavc", script: "fetch-cavc.mjs" },
-  { name: "fedcir", script: "fetch-fedcir.mjs" },
-];
+// These fetchers feed the eCFR legal-index MONOLITH (public/legal-index/) that
+// "Ask the Regs" queries. M21-1 (S31), CAVC and Federal Circuit (S33) are
+// deliberately NOT here: each lands in its OWN shard under public/dkb-index/
+// (m21_1/ procedural, cavc/ judicial, fedcir/ judicial_federal_circuit) via its
+// fetch-*.mjs → build-*-shard.mjs → build-registry.mjs pipeline, so
+// procedural-manual and case-law content never dilute the statutory eCFR
+// retrieval S29 keeps regression-free. Run those shard pipelines with
+// `npm run refresh:m21-1-shard` / `refresh:cavc-shard` / `refresh:fedcir-shard`.
+const FETCHERS = [{ name: "ecfr", script: "fetch-ecfr.mjs" }];
 
 function parseArgs(argv) {
   const out = { skip: new Set() };

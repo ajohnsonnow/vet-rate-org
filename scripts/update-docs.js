@@ -60,7 +60,7 @@ const filesToUpdate = [
       },
       {
         // Second features mention
-        pattern: /\d+ VA Disabilities\*\*: Complete coverage of all body systems with validated rating criteria/g,
+        pattern: /\d{1,6} VA Disabilities\*\*: Complete coverage of all body systems with validated rating criteria/g,
         replacement: `${DISABILITY_COUNT} VA Disabilities**: Complete coverage of all body systems with validated rating criteria`
       },
       {
@@ -75,7 +75,7 @@ const filesToUpdate = [
       },
       {
         // Tool count in meta description
-        pattern: /\d+ professional tools/g,
+        pattern: /\d{1,6} professional tools/g,
         replacement: `${TOOL_COUNT} professional tools`
       },
       {

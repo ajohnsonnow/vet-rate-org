@@ -20,11 +20,16 @@ import {
   isAnyAIAvailable,
   getAIStatus,
   resetAICircuitBreaker,
+  reloadSwarmEngine,
   AI_MODES,
 } from "./unifiedAIService";
-import { validateDiagnosticCode } from "./hallucinationTrap";
+import {
+  validateDiagnosticCode,
+  lookupDiagnosticCodeByName,
+} from "./hallucinationTrap";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
+import { scrubText } from "./piiScrubber";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
@@ -53,13 +58,64 @@ const TOKEN_LIMITS = {
 // Used only for chunk-size budgeting; generateWithSwarm uses /3 for its truncation guard.
 const CHARS_PER_TOKEN = 3.4;
 
-// Pre-flight scoring caps local-AI runs to the top-scored 150 chunks (sorted by
-// claims-keyword density). At ~100 s/chunk (p50 observed 2026-06-13), 150 chunks
-// ≈ 4.2 h AI + ~45 min first-run warmup ≈ 5 h total — down from 8+ h at 284 chunks.
-// MIN_CLAIMS_SCORE is the absolute keyword floor: chunks scoring below this are
-// skipped even within the cap, eliminating admin pages that slipped past Gate 2.
-const MAX_WEBGPU_AI_CHUNKS = 150;
-const MIN_CLAIMS_SCORE = 2;
+// Pre-flight scoring passes ALL medically-relevant chunks to the LLM. The 10k
+// value is a safety valve against pathological documents only — in practice a
+// 313 MB C-File produces ~284 chunks.
+// MIN_CLAIMS_SCORE = 0 disables the relevance floor (Gate 3): every chunk that
+// clears the blank-page (Gate 1) and any-medical-signal (Gate 2) pre-filters is
+// sent to the AI, so no page carrying potential claim evidence is skipped for a
+// low keyword score. This is the "no missing data" full-coverage policy — it
+// trades longer runtime on large files for completeness. Gates 1/2 still drop
+// genuinely blank / zero-signal pages, which carry nothing to lose.
+const MAX_WEBGPU_AI_CHUNKS = 10_000;
+const MIN_CLAIMS_SCORE = 0;
+
+/**
+ * Pure computation of which local-AI chunks get excluded, and why. This is the
+ * single source of truth the analysis loop consults for its cap/floor skip
+ * decisions, so unit-testing this function tests the real exclusion behaviour
+ * (no drift between a helper and the loop).
+ *
+ * Two independent exclusion gates, mirroring the loop:
+ *   - floor (Gate 3): score < `minClaimsScore` — admin-heavy chunks that cleared
+ *     the coarser medical pre-filter on a single generic term.
+ *   - cap   (Gate 4): only the top `maxAiChunks` chunks by score run the slow
+ *     pass; the rest are excluded (soft on ties — matches `scoreThreshold`).
+ * A chunk excluded by the floor is not also counted under the cap.
+ *
+ * These caps protect a real per-chunk time budget on low-end devices and are
+ * NOT removed — S24 makes their effect visible (and decouples the semantic
+ * index from them) rather than eliminating them.
+ *
+ * @param {number[]} chunkScores
+ * @param {{maxAiChunks:number, minClaimsScore:number}} params
+ * @returns {{floorIndices:Set<number>, capIndices:Set<number>}}
+ */
+export function computeAiExclusion(
+  chunkScores,
+  {
+    maxAiChunks = MAX_WEBGPU_AI_CHUNKS,
+    minClaimsScore = MIN_CLAIMS_SCORE,
+  } = {},
+) {
+  const floorIndices = new Set();
+  const capIndices = new Set();
+  if (!Array.isArray(chunkScores) || chunkScores.length === 0) {
+    return { floorIndices, capIndices };
+  }
+  chunkScores.forEach((s, i) => {
+    if (s < minClaimsScore) floorIndices.add(i);
+  });
+  if (chunkScores.length > maxAiChunks) {
+    const threshold = [...chunkScores].sort((a, b) => b - a)[maxAiChunks - 1];
+    if (threshold > 0) {
+      chunkScores.forEach((s, i) => {
+        if (!floorIndices.has(i) && s < threshold) capIndices.add(i);
+      });
+    }
+  }
+  return { floorIndices, capIndices };
+}
 
 // Maximum characters per chunk based on AI mode.
 // For SWARM (WebLLM), use the device profile's adaptive chunk size if available
@@ -86,8 +142,22 @@ const CHUNK_OVERLAP_PAGES = 2; // Reduced from 5 to minimize processing time
 const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks better
 
 // Retry failed chunks before recording them in the failedChunks manifest
+// 2 retries (3 attempts): deliberately aligned with CIRCUIT_BREAKER_THRESHOLD
+// (3 consecutive generation failures) so a chunk's retries never trip the
+// breaker mid-recovery and incur its 30s cooldown. Recovery of a chunk that
+// truncated its JSON is driven instead by the per-attempt output-token
+// escalation in _requestChunkAnalysis (2048→4096→6144) — a chunk that still
+// can't parse after all 3 attempts fails loudly (never a silent drop).
 const MAX_CHUNK_RETRIES = 2;
 const CHUNK_RETRY_BACKOFF_MS = 1000;
+
+// How many times a single chunk may trigger a full GPU-engine rebuild before
+// the run aborts. Generous because each recovery reloads a fresh WebGPU adapter
+// and the model weights (~1-3 min), which clears the "adapter consumed" /
+// hung-compute state that causes the freeze. If the GPU is physically dead this
+// still terminates instead of looping forever — but it never silently drops the
+// chunk, because missing medical evidence is unacceptable for a VA claim.
+const MAX_GPU_RECOVERIES = 5;
 
 // ============================================================================
 // SYSTEM PROMPTS
@@ -203,6 +273,247 @@ Focus on extracting findings from THIS chunk only. Findings will be merged with 
  * @param {string} jsonStr - Potentially truncated JSON string
  * @returns {Object|null} - Parsed object or null if repair failed
  */
+function _repairNormalizeControlChars(content) {
+  return JSON.parse(content.replace(/\r\n|\r|\n/g, " "));
+}
+
+function _repairMissingOpeningQuote(content) {
+  const fixed = content.replace(
+    // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
+    /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
+    (_, colon, value, closingPart) => `${colon}"${value.trim()}${closingPart}`,
+  );
+  return JSON.parse(fixed);
+}
+
+function _repairCloseOpenBrackets(content) {
+  let repaired = content;
+  // Count open brackets
+  const openBraces = (repaired.match(/{/g) || []).length;
+  const closeBraces = (repaired.match(/}/g) || []).length;
+  const openBrackets = (repaired.match(/\[/g) || []).length;
+  const closeBrackets = (repaired.match(/]/g) || []).length;
+
+  // Remove any trailing incomplete string/value
+  repaired = repaired.replace(/,\s*"[^"]*$/, ""); // Incomplete key
+  repaired = repaired.replace(/:\s*"[^"]*$/, ': ""'); // Incomplete string value
+  repaired = repaired.replace(/,\s*$/, ""); // Trailing comma
+  repaired = repaired.replace(/:\s*$/, ": null"); // Trailing colon
+
+  // Close arrays and objects
+  for (let i = 0; i < openBrackets - closeBrackets; i++) {
+    repaired += "]";
+  }
+  for (let i = 0; i < openBraces - closeBraces; i++) {
+    repaired += "}";
+  }
+
+  return JSON.parse(repaired);
+}
+
+function _repairInsertMissingCommas(content) {
+  // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
+  const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
+  return JSON.parse(fixed);
+}
+
+function _repairStripPreamble(content) {
+  const jsonStart = content.indexOf("{");
+  if (jsonStart <= 0) return null;
+  let extracted = content.substring(jsonStart);
+  extracted = extracted.replace(/,\s*"[^"]*$/, "");
+  extracted = extracted.replace(/:\s*"[^"]*$/, ': ""');
+  extracted = extracted.replace(/,\s*$/, "");
+  extracted = extracted.replace(/:\s*$/, ": null");
+  const ob = (extracted.match(/{/g) || []).length;
+  const cb = (extracted.match(/}/g) || []).length;
+  const oB = (extracted.match(/\[/g) || []).length;
+  const cB = (extracted.match(/]/g) || []).length;
+  for (let i = 0; i < oB - cB; i++) extracted += "]";
+  for (let i = 0; i < ob - cb; i++) extracted += "}";
+  return JSON.parse(extracted);
+}
+
+function _scanJsonCharForDepth(char, state) {
+  if (state.escapeNext) {
+    state.escapeNext = false;
+    return;
+  }
+
+  if (char === "\\" && state.inString) {
+    state.escapeNext = true;
+    return;
+  }
+
+  if (char === '"' && !state.escapeNext) {
+    state.inString = !state.inString;
+    return;
+  }
+
+  if (!state.inString) {
+    if (char === "{" || char === "[") state.depth++;
+    if (char === "}" || char === "]") {
+      state.depth--;
+      if (state.depth === 0) state.lastCompleteIndex = state.index;
+    }
+  }
+}
+
+function _repairFindLastCompleteObject(content) {
+  const state = {
+    depth: 0,
+    lastCompleteIndex: -1,
+    inString: false,
+    escapeNext: false,
+    index: 0,
+  };
+
+  for (let i = 0; i < content.length; i++) {
+    state.index = i;
+    _scanJsonCharForDepth(content[i], state);
+  }
+
+  if (state.lastCompleteIndex > 0) {
+    return JSON.parse(content.substring(0, state.lastCompleteIndex + 1));
+  }
+  return null;
+}
+
+function _repairSingleQuotes(content) {
+  return JSON.parse(content.replace(/'/g, '"'));
+}
+
+function _repairUnquotedPropertyNames(content) {
+  const fixed = content.replace(
+    /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
+    '$1 "$2":',
+  );
+  return JSON.parse(fixed);
+}
+
+function _repairRegexFieldExtraction(content) {
+  const result = {
+    summary: "",
+    servicePeriod: {},
+    timeline: [],
+    potential_claims: [],
+    exposures: [],
+    combatIndicators: [],
+    redFlags: [],
+    actionItems: [],
+    mentalHealth: {
+      diagnoses: [],
+      indicators: [],
+      stressors: [],
+      pages: [],
+    },
+  };
+
+  // Pull condition+likelihood pairs from any fragment of the response
+  const claimRe =
+    /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
+  let m;
+  while ((m = claimRe.exec(content)) !== null) {
+    result.potential_claims.push({
+      condition: m[1],
+      likelihood: m[2],
+      inServiceEvent: "",
+      currentDiagnosis: "unclear",
+      missing_element: "",
+    });
+  }
+
+  // Pull servicePeriod fields
+  const branchM = content.match(/"branch"\s*:\s*"([^"]*)"/);
+  const entryM = content.match(/"entryDate"\s*:\s*"([^"]*)"/);
+  const sepM = content.match(/"separationDate"\s*:\s*"([^"]*)"/);
+  const mosM = content.match(/"mos"\s*:\s*"([^"]*)"/);
+  if (branchM || entryM) {
+    result.servicePeriod = {
+      branch: branchM?.[1] ?? "",
+      entryDate: entryM?.[1] ?? "",
+      separationDate: sepM?.[1] ?? "",
+      mos: mosM?.[1] ?? "",
+    };
+  }
+
+  const hasServiceData = Object.values(result.servicePeriod).some(
+    (v) => typeof v === "string" && v.trim() !== "",
+  );
+  if (result.potential_claims.length > 0 || hasServiceData) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
+    );
+    return result;
+  }
+
+  // Nothing recoverable from this malformed response. Return null (NOT an empty
+  // template) so _parseChunkAiResponse re-throws, _runChunkWithRetries requests
+  // a fresh response, and — only if the chunk stays unrecoverable across every
+  // retry — it lands in failedChunks and fires the Partial-analysis banner.
+  // Emitting an empty template here would silently drop the chunk's pages with
+  // no signal, the one failure this pipeline must never hide. A genuinely empty
+  // administrative page returns VALID empty JSON that parses without ever
+  // reaching this last-resort strategy, so this cannot suppress real empties.
+  // eslint-disable-next-line no-console
+  console.warn(
+    `📝 Regex fallback: no structured data extractable — signalling failure so the chunk retries instead of dropping`,
+  );
+  return null;
+}
+
+function _repairTruncateBeforeOpenString(content) {
+  // Walk the content with proper escape/string-boundary tracking to find the
+  // last structural separator (comma or closing bracket) that is OUTSIDE any
+  // open string. When the model runs out of tokens mid-value — especially
+  // values that contain embedded escaped quotes, which defeat the simpler
+  // [^"]* regex in _repairCloseOpenBrackets — we end up inside an unclosed
+  // string. Truncate at the last safe structural position, remove any trailing
+  // comma, then close remaining open brackets with a count-based pass.
+  let inStr = false;
+  let esc = false;
+  let lastStructuralPos = -1;
+
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i];
+    if (esc) {
+      esc = false;
+      continue;
+    }
+    if (c === "\\" && inStr) {
+      esc = true;
+      continue;
+    }
+    if (c === '"') {
+      inStr = !inStr;
+      continue;
+    }
+    if (!inStr && (c === "," || c === "}" || c === "]")) {
+      lastStructuralPos = i;
+    }
+  }
+
+  // Only valuable when we end inside an unclosed string — other strategies
+  // already handle content that ends outside a string.
+  if (!inStr || lastStructuralPos === -1) return null;
+
+  let truncated = content.slice(0, lastStructuralPos + 1).replace(/,\s*$/, "");
+
+  // Close open brackets. Count-based is safe here because the truncation
+  // point is a structural separator (not inside a string), so the remaining
+  // open structure is predictable. Unbalanced braces inside string LITERALS
+  // in the retained portion are still present but cancel out in the count.
+  const ob = (truncated.match(/{/g) || []).length;
+  const cb = (truncated.match(/}/g) || []).length;
+  const oB = (truncated.match(/\[/g) || []).length;
+  const cB = (truncated.match(/]/g) || []).length;
+  for (let i = 0; i < oB - cB; i++) truncated += "]";
+  for (let i = 0; i < ob - cb; i++) truncated += "}";
+
+  return JSON.parse(truncated);
+}
+
 function attemptJSONRepair(jsonStr) {
   if (!jsonStr || typeof jsonStr !== "string") return null;
 
@@ -215,195 +526,56 @@ function attemptJSONRepair(jsonStr) {
     // values are invalid and cause V8 parse failures at the embedded newline position).
     // Replacing all \r/\n with space is safe: JSON ignores whitespace between tokens,
     // and we never want literal newlines in our field values.
-    () => JSON.parse(content.replace(/\r\n|\r|\n/g, " ")),
+    _repairNormalizeControlChars,
     // Strategy 0b: Fix missing OPENING quote on string values.
     // Model sometimes writes  "key": The text here."  instead of  "key": "The text here."
     // Match: colon, not-a-quote (not already quoted / not null/true/false/number),
     // any non-quote non-newline chars, then a closing quote before a JSON separator.
-    () => {
-      const fixed = content.replace(
-        /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
-        (_, colon, value, closingPart) =>
-          `${colon}"${value.trim()}${closingPart}`,
-      );
-      return JSON.parse(fixed);
-    },
+    _repairMissingOpeningQuote,
     // Strategy 1: Close all open brackets/braces
-    () => {
-      let repaired = content;
-      // Count open brackets
-      const openBraces = (repaired.match(/{/g) || []).length;
-      const closeBraces = (repaired.match(/}/g) || []).length;
-      const openBrackets = (repaired.match(/\[/g) || []).length;
-      const closeBrackets = (repaired.match(/]/g) || []).length;
-
-      // Remove any trailing incomplete string/value
-      repaired = repaired.replace(/,\s*"[^"]*$/, ""); // Incomplete key
-      repaired = repaired.replace(/:\s*"[^"]*$/, ': ""'); // Incomplete string value
-      repaired = repaired.replace(/,\s*$/, ""); // Trailing comma
-      repaired = repaired.replace(/:\s*$/, ": null"); // Trailing colon
-
-      // Close arrays and objects
-      for (let i = 0; i < openBrackets - closeBrackets; i++) {
-        repaired += "]";
-      }
-      for (let i = 0; i < openBraces - closeBraces; i++) {
-        repaired += "}";
-      }
-
-      return JSON.parse(repaired);
-    },
+    _repairCloseOpenBrackets,
     // Strategy 1b: Insert missing commas between consecutive array elements.
     // Model sometimes emits [{...} {...}] without the separating comma.
     // The pattern only appears at array-element boundaries in our schema output;
     // it does not occur inside quoted string values (which never contain bare `}{`).
-    () => {
-      const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
-      return JSON.parse(fixed);
-    },
+    _repairInsertMissingCommas,
     // Strategy 1c: Strip text preamble before the first '{', then close brackets.
     // Model sometimes outputs explanatory prose before the JSON object, e.g.
     // "Based on the records: {..." — all prior strategies fail because the
     // non-JSON prefix makes the string unparseable from position 0.
-    () => {
-      const jsonStart = content.indexOf("{");
-      if (jsonStart <= 0) return null;
-      let extracted = content.substring(jsonStart);
-      extracted = extracted.replace(/,\s*"[^"]*$/, "");
-      extracted = extracted.replace(/:\s*"[^"]*$/, ': ""');
-      extracted = extracted.replace(/,\s*$/, "");
-      extracted = extracted.replace(/:\s*$/, ": null");
-      const ob = (extracted.match(/{/g) || []).length;
-      const cb = (extracted.match(/}/g) || []).length;
-      const oB = (extracted.match(/\[/g) || []).length;
-      const cB = (extracted.match(/]/g) || []).length;
-      for (let i = 0; i < oB - cB; i++) extracted += "]";
-      for (let i = 0; i < ob - cb; i++) extracted += "}";
-      return JSON.parse(extracted);
-    },
+    _repairStripPreamble,
+    // Strategy 1d: Truncate at the last structural separator outside any open
+    // string, then close remaining brackets. Handles the case where the model
+    // runs out of tokens mid-string-value when the value contains embedded
+    // escaped quotes — the simple [^"]* regex in Strategy 1 cannot find the
+    // match in that case, but a proper escape-aware scan can.
+    _repairTruncateBeforeOpenString,
     // Strategy 2: Find last complete object at top level
-    () => {
-      let depth = 0;
-      let lastCompleteIndex = -1;
-      let inString = false;
-      let escapeNext = false;
-
-      for (let i = 0; i < content.length; i++) {
-        const char = content[i];
-
-        if (escapeNext) {
-          escapeNext = false;
-          continue;
-        }
-
-        if (char === "\\" && inString) {
-          escapeNext = true;
-          continue;
-        }
-
-        if (char === '"' && !escapeNext) {
-          inString = !inString;
-          continue;
-        }
-
-        if (!inString) {
-          if (char === "{" || char === "[") depth++;
-          if (char === "}" || char === "]") {
-            depth--;
-            if (depth === 0) lastCompleteIndex = i;
-          }
-        }
-      }
-
-      if (lastCompleteIndex > 0) {
-        return JSON.parse(content.substring(0, lastCompleteIndex + 1));
-      }
-      return null;
-    },
+    _repairFindLastCompleteObject,
     // Strategy 2b: Single-quote normalization.
     // Local models occasionally emit valid-JS but invalid-JSON single-quoted output:
     // {'condition': 'PTSD', 'likelihood': 'high'}. Simple global replace works when
     // field values contain no apostrophes; the try/catch discards it otherwise.
-    () => JSON.parse(content.replace(/'/g, '"')),
+    _repairSingleQuotes,
     // Strategy 3: Fix unquoted property names (JSON5-style output from the model)
     // e.g.  {summary: "...", timeline: [...]} → {"summary": "...", "timeline": [...]}
     // Applies the substitution only at structural positions ({, or ,) to avoid
     // touching identifier-like text inside string values.
-    () => {
-      const fixed = content.replace(
-        /([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
-        '$1 "$2":',
-      );
-      return JSON.parse(fixed);
-    },
+    _repairUnquotedPropertyNames,
     // Strategy 4: Regex field extraction — last-resort for badly truncated output.
     // Extracts individual condition names and servicePeriod fields even when the
     // surrounding JSON structure is unrecoverable. Works with the slim 3-field
     // schema (no summary field) unlike the previous summary-only fallback.
-    () => {
-      const result = {
-        summary: "",
-        servicePeriod: {},
-        timeline: [],
-        potential_claims: [],
-        exposures: [],
-        combatIndicators: [],
-        redFlags: [],
-        actionItems: [],
-        mentalHealth: {
-          diagnoses: [],
-          indicators: [],
-          stressors: [],
-          pages: [],
-        },
-      };
-
-      // Pull condition+likelihood pairs from any fragment of the response
-      const claimRe =
-        /"condition"\s*:\s*"([^"]+)"[^}]*?"likelihood"\s*:\s*"([^"]+)"/g;
-      let m;
-      while ((m = claimRe.exec(content)) !== null) {
-        result.potential_claims.push({
-          condition: m[1],
-          likelihood: m[2],
-          inServiceEvent: "",
-          currentDiagnosis: "unclear",
-          missing_element: "",
-        });
-      }
-
-      // Pull servicePeriod fields
-      const branchM = content.match(/"branch"\s*:\s*"([^"]*)"/);
-      const entryM = content.match(/"entryDate"\s*:\s*"([^"]*)"/);
-      const sepM = content.match(/"separationDate"\s*:\s*"([^"]*)"/);
-      const mosM = content.match(/"mos"\s*:\s*"([^"]*)"/);
-      if (branchM || entryM) {
-        result.servicePeriod = {
-          branch: branchM?.[1] ?? "",
-          entryDate: entryM?.[1] ?? "",
-          separationDate: sepM?.[1] ?? "",
-          mos: mosM?.[1] ?? "",
-        };
-      }
-
-      if (result.potential_claims.length > 0 || result.servicePeriod.branch) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `📝 Regex fallback: extracted ${result.potential_claims.length} claim(s) from truncated output`,
-        );
-        return result;
-      }
-      return null;
-    },
+    _repairRegexFieldExtraction,
   ];
 
   for (const strategy of strategies) {
     try {
-      const result = strategy();
+      const result = strategy(content);
       if (result && typeof result === "object") {
         return result;
       }
-    } catch (e) {
+    } catch {
       // Strategy failed, try next
       continue;
     }
@@ -423,13 +595,9 @@ function attemptJSONRepair(jsonStr) {
  * @param {string} aiMode - Current AI mode (cloud/local/swarm)
  * @returns {Array<{text: string, startPage: number, endPage: number, chunkIndex: number}>}
  */
-function splitIntoChunks(fullText, aiMode) {
-  const maxCharsPerChunk = getMaxCharsPerChunk(aiMode);
-
-  // Parse page markers to get page boundaries
+function _parsePageMarkers(fullText) {
   const pageMarkerRegex = /--- PAGE (\d+) ---/g;
   const pages = [];
-  let lastIndex = 0;
   let match;
 
   while ((match = pageMarkerRegex.exec(fullText)) !== null) {
@@ -441,48 +609,15 @@ function splitIntoChunks(fullText, aiMode) {
       startIndex: match.index,
       endIndex: fullText.length, // Will be updated on next iteration
     });
-    // eslint-disable-next-line no-unused-vars
-    lastIndex = match.index;
   }
 
-  // If no page markers found, treat as single chunk
-  if (pages.length === 0) {
-    console.warn("No page markers found in text, treating as single chunk");
-    return [
-      {
-        text: fullText,
-        startPage: 1,
-        endPage: 1,
-        chunkIndex: 0,
-      },
-    ];
-  }
+  return pages;
+}
 
-  // eslint-disable-next-line no-console
-  console.log(`📄 Found ${pages.length} pages in document`);
-
-  // If total text fits in one chunk, return as-is
-  if (fullText.length <= maxCharsPerChunk) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `✅ Document fits in single chunk (${fullText.length} chars <= ${maxCharsPerChunk} max)`,
-    );
-    return [
-      {
-        text: fullText,
-        startPage: pages[0].pageNum,
-        endPage: pages[pages.length - 1].pageNum,
-        chunkIndex: 0,
-      },
-    ];
-  }
-
-  // Need to split into multiple chunks
-  // eslint-disable-next-line no-console
-  console.log(
-    `📦 Document too large (${fullText.length} chars > ${maxCharsPerChunk} max), splitting into chunks...`,
-  );
-
+// Greedily packs pages into chunks under maxCharsPerChunk, starting a new
+// chunk once the current one would overflow (and has enough pages to be
+// worth splitting), carrying CHUNK_OVERLAP_PAGES of context into the next.
+function _buildTextChunks(fullText, pages, maxCharsPerChunk) {
   const chunks = [];
   let currentChunkStart = 0;
   let currentChunkPages = [];
@@ -536,6 +671,53 @@ function splitIntoChunks(fullText, aiMode) {
     });
   }
 
+  return chunks;
+}
+
+function splitIntoChunks(fullText, aiMode) {
+  const maxCharsPerChunk = getMaxCharsPerChunk(aiMode);
+  const pages = _parsePageMarkers(fullText);
+
+  // If no page markers found, treat as single chunk
+  if (pages.length === 0) {
+    console.warn("No page markers found in text, treating as single chunk");
+    return [
+      {
+        text: fullText,
+        startPage: 1,
+        endPage: 1,
+        chunkIndex: 0,
+      },
+    ];
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`📄 Found ${pages.length} pages in document`);
+
+  // If total text fits in one chunk, return as-is
+  if (fullText.length <= maxCharsPerChunk) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Document fits in single chunk (${fullText.length} chars <= ${maxCharsPerChunk} max)`,
+    );
+    return [
+      {
+        text: fullText,
+        startPage: pages[0].pageNum,
+        endPage: pages[pages.length - 1].pageNum,
+        chunkIndex: 0,
+      },
+    ];
+  }
+
+  // Need to split into multiple chunks
+  // eslint-disable-next-line no-console
+  console.log(
+    `📦 Document too large (${fullText.length} chars > ${maxCharsPerChunk} max), splitting into chunks...`,
+  );
+
+  const chunks = _buildTextChunks(fullText, pages, maxCharsPerChunk);
+
   // eslint-disable-next-line no-console
   console.log(`📦 Split into ${chunks.length} chunks`);
   chunks.forEach((chunk, i) => {
@@ -576,6 +758,7 @@ const PAGE_RELEVANCE_PATTERN = new RegExp(
  * filter would discard nearly everything, the original text is returned.
  */
 export function screenRelevantPages(fullText) {
+  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
   const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
   const markers = [...fullText.matchAll(pageRegex)];
   if (markers.length < 10) {
@@ -640,8 +823,14 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
   const tier = profile?.tier ?? "desktop-high";
   const localRate =
     AI_CHUNK_RATE[tier]?.p50 ?? AI_CHUNK_RATE["desktop-high"].p50;
-  const baseTimePerChunk =
-    aiMode === AI_MODES.CLOUD ? 30 : aiMode === AI_MODES.SWARM ? localRate : 45;
+  let baseTimePerChunk;
+  if (aiMode === AI_MODES.CLOUD) {
+    baseTimePerChunk = 30;
+  } else if (aiMode === AI_MODES.SWARM) {
+    baseTimePerChunk = localRate;
+  } else {
+    baseTimePerChunk = 45;
+  }
 
   const totalSeconds = aiChunks * baseTimePerChunk;
 
@@ -664,6 +853,121 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
  * @param {Array<Object>} chunkResults - Array of analysis results from each chunk
  * @returns {Object} - Merged analysis result
  */
+function _mergeServicePeriod(merged, chunkResults) {
+  // Merge service period (take non-empty values from any chunk)
+  for (const result of chunkResults) {
+    if (result.servicePeriod) {
+      if (!merged.servicePeriod.branch && result.servicePeriod.branch) {
+        merged.servicePeriod.branch = result.servicePeriod.branch;
+      }
+      if (!merged.servicePeriod.entryDate && result.servicePeriod.entryDate) {
+        merged.servicePeriod.entryDate = result.servicePeriod.entryDate;
+      }
+      if (
+        !merged.servicePeriod.separationDate &&
+        result.servicePeriod.separationDate
+      ) {
+        merged.servicePeriod.separationDate =
+          result.servicePeriod.separationDate;
+      }
+      if (!merged.servicePeriod.mos && result.servicePeriod.mos) {
+        merged.servicePeriod.mos = result.servicePeriod.mos;
+      }
+    }
+  }
+}
+
+function _mergeTimeline(merged, chunkResults) {
+  // Merge timelines and sort chronologically
+  for (const result of chunkResults) {
+    if (result.timeline && Array.isArray(result.timeline)) {
+      merged.timeline.push(...result.timeline);
+    }
+  }
+  merged.timeline = deduplicateTimeline(merged.timeline);
+  merged.timeline.sort(compareDates);
+}
+
+function _mergePotentialClaims(merged, chunkResults) {
+  // Merge potential claims with deduplication by condition name
+  for (const result of chunkResults) {
+    if (result.potential_claims && Array.isArray(result.potential_claims)) {
+      merged.potential_claims.push(...result.potential_claims);
+    }
+  }
+  merged.potential_claims = deduplicateClaims(merged.potential_claims);
+}
+
+function _mergeExposures(merged, chunkResults) {
+  // Merge exposures with deduplication
+  for (const result of chunkResults) {
+    if (result.exposures && Array.isArray(result.exposures)) {
+      merged.exposures.push(...result.exposures);
+    }
+  }
+  merged.exposures = deduplicateByField(merged.exposures, "type");
+}
+
+function _mergeCombatIndicators(merged, chunkResults) {
+  // Merge combat indicators
+  for (const result of chunkResults) {
+    if (result.combatIndicators && Array.isArray(result.combatIndicators)) {
+      merged.combatIndicators.push(...result.combatIndicators);
+    }
+  }
+  merged.combatIndicators = deduplicateByField(
+    merged.combatIndicators,
+    "indicator",
+  );
+}
+
+function _mergeMentalHealth(merged, chunkResults) {
+  // Merge mental health data
+  for (const result of chunkResults) {
+    if (result.mentalHealth) {
+      if (result.mentalHealth.indicators) {
+        merged.mentalHealth.indicators.push(...result.mentalHealth.indicators);
+      }
+      if (result.mentalHealth.diagnoses) {
+        merged.mentalHealth.diagnoses.push(...result.mentalHealth.diagnoses);
+      }
+      if (result.mentalHealth.stressors) {
+        merged.mentalHealth.stressors.push(...result.mentalHealth.stressors);
+      }
+      if (result.mentalHealth.pages) {
+        merged.mentalHealth.pages.push(...result.mentalHealth.pages);
+      }
+    }
+  }
+  merged.mentalHealth.indicators = [...new Set(merged.mentalHealth.indicators)];
+  merged.mentalHealth.diagnoses = [...new Set(merged.mentalHealth.diagnoses)];
+  merged.mentalHealth.stressors = [...new Set(merged.mentalHealth.stressors)];
+  merged.mentalHealth.pages = [...new Set(merged.mentalHealth.pages)].sort(
+    (a, b) => a - b,
+  );
+}
+
+function _mergeRedFlags(merged, chunkResults) {
+  // Merge red flags
+  for (const result of chunkResults) {
+    if (result.redFlags && Array.isArray(result.redFlags)) {
+      merged.redFlags.push(...result.redFlags);
+    }
+  }
+  merged.redFlags = deduplicateByField(merged.redFlags, "issue");
+}
+
+function _mergeActionItems(merged, chunkResults) {
+  // Merge action items (deduplicate similar items)
+  const allActions = [];
+  for (const result of chunkResults) {
+    if (result.actionItems && Array.isArray(result.actionItems)) {
+      allActions.push(...result.actionItems);
+    }
+  }
+  merged.actionItems = deduplicateActionItems(allActions);
+}
+
 function mergeChunkResults(chunkResults) {
   if (chunkResults.length === 0) {
     throw new Error("No chunk results to merge");
@@ -698,104 +1002,21 @@ function mergeChunkResults(chunkResults) {
   const summaries = chunkResults.filter((r) => r.summary).map((r) => r.summary);
   merged.summary = createMetaSummary(summaries);
 
-  // Merge service period (take non-empty values from any chunk)
-  for (const result of chunkResults) {
-    if (result.servicePeriod) {
-      if (!merged.servicePeriod.branch && result.servicePeriod.branch) {
-        merged.servicePeriod.branch = result.servicePeriod.branch;
-      }
-      if (!merged.servicePeriod.entryDate && result.servicePeriod.entryDate) {
-        merged.servicePeriod.entryDate = result.servicePeriod.entryDate;
-      }
-      if (
-        !merged.servicePeriod.separationDate &&
-        result.servicePeriod.separationDate
-      ) {
-        merged.servicePeriod.separationDate =
-          result.servicePeriod.separationDate;
-      }
-      if (!merged.servicePeriod.mos && result.servicePeriod.mos) {
-        merged.servicePeriod.mos = result.servicePeriod.mos;
-      }
-    }
-  }
+  _mergeServicePeriod(merged, chunkResults);
 
-  // Merge timelines and sort chronologically
-  for (const result of chunkResults) {
-    if (result.timeline && Array.isArray(result.timeline)) {
-      merged.timeline.push(...result.timeline);
-    }
-  }
-  merged.timeline = deduplicateTimeline(merged.timeline);
-  merged.timeline.sort(compareDates);
+  _mergeTimeline(merged, chunkResults);
 
-  // Merge potential claims with deduplication by condition name
-  for (const result of chunkResults) {
-    if (result.potential_claims && Array.isArray(result.potential_claims)) {
-      merged.potential_claims.push(...result.potential_claims);
-    }
-  }
-  merged.potential_claims = deduplicateClaims(merged.potential_claims);
+  _mergePotentialClaims(merged, chunkResults);
 
-  // Merge exposures with deduplication
-  for (const result of chunkResults) {
-    if (result.exposures && Array.isArray(result.exposures)) {
-      merged.exposures.push(...result.exposures);
-    }
-  }
-  merged.exposures = deduplicateByField(merged.exposures, "type");
+  _mergeExposures(merged, chunkResults);
 
-  // Merge combat indicators
-  for (const result of chunkResults) {
-    if (result.combatIndicators && Array.isArray(result.combatIndicators)) {
-      merged.combatIndicators.push(...result.combatIndicators);
-    }
-  }
-  merged.combatIndicators = deduplicateByField(
-    merged.combatIndicators,
-    "indicator",
-  );
+  _mergeCombatIndicators(merged, chunkResults);
 
-  // Merge mental health data
-  for (const result of chunkResults) {
-    if (result.mentalHealth) {
-      if (result.mentalHealth.indicators) {
-        merged.mentalHealth.indicators.push(...result.mentalHealth.indicators);
-      }
-      if (result.mentalHealth.diagnoses) {
-        merged.mentalHealth.diagnoses.push(...result.mentalHealth.diagnoses);
-      }
-      if (result.mentalHealth.stressors) {
-        merged.mentalHealth.stressors.push(...result.mentalHealth.stressors);
-      }
-      if (result.mentalHealth.pages) {
-        merged.mentalHealth.pages.push(...result.mentalHealth.pages);
-      }
-    }
-  }
-  merged.mentalHealth.indicators = [...new Set(merged.mentalHealth.indicators)];
-  merged.mentalHealth.diagnoses = [...new Set(merged.mentalHealth.diagnoses)];
-  merged.mentalHealth.stressors = [...new Set(merged.mentalHealth.stressors)];
-  merged.mentalHealth.pages = [...new Set(merged.mentalHealth.pages)].sort(
-    (a, b) => a - b,
-  );
+  _mergeMentalHealth(merged, chunkResults);
 
-  // Merge red flags
-  for (const result of chunkResults) {
-    if (result.redFlags && Array.isArray(result.redFlags)) {
-      merged.redFlags.push(...result.redFlags);
-    }
-  }
-  merged.redFlags = deduplicateByField(merged.redFlags, "issue");
+  _mergeRedFlags(merged, chunkResults);
 
-  // Merge action items (deduplicate similar items)
-  const allActions = [];
-  for (const result of chunkResults) {
-    if (result.actionItems && Array.isArray(result.actionItems)) {
-      allActions.push(...result.actionItems);
-    }
-  }
-  merged.actionItems = deduplicateActionItems(allActions);
+  _mergeActionItems(merged, chunkResults);
 
   // eslint-disable-next-line no-console
   console.log(
@@ -841,6 +1062,31 @@ function createMetaSummary(summaries) {
  * ("Jan 2005", "January 2005", "2005-01") produce the same dedup key.
  * Avoids Date.parse for keying — it mixes local/UTC interpretation across formats.
  */
+function _findMonthNameMatch(str, monthNames) {
+  for (let i = 0; i < monthNames.length; i++) {
+    if (str.includes(monthNames[i])) return i + 1;
+  }
+  return 0;
+}
+
+function _extractNumericMonthDay(str) {
+  const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
+  if (ymd) {
+    return {
+      month: parseInt(ymd[1], 10),
+      day: ymd[2] ? parseInt(ymd[2], 10) : 0,
+    };
+  }
+  const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
+  if (mdy) {
+    return {
+      month: parseInt(mdy[1], 10),
+      day: mdy[2] ? parseInt(mdy[2], 10) : 0,
+    };
+  }
+  return { month: 0, day: 0 };
+}
+
 function normalizeDateKey(dateStr) {
   if (!dateStr) return "";
   const str = String(dateStr).toLowerCase().trim();
@@ -864,30 +1110,16 @@ function normalizeDateKey(dateStr) {
     "dec",
   ];
 
-  let month = 0;
+  let month = _findMonthNameMatch(str, monthNames);
   let day = 0;
-  for (let i = 0; i < monthNames.length; i++) {
-    if (str.includes(monthNames[i])) {
-      month = i + 1;
-      break;
-    }
-  }
 
   if (month) {
     const dayMatch = str.match(/\b(\d{1,2})\b/);
     if (dayMatch) day = parseInt(dayMatch[1], 10);
   } else {
-    const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
-    if (ymd) {
-      month = parseInt(ymd[1], 10);
-      day = ymd[2] ? parseInt(ymd[2], 10) : 0;
-    } else {
-      const mdy = str.match(/\b(\d{1,2})[/](?:(\d{1,2})[/])?\d{4}/);
-      if (mdy) {
-        month = parseInt(mdy[1], 10);
-        day = mdy[2] ? parseInt(mdy[2], 10) : 0;
-      }
-    }
+    const numeric = _extractNumericMonthDay(str);
+    month = numeric.month;
+    day = numeric.day;
   }
 
   return `${year}-${month}-${day}`;
@@ -1119,6 +1351,125 @@ export function enforceValidDiagnosticCodes(analysis) {
 }
 
 // ============================================================================
+// GROUNDED-TERM SAFETY NET (recall floor)
+// ============================================================================
+
+// A handful of explicit, unambiguous ratable diagnoses that are frequently
+// documented exactly ONCE — as a single checkbox line on a dense full-body
+// exam form (e.g. the FEET section of a DD Form 2808) — and therefore lose to
+// louder findings under the compact chunk prompt's "max 3 claims per chunk"
+// cap. Each entry pairs the canonical condition name with a tight regex that
+// matches the literal clinical term (with minimal OCR/spelling tolerance).
+//
+// This is grounded extraction, NOT fabrication: a condition is surfaced only
+// when its exact name is literally present in the veteran's own records. Each
+// carries its CANONICAL 38 CFR Part 4 diagnostic code — a deterministic
+// condition→code mapping verified against disabilityData.json, not a model
+// guess — so enforceValidDiagnosticCodes accepts it and the veteran sees a
+// real, correct DC. The nearest preceding page marker is attached as evidence
+// so the finding is auditable. `dc` MUST exist in disabilityData.json or the
+// hallucination gate would null it (defeating the badge); verified by the
+// surfaceDocumentedConditions unit tests.
+const DOCUMENTED_CONDITION_TERMS = [
+  { name: "Pes Planus", dc: "5276", pattern: /\bpes\s+planus\b/i }, // 5276 Flatfoot, acquired
+  { name: "Pes Cavus", dc: "5278", pattern: /\bpes\s+cavus\b/i }, // 5278 Claw foot (pes cavus)
+  {
+    name: "Plantar Fasciitis",
+    dc: "5269", // 5269 Plantar fasciitis
+    pattern: /\bplantar\s+fasci(itis|it[iy]s)?\b/i,
+  },
+  { name: "Hallux Valgus", dc: "5280", pattern: /\bhallux\s+valgus\b/i }, // 5280 Hallux valgus
+];
+
+// Nearest "--- PAGE N ---" marker at or before a character index, so a
+// grounded finding can cite the page it was read from.
+function _pageNumberAtIndex(fullText, idx) {
+  const re = /--- PAGE (\d+)/g;
+  let page = null;
+  let m;
+  while ((m = re.exec(fullText)) !== null && m.index <= idx) {
+    page = Number.parseInt(m[1], 10);
+  }
+  return page;
+}
+
+/**
+ * Ensure explicit, literally-documented diagnoses that the model under-recalled
+ * still reach the veteran. Mutates merged.potential_claims in place. A term is
+ * added only when (a) it is present in the raw C-File text AND (b) no existing
+ * claim already names it (including inside a comma-joined condition string).
+ */
+export function surfaceDocumentedConditions(merged, fullText) {
+  if (!fullText || !merged || !Array.isArray(merged.potential_claims)) {
+    return [];
+  }
+  const added = [];
+  for (const { name, dc, pattern } of DOCUMENTED_CONDITION_TERMS) {
+    const match = pattern.exec(fullText);
+    if (!match) continue;
+    const already = merged.potential_claims.some(
+      (c) => c && pattern.test(c.condition || ""),
+    );
+    if (already) continue;
+    const pageNum = _pageNumberAtIndex(fullText, match.index);
+    const pageCite = pageNum ? ` (see page ${pageNum})` : "";
+    merged.potential_claims.push({
+      condition: name,
+      diagnosticCode: dc,
+      likelihood: "medium",
+      inServiceEvent: "",
+      currentDiagnosis: "unclear",
+      nexusStrength: "unclear",
+      missing_element:
+        "Auto-surfaced from an explicit mention in your records — confirm the diagnosis and its service connection.",
+      evidence_pages: pageNum ? [pageNum] : [],
+      recommendation: `"${name}" is named in your records${pageCite}. Verify it against your exam findings and file if applicable.`,
+      source: "documented-term-scan",
+    });
+    added.push(name);
+  }
+  if (added.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔎 Grounded-term safety net surfaced ${added.length} documented condition(s): ${added.join(", ")}`,
+    );
+  }
+  return added;
+}
+
+/**
+ * Fill diagnostic codes for model-extracted claims that arrive without one.
+ * The compact chunk prompt (CFILE_SYSTEM_PROMPT_COMPACT) omits the
+ * diagnosticCode field to save decode tokens, so every LLM claim is code-less
+ * and renders no DC badge. This restores a code ONLY via a grounded,
+ * normalized-exact name match against the 38 CFR Part 4 schedule
+ * (lookupDiagnosticCodeByName) — never a fuzzy guess: a claim with no confident
+ * match, or a multi-condition free-text list, keeps its null code.
+ * enforceValidDiagnosticCodes still runs afterward as the final gate, so even a
+ * theoretically bad code cannot reach the veteran. Mutates in place; returns
+ * the count enriched.
+ */
+export function enrichClaimsWithDiagnosticCodes(analysis) {
+  if (!analysis || !Array.isArray(analysis.potential_claims)) return 0;
+  let enriched = 0;
+  for (const claim of analysis.potential_claims) {
+    if (!claim || claim.diagnosticCode) continue;
+    const code = lookupDiagnosticCodeByName(claim.condition);
+    if (code) {
+      claim.diagnosticCode = code;
+      enriched++;
+    }
+  }
+  if (enriched > 0) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔖 Enriched ${enriched} extracted condition(s) with grounded diagnostic codes`,
+    );
+  }
+  return enriched;
+}
+
+// ============================================================================
 // MAIN ANALYSIS FUNCTION
 // ============================================================================
 
@@ -1132,23 +1483,30 @@ export function enforceValidDiagnosticCodes(analysis) {
  * @param {AbortController} abortController - Optional abort controller to cancel analysis
  * @returns {Promise<Object>} - Structured analysis results
  */
-export async function analyzeCFile(
-  apiKey,
-  fullText,
-  onProgress = () => {},
-  abortController = null,
-) {
-  // Check if ANY AI is available (Cloud or Local)
-  if (!isAnyAIAvailable()) {
-    throw new Error(
-      "No AI available. Please set up an API key or enable Local AI.",
-    );
-  }
+function _buildSemanticOpts(onProgress, abortController, options) {
+  // S24 semantic-index options. `buildSemanticIndex` defaults ON in the app;
+  // tests disable it (or inject `semanticEmbed`/`semanticStore`) to avoid the
+  // real embedder + IndexedDB. `semanticSessionKey` namespaces this document's
+  // vectors so the results UI can search them afterward.
+  const {
+    buildSemanticIndex = true,
+    semanticSessionKey = `cfile_sem_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2, 8)}`,
+    semanticEmbed,
+    semanticStore,
+  } = options;
+  return {
+    sessionKey: semanticSessionKey,
+    onProgress,
+    signal: abortController?.signal,
+    embed: semanticEmbed,
+    store: semanticStore,
+    enabled: buildSemanticIndex,
+  };
+}
 
-  if (!fullText || fullText.trim().length < 100) {
-    throw new Error("Insufficient text content to analyze");
-  }
-
+async function _determineAiModeAndChunks(fullText, onProgress) {
   const aiStatus = getAIStatus();
   const aiMode = aiStatus.effectiveMode;
 
@@ -1166,7 +1524,7 @@ export async function analyzeCFile(
 
   // Local engines generate sequentially — skip boilerplate pages before AI.
   // Cloud mode reads everything (1M context, few calls).
-  // NOTE: analyzePageByPage exists but is NOT used yet — WebLLM's ~14 s fixed
+  // NOTE: _analyzePageByPage exists but is NOT used yet — WebLLM's ~14 s fixed
   // overhead per call × 1755 page calls = 12+ hours vs chunk-based ~260 min.
   // The right future path is page-level parsing + small-batch AI (3-5 pages).
   const isLocalAIMode = [
@@ -1176,11 +1534,9 @@ export async function analyzeCFile(
     AI_MODES.LOCAL_SERVER,
   ].includes(aiMode);
 
-  let analysisText = fullText;
-  let skippedPages = 0;
   const screened = screenRelevantPages(fullText);
-  analysisText = screened.text;
-  skippedPages = screened.skippedPages;
+  const analysisText = screened.text;
+  const skippedPages = screened.skippedPages;
   if (skippedPages > 0) {
     // eslint-disable-next-line no-console
     console.log(
@@ -1197,39 +1553,71 @@ export async function analyzeCFile(
   } else {
     chunks = splitIntoChunks(analysisText, aiMode);
   }
-  const totalChunks = chunks.length;
 
   // eslint-disable-next-line no-console
-  console.log(`📊 Analysis plan: ${totalChunks} chunk(s), AI mode: ${aiMode}`);
+  console.log(
+    `📊 Analysis plan: ${chunks.length} chunk(s), AI mode: ${aiMode}`,
+  );
 
-  if (totalChunks === 1) {
-    // Single chunk - process normally
-    onProgress("Sending to AI for analysis...", {
-      phase: "analyze",
-      current: 1,
-      total: 1,
-    });
-    const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
-    const rejectedCodes = enforceValidDiagnosticCodes(result);
-    result.failedChunks = [];
+  return { aiMode, isLocalAIMode, chunks, skippedPages };
+}
 
-    onProgress("Analysis complete!", { phase: "complete" });
+async function _analyzeSingleChunkPath(
+  chunks,
+  aiMode,
+  fullText,
+  skippedPages,
+  semanticOpts,
+  onProgress,
+) {
+  // Single chunk - process normally
+  onProgress("Sending to AI for analysis...", {
+    phase: "analyze",
+    current: 1,
+    total: 1,
+  });
+  const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+  surfaceDocumentedConditions(result, fullText);
+  enrichClaimsWithDiagnosticCodes(result);
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  result.failedChunks = [];
 
-    return {
-      success: true,
-      analysis: result,
-      metadata: {
-        analyzedAt: new Date().toISOString(),
-        textLength: fullText.length,
-        aiMode: aiMode,
-        chunksProcessed: 1,
-        boilerplatePagesSkipped: skippedPages,
-        rejectedDiagnosticCodes: rejectedCodes,
-      },
-    };
-  }
+  // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
+  // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
+  // Built on-demand when the user triggers semantic search instead.
+  const semanticIndex = {
+    indexed: false,
+    reason: "deferred",
+    sessionKey: semanticOpts.sessionKey,
+  };
 
-  // Multi-chunk processing
+  onProgress("Analysis complete!", { phase: "complete" });
+
+  return {
+    success: true,
+    analysis: result,
+    metadata: {
+      analyzedAt: new Date().toISOString(),
+      textLength: fullText.length,
+      aiMode: aiMode,
+      chunksProcessed: 1,
+      boilerplatePagesSkipped: skippedPages,
+      pagesExcludedFromAI: 0,
+      chunksExcludedFromAI: 0,
+      semanticIndex,
+      rejectedDiagnosticCodes: rejectedCodes,
+    },
+  };
+}
+
+function _buildMultiChunkState(
+  chunks,
+  fullText,
+  aiMode,
+  isLocalAIMode,
+  onProgress,
+) {
+  const totalChunks = chunks.length;
   const estimatedTime = estimateProcessingTime(
     fullText.length,
     totalChunks,
@@ -1241,227 +1629,369 @@ export async function analyzeCFile(
     total: totalChunks,
   });
 
-  const chunkResults = [];
-  const failedChunks = [];
-
   // Pre-flight: score every chunk before the loop so the cap selects the
   // highest-value chunks rather than the first N by page order.
   const chunkScores = isLocalAIMode
     ? chunks.map((c) => scoreChunkRelevance(c.text))
     : null;
-  let scoreThreshold = 0;
-  if (chunkScores && chunkScores.length > MAX_WEBGPU_AI_CHUNKS) {
-    const sorted = [...chunkScores].sort((a, b) => b - a);
-    scoreThreshold = sorted[MAX_WEBGPU_AI_CHUNKS - 1];
+  // S24: compute cap (Gate 4) + floor (Gate 3) exclusions up front. This is the
+  // single source of truth both for the loop's skip decisions and for the
+  // user-visible "N pages excluded from AI analysis" count — the two can't drift.
+  const { floorIndices, capIndices } =
+    isLocalAIMode && chunkScores
+      ? computeAiExclusion(chunkScores, {
+          maxAiChunks: MAX_WEBGPU_AI_CHUNKS,
+          minClaimsScore: MIN_CLAIMS_SCORE,
+        })
+      : { floorIndices: new Set(), capIndices: new Set() };
+  if (capIndices.size > 0) {
     // eslint-disable-next-line no-console
     console.log(
-      `📊 Chunk cap: top ${MAX_WEBGPU_AI_CHUNKS}/${chunkScores.length} by score (threshold ≥${scoreThreshold})`,
+      `📊 Chunk cap: top ${MAX_WEBGPU_AI_CHUNKS}/${chunkScores.length} chunks by score run the AI pass; ${capIndices.size} excluded (still indexed for semantic search)`,
     );
   }
-  let skippedLowScore = 0;
 
-  for (let i = 0; i < chunks.length; i++) {
-    // Check if aborted
+  return {
+    totalChunks,
+    isLocalAIMode,
+    chunkScores,
+    floorIndices,
+    capIndices,
+    chunkResults: [],
+    failedChunks: [],
+    skippedLowScore: 0,
+    // S24: which real pages the AI actually read vs. were excluded by the score
+    // cap/floor, so the results UI can surface how much of the document the slow
+    // AI pass skipped — while the semantic index (below) still covers all of it.
+    aiAnalyzedPages: new Set(),
+    aiExcludedPages: new Set(),
+    chunksExcludedFromAI: 0,
+    recordPages: (set, chunk) => {
+      const from = chunk.startPage || 0;
+      const to = chunk.endPage || from;
+      for (let p = from; p <= to; p++) set.add(p);
+    },
+    onProgress,
+  };
+}
+
+function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
+  // --- Gate 1: low-content skip ---
+  // Near-blank pages: cover sheets, index separators, blank pages.
+  // Conservative thresholds — both conditions must hold.
+  const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
+  if (chunk.text.trim().length < 250 || alphaCount < 120) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 2: medical content pre-filter ---
+  // Text-heavy but purely administrative pages (routing slips, consent forms,
+  // SF authorization sheets, index pages) have none of: dates, medical terms,
+  // VA/claims language, or body-part references. Any ONE signal → send to LLM.
+  if (!chunkHasMedicalContent(chunk.text)) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 3: pre-flight relevance score ---
+  // Coarser than Gate 2 (which fires on any medical term); this gate requires
+  // at least MIN_CLAIMS_SCORE condition/claims keywords. Catches admin-heavy
+  // chunks that passed Gate 2 on a single generic medical term (e.g. "clinic").
+  if (ctx.isLocalAIMode && ctx.floorIndices.has(i)) {
+    ctx.skippedLowScore++;
+    ctx.chunksExcludedFromAI++;
+    ctx.recordPages(ctx.aiExcludedPages, chunk);
+    // eslint-disable-next-line no-console
+    console.log(
+      `⏭️ Chunk ${chunkNum}/${ctx.totalChunks} skipped (relevance score ${ctx.chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
+    );
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // --- Gate 4: priority-ordered chunk cap ---
+  // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
+  // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
+  // banner fires — these are intentional skips, not errors. The excluded pages
+  // are still fully covered by the semantic index built below.
+  if (ctx.isLocalAIMode && ctx.capIndices.has(i)) {
+    ctx.chunksExcludedFromAI++;
+    ctx.recordPages(ctx.aiExcludedPages, chunk);
+    ctx.chunkResults.push(createEmptyChunkResult());
+    return true;
+  }
+
+  // This chunk clears every gate — the AI actually reads these pages.
+  ctx.recordPages(ctx.aiAnalyzedPages, chunk);
+  return false;
+}
+
+// Classify a chunk-analysis failure and perform its recovery side effects.
+// Returns a directive the retry loop acts on, keeping _runChunkWithRetries
+// under the cognitive-complexity limit:
+//   "retry-free" — recovered (circuit cooldown or GPU rebuild); retry the SAME
+//                  chunk WITHOUT consuming a content retry
+//   "empty"      — deterministic context-window overflow; record an empty
+//                  result (not a failedChunk) and stop retrying
+//   "retry"      — ordinary malformed-output error; let the loop consume a retry
+// Throws to abort the whole run (GPU recovery exhausted, or user cancellation).
+async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
+  // Message inlined in the string: the console capture wrapper only records the
+  // first argument, so a bare error object logs as blank.
+  console.error(
+    `Error analyzing chunk ${chunkNum} (attempt ${state.attempt + 1}): ${error?.message || error}`,
+  );
+
+  if (error.message?.includes("AI_CIRCUIT_OPEN") && state.circuitWaits < 3) {
+    state.circuitWaits++;
+    ctx.onProgress(
+      `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
+      { phase: "circuit-wait", current: chunkNum, total: ctx.totalChunks },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 31000));
+    resetAICircuitBreaker();
+    return "retry-free";
+  }
+
+  // Context window errors are deterministic — retrying cannot help.
+  // unifiedAIService transforms the raw ContextWindowSizeExceededError into
+  // "📏 Document is too large for Local AI" before it reaches this catch, so
+  // the check covers both forms. Use an empty result (not a failedChunks entry)
+  // so the Partial Analysis banner does not fire for this skip, and the circuit
+  // breaker does not open on a single overflowing chunk.
+  if (
+    error.message?.includes("context window") ||
+    error.message?.includes("ContextWindowSizeExceededError") ||
+    error.message?.includes("too large for Local AI")
+  ) {
+    return "empty";
+  }
+
+  // GPU-level hang: the WebGPU compute pipeline stopped signalling completion
+  // and the Promise.race timeout fired. The engine's GPU device is now in a
+  // degraded state, so every subsequent chunk would hang the same way. We MUST
+  // NOT skip this chunk — its pages may hold claim-critical evidence. Rebuild
+  // the engine on a fresh GPU adapter, then retry the SAME chunk without
+  // consuming a normal retry. Bounded so a physically dead GPU still aborts
+  // loudly (a false "analysis complete" on missing data is worse than a hard
+  // failure the veteran can see and re-run).
+  if (error.message?.includes("timed out")) {
+    if (state.gpuRecoveries < MAX_GPU_RECOVERIES) {
+      state.gpuRecoveries++;
+      ctx.onProgress(
+        `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} — rebuilding the AI engine and retrying (recovery ${state.gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
+        { phase: "gpu-recovery", current: chunkNum, total: ctx.totalChunks },
+      );
+      await reloadSwarmEngine();
+      return "retry-free";
+    }
+    throw new Error(
+      `GPU could not process chunk ${chunkNum}/${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage}) after ${MAX_GPU_RECOVERIES} engine rebuilds. Analysis aborted to avoid silently dropping medical evidence.`,
+    );
+  }
+
+  if (error.message === "Analysis cancelled by user") {
+    throw error;
+  }
+
+  return "retry";
+}
+
+async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
+  let result = null;
+  let lastError = null;
+  // circuitWaits: the circuit breaker protects interactive callers, but this
+  // batch loop is the legitimate retry owner — wait out the cooldown and resume
+  // instead of failing every remaining chunk. gpuRecoveries: a stalled GPU is
+  // an environmental fault, tracked apart from content retries so recovering it
+  // never burns the retries reserved for genuinely malformed model output.
+  const state = { attempt: 0, circuitWaits: 0, gpuRecoveries: 0 };
+
+  for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
+    state.attempt = attempt;
     if (abortController?.signal.aborted) {
       throw new Error("Analysis cancelled by user");
     }
 
-    const chunk = chunks[i];
-    const chunkNum = i + 1;
+    try {
+      if (attempt > 0) {
+        ctx.onProgress(
+          `Retrying chunk ${chunkNum}/${ctx.totalChunks} (attempt ${attempt + 1} of ${MAX_CHUNK_RETRIES + 1})...`,
+          {
+            phase: "chunk-retry",
+            current: chunkNum,
+            total: ctx.totalChunks,
+            attempt: attempt + 1,
+          },
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, CHUNK_RETRY_BACKOFF_MS * attempt),
+        );
+      }
 
-    // --- Gate 1: low-content skip ---
-    // Near-blank pages: cover sheets, index separators, blank pages.
-    // Conservative thresholds — both conditions must hold.
-    const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
-    if (chunk.text.trim().length < 250 || alphaCount < 120) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (low-content: ${chunk.text.trim().length} chars, ${alphaCount} alpha)`,
+      result = await analyzeChunk(
+        chunk,
+        chunkNum,
+        ctx.totalChunks,
+        ctx.onProgress,
+        attempt,
       );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
-
-    // --- Gate 2: medical content pre-filter ---
-    // Text-heavy but purely administrative pages (routing slips, consent forms,
-    // SF authorization sheets, index pages) have none of: dates, medical terms,
-    // VA/claims language, or body-part references. Any ONE signal → send to LLM.
-    if (!chunkHasMedicalContent(chunk.text)) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (no medical signals: ${chunk.text.trim().length} chars)`,
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      const directive = await _handleChunkFailure(
+        error,
+        chunk,
+        chunkNum,
+        ctx,
+        state,
       );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
+      if (directive === "retry-free") {
+        attempt--; // recovery does not consume a content retry
+      } else if (directive === "empty") {
+        result = createEmptyChunkResult();
+        break;
+      }
+      // "retry" → fall through; the loop consumes an ordinary content retry.
     }
+  }
 
-    // --- Gate 3: pre-flight relevance score ---
-    // Coarser than Gate 2 (which fires on any medical term); this gate requires
-    // at least MIN_CLAIMS_SCORE condition/claims keywords. Catches admin-heavy
-    // chunks that passed Gate 2 on a single generic medical term (e.g. "clinic").
-    if (isLocalAIMode && chunkScores && chunkScores[i] < MIN_CLAIMS_SCORE) {
-      skippedLowScore++;
-      // eslint-disable-next-line no-console
-      console.log(
-        `⏭️ Chunk ${chunkNum}/${totalChunks} skipped (relevance score ${chunkScores[i]} < ${MIN_CLAIMS_SCORE})`,
-      );
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
+  return { result, lastError };
+}
 
-    // --- Gate 4: priority-ordered chunk cap ---
-    // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
-    // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
-    // banner fires — these are intentional skips, not errors.
-    if (
-      isLocalAIMode &&
-      scoreThreshold > 0 &&
-      chunkScores &&
-      chunkScores[i] < scoreThreshold
-    ) {
-      chunkResults.push(createEmptyChunkResult());
-      continue;
-    }
+async function _processOneChunk(chunk, i, ctx, abortController) {
+  if (abortController?.signal.aborted) {
+    throw new Error("Analysis cancelled by user");
+  }
 
-    onProgress(
-      `Analyzing chunk ${chunkNum} of ${totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
+  const chunkNum = i + 1;
+
+  if (_evaluatePreflightGates(chunk, i, chunkNum, ctx)) {
+    return;
+  }
+
+  ctx.onProgress(
+    `Analyzing chunk ${chunkNum} of ${ctx.totalChunks} (pages ${chunk.startPage}-${chunk.endPage})...`,
+    {
+      phase: "analyze",
+      current: chunkNum,
+      total: ctx.totalChunks,
+      startPage: chunk.startPage,
+      endPage: chunk.endPage,
+    },
+  );
+
+  const { result, lastError } = await _runChunkWithRetries(
+    chunk,
+    chunkNum,
+    ctx,
+    abortController,
+  );
+
+  if (result) {
+    ctx.chunkResults.push(result);
+
+    ctx.onProgress(`Chunk ${chunkNum}/${ctx.totalChunks} complete`, {
+      phase: "chunk-complete",
+      current: chunkNum,
+      total: ctx.totalChunks,
+    });
+  } else {
+    // Record the failure so the final result can show what's missing,
+    // then continue — one bad chunk must not abort the run
+    ctx.failedChunks.push({
+      chunkIndex: i,
+      startPage: chunk.startPage,
+      endPage: chunk.endPage,
+      error: lastError?.message || "Unknown error",
+    });
+
+    // Page range + error type only (never document content) — pairs with
+    // the "failedChunk" console filter in tests/stress/cfile-313mb.spec.ts
+    // eslint-disable-next-line no-console -- forensic
+    console.log(
+      `failedChunk: pages ${chunk.startPage}-${chunk.endPage} (chunk ${chunkNum}/${ctx.totalChunks}) — ${lastError?.message || "Unknown error"}`,
+    );
+
+    ctx.onProgress(
+      `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
       {
-        phase: "analyze",
+        phase: "chunk-error",
         current: chunkNum,
-        total: totalChunks,
-        startPage: chunk.startPage,
-        endPage: chunk.endPage,
+        total: ctx.totalChunks,
+        error: lastError?.message,
       },
     );
-
-    let result = null;
-    let lastError = null;
-    // The circuit breaker protects interactive callers, but this batch loop
-    // is the legitimate retry owner: when the circuit opens mid-batch, wait
-    // out the cooldown and resume instead of letting every remaining chunk
-    // fail instantly. Bounded so a genuinely dead engine still aborts.
-    let circuitWaits = 0;
-
-    for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
-      if (abortController?.signal.aborted) {
-        throw new Error("Analysis cancelled by user");
-      }
-
-      try {
-        if (attempt > 0) {
-          onProgress(
-            `Retrying chunk ${chunkNum}/${totalChunks} (attempt ${attempt + 1} of ${MAX_CHUNK_RETRIES + 1})...`,
-            {
-              phase: "chunk-retry",
-              current: chunkNum,
-              total: totalChunks,
-              attempt: attempt + 1,
-            },
-          );
-          await new Promise((resolve) =>
-            setTimeout(resolve, CHUNK_RETRY_BACKOFF_MS * attempt),
-          );
-        }
-
-        result = await analyzeChunk(chunk, chunkNum, totalChunks, onProgress);
-        lastError = null;
-        break;
-      } catch (error) {
-        lastError = error;
-        // Message inlined in the string: the console capture wrapper only
-        // records the first argument, so a bare error object logs as blank
-        console.error(
-          `Error analyzing chunk ${chunkNum} (attempt ${attempt + 1}): ${error?.message || error}`,
-        );
-
-        if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
-          circuitWaits++;
-          onProgress(
-            `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${totalChunks}...`,
-            { phase: "circuit-wait", current: chunkNum, total: totalChunks },
-          );
-          await new Promise((resolve) => setTimeout(resolve, 31000));
-          resetAICircuitBreaker();
-          attempt--; // circuit downtime doesn't consume a retry
-          continue;
-        }
-
-        // Context window errors are deterministic — retrying cannot help.
-        // unifiedAIService transforms the raw ContextWindowSizeExceededError into
-        // "📏 Document is too large for Local AI" before it reaches this catch, so
-        // the check covers both forms. Use an empty result (not a failedChunks
-        // entry) so the Partial Analysis banner does not fire for this skip, and
-        // the circuit breaker does not open on a single overflowing chunk.
-        if (
-          error.message?.includes("context window") ||
-          error.message?.includes("ContextWindowSizeExceededError") ||
-          error.message?.includes("too large for Local AI")
-        ) {
-          result = createEmptyChunkResult();
-          break;
-        }
-
-        if (error.message === "Analysis cancelled by user") {
-          throw error;
-        }
-      }
-    }
-
-    if (result) {
-      chunkResults.push(result);
-
-      onProgress(`Chunk ${chunkNum}/${totalChunks} complete`, {
-        phase: "chunk-complete",
-        current: chunkNum,
-        total: totalChunks,
-      });
-    } else {
-      // Record the failure so the final result can show what's missing,
-      // then continue — one bad chunk must not abort the run
-      failedChunks.push({
-        chunkIndex: i,
-        startPage: chunk.startPage,
-        endPage: chunk.endPage,
-        error: lastError?.message || "Unknown error",
-      });
-
-      onProgress(
-        `⚠️ Chunk ${chunkNum} failed after ${MAX_CHUNK_RETRIES + 1} attempts, continuing...`,
-        {
-          phase: "chunk-error",
-          current: chunkNum,
-          total: totalChunks,
-          error: lastError?.message,
-        },
-      );
-    }
-
-    // No inter-chunk sleep: local WebGPU AI has no rate limiting.
   }
 
-  if (skippedLowScore > 0) {
+  // No inter-chunk sleep: local WebGPU AI has no rate limiting.
+}
+
+async function _finalizeMultiChunkResult(
+  ctx,
+  fullText,
+  aiMode,
+  skippedPages,
+  semanticOpts,
+) {
+  if (ctx.skippedLowScore > 0) {
     // eslint-disable-next-line no-console
     console.log(
-      `📊 Pre-flight skipped ${skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`,
+      `📊 Pre-flight skipped ${ctx.skippedLowScore} low-relevance chunks (score < ${MIN_CLAIMS_SCORE})`,
     );
   }
 
-  if (chunkResults.length === 0) {
+  if (ctx.chunkResults.length === 0) {
     throw new Error(
       "All chunks failed to process. Please try again or use a smaller file.",
     );
   }
 
   // Merge all results
-  onProgress("Merging analysis results...", { phase: "merge" });
-  const mergedResult = mergeChunkResults(chunkResults);
+  ctx.onProgress("Merging analysis results...", { phase: "merge" });
+  const mergedResult = mergeChunkResults(ctx.chunkResults);
+
+  // Recall floor: re-surface explicit diagnoses the model under-recalled (a
+  // faint, single-mention finding on a dense exam form loses to the compact
+  // prompt's 3-claims-per-chunk cap). Grounded — only names literally present
+  // in the text, with null DC — so it runs BEFORE the hallucination gate.
+  surfaceDocumentedConditions(mergedResult, fullText);
+
+  // Restore diagnostic codes the compact chunk prompt strips from LLM claims —
+  // grounded, normalized-exact schedule matches only (no guessing).
+  enrichClaimsWithDiagnosticCodes(mergedResult);
 
   // Anti-hallucination gate on the MERGED result: any diagnostic code not in
   // the 38 CFR Part 4 database is stripped before the veteran ever sees it
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
-  mergedResult.failedChunks = failedChunks;
+  mergedResult.failedChunks = ctx.failedChunks;
 
-  onProgress("Analysis complete!", { phase: "complete" });
+  // S24: distinct real pages the AI never read because of the score cap/floor
+  // (pages that appear in an analyzed chunk via overlap don't count as excluded).
+  const pagesExcludedFromAI = [...ctx.aiExcludedPages].filter(
+    (p) => !ctx.aiAnalyzedPages.has(p),
+  ).length;
+
+  // BGE WASM semantic index deferred: running it inline (even fire-and-forget)
+  // consumes enough memory over ~39 min on large docs to OOM-crash Chrome.
+  // Built on-demand when the user triggers semantic search instead.
+  const semanticIndex = {
+    indexed: false,
+    reason: "deferred",
+    sessionKey: semanticOpts.sessionKey,
+  };
+
+  ctx.onProgress("Analysis complete!", { phase: "complete" });
 
   return {
     success: true,
@@ -1470,13 +2000,73 @@ export async function analyzeCFile(
       analyzedAt: new Date().toISOString(),
       textLength: fullText.length,
       aiMode: aiMode,
-      chunksProcessed: chunkResults.length,
-      totalChunks: totalChunks,
-      failedChunkCount: failedChunks.length,
+      chunksProcessed: ctx.chunkResults.length,
+      totalChunks: ctx.totalChunks,
+      failedChunkCount: ctx.failedChunks.length,
       boilerplatePagesSkipped: skippedPages,
+      pagesExcludedFromAI,
+      chunksExcludedFromAI: ctx.chunksExcludedFromAI,
+      semanticIndex,
       rejectedDiagnosticCodes: rejectedCodes,
     },
   };
+}
+
+export async function analyzeCFile(
+  apiKey,
+  fullText,
+  onProgress = () => {},
+  abortController = null,
+  options = {},
+) {
+  const semanticOpts = _buildSemanticOpts(onProgress, abortController, options);
+
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error(
+      "No AI available. Please set up an API key or enable Local AI.",
+    );
+  }
+
+  if (!fullText || fullText.trim().length < 100) {
+    throw new Error("Insufficient text content to analyze");
+  }
+
+  const { aiMode, isLocalAIMode, chunks, skippedPages } =
+    await _determineAiModeAndChunks(fullText, onProgress);
+  const totalChunks = chunks.length;
+
+  if (totalChunks === 1) {
+    return await _analyzeSingleChunkPath(
+      chunks,
+      aiMode,
+      fullText,
+      skippedPages,
+      semanticOpts,
+      onProgress,
+    );
+  }
+
+  // Multi-chunk processing
+  const ctx = _buildMultiChunkState(
+    chunks,
+    fullText,
+    aiMode,
+    isLocalAIMode,
+    onProgress,
+  );
+
+  for (let i = 0; i < chunks.length; i++) {
+    await _processOneChunk(chunks[i], i, ctx, abortController);
+  }
+
+  return await _finalizeMultiChunkResult(
+    ctx,
+    fullText,
+    aiMode,
+    skippedPages,
+    semanticOpts,
+  );
 }
 
 // Slim system prompt for local AI (3 fields: servicePeriod, potential_claims, timeline).
@@ -1485,7 +2075,16 @@ export async function analyzeCFile(
 // mergeChunkResults handle absent fields gracefully as empty arrays/strings.
 // Omitting 6 fields reduces decode from ~800-1500 to ~150-500 tokens/chunk.
 // potential_claims before timeline preserves priority within the 1024-token budget.
-const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 2 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
+const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 3 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
+
+// Last-retry SALVAGE prompt. A chunk only reaches this after its normal-prompt
+// attempts truncated their JSON — the model transcribing garbled OCR into the
+// timeline `description` field until it exhausts the token budget. This schema
+// has NO timeline and NO free-text field, so there is nowhere to put a runaway
+// transcription: the model can only emit short condition names, which cannot
+// truncate. Secondary fields default to empty downstream (analyzeChunk
+// sanitization). A grounded conditions-only capture beats a failed chunk.
+const CFILE_SYSTEM_PROMPT_SALVAGE = `You are a VA Claims Auditor. From the C-File text, output ONLY valid JSON: {"potential_claims":[{"condition":"","likelihood":"high|medium|low"}]}. Rules: list only medical CONDITION NAMES actually present in the text (2 to 5 words each); NO descriptions, NO dates, NO timeline, NEVER transcribe or quote the document text; every string quoted; put a comma between array elements; if no conditions are found output {"potential_claims":[]}.`;
 
 // Per-page prompt for the page-by-page local-AI path.
 // ~200 tokens vs ~600 for CFILE_SYSTEM_PROMPT_COMPACT — saves 400 tokens × every
@@ -1514,6 +2113,12 @@ export const createEmptyChunkResult = () => ({
 // Patterns indicating the chunk has meaningful medical/claims content.
 // ANY single match → send to LLM. Zero matches → administrative page, skip.
 // Conservative: single patterns cover dates, clinical terms, VA language, body parts.
+// Security review note: these are relevance-filtering word lists (skip vs. send-to-LLM),
+// not PII extraction — a false negative just means a page gets sent to the LLM anyway
+// (conservative fallback), so mechanical complexity-reduction is lower-risk here than in
+// the field-extraction parsers, but splitting ~20-word alternations into equivalent
+// smaller regexes still deserves fixture testing rather than a same-session rewrite.
+/* eslint-disable sonarjs/regex-complexity */
 const MEDICAL_SIGNAL_PATTERNS = [
   // Date-only patterns removed for the same reason as PAGE_RELEVANCE_PATTERN:
   // every page in a VA C-File has dates, so date patterns provided zero filtering.
@@ -1524,6 +2129,7 @@ const MEDICAL_SIGNAL_PATTERNS = [
   // Body parts and specific conditions
   /\b(knee|shoulder|hip|ankle|wrist|elbow|lumbar|cervical|thoracic|tinnitus|hearing loss|vision|anxiety|depression|headache|migraine|diabetes|hypertension|blood pressure|cardiac|pulmonary|respirat\w+)\b/i,
 ];
+/* eslint-enable sonarjs/regex-complexity */
 
 function chunkHasMedicalContent(text) {
   return MEDICAL_SIGNAL_PATTERNS.some((p) => p.test(text));
@@ -1531,6 +2137,93 @@ function chunkHasMedicalContent(text) {
 
 // Returns a claims-relevance score for a chunk of text (0–N, higher = more relevant).
 // Runs in <1 ms per chunk; used for priority-ordering before the AI cap is applied.
+const CHUNK_SCORE_HIGH_TERMS = [
+  "ptsd",
+  "post-traumatic",
+  "tinnitus",
+  "radiculopathy",
+  "pes planus",
+  "plantar fasci",
+  "sleep apnea",
+  "migraine",
+  "nexus",
+  "service connection",
+  "service-connected",
+  "in-service",
+  "dbq",
+  "disability benefits questionnaire",
+  "c&p exam",
+  "rating decision",
+  "service treatment record",
+  "traumatic brain",
+  "tbi",
+  "burn pit",
+  "agent orange",
+  "pact act",
+];
+
+const CHUNK_SCORE_MED_TERMS = [
+  "diagnosis",
+  "diagnosed",
+  "chronic",
+  "bilateral",
+  "aggravated",
+  "secondary to",
+  "hypertension",
+  "diabetes",
+  "depression",
+  "anxiety",
+  "neuropathy",
+  "degenerative",
+  "lumbar",
+  "cervical",
+  "sciatica",
+  "carpal tunnel",
+  "hearing loss",
+  "knee",
+  "shoulder",
+  "hip",
+  "ankle",
+  "back pain",
+  "deployed",
+  "combat",
+  "active duty",
+  "discharge",
+  "dd-214",
+  "dd214",
+  "va medical",
+  "vamc",
+  "progress note",
+  "treatment",
+  "prescribed",
+  "etiology",
+  "prognosis",
+  "pathology",
+  "biopsy",
+  "specimen",
+  "laboratory",
+  "radiology",
+  "consultation",
+  "referred to",
+  "presented with",
+  "complaints of",
+  "history of",
+  "chronic condition",
+];
+
+const CHUNK_SCORE_ADMIN_TERMS = [
+  "please deliver to",
+  "fax transmittal",
+  "routing slip",
+  "authorization to release",
+  "cover sheet",
+  "sign here",
+  "signature required",
+  "this form is",
+  "table of contents",
+  "page intentionally left blank",
+];
+
 function scoreChunkRelevance(text) {
   const t = text.toLowerCase();
   let score = 0;
@@ -1544,204 +2237,28 @@ function scoreChunkRelevance(text) {
   if (/\b(assessment|impression|findings|diagnosis|plan)\s*:/i.test(text))
     score += 2;
 
-  const HIGH = [
-    "ptsd",
-    "post-traumatic",
-    "tinnitus",
-    "radiculopathy",
-    "pes planus",
-    "plantar fasci",
-    "sleep apnea",
-    "migraine",
-    "nexus",
-    "service connection",
-    "service-connected",
-    "in-service",
-    "dbq",
-    "disability benefits questionnaire",
-    "c&p exam",
-    "rating decision",
-    "service treatment record",
-    "traumatic brain",
-    "tbi",
-    "burn pit",
-    "agent orange",
-    "pact act",
-  ];
-  for (const s of HIGH) {
+  for (const s of CHUNK_SCORE_HIGH_TERMS) {
     if (t.includes(s)) score += 2;
   }
 
-  const MED = [
-    "diagnosis",
-    "diagnosed",
-    "chronic",
-    "bilateral",
-    "aggravated",
-    "secondary to",
-    "hypertension",
-    "diabetes",
-    "depression",
-    "anxiety",
-    "neuropathy",
-    "degenerative",
-    "lumbar",
-    "cervical",
-    "sciatica",
-    "carpal tunnel",
-    "hearing loss",
-    "knee",
-    "shoulder",
-    "hip",
-    "ankle",
-    "back pain",
-    "deployed",
-    "combat",
-    "active duty",
-    "discharge",
-    "dd-214",
-    "dd214",
-    "va medical",
-    "vamc",
-    "progress note",
-    "treatment",
-    "prescribed",
-    "etiology",
-    "prognosis",
-    "pathology",
-    "biopsy",
-    "specimen",
-    "laboratory",
-    "radiology",
-    "consultation",
-    "referred to",
-    "presented with",
-    "complaints of",
-    "history of",
-    "chronic condition",
-  ];
-  for (const s of MED) {
+  for (const s of CHUNK_SCORE_MED_TERMS) {
     if (t.includes(s)) score += 1;
   }
 
-  const ADMIN = [
-    "please deliver to",
-    "fax transmittal",
-    "routing slip",
-    "authorization to release",
-    "cover sheet",
-    "sign here",
-    "signature required",
-    "this form is",
-    "table of contents",
-    "page intentionally left blank",
-  ];
-  for (const s of ADMIN) {
+  for (const s of CHUNK_SCORE_ADMIN_TERMS) {
     if (t.includes(s)) score -= 2;
   }
 
   return Math.max(0, score);
 }
 
-// JSON Schema for XGrammar constrained decoding — enforces valid JSON output
-// per-token so parse errors and repair retries are impossible. Keep this schema
-// constant across all 304 chunk calls (WebLLM issue #560: changing schemas on a
-// live engine disposes the matcher and throws).
-const CFILE_CHUNK_SCHEMA = {
-  type: "object",
-  properties: {
-    summary: { type: "string" },
-    servicePeriod: {
-      type: "object",
-      properties: {
-        branch: { type: "string" },
-        entryDate: { type: "string" },
-        separationDate: { type: "string" },
-        mos: { type: "string" },
-      },
-    },
-    timeline: {
-      type: "array",
-      maxItems: 8,
-      items: {
-        type: "object",
-        properties: {
-          date: { type: "string" },
-          page_number: { type: "integer" },
-          category: { type: "string" },
-          description: { type: "string" },
-          significance: { type: "string", enum: ["high", "medium", "low"] },
-        },
-        required: ["date", "description"],
-      },
-    },
-    potential_claims: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          condition: { type: "string" },
-          likelihood: { type: "string", enum: ["high", "medium", "low"] },
-          inServiceEvent: { type: "string" },
-          currentDiagnosis: { type: "string", enum: ["yes", "no", "unclear"] },
-          missing_element: { type: "string" },
-        },
-        required: ["condition"],
-      },
-    },
-    exposures: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          type: { type: "string" },
-          location: { type: "string" },
-          timeframe: { type: "string" },
-        },
-      },
-    },
-    combatIndicators: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          indicator: { type: "string" },
-          page_number: { type: "integer" },
-        },
-      },
-    },
-    mentalHealth: {
-      type: "object",
-      properties: {
-        indicators: { type: "array", maxItems: 5, items: { type: "string" } },
-        diagnoses: { type: "array", maxItems: 5, items: { type: "string" } },
-        stressors: { type: "array", maxItems: 5, items: { type: "string" } },
-        pages: { type: "array", maxItems: 5, items: { type: "integer" } },
-      },
-    },
-    redFlags: {
-      type: "array",
-      maxItems: 5,
-      items: {
-        type: "object",
-        properties: {
-          issue: { type: "string" },
-          suggestion: { type: "string" },
-        },
-      },
-    },
-    actionItems: { type: "array", maxItems: 8, items: { type: "string" } },
-  },
-  required: ["summary"],
-};
-
-/**
- * Analyze a single chunk of text
- */
-async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
+async function _requestChunkAnalysis(
+  chunk,
+  chunkNum,
+  totalChunks,
+  onProgress,
+  attempt = 0,
+) {
   // Detect if we're using local AI (smaller context). effectiveMode is the
   // resolved routing target — the raw stored mode can disagree with it
   // (e.g. "auto"), which silently gave local generations the short cloud
@@ -1754,10 +2271,17 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     effectiveMode === AI_MODES.WLLAMA ||
     effectiveMode === AI_MODES.LOCAL_SERVER;
 
-  // Use compact prompt for local AI to maximize document space
-  let systemPrompt = isLocalAI
-    ? CFILE_SYSTEM_PROMPT_COMPACT
-    : CFILE_SYSTEM_PROMPT;
+  // Use compact prompt for local AI to maximize document space. On the final
+  // retry (a chunk whose earlier attempts truncated their JSON), drop to the
+  // salvage schema — conditions only, no timeline/free-text — so there is no
+  // long field left for the model to run away transcribing.
+  const isSalvage = isLocalAI && attempt >= MAX_CHUNK_RETRIES;
+  let systemPrompt = CFILE_SYSTEM_PROMPT;
+  if (isSalvage) {
+    systemPrompt = CFILE_SYSTEM_PROMPT_SALVAGE;
+  } else if (isLocalAI) {
+    systemPrompt = CFILE_SYSTEM_PROMPT_COMPACT;
+  }
 
   if (totalChunks > 1) {
     const chunkPrefix = `CHUNK ${chunkNum}/${totalChunks} (Pages ${chunk.startPage}-${chunk.endPage}). Extract findings from THIS chunk only.\n\n`;
@@ -1770,10 +2294,19 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   // (an injected instruction inside the document is then framed as DATA, not command).
   const userPrompt = `${untrustedSection("C-FILE TEXT", chunk.text)}\n\nAnalyze and return ONLY the JSON object.`;
 
-  // Local AI: cap output at 1024 tokens. Without XGrammar schema enforcement,
-  // maxTokens is respected and decode runs at 30+ tok/s instead of 1.5-3 tok/s.
+  // Local AI: allow up to the device profile's maxOutputTokens (2048 on desktop-high).
+  // The former Math.min(..., 1024) cap was added for decode speed but caused truncation
+  // on complex chunks (many conditions, long summaries), defeating the repair cascade.
+  // stream:false batch readback at 30+ tok/s keeps the decode time proportional to
+  // actual output length rather than a fixed ceiling.
+  // Per-retry escalation: a JSON that truncated at the ceiling on the previous
+  // attempt is the top cause of an unrecoverable chunk, so grant each retry more
+  // room to finish the object instead of re-truncating. +2048/attempt reaches a
+  // 6144 ceiling by the last of the 3 circuit-safe attempts (2048→4096→6144 on
+  // desktop-high); attempt 0 keeps the fast base.
+  const baseMaxTokens = getCachedDeviceProfile()?.maxOutputTokens ?? 1024;
   const localMaxTokens = isLocalAI
-    ? Math.min(getCachedDeviceProfile()?.maxOutputTokens ?? 2048, 1024)
+    ? Math.min(baseMaxTokens + attempt * 2048, 6144)
     : 32768;
 
   // Heartbeat: local AI blocks for ~2 min/chunk with no intermediate callbacks.
@@ -1833,9 +2366,10 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     throw new Error("No analysis content received from AI");
   }
 
-  const contentStr =
-    typeof content === "string" ? content : JSON.stringify(content);
+  return typeof content === "string" ? content : JSON.stringify(content);
+}
 
+function _parseChunkAiResponse(contentStr) {
   // Parse JSON response
   let cleanContent = contentStr.trim();
   if (cleanContent.startsWith("```json")) {
@@ -1859,34 +2393,58 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
     );
   }
 
-  let analysisResult;
   try {
-    analysisResult = JSON.parse(cleanContent);
+    return JSON.parse(cleanContent);
   } catch (parseError) {
     console.error("JSON Parse Error:", parseError);
-    console.error("Content to parse:", cleanContent.substring(0, 500));
+    console.error(
+      "Content to parse (PII-scrubbed):",
+      scrubText(cleanContent.substring(0, 500)),
+    );
 
     // Attempt to repair truncated JSON
     const repaired = attemptJSONRepair(cleanContent);
     if (repaired) {
       // eslint-disable-next-line no-console
       console.log("✅ Successfully repaired truncated JSON response");
-      analysisResult = repaired;
-    } else if (!cleanContent.includes("{")) {
+      return repaired;
+    }
+    if (!cleanContent.includes("{")) {
       // Model returned plain text with no JSON structure at all — it found nothing
       // to report (e.g. "This page contains administrative records."). Treat as an
-      // empty-but-successful chunk so it never lands in failedChunks.
+      // empty-but-successful chunk so it never lands in failedChunks. Returning {}
+      // here is equivalent to createEmptyChunkResult(): every field below defaults
+      // the same way whether analysisResult is {} or genuinely absent.
       // eslint-disable-next-line no-console
       console.warn(
         `⚠️ Non-JSON model response (no '{' found) — treating as empty chunk: "${cleanContent.substring(0, 80)}"`,
       );
-      return createEmptyChunkResult();
-    } else {
-      throw new Error(
-        `Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`,
-      );
+      return {};
     }
+    throw new Error(
+      `Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`,
+    );
   }
+}
+
+/**
+ * Analyze a single chunk of text
+ */
+async function analyzeChunk(
+  chunk,
+  chunkNum,
+  totalChunks,
+  onProgress,
+  attempt = 0,
+) {
+  const contentStr = await _requestChunkAnalysis(
+    chunk,
+    chunkNum,
+    totalChunks,
+    onProgress,
+    attempt,
+  );
+  const analysisResult = _parseChunkAiResponse(contentStr);
 
   // Sanitize result — use Array.isArray for array fields so a repaired object
   // (e.g. timeline:{} instead of timeline:[]) doesn't slip through as truthy.
@@ -1937,6 +2495,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
  * No overlap, no size limits — each page is its own entry.
  */
 function parseAllPages(fullText) {
+  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
   const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
   const pages = [];
   let prev = null;
@@ -1972,7 +2531,7 @@ function classifyPage(text) {
  * Analyze a single page with the short PAGE_SYSTEM_PROMPT.
  * Returns a chunk-schema-compatible object so mergeChunkResults works unchanged.
  */
-async function analyzePage(pageText, pageNum, totalPages, onProgress) {
+async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   const status = getAIStatus();
   const effectiveMode = status.effectiveMode || status.mode;
   const isLocalAI = [
@@ -1983,7 +2542,8 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
   ].includes(effectiveMode);
 
   // PI-02: spotlight the untrusted page text (treat-as-data delimiters).
-  const userPrompt = `${untrustedSection(`C-FILE PAGE ${pageNum}`, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
+  const pageLabel = `C-FILE PAGE ${pageNum}`;
+  const userPrompt = `${untrustedSection(pageLabel, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
 
   // 256 output tokens per page is generous — a single VA record page rarely has
   // more than 5-6 conditions + a few timeline entries.
@@ -2030,25 +2590,29 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
     clearInterval(heartbeat);
   }
 
-  const raw =
-    typeof response?.text === "string" ? response.text : String(response || "");
+  return typeof response?.text === "string"
+    ? response.text
+    : String(response || "");
+}
+
+function _parsePageAiResponse(raw, pageNum) {
   let clean = raw.trim();
   if (clean.startsWith("```json")) clean = clean.slice(7);
   if (clean.startsWith("```")) clean = clean.slice(3);
   if (clean.endsWith("```")) clean = clean.slice(0, -3);
   clean = clean.trim();
 
-  let pr;
   try {
-    pr = JSON.parse(clean);
+    return JSON.parse(clean);
   } catch {
     const repaired = attemptJSONRepair(clean);
-    if (repaired) pr = repaired;
-    else
-      throw new Error(`Page ${pageNum}: failed to parse AI response as JSON`);
+    if (repaired) return repaired;
+    throw new Error(`Page ${pageNum}: failed to parse AI response as JSON`);
   }
+}
 
-  // Map page-level schema → chunk-compatible schema expected by mergeChunkResults
+// Map page-level schema → chunk-compatible schema expected by mergeChunkResults
+function _mapPageResultToChunkSchema(pr, pageNum) {
   return {
     summary: "",
     servicePeriod: {
@@ -2100,17 +2664,18 @@ async function analyzePage(pageText, pageNum, totalPages, onProgress) {
   };
 }
 
-/**
- * Page-by-page orchestrator for local AI modes.
- * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
- * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
- */
-async function analyzePageByPage(
-  fullText,
-  aiMode,
-  onProgress,
-  abortController,
-) {
+async function analyzePage(pageText, pageNum, totalPages, onProgress) {
+  const raw = await _requestPageAnalysis(
+    pageText,
+    pageNum,
+    totalPages,
+    onProgress,
+  );
+  const pr = _parsePageAiResponse(raw, pageNum);
+  return _mapPageResultToChunkSchema(pr, pageNum);
+}
+
+function _prepareMedicalPages(fullText, onProgress) {
   const allPages = parseAllPages(fullText);
   if (allPages.length === 0) {
     throw new Error("No page markers found in document text");
@@ -2135,106 +2700,122 @@ async function analyzePageByPage(
     { phase: "multi-chunk", current: 0, total: totalPages },
   );
 
-  const pageResults = [];
-  const failedPages = [];
+  return { medicalPages, skippedPages };
+}
 
-  for (let i = 0; i < medicalPages.length; i++) {
+async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
+  let result = null;
+  let lastError = null;
+  let circuitWaits = 0;
+
+  for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
     if (abortController?.signal.aborted) {
       throw new Error("Analysis cancelled by user");
     }
-
-    const { pageNum, text } = medicalPages[i];
-
-    // Gate: near-blank pages (should be rare after classifyPage, but defensive)
-    const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
-    if (text.trim().length < 100 || alphaCount < 50) {
-      pageResults.push(createEmptyChunkResult());
-      continue;
-    }
-
-    onProgress(`Analyzing page ${pageNum} (${i + 1} of ${totalPages})…`, {
-      phase: "analyze",
-      current: i + 1,
-      total: totalPages,
-      startPage: pageNum,
-      endPage: pageNum,
-    });
-
-    let result = null;
-    let lastError = null;
-    let circuitWaits = 0;
-
-    for (let attempt = 0; attempt <= MAX_CHUNK_RETRIES; attempt++) {
-      if (abortController?.signal.aborted) {
-        throw new Error("Analysis cancelled by user");
-      }
-      try {
-        if (attempt > 0) {
-          await new Promise((r) =>
-            setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
-          );
-        }
-        result = await analyzePage(text, pageNum, totalPages, onProgress);
-        lastError = null;
-        break;
-      } catch (error) {
-        lastError = error;
-        console.error(
-          `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
+    try {
+      if (attempt > 0) {
+        await new Promise((r) =>
+          setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
         );
+      }
+      result = await analyzePage(text, pageNum, ctx.totalPages, ctx.onProgress);
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
+      );
 
-        if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
-          circuitWaits++;
-          onProgress(`AI engine paused — waiting 30s before page ${pageNum}…`, {
+      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+        circuitWaits++;
+        ctx.onProgress(
+          `AI engine paused — waiting 30s before page ${pageNum}…`,
+          {
             phase: "circuit-wait",
             current: i + 1,
-            total: totalPages,
-          });
-          await new Promise((r) => setTimeout(r, 31000));
-          resetAICircuitBreaker();
-          attempt--;
-          continue;
-        }
-
-        if (
-          error.message?.includes("context window") ||
-          error.message?.includes("too large for Local AI")
-        ) {
-          result = createEmptyChunkResult();
-          break;
-        }
-
-        if (error.message === "Analysis cancelled by user") throw error;
+            total: ctx.totalPages,
+          },
+        );
+        await new Promise((r) => setTimeout(r, 31000));
+        resetAICircuitBreaker();
+        attempt--;
+        continue;
       }
-    }
 
-    if (result) {
-      pageResults.push(result);
-      onProgress(`Page ${pageNum} complete (${i + 1}/${totalPages})`, {
-        phase: "chunk-complete",
-        current: i + 1,
-        total: totalPages,
-      });
-    } else {
-      failedPages.push({
-        pageNum,
-        error: lastError?.message || "Unknown error",
-      });
+      if (
+        error.message?.includes("context window") ||
+        error.message?.includes("too large for Local AI")
+      ) {
+        result = createEmptyChunkResult();
+        break;
+      }
+
+      if (error.message === "Analysis cancelled by user") throw error;
     }
   }
 
-  if (pageResults.length === 0) {
+  return { result, lastError };
+}
+
+async function _processOnePage(pageEntry, i, ctx, abortController) {
+  if (abortController?.signal.aborted) {
+    throw new Error("Analysis cancelled by user");
+  }
+
+  const { pageNum, text } = pageEntry;
+
+  // Gate: near-blank pages (should be rare after classifyPage, but defensive)
+  const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
+  if (text.trim().length < 100 || alphaCount < 50) {
+    ctx.pageResults.push(createEmptyChunkResult());
+    return;
+  }
+
+  ctx.onProgress(`Analyzing page ${pageNum} (${i + 1} of ${ctx.totalPages})…`, {
+    phase: "analyze",
+    current: i + 1,
+    total: ctx.totalPages,
+    startPage: pageNum,
+    endPage: pageNum,
+  });
+
+  const { result, lastError } = await _runPageWithRetries(
+    text,
+    pageNum,
+    i,
+    ctx,
+    abortController,
+  );
+
+  if (result) {
+    ctx.pageResults.push(result);
+    ctx.onProgress(`Page ${pageNum} complete (${i + 1}/${ctx.totalPages})`, {
+      phase: "chunk-complete",
+      current: i + 1,
+      total: ctx.totalPages,
+    });
+  } else {
+    ctx.failedPages.push({
+      pageNum,
+      error: lastError?.message || "Unknown error",
+    });
+  }
+}
+
+function _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages) {
+  if (ctx.pageResults.length === 0) {
     throw new Error(
       "All pages failed to process. Please try again or check AI model status.",
     );
   }
 
-  onProgress("Merging analysis results…", { phase: "merge" });
-  const mergedResult = mergeChunkResults(pageResults);
+  ctx.onProgress("Merging analysis results…", { phase: "merge" });
+  const mergedResult = mergeChunkResults(ctx.pageResults);
   const rejectedCodes = enforceValidDiagnosticCodes(mergedResult);
-  mergedResult.failedChunks = failedPages;
+  mergedResult.failedChunks = ctx.failedPages;
 
-  onProgress("Analysis complete!", { phase: "complete" });
+  ctx.onProgress("Analysis complete!", { phase: "complete" });
 
   return {
     success: true,
@@ -2243,14 +2824,44 @@ async function analyzePageByPage(
       analyzedAt: new Date().toISOString(),
       textLength: fullText.length,
       aiMode,
-      chunksProcessed: pageResults.length,
-      totalChunks: totalPages,
-      failedChunkCount: failedPages.length,
+      chunksProcessed: ctx.pageResults.length,
+      totalChunks: ctx.totalPages,
+      failedChunkCount: ctx.failedPages.length,
       boilerplatePagesSkipped: skippedPages,
       rejectedDiagnosticCodes: rejectedCodes,
       processingMode: "page-by-page",
     },
   };
+}
+
+/**
+ * Page-by-page orchestrator for local AI modes.
+ * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
+ * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
+ */
+async function _analyzePageByPage(
+  fullText,
+  aiMode,
+  onProgress,
+  abortController,
+) {
+  const { medicalPages, skippedPages } = _prepareMedicalPages(
+    fullText,
+    onProgress,
+  );
+
+  const ctx = {
+    pageResults: [],
+    failedPages: [],
+    totalPages: medicalPages.length,
+    onProgress,
+  };
+
+  for (let i = 0; i < medicalPages.length; i++) {
+    await _processOnePage(medicalPages[i], i, ctx, abortController);
+  }
+
+  return _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages);
 }
 
 // ============================================================================

@@ -40,6 +40,7 @@ async function bootApp(
       localStorage.setItem("vet_rate_last_seen_version", version);
       localStorage.setItem("vetrate-tour-completed", "true");
       localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       localStorage.setItem("vet_rate_saved_claims", JSON.stringify(claims));
 
       if (geminiKey !== null && geminiKey !== undefined) {
@@ -66,10 +67,13 @@ async function bootApp(
 async function openAICommandCenter(page: Page): Promise<boolean> {
   // The AI Command Center is accessible via various entry points.
   // Try the main AI settings button or a tool's configure-AI prompt.
+  // Excludes #tour-ai-navigator-btn (the floating "AI Navigator" chat bubble)
+  // — its aria-label contains "AI" too but it opens an unrelated chat panel,
+  // not the AI Command Center / AI Settings surface this helper targets.
   const aiBtn = page
     .locator(
-      '[aria-label*="AI"], [aria-label*="Configure"], button:has-text("AI Settings"), ' +
-        'button:has-text("Configure AI"), button:has-text("AI Command")',
+      '[aria-label*="AI"]:not(#tour-ai-navigator-btn), [aria-label*="Configure"]:not(#tour-ai-navigator-btn), ' +
+        'button:has-text("AI Settings"), button:has-text("Configure AI"), button:has-text("AI Command")',
     )
     .first();
 
@@ -85,7 +89,7 @@ async function openAICommandCenter(page: Page): Promise<boolean> {
 
   // Fallback: dispatch the custom event used by the tool launcher
   await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent("openAICommandCenter"));
+    window.dispatchEvent(new CustomEvent("openAISettings"));
   });
   const opened = await page
     .locator('[role="dialog"]')

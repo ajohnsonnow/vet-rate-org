@@ -1,0 +1,267 @@
+{
+  "state": "Alabama",
+  "stateCode": "AL",
+  "officialSource": "https://va.alabama.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "al-property_tax_exemption-homestead-exemption-for-permanently-and-totally-",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Homestead Exemption for Permanently and Totally Disabled Persons (H-3)",
+      "description": "Alabama residents who are permanently and totally disabled (which includes veterans rated 100% permanently and totally disabled by the VA) are fully exempt from all state, county, and school ad valorem (property) taxes on their homestead, with no maximum assessed-value cap and no income limitation, on up to 160 acres. This exemption is not veteran-specific on the official Alabama Department of Revenue homestead-exemptions page fetched this session -- it applies to any Alabama resident certified as permanently and totally disabled, not only veterans. Secondary (non-.gov) sources describe an additional partial homestead exemption scaled to disability percentage for veterans rated as low as 20% disabled, but that specific partial-exemption program could not be confirmed against the official Department of Revenue page read this session, so it is not presented as confirmed fact.",
+      "value": "Full exemption from state, county, and school property tax on homestead (up to 160 acres, no value cap) for permanent and total disability",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Own and occupy the property as primary residence on the first day of the tax year",
+          "File with local county Revenue Commissioner/tax assessor with a Physician's Affidavit or VA documentation of permanent and total disability"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Revenue / County Revenue Commissioners",
+        "form": "Physician's Affidavit (homestead exemption application)",
+        "url": "https://www.revenue.alabama.gov/property-tax/homestead-exemptions/",
+        "documentation": [
+          "VA disability rating letter or Physician's Affidavit confirming permanent and total disability",
+          "Proof of Alabama residency and ownership"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.alabama.gov/property-tax/homestead-exemptions/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-state_veterans_home-alabama-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Alabama State Veterans Homes",
+      "description": "The Alabama Department of Veterans Affairs operates five state veterans homes providing nursing and long-term care for aging or chronically disabled veterans: Bill Nichols State Veterans Home (Alexander City), Floyd E. 'Tut' Fann State Veterans Home (Huntsville), William F. Green State Veterans Home (Bay Minette), Colonel Robert L. Howard State Veterans Home (Pell City), and the Command Sgt. Maj. Bennie G. Adkins State Veterans Home (Enterprise, opened October 2024). The official program page does not itself state specific admission criteria (residency duration, minimum active-duty days, or discharge-type detail); those specifics appear only in secondary sources not independently confirmed this session, so admission eligibility beyond 'aging or chronically disabled veterans' is not asserted as fact here.",
+      "value": "Skilled nursing and long-term care for veterans at state veterans homes; described by the state as 'a very affordable solution' though exact rates are not published on the official page",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applications obtained from local county Veterans Service Office or directly from a facility",
+          "Specific admission criteria (residency length, discharge type, service length) not confirmed against an official source this session"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Veterans Affairs",
+        "form": null,
+        "url": "https://va.alabama.gov/veterans-services/veterans-home-program/",
+        "documentation": [
+          "DD-214 or other proof of military service (specific list not confirmed this session)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://va.alabama.gov/veterans-services/veterans-home-program/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-education_tuition-alabama-g-i-dependent-scholarship-program",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Alabama G.I. Dependent Scholarship Program",
+      "description": "Provides tuition (up to $400 per credit hour), textbooks, and fees (combined maximum $1,000 annually) to qualifying dependents (children, stepchildren, spouses, and un-remarried widows/widowers) of veterans rated 40% or more service-connected disabled, former POW/MIA veterans, or veterans who died of a service-connected cause. Children and stepchildren receive up to 10 semesters of undergraduate study; spouses receive 10 semesters if the veteran is 100% disabled or 6 semesters if the veteran is rated 40-90% disabled. The veteran must have been honorably discharged after at least 90 consecutive days of active duty (exceptions apply for service-connected disability), and Alabama residency requirements apply to the veteran (pre-service resident, or 5 years' residency preceding application for 100% P&T ratings).",
+      "value": "Up to $400/credit hour tuition plus combined $1,000/year for books and fees; 10 semesters (children/stepchildren, or spouses of 100%-disabled veterans) or 6 semesters (spouses of 40-90%-disabled veterans)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 40,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran honorably discharged with at least 90 consecutive days active duty (exceptions for service-connected disability)",
+          "Dependent must apply directly, complete FAFSA annually, and maintain satisfactory academic progress",
+          "Children/stepchildren must begin training before age 26"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Veterans Affairs",
+        "form": null,
+        "url": "https://va.alabama.gov/education-training/alabama-g-i-dependent-scholarship-program/",
+        "documentation": [
+          "VA disability rating letter (40%+) or POW/MIA/service-connected-death documentation",
+          "Veteran's DD-214",
+          "Proof of dependent relationship"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://va.alabama.gov/education-training/alabama-g-i-dependent-scholarship-program/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-hiring_preference-state-employment-veteran-s-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veteran's Preference",
+      "description": "Alabama state employment applicants who are veterans receive 5 points added to their competitive examination score; disabled veterans, deceased veterans' spouses, and disabled veterans' spouses receive 10 points. Standard veteran status requires a DD-214 or document showing dates of service and type of discharge (active duty beyond training only). Disabled veteran claims additionally require a VA letter of disability dated within the last 6 months, which must remain current until the employment register is established or the additional points are forfeited.",
+      "value": "5 points added to exam score for veterans; 10 points for disabled veterans and qualifying spouses",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge from active duty beyond training",
+          "VA letter of disability dated within last 6 months required for the 10-point disabled-veteran preference"
+        ]
+      },
+      "application": {
+        "agency": "State of Alabama Personnel Department",
+        "form": null,
+        "url": "https://personnel.alabama.gov/Faq",
+        "documentation": [
+          "DD-214 or document showing dates of service and type of discharge",
+          "VA letter of disability (for disabled-veteran preference)",
+          "Marriage and/or death certificates (for spouse preference)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://personnel.alabama.gov/Faq",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Alabama-resident service-connected disabled veterans can obtain a Disabled Veteran distinctive license plate. Veterans rated 10-50% disabled pay no registration or plate-issuance fee on their first plate (additional plates pay full fees); veterans rated 51% or higher, or with a vehicle equipped with special mechanical controls, likewise pay no fee on the first plate and only a $5 annual fee on additional plates. Ad valorem tax is NOT waived for these tiers -- only vehicles all or partly funded by the VA (a separate benefit) are ad-valorem-exempt. Veterans are not required to obtain this specific plate to claim the underlying registration-fee exemption/reduction. The plate cannot be personalized or transferred between owners.",
+      "value": "Registration/plate-issuance fee waived on first plate (10-50% and 51%+ tiers); $5 annual fee on additional plates for 51%+ tier",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Alabama residency",
+          "VA disability rating certification plus military ID card, DD-214, or VA affidavit"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Revenue, Motor Vehicle Division",
+        "form": null,
+        "url": "https://www.revenue.alabama.gov/license-plates/disabled-veteran-us-army/",
+        "documentation": [
+          "VA disability rating certification",
+          "Military ID card, DD-214, or VA affidavit"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.alabama.gov/license-plates/disabled-veteran-us-army/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-vehicle_registration-va-funded-vehicle-registration-and-ad-valorem-ta",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "VA-Funded Vehicle Registration and Ad Valorem Tax Exemption",
+      "description": "A vehicle owned by a veteran disabled during a period of war, conflict, or hostilities, that was all or partly paid for with funds from the VA to accommodate the veteran's disability, is exempt from both license/registration fees and ad valorem (property) tax on that vehicle -- a broader exemption than the standard Disabled Veteran plate, which does not waive ad valorem tax.",
+      "value": "Full exemption from vehicle registration/license fees and ad valorem tax on a VA-funded vehicle",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Vehicle must be all or partly paid for with VA funds to accommodate a service-connected disability",
+          "Veteran must have been disabled during a war, conflict, or period of hostilities"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Revenue, Motor Vehicle Division",
+        "form": null,
+        "url": "https://www.revenue.alabama.gov/license-plates/disabled-veteran-us-army/",
+        "documentation": [
+          "VA documentation of vehicle grant/funding for adaptive equipment"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.alabama.gov/license-plates/disabled-veteran-us-army/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-recreation-disabled-military-veteran-s-appreciation-hunting",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Military Veteran's Appreciation Hunting and Fishing Licenses",
+      "description": "Alabama offers reduced-fee Military Veteran's Appreciation hunting and fishing licenses for resident disabled veterans: an annual hunting license for veterans rated 50% or more (or 100%) disabled, and an annual fishing license for veterans rated 20% or more disabled. A VA letter documenting the disability level must be presented; licenses are available through local probate offices, license commissioners, or online. Exact current fee amounts and whether lifetime license options exist could not be confirmed against the official Outdoor Alabama FAQ page read this session (it did not list prices); secondary sources cite lifetime options and specific dollar prices, but those are not confirmed here.",
+      "value": "Reduced-fee annual hunting license (50%+ or 100% disabled) and reduced-fee annual fishing license (20%+ disabled); exact prices not confirmed via official source this session",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 20,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Alabama residency",
+          "VA letter documenting disability percentage"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Conservation and Natural Resources",
+        "form": null,
+        "url": "https://www.outdooralabama.com/licenses/license-faqs",
+        "documentation": ["VA letter stating disability rating percentage"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.outdooralabama.com/licenses/license-faqs",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "al-other-military-retired-pay-and-va-disability-compensat",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Military Retired Pay and VA Disability Compensation Income Tax Exemption",
+      "description": "Military retirement pay is completely exempt from Alabama state income tax for all retirees regardless of age or income (effective for tax years since January 1, 1989, per Ala. Code 40-18-20, as referenced in secondary sources; the statute number itself was not independently re-confirmed against the Department of Revenue page fetched this session). VA disability compensation ('disability retirement payments and other benefits paid by the Veterans Administration') is also listed as exempt income by the Alabama Department of Revenue. No application is required -- the exemption applies directly to how the income is reported.",
+      "value": "Full exemption of military retirement pay and VA disability compensation from Alabama state income tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "No application required; applies to Alabama income tax filing"
+        ]
+      },
+      "application": {
+        "agency": "Alabama Department of Revenue",
+        "form": null,
+        "url": "https://www.revenue.alabama.gov/individual-corporate/income-exempt-from-alabama-income-taxation/",
+        "documentation": []
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.alabama.gov/individual-corporate/income-exempt-from-alabama-income-taxation/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

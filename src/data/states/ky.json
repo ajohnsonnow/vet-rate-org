@@ -1,0 +1,254 @@
+{
+  "state": "Kentucky",
+  "stateCode": "KY",
+  "officialSource": "https://veterans.ky.gov/Pages/default.aspx",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "ky-property_tax_exemption-homestead-disability-exemption-annual-reapplicat",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Homestead/Disability Exemption (Annual-Reapplication Waiver for Service-Connected Totally Disabled Veterans)",
+      "description": "Kentucky's homestead exemption reduces the assessed value of an owner-occupied primary residence for homeowners who are 65+ or classified as totally disabled. This exemption is NOT veteran-exclusive and the dollar amount is identical for all qualifying homeowners (seniors and disabled civilians alike). The one veteran-specific carve-out under KRS 132.810(2)(d)(2)(a): most totally disabled homeowners under age 65 must reapply for the exemption every single year, but a 'service-connected totally disabled veteran of the United States Armed Forces' only has to document the disability once and is exempt from the annual reapplication requirement. The statute does not specify a VA percentage threshold for 'totally disabled' -- it references classification under a federal or retirement-system disability program, which in practice means a VA total-disability finding (100% schedular or TDIU), but this exact percentage-to-statute mapping was not independently confirmed against VA adjudication rules this session.",
+      "value": "$49,100 reduction in assessed home value for the 2025-2026 assessment years (same amount available to any qualifying 65+ or totally disabled Kentucky homeowner; veterans do not receive a larger exemption, only relief from annual reapplication)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property must be owned, occupied, and maintained as the applicant's personal residence as of the January 1 assessment date",
+          "Application filed with the county Property Valuation Administrator (PVA) on Form 62A350",
+          "Disability classification must be documented at time of application; non-veteran disabled applicants under 65 must reapply annually, service-connected totally disabled veterans do not"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Department of Revenue / County Property Valuation Administrators",
+        "form": "62A350",
+        "url": "https://revenue.ky.gov/Property/Residential-Farm-Commercial-Property/Pages/Homestead-Exemption.aspx",
+        "documentation": [
+          "Proof of age 65+ OR documentation of total disability classification from a federal agency or retirement system",
+          "Proof of ownership and occupancy of the residence"
+        ]
+      },
+      "legalCitation": "KRS 132.810",
+      "authorityTier": "reference",
+      "sourceUrl": "https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=39641",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-state_veterans_home-kentucky-state-veterans-centers-long-term-skille",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Kentucky State Veterans Centers (Long-Term Skilled Nursing Care)",
+      "description": "Kentucky operates five state veterans nursing homes/centers providing long-term skilled nursing care: Thomson-Hood Veterans Center (Wilmore, the largest, 285 beds), Paul E. Patton Eastern Kentucky Veterans Center (Hazard, 120 beds), Carl M. Brashear Radcliff Veterans Center (Radcliff), Joseph Eddie Ballard Western Kentucky Veterans Center (Madisonville/Hanson area, 156 beds), and Robert E. Spiller Bowling Green Veterans Center (Bowling Green, a newer facility). Admission requires being a veteran in need of nursing care, a Kentucky resident as of the admission date, and having a discharge that is not dishonorable. Cost/fee schedule for residents was not disclosed on the fetched admissions page.",
+      "value": "Long-term skilled nursing care at 5 state-run veterans centers statewide",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Be a veteran",
+          "Be disabled by reason of disease, wounds, age, or otherwise in need of nursing care",
+          "Be a Kentucky resident as of the date of admission",
+          "Have a military discharge that is not of a dishonorable nature",
+          "DD-214, proof of KY residency, insurance cards, and (for 70%+ VA compensation recipients) a VA Disability Award Letter required with application"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Department of Veterans Affairs",
+        "form": null,
+        "url": "https://veterans.ky.gov/Veterans-Centers/Pages/Admission-to-State-Veterans-Homes.aspx",
+        "documentation": [
+          "DD-214 copy",
+          "Proof of Kentucky residency",
+          "Medicare/Medicaid/supplemental insurance cards",
+          "VA Disability Award Letter (for 70%+ compensation recipients)",
+          "Power of Attorney, Healthcare Surrogate, or Living Will if applicable"
+        ]
+      },
+      "legalCitation": "KRS 40.320; KRS 40.325",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.ky.gov/Veterans-Centers/Pages/Admission-to-State-Veterans-Homes.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-education_tuition-kentucky-tuition-waiver-for-veterans-and-depende",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Kentucky Tuition Waiver for Veterans and Dependents",
+      "description": "Kentucky waives tuition (not room, board, books, or fees) at Kentucky public two-year, four-year, and vocational-technical institutions for dependents (children, stepchildren, spouses, and unmarried widows/widowers) of qualifying veterans. A veteran qualifies if they died while on active duty, died from a service-connected disability, hold a 100% service-connected disability rating, are totally disabled (non-service-connected) with wartime service, or are deceased, were a Kentucky resident at time of death, and served during wartime. The veteran must be (or have been at death) a current Kentucky resident; the dependent applicant need not be a KY resident but must attend a KY institution. Benefits generally end at degree/certificate completion, 45 months of coursework, or age 26 (dependent children only) -- however, one specific sub-category under KRS 164.505 (widow/widower, or dependents of a veteran killed in service or who died of a service-connected disability) is unrestricted with no 45-month or age-26 cap; it was not confirmed this session which exact statute governs each of the other eligibility sub-categories described on the KDVA page.",
+      "value": "Full tuition waiver at Kentucky public institutions (tuition only; excludes room, board, books, fees)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran must be/have been a current Kentucky resident",
+          "Dependent applicant must attend a Kentucky public institution",
+          "Application submitted only after acceptance/commitment to a specific school",
+          "Coverage ends at degree/certificate completion, 45 months of classes, or age 26 (children only, except under KRS 164.505)"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Department of Veterans Affairs",
+        "form": "Kentucky Department of Veterans Affairs Tuition Waiver Application",
+        "url": "https://veterans.ky.gov/Benefits/Pages/Education-for-Veterans-in-Kentucky.aspx",
+        "documentation": [
+          "Proof of veteran's qualifying status (death in service, service-connected death, 100% disability rating, or wartime service + residency)",
+          "Proof of relationship to the veteran",
+          "Acceptance/enrollment documentation from the Kentucky institution"
+        ]
+      },
+      "legalCitation": "KRS 164.505 (governs the unrestricted widow/widower and killed-in-service/died-of-SC-disability category; statute(s) for the other eligibility categories described were not independently verified this session)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.ky.gov/Benefits/Pages/Education-for-Veterans-in-Kentucky.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-hiring_preference-veterans-preference-in-state-employment",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Preference in State Employment",
+      "description": "Kentucky law (KRS 18A.150) requires state executive branch hiring agencies to offer interviews to a minimum number of veteran applicants identified on a job register as having Veterans' Preference. If more than five applicants on a register have the preference, the agency must interview at least five of them (including current state employees); if fewer than five qualify, the agency must interview all of them. Preference is available to currently serving members (active duty, National Guard, Reserve) as well as separated veterans, regardless of whether they were mobilized or served during wartime, provided the character of service was Honorable or General (Under Honorable Conditions). It is an interview-preference mechanism, not a hiring points system, and applicants must still meet minimum job qualifications.",
+      "value": "Guaranteed interview consideration (minimum of 5, or all qualifying applicants if fewer than 5) for Kentucky state executive branch job registers",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Character of service must be Honorable or General (Under Honorable Conditions)",
+          "Must submit DD Form 214 (Service 2 or Member 4 long form showing character of service) to the Personnel Cabinet before a job register is issued to the hiring agency",
+          "Applicant must still meet minimum qualifications for the position"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Personnel Cabinet",
+        "form": "DD Form 214 (Service 2 or Member 4)",
+        "url": "https://extranet.personnel.ky.gov/DHRA/VetPref-FAQ.pdf",
+        "documentation": [
+          "DD Form 214 Service 2 or Member 4 (long form) showing Honorable or General discharge"
+        ]
+      },
+      "legalCitation": "KRS 18A.150",
+      "authorityTier": "reference",
+      "sourceUrl": "https://extranet.personnel.ky.gov/DHRA/VetPref-FAQ.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-license_plate-disabled-veterans-free-certificate-of-registrati",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veterans Free Certificate of Registration and License Plate",
+      "description": "Kentucky provides a free (no registration fee collected) certificate of registration and license plate to disabled veterans who qualify under one of three categories: received assistance to purchase a vehicle from the U.S. Department of Veterans Affairs, were declared by the VA to be 100% service-connected disabled, or are a recipient of the Congressional Medal of Honor. Applicable usage/ad valorem taxes are still collected, but the standard registration fee is waived. This is distinct from Kentucky's broader catalog of ~37 military-honor license plate designs (available to a wider range of service members/veterans for a fee, with $5 of each plate fee going to the Veterans' Trust Fund), which do not carry this fee waiver.",
+      "value": "No registration fee collected (usage/ad valorem taxes still apply); free license plate",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must be a Kentucky resident",
+          "Must qualify as: VA vehicle-purchase-assistance recipient, OR 100% VA service-connected disabled, OR Congressional Medal of Honor recipient",
+          "Must provide the county clerk with authorization/documentation from the U.S. Department of Veterans Affairs supporting the qualifying certification",
+          "Application via Form TC 96-217 through the County Clerk's office"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Transportation Cabinet, Division of Motor Vehicle Licensing",
+        "form": "TC 96-217",
+        "url": "https://transportation.ky.gov/Organizational-Resources/Forms/TC%2096-217.pdf",
+        "documentation": [
+          "Authorization/documentation from the U.S. Department of Veterans Affairs",
+          "Standard vehicle registration documentation"
+        ]
+      },
+      "legalCitation": "KRS 186.041; KRS 186.162(2)(A)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://transportation.ky.gov/Organizational-Resources/Forms/TC%2096-217.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-recreation-disabled-sportsman-s-license-combination-hunting",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Sportsman's License (Combination Hunting & Fishing)",
+      "description": "Kentucky resident veterans who are at least 50% disabled as the result of a service-connected disability qualify for the Disabled Sportsman's License, a combination hunting and fishing permit that also includes all deer permits, spring turkey permit, resident fall turkey permit, Kentucky migratory bird/waterfowl permit, and trout permit. Veterans must submit written VA verification of their disability rating (including current KY address and last 4 digits of SSN) to Kentucky Fish and Wildlife; disability authorization is valid for 3 years and must be renewed. The exact license fee/price was not disclosed on the fetched page.",
+      "value": "Combination hunting/fishing license plus deer, turkey, waterfowl, and trout permits bundled together",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must be a Kentucky resident veteran",
+          "At least 50% VA service-connected disability rating",
+          "Written VA verification of disability rating must be submitted (online via MyProfile, by mail, fax, or in person)",
+          "Authorization valid for 3 years, then must be renewed",
+          "License itself valid through February 28 each year"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Department of Fish and Wildlife Resources",
+        "form": null,
+        "url": "https://fw.ky.gov/Licenses/Pages/Resident-Senior-and-Disabled-Licenses.aspx",
+        "documentation": [
+          "Written VA verification of disability rating status showing current KY address and last 4 digits of SSN"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://fw.ky.gov/Licenses/Pages/Resident-Senior-and-Disabled-Licenses.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ky-financial_bonus-military-retired-pay-state-income-tax-exclusion",
+      "benefitType": "financial_bonus",
+      "category": "Other",
+      "name": "Military Retired Pay State Income Tax Exclusion",
+      "description": "Kentucky does not tax active-duty military pay at all. For military retirement (retired) pay specifically: service members who retired before January 1, 1998 have their military retired pay completely exempt from Kentucky income tax. Those who retired after December 31, 1997 may exclude up to $31,110 of retirement/pension income (this general pension exclusion cap applies to all Kentucky retirees, not just veterans); retirees with creditable service before 1/1/1998 but who retired after that date may qualify to exclude more than $31,110 using Schedule P. The fetched Department of Revenue page did not address the state income tax treatment of VA disability compensation specifically -- VA disability compensation is not included in federal AGI to begin with, so it was not called out separately on this page, and that omission should not be read as confirmation either way.",
+      "value": "Full state income tax exemption on military retired pay if retired before 1/1/1998; up to $31,110 exclusion (shared with general KY pension exclusion) if retired after 12/31/1997",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applies to Kentucky resident/part-year resident tax filers",
+          "Post-1997 retirees with pre-1998 creditable service may need to complete Schedule P to claim an exclusion above $31,110"
+        ]
+      },
+      "application": {
+        "agency": "Kentucky Department of Revenue",
+        "form": "Schedule P (Kentucky Pension Income Exclusion)",
+        "url": "https://revenue.ky.gov/Individual/Pages/Military-Exemptions.aspx",
+        "documentation": [
+          "Federal return showing military retired pay in AGI",
+          "Schedule P calculation if claiming an exclusion above the standard cap"
+        ]
+      },
+      "legalCitation": "KRS 141.019",
+      "authorityTier": "reference",
+      "sourceUrl": "https://revenue.ky.gov/Individual/Pages/Military-Exemptions.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

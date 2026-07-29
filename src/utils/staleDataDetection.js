@@ -29,6 +29,10 @@ export function isStaleData(disability) {
     return daysDifference > 365;
   } catch (error) {
     // If date parsing fails, consider it stale
+    console.warn(
+      "[staleDataDetection] Failed to parse lastVerifiedDate:",
+      error,
+    );
     return true;
   }
 }
@@ -48,6 +52,10 @@ export function getDataAgeDays(disability) {
     const currentDate = new Date();
     return Math.floor((currentDate - verifiedDate) / (1000 * 60 * 60 * 24));
   } catch (error) {
+    console.warn(
+      "[staleDataDetection] Failed to parse lastVerifiedDate:",
+      error,
+    );
     return Infinity;
   }
 }

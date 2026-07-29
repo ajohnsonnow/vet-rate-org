@@ -9,6 +9,153 @@ import { dispatchToolById } from "../../utils/dispatchToolById";
 import { PROJECT_STATS } from "../../data/projectStats";
 
 /**
+ * SearchResultsPanel — the error/loading/results/no-results states rendered
+ * directly beneath the search bar. Split out of SearchSection to keep it
+ * under the max-lines-per-function budget (audit, wave 4).
+ */
+function SearchResultsPanel({
+  error,
+  isLoading,
+  results,
+  selectedResult,
+  setSelectedResult,
+  hasSearched,
+  searchTerm,
+}) {
+  return (
+    <>
+      {/* SEARCH RESULTS - Directly under search bar */}
+      {error && (
+        <div
+          className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg"
+          role="alert"
+        >
+          <p className="text-yellow-800 dark:text-yellow-200">
+            <strong>Info:</strong> {error}
+          </p>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-va-blue border-t-va-gold"></div>
+        </div>
+      )}
+
+      {!isLoading && results.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+            ✅ Search Results ({results.length} found)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {results.map((result) => (
+              <SearchResultCard
+                key={result.id}
+                result={result}
+                onSelect={() => setSelectedResult(result)}
+                isSelected={selectedResult?.id === result.id}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isLoading &&
+        hasSearched &&
+        searchTerm.trim() !== "" &&
+        results.length === 0 &&
+        !error && (
+          <div className="text-center py-8">
+            <p className="text-gray-600 dark:text-gray-400 text-lg">
+              No matching disabilities found.
+            </p>
+          </div>
+        )}
+    </>
+  );
+}
+
+/**
+ * SearchSection — CommandersChecklist, SearchBar, DemoDataLoader, and the
+ * SearchResultsPanel rendered directly beneath it.
+ * Split out of HomeMain to keep that component under the
+ * max-lines-per-function budget (audit, wave 4).
+ */
+function SearchSection({
+  searchTerm,
+  setSearchTerm,
+  results,
+  selectedResult,
+  setSelectedResult,
+  isLoading,
+  error,
+  hasSearched,
+  setHasSearched,
+  handleClearSearch,
+}) {
+  return (
+    <div className="max-w-4xl mx-auto mb-8">
+      {/* Mission Readiness Progress Bar - Embedded */}
+      <div className="mb-6">
+        <CommandersChecklist
+          isEmbedded={true}
+          onToolSelect={(toolName) => {
+            // 3 mappings diverge from dispatchToolById:
+            // conditions-search clears the search instead of
+            // opening a modal; veteran-profile here means
+            // "edit profile" (FormsHelper), not "view packet"
+            // (MyPacket) like the other surfaces; symptom-logger
+            // isn't in the shared map. Everything else delegates.
+            if (toolName === "conditions-search") setHasSearched(false);
+            else if (toolName === "veteran-profile")
+              window.dispatchEvent(new CustomEvent("openFormsHelper"));
+            else if (toolName === "symptom-logger")
+              window.dispatchEvent(new CustomEvent("openSymptomLogger"));
+            else dispatchToolById(toolName);
+          }}
+        />
+      </div>
+
+      <div
+        id="tour-search-section"
+        className="bg-white dark:bg-emerald-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-emerald-600 p-6"
+      >
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onClear={handleClearSearch}
+          isLoading={isLoading}
+        />
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
+          💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or
+          keyword - covers all 15 body systems from 38 CFR Part 4
+        </p>
+
+        {/* Demo Data Loader - "Gold Standard" Example */}
+        <div className="text-center mt-4">
+          <DemoDataLoader
+            onDataLoaded={() =>
+              window.dispatchEvent(new CustomEvent("openMyPacket"))
+            }
+            variant="link"
+          />
+        </div>
+      </div>
+
+      <SearchResultsPanel
+        error={error}
+        isLoading={isLoading}
+        results={results}
+        selectedResult={selectedResult}
+        setSelectedResult={setSelectedResult}
+        hasSearched={hasSearched}
+        searchTerm={searchTerm}
+      />
+    </div>
+  );
+}
+
+/**
  * Home page <main> region — the hero, search bar, CommandersChecklist,
  * results list, QuickConditionPicker, the optional DisabilityDetails
  * panel, and the HomeFeatureCards grid below it.
@@ -57,103 +204,18 @@ export default function HomeMain({
         </p>
       </div>
 
-      {/* SEARCH BAR - Prominent Position */}
-      <div className="max-w-4xl mx-auto mb-8">
-        {/* Mission Readiness Progress Bar - Embedded */}
-        <div className="mb-6">
-          <CommandersChecklist
-            isEmbedded={true}
-            onToolSelect={(toolName) => {
-              // 3 mappings diverge from dispatchToolById:
-              // conditions-search clears the search instead of
-              // opening a modal; veteran-profile here means
-              // "edit profile" (FormsHelper), not "view packet"
-              // (MyPacket) like the other surfaces; symptom-logger
-              // isn't in the shared map. Everything else delegates.
-              if (toolName === "conditions-search") setHasSearched(false);
-              else if (toolName === "veteran-profile")
-                window.dispatchEvent(new CustomEvent("openFormsHelper"));
-              else if (toolName === "symptom-logger")
-                window.dispatchEvent(new CustomEvent("openSymptomLogger"));
-              else dispatchToolById(toolName);
-            }}
-          />
-        </div>
-
-        <div
-          id="tour-search-section"
-          className="bg-white dark:bg-emerald-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-emerald-600 p-6"
-        >
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onClear={handleClearSearch}
-            isLoading={isLoading}
-          />
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
-            💡 <strong>Tip:</strong> Search by condition name, diagnostic code,
-            or keyword - covers all 15 body systems from 38 CFR Part 4
-          </p>
-
-          {/* Demo Data Loader - "Gold Standard" Example */}
-          <div className="text-center mt-4">
-            <DemoDataLoader
-              onDataLoaded={() =>
-                window.dispatchEvent(new CustomEvent("openMyPacket"))
-              }
-              variant="link"
-            />
-          </div>
-        </div>
-
-        {/* SEARCH RESULTS - Directly under search bar */}
-        {error && (
-          <div
-            className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg"
-            role="alert"
-          >
-            <p className="text-yellow-800 dark:text-yellow-200">
-              <strong>Info:</strong> {error}
-            </p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="flex justify-center my-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-va-blue border-t-va-gold"></div>
-          </div>
-        )}
-
-        {!isLoading && results.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-              ✅ Search Results ({results.length} found)
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {results.map((result) => (
-                <SearchResultCard
-                  key={result.id}
-                  result={result}
-                  onSelect={() => setSelectedResult(result)}
-                  isSelected={selectedResult?.id === result.id}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!isLoading &&
-          hasSearched &&
-          searchTerm.trim() !== "" &&
-          results.length === 0 &&
-          !error && (
-            <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                No matching disabilities found.
-              </p>
-            </div>
-          )}
-      </div>
+      <SearchSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        results={results}
+        selectedResult={selectedResult}
+        setSelectedResult={setSelectedResult}
+        isLoading={isLoading}
+        error={error}
+        hasSearched={hasSearched}
+        setHasSearched={setHasSearched}
+        handleClearSearch={handleClearSearch}
+      />
 
       {/* Quick Condition Picker - Below Search Results */}
       <div id="tour-quick-picker" className="max-w-4xl mx-auto mb-8">

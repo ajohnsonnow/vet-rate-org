@@ -31,6 +31,183 @@ const DEVICE_COLORS = {
   arrowhead: "#CD7F32",
 };
 
+function renderStarDevice(device, index, deviceSize, color) {
+  return (
+    <div
+      key={index}
+      className="absolute flex items-center justify-center"
+      style={{
+        left: device.x,
+        top: device.y,
+        width: deviceSize,
+        height: deviceSize,
+      }}
+      aria-label={device.type.replace(/_/g, " ")}
+    >
+      <span
+        style={{
+          color,
+          fontSize: deviceSize * 1.2,
+          textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+        }}
+      >
+        ★
+      </span>
+    </div>
+  );
+}
+
+function renderOlcDevice(device, index, deviceSize, color) {
+  return (
+    <div
+      key={index}
+      className="absolute flex items-center justify-center"
+      style={{
+        left: device.x,
+        top: device.y,
+        width: deviceSize,
+        height: deviceSize,
+      }}
+      aria-label={
+        device.type === "bronze_olc"
+          ? "Bronze Oak Leaf Cluster"
+          : "Silver Oak Leaf Cluster"
+      }
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width={deviceSize}
+        height={deviceSize}
+        style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.3))" }}
+      >
+        <path
+          d="M12 2C8 2 6 5 6 8c0 2 1 4 3 5l-1 7h8l-1-7c2-1 3-3 3-5 0-3-2-6-6-6z"
+          fill={color}
+          stroke="#000"
+          strokeWidth="0.5"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function renderLetterDevice(
+  device,
+  index,
+  deviceSize,
+  color,
+  letter,
+  ariaLabel,
+) {
+  return (
+    <div
+      key={index}
+      className="absolute flex items-center justify-center font-bold"
+      style={{
+        left: device.x,
+        top: device.y,
+        width: deviceSize,
+        height: deviceSize,
+        color: color,
+        fontSize: deviceSize * 0.8,
+        textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+      }}
+      aria-label={ariaLabel}
+    >
+      {letter}
+    </div>
+  );
+}
+
+function renderArrowheadDevice(device, index, deviceSize, color) {
+  return (
+    <div
+      key={index}
+      className="absolute flex items-center justify-center"
+      style={{
+        left: device.x,
+        top: device.y,
+        width: deviceSize,
+        height: deviceSize,
+        color: color,
+        fontSize: deviceSize * 0.9,
+        textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+      }}
+      aria-label="Arrowhead Device"
+    >
+      ▲
+    </div>
+  );
+}
+
+// Calculate device positions for horizontal centering
+function getDevicePositions(deviceList, width, height, deviceSize) {
+  if (!deviceList || deviceList.length === 0) return [];
+
+  const totalDevices = deviceList.length;
+  const spacing = deviceSize + 2;
+  const totalWidth = totalDevices * spacing;
+  const startX = (width - totalWidth) / 2 + spacing / 2;
+
+  return deviceList.map((device, index) => ({
+    ...device,
+    x: startX + index * spacing,
+    y: (height - deviceSize) / 2,
+  }));
+}
+
+// Render individual device
+function renderDevice(device, index, deviceSize) {
+  const color = DEVICE_COLORS[device.type] || "#CD7F32";
+
+  switch (device.type) {
+    case "bronze_star":
+    case "silver_star":
+    case "gold_star":
+      return renderStarDevice(device, index, deviceSize, color);
+
+    case "bronze_olc":
+    case "silver_olc":
+      return renderOlcDevice(device, index, deviceSize, color);
+
+    case "v_device":
+      return renderLetterDevice(
+        device,
+        index,
+        deviceSize,
+        color,
+        "V",
+        "V Device (Valor)",
+      );
+
+    case "c_device":
+      return renderLetterDevice(
+        device,
+        index,
+        deviceSize,
+        color,
+        "C",
+        "C Device (Combat)",
+      );
+
+    case "r_device":
+      return renderLetterDevice(
+        device,
+        index,
+        deviceSize,
+        color,
+        "R",
+        "R Device (Remote)",
+      );
+
+    case "arrowhead":
+      return renderArrowheadDevice(device, index, deviceSize, color);
+
+    default:
+      return null;
+  }
+}
+
 /**
  * Visual Ribbon Component
  *
@@ -52,174 +229,12 @@ const VisualRibbon = ({
   const dimensions = SIZES[size] || SIZES.md;
   const { width, height, deviceSize } = dimensions;
 
-  // Calculate device positions for horizontal centering
-  const getDevicePositions = (deviceList) => {
-    if (!deviceList || deviceList.length === 0) return [];
-
-    const totalDevices = deviceList.length;
-    const spacing = deviceSize + 2;
-    const totalWidth = totalDevices * spacing;
-    const startX = (width - totalWidth) / 2 + spacing / 2;
-
-    return deviceList.map((device, index) => ({
-      ...device,
-      x: startX + index * spacing,
-      y: (height - deviceSize) / 2,
-    }));
-  };
-
-  const positionedDevices = getDevicePositions(devices);
-
-  // Render individual device
-  const renderDevice = (device, index) => {
-    const color = DEVICE_COLORS[device.type] || "#CD7F32";
-
-    switch (device.type) {
-      case "bronze_star":
-      case "silver_star":
-      case "gold_star":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-            }}
-            aria-label={device.type.replace(/_/g, " ")}
-          >
-            <span
-              style={{
-                color,
-                fontSize: deviceSize * 1.2,
-                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-              }}
-            >
-              ★
-            </span>
-          </div>
-        );
-
-      case "bronze_olc":
-      case "silver_olc":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-            }}
-            aria-label={
-              device.type === "bronze_olc"
-                ? "Bronze Oak Leaf Cluster"
-                : "Silver Oak Leaf Cluster"
-            }
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={deviceSize}
-              height={deviceSize}
-              style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.3))" }}
-            >
-              <path
-                d="M12 2C8 2 6 5 6 8c0 2 1 4 3 5l-1 7h8l-1-7c2-1 3-3 3-5 0-3-2-6-6-6z"
-                fill={color}
-                stroke="#000"
-                strokeWidth="0.5"
-              />
-            </svg>
-          </div>
-        );
-
-      case "v_device":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center font-bold"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-              color: color,
-              fontSize: deviceSize * 0.8,
-              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-            }}
-            aria-label="V Device (Valor)"
-          >
-            V
-          </div>
-        );
-
-      case "c_device":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center font-bold"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-              color: color,
-              fontSize: deviceSize * 0.8,
-              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-            }}
-            aria-label="C Device (Combat)"
-          >
-            C
-          </div>
-        );
-
-      case "r_device":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center font-bold"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-              color: color,
-              fontSize: deviceSize * 0.8,
-              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-            }}
-            aria-label="R Device (Remote)"
-          >
-            R
-          </div>
-        );
-
-      case "arrowhead":
-        return (
-          <div
-            key={index}
-            className="absolute flex items-center justify-center"
-            style={{
-              left: device.x,
-              top: device.y,
-              width: deviceSize,
-              height: deviceSize,
-              color: color,
-              fontSize: deviceSize * 0.9,
-              textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-            }}
-            aria-label="Arrowhead Device"
-          >
-            ▲
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const positionedDevices = getDevicePositions(
+    devices,
+    width,
+    height,
+    deviceSize,
+  );
 
   return (
     <div className={`inline-block ${className}`}>
@@ -241,7 +256,9 @@ const VisualRibbon = ({
         />
 
         {/* Device overlay layer */}
-        {positionedDevices.map((device, index) => renderDevice(device, index))}
+        {positionedDevices.map((device, index) =>
+          renderDevice(device, index, deviceSize),
+        )}
       </div>
 
       {/* Award name (optional) */}

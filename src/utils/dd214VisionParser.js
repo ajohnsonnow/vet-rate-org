@@ -27,6 +27,108 @@
  * the veteran's own use and can be redacted before display.
  */
 
+// Block 1/3 (name, SSN, service number)
+function extractPersonalInfoFields(text) {
+  const fields = {};
+  const confidence = {};
+
+  const nameResult = extractName(text);
+  fields.name = nameResult.value;
+  fields.lastName = nameResult.lastName;
+  fields.firstName = nameResult.firstName;
+  fields.middleName = nameResult.middleName;
+  confidence.name = nameResult.confidence;
+
+  const ssnResult = extractSSN(text);
+  fields.ssn = ssnResult.value;
+  fields.ssnMasked = ssnResult.masked;
+  confidence.ssn = ssnResult.confidence;
+
+  const serviceNumResult = extractServiceNumber(text);
+  fields.serviceNumber = serviceNumResult.value;
+  confidence.serviceNumber = serviceNumResult.confidence;
+
+  return { fields, confidence };
+}
+
+// Block 2/4a/4b/5/11 (branch, rank, MOS)
+function extractServiceInfoFields(text) {
+  const fields = {};
+  const confidence = {};
+
+  const branchResult = extractBranch(text);
+  fields.branch = branchResult.value;
+  fields.component = branchResult.component;
+  confidence.branch = branchResult.confidence;
+
+  const rankResult = extractRank(text);
+  fields.rank = rankResult.value;
+  fields.payGrade = rankResult.payGrade;
+  confidence.rank = rankResult.confidence;
+
+  const mosResult = extractMOS(text);
+  fields.mos = mosResult.value;
+  fields.mosTitle = mosResult.title;
+  confidence.mos = mosResult.confidence;
+
+  return { fields, confidence };
+}
+
+// Block 12a/12b (entry/separation dates + derived service length)
+function extractDatesFields(text) {
+  const fields = {};
+  const confidence = {};
+
+  const entryDateResult = extractDate(text, "entry|enlist|active|ead");
+  fields.entryDate = entryDateResult.value;
+  fields.entryDateFormatted = entryDateResult.formatted;
+  confidence.entryDate = entryDateResult.confidence;
+
+  const sepDateResult = extractDate(text, "separat|discharg|release|ets|dos");
+  fields.separationDate = sepDateResult.value;
+  fields.separationDateFormatted = sepDateResult.formatted;
+  confidence.separationDate = sepDateResult.confidence;
+
+  if (fields.entryDate && fields.separationDate) {
+    const serviceLength = calculateServiceLength(
+      fields.entryDate,
+      fields.separationDate,
+    );
+    fields.yearsService = serviceLength.years;
+    fields.monthsService = serviceLength.months;
+    fields.daysService = serviceLength.days;
+    fields.totalMonthsService = serviceLength.totalMonths;
+  }
+
+  return { fields, confidence };
+}
+
+// Block 24/26/27/28 (character of service, separation/reentry codes, narrative reason)
+function extractDischargeInfoFields(text) {
+  const fields = {};
+  const confidence = {};
+
+  const characterResult = extractCharacterOfService(text);
+  fields.characterOfService = characterResult.value;
+  confidence.characterOfService = characterResult.confidence;
+
+  const sepCodeResult = extractSeparationCode(text);
+  fields.separationCode = sepCodeResult.value;
+  fields.separationCodeMeaning = sepCodeResult.meaning;
+  confidence.separationCode = sepCodeResult.confidence;
+
+  const reentryResult = extractReentryCode(text);
+  fields.reentryCode = reentryResult.value;
+  fields.reentryCodeMeaning = reentryResult.meaning;
+  confidence.reentryCode = reentryResult.confidence;
+
+  const narrativeResult = extractNarrativeReason(text);
+  fields.narrativeReason = narrativeResult.value;
+  confidence.narrativeReason = narrativeResult.confidence;
+
+  return { fields, confidence };
+}
+
 /**
  * Main parser function - extracts DD214 fields from raw OCR text
  *
@@ -44,100 +146,24 @@ export function parseDD214Text(rawText) {
   // eslint-disable-next-line no-console
   console.log("🔍 [DD214Parser] Input text length:", rawText.length);
 
-  const fields = {};
-  const confidence = {};
+  const personalInfo = extractPersonalInfoFields(text);
+  const serviceInfo = extractServiceInfoFields(text);
+  const datesInfo = extractDatesFields(text);
+  const dischargeInfo = extractDischargeInfoFields(text);
+
+  const fields = {
+    ...personalInfo.fields,
+    ...serviceInfo.fields,
+    ...datesInfo.fields,
+    ...dischargeInfo.fields,
+  };
+  const confidence = {
+    ...personalInfo.confidence,
+    ...serviceInfo.confidence,
+    ...datesInfo.confidence,
+    ...dischargeInfo.confidence,
+  };
   const extractionNotes = [];
-
-  // === PERSONAL INFORMATION ===
-
-  // Name (Block 1)
-  const nameResult = extractName(text);
-  fields.name = nameResult.value;
-  fields.lastName = nameResult.lastName;
-  fields.firstName = nameResult.firstName;
-  fields.middleName = nameResult.middleName;
-  confidence.name = nameResult.confidence;
-
-  // SSN (Block 3) - SENSITIVE
-  const ssnResult = extractSSN(text);
-  fields.ssn = ssnResult.value;
-  fields.ssnMasked = ssnResult.masked;
-  confidence.ssn = ssnResult.confidence;
-
-  // Service Number (older DD214s)
-  const serviceNumResult = extractServiceNumber(text);
-  fields.serviceNumber = serviceNumResult.value;
-  confidence.serviceNumber = serviceNumResult.confidence;
-
-  // === MILITARY SERVICE INFO ===
-
-  // Branch (Block 2)
-  const branchResult = extractBranch(text);
-  fields.branch = branchResult.value;
-  fields.component = branchResult.component;
-  confidence.branch = branchResult.confidence;
-
-  // Rank/Grade (Block 4a/4b)
-  const rankResult = extractRank(text);
-  fields.rank = rankResult.value;
-  fields.payGrade = rankResult.payGrade;
-  confidence.rank = rankResult.confidence;
-
-  // MOS (Block 4b/5/11)
-  const mosResult = extractMOS(text);
-  fields.mos = mosResult.value;
-  fields.mosTitle = mosResult.title;
-  confidence.mos = mosResult.confidence;
-
-  // === DATES ===
-
-  // Entry Date (Block 12a)
-  const entryDateResult = extractDate(text, "entry|enlist|active|ead");
-  fields.entryDate = entryDateResult.value;
-  fields.entryDateFormatted = entryDateResult.formatted;
-  confidence.entryDate = entryDateResult.confidence;
-
-  // Separation Date (Block 12b)
-  const sepDateResult = extractDate(text, "separat|discharg|release|ets|dos");
-  fields.separationDate = sepDateResult.value;
-  fields.separationDateFormatted = sepDateResult.formatted;
-  confidence.separationDate = sepDateResult.confidence;
-
-  // Calculate service length
-  if (fields.entryDate && fields.separationDate) {
-    const serviceLength = calculateServiceLength(
-      fields.entryDate,
-      fields.separationDate,
-    );
-    fields.yearsService = serviceLength.years;
-    fields.monthsService = serviceLength.months;
-    fields.daysService = serviceLength.days;
-    fields.totalMonthsService = serviceLength.totalMonths;
-  }
-
-  // === DISCHARGE INFO ===
-
-  // Character of Service (Block 24)
-  const characterResult = extractCharacterOfService(text);
-  fields.characterOfService = characterResult.value;
-  confidence.characterOfService = characterResult.confidence;
-
-  // Separation Code (Block 26)
-  const sepCodeResult = extractSeparationCode(text);
-  fields.separationCode = sepCodeResult.value;
-  fields.separationCodeMeaning = sepCodeResult.meaning;
-  confidence.separationCode = sepCodeResult.confidence;
-
-  // Reentry Code (Block 27)
-  const reentryResult = extractReentryCode(text);
-  fields.reentryCode = reentryResult.value;
-  fields.reentryCodeMeaning = reentryResult.meaning;
-  confidence.reentryCode = reentryResult.confidence;
-
-  // Narrative Reason (Block 28)
-  const narrativeResult = extractNarrativeReason(text);
-  fields.narrativeReason = narrativeResult.value;
-  confidence.narrativeReason = narrativeResult.confidence;
 
   // === AWARDS AND DECORATIONS ===
 
@@ -266,17 +292,20 @@ function extractName(text) {
   // Also handle Florence-2 output which may have different formatting
   const patterns = [
     // Standard DD214 format
+    // eslint-disable-next-line sonarjs/regex-complexity -- deliberately handles multiple real-world DD214 header variants (optional parens, comma/space separators); collapsing branches risks silently dropping formats without a document corpus to validate against
     /name\s*\(?last[,\s]*first[,\s]*middle\)?[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
     // Numbered block format
     /1\.\s*name[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
     // Name followed by SSN or digits
-    /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*\d|\s*ssn|\s*social)/i,
+    // eslint-disable-next-line sonarjs/slow-regex -- three chained unbounded quantifiers gated by a trailing lookahead; rewriting the backtracking shape risks changing which text is captured as last/first/middle without a DD214 sample corpus to validate against
+    /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*(?:\d|ssn|social))/i,
     // Florence-2 may output: "JOHNSON JOHN WILLIAM" or "LAST: JOHNSON FIRST: JOHN"
-    /last\s*name?\s*[:-]?\s*([A-Z][A-Za-z\-']+)\s+first\s*name?\s*[:-]?\s*([A-Za-z\-']+)/i,
+    // eslint-disable-next-line sonarjs/slow-regex -- unbounded name-character quantifier followed by a literal "first" check; greedy-to-lazy or other backtracking rewrites can shift the matched name boundary and aren't safe to guess without a document corpus
+    /last\s*name?\s*[:-]?\s*([A-Z][a-z\-']+)\s+first\s*name?\s*[:-]?\s*([a-z\-']+)/i,
     // Just look for LASTNAME, FIRSTNAME pattern anywhere
     /\b([A-Z][A-Z]+),\s*([A-Z][A-Za-z]+)(?:\s+([A-Z][A-Za-z]*))?(?=\s|$|\d|,)/,
     // Veterans name format - flexible
-    /(?:member|veteran|service\s*member)['']?s?\s*name[:\s]+([A-Z][A-Za-z\-']+),?\s*([A-Za-z\-']+)/i,
+    /(?:member|veteran|service\s*member)'?s?\s*name[:\s]+([A-Z][a-z\-']+),?\s*([a-z\-']+)/i,
   ];
 
   for (let i = 0; i < patterns.length; i++) {
@@ -358,70 +387,71 @@ function extractServiceNumber(text) {
   return { value: null, confidence: 0 };
 }
 
+const BRANCHES = {
+  ARMY: {
+    name: "Army",
+    components: ["Active Army", "Army Reserve", "Army National Guard"],
+  },
+  NAVY: { name: "Navy", components: ["Active Navy", "Navy Reserve"] },
+  "AIR FORCE": {
+    name: "Air Force",
+    components: ["Active Air Force", "Air Force Reserve", "Air National Guard"],
+  },
+  MARINE: {
+    name: "Marine Corps",
+    components: ["Active Marine Corps", "Marine Corps Reserve"],
+  },
+  "COAST GUARD": {
+    name: "Coast Guard",
+    components: ["Active Coast Guard", "Coast Guard Reserve"],
+  },
+  "SPACE FORCE": { name: "Space Force", components: ["Active Space Force"] },
+};
+
+// Also check for abbreviated/variations
+const BRANCH_ALIASES = {
+  "US ARMY": "ARMY",
+  "U.S. ARMY": "ARMY",
+  "UNITED STATES ARMY": "ARMY",
+  USMC: "MARINE",
+  "US MARINE": "MARINE",
+  USAF: "AIR FORCE",
+  "US AIR FORCE": "AIR FORCE",
+  USN: "NAVY",
+  "US NAVY": "NAVY",
+  USCG: "COAST GUARD",
+  USSF: "SPACE FORCE",
+};
+
+function determineComponent(textUpper) {
+  if (
+    textUpper.includes("RESERVE") ||
+    textUpper.includes("USAR") ||
+    textUpper.includes("USNR")
+  ) {
+    return "Reserve";
+  }
+  if (
+    textUpper.includes("NATIONAL GUARD") ||
+    textUpper.includes("ARNG") ||
+    textUpper.includes("ANG")
+  ) {
+    return "National Guard";
+  }
+  return "Active";
+}
+
 /**
  * Extract branch of service
  */
 function extractBranch(text) {
-  const branches = {
-    ARMY: {
-      name: "Army",
-      components: ["Active Army", "Army Reserve", "Army National Guard"],
-    },
-    NAVY: { name: "Navy", components: ["Active Navy", "Navy Reserve"] },
-    "AIR FORCE": {
-      name: "Air Force",
-      components: [
-        "Active Air Force",
-        "Air Force Reserve",
-        "Air National Guard",
-      ],
-    },
-    MARINE: {
-      name: "Marine Corps",
-      components: ["Active Marine Corps", "Marine Corps Reserve"],
-    },
-    "COAST GUARD": {
-      name: "Coast Guard",
-      components: ["Active Coast Guard", "Coast Guard Reserve"],
-    },
-    "SPACE FORCE": { name: "Space Force", components: ["Active Space Force"] },
-  };
-
-  // Also check for abbreviated/variations
-  const branchAliases = {
-    "US ARMY": "ARMY",
-    "U.S. ARMY": "ARMY",
-    "UNITED STATES ARMY": "ARMY",
-    USMC: "MARINE",
-    "US MARINE": "MARINE",
-    USAF: "AIR FORCE",
-    "US AIR FORCE": "AIR FORCE",
-    USN: "NAVY",
-    "US NAVY": "NAVY",
-    USCG: "COAST GUARD",
-    USSF: "SPACE FORCE",
-  };
-
   const textUpper = text.toUpperCase();
 
   // Check aliases first
-  for (const [alias, branchKey] of Object.entries(branchAliases)) {
+  for (const [alias, branchKey] of Object.entries(BRANCH_ALIASES)) {
     if (textUpper.includes(alias)) {
-      const value = branches[branchKey];
-      let component = "Active";
-      if (
-        textUpper.includes("RESERVE") ||
-        textUpper.includes("USAR") ||
-        textUpper.includes("USNR")
-      ) {
-        component = "Reserve";
-      } else if (
-        textUpper.includes("NATIONAL GUARD") ||
-        textUpper.includes("ARNG") ||
-        textUpper.includes("ANG")
-      ) {
-        component = "National Guard";
-      }
+      const value = BRANCHES[branchKey];
+      const component = determineComponent(textUpper);
       // eslint-disable-next-line no-console
       console.log(
         `🔍 [DD214Parser:Branch] Found via alias "${alias}":`,
@@ -431,24 +461,9 @@ function extractBranch(text) {
     }
   }
 
-  for (const [key, value] of Object.entries(branches)) {
+  for (const [key, value] of Object.entries(BRANCHES)) {
     if (textUpper.includes(key)) {
-      // Try to detect component
-      let component = "Active";
-      if (
-        textUpper.includes("RESERVE") ||
-        textUpper.includes("USAR") ||
-        textUpper.includes("USNR")
-      ) {
-        component = "Reserve";
-      } else if (
-        textUpper.includes("NATIONAL GUARD") ||
-        textUpper.includes("ARNG") ||
-        textUpper.includes("ANG")
-      ) {
-        component = "National Guard";
-      }
-
+      const component = determineComponent(textUpper);
       // eslint-disable-next-line no-console
       console.log(`🔍 [DD214Parser:Branch] Found:`, value.name);
       return {
@@ -464,6 +479,74 @@ function extractBranch(text) {
   return { value: null, component: null, confidence: 0 };
 }
 
+// Enlisted ranks
+const ENLISTED_RANKS = [
+  "PVT",
+  "PV2",
+  "PFC",
+  "SPC",
+  "CPL",
+  "SGT",
+  "SSG",
+  "SFC",
+  "MSG",
+  "1SG",
+  "SGM",
+  "CSM",
+  "SR",
+  "SA",
+  "SN",
+  "PO3",
+  "PO2",
+  "PO1",
+  "CPO",
+  "SCPO",
+  "MCPO",
+  "AB",
+  "AMN",
+  "A1C",
+  "SRA",
+  "SSGT",
+  "TSGT",
+  "MSGT",
+  "SMSGT",
+  "CMSGT",
+  "PVT",
+  "LCPL",
+  "CPL",
+  "SGT",
+  "SSGT",
+  "GYSGT",
+  "MSGT",
+  "MGYSGT",
+  "SGTMAJ",
+];
+
+// Officer ranks
+const OFFICER_RANKS = [
+  "2LT",
+  "1LT",
+  "CPT",
+  "MAJ",
+  "LTC",
+  "COL",
+  "BG",
+  "MG",
+  "LTG",
+  "GEN",
+  "ENS",
+  "LTJG",
+  "LT",
+  "LCDR",
+  "CDR",
+  "CAPT",
+  "RADM",
+  "VADM",
+  "ADM",
+];
+
+const ALL_RANKS = [...ENLISTED_RANKS, ...OFFICER_RANKS];
+
 /**
  * Extract rank and pay grade
  */
@@ -472,83 +555,23 @@ function extractRank(text) {
   const payGradePattern = /(?:pay\s*grade|grade)[:\s]*([EWO]-?\d{1,2})/i;
   const payMatch = text.match(payGradePattern);
 
-  // Enlisted ranks
-  const enlistedRanks = [
-    "PVT",
-    "PV2",
-    "PFC",
-    "SPC",
-    "CPL",
-    "SGT",
-    "SSG",
-    "SFC",
-    "MSG",
-    "1SG",
-    "SGM",
-    "CSM",
-    "SR",
-    "SA",
-    "SN",
-    "PO3",
-    "PO2",
-    "PO1",
-    "CPO",
-    "SCPO",
-    "MCPO",
-    "AB",
-    "AMN",
-    "A1C",
-    "SRA",
-    "SSGT",
-    "TSGT",
-    "MSGT",
-    "SMSGT",
-    "CMSGT",
-    "PVT",
-    "LCPL",
-    "CPL",
-    "SGT",
-    "SSGT",
-    "GYSGT",
-    "MSGT",
-    "MGYSGT",
-    "SGTMAJ",
-  ];
-
-  // Officer ranks
-  const officerRanks = [
-    "2LT",
-    "1LT",
-    "CPT",
-    "MAJ",
-    "LTC",
-    "COL",
-    "BG",
-    "MG",
-    "LTG",
-    "GEN",
-    "ENS",
-    "LTJG",
-    "LT",
-    "LCDR",
-    "CDR",
-    "CAPT",
-    "RADM",
-    "VADM",
-    "ADM",
-  ];
-
-  const allRanks = [...enlistedRanks, ...officerRanks];
   const rankPattern = new RegExp(
-    `(?:rank|grade|rate)[:\\s]*(${allRanks.join("|")})`,
+    `(?:rank|grade|rate)[:\\s]*(${ALL_RANKS.join("|")})`,
     "i",
   );
   const rankMatch = text.match(rankPattern);
 
+  let confidence = 0;
+  if (rankMatch) {
+    confidence = 85;
+  } else if (payMatch) {
+    confidence = 70;
+  }
+
   return {
     value: rankMatch ? rankMatch[1].toUpperCase() : null,
     payGrade: payMatch ? payMatch[1].toUpperCase().replace("-", "") : null,
-    confidence: rankMatch ? 85 : payMatch ? 70 : 0,
+    confidence,
   };
 }
 
@@ -563,15 +586,15 @@ function extractMOS(text) {
 
   const patterns = [
     // Block 11 - Primary Specialty
-    /primary\s*(?:specialty|mos|afsc|rating)[:\s#]*([0-9A-Z]{2,6})\s*[-–]\s*([A-Za-z\s]+)/i,
+    /primary\s*(?:specialty|mos|afsc|rating)[:\s#]*([0-9A-Z]{2,6})\s*[-–]\s*([a-z\s]+)/i,
     // Block 4b/5
-    /(?:mos|afsc|rating|specialty)[:\s#]*([0-9]{2}[A-Z]{1,2}[0-9]?)/i,
+    /(?:mos|afsc|rating|specialty)[:\s#]*(\d{2}[A-Z]{1,2}\d?)/i,
     // Army format: 11B, 92Y
-    /(?:mos|pmos)[:\s#]*([0-9]{2}[A-Z][0-9]?)/i,
+    /(?:mos|pmos)[:\s#]*(\d{2}[A-Z]\d?)/i,
     // Air Force AFSC: 2A5X1
-    /afsc[:\s#]*([0-9][A-Z][0-9X][0-9X][0-9X]?)/i,
+    /afsc[:\s#]*(\d[A-Z][0-9X][0-9X][0-9X]?)/i,
     // Marine: 0311
-    /mos[:\s#]*(0[0-9]{3})/i,
+    /mos[:\s#]*(0\d{3})/i,
   ];
 
   for (const pattern of patterns) {
@@ -769,7 +792,8 @@ function extractReentryCode(text) {
  */
 function extractNarrativeReason(text) {
   const pattern =
-    /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([A-Za-z\s,]+)(?=\s*\d|\s*29|\s*block)/i;
+    // eslint-disable-next-line sonarjs/slow-regex -- input is OCR text from a user's own DD214, bounded to a few KB, not attacker-controlled; a mechanical rewrite of the [:\s]+/[a-z\s,]+ overlap risks changing which narrative text gets captured
+    /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([a-z\s,]+)(?=\s*(?:\d|29|block))/i;
   const match = text.match(pattern);
 
   if (match) {
@@ -779,126 +803,126 @@ function extractNarrativeReason(text) {
   return { value: null, confidence: 0 };
 }
 
+// Common military awards
+const AWARD_PATTERNS = [
+  {
+    name: "Purple Heart",
+    abbrev: "PH",
+    combat: true,
+    pattern: /purple\s*heart/gi,
+  },
+  {
+    name: "Bronze Star Medal",
+    abbrev: "BSM",
+    combat: true,
+    pattern: /bronze\s*star/gi,
+  },
+  {
+    name: "Silver Star",
+    abbrev: "SS",
+    combat: true,
+    pattern: /silver\s*star/gi,
+  },
+  {
+    name: "Combat Infantryman Badge",
+    abbrev: "CIB",
+    combat: true,
+    pattern: /combat\s*infantry(?:man)?\s*badge|cib/gi,
+  },
+  {
+    name: "Combat Action Badge",
+    abbrev: "CAB",
+    combat: true,
+    pattern: /combat\s*action\s*badge|cab/gi,
+  },
+  {
+    name: "Combat Action Ribbon",
+    abbrev: "CAR",
+    combat: true,
+    pattern: /combat\s*action\s*ribbon|car/gi,
+  },
+  {
+    name: "Army Commendation Medal",
+    abbrev: "ARCOM",
+    combat: false,
+    pattern: /army\s*commendation/gi,
+  },
+  {
+    name: "Army Achievement Medal",
+    abbrev: "AAM",
+    combat: false,
+    pattern: /army\s*achievement/gi,
+  },
+  {
+    name: "Good Conduct Medal",
+    abbrev: "GCM",
+    combat: false,
+    pattern: /good\s*conduct/gi,
+  },
+  {
+    name: "National Defense Service Medal",
+    abbrev: "NDSM",
+    combat: false,
+    pattern: /national\s*defense/gi,
+  },
+  {
+    name: "Global War on Terrorism Service Medal",
+    abbrev: "GWOTSM",
+    combat: false,
+    pattern: /global\s*war.*terrorism.*service/gi,
+  },
+  {
+    name: "Global War on Terrorism Expeditionary Medal",
+    abbrev: "GWOTEM",
+    combat: true,
+    pattern: /global\s*war.*terrorism.*expedition/gi,
+  },
+  {
+    name: "Iraq Campaign Medal",
+    abbrev: "ICM",
+    combat: true,
+    pattern: /iraq\s*campaign/gi,
+  },
+  {
+    name: "Afghanistan Campaign Medal",
+    abbrev: "ACM",
+    combat: true,
+    pattern: /afghanistan\s*campaign/gi,
+  },
+  {
+    name: "Expert Infantryman Badge",
+    abbrev: "EIB",
+    combat: false,
+    pattern: /expert\s*infantry(?:man)?\s*badge|eib/gi,
+  },
+  {
+    name: "Parachutist Badge",
+    abbrev: "PARA",
+    combat: false,
+    pattern: /parachutist|airborne/gi,
+  },
+  {
+    name: "Air Assault Badge",
+    abbrev: "AAB",
+    combat: false,
+    pattern: /air\s*assault/gi,
+  },
+  {
+    name: "Meritorious Service Medal",
+    abbrev: "MSM",
+    combat: false,
+    pattern: /meritorious\s*service/gi,
+  },
+];
+
 /**
  * Extract awards and decorations from Block 13 and Block 18
  */
 function extractAwards(text) {
-  // Common military awards
-  const awardPatterns = [
-    {
-      name: "Purple Heart",
-      abbrev: "PH",
-      combat: true,
-      pattern: /purple\s*heart/gi,
-    },
-    {
-      name: "Bronze Star Medal",
-      abbrev: "BSM",
-      combat: true,
-      pattern: /bronze\s*star/gi,
-    },
-    {
-      name: "Silver Star",
-      abbrev: "SS",
-      combat: true,
-      pattern: /silver\s*star/gi,
-    },
-    {
-      name: "Combat Infantryman Badge",
-      abbrev: "CIB",
-      combat: true,
-      pattern: /combat\s*infantry(?:man)?\s*badge|cib/gi,
-    },
-    {
-      name: "Combat Action Badge",
-      abbrev: "CAB",
-      combat: true,
-      pattern: /combat\s*action\s*badge|cab/gi,
-    },
-    {
-      name: "Combat Action Ribbon",
-      abbrev: "CAR",
-      combat: true,
-      pattern: /combat\s*action\s*ribbon|car/gi,
-    },
-    {
-      name: "Army Commendation Medal",
-      abbrev: "ARCOM",
-      combat: false,
-      pattern: /army\s*commendation/gi,
-    },
-    {
-      name: "Army Achievement Medal",
-      abbrev: "AAM",
-      combat: false,
-      pattern: /army\s*achievement/gi,
-    },
-    {
-      name: "Good Conduct Medal",
-      abbrev: "GCM",
-      combat: false,
-      pattern: /good\s*conduct/gi,
-    },
-    {
-      name: "National Defense Service Medal",
-      abbrev: "NDSM",
-      combat: false,
-      pattern: /national\s*defense/gi,
-    },
-    {
-      name: "Global War on Terrorism Service Medal",
-      abbrev: "GWOTSM",
-      combat: false,
-      pattern: /global\s*war.*terrorism.*service/gi,
-    },
-    {
-      name: "Global War on Terrorism Expeditionary Medal",
-      abbrev: "GWOTEM",
-      combat: true,
-      pattern: /global\s*war.*terrorism.*expedition/gi,
-    },
-    {
-      name: "Iraq Campaign Medal",
-      abbrev: "ICM",
-      combat: true,
-      pattern: /iraq\s*campaign/gi,
-    },
-    {
-      name: "Afghanistan Campaign Medal",
-      abbrev: "ACM",
-      combat: true,
-      pattern: /afghanistan\s*campaign/gi,
-    },
-    {
-      name: "Expert Infantryman Badge",
-      abbrev: "EIB",
-      combat: false,
-      pattern: /expert\s*infantry(?:man)?\s*badge|eib/gi,
-    },
-    {
-      name: "Parachutist Badge",
-      abbrev: "PARA",
-      combat: false,
-      pattern: /parachutist|airborne/gi,
-    },
-    {
-      name: "Air Assault Badge",
-      abbrev: "AAB",
-      combat: false,
-      pattern: /air\s*assault/gi,
-    },
-    {
-      name: "Meritorious Service Medal",
-      abbrev: "MSM",
-      combat: false,
-      pattern: /meritorious\s*service/gi,
-    },
-  ];
-
   const awards = [];
   let hasCombatAwards = false;
 
-  for (const award of awardPatterns) {
+  for (const award of AWARD_PATTERNS) {
     const matches = text.match(award.pattern);
     if (matches) {
       awards.push({
@@ -914,7 +938,7 @@ function extractAwards(text) {
   }
 
   // Look for device indicators (Oak Leaf Clusters, etc.)
-  const olcPattern = /(\d+)\s*(?:oak\s*leaf|olc)/gi;
+  const olcPattern = /(\d{1,2})\s*(?:oak\s*leaf|olc)/gi;
   const olcMatches = text.match(olcPattern);
   if (olcMatches) {
     // Note: Would need to associate with specific awards

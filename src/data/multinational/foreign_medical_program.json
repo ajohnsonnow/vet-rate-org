@@ -1,0 +1,213 @@
+{
+  "category": "foreign_medical_program",
+  "displayName": "Foreign Medical Program",
+  "officialSource": "https://www.va.gov/COMMUNITYCARE/programs/veterans/fmp/index.asp",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "provisions": [
+    {
+      "id": "foreign_medical_program-what-the-foreign-medical-program-fmp-is",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "What the Foreign Medical Program (FMP) is",
+      "description": "FMP is a VA health benefit that may pay for medical care a Veteran gets outside the United States for a VA-rated service-connected condition. It exists for Veterans who live in or travel to a foreign country.",
+      "keyPoints": [
+        "Covers care obtained outside the U.S. for a service-connected condition",
+        "VA may cover the cost of that care when it is medically necessary",
+        "Administered by VHA Office of Integrated Veteran Care"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": null,
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": null,
+        "url": "https://www.va.gov/COMMUNITYCARE/programs/veterans/fmp/index.asp",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/COMMUNITYCARE/programs/veterans/fmp/index.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-who-qualifies-and-what-care-fmp-pays-for",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "Who qualifies and what care FMP pays for",
+      "description": "FMP covers medically necessary services for a VA-rated service-connected disability, for a condition associated with a service-connected disability that VA determines the service-connected disability makes worse, or as part of care received in the Veteran Readiness and Employment (VR&E) program.",
+      "keyPoints": [
+        "Care for a VA-rated, service-connected disability",
+        "Care for a condition associated with a service-connected disability that VA determines the service-connected disability makes worse",
+        "Care that is part of participation in the Veteran Readiness and Employment (VR&E) program",
+        "Services must be medically necessary"
+      ],
+      "eligibility": "Veterans getting medical care in a country outside the U.S. for a VA-rated service-connected disability, an associated/aggravated condition, or as part of VR&E program care.",
+      "application": {
+        "howToFile": null,
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": null,
+        "url": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-fmp-only-covers-care-obtained-in-a-foreign-count",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "FMP only covers care obtained in a foreign country",
+      "description": "FMP can only be used for care received in a foreign country. VA will not cover care or supplies obtained in or from the U.S. or U.S. territories under this program.",
+      "keyPoints": [
+        "Care must be received in a foreign country to be covered by FMP",
+        "Care or supplies obtained in or from the U.S. or U.S. territories are not covered under FMP"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": null,
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": null,
+        "url": "https://www.va.gov/COMMUNITYCARE/programs/veterans/fmp/index.asp",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/COMMUNITYCARE/programs/veterans/fmp/index.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-filing-an-fmp-claim-va-form-10-7959f-2",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "Filing an FMP claim (VA Form 10-7959f-2)",
+      "description": "To be reimbursed, Veterans file an FMP claim using the FMP Claim Cover Sheet, VA Form 10-7959f-2. Claims can be filed online, by email, by mail, or by fax.",
+      "keyPoints": [
+        "Claim form is the Foreign Medical Program (FMP) Claim Cover Sheet, VA Form 10-7959f-2",
+        "Four ways to file: online, by email, by mail, or by fax",
+        "Email completed form and supporting documents to HAC.FMP@va.gov",
+        "Mailing address for care in any country except Canada: VHA Office of Integrated Veteran Care Foreign Medical Program (FMP), PO Box 200, Spring City, PA 19475",
+        "A separate Canada-specific mailing address is provided on the page"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": "File the completed VA Form 10-7959f-2 (FMP Claim Cover Sheet) with supporting documents online, by email to HAC.FMP@va.gov, by fax, or by mail to the FMP office (PO Box 200, Spring City, PA 19475 for care outside Canada).",
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": "VA Form 10-7959f-2",
+        "url": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-fmp-claim-cover-sheet-form-identity-confirmed",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "FMP Claim Cover Sheet form identity confirmed",
+      "description": "VA's official form catalog confirms VA Form 10-7959f-2 is the Foreign Medical Program (FMP) Claim Cover Sheet, categorized under health care.",
+      "keyPoints": [
+        "VA Form 10-7959f-2 = Foreign Medical Program (FMP) Claim Cover Sheet",
+        "Listed under the VA 'find forms' catalog, related to health care"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": null,
+        "agency": "Department of Veterans Affairs",
+        "form": "VA Form 10-7959f-2",
+        "url": "https://www.va.gov/find-forms/about-form-10-7959f-2/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/find-forms/about-form-10-7959f-2/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-registering-for-fmp-va-form-10-7959f-1",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "Registering for FMP (VA Form 10-7959f-1)",
+      "description": "Before using FMP, Veterans register with the FMP office. The registration form is VA Form 10-7959f-1, hosted on VA's dedicated FMP registration page. The exact registration mailing address and FMP office phone number could not be confirmed by reading an official page (the values render as blanks in the page conversion) and are left null rather than guessed.",
+      "keyPoints": [
+        "Registration form is VA Form 10-7959f-1 (per the official VA registration page URL and form catalog title)",
+        "Registration mailing address and FMP office phone number were not confirmable by direct page read and are intentionally left null"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": "Complete VA Form 10-7959f-1 to register for the Foreign Medical Program (registration page: https://www.va.gov/health-care/foreign-medical-program/register-form-10-7959f-1/). Mailing address for the form could not be verified here.",
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": "VA Form 10-7959f-1",
+        "url": "https://www.va.gov/health-care/foreign-medical-program/register-form-10-7959f-1/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/health-care/foreign-medical-program/register-form-10-7959f-1/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "unverified"
+    },
+    {
+      "id": "foreign_medical_program-care-in-the-philippines-manila-va-outpatient-cli",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "Care in the Philippines (Manila VA Outpatient Clinic and FMP)",
+      "description": "The Philippines is handled distinctly: the Manila VA Outpatient Clinic (the only VA facility in a foreign country) and the VA Foreign Medical Program together provide care for a Veteran's VA-rated service-connected disability, or any disability associated with and held to be aggravating a service-connected disability. Veterans in the Philippines are advised to enroll in both the Manila VA OPC and FMP.",
+      "keyPoints": [
+        "Manila VA Outpatient Clinic and VA FMP provide care only for VA-rated service-connected disabilities (or associated/aggravating conditions)",
+        "Statutory/regulatory basis cited by VA: 38 U.S.C. 1724 and 38 C.F.R. 17.35",
+        "Manila VA OPC is the only VA facility located in a foreign country",
+        "Veterans in the Philippines are advised to enroll in both the Manila VA OPC and FMP"
+      ],
+      "eligibility": "U.S. Veterans residing in or visiting the Philippines with a VA-rated service-connected disability (or an associated/aggravating condition).",
+      "application": {
+        "howToFile": null,
+        "agency": "Manila VA Outpatient Clinic / VHA Office of Integrated Veteran Care (FMP)",
+        "form": null,
+        "url": "https://www.va.gov/manila-health-care/health-services/",
+        "phone": null
+      },
+      "legalCitation": "38 U.S.C. 1724; 38 C.F.R. 17.35",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/manila-health-care/health-services/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "foreign_medical_program-fmp-contact-options-email-and-country-toll-free-",
+      "category": "foreign_medical_program",
+      "displayCategory": "Foreign Medical Program",
+      "name": "FMP contact options (email and country toll-free lines)",
+      "description": "VA's FMP claim page lists an email address and several country-specific toll-free phone numbers for reaching the program. The primary U.S. FMP office phone number rendered as a blank in the official page conversion and is left null rather than guessed.",
+      "keyPoints": [
+        "Email: HAC.FMP@va.gov",
+        "Australia toll-free: 1800 354 965",
+        "Italy toll-free: 800 782655",
+        "Spain toll-free: 900 981 776",
+        "Japan toll-free: 00531-13-0871",
+        "Primary U.S. FMP office phone number was not confirmable by direct page read and is left null"
+      ],
+      "eligibility": null,
+      "application": {
+        "howToFile": null,
+        "agency": "VHA Office of Integrated Veteran Care",
+        "form": null,
+        "url": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/health-care/file-foreign-medical-program-claim/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

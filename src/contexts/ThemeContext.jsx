@@ -30,94 +30,69 @@ export const COLOR_BLIND_MODES = {
   HIGH_CONTRAST: "high-contrast",
 };
 
-export function ThemeProvider({ children }) {
-  // Initialize from localStorage or default to dark mode
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("vet-rate-theme");
-    if (saved) return saved;
-    // Default to dark theme instead of checking system preference
-    return THEME_MODES.DARK;
+function applyThemeToDocument(
+  theme,
+  colorBlindMode,
+  reducedMotion,
+  fontSize,
+  palette,
+) {
+  const root = document.documentElement;
+
+  // Remove all theme classes
+  root.classList.remove("light", "dark", "tbi-comfort", "aaa-high-contrast");
+
+  // Apply the correct theme class
+  if (theme === THEME_MODES.TBI_COMFORT) {
+    root.classList.add("tbi-comfort");
+  } else if (theme === THEME_MODES.AAA_CONTRAST) {
+    root.classList.add("aaa-high-contrast");
+  } else {
+    root.classList.add(theme);
+  }
+
+  // Remove all color blind classes
+  Object.values(COLOR_BLIND_MODES).forEach((mode) => {
+    root.classList.remove(`cb-${mode}`);
   });
+  if (colorBlindMode !== COLOR_BLIND_MODES.NONE) {
+    root.classList.add(`cb-${colorBlindMode}`);
+  }
 
-  const [colorBlindMode, setColorBlindMode] = useState(() => {
-    return (
-      localStorage.getItem("vet-rate-color-blind-mode") ||
-      COLOR_BLIND_MODES.NONE
-    );
-  });
+  // Reduced motion
+  if (reducedMotion) {
+    root.classList.add("reduce-motion");
+  } else {
+    root.classList.remove("reduce-motion");
+  }
 
-  const [reducedMotion, setReducedMotion] = useState(() => {
-    const saved = localStorage.getItem("vet-rate-reduced-motion");
-    if (saved) return saved === "true";
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  });
+  // Font size
+  root.classList.remove(
+    "font-small",
+    "font-normal",
+    "font-large",
+    "font-xlarge",
+  );
+  root.classList.add(`font-${fontSize}`);
 
-  const [fontSize, setFontSize] = useState(() => {
-    return localStorage.getItem("vet-rate-font-size") || "normal";
-  });
+  // Affiliation palette — remove any previous palette-* class, then apply.
+  // Precedence (docs/AFFILIATION_PALETTES.md §2): accessibility outranks branding.
+  // A palette only applies in plain light/dark with no colorblind mode active; the
+  // colorblind / TBI / AAA modes keep their purpose-built accents untouched.
+  PALETTES.forEach(({ id }) => root.classList.remove(`palette-${id}`));
+  if (palette !== "default" && colorBlindMode === COLOR_BLIND_MODES.NONE) {
+    root.classList.add(`palette-${palette}`);
+  }
 
-  const [palette, setPaletteState] = useState(() => {
-    const saved = localStorage.getItem("vet-rate-palette");
-    return saved && VALID_PALETTES.has(saved) ? saved : "default";
-  });
+  // Save to localStorage
+  localStorage.setItem("vet-rate-theme", theme);
+  localStorage.setItem("vet-rate-color-blind-mode", colorBlindMode);
+  localStorage.setItem("vet-rate-reduced-motion", reducedMotion.toString());
+  localStorage.setItem("vet-rate-font-size", fontSize);
+  localStorage.setItem("vet-rate-palette", palette);
+}
 
-  // Apply theme to document
-  useEffect(() => {
-    const root = document.documentElement;
-
-    // Remove all theme classes
-    root.classList.remove("light", "dark", "tbi-comfort", "aaa-high-contrast");
-
-    // Apply the correct theme class
-    if (theme === THEME_MODES.TBI_COMFORT) {
-      root.classList.add("tbi-comfort");
-    } else if (theme === THEME_MODES.AAA_CONTRAST) {
-      root.classList.add("aaa-high-contrast");
-    } else {
-      root.classList.add(theme);
-    }
-
-    // Remove all color blind classes
-    Object.values(COLOR_BLIND_MODES).forEach((mode) => {
-      root.classList.remove(`cb-${mode}`);
-    });
-    if (colorBlindMode !== COLOR_BLIND_MODES.NONE) {
-      root.classList.add(`cb-${colorBlindMode}`);
-    }
-
-    // Reduced motion
-    if (reducedMotion) {
-      root.classList.add("reduce-motion");
-    } else {
-      root.classList.remove("reduce-motion");
-    }
-
-    // Font size
-    root.classList.remove(
-      "font-small",
-      "font-normal",
-      "font-large",
-      "font-xlarge",
-    );
-    root.classList.add(`font-${fontSize}`);
-
-    // Affiliation palette — remove any previous palette-* class, then apply.
-    // Precedence (docs/AFFILIATION_PALETTES.md §2): accessibility outranks branding.
-    // A palette only applies in plain light/dark with no colorblind mode active; the
-    // colorblind / TBI / AAA modes keep their purpose-built accents untouched.
-    PALETTES.forEach(({ id }) => root.classList.remove(`palette-${id}`));
-    if (palette !== "default" && colorBlindMode === COLOR_BLIND_MODES.NONE) {
-      root.classList.add(`palette-${palette}`);
-    }
-
-    // Save to localStorage
-    localStorage.setItem("vet-rate-theme", theme);
-    localStorage.setItem("vet-rate-color-blind-mode", colorBlindMode);
-    localStorage.setItem("vet-rate-reduced-motion", reducedMotion.toString());
-    localStorage.setItem("vet-rate-font-size", fontSize);
-    localStorage.setItem("vet-rate-palette", palette);
-  }, [theme, colorBlindMode, reducedMotion, fontSize, palette]);
-
+function useSystemThemeSync(setTheme) {
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -128,8 +103,10 @@ export function ThemeProvider({ children }) {
     };
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  }, [setTheme]);
+}
 
+function useSystemReducedMotionSync(setReducedMotion) {
   // Listen for system reduced-motion changes (parallels color-scheme above).
   // If the user hasn't set an in-app override, mirror their OS preference
   // live — so toggling "Reduce motion" in System Settings updates the app
@@ -143,41 +120,27 @@ export function ThemeProvider({ children }) {
     };
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  }, [setReducedMotion]);
+}
 
-  const toggleTheme = () => {
-    setTheme((prev) =>
-      prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT,
-    );
-  };
-
-  // Cycle through all theme modes
-  const cycleTheme = () => {
-    const modes = [
-      THEME_MODES.LIGHT,
-      THEME_MODES.DARK,
-      THEME_MODES.TBI_COMFORT,
-      THEME_MODES.AAA_CONTRAST,
-    ];
-    const currentIndex = modes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setTheme(modes[nextIndex]);
-  };
-
-  const setPalette = (id) => {
-    if (VALID_PALETTES.has(id)) {
-      setPaletteState(id);
-    }
-  };
-
-  const isDark =
-    theme === THEME_MODES.DARK ||
-    theme === THEME_MODES.TBI_COMFORT ||
-    theme === THEME_MODES.AAA_CONTRAST;
-  const isTbiComfort = theme === THEME_MODES.TBI_COMFORT;
-  const isAaaContrast = theme === THEME_MODES.AAA_CONTRAST;
-
-  const value = {
+function buildThemeContextValue({
+  theme,
+  setTheme,
+  toggleTheme,
+  cycleTheme,
+  isDark,
+  isTbiComfort,
+  isAaaContrast,
+  colorBlindMode,
+  setColorBlindMode,
+  reducedMotion,
+  setReducedMotion,
+  fontSize,
+  setFontSize,
+  palette,
+  setPalette,
+}) {
+  return {
     theme,
     setTheme,
     toggleTheme,
@@ -211,6 +174,102 @@ export function ThemeProvider({ children }) {
       border: BORDER_COLORS,
     },
   };
+}
+
+export function ThemeProvider({ children }) {
+  // Initialize from localStorage or default to dark mode
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-theme");
+    if (saved) return saved;
+    // Default to dark theme instead of checking system preference
+    return THEME_MODES.DARK;
+  });
+
+  const [colorBlindMode, setColorBlindMode] = useState(() => {
+    return (
+      localStorage.getItem("vet-rate-color-blind-mode") ||
+      COLOR_BLIND_MODES.NONE
+    );
+  });
+
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-reduced-motion");
+    if (saved) return saved === "true";
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+
+  const [fontSize, setFontSize] = useState(() => {
+    return localStorage.getItem("vet-rate-font-size") || "normal";
+  });
+
+  const [palette, setPaletteState] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-palette");
+    return saved && VALID_PALETTES.has(saved) ? saved : "default";
+  });
+
+  // Apply theme to document
+  useEffect(() => {
+    applyThemeToDocument(
+      theme,
+      colorBlindMode,
+      reducedMotion,
+      fontSize,
+      palette,
+    );
+  }, [theme, colorBlindMode, reducedMotion, fontSize, palette]);
+
+  useSystemThemeSync(setTheme);
+  useSystemReducedMotionSync(setReducedMotion);
+
+  const toggleTheme = () => {
+    setTheme((prev) =>
+      prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT,
+    );
+  };
+
+  // Cycle through all theme modes
+  const cycleTheme = () => {
+    const modes = [
+      THEME_MODES.LIGHT,
+      THEME_MODES.DARK,
+      THEME_MODES.TBI_COMFORT,
+      THEME_MODES.AAA_CONTRAST,
+    ];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setTheme(modes[nextIndex]);
+  };
+
+  const setPalette = (id) => {
+    if (VALID_PALETTES.has(id)) {
+      setPaletteState(id);
+    }
+  };
+
+  const isDark =
+    theme === THEME_MODES.DARK ||
+    theme === THEME_MODES.TBI_COMFORT ||
+    theme === THEME_MODES.AAA_CONTRAST;
+  const isTbiComfort = theme === THEME_MODES.TBI_COMFORT;
+  const isAaaContrast = theme === THEME_MODES.AAA_CONTRAST;
+
+  const value = buildThemeContextValue({
+    theme,
+    setTheme,
+    toggleTheme,
+    cycleTheme,
+    isDark,
+    isTbiComfort,
+    isAaaContrast,
+    colorBlindMode,
+    setColorBlindMode,
+    reducedMotion,
+    setReducedMotion,
+    fontSize,
+    setFontSize,
+    palette,
+    setPalette,
+  });
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

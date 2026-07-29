@@ -20,6 +20,151 @@ const _PII_PATTERNS = {
 };
 
 /**
+ * Apply redaction overlay to PII-sensitive elements
+ * Creates temporary black bars over .pii-sensitive elements
+ */
+function buildRedactionOverlays(targetElement) {
+  const overlays = [];
+  const sensitiveElements = targetElement.querySelectorAll(
+    '.pii-sensitive, [data-pii="true"]',
+  );
+
+  sensitiveElements.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "screenshot-redaction-overlay";
+    overlay.style.cssText = `
+        position: absolute;
+        top: ${rect.top - targetRect.top}px;
+        left: ${rect.left - targetRect.left}px;
+        width: ${rect.width}px;
+        height: ${rect.height}px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+        border-radius: 4px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e94560;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        box-shadow: inset 0 0 10px rgba(233, 69, 96, 0.3);
+      `;
+    overlay.innerHTML = "🔒 REDACTED"; // nosemgrep: no-inner-html-unsanitized
+
+    overlays.push(overlay);
+  });
+
+  return overlays;
+}
+
+/**
+ * Add watermark to canvas
+ */
+function drawWatermark(canvas, watermarkText, watermarkColor) {
+  const ctx = canvas.getContext("2d");
+
+  // Add semi-transparent banner at bottom
+  const bannerHeight = 40;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
+
+  // Add watermark text
+  ctx.font = "bold 14px Inter, system-ui, sans-serif";
+  ctx.fillStyle = watermarkColor;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.fillText(
+    watermarkText,
+    canvas.width - 20,
+    canvas.height - bannerHeight / 2,
+  );
+
+  // Add small logo/icon on left
+  ctx.font = "16px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("🇺🇸", 20, canvas.height - bannerHeight / 2);
+
+  // Add timestamp
+  ctx.font = "11px Inter, system-ui, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.textAlign = "left";
+  ctx.fillText(
+    new Date().toLocaleDateString(),
+    45,
+    canvas.height - bannerHeight / 2,
+  );
+
+  return canvas;
+}
+
+/**
+ * Perform the actual DOM capture: overlay redaction, snapshot with
+ * html2canvas, then watermark the result. Pure aside from DOM/canvas I/O.
+ */
+async function runScreenshotCapture(
+  target,
+  captureOptions,
+  watermarkText,
+  watermarkColor,
+) {
+  // Get the actual DOM element
+  const element = target?.current || target;
+  if (!element || !(element instanceof HTMLElement)) {
+    throw new Error("Invalid target element");
+  }
+
+  // Ensure element has position relative for overlays
+  const originalPosition = element.style.position;
+  element.style.position = "relative";
+
+  // Apply redaction overlays
+  const overlays = buildRedactionOverlays(element);
+  overlays.forEach((overlay) => element.appendChild(overlay));
+
+  // Wait for overlays to render
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Capture with html2canvas
+  const canvas = await html2canvas(element, {
+    backgroundColor: captureOptions.backgroundColor || "#1a1a2e",
+    scale: captureOptions.scale || 2, // High resolution
+    useCORS: true,
+    allowTaint: false,
+    logging: false,
+    ...captureOptions,
+  });
+
+  // Remove overlays
+  overlays.forEach((overlay) => overlay.remove());
+  element.style.position = originalPosition;
+
+  // Add watermark
+  const watermarkedCanvas = drawWatermark(
+    canvas,
+    watermarkText,
+    watermarkColor,
+  );
+
+  // Convert to blob and data URL
+  const dataUrl = watermarkedCanvas.toDataURL("image/png", 1.0);
+  const blob = await new Promise((resolve) =>
+    watermarkedCanvas.toBlob(resolve, "image/png", 1.0),
+  );
+
+  return {
+    dataUrl,
+    blob,
+    width: canvas.width,
+    height: canvas.height,
+  };
+}
+
+/**
  * useScreenshot hook
  *
  * @param {Object} options - Configuration options
@@ -40,92 +185,6 @@ export const useScreenshot = (options = {}) => {
   const [lastCapture, setLastCapture] = useState(null);
 
   /**
-   * Apply redaction overlay to PII-sensitive elements
-   * Creates temporary black bars over .pii-sensitive elements
-   */
-  const applyRedactionOverlays = useCallback((targetElement) => {
-    const overlays = [];
-    const sensitiveElements = targetElement.querySelectorAll(
-      '.pii-sensitive, [data-pii="true"]',
-    );
-
-    sensitiveElements.forEach((el) => {
-      const rect = el.getBoundingClientRect();
-      const targetRect = targetElement.getBoundingClientRect();
-
-      // Create overlay
-      const overlay = document.createElement("div");
-      overlay.className = "screenshot-redaction-overlay";
-      overlay.style.cssText = `
-        position: absolute;
-        top: ${rect.top - targetRect.top}px;
-        left: ${rect.left - targetRect.left}px;
-        width: ${rect.width}px;
-        height: ${rect.height}px;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
-        border-radius: 4px;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #e94560;
-        font-size: 12px;
-        font-weight: bold;
-        letter-spacing: 1px;
-        box-shadow: inset 0 0 10px rgba(233, 69, 96, 0.3);
-      `;
-      overlay.innerHTML = "🔒 REDACTED"; // nosemgrep: no-inner-html-unsanitized
-
-      overlays.push(overlay);
-    });
-
-    return overlays;
-  }, []);
-
-  /**
-   * Add watermark to canvas
-   */
-  const addWatermark = useCallback(
-    (canvas) => {
-      const ctx = canvas.getContext("2d");
-
-      // Add semi-transparent banner at bottom
-      const bannerHeight = 40;
-      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-      ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
-
-      // Add watermark text
-      ctx.font = "bold 14px Inter, system-ui, sans-serif";
-      ctx.fillStyle = watermarkColor;
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-      ctx.fillText(
-        watermarkText,
-        canvas.width - 20,
-        canvas.height - bannerHeight / 2,
-      );
-
-      // Add small logo/icon on left
-      ctx.font = "16px sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("🇺🇸", 20, canvas.height - bannerHeight / 2);
-
-      // Add timestamp
-      ctx.font = "11px Inter, system-ui, sans-serif";
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.textAlign = "left";
-      ctx.fillText(
-        new Date().toLocaleDateString(),
-        45,
-        canvas.height - bannerHeight / 2,
-      );
-
-      return canvas;
-    },
-    [watermarkText, watermarkColor],
-  );
-
-  /**
    * Capture screenshot with redaction
    *
    * @param {HTMLElement|React.RefObject} target - Element or ref to capture
@@ -138,52 +197,13 @@ export const useScreenshot = (options = {}) => {
       setError(null);
 
       try {
-        // Get the actual DOM element
-        const element = target?.current || target;
-        if (!element || !(element instanceof HTMLElement)) {
-          throw new Error("Invalid target element");
-        }
-
-        // Ensure element has position relative for overlays
-        const originalPosition = element.style.position;
-        element.style.position = "relative";
-
-        // Apply redaction overlays
-        const overlays = applyRedactionOverlays(element);
-        overlays.forEach((overlay) => element.appendChild(overlay));
-
-        // Wait for overlays to render
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Capture with html2canvas
-        const canvas = await html2canvas(element, {
-          backgroundColor: captureOptions.backgroundColor || "#1a1a2e",
-          scale: captureOptions.scale || 2, // High resolution
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          ...captureOptions,
-        });
-
-        // Remove overlays
-        overlays.forEach((overlay) => overlay.remove());
-        element.style.position = originalPosition;
-
-        // Add watermark
-        const watermarkedCanvas = addWatermark(canvas);
-
-        // Convert to blob and data URL
-        const dataUrl = watermarkedCanvas.toDataURL("image/png", 1.0);
-        const blob = await new Promise((resolve) =>
-          watermarkedCanvas.toBlob(resolve, "image/png", 1.0),
+        const result = await runScreenshotCapture(
+          target,
+          captureOptions,
+          watermarkText,
+          watermarkColor,
         );
 
-        const result = {
-          dataUrl,
-          blob,
-          width: canvas.width,
-          height: canvas.height,
-        };
         setLastCapture(result);
         setIsCapturing(false);
 
@@ -195,7 +215,7 @@ export const useScreenshot = (options = {}) => {
         throw err;
       }
     },
-    [applyRedactionOverlays, addWatermark],
+    [watermarkText, watermarkColor],
   );
 
   /**

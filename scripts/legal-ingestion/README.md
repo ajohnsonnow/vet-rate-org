@@ -101,10 +101,7 @@ pipeline meets the OWASP LLM01 indirect-prompt-injection bar documented in
 
 ## Determinism / reproducibility
 
-Fetchers honor ETag / If-Modified-Since headers and emit `content_hash` per
-record. `diff.mjs` walks two index versions and reports the symmetric
-difference — used by the weekly cron action to open a PR titled
-`chore(legal): refresh index → v{x.y.z}` when changes are detected.
+Fetchers do not currently send ETag / If-Modified-Since headers; change detection is post-hoc. Each fetcher emits `content_hash` per record, and `diff.mjs` compares hashes between two index versions to detect the symmetric difference — used by the weekly cron action to open a PR titled `chore(legal): refresh index → v{x.y.z}` when changes are detected. Conditional-GET support (skipping unchanged resources) is a planned improvement — see [docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md § S26](../../docs/SPRINT_PLAN_S18-S26_KB_INGESTION.md).
 
 ## Status: SCAFFOLD (Sprint 6)
 

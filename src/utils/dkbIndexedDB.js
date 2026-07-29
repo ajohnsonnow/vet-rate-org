@@ -114,126 +114,135 @@ export const getCachedEntryCount = async () => {
  * @param {function} onProgress - Progress callback (0-100)
  * @returns {Promise<{success: boolean, entryCount: number}>}
  */
+async function _fetchDKBEntries(onProgress) {
+  // First try to fetch the full database
+  let response;
+  let isFullDB = true;
+
+  try {
+    response = await fetch(FULL_DKB_URL);
+    if (!response.ok) {
+      console.warn(
+        "[DKB] Full database not available, using web-optimized version",
+      );
+      response = await fetch(WEB_DKB_URL);
+      isFullDB = false;
+    }
+  } catch (fetchError) {
+    console.warn("[DKB] Fetch error, trying web-optimized:", fetchError);
+    response = await fetch(WEB_DKB_URL);
+    isFullDB = false;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch DKB: ${response.status}`);
+  }
+
+  onProgress(20);
+
+  // Get total size for progress tracking
+  const contentLength = response.headers.get("content-length");
+  const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
+
+  // Read response as stream for progress
+  const reader = response.body.getReader();
+  const chunks = [];
+  let receivedLength = 0;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    chunks.push(value);
+    receivedLength += value.length;
+
+    if (totalSize > 0) {
+      const downloadProgress =
+        20 + Math.round((receivedLength / totalSize) * 50);
+      onProgress(downloadProgress);
+    }
+  }
+
+  // Combine chunks and parse JSON
+  const allChunks = new Uint8Array(receivedLength);
+  let position = 0;
+  for (const chunk of chunks) {
+    allChunks.set(chunk, position);
+    position += chunk.length;
+  }
+
+  onProgress(75);
+  const jsonString = new TextDecoder().decode(allChunks);
+  const data = JSON.parse(jsonString);
+
+  const entries = data.entries || data || [];
+  // eslint-disable-next-line no-console
+  console.log(
+    `[DKB] Parsed ${entries.length} entries (${isFullDB ? "FULL" : "web-optimized"})`,
+  );
+
+  return { entries, isFullDB };
+}
+
+async function _storeDKBEntries(entries, isFullDB, onProgress) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+
+  // Clear existing data
+  await new Promise((resolve, reject) => {
+    const clearRequest = store.clear();
+    clearRequest.onerror = () => reject(clearRequest.error);
+    clearRequest.onsuccess = () => resolve();
+  });
+
+  onProgress(85);
+
+  // Store each entry (batched for performance)
+  const BATCH_SIZE = 1000;
+  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+    const batch = entries.slice(i, i + BATCH_SIZE);
+    for (const entry of batch) {
+      store.put({ id: entry.id, ...entry });
+    }
+
+    const storeProgress = 85 + Math.round((i / entries.length) * 10);
+    onProgress(storeProgress);
+  }
+
+  // Store metadata
+  store.put({
+    id: METADATA_KEY,
+    fullDatabaseLoaded: isFullDB,
+    entryCount: entries.length,
+    downloadedAt: new Date().toISOString(),
+    version: "1.0.0",
+  });
+
+  await new Promise((resolve, reject) => {
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
 export const downloadFullDKB = async (onProgress = () => {}) => {
   try {
     onProgress(5);
     // eslint-disable-next-line no-console
     console.log("[DKB] Starting full database download...");
 
-    // First try to fetch the full database
-    let response;
-    let isFullDB = true;
-
-    try {
-      response = await fetch(FULL_DKB_URL);
-      if (!response.ok) {
-        console.warn(
-          "[DKB] Full database not available, using web-optimized version",
-        );
-        response = await fetch(WEB_DKB_URL);
-        isFullDB = false;
-      }
-    } catch (fetchError) {
-      console.warn("[DKB] Fetch error, trying web-optimized:", fetchError);
-      response = await fetch(WEB_DKB_URL);
-      isFullDB = false;
-    }
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch DKB: ${response.status}`);
-    }
-
-    onProgress(20);
-
-    // Get total size for progress tracking
-    const contentLength = response.headers.get("content-length");
-    const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
-
-    // Read response as stream for progress
-    const reader = response.body.getReader();
-    const chunks = [];
-    let receivedLength = 0;
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      chunks.push(value);
-      receivedLength += value.length;
-
-      if (totalSize > 0) {
-        const downloadProgress =
-          20 + Math.round((receivedLength / totalSize) * 50);
-        onProgress(downloadProgress);
-      }
-    }
-
-    // Combine chunks and parse JSON
-    const allChunks = new Uint8Array(receivedLength);
-    let position = 0;
-    for (const chunk of chunks) {
-      allChunks.set(chunk, position);
-      position += chunk.length;
-    }
-
-    onProgress(75);
-    const jsonString = new TextDecoder().decode(allChunks);
-    const data = JSON.parse(jsonString);
-
-    const entries = data.entries || data || [];
-    // eslint-disable-next-line no-console
-    console.log(
-      `[DKB] Parsed ${entries.length} entries (${isFullDB ? "FULL" : "web-optimized"})`,
-    );
+    const { entries, isFullDB } = await _fetchDKBEntries(onProgress);
 
     onProgress(80);
 
-    // Store in IndexedDB
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-
-    // Clear existing data
-    await new Promise((resolve, reject) => {
-      const clearRequest = store.clear();
-      clearRequest.onerror = () => reject(clearRequest.error);
-      clearRequest.onsuccess = () => resolve();
-    });
-
-    onProgress(85);
-
-    // Store each entry (batched for performance)
-    const BATCH_SIZE = 1000;
-    for (let i = 0; i < entries.length; i += BATCH_SIZE) {
-      const batch = entries.slice(i, i + BATCH_SIZE);
-      for (const entry of batch) {
-        store.put({ id: entry.id, ...entry });
-      }
-
-      const storeProgress = 85 + Math.round((i / entries.length) * 10);
-      onProgress(storeProgress);
-    }
-
-    // Store metadata
-    store.put({
-      id: METADATA_KEY,
-      fullDatabaseLoaded: isFullDB,
-      entryCount: entries.length,
-      downloadedAt: new Date().toISOString(),
-      version: "1.0.0",
-    });
-
-    await new Promise((resolve, reject) => {
-      tx.oncomplete = () => {
-        db.close();
-        resolve();
-      };
-      tx.onerror = () => {
-        db.close();
-        reject(tx.error);
-      };
-    });
+    await _storeDKBEntries(entries, isFullDB, onProgress);
 
     onProgress(100);
     // eslint-disable-next-line no-console

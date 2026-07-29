@@ -31,7 +31,6 @@ const args = process.argv.slice(2);
 const FLAG_UNIT_ONLY = args.includes("--unit-only");
 const FLAG_E2E_ONLY = args.includes("--e2e-only");
 const FLAG_FAST = args.includes("--fast");
-const FLAG_CI = args.includes("--ci") || !!process.env.CI;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 const C = {
@@ -44,14 +43,13 @@ const C = {
 };
 const ok = (s) => `${C.green}✓${C.reset} ${s}`;
 const fail = (s) => `${C.red}✗${C.reset} ${s}`;
-const warn = (s) => `${C.yellow}⚠${C.reset} ${s}`;
 const info = (s) => `${C.cyan}→${C.reset} ${s}`;
 
 // ── Result accumulator ────────────────────────────────────────────────────────
 const results = {
   unit: null,   // { passed, failed, skipped, duration, failures: [] }
   e2e: null,    // { passed, failed, skipped, duration, failures: [] }
-  gitleaks: null, // { clean: bool }
+  gitleaks: null, // shape: clean (bool)
   startTime: Date.now(),
 };
 
@@ -154,9 +152,8 @@ if (!FLAG_E2E_ONLY) {
     const parsed = parseVitestJson(readFileSync(jsonOut, "utf-8"));
     results.unit = { ...parsed, duration: 0 };
     const status = parsed.failed === 0 ? ok : fail;
-    console.log(
-      `  ${status(`Vitest: ${parsed.passed} passed, ${parsed.failed} failed, ${parsed.skipped} skipped`)}`,
-    );
+    const summaryLine = `Vitest: ${parsed.passed} passed, ${parsed.failed} failed, ${parsed.skipped} skipped`;
+    console.log(`  ${status(summaryLine)}`);
     if (parsed.failures.length > 0) {
       for (const f of parsed.failures.slice(0, 10)) {
         console.log(`    ${C.red}•${C.reset} ${f.name}`);
@@ -170,14 +167,21 @@ if (!FLAG_E2E_ONLY) {
     const lines = vitestResult.stdout + vitestResult.stderr;
     const passMatch = lines.match(/(\d+) passed/);
     const failMatch = lines.match(/(\d+) failed/);
+    let unitFailedCount;
+    if (failMatch) {
+      unitFailedCount = parseInt(failMatch[1]);
+    } else {
+      unitFailedCount = vitestResult.code !== 0 ? 1 : 0;
+    }
     results.unit = {
       passed: passMatch ? parseInt(passMatch[1]) : 0,
-      failed: failMatch ? parseInt(failMatch[1]) : (vitestResult.code !== 0 ? 1 : 0),
+      failed: unitFailedCount,
       skipped: 0,
       failures: [],
     };
     const status = results.unit.failed === 0 ? ok : fail;
-    console.log(`  ${status(`Vitest: ${results.unit.passed} passed, ${results.unit.failed} failed`)}`);
+    const fallbackSummaryLine = `Vitest: ${results.unit.passed} passed, ${results.unit.failed} failed`;
+    console.log(`  ${status(fallbackSummaryLine)}`);
     if (vitestResult.code !== 0) {
       console.log(`    Output: ${lines.slice(-500)}`);
     }
@@ -207,9 +211,8 @@ if (!FLAG_UNIT_ONLY) {
     const parsed = parsePlaywrightJson(pwJson);
     results.e2e = { ...parsed, duration: 0 };
     const status = parsed.failed === 0 ? ok : fail;
-    console.log(
-      `  ${status(`Playwright: ${parsed.passed} passed, ${parsed.failed} failed, ${parsed.skipped} skipped`)}`,
-    );
+    const summaryLine = `Playwright: ${parsed.passed} passed, ${parsed.failed} failed, ${parsed.skipped} skipped`;
+    console.log(`  ${status(summaryLine)}`);
     if (parsed.failures.length > 0) {
       for (const f of parsed.failures.slice(0, 15)) {
         console.log(`    ${C.red}•${C.reset} ${f.name}`);
@@ -221,14 +224,21 @@ if (!FLAG_UNIT_ONLY) {
     const lines = pwResult.stdout + pwResult.stderr;
     const passMatch = lines.match(/(\d+) passed/);
     const failMatch = lines.match(/(\d+) failed/);
+    let e2eFailedCount;
+    if (failMatch) {
+      e2eFailedCount = parseInt(failMatch[1]);
+    } else {
+      e2eFailedCount = pwResult.code !== 0 ? 1 : 0;
+    }
     results.e2e = {
       passed: passMatch ? parseInt(passMatch[1]) : 0,
-      failed: failMatch ? parseInt(failMatch[1]) : (pwResult.code !== 0 ? 1 : 0),
+      failed: e2eFailedCount,
       skipped: 0,
       failures: [],
     };
     const status = results.e2e.failed === 0 ? ok : fail;
-    console.log(`  ${status(`Playwright: ${results.e2e.passed} passed, ${results.e2e.failed} failed`)}`);
+    const fallbackSummaryLine = `Playwright: ${results.e2e.passed} passed, ${results.e2e.failed} failed`;
+    console.log(`  ${status(fallbackSummaryLine)}`);
     // Print last 600 chars of output for diagnostics
     if (pwResult.code !== 0) {
       const tail = (lines).slice(-600);

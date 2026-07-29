@@ -10,16 +10,19 @@
 import React, { useState } from "react";
 import DictationButton from "../components/DictationButton";
 
-function MyTextAreaWithDictation() {
+function _MyTextAreaWithDictation() {
   const [text, setText] = useState("");
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium">Personal Statement</label>
+      <label htmlFor="personal-statement" className="block text-sm font-medium">
+        Personal Statement
+      </label>
 
       {/* The textarea container needs to be relative */}
       <div className="relative">
         <textarea
+          id="personal-statement"
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[200px]"
@@ -51,7 +54,7 @@ function MyTextAreaWithDictation() {
 
 import { Redactable } from "../components/RedactionMode";
 
-function VeteranInfoCard({ veteran }) {
+function _VeteranInfoCard({ veteran }) {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
       <h3 className="font-bold mb-4">Veteran Information</h3>
@@ -180,8 +183,8 @@ function HeaderWithSecurity({ securityContext }) {
 
 import { secureSetItem, secureGetItem } from "../utils/secureStorage";
 
-function ComponentWithEncryptedStorage({ securityContext }) {
-  const [claims, setClaims] = useState([]);
+function _ComponentWithEncryptedStorage({ securityContext }) {
+  const [_claims, setClaims] = useState([]);
 
   // Load encrypted data on mount
   useEffect(() => {
@@ -205,7 +208,7 @@ function ComponentWithEncryptedStorage({ securityContext }) {
   }, [securityContext?.currentPin]);
 
   // Save encrypted data
-  const saveClaims = async (newClaims) => {
+  const _saveClaims = async (newClaims) => {
     if (securityContext?.currentPin) {
       try {
         await secureSetItem(
@@ -265,7 +268,7 @@ export default function WrappedApp() {
 // EXAMPLE 6: Multiple Dictation Buttons
 // ============================================
 
-function FormWithMultipleDictationFields() {
+function _FormWithMultipleDictationFields() {
   const [personalStatement, setPersonalStatement] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [impacts, setImpacts] = useState("");
@@ -274,10 +277,14 @@ function FormWithMultipleDictationFields() {
     <form className="space-y-6">
       {/* Field 1: Personal Statement */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">
+        <label
+          htmlFor="ex6-personal-statement"
+          className="block text-sm font-medium mb-2"
+        >
           Personal Statement
         </label>
         <textarea
+          id="ex6-personal-statement"
           value={personalStatement}
           onChange={(e) => setPersonalStatement(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"
@@ -294,8 +301,14 @@ function FormWithMultipleDictationFields() {
 
       {/* Field 2: Symptoms */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">Symptoms</label>
+        <label
+          htmlFor="ex6-symptoms"
+          className="block text-sm font-medium mb-2"
+        >
+          Symptoms
+        </label>
         <textarea
+          id="ex6-symptoms"
           value={symptoms}
           onChange={(e) => setSymptoms(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"
@@ -310,10 +323,11 @@ function FormWithMultipleDictationFields() {
 
       {/* Field 3: Daily Life Impacts */}
       <div className="relative">
-        <label className="block text-sm font-medium mb-2">
+        <label htmlFor="ex6-impacts" className="block text-sm font-medium mb-2">
           How It Affects Your Daily Life
         </label>
         <textarea
+          id="ex6-impacts"
           value={impacts}
           onChange={(e) => setImpacts(e.target.value)}
           className="w-full p-4 border rounded-lg min-h-[150px]"

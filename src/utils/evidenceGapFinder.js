@@ -166,131 +166,34 @@ export function findEvidenceGaps(decisionLetterText, cFileText) {
     const cFileData = segmentCFile(cFileText, { parseDocuments: false });
 
     // Build list of evidence actually in C-File
-    for (const segment of cFileData.segments) {
-      const evidenceItem = {
-        type: segment.type,
-        category: segment.category,
-        preview: segment.preview,
-        id: segment.id,
-        mentioned: false,
-      };
-
-      // Check if this evidence was mentioned in the decision
-      for (const mentioned of report.evidenceInDecision) {
-        const mentionedLower = mentioned.toLowerCase();
-        const previewLower = segment.preview.toLowerCase();
-
-        // Check for matching keywords
-        for (const [_typeName, typeInfo] of Object.entries(EVIDENCE_TYPES)) {
-          for (const pattern of typeInfo.patterns) {
-            if (mentionedLower.match(pattern) && previewLower.match(pattern)) {
-              evidenceItem.mentioned = true;
-              break;
-            }
-          }
-          if (evidenceItem.mentioned) break;
-        }
-        if (evidenceItem.mentioned) break;
-      }
-
-      report.evidenceInCFile.push(evidenceItem);
-    }
+    report.evidenceInCFile = buildEvidenceInCFileList(
+      cFileData,
+      report.evidenceInDecision,
+    );
 
     // === FIND THE GAPS ===
-    for (const evidence of report.evidenceInCFile) {
-      if (!evidence.mentioned) {
-        // This is a gap!
-        const gap = {
-          evidenceType: evidence.type,
-          category: evidence.category,
-          preview: evidence.preview,
-          importance: calculateEvidenceImportance(evidence),
-          potentialImpact: assessPotentialImpact(evidence, decisionData),
-        };
-
-        report.gaps.push(gap);
-        report.gapCount++;
-        report.severityScore += gap.importance;
-      }
-    }
+    const gapResult = collectEvidenceGaps(report.evidenceInCFile, decisionData);
+    report.gaps = gapResult.gaps;
+    report.gapCount = gapResult.gapCount;
+    report.severityScore = gapResult.severityScore;
 
     // === IDENTIFY POTENTIAL VIOLATIONS ===
-    if (report.gapCount > 0) {
-      report.potentialViolations.push({
-        ...DTA_VIOLATIONS.EVIDENCE_NOT_CONSIDERED,
-        affectedEvidence: report.gaps.map((g) => g.preview.substring(0, 50)),
-      });
-    }
-
-    // Check for missing exam
-    const hasConditionDenied = decisionData.conditions?.some(
-      (c) => c.status === "DENIED",
+    report.potentialViolations = identifyPotentialViolations(
+      report,
+      decisionData,
     );
-    const hasCPExam = report.evidenceInCFile.some((e) => e.type === "DBQ");
-    if (hasConditionDenied && !hasCPExam) {
-      report.potentialViolations.push({
-        ...DTA_VIOLATIONS.NO_EXAM_PROVIDED,
-        note: "Condition was denied without a C&P examination",
-      });
-    }
-
-    // Check for favorable evidence ignored
-    const hasNexusLetter = report.evidenceInCFile.some(
-      (e) =>
-        e.preview.toLowerCase().includes("nexus") ||
-        e.preview.toLowerCase().includes("more likely"),
-    );
-    const wasDenied = decisionData.conditions?.some(
-      (c) => c.status === "DENIED",
-    );
-    if (hasNexusLetter && wasDenied) {
-      const nexusEvidence = report.gaps.find(
-        (g) =>
-          g.preview.toLowerCase().includes("nexus") ||
-          g.preview.toLowerCase().includes("likely"),
-      );
-      if (nexusEvidence) {
-        report.potentialViolations.push({
-          ...DTA_VIOLATIONS.FAVORABLE_EVIDENCE_IGNORED,
-          note: "Nexus letter present but not discussed in denial",
-        });
-      }
-    }
 
     // === GENERATE RECOMMENDATIONS ===
-    if (report.gapCount > 5) {
-      report.recommendations.push({
-        priority: "HIGH",
-        action: "File Supplemental Claim or Higher-Level Review",
-        reasoning: `${report.gapCount} pieces of evidence were not considered in your decision.`,
-      });
-    }
-
-    if (report.potentialViolations.some((v) => v.severity === "HIGH")) {
-      report.recommendations.push({
-        priority: "HIGH",
-        action: "Consider Notice of Disagreement (NOD)",
-        reasoning: "Significant Duty to Assist errors identified.",
-      });
-    }
+    report.recommendations = generateGapRecommendations(
+      report.gapCount,
+      report.potentialViolations,
+    );
 
     // === BUILD LEGAL ARGUMENTS ===
-    if (report.potentialViolations.length > 0) {
-      report.legalArguments.push({
-        argument: "The VA failed to consider all evidence of record.",
-        support: `Per 38 CFR § 3.159(c), the VA must consider all evidence. ${report.gapCount} documents in the C-File were not mentioned in the decision.`,
-        caselaw: "See Gabrielson v. Brown, 7 Vet. App. 36 (1994)",
-      });
-    }
-
-    if (report.potentialViolations.some((v) => v.code === "DTA-002")) {
-      report.legalArguments.push({
-        argument: "The VA failed to provide a medical examination.",
-        support:
-          "Under 38 CFR § 3.159(c)(4), an examination is required when there is: (1) competent evidence of current disability; (2) evidence of an in-service event; (3) indication of a possible nexus; and (4) insufficient medical evidence.",
-        caselaw: "See McLendon v. Nicholson, 20 Vet. App. 79 (2006)",
-      });
-    }
+    report.legalArguments = buildGapLegalArguments(
+      report.potentialViolations,
+      report.gapCount,
+    );
 
     // === GENERATE ADVERSARIAL REPORT ===
     report.adversarialReport = generateAdversarialReport(report, decisionData);
@@ -300,6 +203,177 @@ export function findEvidenceGaps(decisionLetterText, cFileText) {
   }
 
   return report;
+}
+
+/**
+ * Build the list of evidence actually present in the C-File, marking
+ * each item as `mentioned` if it matches evidence considered in the
+ * decision letter.
+ */
+function buildEvidenceInCFileList(cFileData, evidenceInDecision) {
+  const evidenceInCFile = [];
+
+  for (const segment of cFileData.segments) {
+    const previewLower = segment.preview.toLowerCase();
+
+    // Check if this evidence was mentioned in the decision
+    const mentioned = evidenceInDecision.some((mentionedEntry) =>
+      matchesEvidenceTypePattern(mentionedEntry.toLowerCase(), previewLower),
+    );
+
+    evidenceInCFile.push({
+      type: segment.type,
+      category: segment.category,
+      preview: segment.preview,
+      id: segment.id,
+      mentioned,
+    });
+  }
+
+  return evidenceInCFile;
+}
+
+/**
+ * Check whether the mentioned-evidence text and the C-File preview text
+ * share a matching keyword pattern for any known evidence type.
+ */
+function matchesEvidenceTypePattern(mentionedLower, previewLower) {
+  for (const typeInfo of Object.values(EVIDENCE_TYPES)) {
+    for (const pattern of typeInfo.patterns) {
+      if (mentionedLower.match(pattern) && previewLower.match(pattern)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Find evidence present in the C-File but not mentioned in the decision.
+ */
+function collectEvidenceGaps(evidenceInCFile, decisionData) {
+  const gaps = [];
+  let gapCount = 0;
+  let severityScore = 0;
+
+  for (const evidence of evidenceInCFile) {
+    if (!evidence.mentioned) {
+      // This is a gap!
+      const gap = {
+        evidenceType: evidence.type,
+        category: evidence.category,
+        preview: evidence.preview,
+        importance: calculateEvidenceImportance(evidence),
+        potentialImpact: assessPotentialImpact(evidence, decisionData),
+      };
+
+      gaps.push(gap);
+      gapCount++;
+      severityScore += gap.importance;
+    }
+  }
+
+  return { gaps, gapCount, severityScore };
+}
+
+/**
+ * Identify potential Duty to Assist violations from the gap report.
+ */
+function identifyPotentialViolations(report, decisionData) {
+  const potentialViolations = [];
+
+  if (report.gapCount > 0) {
+    potentialViolations.push({
+      ...DTA_VIOLATIONS.EVIDENCE_NOT_CONSIDERED,
+      affectedEvidence: report.gaps.map((g) => g.preview.substring(0, 50)),
+    });
+  }
+
+  // Check for missing exam
+  const hasConditionDenied = decisionData.conditions?.some(
+    (c) => c.status === "DENIED",
+  );
+  const hasCPExam = report.evidenceInCFile.some((e) => e.type === "DBQ");
+  if (hasConditionDenied && !hasCPExam) {
+    potentialViolations.push({
+      ...DTA_VIOLATIONS.NO_EXAM_PROVIDED,
+      note: "Condition was denied without a C&P examination",
+    });
+  }
+
+  // Check for favorable evidence ignored
+  const hasNexusLetter = report.evidenceInCFile.some(
+    (e) =>
+      e.preview.toLowerCase().includes("nexus") ||
+      e.preview.toLowerCase().includes("more likely"),
+  );
+  const wasDenied = decisionData.conditions?.some((c) => c.status === "DENIED");
+  if (hasNexusLetter && wasDenied) {
+    const nexusEvidence = report.gaps.find(
+      (g) =>
+        g.preview.toLowerCase().includes("nexus") ||
+        g.preview.toLowerCase().includes("likely"),
+    );
+    if (nexusEvidence) {
+      potentialViolations.push({
+        ...DTA_VIOLATIONS.FAVORABLE_EVIDENCE_IGNORED,
+        note: "Nexus letter present but not discussed in denial",
+      });
+    }
+  }
+
+  return potentialViolations;
+}
+
+/**
+ * Generate action recommendations based on gap count and violations found.
+ */
+function generateGapRecommendations(gapCount, potentialViolations) {
+  const recommendations = [];
+
+  if (gapCount > 5) {
+    recommendations.push({
+      priority: "HIGH",
+      action: "File Supplemental Claim or Higher-Level Review",
+      reasoning: `${gapCount} pieces of evidence were not considered in your decision.`,
+    });
+  }
+
+  if (potentialViolations.some((v) => v.severity === "HIGH")) {
+    recommendations.push({
+      priority: "HIGH",
+      action: "Consider Notice of Disagreement (NOD)",
+      reasoning: "Significant Duty to Assist errors identified.",
+    });
+  }
+
+  return recommendations;
+}
+
+/**
+ * Build supporting legal arguments based on identified violations.
+ */
+function buildGapLegalArguments(potentialViolations, gapCount) {
+  const legalArguments = [];
+
+  if (potentialViolations.length > 0) {
+    legalArguments.push({
+      argument: "The VA failed to consider all evidence of record.",
+      support: `Per 38 CFR § 3.159(c), the VA must consider all evidence. ${gapCount} documents in the C-File were not mentioned in the decision.`,
+      caselaw: "See Gabrielson v. Brown, 7 Vet. App. 36 (1994)",
+    });
+  }
+
+  if (potentialViolations.some((v) => v.code === "DTA-002")) {
+    legalArguments.push({
+      argument: "The VA failed to provide a medical examination.",
+      support:
+        "Under 38 CFR § 3.159(c)(4), an examination is required when there is: (1) competent evidence of current disability; (2) evidence of an in-service event; (3) indication of a possible nexus; and (4) insufficient medical evidence.",
+      caselaw: "See McLendon v. Nicholson, 20 Vet. App. 79 (2006)",
+    });
+  }
+
+  return legalArguments;
 }
 
 /**

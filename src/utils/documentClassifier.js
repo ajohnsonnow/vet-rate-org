@@ -32,6 +32,7 @@ export const DOCUMENT_TYPES = {
   NEXUS_LETTER: "NEXUS_LETTER",
   PERSONAL_STATEMENT: "PERSONAL_STATEMENT",
   VA_CORRESPONDENCE: "VA_CORRESPONDENCE",
+  BLUE_BUTTON: "BLUE_BUTTON",
   MEDICAL_RECORD: "MEDICAL_RECORD",
   EXAM_REPORT: "EXAM_REPORT",
   UNKNOWN: "UNKNOWN",
@@ -45,11 +46,11 @@ const CLASSIFICATION_PATTERNS = {
     patterns: [
       // ===== DD214 / DISCHARGE DOCUMENT PATTERNS =====
       // Core identifiers - these should ONLY appear on actual DD214s
-      /DD\s*[-]?\s*FORM\s*[-]?\s*214/i, // DD FORM 214, DD-FORM-214, etc.
+      /DD\s*(?:-\s*)?FORM\s*(?:-\s*)?214/i, // DD FORM 214, DD-FORM-214, etc.
       /DD[-\s]?214/i, // DD214, DD-214, DD 214
       /CERTIFICATE\s+OF\s+RELEASE/i, // Shorter version (OCR friendly)
       /RELEASE\s+OR\s+DISCHARGE\s+FROM\s+ACTIVE\s+DUTY/i,
-      /MEMBER\s*[-]?\s*\d\s*[-:]\s*COPY/i, // MEMBER 4 - COPY, MEMBER-1: COPY
+      /MEMBER\s*(?:-\s*)?\d\s*[-:]\s*COPY/i, // MEMBER 4 - COPY, MEMBER-1: COPY
       /SEPARATION\s+DATE/i, // Generic separation date
       /CHARACTER\s+OF\s+(SERVICE|DISCHARGE)/i, // Character of service/discharge
 
@@ -181,7 +182,7 @@ const CLASSIFICATION_PATTERNS = {
       // Exam scheduling
       /C&P\s+EXAM(?:INATION)?/i,
       /COMPENSATION\s+(?:AND|&)\s+PENSION\s+EXAM/i,
-      /WE\s+(?:HAVE\s+)?SCHEDULE[D]?\s+(?:AN?\s+)?EXAM/i,
+      /WE\s+(?:HAVE\s+)?SCHEDULED?\s+(?:AN?\s+)?EXAM/i,
       /EXAM(?:INATION)?\s+(?:HAS\s+BEEN\s+|IS\s+)?SCHEDULED/i,
       /MEDICAL\s+EXAM(?:INATION)?\s+(?:WILL\s+BE\s+)?SCHEDULED/i,
       /(?:QTC|VES|LHI)\s+(?:EXAM|APPOINTMENT|MEDICAL)/i,
@@ -209,7 +210,7 @@ const CLASSIFICATION_PATTERNS = {
       /REGIONAL\s+(?:OFFICE|PROCESSING)/i,
       /AWARD\s+(?:OR\s+)?DENIAL/i,
       /DECISION\s+ON\s+YOUR\s+CLAIM/i,
-      /(?:SERVICE[D]?[-\s]?)?CONNECTED\s+(?:DISABILITY|CLAIM)/i,
+      /(?:SERVICED?[-\s]?)?CONNECTED\s+(?:DISABILITY|CLAIM)/i,
       /DISABILITY\s+CLAIM/i,
 
       // VA letterhead/header patterns
@@ -280,6 +281,27 @@ const CLASSIFICATION_PATTERNS = {
     ],
   },
 
+  // VA.gov's "Blue Button" self-service records export (My HealtheVet). Its
+  // cover-page boilerplate is unique to this export and otherwise reads like
+  // a generic medical record (lab results, clinical notes), which is why it
+  // needs its own high-weight, high-priority block instead of falling into
+  // C_FILE_MEDICAL by default.
+  [DOCUMENT_TYPES.BLUE_BUTTON]: {
+    patterns: [
+      /VA\s+BLUE\s+BUTTON/i,
+      /BLUE\s+BUTTON\s*(?:®|\(R\))?\s+REPORT/i,
+      /THIS\s+REPORT\s+INCLUDES\s+KEY\s+INFORMATION\s+FROM\s+YOUR\s+VA\s+MEDICAL\s+RECORDS/i,
+      /WHAT\s+TO\s+KNOW\s+ABOUT\s+YOUR\s+BLUE\s+BUTTON\s+REPORT/i,
+      /MY\s+HEALTHEVET/i,
+      /RECORDS\s+IN\s+THIS\s+REPORT/i,
+      /RECORDS\s+NOT\s+IN\s+THIS\s+REPORT/i,
+      /THE\s+FOLLOWING\s+RECORDS\s+HAVE\s+BEEN\s+DOWNLOADED/i,
+    ],
+    weight: 6,
+    category: "self_service_records",
+    priority: 11,
+  },
+
   [DOCUMENT_TYPES.NEXUS_LETTER]: {
     patterns: [
       /NEXUS\s+LETTER/i,
@@ -300,6 +322,7 @@ const CLASSIFICATION_PATTERNS = {
       /PERSONAL\s+STATEMENT/i,
       /STATEMENT\s+IN\s+SUPPORT\s+OF\s+CLAIM/i,
       /VA\s+FORM\s+21-4138/i,
+      // eslint-disable-next-line sonarjs/slow-regex -- input is the user's own uploaded document text, not attacker-controlled, and classification only scans a bounded excerpt
       /I.*DECLARE/i,
       /MY\s+NAME\s+IS/i,
       /I\s+AM\s+WRITING\s+TO/i,
@@ -350,6 +373,226 @@ const CLASSIFICATION_PATTERNS = {
   },
 };
 
+function logClassificationStart(filename, text, normalizedText) {
+  // eslint-disable-next-line no-console
+  console.log("🔍 [CLASSIFIER DEBUG] Starting document classification");
+  // eslint-disable-next-line no-console
+  console.log("🔍 [CLASSIFIER DEBUG] Filename:", filename);
+  // eslint-disable-next-line no-console
+  console.log("🔍 [CLASSIFIER DEBUG] Text length:", text.length);
+  // eslint-disable-next-line no-console
+  console.log(
+    "🔍 [CLASSIFIER DEBUG] First 500 chars:",
+    normalizedText.substring(0, 500),
+  );
+}
+
+// Special filename pattern matching for common naming conventions
+function getFilenameTypeBoost(docType, filename) {
+  if (docType === DOCUMENT_TYPES.CLAIM_LETTER) {
+    // Match: claimletter, claim-letter, claim_letter, claim letter
+    if (
+      /claim[-_\s]?letter/i.test(filename) ||
+      /va[-_\s]?claim/i.test(filename) ||
+      /development[-_\s]?letter/i.test(filename)
+    ) {
+      return 3; // Stronger boost for claim letters
+    }
+  }
+  if (docType === DOCUMENT_TYPES.DD214) {
+    // Match: dd214, dd-214, dd_214, dd 214
+    if (/dd[-_\s]?214/i.test(filename)) {
+      return 3;
+    }
+  }
+  if (docType === DOCUMENT_TYPES.RATING_DECISION) {
+    // Match: rating, decision, ratingdecision
+    if (
+      /rating[-_\s]?decision/i.test(filename) ||
+      /decision[-_\s]?letter/i.test(filename)
+    ) {
+      return 3;
+    }
+  }
+  return 0;
+}
+
+function scoreDocumentType(
+  docType,
+  config,
+  normalizedText,
+  filenameHints,
+  filename,
+) {
+  let score = 0;
+  const matchedPatterns = [];
+  const matchedNegativePatterns = [];
+
+  // Check positive patterns
+  for (const pattern of config.patterns) {
+    if (pattern.test(normalizedText)) {
+      score += config.weight;
+      matchedPatterns.push(pattern.source);
+    }
+  }
+
+  // Check negative patterns (reduce score if found)
+  // This helps disambiguate similar document types
+  if (config.negativePatterns) {
+    for (const negPattern of config.negativePatterns) {
+      if (negPattern.test(normalizedText)) {
+        // Heavy penalty for finding negative patterns
+        score -= config.weight * 2;
+        matchedNegativePatterns.push(negPattern.source);
+      }
+    }
+  }
+
+  // Filename hints (small boost)
+  // Check for document type in filename with flexible matching
+  if (filenameHints.includes(docType.toLowerCase())) {
+    score += 1;
+  }
+
+  score += getFilenameTypeBoost(docType, filename);
+
+  return { score, matchedPatterns, matchedNegativePatterns };
+}
+
+function logDocTypeScore(
+  docType,
+  matchedPatterns,
+  matchedNegativePatterns,
+  score,
+) {
+  if (matchedPatterns.length === 0 && matchedNegativePatterns.length === 0) {
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log(`🔍 [CLASSIFIER DEBUG] ${docType}:`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `   ✅ Matched patterns (${matchedPatterns.length}):`,
+    matchedPatterns,
+  );
+  // eslint-disable-next-line no-console
+  console.log(
+    `   ❌ Negative patterns (${matchedNegativePatterns.length}):`,
+    matchedNegativePatterns,
+  );
+  // eslint-disable-next-line no-console
+  console.log(`   📊 Final score: ${score}`);
+}
+
+function findBestMatch(scores) {
+  let bestType = DOCUMENT_TYPES.UNKNOWN;
+  let bestScore = 0;
+  let bestCategory = "unknown";
+  let bestPriority = 0;
+
+  for (const [docType, score] of Object.entries(scores)) {
+    if (score > bestScore) {
+      bestScore = score;
+      bestType = docType;
+      bestCategory = CLASSIFICATION_PATTERNS[docType].category;
+      bestPriority = CLASSIFICATION_PATTERNS[docType].priority;
+    }
+  }
+
+  return { bestType, bestScore, bestCategory, bestPriority };
+}
+
+// ============================================================
+// IMPROVED CONFIDENCE CALCULATION FOR DD214s
+//
+// Old method was dividing by ALL possible patterns across ALL doc types
+// which gave artificially low scores (34% for a valid DD214).
+//
+// New method: Score relative to the SPECIFIC document type's maximum,
+// with bonuses for finding multiple key indicators.
+// ============================================================
+function computeConfidence(bestType, bestScore, matches, filenameHints) {
+  if (bestType === DOCUMENT_TYPES.UNKNOWN) {
+    return 0;
+  }
+
+  const docConfig = CLASSIFICATION_PATTERNS[bestType];
+  const maxForThisType = docConfig.weight * docConfig.patterns.length;
+  const baseConfidence = Math.round((bestScore / maxForThisType) * 100);
+
+  // Bonus confidence for finding multiple patterns (more = more certain)
+  const matchedCount = matches[bestType]?.length || 0;
+  const patternBonus = Math.min(20, matchedCount * 5); // Up to 20% bonus
+
+  // Bonus for high-priority document types (DD214, rating decisions)
+  const priorityBonus = docConfig.priority >= 9 ? 10 : 0;
+
+  // Filename match bonus
+  const filenameBonus = filenameHints.includes(bestType.toLowerCase()) ? 10 : 0;
+
+  let confidence = Math.min(
+    100,
+    baseConfidence + patternBonus + priorityBonus + filenameBonus,
+  );
+
+  // Floor: If we matched ANY DD214/service record pattern, minimum 60% confidence
+  if (
+    (bestType === DOCUMENT_TYPES.DD214 ||
+      bestType === DOCUMENT_TYPES.NGB22 ||
+      bestType === DOCUMENT_TYPES.DD215) &&
+    matchedCount >= 1
+  ) {
+    confidence = Math.max(60, confidence);
+  }
+
+  // If we matched 2+ patterns on critical docs, minimum 75%
+  if (
+    (bestType === DOCUMENT_TYPES.DD214 ||
+      bestType === DOCUMENT_TYPES.RATING_DECISION) &&
+    matchedCount >= 2
+  ) {
+    confidence = Math.max(75, confidence);
+  }
+
+  return confidence;
+}
+
+function logClassificationResult(
+  bestType,
+  bestScore,
+  confidence,
+  matches,
+  scores,
+) {
+  // eslint-disable-next-line no-console
+  console.log("🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====");
+  // eslint-disable-next-line no-console
+  console.log(`🏆 [CLASSIFIER DEBUG] WINNER: ${bestType}`);
+  // eslint-disable-next-line no-console
+  console.log(`🏆 [CLASSIFIER DEBUG] Score: ${bestScore}`);
+  // eslint-disable-next-line no-console
+  console.log(`🏆 [CLASSIFIER DEBUG] Confidence: ${confidence}%`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `🏆 [CLASSIFIER DEBUG] Matched patterns:`,
+    matches[bestType] || [],
+  );
+  // eslint-disable-next-line no-console
+  console.log("🏆 [CLASSIFIER DEBUG] ================================");
+
+  // Also log if there were close competitors
+  const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  if (sortedScores.length > 1) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🥈 [CLASSIFIER DEBUG] Runner-up:",
+      sortedScores[1]?.[0],
+      "with score",
+      sortedScores[1]?.[1],
+    );
+  }
+}
+
 /**
  * Classify a document based on its text content
  * @param {string} text - The document text
@@ -375,17 +618,7 @@ export const classifyDocument = (text, filename = "") => {
   const filenameHints = filename.toLowerCase();
 
   if (DEBUG_CLASSIFICATION) {
-    // eslint-disable-next-line no-console
-    console.log("🔍 [CLASSIFIER DEBUG] Starting document classification");
-    // eslint-disable-next-line no-console
-    console.log("🔍 [CLASSIFIER DEBUG] Filename:", filename);
-    // eslint-disable-next-line no-console
-    console.log("🔍 [CLASSIFIER DEBUG] Text length:", text.length);
-    // eslint-disable-next-line no-console
-    console.log(
-      "🔍 [CLASSIFIER DEBUG] First 500 chars:",
-      normalizedText.substring(0, 500),
-    );
+    logClassificationStart(filename, text, normalizedText);
   }
 
   const scores = {};
@@ -395,82 +628,17 @@ export const classifyDocument = (text, filename = "") => {
 
   // Score each document type
   for (const [docType, config] of Object.entries(CLASSIFICATION_PATTERNS)) {
-    let score = 0;
-    const matchedPatterns = [];
-    const matchedNegativePatterns = [];
-
-    // Check positive patterns
-    for (const pattern of config.patterns) {
-      if (pattern.test(normalizedText)) {
-        score += config.weight;
-        matchedPatterns.push(pattern.source);
-      }
-    }
-
-    // Check negative patterns (reduce score if found)
-    // This helps disambiguate similar document types
-    if (config.negativePatterns) {
-      for (const negPattern of config.negativePatterns) {
-        if (negPattern.test(normalizedText)) {
-          // Heavy penalty for finding negative patterns
-          score -= config.weight * 2;
-          matchedNegativePatterns.push(negPattern.source);
-        }
-      }
-    }
-
-    // Filename hints (small boost)
-    // Check for document type in filename with flexible matching
-    if (filenameHints.includes(docType.toLowerCase())) {
-      score += 1;
-    }
-
-    // Special filename pattern matching for common naming conventions
-    if (docType === DOCUMENT_TYPES.CLAIM_LETTER) {
-      // Match: claimletter, claim-letter, claim_letter, claim letter
-      if (
-        /claim[-_\s]?letter/i.test(filename) ||
-        /va[-_\s]?claim/i.test(filename) ||
-        /development[-_\s]?letter/i.test(filename)
-      ) {
-        score += 3; // Stronger boost for claim letters
-      }
-    }
-    if (docType === DOCUMENT_TYPES.DD214) {
-      // Match: dd214, dd-214, dd_214, dd 214
-      if (/dd[-_\s]?214/i.test(filename)) {
-        score += 3;
-      }
-    }
-    if (docType === DOCUMENT_TYPES.RATING_DECISION) {
-      // Match: rating, decision, ratingdecision
-      if (
-        /rating[-_\s]?decision/i.test(filename) ||
-        /decision[-_\s]?letter/i.test(filename)
-      ) {
-        score += 3;
-      }
-    }
-
-    // Debug output for this doc type
-    if (
-      DEBUG_CLASSIFICATION &&
-      (matchedPatterns.length > 0 || matchedNegativePatterns.length > 0)
-    ) {
-      // eslint-disable-next-line no-console
-      console.log(`🔍 [CLASSIFIER DEBUG] ${docType}:`);
-      // eslint-disable-next-line no-console
-      console.log(
-        `   ✅ Matched patterns (${matchedPatterns.length}):`,
-        matchedPatterns,
+    const { score, matchedPatterns, matchedNegativePatterns } =
+      scoreDocumentType(
+        docType,
+        config,
+        normalizedText,
+        filenameHints,
+        filename,
       );
-      // eslint-disable-next-line no-console
-      console.log(
-        `   ❌ Negative patterns (${matchedNegativePatterns.length}):`,
-        matchedNegativePatterns,
-      );
-      // eslint-disable-next-line no-console
-      console.log(`   📊 Final score: ${score}`);
+
+    if (DEBUG_CLASSIFICATION) {
+      logDocTypeScore(docType, matchedPatterns, matchedNegativePatterns, score);
     }
 
     // Store debug info
@@ -494,103 +662,19 @@ export const classifyDocument = (text, filename = "") => {
   }
 
   // Find best match
-  let bestType = DOCUMENT_TYPES.UNKNOWN;
-  let bestScore = 0;
-  let bestCategory = "unknown";
-  let bestPriority = 0;
+  const { bestType, bestScore, bestCategory, bestPriority } =
+    findBestMatch(scores);
 
-  for (const [docType, score] of Object.entries(scores)) {
-    if (score > bestScore) {
-      bestScore = score;
-      bestType = docType;
-      bestCategory = CLASSIFICATION_PATTERNS[docType].category;
-      bestPriority = CLASSIFICATION_PATTERNS[docType].priority;
-    }
-  }
-
-  // ============================================================
-  // IMPROVED CONFIDENCE CALCULATION FOR DD214s
-  //
-  // Old method was dividing by ALL possible patterns across ALL doc types
-  // which gave artificially low scores (34% for a valid DD214).
-  //
-  // New method: Score relative to the SPECIFIC document type's maximum,
-  // with bonuses for finding multiple key indicators.
-  // ============================================================
-
-  let confidence = 0;
-
-  if (bestType !== DOCUMENT_TYPES.UNKNOWN) {
-    const docConfig = CLASSIFICATION_PATTERNS[bestType];
-    const maxForThisType = docConfig.weight * docConfig.patterns.length;
-    const baseConfidence = Math.round((bestScore / maxForThisType) * 100);
-
-    // Bonus confidence for finding multiple patterns (more = more certain)
-    const matchedCount = matches[bestType]?.length || 0;
-    const patternBonus = Math.min(20, matchedCount * 5); // Up to 20% bonus
-
-    // Bonus for high-priority document types (DD214, rating decisions)
-    const priorityBonus = docConfig.priority >= 9 ? 10 : 0;
-
-    // Filename match bonus
-    const filenameBonus = filenameHints.includes(bestType.toLowerCase())
-      ? 10
-      : 0;
-
-    confidence = Math.min(
-      100,
-      baseConfidence + patternBonus + priorityBonus + filenameBonus,
-    );
-
-    // Floor: If we matched ANY DD214/service record pattern, minimum 60% confidence
-    if (
-      (bestType === DOCUMENT_TYPES.DD214 ||
-        bestType === DOCUMENT_TYPES.NGB22 ||
-        bestType === DOCUMENT_TYPES.DD215) &&
-      matchedCount >= 1
-    ) {
-      confidence = Math.max(60, confidence);
-    }
-
-    // If we matched 2+ patterns on critical docs, minimum 75%
-    if (
-      (bestType === DOCUMENT_TYPES.DD214 ||
-        bestType === DOCUMENT_TYPES.RATING_DECISION) &&
-      matchedCount >= 2
-    ) {
-      confidence = Math.max(75, confidence);
-    }
-  }
+  const confidence = computeConfidence(
+    bestType,
+    bestScore,
+    matches,
+    filenameHints,
+  );
 
   // Final debug output showing the winner
   if (DEBUG_CLASSIFICATION) {
-    // eslint-disable-next-line no-console
-    console.log("🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====");
-    // eslint-disable-next-line no-console
-    console.log(`🏆 [CLASSIFIER DEBUG] WINNER: ${bestType}`);
-    // eslint-disable-next-line no-console
-    console.log(`🏆 [CLASSIFIER DEBUG] Score: ${bestScore}`);
-    // eslint-disable-next-line no-console
-    console.log(`🏆 [CLASSIFIER DEBUG] Confidence: ${confidence}%`);
-    // eslint-disable-next-line no-console
-    console.log(
-      `🏆 [CLASSIFIER DEBUG] Matched patterns:`,
-      matches[bestType] || [],
-    );
-    // eslint-disable-next-line no-console
-    console.log("🏆 [CLASSIFIER DEBUG] ================================");
-
-    // Also log if there were close competitors
-    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    if (sortedScores.length > 1) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "🥈 [CLASSIFIER DEBUG] Runner-up:",
-        sortedScores[1]?.[0],
-        "with score",
-        sortedScores[1]?.[1],
-      );
-    }
+    logClassificationResult(bestType, bestScore, confidence, matches, scores);
   }
 
   return {
@@ -672,6 +756,7 @@ export const getDocumentTypeLabel = (type) => {
     [DOCUMENT_TYPES.NEXUS_LETTER]: "Nexus Letter",
     [DOCUMENT_TYPES.PERSONAL_STATEMENT]: "Personal Statement",
     [DOCUMENT_TYPES.VA_CORRESPONDENCE]: "VA Correspondence",
+    [DOCUMENT_TYPES.BLUE_BUTTON]: "VA Blue Button Report",
     [DOCUMENT_TYPES.MEDICAL_RECORD]: "Medical Record",
     [DOCUMENT_TYPES.EXAM_REPORT]: "Examination Report",
     [DOCUMENT_TYPES.UNKNOWN]: "Unknown Document",

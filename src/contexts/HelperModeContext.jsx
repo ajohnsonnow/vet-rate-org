@@ -131,7 +131,7 @@ export const TERMINOLOGY = {
 // Tools most relevant to caregivers/family members
 export const CAREGIVER_PRIORITY_TOOLS = [
   "Witness Bench", // They may need to write buddy statements
-  "State Benefits", // Tax exemptions, etc.
+  "State Benefit Hunter", // Tax exemptions, etc.
   "Symptom Logger", // They can help document symptoms
   "Forms Helper", // Help with paperwork
   "VSO Finder", // Find free help

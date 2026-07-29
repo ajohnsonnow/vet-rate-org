@@ -7,6 +7,22 @@
  * a project dep. Q8 quantization brings the per-vector cost to 384 bytes,
  * keeping the lazy-loaded index bundle under the 25 MB target.
  *
+ * S20 contextual retrieval (CONTEXTUALIZE_CHUNKS=1, default OFF): when set,
+ * each chunk is embedded via contextualize.mjs's `contextualizeText()`, which
+ * prepends the chunk's own section title (never the corpus-wide part
+ * heading — see contextualize.mjs) — the PERSISTED chunk `text` (what ships
+ * in chunks/*.jsonl and what the runtime extractor sees) is untouched; only
+ * the embedding INPUT changes. Query text at retrieval time is always
+ * embedded as-is, unprefixed.
+ *
+ * Left OFF by default: an S18-harness A/B on the shipped single-part corpus
+ * (scripts/legal-ingestion/eval/baseline.json's S20 note) showed a net wash —
+ * NDCG@5 +6%, but recall@5/MRR both dipped (one borderline query, § 4.21,
+ * got displaced by adjacent procedural sections). Same disabled-by-default
+ * pattern as the ENABLE_SCAFFOLD_FETCHERS gate on fetch-m21-1/cavc/fedcir.mjs
+ * — re-evaluate once S21 (hybrid BM25 retrieval) or S25 (multi-part corpus,
+ * where the part heading becomes discriminative again) lands.
+ *
  * Output:
  *   public/legal-index/{version}/vectors/{source}.bin       (raw Q8 vectors)
  *   public/legal-index/{version}/manifest.json              (index metadata)
@@ -28,6 +44,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { contextualizeText } from "./contextualize.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
@@ -70,6 +87,27 @@ async function loadPipeline() {
   return pipeline("feature-extraction", EMBEDDING_MODEL);
 }
 
+/**
+ * Position of each chunk among all chunks sharing its parent citation — used
+ * only to templated-descriptor "(continued)" fragments (S20 contextualize.mjs).
+ * Chunks from the same record are always contiguous (chunk.mjs emits them in
+ * order), so a single linear pass is enough.
+ */
+function positionsByCitation(chunks) {
+  const totals = new Map();
+  for (const c of chunks) totals.set(c.citation, (totals.get(c.citation) || 0) + 1);
+  const seen = new Map();
+  return chunks.map((c) => {
+    const index = seen.get(c.citation) || 0;
+    seen.set(c.citation, index + 1);
+    return { index, total: totals.get(c.citation) };
+  });
+}
+
+// Off by default — see the S20 header note above for the eval numbers behind
+// this decision. Same opt-in-env-var pattern as ENABLE_SCAFFOLD_FETCHERS.
+const CONTEXTUALIZE = process.env.CONTEXTUALIZE_CHUNKS === "1";
+
 async function embedSource({ chunkFile, vectorFile, embedder }) {
   const lines = readFileSync(chunkFile, "utf8").split("\n").filter(Boolean);
   if (lines.length === 0) {
@@ -77,10 +115,14 @@ async function embedSource({ chunkFile, vectorFile, embedder }) {
     return { count: 0 };
   }
 
+  const chunks = lines.map((l) => JSON.parse(l));
+  const positions = CONTEXTUALIZE ? positionsByCitation(chunks) : null;
   const buf = new Int8Array(lines.length * EMBED_DIM);
-  for (let i = 0; i < lines.length; i++) {
-    const chunk = JSON.parse(lines[i]);
-    const output = await embedder(chunk.text, {
+  for (let i = 0; i < chunks.length; i++) {
+    const embedInput = CONTEXTUALIZE
+      ? contextualizeText(chunks[i], positions[i])
+      : chunks[i].text;
+    const output = await embedder(embedInput, {
       pooling: "mean",
       normalize: false,
     });

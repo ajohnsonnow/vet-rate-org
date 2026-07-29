@@ -215,84 +215,82 @@ const determineCurrentView = (appState) => {
 };
 
 /**
- * Get list of active modals - DIAMOND LEVEL: All 45+ tools tracked!
+ * Modal flag -> display name, in the same order as the original if-chain.
+ * DIAMOND LEVEL: All 45+ tools tracked!
  */
-const getActiveModals = (appState) => {
-  const modals = [];
-
+const MODAL_FLAGS = [
   // Core Navigation
-  if (appState.showMyPacket) modals.push("MyPacket");
-  if (appState.showUserManual) modals.push("UserManual");
-  if (appState.showVAResources) modals.push("VAResources");
+  ["showMyPacket", "MyPacket"],
+  ["showUserManual", "UserManual"],
+  ["showVAResources", "VAResources"],
 
   // Calculate Tools
-  if (appState.showTacticalCalculator) modals.push("TacticalCalculator");
-  if (appState.showMillionDollarDashboard)
-    modals.push("MillionDollarDashboard");
-  if (appState.showWhatIfSandbox) modals.push("WhatIfSandbox");
-  if (appState.showRetroPayHunter) modals.push("RetroPayHunter");
-  if (appState.showTimeMachine) modals.push("TimeMachine");
+  ["showTacticalCalculator", "TacticalCalculator"],
+  ["showMillionDollarDashboard", "MillionDollarDashboard"],
+  ["showWhatIfSandbox", "WhatIfSandbox"],
+  ["showRetroPayHunter", "RetroPayHunter"],
+  ["showTimeMachine", "TimeMachine"],
 
   // Discover Tools
-  if (appState.showSecondaryScoutLauncher)
-    modals.push("SecondaryScoutLauncher");
-  if (appState.showSecondaryScout) modals.push("SecondaryScout");
-  if (appState.showCAPSimulator) modals.push("CAPSimulator");
-  if (appState.showPathfinder) modals.push("Pathfinder");
-  if (appState.showClaimNavigator) modals.push("ClaimNavigator");
-  if (appState.showMOSHazardMatcher) modals.push("MOSHazardMatcher");
-  if (appState.showPACTActNavigator) modals.push("PACTActNavigator");
-  if (appState.showWebOfConditions) modals.push("WebOfConditions");
+  ["showSecondaryScoutLauncher", "SecondaryScoutLauncher"],
+  ["showSecondaryScout", "SecondaryScout"],
+  ["showCAPSimulator", "CAPSimulator"],
+  ["showPathfinder", "Pathfinder"],
+  ["showClaimNavigator", "ClaimNavigator"],
+  ["showMOSHazardMatcher", "MOSHazardMatcher"],
+  ["showPACTActNavigator", "PACTActNavigator"],
+  ["showWebOfConditions", "WebOfConditions"],
 
   // Build Evidence Tools
-  if (appState.showCFileAnalyzer) modals.push("CFileAnalyzer");
-  if (appState.showBlueButtonXRay) modals.push("BlueButtonXRay");
-  if (appState.showRecordSearch) modals.push("RecordSearch");
-  if (appState.showWitnessBench) modals.push("WitnessBench");
-  if (appState.showNexusBuilder) modals.push("NexusBuilder");
-  if (appState.showFormsHelper) modals.push("FormsHelper");
-  if (appState.showSymptomLogger) modals.push("SymptomLogger");
-  if (appState.showPainPainter) modals.push("PainPainter");
-  if (appState.showEvidenceTimeline) modals.push("EvidenceTimeline");
-  if (appState.showFOIAGenerator) modals.push("FOIAGenerator");
-  if (appState.showDD214Analyzer) modals.push("DD214Analyzer");
+  ["showCFileAnalyzer", "CFileAnalyzer"],
+  ["showBlueButtonXRay", "BlueButtonXRay"],
+  ["showRecordSearch", "RecordSearch"],
+  ["showWitnessBench", "WitnessBench"],
+  ["showNexusBuilder", "NexusBuilder"],
+  ["showFormsHelper", "FormsHelper"],
+  ["showSymptomLogger", "SymptomLogger"],
+  ["showPainPainter", "PainPainter"],
+  ["showEvidenceTimeline", "EvidenceTimeline"],
+  ["showFOIAGenerator", "FOIAGenerator"],
+  ["showDD214Analyzer", "DD214Analyzer"],
 
   // Quality Control Tools
-  if (appState.showRedTeam) modals.push("RedTeam");
-  if (appState.showClaimStressTest) modals.push("ClaimStressTest");
-  if (appState.showDecisionDecoder) modals.push("DecisionDecoder");
-  if (appState.showDenialDecoder) modals.push("DenialDecoder");
-  if (appState.showSharkRadar) modals.push("SharkRadar");
-  if (appState.showConsistencyEngine) modals.push("ConsistencyEngine");
-  if (appState.showEvidenceGapVisualizer) modals.push("EvidenceGapVisualizer");
-  if (appState.showRiskAssessment) modals.push("RiskAssessment");
+  ["showRedTeam", "RedTeam"],
+  ["showClaimStressTest", "ClaimStressTest"],
+  ["showDecisionDecoder", "DecisionDecoder"],
+  ["showDenialDecoder", "DenialDecoder"],
+  ["showSharkRadar", "SharkRadar"],
+  ["showConsistencyEngine", "ConsistencyEngine"],
+  ["showEvidenceGapVisualizer", "EvidenceGapVisualizer"],
+  ["showRiskAssessment", "RiskAssessment"],
 
   // Maximize Rating Tools
-  if (appState.showTDIUBuilder) modals.push("TDIUBuilder");
-  if (appState.showStateBenefitHunter) modals.push("StateBenefitHunter");
-  if (appState.showTheTribunal) modals.push("TheTribunal");
-  if (appState.showLegislativeWatchdog) modals.push("LegislativeWatchdog");
+  ["showTDIUBuilder", "TDIUBuilder"],
+  ["showStateBenefitHunter", "StateBenefitHunter"],
+  ["showTheTribunal", "TheTribunal"],
+  ["showLegislativeWatchdog", "LegislativeWatchdog"],
 
   // Support Tools
-  if (appState.showVSOFinder) modals.push("VSOFinder");
-  if (appState.showVAAITransparency) modals.push("VAAITransparency");
+  ["showVSOFinder", "VSOFinder"],
+  ["showVAAITransparency", "VAAITransparency"],
 
   // Data Management
-  if (appState.showBackupManager) modals.push("BackupManager");
-  if (appState.showCloudSyncManager) modals.push("CloudSyncManager");
+  ["showBackupManager", "BackupManager"],
+  ["showCloudSyncManager", "CloudSyncManager"],
 
   // AI & Settings
-  if (appState.showAISettings) modals.push("AISettings");
-  if (appState.showLocalAIPanel) modals.push("LocalAIPanel");
+  ["showAISettings", "AISettings"],
+  ["showLocalAIPanel", "LocalAIPanel"],
 
   // System Modals
-  if (appState.showPrivacyPolicy) modals.push("PrivacyPolicy");
-  if (appState.showAboutUs) modals.push("AboutUs");
-  if (appState.showContactUs) modals.push("ContactUs");
-  if (appState.showTermsOfService) modals.push("TermsOfService");
+  ["showPrivacyPolicy", "PrivacyPolicy"],
+  ["showAboutUs", "AboutUs"],
+  ["showContactUs", "ContactUs"],
+  ["showTermsOfService", "TermsOfService"],
+];
 
-  return modals;
-};
+const getActiveModals = (appState) =>
+  MODAL_FLAGS.filter(([flag]) => appState[flag]).map(([, name]) => name);
 
 /**
  * Get localStorage diagnostic info (sanitized)
@@ -368,31 +366,19 @@ export const logConsoleError = (entry) => {
   }
 };
 
-/**
- * Format the complete bug report for clipboard/display
- */
-export const formatBugReport = (reportData) => {
-  const {
-    userDescription,
-    stepsToReproduce,
-    expectedBehavior,
-    actualBehavior,
-    module,
-    diagnosticCode,
-    severity,
-    category,
-    systemInfo,
-    appState,
-    storageInfo,
-    consoleErrors,
-    additionalContext,
-  } = reportData;
-
-  const divider = "─".repeat(60);
-  const timestamp = new Date().toISOString();
-  const reportId = `BUG-${Date.now().toString(36).toUpperCase()}`;
-
-  let report = `Squash this Bug:
+const buildSummarySection = ({
+  severity,
+  category,
+  module,
+  diagnosticCode,
+  userDescription,
+  stepsToReproduce,
+  expectedBehavior,
+  actualBehavior,
+  timestamp,
+  reportId,
+  divider,
+}) => `Squash this Bug:
 
 ╔══════════════════════════════════════════════════════════════╗
 ║              🐛 VET-RATE.ORG BUG REPORT                      ║
@@ -429,16 +415,17 @@ ${divider}
 ${actualBehavior || "(Not specified)"}
 `;
 
-  if (additionalContext) {
-    report += `
+const buildAdditionalContextSection = (additionalContext, divider) => {
+  if (!additionalContext) return "";
+  return `
 ${divider}
 💬 ADDITIONAL CONTEXT
 ${divider}
 ${additionalContext}
 `;
-  }
+};
 
-  report += `
+const buildSystemInfoSection = (systemInfo, divider) => `
 ${divider}
 🖥️ SYSTEM INFORMATION
 ${divider}
@@ -454,7 +441,7 @@ ${divider}
 • Timestamp: ${systemInfo.timestamp}
 `;
 
-  report += `
+const buildAppStateSection = (appState, divider) => `
 ${divider}
 📱 APPLICATION STATE
 ${divider}
@@ -478,7 +465,8 @@ ${appState.nexusBuilderCondition ? `• Nexus Builder Condition: ${appState.nexu
 ${appState.hasError ? `• Error Present: Yes\n• Error Message: ${appState.errorMessage}` : "• Error Present: No"}
 `;
 
-  report += `
+const buildStorageSection = (storageInfo, divider) => {
+  let section = `
 ${divider}
 💾 STORAGE INFORMATION
 ${divider}
@@ -496,29 +484,41 @@ ${
     storageInfo.savedClaimConditions &&
     storageInfo.savedClaimConditions.length > 0
   ) {
-    report += `
+    section += `
 • Saved Claim Details:
 ${storageInfo.savedClaimConditions.map((c, i) => `  ${i + 1}. ${c.condition} (${c.status})${c.hasParent ? " [Secondary]" : ""}`).join("\n")}
 `;
   }
 
-  if (consoleErrors && consoleErrors.length > 0) {
-    // Group by type for better readability
-    const errorTypes = {
-      error: consoleErrors.filter((e) => e.type === "error"),
-      warn: consoleErrors.filter((e) => e.type === "warn"),
-      log: consoleErrors.filter((e) => e.type === "log"),
-      info: consoleErrors.filter((e) => e.type === "info"),
-    };
+  return section;
+};
 
-    report += `
+const buildConsoleLogsSection = (consoleErrors, divider) => {
+  if (!consoleErrors || consoleErrors.length === 0) {
+    return `
+${divider}
+🔍 CONSOLE LOGS
+${divider}
+No console messages captured. (Console monitoring may not be active)
+`;
+  }
+
+  // Group by type for better readability
+  const errorTypes = {
+    error: consoleErrors.filter((e) => e.type === "error"),
+    warn: consoleErrors.filter((e) => e.type === "warn"),
+    log: consoleErrors.filter((e) => e.type === "log"),
+    info: consoleErrors.filter((e) => e.type === "info"),
+  };
+
+  let section = `
 ${divider}
 🔍 CONSOLE LOGS (Last ${consoleErrors.length} entries)
 ${divider}
 `;
 
-    if (errorTypes.error.length > 0) {
-      report += `
+  if (errorTypes.error.length > 0) {
+    section += `
 ❌ ERRORS (${errorTypes.error.length}):
 ${errorTypes.error
   .map(
@@ -531,10 +531,10 @@ ${errorTypes.error
   )
   .join("")}
 `;
-    }
+  }
 
-    if (errorTypes.warn.length > 0) {
-      report += `
+  if (errorTypes.warn.length > 0) {
+    section += `
 ⚠️ WARNINGS (${errorTypes.warn.length}):
 ${errorTypes.warn
   .map(
@@ -546,10 +546,10 @@ ${errorTypes.warn
   )
   .join("")}
 `;
-    }
+  }
 
-    if (errorTypes.log.length > 0) {
-      report += `
+  if (errorTypes.log.length > 0) {
+    section += `
 📝 LOGS (${errorTypes.log.length}):
 ${errorTypes.log
   .map(
@@ -559,10 +559,10 @@ ${errorTypes.log
   )
   .join("")}
 `;
-    }
+  }
 
-    if (errorTypes.info.length > 0) {
-      report += `
+  if (errorTypes.info.length > 0) {
+    section += `
 ℹ️ INFO (${errorTypes.info.length}):
 ${errorTypes.info
   .map(
@@ -572,15 +572,54 @@ ${errorTypes.info
   )
   .join("")}
 `;
-    }
-  } else {
-    report += `
-${divider}
-🔍 CONSOLE LOGS
-${divider}
-No console messages captured. (Console monitoring may not be active)
-`;
   }
+
+  return section;
+};
+
+/**
+ * Format the complete bug report for clipboard/display
+ */
+export const formatBugReport = (reportData) => {
+  const {
+    userDescription,
+    stepsToReproduce,
+    expectedBehavior,
+    actualBehavior,
+    module,
+    diagnosticCode,
+    severity,
+    category,
+    systemInfo,
+    appState,
+    storageInfo,
+    consoleErrors,
+    additionalContext,
+  } = reportData;
+
+  const divider = "─".repeat(60);
+  const timestamp = new Date().toISOString();
+  const reportId = `BUG-${Date.now().toString(36).toUpperCase()}`;
+
+  let report = buildSummarySection({
+    severity,
+    category,
+    module,
+    diagnosticCode,
+    userDescription,
+    stepsToReproduce,
+    expectedBehavior,
+    actualBehavior,
+    timestamp,
+    reportId,
+    divider,
+  });
+
+  report += buildAdditionalContextSection(additionalContext, divider);
+  report += buildSystemInfoSection(systemInfo, divider);
+  report += buildAppStateSection(appState, divider);
+  report += buildStorageSection(storageInfo, divider);
+  report += buildConsoleLogsSection(consoleErrors, divider);
 
   report += `
 ${divider}
@@ -600,6 +639,7 @@ export const copyToClipboard = async (text) => {
     await navigator.clipboard.writeText(text);
     return { success: true };
   } catch (error) {
+    console.warn("Clipboard API write failed, falling back:", error);
     // Fallback for older browsers
     try {
       const textArea = document.createElement("textarea");
@@ -618,11 +658,14 @@ export const copyToClipboard = async (text) => {
   }
 };
 
-/**
- * Initialize global error handler for capturing runtime errors
- * DIAMOND LEVEL: Captures ALL console activity (errors, warnings, logs, info)
- */
-export const initializeErrorCapture = () => {
+const stringifyConsoleArgs = (args) =>
+  args
+    .map((arg) =>
+      typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
+    )
+    .join(" ");
+
+const captureGlobalErrorEvents = () => {
   // Capture unhandled errors
   window.addEventListener("error", (event) => {
     logConsoleError({
@@ -643,91 +686,102 @@ export const initializeErrorCapture = () => {
       stack: event.reason?.stack,
     });
   });
+};
 
-  // Intercept console methods to capture logs
+const overrideConsoleError = (originalConsole) => {
+  console.error = function (...args) {
+    logConsoleError({
+      type: "error",
+      message: stringifyConsoleArgs(args),
+      stack: new Error().stack,
+    });
+    originalConsole.error.apply(console, args);
+  };
+};
+
+const overrideConsoleWarn = (originalConsole) => {
+  console.warn = function (...args) {
+    logConsoleError({
+      type: "warn",
+      message: stringifyConsoleArgs(args),
+    });
+    originalConsole.warn.apply(console, args);
+  };
+};
+
+// Filter: only capture logs with keywords that indicate issues
+const CONSOLE_LOG_KEYWORDS = [
+  "error",
+  "fail",
+  "invalid",
+  "undefined",
+  "null",
+  "not found",
+  "missing",
+  "warning",
+];
+
+const overrideConsoleLog = (originalConsole) => {
+  // Intercept console.log (capture only important logs to avoid spam)
+  // eslint-disable-next-line no-console
+  console.log = function (...args) {
+    const message = stringifyConsoleArgs(args);
+    if (
+      CONSOLE_LOG_KEYWORDS.some((keyword) =>
+        message.toLowerCase().includes(keyword),
+      )
+    ) {
+      logConsoleError({ type: "log", message });
+    }
+    originalConsole.log.apply(console, args);
+  };
+};
+
+// Only capture info messages with relevant keywords
+const CONSOLE_INFO_KEYWORDS = [
+  "loaded",
+  "initialized",
+  "ready",
+  "completed",
+  "started",
+];
+
+const overrideConsoleInfo = (originalConsole) => {
+  // eslint-disable-next-line no-console
+  console.info = function (...args) {
+    const message = stringifyConsoleArgs(args);
+    if (
+      CONSOLE_INFO_KEYWORDS.some((keyword) =>
+        message.toLowerCase().includes(keyword),
+      )
+    ) {
+      logConsoleError({ type: "info", message });
+    }
+    originalConsole.info.apply(console, args);
+  };
+};
+
+const interceptConsoleMethods = () => {
   const originalConsole = {
     error: console.error,
     warn: console.warn,
     // eslint-disable-next-line no-console
     log: console.log,
+    // eslint-disable-next-line no-console
     info: console.info,
   };
 
-  // Intercept console.error
-  console.error = function (...args) {
-    logConsoleError({
-      type: "error",
-      message: args
-        .map((arg) =>
-          typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
-        )
-        .join(" "),
-      stack: new Error().stack,
-    });
-    originalConsole.error.apply(console, args);
-  };
+  overrideConsoleError(originalConsole);
+  overrideConsoleWarn(originalConsole);
+  overrideConsoleLog(originalConsole);
+  overrideConsoleInfo(originalConsole);
+};
 
-  // Intercept console.warn
-  console.warn = function (...args) {
-    logConsoleError({
-      type: "warn",
-      message: args
-        .map((arg) =>
-          typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
-        )
-        .join(" "),
-    });
-    originalConsole.warn.apply(console, args);
-  };
-
-  // Intercept console.log (capture only important logs to avoid spam)
-  // eslint-disable-next-line no-console
-  console.log = function (...args) {
-    // Only capture logs that might be relevant to bugs
-    const message = args
-      .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
-      )
-      .join(" ");
-
-    // Filter: only capture logs with keywords that indicate issues
-    const keywords = [
-      "error",
-      "fail",
-      "invalid",
-      "undefined",
-      "null",
-      "not found",
-      "missing",
-      "warning",
-    ];
-    if (keywords.some((keyword) => message.toLowerCase().includes(keyword))) {
-      logConsoleError({
-        type: "log",
-        message: message,
-      });
-    }
-
-    originalConsole.log.apply(console, args);
-  };
-
-  // Intercept console.info
-  console.info = function (...args) {
-    const message = args
-      .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
-      )
-      .join(" ");
-
-    // Only capture info messages with relevant keywords
-    const keywords = ["loaded", "initialized", "ready", "completed", "started"];
-    if (keywords.some((keyword) => message.toLowerCase().includes(keyword))) {
-      logConsoleError({
-        type: "info",
-        message: message,
-      });
-    }
-
-    originalConsole.info.apply(console, args);
-  };
+/**
+ * Initialize global error handler for capturing runtime errors
+ * DIAMOND LEVEL: Captures ALL console activity (errors, warnings, logs, info)
+ */
+export const initializeErrorCapture = () => {
+  captureGlobalErrorEvents();
+  interceptConsoleMethods();
 };

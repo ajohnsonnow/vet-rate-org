@@ -66,11 +66,14 @@ export const autoSummarizeIfLong = async (
 
   // 3. Trigger the AI for summary generation
   try {
-    const reason = isExplicitRequest
-      ? "Explicit Request"
-      : isTooLong
-        ? "Length Check"
-        : "Forced";
+    let reason;
+    if (isExplicitRequest) {
+      reason = "Explicit Request";
+    } else if (isTooLong) {
+      reason = "Length Check";
+    } else {
+      reason = "Forced";
+    }
     // eslint-disable-next-line no-console
     console.log(`📋 Reddit Summary Triggered: ${reason} (${wordCount} words)`);
 
@@ -127,9 +130,18 @@ export const checkShouldSummarize = (text, userPrompt = "") => {
   const wordCount = text.trim().split(/\s+/).length;
   const isTooLong = wordCount > WORD_COUNT_THRESHOLD;
 
+  let reason;
+  if (isExplicitRequest) {
+    reason = "explicit";
+  } else if (isTooLong) {
+    reason = "length";
+  } else {
+    reason = null;
+  }
+
   return {
     shouldSummarize: isExplicitRequest || isTooLong,
-    reason: isExplicitRequest ? "explicit" : isTooLong ? "length" : null,
+    reason,
     wordCount,
     threshold: WORD_COUNT_THRESHOLD,
   };

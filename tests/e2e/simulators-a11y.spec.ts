@@ -21,6 +21,7 @@ async function bootReturningUser(page: Page): Promise<void> {
     localStorage.setItem("vet_rate_last_seen_version", appVersion);
     localStorage.setItem("vetrate-tour-completed", "true");
     localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+    localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
   }, APP_VERSION);
   await page.goto("/");
   await dismissDisclaimer(page);

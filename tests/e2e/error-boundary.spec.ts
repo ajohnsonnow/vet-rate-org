@@ -98,6 +98,7 @@ test.describe(`ErrorBoundary @ ${VIEWPORT.width}px (small-android)`, () => {
       localStorage.setItem("vet-rate-tos-accepted", "true");
       localStorage.setItem("vet_rate_last_seen_version", appVersion);
       localStorage.setItem("vetrate-tour-completed", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
     }, APP_VERSION);
     await page.goto("/");
     await dismissDisclaimer(page);
@@ -156,9 +157,12 @@ test.describe(`ErrorBoundary @ ${VIEWPORT.width}px (small-android)`, () => {
       name: "Report this problem",
     });
     await reportBtn.click();
+    // Widened from the default 5s: the click triggers an async IndexedDB
+    // write, which can exceed a tight budget under the 6-parallel-worker
+    // local dev-server contention this suite runs with.
     await expect(
       page.getByRole("button", { name: "Reported ✓" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
 
     const reports = await readHomeReports(page);
     expect(reports.length).toBeGreaterThanOrEqual(1);

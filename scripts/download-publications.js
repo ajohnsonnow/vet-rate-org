@@ -130,6 +130,8 @@ const PUBLICATIONS = [
   },
 ];
 
+function noop() {}
+
 // Download function with redirect handling
 function downloadFile(url, destPath, description) {
   return new Promise((resolve, reject) => {
@@ -169,7 +171,7 @@ function downloadFile(url, destPath, description) {
       });
       
       file.on('error', (err) => {
-        fs.unlink(destPath, () => {}); // Delete partial file
+        fs.unlink(destPath, noop); // Delete partial file
         reject(err);
       });
     });

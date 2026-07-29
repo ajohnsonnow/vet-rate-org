@@ -108,6 +108,7 @@ export function FocusWrapper({ id, children }) {
   const isDimmed = focusMode && focusedElement && !isFocused;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- listens to focus/blur bubbling from a focusable child to drive purely visual dimming; the div itself takes no user interaction and needs no role/tabIndex
     <div
       className={`transition-opacity duration-300 ${isDimmed ? "opacity-10" : "opacity-100"}`}
       onFocus={() => focusMode && setFocus(id)}

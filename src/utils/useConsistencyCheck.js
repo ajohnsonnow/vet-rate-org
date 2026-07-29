@@ -226,8 +226,9 @@ const CONSISTENCY_RULES = [
               const activities = extractActivities(log.notes);
 
               inabilities.forEach((inability) => {
-                const contradictoryActivity = activities.find((activity) =>
-                  isContradictoryActivity(inability, activity),
+                const contradictoryActivity = findContradictoryActivity(
+                  inability,
+                  activities,
                 );
 
                 if (contradictoryActivity) {
@@ -304,16 +305,20 @@ function extractLaterality(text) {
   const leftMentions = (text.match(/\bleft\b/gi) || []).length;
   const rightMentions = (text.match(/\bright\b/gi) || []).length;
 
+  let side;
+  if (leftMentions > rightMentions) {
+    side = "left";
+  } else if (rightMentions > leftMentions) {
+    side = "right";
+  } else {
+    side = null;
+  }
+
   return {
     left: leftMentions,
     right: rightMentions,
     hasConflict: leftMentions > 0 && rightMentions > 0,
-    side:
-      leftMentions > rightMentions
-        ? "left"
-        : rightMentions > leftMentions
-          ? "right"
-          : null,
+    side,
   };
 }
 
@@ -367,6 +372,12 @@ function isContradictoryActivity(inability, activity) {
   return contradictoryTerms.some((term) => activity.includes(term));
 }
 
+function findContradictoryActivity(inability, activities) {
+  return activities.find((activity) =>
+    isContradictoryActivity(inability, activity),
+  );
+}
+
 // Main Hook
 export default function useConsistencyCheck() {
   const [contradictions, setContradictions] = useState([]);
@@ -381,26 +392,28 @@ export default function useConsistencyCheck() {
       // pointed at names nothing in the app writes ("savedClaims",
       // "statements", ...), so every rule ran against empty data and the
       // engine could never find a contradiction.
+      // safeParse guards against the literal string "undefined" (some write
+      // paths call localStorage.setItem(key, undefined), which stringifies
+      // to that) so one corrupted key can't abort every rule via the
+      // shared try/catch below.
+      const safeParse = (key, fallback) => {
+        const raw = localStorage.getItem(key);
+        return raw && raw !== "undefined"
+          ? JSON.parse(raw)
+          : JSON.parse(fallback);
+      };
       const data = {
-        profile: JSON.parse(
-          localStorage.getItem("vet_rate_veteran_profile") || "null",
-        ),
-        claims: JSON.parse(
-          localStorage.getItem("vet_rate_saved_claims") || "[]",
-        ),
-        statements: JSON.parse(
-          localStorage.getItem("vet_rate_statements") || "{}",
-        ),
-        forms: JSON.parse(localStorage.getItem("vet_rate_saved_forms") || "[]"),
+        profile: safeParse("vet_rate_veteran_profile", "null"),
+        claims: safeParse("vet_rate_saved_claims", "[]"),
+        statements: safeParse("vet_rate_statements", "{}"),
+        forms: safeParse("vet_rate_saved_forms", "[]"),
         // Rules expect a {conditionName: percent} map; My Ratings stores an array
         ratings: Object.fromEntries(
-          JSON.parse(localStorage.getItem("vet_rate_my_ratings") || "[]")
+          safeParse("vet_rate_my_ratings", "[]")
             .filter((r) => r && r.name)
             .map((r) => [r.name, r.rating]),
         ),
-        symptomLogs: JSON.parse(
-          localStorage.getItem("vetrate_symptom_logs") || "[]",
-        ),
+        symptomLogs: safeParse("vetrate_symptom_logs", "[]"),
       };
 
       // Run all consistency rules

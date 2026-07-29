@@ -10,14 +10,14 @@
  * fake form numbers (like "27-0820" used incorrectly) leading to procedural errors.
  */
 
-import disabilityDataJson from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { validateVAForms, safeFormResponse } from "./formValidator";
 
 // Re-export form validation for convenience
 export { validateVAForms, safeFormResponse };
 
-// Extract the disabilities array from the JSON structure
-const disabilityData = disabilityDataJson.disabilities || [];
+// Disabilities array, sourced through the unified KB access layer (S30)
+const disabilityData = getAllConditions();
 
 // Build lookup table for O(1) access
 const VALID_CODES = new Set(
@@ -30,6 +30,53 @@ disabilityData.forEach((d) => {
   const normalizedName = d.conditionName.toLowerCase().trim();
   NAME_TO_CODE.set(normalizedName, String(d.diagnosticCode));
 });
+
+// Fold case, surrounding punctuation, internal whitespace, and a single
+// trailing plural "s" so "Tinnitus"/"tinnitus" and "Migraine"/"Migraines"
+// resolve to the same key for grounded name→code lookup.
+const _normalizeConditionName = (name) =>
+  String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/s$/, "");
+
+// Normalized-name → code index. A key that two DIFFERENT codes normalize to is
+// stored as null (ambiguous) so enrichment never guesses which condition an
+// extracted name meant.
+const NORMALIZED_NAME_TO_CODE = (() => {
+  const map = new Map();
+  for (const d of disabilityData) {
+    const key = _normalizeConditionName(d.conditionName);
+    if (!key) continue;
+    const code = String(d.diagnosticCode);
+    if (map.has(key)) {
+      if (map.get(key) !== code) map.set(key, null); // ambiguous
+    } else {
+      map.set(key, code);
+    }
+  }
+  return map;
+})();
+
+/**
+ * Grounded exact-name → diagnostic code lookup for enriching model-extracted
+ * conditions that carry no code. Returns the DC string ONLY for an unambiguous,
+ * normalized-exact match to a 38 CFR Part 4 condition name. Returns null for no
+ * match, an ambiguous match, or a multi-condition free-text value (comma /
+ * slash / " and " separated list). A wrong code is a hallucination, so anything
+ * short of a confident exact match yields null — never a guess.
+ * @param {string} name
+ * @returns {string|null}
+ */
+export const lookupDiagnosticCodeByName = (name) => {
+  const raw = String(name || "").trim();
+  if (!raw) return null;
+  // List-form values must never be force-mapped to a single code.
+  if (/[,/]|\sand\s/i.test(raw)) return null;
+  return NORMALIZED_NAME_TO_CODE.get(_normalizeConditionName(raw)) || null;
+};
 
 /**
  * Validate a single diagnostic code

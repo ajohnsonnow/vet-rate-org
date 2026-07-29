@@ -76,27 +76,101 @@ function log(msg, color = 'reset') {
  * Parse VA_GLOSSARY from vaGlossary.js
  * @returns {Map<string, string>} Term -> Definition map
  */
+// Reads a quoted string starting at `text[startIndex]` (the opening quote)
+// and returns { value, endIndex } with escapes resolved, or null if the
+// quote is never closed. Manual scan instead of a backtracking regex.
+function readQuotedString(text, startIndex) {
+  const quote = text[startIndex];
+  let value = '';
+  for (let i = startIndex + 1; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '\\') {
+      value += text[i + 1];
+      i++;
+      continue;
+    }
+    if (ch === quote) return { value, endIndex: i };
+    value += ch;
+  }
+  return null;
+}
+
+const WHITESPACE = new Set([' ', '\t', '\n', '\r']);
+const IDENTIFIER_CHARS = /[A-Za-z0-9_$&]/;
+
+function skipWhitespaceAndComments(text, i) {
+  while (i < text.length) {
+    if (WHITESPACE.has(text[i])) {
+      i++;
+      continue;
+    }
+    if (text[i] === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      continue;
+    }
+    break;
+  }
+  return i;
+}
+
+// Reads a quoted key ("Term") or a bare identifier key (DBQ, VARO) starting
+// at index `i`. Returns { key, next } or null if there's no key here.
+function readKey(text, i) {
+  if (text[i] === '"' || text[i] === "'") {
+    const parsed = readQuotedString(text, i);
+    return parsed ? { key: parsed.value, next: parsed.endIndex + 1 } : null;
+  }
+  const start = i;
+  while (i < text.length && IDENTIFIER_CHARS.test(text[i])) i++;
+  return i > start ? { key: text.slice(start, i), next: i } : null;
+}
+
+// Parses one `key: "value"` entry starting at index `i` (whitespace/comments
+// already skipped). Returns { term, definition, next } on a match, or just
+// { next } to advance past a non-entry token (stray char, missing colon,
+// missing/unterminated value).
+function parseEntryAt(body, i) {
+  const keyResult = readKey(body, i);
+  if (!keyResult) return { next: i + 1 };
+
+  let next = skipWhitespaceAndComments(body, keyResult.next);
+  if (body[next] !== ':') return { next };
+
+  next = skipWhitespaceAndComments(body, next + 1);
+  if (body[next] !== '"' && body[next] !== "'") return { next };
+
+  const valueResult = readQuotedString(body, next);
+  if (!valueResult) return { next };
+
+  return {
+    term: keyResult.key,
+    definition: valueResult.value,
+    next: valueResult.endIndex + 1,
+  };
+}
+
 function parseGlossarySource() {
   const content = fs.readFileSync(GLOSSARY_SOURCE, 'utf8');
   const glossary = new Map();
-  
-  // Match all 'Term': 'Definition' patterns
-  const regex = /'([^']+)':\s*['"`]([^'"`]+)['"`]/g;
-  let match;
-  
-  while ((match = regex.exec(content)) !== null) {
-    const term = match[1];
-    const definition = match[2];
-    
-    // Skip excluded terms
-    if (EXCLUDE_TERMS.includes(term)) continue;
-    
-    // Skip if we already have this term (handle duplicates)
-    if (!glossary.has(term)) {
-      glossary.set(term, definition);
+
+  // Scope the scan to the VA_GLOSSARY object body so exported helper
+  // functions (hasDefinition, getAllTerms, etc.) can't produce false matches.
+  const bodyMatch = content.match(/VA_GLOSSARY\s*=\s*\{([\s\S]*?)\n\};/);
+  const body = bodyMatch ? bodyMatch[1] : content;
+
+  let i = 0;
+  while (i < body.length) {
+    i = skipWhitespaceAndComments(body, i);
+    if (i >= body.length || body[i] === '}') break;
+
+    const entry = parseEntryAt(body, i);
+    i = entry.next;
+
+    if (entry.term && !EXCLUDE_TERMS.includes(entry.term) && !glossary.has(entry.term)) {
+      glossary.set(entry.term, entry.definition);
     }
   }
-  
+
   return glossary;
 }
 
@@ -167,7 +241,7 @@ function updateUserManual(newGlossaryContent, write = false) {
   const content = fs.readFileSync(USER_MANUAL_PATH, 'utf8');
   
   // Find the glossary section in pageContent
-  const glossaryRegex = /(glossary:\s*\{\s*title:\s*'Glossary',\s*content:\s*`)([^`]*?)(`\s*,?\s*\})/s;
+  const glossaryRegex = /(glossary:\s*\{\s*title:\s*"Glossary",\s*content:\s*`)([^`]*?)(`\s*,?\s*\})/s;
   const match = content.match(glossaryRegex);
   
   if (!match) {

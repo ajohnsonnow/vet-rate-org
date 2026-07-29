@@ -1,0 +1,1046 @@
+[
+ {
+  "dc": "5281",
+  "name": "Hallux rigidus",
+  "section": "§ 4.71a",
+  "rows": [
+   [
+    "5281 Hallux rigidus, unilateral, severe:",
+    ""
+   ],
+   [
+    "Rate as hallux valgus, severe.",
+    ""
+   ],
+   [
+    "Note: Not to be combined with claw foot ratings.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5309",
+  "name": "Group IX: Forearm muscles",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5309 Group IX. Function: The forearm muscles act in strong grasping movements and are supplemented by the intrinsic muscles in delicate manipulative movements. Intrinsic muscles of hand: Thenar eminence; short flexor, opponens, abductor and adductor of thumb; hypothenar eminence; short flexor, opponens and abductor of little finger; 4 lumbricales; 4 dorsal and 3 palmar interossei",
+    "",
+    ""
+   ],
+   [
+    "Note: The hand is so compact a structure that isolated muscle injuries are rare, being nearly always complicated with injuries of bones, joints, tendons, etc. Rate on limitation of motion, minimum 10 percent.",
+    "",
+    ""
+   ],
+   [
+    "The Foot and Leg"
+   ],
+   [
+    "",
+    "Rating"
+   ],
+   [
+    "---",
+    "---"
+   ]
+  ]
+ },
+ {
+  "dc": "5325",
+  "name": "Muscle injury, facial muscles",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5325 Muscle injury, facial muscles. Evaluate functional impairment as seventh (facial) cranial nerve neuropathy (diagnostic code 8207), disfiguring scar (diagnostic code 7800), etc. Minimum, if interfering to any extent with mastication—10",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5326",
+  "name": "Muscle hernia",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5326 Muscle hernia, extensive. Without other injury to the muscle—10",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5327",
+  "name": "Muscle, neoplasm of, malignant",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5327 Muscle, neoplasm of, malignant (excluding soft tissue sarcoma)—100",
+    ""
+   ],
+   [
+    "Note: A rating of 100 percent shall continue beyond the cessation of any surgery, radiation treatment, antineoplastic chemotherapy or other therapeutic procedures. Six months after discontinuance of such treatment, the appropriate disability rating shall be determined by mandatory VA examination. Any change in evaluation based upon that or any subsequent examination shall be subject to the provisions of § 3.105(e) of this chapter . If there has been no local recurrence or metastasis, rate on residual impairment of function.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5328",
+  "name": "Muscle, neoplasm of, benign",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5328 Muscle, neoplasm of, benign, postoperative. Rate on impairment of function, i.e. , limitation of motion, or scars, diagnostic code 7805, etc",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5329",
+  "name": "Sarcoma, soft tissue",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5329 Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)—100",
+    ""
+   ],
+   [
+    "Note: A rating of 100 percent shall continue beyond the cessation of any surgery, radiation treatment, antineoplastic chemotherapy or other therapeutic procedures. Six months after discontinuance of such treatment, the appropriate disability rating shall be determined by mandatory VA examination. Any change in evaluation based upon that or any subsequent examination shall be subject to the provisions of § 3.105(e) of this chapter . If there has been no local recurrence or metastasis, rate on residual impairment of function.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5330",
+  "name": "Rhabdomyolysis, residuals of",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5330 Rhabdomyolysis, residuals of:",
+    ""
+   ],
+   [
+    "Rate each affected muscle group separately and combine in accordance with § 4.25",
+    ""
+   ],
+   [
+    "Note: Separately evaluate any chronic renal complications within the appropriate body system.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "5331",
+  "name": "Compartment syndrome",
+  "section": "§ 4.73",
+  "rows": [
+   [
+    "5331 Compartment syndrome:",
+    ""
+   ],
+   [
+    "Rate each affected muscle group separately and combine in accordance with § 4.25",
+    ""
+   ],
+   [
+    "",
+    "Rating"
+   ],
+   [
+    "---",
+    "---"
+   ],
+   [
+    "DISEASES OF THE NOSE AND THROAT"
+   ]
+  ]
+ },
+ {
+  "dc": "6723",
+  "name": "Pulmonary TB, inactive, minimal",
+  "section": "§ 4.97",
+  "rows": [
+   [
+    "6723 Tuberculosis, pulmonary, chronic, minimal, inactive",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7354",
+  "name": "Hepatitis C",
+  "section": "§ 4.114",
+  "rows": [
+   [
+    "7354 Hepatitis C (or non-A, non-B hepatitis):",
+    ""
+   ],
+   [
+    "Rate under DC 7345 (Chronic liver disease without cirrhosis).",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7533",
+  "name": "Cystic diseases of the kidneys",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7533 Cystic diseases of the kidneys:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ],
+   [
+    "Note: Cystic diseases of the kidneys include, but are not limited to, polycystic disease, uremic medullary cystic disease, medullary sponge kidney, and similar conditions such as Alport's syndrome, cystinosis, primary oxalosis, and Fabry's disease.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7534",
+  "name": "Atherosclerotic renal disease",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7534 Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel disease, unspecified):",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7535",
+  "name": "Toxic nephropathy",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7535 Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy metals, and similar agents):",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7536",
+  "name": "Glomerulonephritis",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7536 Glomerulonephritis:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7537",
+  "name": "Interstitial nephritis",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7537 Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7538",
+  "name": "Papillary necrosis",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7538 Papillary necrosis:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7539",
+  "name": "Renal amyloid disease",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7539 Renal amyloid disease:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ],
+   [
+    "Note: This diagnostic code pertains to renal involvement secondary to all glomerulonephritis conditions, all vasculitis conditions and their derivatives, and other renal conditions caused by systemic diseases, such as Lupus erythematosus, systemic lupus erythematosus nephritis, Henoch-Schonlein syndrome, scleroderma, hemolytic uremic syndrome, polyarthritis, Wegener's granulomatosis, Goodpasture's syndrome, and sickle cell disease.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7544",
+  "name": "Renal disease caused by viral infection",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7544 Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and Hepatitis C:",
+    ""
+   ],
+   [
+    "Rate as renal dysfunction.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "7545",
+  "name": "Bladder, diverticulum of",
+  "section": "§ 4.115b",
+  "rows": [
+   [
+    "7545 Bladder, diverticulum of:",
+    ""
+   ],
+   [
+    "Rate as voiding dysfunction or urinary tract infection, whichever is predominant.",
+    ""
+   ],
+   [
+    "1 Review for entitlement to special monthly compensation under § 3.350 of this chapter ."
+   ],
+   [
+    "",
+    "Rating"
+   ],
+   [
+    "---",
+    "---"
+   ]
+  ]
+ },
+ {
+  "dc": "7833",
+  "name": "Malignant melanoma",
+  "section": "§ 4.118",
+  "rows": [
+   [
+    "7833 Malignant melanoma:",
+    ""
+   ],
+   [
+    "Rate as scars (DC's 7801, 7802, 7803, 7804, or 7805), disfigurement of the head, face, or neck (DC 7800), or impairment of function (under the appropriate body system)",
+    ""
+   ],
+   [
+    "Note: If a skin malignancy requires therapy that is comparable to that used for systemic malignancies, i.e. , systemic chemotherapy, X-ray therapy more extensive than to the skin, or surgery more extensive than wide local excision, a 100-percent evaluation will be assigned from the date of onset of treatment, and will continue, with a mandatory VA examination six months following the completion of such antineoplastic treatment, and any change in evaluation based upon that or any subsequent examination will be subject to the provisions of § 3.105(e) . If there has been no local recurrence or metastasis, evaluation will then be made on residuals. If treatment is confined to the skin, the provisions for a 100-percent evaluation do not apply.",
+    ""
+   ],
+   [
+    "Organic Diseases of the Central Nervous System"
+   ],
+   [
+    "",
+    "Rating"
+   ],
+   [
+    "---",
+    "---"
+   ]
+  ]
+ },
+ {
+  "dc": "8610",
+  "name": "Neuritis, upper radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8610 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8611",
+  "name": "Neuritis, middle radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8611 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8612",
+  "name": "Neuritis, lower radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8612 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8613",
+  "name": "Neuritis, all radicular groups",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8613 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8614",
+  "name": "Neuritis, musculospiral nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8614 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8615",
+  "name": "Neuritis, median nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8615 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8616",
+  "name": "Neuritis, ulnar nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8616 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8617",
+  "name": "Neuritis, musculocutaneous nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8617 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8618",
+  "name": "Neuritis, circumflex nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8618 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8619",
+  "name": "Neuritis, long thoracic nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8619 Neuritis.",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8621",
+  "name": "Neuritis, external popliteal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8621 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8622",
+  "name": "Neuritis, musculocutaneous nerve (superficial peroneal)",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8622 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8623",
+  "name": "Neuritis, anterior tibial nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8623 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8624",
+  "name": "Neuritis, internal popliteal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8624 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8625",
+  "name": "Neuritis, posterior tibial nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8625 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8626",
+  "name": "Neuritis, anterior crural nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8626 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8627",
+  "name": "Neuritis, internal saphenous nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8627 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8628",
+  "name": "Neuritis, obturator nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8628 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8629",
+  "name": "Neuritis, external cutaneous nerve of thigh",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8629 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8630",
+  "name": "Neuritis, ilio-inguinal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8630 Neuritis.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8710",
+  "name": "Neuralgia, upper radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8710 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Middle radicular group",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8711",
+  "name": "Neuralgia, middle radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8711 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Lower radicular group",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8712",
+  "name": "Neuralgia, lower radicular group",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8712 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "All radicular groups",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8713",
+  "name": "Neuralgia, all radicular groups",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8713 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "The musculospiral nerve (radial nerve)",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8714",
+  "name": "Neuralgia, musculospiral nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8714 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Note: Lesions involving only “dissociation of extensor communis digitorum” and “paralysis below the extensor communis digitorum,” will not exceed the moderate rating under code 8514."
+   ],
+   [
+    "The median nerve",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8715",
+  "name": "Neuralgia, median nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8715 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "The ulnar nerve",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8716",
+  "name": "Neuralgia, ulnar nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8716 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Musculocutaneous nerve",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8717",
+  "name": "Neuralgia, musculocutaneous nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8717 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Circumflex nerve",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8718",
+  "name": "Neuralgia, circumflex nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8718 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Long thoracic nerve",
+    "",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8719",
+  "name": "Neuralgia, long thoracic nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8719 Neuralgia.",
+    "",
+    ""
+   ],
+   [
+    "Note: Combined nerve injuries should be rated by reference to the major involvement, or if sufficient in extent, consider radicular group ratings."
+   ],
+   [
+    "",
+    "Rating"
+   ],
+   [
+    "---",
+    "---"
+   ],
+   [
+    "Sciatic nerve",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8720",
+  "name": "Neuralgia, sciatic nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8720 Neuralgia.",
+    ""
+   ],
+   [
+    "External popliteal nerve (common peroneal)",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8721",
+  "name": "Neuralgia, external popliteal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8721 Neuralgia.",
+    ""
+   ],
+   [
+    "Musculocutaneous nerve (superficial peroneal)",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8722",
+  "name": "Neuralgia, musculocutaneous nerve (superficial peroneal)",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8722 Neuralgia.",
+    ""
+   ],
+   [
+    "Anterior tibial nerve (deep peroneal)",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8723",
+  "name": "Neuralgia, anterior tibial nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8723 Neuralgia.",
+    ""
+   ],
+   [
+    "Internal popliteal nerve (tibial)",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8724",
+  "name": "Neuralgia, internal popliteal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8724 Neuralgia.",
+    ""
+   ],
+   [
+    "Posterior tibial nerve",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8725",
+  "name": "Neuralgia, posterior tibial nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8725 Neuralgia.",
+    ""
+   ],
+   [
+    "Anterior crural nerve (femoral)",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8726",
+  "name": "Neuralgia, anterior crural nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8726 Neuralgia.",
+    ""
+   ],
+   [
+    "Internal saphenous nerve",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8727",
+  "name": "Neuralgia, internal saphenous nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8727 Neuralgia.",
+    ""
+   ],
+   [
+    "Obturator nerve",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8728",
+  "name": "Neuralgia, obturator nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8728 Neuralgia.",
+    ""
+   ],
+   [
+    "External cutaneous nerve of thigh",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8729",
+  "name": "Neuralgia, external cutaneous nerve of thigh",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8729 Neuralgia.",
+    ""
+   ],
+   [
+    "Ilio-inguinal nerve",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8730",
+  "name": "Neuralgia, ilio-inguinal nerve",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8730 Neuralgia.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8910",
+  "name": "Epilepsy (Major Seizures)",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8910 Epilepsy, grand mal.",
+    ""
+   ],
+   [
+    "Rate under the general rating formula for major seizures.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8912",
+  "name": "Jacksonian and focal motor or sensory epilepsy",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8912 Epilepsy, Jacksonian and focal motor or sensory.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8913",
+  "name": "Diencephalic epilepsy",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8913 Epilepsy, diencephalic.",
+    ""
+   ],
+   [
+    "Rate as minor seizures, except in the presence of major and minor seizures, rate the predominating type.",
+    ""
+   ]
+  ]
+ },
+ {
+  "dc": "8914",
+  "name": "Psychomotor epilepsy",
+  "section": "§ 4.124a",
+  "rows": [
+   [
+    "8914 Epilepsy, psychomotor.",
+    ""
+   ],
+   [
+    "Major seizures:",
+    ""
+   ],
+   [
+    "Psychomotor seizures will be rated as major seizures under the general rating formula when characterized by automatic states and/or generalized convulsions with unconsciousness.",
+    ""
+   ],
+   [
+    "Minor seizures:",
+    ""
+   ],
+   [
+    "Psychomotor seizures will be rated as minor seizures under the general rating formula when characterized by brief transient episodes of random motor movements, hallucinations, perceptual illusions, abnormalities of thinking, memory or mood, or autonomic disturbances.",
+    ""
+   ],
+   [
+    "Mental Disorders in Epilepsies: A nonpsychotic organic brain syndrome will be rated separately under the appropriate diagnostic code (e.g., 9304 or 9326). In the absence of a diagnosis of non-psychotic organic psychiatric disturbance (psychotic, psychoneurotic or personality disorder) if diagnosed and shown to be secondary to or directly associated with epilepsy will be rated separately. The psychotic or psychroneurotic disorder will be rated under the appropriate diagnostic code. The personality disorder will be rated as a dementia (e.g., diagnostic code 9304 or 9326)."
+   ],
+   [
+    "Epilepsy and Unemployability: (1) Rating specialists must bear in mind that the epileptic, although his or her seizures are controlled, may find employment and rehabilitation difficult of attainment due to employer reluctance to the hiring of the epileptic."
+   ],
+   [
+    "(2) Where a case is encountered with a definite history of unemployment, full and complete development should be undertaken to ascertain whether the epilepsy is the determining factor in his or her inability to obtain employment."
+   ],
+   [
+    "(3) The assent of the claimant should first be obtained for permission to conduct this economic and social survey. The purpose of this survey is to secure all the relevant facts and data necessary to permit of a true judgment as to the reason for his or her unemployment and should include information as to:"
+   ],
+   [
+    "(a) Education;"
+   ],
+   [
+    "(b) Occupations prior and subsequent to service;"
+   ],
+   [
+    "(c) Places of employment and reasons for termination;"
+   ],
+   [
+    "(d) Wages received;"
+   ],
+   [
+    "(e) Number of seizures."
+   ],
+   [
+    "(4) Upon completion of this survey and current examination, the case should have rating board consideration. Where in the judgment of the rating board the veteran's unemployability is due to epilepsy and jurisdiction is not vested in that body by reason of schedular evaluations, the case should be submitted to the Compensation Service or the Director, Pension and Fiduciary Service."
+   ],
+   [
+    "General Rating Formula for Mental Disorders"
+   ],
+   [
+    "",
+    "Rating"
+   ]
+  ]
+ }
+]

@@ -86,17 +86,20 @@ async function persistEntry(entry) {
   }
 }
 
+function selectConsoleFn(level) {
+  if (level === "error") return console.error;
+  if (level === "warn") return console.warn;
+  if (level === "debug") {
+    // eslint-disable-next-line no-console -- intentional passthrough; this module IS the logger
+    return console.debug;
+  }
+  // eslint-disable-next-line no-console -- intentional passthrough; this module IS the logger
+  return console.info;
+}
+
 function passthrough(level, entry) {
   if (!consolePassthrough) return;
-  const fn =
-    level === "error"
-      ? console.error
-      : level === "warn"
-        ? console.warn
-        : level === "debug"
-          ? // eslint-disable-next-line no-console
-            console.debug
-          : console.info;
+  const fn = selectConsoleFn(level);
   if (entry.fields) fn(`[${level}] ${entry.msg}`, entry.fields);
   else fn(`[${level}] ${entry.msg}`);
 }

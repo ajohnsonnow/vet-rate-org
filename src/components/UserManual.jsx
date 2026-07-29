@@ -3519,14 +3519,14 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **benefit of the doubt** - When evidence is approximately equal, VA must decide in favor of the veteran (38 CFR 3.102)
 - **Bilateral Factor** - Additional percentage added when you have the same disability affecting both sides of your body
 - **BiPAP** - Bilevel Positive Airway Pressure - Breathing device similar to CPAP that can support 50% sleep apnea rating
-- **Blue Button** - VA\
+- **Blue Button** - VA's online tool to download your VA medical records and health information
 - **Buddy Statement** - A sworn statement from someone who witnessed your condition during or after service, often filed on VA Form 21-10210
 - **Burn Pit** - Open-air waste burning common in Iraq/Afghanistan; PACT Act establishes presumptive conditions
-- **BVA** - Board of Veterans\
+- **BVA** - Board of Veterans' Appeals - The appellate body that reviews claim decisions when higher-level review doesn't resolve...
 - **C-File** - Claims File - Your complete VA claims folder containing all evidence, decisions, and correspondence
 - **C&P** - Compensation & Pension Exam - A medical examination scheduled by the VA to evaluate your claimed disability
 - **Camp Lejeune** - Marine base with contaminated water (1953-1987); presumptive conditions established by PACT Act
-- **CAPRI** - Computerized Patient Record Interface - VA\
+- **CAPRI** - Computerized Patient Record Interface - VA's internal medical records system
 - **CAVC** - Court of Appeals for Veterans Claims - Federal court that reviews BVA decisions
 - **CFR** - Code of Federal Regulations - The legal framework governing VA disability ratings. Title 38 CFR covers veterans benefits
 - **CFS** - Chronic Fatigue Syndrome - Presumptive condition for Gulf War veterans under 38 CFR 3.317
@@ -3534,7 +3534,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **Chapter 31** - Another name for VR&E/Vocational Rehabilitation
 - **Chapter 35** - See DEA - education benefits for dependents
 - **Chronic Disease** - A disease listed in 38 CFR 3.309 that is presumptively service-connected if it manifests within one year of discharge
-- **Combined Rating** - The VA\
+- **Combined Rating** - The VA's unique math formula for combining multiple disability ratings (not simple addition)
 - **competent evidence** - Evidence from a qualified source (medical evidence from doctors, lay evidence from witnesses)
 - **Continuous Pursuit** - Maintaining your appeal through proper review options to preserve your effective date
 - **COPD** - Chronic Obstructive Pulmonary Disease - Progressive lung disease often service-connected from toxic exposures
@@ -3550,7 +3550,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **DD-214** - Certificate of Release or Discharge from Active Duty - Official proof of military service
 - **DD-215** - Correction to DD-214 - Used to correct or add information to your discharge document
 - **De Novo Review** - A fresh look at your claim by a different reviewer (used in Higher-Level Review)
-- **DEA** - Dependents\
+- **DEA** - Dependents' Educational Assistance (Chapter 35) - Education benefits for dependents of 100% P&T veterans
 - **Decision Notice** - Official VA letter informing you of the decision on your claim and your appeal rights
 - **Deferred** - When VA postpones deciding part of your claim pending additional evidence or examination
 - **Development** - The process of gathering evidence for your claim - VA has a duty to assist in this process
@@ -3560,16 +3560,16 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **Direct Service Connection** - A disability directly caused by an event, injury, or disease during military service
 - **DRO** - Decision Review Officer - A senior VA employee who reviews claim decisions during the appeals process
 - **DSM-5** - Diagnostic and Statistical Manual of Mental Disorders, 5th Edition - Mental health diagnosis criteria
-- **duty to assist** - VA\
+- **duty to assist** - VA's legal obligation to help veterans develop evidence for their claims
 - **Duty to Notify** - VA obligation to inform you what evidence is needed to substantiate your claim (38 CFR 3.159(b))
-- **Ebenefits** - VA\
+- **Ebenefits** - VA's online portal for managing claims and viewing disability ratings (being replaced by VA.gov)
 - **EED** - Earliest Effective Date - The date VA uses to calculate when benefits begin, usually the claim filing date
 - **Effective Date** - The date from which VA compensation payments begin
 - **EPTS** - Existed Prior to Service - A condition that existed before military service that may have been aggravated
 - **Evidence Submission Docket** - Board appeal option allowing 90 days to submit new evidence after filing the NOD, but no hearing
 - **Ex Parte** - The nature of VA proceedings meaning VA is supposed to help develop your claim, not act as an adversary
 - **Extraschedular Rating** - A rating above the schedule maximum for exceptional cases (38 CFR 3.321)
-- **favorable finding** - Evidence or testimony that supports the veteran\
+- **favorable finding** - Evidence or testimony that supports the veteran's claim
 - **Favorable Finding** - A determination in your favor by VA that becomes binding on future adjudicators and cannot be reversed without CUE
 - **FDC** - Fully Developed Claim - A claim submitted with all evidence upfront for faster processing
 - **FEV-1** - Forced Expiratory Volume in 1 Second - A key PFT measurement used in asthma and COPD ratings
@@ -3611,12 +3611,12 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 ## N-S
 
 - **New and Relevant Evidence** - Evidence not previously submitted that tends to prove an unestablished element of your claim - required for supplemen...
-- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as 
+- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as "at ...
 - **Nexus Letter** - A medical opinion letter from a doctor establishing the connection between your service/service-connected condition a...
 - **NOD** - Notice of Disagreement - The initial appeal filed when you disagree with a VA decision
-- **NOVA** - National Organization of Veterans\
+- **NOVA** - National Organization of Veterans' Advocates - Professional association of VA-accredited attorneys
 - **NSC** - Non-Service-Connected - A disability not related to military service
-- **OGC** - Office of General Counsel - VA\
+- **OGC** - Office of General Counsel - VA's legal department
 - **OSA** - Obstructive Sleep Apnea - The most common type of sleep apnea rated under DC 6847
 - **P&T** - Permanent and Total - A 100% disability rating that VA considers permanent and unlikely to improve
 - **PACT Act** - Promise to Address Comprehensive Toxics Act - Expands VA benefits for veterans exposed to burn pits, Agent Orange, an...
@@ -3657,7 +3657,7 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **SMC(k)** - Special Monthly Compensation for loss of use of one hand, foot, eye, or creative organ - paid in addition to schedula...
 - **SMC(l)** - Special Monthly Compensation for veterans needing aid and attendance of another person
 - **SMC(s)** - Special Monthly Compensation for being housebound OR having 100% rating plus additional 60% disability
-- **SOC** - Statement of the Case - The VA\
+- **SOC** - Statement of the Case - The VA's detailed explanation of their decision on your claim
 - **Southwest Asia** - Iraq, Kuwait, Saudi Arabia, and surrounding areas - location for Gulf War presumptives
 - **SSOC** - Supplemental Statement of the Case - Additional VA explanation issued after new evidence or arguments
 - **Staged Rating** - Different rating percentages for different time periods based on changing severity
@@ -3695,13 +3695,13 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **VA Form 21-534EZ** - Application for DIC, Death Pension, and Accrued Benefits by Surviving Spouse or Child
 - **VA Form 21-686c** - Declaration of Status of Dependents - Used to add dependents for additional compensation
 - **VA Form 21-8940** - Veterans Application for Increased Compensation Based on Unemployability - The form to apply for TDIU
-- **VA Math** - The VA\
+- **VA Math** - The VA's unique method of combining disability percentages (uses efficiency of function, not simple addition)
 - **VA Pension** - Non-service-connected pension for low-income wartime veterans
 - **VA Treatment Records** - Medical records from VA healthcare facilities automatically in your claims file
 - **VARO** - VA Regional Office - The local VA office that processes disability claims for your region
 - **VASRD** - VA Schedule for Rating Disabilities - The rating criteria in 38 CFR Part 4 used to evaluate all disabilities
 - **VBA** - Veterans Benefits Administration - The VA division that handles disability compensation, pension, and other benefits
-- **VBMS** - Veterans Benefits Management System - The VA\
+- **VBMS** - Veterans Benefits Management System - The VA's electronic claims processing system
 - **VCAA** - Veterans Claims Assistance Act - Law requiring VA to notify veterans of evidence needed and assist in gathering evide...
 - **VES** - Veterans Evaluation Services - Another VA contractor for C&P exams
 - **VHA** - Veterans Health Administration - The VA division that provides healthcare services to veterans
@@ -3836,6 +3836,246 @@ Available 24/7
 };
 
 // Simple markdown-like renderer
+function _createManualParserState() {
+  return {
+    elements: [],
+    tableRows: [],
+    inList: false,
+    listItems: [],
+    blockquoteContent: [],
+  };
+}
+
+function _renderInline(text) {
+  if (!text) return text;
+
+  // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
+  // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
+  // edit to the manual strings is inert. The CSP is NOT a backstop here
+  // (script-src 'unsafe-inline' is set).
+  text = escapeHtml(text);
+
+  // Handle bold
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Handle inline code
+  text = text.replace(
+    /`(.+?)`/g,
+    '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
+  );
+  // Handle links — sanitize the href so a future contributor cannot land a
+  // javascript: URL in the static manual content. sanitizeUrl returns '#'
+  // for any non-http(s)/mailto/tel protocol.
+  // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
+  text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
+    const safeUrl = sanitizeUrl(url);
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+  });
+
+  // Safe-by-construction: input is escapeHtml()'d first (above), then only a
+  // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
+  // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
+  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
+  return <span dangerouslySetInnerHTML={{ __html: text }} />;
+}
+
+function _flushList(state) {
+  if (state.listItems.length > 0) {
+    state.elements.push(
+      <ul
+        key={`list-${state.elements.length}`}
+        className="list-disc pl-6 mb-4 space-y-1"
+      >
+        {state.listItems.map((item, i) => (
+          <li key={i} className="text-gray-700 dark:text-gray-300">
+            {_renderInline(item)}
+          </li>
+        ))}
+      </ul>,
+    );
+    state.listItems = [];
+    state.inList = false;
+  }
+}
+
+function _flushBlockquote(state) {
+  if (state.blockquoteContent.length > 0) {
+    state.elements.push(
+      <blockquote
+        key={`bq-${state.elements.length}`}
+        className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
+      >
+        {state.blockquoteContent.map((line, i) => (
+          <p key={i} className="text-gray-700 dark:text-gray-300">
+            {_renderInline(line)}
+          </p>
+        ))}
+      </blockquote>,
+    );
+    state.blockquoteContent = [];
+  }
+}
+
+function _flushTable(state) {
+  if (state.tableRows.length > 0) {
+    const headers = state.tableRows[0];
+    const dataRows = state.tableRows.slice(2); // Skip header separator
+    state.elements.push(
+      <div
+        key={`table-${state.elements.length}`}
+        className="overflow-x-auto mb-4"
+      >
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              {headers.map((cell, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  {_renderInline(cell.trim())}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {dataRows.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {row.map((cell, cellIdx) => (
+                  <td
+                    key={cellIdx}
+                    className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    {_renderInline(cell.trim())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>,
+    );
+    state.tableRows = [];
+  }
+}
+
+function _flushAllPending(state) {
+  _flushList(state);
+  _flushBlockquote(state);
+  _flushTable(state);
+}
+
+function TourRestartButton({ onClose }) {
+  return (
+    <button
+      onClick={() => {
+        // Close the User Manual first
+        if (onClose) onClose();
+        // Trigger tour restart after a brief delay
+        setTimeout(() => {
+          triggerTourRestart();
+        }, 300);
+      }}
+      className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+    >
+      🎓 Restart Interactive Tour
+    </button>
+  );
+}
+
+function _processManualContentLine(line, i, state, onClose) {
+  // Empty line - flush lists/blockquotes
+  if (line.trim() === "") {
+    _flushAllPending(state);
+    return;
+  }
+
+  // Headers
+  if (line.startsWith("## ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h2
+        key={`h2-${i}`}
+        className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
+      >
+        {line.slice(3)}
+      </h2>,
+    );
+    return;
+  }
+
+  if (line.startsWith("### ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h3
+        key={`h3-${i}`}
+        className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
+      >
+        {line.slice(4)}
+      </h3>,
+    );
+    return;
+  }
+
+  // Blockquote
+  if (line.startsWith("> ")) {
+    _flushList(state);
+    _flushTable(state);
+    state.blockquoteContent.push(line.slice(2));
+    return;
+  }
+
+  // Table
+  if (line.startsWith("|")) {
+    _flushList(state);
+    _flushBlockquote(state);
+    const cells = line.split("|").filter((cell) => cell.trim() !== "");
+    state.tableRows.push(cells);
+    return;
+  }
+
+  // List item
+  if (line.startsWith("- ")) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    state.inList = true;
+    state.listItems.push(line.slice(2));
+    return;
+  }
+
+  // Numbered list
+  if (/^\d+\.\s/.test(line)) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    const match = line.match(/^\d+\.\s(.+)/);
+    if (match) {
+      if (!state.inList) {
+        state.inList = true;
+      }
+      state.listItems.push(match[1]);
+    }
+    return;
+  }
+
+  // Special: Tour restart button
+  if (line.includes("<tour-restart-button>")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <div key={`tour-btn-${i}`} className="my-4">
+        <TourRestartButton onClose={onClose} />
+      </div>,
+    );
+    return;
+  }
+
+  // Regular paragraph
+  _flushAllPending(state);
+  state.elements.push(
+    <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
+      {_renderInline(line)}
+    </p>,
+  );
+}
+
 const renderContent = (content, onClose) => {
   if (!content) return null;
 
@@ -3845,253 +4085,666 @@ const renderContent = (content, onClose) => {
     .replace(/\{getDisabilityCount\(\)\}/g, String(getDisabilityCount()));
 
   const lines = resolved.trim().split("\n");
-  const elements = [];
-  let inTable = false;
-  let tableRows = [];
-  let inList = false;
-  let listItems = [];
-  let inBlockquote = false;
-  let blockquoteContent = [];
-
-  const flushList = () => {
-    if (listItems.length > 0) {
-      elements.push(
-        <ul
-          key={`list-${elements.length}`}
-          className="list-disc pl-6 mb-4 space-y-1"
-        >
-          {listItems.map((item, i) => (
-            <li key={i} className="text-gray-700 dark:text-gray-300">
-              {renderInline(item)}
-            </li>
-          ))}
-        </ul>,
-      );
-      listItems = [];
-      inList = false;
-    }
-  };
-
-  const flushBlockquote = () => {
-    if (blockquoteContent.length > 0) {
-      elements.push(
-        <blockquote
-          key={`bq-${elements.length}`}
-          className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
-        >
-          {blockquoteContent.map((line, i) => (
-            <p key={i} className="text-gray-700 dark:text-gray-300">
-              {renderInline(line)}
-            </p>
-          ))}
-        </blockquote>,
-      );
-      blockquoteContent = [];
-      inBlockquote = false;
-    }
-  };
-
-  const flushTable = () => {
-    if (tableRows.length > 0) {
-      const headers = tableRows[0];
-      const dataRows = tableRows.slice(2); // Skip header separator
-      elements.push(
-        <div key={`table-${elements.length}`} className="overflow-x-auto mb-4">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                {headers.map((cell, i) => (
-                  <th
-                    key={i}
-                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    {renderInline(cell.trim())}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {dataRows.map((row, rowIdx) => (
-                <tr key={rowIdx}>
-                  {row.map((cell, cellIdx) => (
-                    <td
-                      key={cellIdx}
-                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
-                    >
-                      {renderInline(cell.trim())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>,
-      );
-      tableRows = [];
-      inTable = false;
-    }
-  };
-
-  const renderInline = (text) => {
-    if (!text) return text;
-
-    // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
-    // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
-    // edit to the manual strings is inert. The CSP is NOT a backstop here
-    // (script-src 'unsafe-inline' is set).
-    text = escapeHtml(text);
-
-    // Handle bold
-    text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    // Handle inline code
-    text = text.replace(
-      /`(.+?)`/g,
-      '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
-    );
-    // Handle links — sanitize the href so a future contributor cannot land a
-    // javascript: URL in the static manual content. sanitizeUrl returns '#'
-    // for any non-http(s)/mailto/tel protocol.
-    text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
-      const safeUrl = sanitizeUrl(url);
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
-    });
-
-    // Safe-by-construction: input is escapeHtml()'d first (above), then only a
-    // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
-    // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
-    // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-    return <span dangerouslySetInnerHTML={{ __html: text }} />;
-  };
+  const state = _createManualParserState();
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Empty line - flush lists/blockquotes
-    if (line.trim() === "") {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      continue;
-    }
-
-    // Headers
-    if (line.startsWith("## ")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <h2
-          key={`h2-${i}`}
-          className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
-        >
-          {line.slice(3)}
-        </h2>,
-      );
-      continue;
-    }
-
-    if (line.startsWith("### ")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <h3
-          key={`h3-${i}`}
-          className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
-        >
-          {line.slice(4)}
-        </h3>,
-      );
-      continue;
-    }
-
-    // Blockquote
-    if (line.startsWith("> ")) {
-      flushList();
-      flushTable();
-      // eslint-disable-next-line no-unused-vars
-      inBlockquote = true;
-      blockquoteContent.push(line.slice(2));
-      continue;
-    }
-
-    // Table
-    if (line.startsWith("|")) {
-      flushList();
-      flushBlockquote();
-      // eslint-disable-next-line no-unused-vars
-      inTable = true;
-      const cells = line.split("|").filter((cell) => cell.trim() !== "");
-      tableRows.push(cells);
-      continue;
-    }
-
-    // List item
-    if (line.startsWith("- ")) {
-      flushBlockquote();
-      flushTable();
-      inList = true;
-      listItems.push(line.slice(2));
-      continue;
-    }
-
-    // Numbered list
-    if (/^\d+\.\s/.test(line)) {
-      flushBlockquote();
-      flushTable();
-      const match = line.match(/^\d+\.\s(.+)/);
-      if (match) {
-        if (!inList) {
-          inList = true;
-        }
-        listItems.push(match[1]);
-      }
-      continue;
-    }
-
-    // Special: Tour restart button
-    if (line.includes("<tour-restart-button>")) {
-      flushList();
-      flushBlockquote();
-      flushTable();
-      elements.push(
-        <div key={`tour-btn-${i}`} className="my-4">
-          <button
-            onClick={() => {
-              // Close the User Manual first
-              if (onClose) onClose();
-              // Trigger tour restart after a brief delay
-              setTimeout(() => {
-                triggerTourRestart();
-              }, 300);
-            }}
-            className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
-          >
-            🎓 Restart Interactive Tour
-          </button>
-        </div>,
-      );
-      continue;
-    }
-
-    // Regular paragraph
-    flushList();
-    flushBlockquote();
-    flushTable();
-    elements.push(
-      <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
-        {renderInline(line)}
-      </p>,
-    );
+    _processManualContentLine(lines[i], i, state, onClose);
   }
 
   // Flush remaining
-  flushList();
-  flushBlockquote();
-  flushTable();
+  _flushAllPending(state);
 
-  return elements;
+  return state.elements;
 };
+
+const NAV_KEY_MAP = {
+  home: "navHome",
+  "getting-started": "navGettingStarted",
+  "first-visit": "navFirstVisit",
+  "interface-overview": "navInterfaceOverview",
+  accessibility: "navAccessibility",
+  search: "navSearchExplore",
+  "how-to-search": "navHowToSearch",
+  "search-results": "navSearchResults",
+  "disability-details": "navDisabilityDetails",
+  "rating-criteria": "navRatingCriteria",
+  "tactical-calculator": "navTacticalCalculator",
+  "calc-overview": "navCalcOverview",
+  "calc-bilateral": "navCalcBilateral",
+  "calc-dependents": "navCalcDependents",
+  "calc-what-if": "navCalcWhatIf",
+  "secondary-scout": "navSecondaryScout",
+  "scout-launching": "navScoutLaunching",
+  "scout-results": "navScoutResults",
+  "scout-add-to-packet": "navScoutAddToPacket",
+  "cp-exam-simulator": "navCPExamSimulator",
+  "simulator-getting-started": "navSimulatorGettingStarted",
+  "condition-selection": "navConditionSelection",
+  "taking-simulation": "navTakingSimulation",
+  "simulator-results": "navSimulatorResults",
+  flashcards: "navFlashcards",
+  "dbq-library": "navDBQLibrary",
+  "dbq-overview": "navDBQOverview",
+  "dbq-browse": "navDBQBrowse",
+  "dbq-usage": "navDBQUsage",
+  pathfinder: "navPathfinder",
+  "workflow-guide": "navWorkflowGuide",
+  "workflow-overview": "navWorkflowOverview",
+  "workflow-progress": "navWorkflowProgress",
+  "cfile-analyzer": "navCFileAnalyzer",
+  "cfile-what-is": "navCFileWhatIs",
+  "cfile-upload": "navCFileUpload",
+  "cfile-analysis": "navCFileAnalysis",
+  "blue-button": "navBlueButtonXRay",
+  "blue-overview": "navBlueOverview",
+  "blue-extract": "navBlueExtract",
+  "witness-bench": "navWitnessBench",
+  "witness-overview": "navWitnessOverview",
+  "witness-interview": "navWitnessInterview",
+  "witness-output": "navWitnessOutput",
+  "nexus-builder": "navNexusBuilder",
+  "what-is-nexus": "navWhatIsNexus",
+  "building-statement": "navBuildingStatement",
+  "doctor-cheat-sheet": "navDoctorCheatSheet",
+  "download-options": "navDownloadOptions",
+  "forms-helper": "navFormsHelper",
+  "available-forms": "navAvailableForms",
+  "buddy-statements": "navBuddyStatements",
+  "intent-to-file": "navIntentToFile",
+  "ptsd-stressor": "navPTSDStressor",
+  "veteran-profile": "navVeteranProfile",
+  "red-team": "navRedTeamSimulator",
+  "red-overview": "navRedOverview",
+  "red-analysis": "navRedAnalysis",
+  "decision-decoder": "navDecisionDecoder",
+  "decoder-overview": "navDecoderOverview",
+  "decoder-upload": "navDecoderUpload",
+  "decoder-appeal": "navDecoderAppeal",
+  "shark-radar": "navSharkRadar",
+  "tdiu-builder": "navTDIUBuilder",
+  "tdiu-overview": "navTDIUOverview",
+  "tdiu-eligibility": "navTDIUEligibility",
+  "risk-assessment": "navRiskAssessment",
+  "symptom-logger": "navSymptomLogger",
+  "symptom-overview": "navSymptomOverview",
+  "symptom-logging": "navSymptomLogging",
+  "symptom-reports": "navSymptomReports",
+  "pact-act": "navPACTActNavigator",
+  "pact-overview": "navPACTOverview",
+  "pact-conditions": "navPACTConditions",
+  "pact-locations": "navPACTLocations",
+  "foia-generator": "navFOIAKeysmith",
+  "million-dollar": "navMillionDollar",
+  "mos-matcher": "navMOSHazardMatcher",
+  "web-conditions": "navWebOfConditions",
+  "vso-finder": "navVSOFinder",
+  "state-benefits": "navStateBenefitHunter",
+  "my-packet": "navMyPacket",
+  "managing-claims": "navManagingClaims",
+  "saved-forms": "navSavedForms",
+  "backup-restore": "navBackupRestore",
+  "exporting-data": "navExportingData",
+  "va-resources": "navVAResources",
+  "online-portals": "navOnlinePortals",
+  "phone-numbers": "navPhoneNumbers",
+  "external-resources": "navExternalResources",
+  settings: "navSettings",
+  "display-mode": "navDisplayMode",
+  "accessibility-options": "navAccessibilityOptions",
+  "data-management": "navDataManagement",
+  "ai-settings": "navAISettings",
+  "local-ai-overview": "navLocalAIOverview",
+  "model-selection": "navModelSelection",
+  "cloud-vs-local": "navCloudVsLocal",
+};
+
+const CATEGORY_KEY_MAP = {
+  "Getting Started": "catGettingStarted",
+  "Search & Explore": "catSearchExplore",
+  "📊 Calculate": "catCalculate",
+  "🔍 Discover": "catDiscover",
+  "📋 Build Evidence": "catBuildEvidence",
+  "🎯 Quality Control": "catQualityControl",
+  "⚡ Advanced Strategy": "catAdvancedStrategy",
+  "💎 Shock & Awe": "catShockAwe",
+  "🤝 Support": "catSupport",
+  "📁 Data & Settings": "catDataSettings",
+};
+
+function _lookupTranslatedLabel(map, id, fallback, t) {
+  const key = map[id];
+  if (key) {
+    const translated = t("userManual", key);
+    if (translated !== key) return translated;
+  }
+  return fallback;
+}
+
+function _toggleSection(sectionId, setExpandedSections) {
+  setExpandedSections((prev) =>
+    prev.includes(sectionId)
+      ? prev.filter((id) => id !== sectionId)
+      : [...prev, sectionId],
+  );
+}
+
+function _searchManualContent(searchQuery) {
+  if (!searchQuery.trim()) return [];
+  return Object.entries(documentationContent)
+    .filter(
+      ([_id, content]) =>
+        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        content.content.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .slice(0, 10);
+}
+
+function UserManualMobileHeader({ t, sidebarOpen, setSidebarOpen, onClose }) {
+  return (
+    <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="p-2 hover:bg-white/20 rounded-lg"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+      <h1 className="font-bold">{t("userManual", "title")}</h1>
+      <button
+        onClick={onClose}
+        className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded-lg"
+        aria-label="Close Field Manual"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function UserManualSidebarHeader({ t, onClose, searchQuery, setSearchQuery }) {
+  return (
+    <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-lg font-bold flex items-center gap-2">
+          {t("userManual", "title")}
+        </h1>
+        <button
+          onClick={onClose}
+          className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded"
+          aria-label="Close Field Manual"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={t("userManual", "searchPlaceholder")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+        />
+        <svg
+          className="absolute left-3 top-2.5 w-4 h-4 text-white/70"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function UserManualSearchResults({
+  t,
+  searchQuery,
+  searchResults,
+  getNavTitle,
+  setCurrentSection,
+  setSearchQuery,
+  setSidebarOpen,
+}) {
+  if (!searchQuery.trim()) return null;
+  return (
+    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+        {t("userManual", "searchResults")}
+      </h3>
+      {searchResults.length > 0 ? (
+        <div className="space-y-1">
+          {searchResults.map(([id, content]) => (
+            <button
+              key={id}
+              onClick={() => {
+                setCurrentSection(id);
+                setSearchQuery("");
+                setSidebarOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              {getNavTitle(id, content.title)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t("userManual", "noResultsFound")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UserManualNavCategoryLabel({ section, getCategoryTitle }) {
+  return (
+    <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+      {getCategoryTitle(section.title)}
+    </div>
+  );
+}
+
+function UserManualNavExpandableSection({
+  t,
+  section,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <>
+      <button
+        onClick={() => toggleSection(section.id)}
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+      >
+        <span className="flex items-center gap-2">
+          <span>{section.icon}</span>
+          <span>{getNavTitle(section.id, section.title)}</span>
+        </span>
+        <svg
+          className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? "rotate-90" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+      {expandedSections.includes(section.id) && (
+        <div className="ml-6 mt-1 space-y-1">
+          <button
+            onClick={() => {
+              setCurrentSection(section.id);
+              setSidebarOpen(false);
+            }}
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+              currentSection === section.id
+                ? "bg-va-blue text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            {t("userManual", "overview")}
+          </button>
+          {section.children.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => {
+                setCurrentSection(child.id);
+                setSidebarOpen(false);
+              }}
+              className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+                currentSection === child.id
+                  ? "bg-va-blue text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              {getNavTitle(child.id, child.title)}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function UserManualNavLeaf({
+  section,
+  currentSection,
+  getNavTitle,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <button
+      onClick={() => {
+        setCurrentSection(section.id);
+        setSidebarOpen(false);
+      }}
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+        currentSection === section.id
+          ? "bg-va-blue text-white"
+          : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+      }`}
+    >
+      <span>{section.icon}</span>
+      <span>{getNavTitle(section.id, section.title)}</span>
+    </button>
+  );
+}
+
+function UserManualNavSection({
+  t,
+  section,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  getCategoryTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  let sectionContent;
+  if (section.isCategory) {
+    sectionContent = (
+      <UserManualNavCategoryLabel
+        section={section}
+        getCategoryTitle={getCategoryTitle}
+      />
+    );
+  } else if (section.children) {
+    sectionContent = (
+      <UserManualNavExpandableSection
+        t={t}
+        section={section}
+        currentSection={currentSection}
+        expandedSections={expandedSections}
+        getNavTitle={getNavTitle}
+        toggleSection={toggleSection}
+        setCurrentSection={setCurrentSection}
+        setSidebarOpen={setSidebarOpen}
+      />
+    );
+  } else {
+    sectionContent = (
+      <UserManualNavLeaf
+        section={section}
+        currentSection={currentSection}
+        getNavTitle={getNavTitle}
+        setCurrentSection={setCurrentSection}
+        setSidebarOpen={setSidebarOpen}
+      />
+    );
+  }
+  return <div className="mb-1">{sectionContent}</div>;
+}
+
+function UserManualNav({
+  t,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  getCategoryTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <nav className="p-3">
+      {navigationStructure.map((section) => (
+        <UserManualNavSection
+          key={section.id}
+          t={t}
+          section={section}
+          currentSection={currentSection}
+          expandedSections={expandedSections}
+          getNavTitle={getNavTitle}
+          getCategoryTitle={getCategoryTitle}
+          toggleSection={toggleSection}
+          setCurrentSection={setCurrentSection}
+          setSidebarOpen={setSidebarOpen}
+        />
+      ))}
+    </nav>
+  );
+}
+
+function UserManualStartTourButton({ t, onClose }) {
+  return (
+    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+      <button
+        onClick={() => {
+          // Close the User Manual first
+          if (onClose) onClose();
+          // Trigger tour restart after a brief delay
+          setTimeout(() => {
+            triggerTourRestart();
+          }, 300);
+        }}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
+      >
+        {t("userManual", "startTour")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualReportBugLink({ t, onReportBug }) {
+  return (
+    <div className="px-3 pb-3">
+      <button
+        onClick={onReportBug}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+      >
+        {t("userManual", "reportBug")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualSidebar({ s }) {
+  const {
+    t,
+    sidebarOpen,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    currentSection,
+    expandedSections,
+    getNavTitle,
+    getCategoryTitle,
+    toggleSection,
+    setCurrentSection,
+    setSidebarOpen,
+    onClose,
+    onReportBug,
+  } = s;
+
+  return (
+    <div
+      className={`${sidebarOpen ? "block" : "hidden"} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`}
+      dir="rtl"
+    >
+      {/* Wrapper to restore LTR for content */}
+      <div dir="ltr">
+        {/* Desktop header */}
+        <UserManualSidebarHeader
+          t={t}
+          onClose={onClose}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        {/* Search results */}
+        <UserManualSearchResults
+          t={t}
+          searchQuery={searchQuery}
+          searchResults={searchResults}
+          getNavTitle={getNavTitle}
+          setCurrentSection={setCurrentSection}
+          setSearchQuery={setSearchQuery}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Navigation */}
+        <UserManualNav
+          t={t}
+          currentSection={currentSection}
+          expandedSections={expandedSections}
+          getNavTitle={getNavTitle}
+          getCategoryTitle={getCategoryTitle}
+          toggleSection={toggleSection}
+          setCurrentSection={setCurrentSection}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Start Tour button */}
+        <UserManualStartTourButton t={t} onClose={onClose} />
+
+        {/* Report bug link */}
+        <UserManualReportBugLink t={t} onReportBug={onReportBug} />
+      </div>
+    </div>
+  );
+}
+
+function UserManualBreadcrumb({
+  t,
+  currentSection,
+  currentContent,
+  getNavTitle,
+  setCurrentSection,
+}) {
+  return (
+    <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <button
+        onClick={() => setCurrentSection("home")}
+        className="hover:text-va-blue dark:hover:text-va-gold"
+      >
+        {t("userManual", "home")}
+      </button>
+      {currentSection !== "home" && (
+        <>
+          <span className="mx-2">/</span>
+          <span className="text-gray-900 dark:text-white">
+            {getNavTitle(currentSection, currentContent.title)}
+          </span>
+        </>
+      )}
+    </nav>
+  );
+}
+
+function UserManualContentNavButtons({ t, setCurrentSection, onClose }) {
+  return (
+    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+      <button
+        onClick={() => setCurrentSection("home")}
+        className="flex items-center gap-2 text-va-blue dark:text-va-gold hover:underline"
+      >
+        {t("userManual", "backToHome")}
+      </button>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+      >
+        {t("userManual", "closeManual")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualContentArea({ s }) {
+  const {
+    t,
+    currentSection,
+    currentContent,
+    getNavTitle,
+    setCurrentSection,
+    onClose,
+  } = s;
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-6 md:p-8">
+        {/* Breadcrumb */}
+        <UserManualBreadcrumb
+          t={t}
+          currentSection={currentSection}
+          currentContent={currentContent}
+          getNavTitle={getNavTitle}
+          setCurrentSection={setCurrentSection}
+        />
+
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+          {getNavTitle(currentSection, currentContent.title)}
+        </h1>
+
+        {/* Content */}
+        <div className="prose dark:prose-invert max-w-none">
+          {renderContent(currentContent.content, onClose)}
+        </div>
+
+        {/* Navigation buttons */}
+        <UserManualContentNavButtons
+          t={t}
+          setCurrentSection={setCurrentSection}
+          onClose={onClose}
+        />
+      </div>
+    </div>
+  );
+}
 
 const UserManual = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
@@ -4110,156 +4763,19 @@ const UserManual = ({ onClose, onReportBug }) => {
     documentationContent[currentSection] || documentationContent.home;
 
   // Helper to get translated navigation title
-  const getNavTitle = (id, fallbackTitle) => {
-    const navKeyMap = {
-      home: "navHome",
-      "getting-started": "navGettingStarted",
-      "first-visit": "navFirstVisit",
-      "interface-overview": "navInterfaceOverview",
-      accessibility: "navAccessibility",
-      search: "navSearchExplore",
-      "how-to-search": "navHowToSearch",
-      "search-results": "navSearchResults",
-      "disability-details": "navDisabilityDetails",
-      "rating-criteria": "navRatingCriteria",
-      "tactical-calculator": "navTacticalCalculator",
-      "calc-overview": "navCalcOverview",
-      "calc-bilateral": "navCalcBilateral",
-      "calc-dependents": "navCalcDependents",
-      "calc-what-if": "navCalcWhatIf",
-      "secondary-scout": "navSecondaryScout",
-      "scout-launching": "navScoutLaunching",
-      "scout-results": "navScoutResults",
-      "scout-add-to-packet": "navScoutAddToPacket",
-      "cp-exam-simulator": "navCPExamSimulator",
-      "simulator-getting-started": "navSimulatorGettingStarted",
-      "condition-selection": "navConditionSelection",
-      "taking-simulation": "navTakingSimulation",
-      "simulator-results": "navSimulatorResults",
-      flashcards: "navFlashcards",
-      "dbq-library": "navDBQLibrary",
-      "dbq-overview": "navDBQOverview",
-      "dbq-browse": "navDBQBrowse",
-      "dbq-usage": "navDBQUsage",
-      pathfinder: "navPathfinder",
-      "workflow-guide": "navWorkflowGuide",
-      "workflow-overview": "navWorkflowOverview",
-      "workflow-progress": "navWorkflowProgress",
-      "cfile-analyzer": "navCFileAnalyzer",
-      "cfile-what-is": "navCFileWhatIs",
-      "cfile-upload": "navCFileUpload",
-      "cfile-analysis": "navCFileAnalysis",
-      "blue-button": "navBlueButtonXRay",
-      "blue-overview": "navBlueOverview",
-      "blue-extract": "navBlueExtract",
-      "witness-bench": "navWitnessBench",
-      "witness-overview": "navWitnessOverview",
-      "witness-interview": "navWitnessInterview",
-      "witness-output": "navWitnessOutput",
-      "nexus-builder": "navNexusBuilder",
-      "what-is-nexus": "navWhatIsNexus",
-      "building-statement": "navBuildingStatement",
-      "doctor-cheat-sheet": "navDoctorCheatSheet",
-      "download-options": "navDownloadOptions",
-      "forms-helper": "navFormsHelper",
-      "available-forms": "navAvailableForms",
-      "buddy-statements": "navBuddyStatements",
-      "intent-to-file": "navIntentToFile",
-      "ptsd-stressor": "navPTSDStressor",
-      "veteran-profile": "navVeteranProfile",
-      "red-team": "navRedTeamSimulator",
-      "red-overview": "navRedOverview",
-      "red-analysis": "navRedAnalysis",
-      "decision-decoder": "navDecisionDecoder",
-      "decoder-overview": "navDecoderOverview",
-      "decoder-upload": "navDecoderUpload",
-      "decoder-appeal": "navDecoderAppeal",
-      "shark-radar": "navSharkRadar",
-      "tdiu-builder": "navTDIUBuilder",
-      "tdiu-overview": "navTDIUOverview",
-      "tdiu-eligibility": "navTDIUEligibility",
-      "risk-assessment": "navRiskAssessment",
-      "symptom-logger": "navSymptomLogger",
-      "symptom-overview": "navSymptomOverview",
-      "symptom-logging": "navSymptomLogging",
-      "symptom-reports": "navSymptomReports",
-      "pact-act": "navPACTActNavigator",
-      "pact-overview": "navPACTOverview",
-      "pact-conditions": "navPACTConditions",
-      "pact-locations": "navPACTLocations",
-      "foia-generator": "navFOIAKeysmith",
-      "million-dollar": "navMillionDollar",
-      "mos-matcher": "navMOSHazardMatcher",
-      "web-conditions": "navWebOfConditions",
-      "vso-finder": "navVSOFinder",
-      "state-benefits": "navStateBenefitHunter",
-      "my-packet": "navMyPacket",
-      "managing-claims": "navManagingClaims",
-      "saved-forms": "navSavedForms",
-      "backup-restore": "navBackupRestore",
-      "exporting-data": "navExportingData",
-      "va-resources": "navVAResources",
-      "online-portals": "navOnlinePortals",
-      "phone-numbers": "navPhoneNumbers",
-      "external-resources": "navExternalResources",
-      settings: "navSettings",
-      "display-mode": "navDisplayMode",
-      "accessibility-options": "navAccessibilityOptions",
-      "data-management": "navDataManagement",
-      "ai-settings": "navAISettings",
-      "local-ai-overview": "navLocalAIOverview",
-      "model-selection": "navModelSelection",
-      "cloud-vs-local": "navCloudVsLocal",
-    };
-    const key = navKeyMap[id];
-    if (key) {
-      const translated = t("userManual", key);
-      if (translated !== key) return translated;
-    }
-    return fallbackTitle;
-  };
+  const getNavTitle = (id, fallbackTitle) =>
+    _lookupTranslatedLabel(NAV_KEY_MAP, id, fallbackTitle, t);
 
   // Helper to get translated category title
-  const getCategoryTitle = (title) => {
-    const catKeyMap = {
-      "Getting Started": "catGettingStarted",
-      "Search & Explore": "catSearchExplore",
-      "📊 Calculate": "catCalculate",
-      "🔍 Discover": "catDiscover",
-      "📋 Build Evidence": "catBuildEvidence",
-      "🎯 Quality Control": "catQualityControl",
-      "⚡ Advanced Strategy": "catAdvancedStrategy",
-      "💎 Shock & Awe": "catShockAwe",
-      "🤝 Support": "catSupport",
-      "📁 Data & Settings": "catDataSettings",
-    };
-    const key = catKeyMap[title];
-    if (key) {
-      const translated = t("userManual", key);
-      if (translated !== key) return translated;
-    }
-    return title;
-  };
+  const getCategoryTitle = (title) =>
+    _lookupTranslatedLabel(CATEGORY_KEY_MAP, title, title, t);
 
   // Toggle section expansion
-  const toggleSection = (sectionId) => {
-    setExpandedSections((prev) =>
-      prev.includes(sectionId)
-        ? prev.filter((id) => id !== sectionId)
-        : [...prev, sectionId],
-    );
-  };
+  const toggleSection = (sectionId) =>
+    _toggleSection(sectionId, setExpandedSections);
 
   // Search functionality
-  const searchResults = searchQuery.trim()
-    ? Object.entries(documentationContent)
-        .filter(
-          ([_id, content]) =>
-            content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            content.content.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-        .slice(0, 10)
-    : [];
+  const searchResults = _searchManualContent(searchQuery);
 
   // Two-pane layout keeps independent sidebar/content scroll, so it stays a
   // hand-built dialog rather than the single-scroll-body ResponsiveModal.
@@ -4276,300 +4792,44 @@ const UserManual = ({ onClose, onReportBug }) => {
         className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden"
       >
         {/* Mobile header */}
-        <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-white/20 rounded-lg"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-          <h1 className="font-bold">{t("userManual", "title")}</h1>
-          <button
-            onClick={onClose}
-            className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded-lg"
-            aria-label="Close Field Manual"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+        <UserManualMobileHeader
+          t={t}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          onClose={onClose}
+        />
 
         {/* Sidebar - scrollbar on left using RTL */}
-        <div
-          className={`${sidebarOpen ? "block" : "hidden"} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`}
-          dir="rtl"
-        >
-          {/* Wrapper to restore LTR for content */}
-          <div dir="ltr">
-            {/* Desktop header */}
-            <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h1 className="text-lg font-bold flex items-center gap-2">
-                  {t("userManual", "title")}
-                </h1>
-                <button
-                  onClick={onClose}
-                  className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded"
-                  aria-label="Close Field Manual"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Search */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder={t("userManual", "searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 w-4 h-4 text-white/70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Search results */}
-            {searchQuery.trim() && (
-              <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                  {t("userManual", "searchResults")}
-                </h3>
-                {searchResults.length > 0 ? (
-                  <div className="space-y-1">
-                    {searchResults.map(([id, content]) => (
-                      <button
-                        key={id}
-                        onClick={() => {
-                          setCurrentSection(id);
-                          setSearchQuery("");
-                          setSidebarOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                      >
-                        {getNavTitle(id, content.title)}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t("userManual", "noResultsFound")}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Navigation */}
-            <nav className="p-3">
-              {navigationStructure.map((section) => (
-                <div key={section.id} className="mb-1">
-                  {/* Category Headers */}
-                  {section.isCategory ? (
-                    <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                      {getCategoryTitle(section.title)}
-                    </div>
-                  ) : section.children ? (
-                    <>
-                      <button
-                        onClick={() => toggleSection(section.id)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>{section.icon}</span>
-                          <span>{getNavTitle(section.id, section.title)}</span>
-                        </span>
-                        <svg
-                          className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? "rotate-90" : ""}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </button>
-                      {expandedSections.includes(section.id) && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          <button
-                            onClick={() => {
-                              setCurrentSection(section.id);
-                              setSidebarOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
-                              currentSection === section.id
-                                ? "bg-va-blue text-white"
-                                : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                          >
-                            {t("userManual", "overview")}
-                          </button>
-                          {section.children.map((child) => (
-                            <button
-                              key={child.id}
-                              onClick={() => {
-                                setCurrentSection(child.id);
-                                setSidebarOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
-                                currentSection === child.id
-                                  ? "bg-va-blue text-white"
-                                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                              }`}
-                            >
-                              {getNavTitle(child.id, child.title)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setCurrentSection(section.id);
-                        setSidebarOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
-                        currentSection === section.id
-                          ? "bg-va-blue text-white"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      <span>{section.icon}</span>
-                      <span>{getNavTitle(section.id, section.title)}</span>
-                    </button>
-                  )}
-                </div>
-              ))}
-            </nav>
-
-            {/* Start Tour button */}
-            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => {
-                  // Close the User Manual first
-                  if (onClose) onClose();
-                  // Trigger tour restart after a brief delay
-                  setTimeout(() => {
-                    triggerTourRestart();
-                  }, 300);
-                }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
-              >
-                {t("userManual", "startTour")}
-              </button>
-            </div>
-
-            {/* Report bug link */}
-            <div className="px-3 pb-3">
-              <button
-                onClick={onReportBug}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-              >
-                {t("userManual", "reportBug")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <UserManualSidebar
+          s={{
+            t,
+            sidebarOpen,
+            searchQuery,
+            setSearchQuery,
+            searchResults,
+            currentSection,
+            expandedSections,
+            getNavTitle,
+            getCategoryTitle,
+            toggleSection,
+            setCurrentSection,
+            setSidebarOpen,
+            onClose,
+            onReportBug,
+          }}
+        />
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-6 md:p-8">
-            {/* Breadcrumb */}
-            <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              <button
-                onClick={() => setCurrentSection("home")}
-                className="hover:text-va-blue dark:hover:text-va-gold"
-              >
-                {t("userManual", "home")}
-              </button>
-              {currentSection !== "home" && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span className="text-gray-900 dark:text-white">
-                    {getNavTitle(currentSection, currentContent.title)}
-                  </span>
-                </>
-              )}
-            </nav>
-
-            {/* Title */}
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-              {getNavTitle(currentSection, currentContent.title)}
-            </h1>
-
-            {/* Content */}
-            <div className="prose dark:prose-invert max-w-none">
-              {renderContent(currentContent.content, onClose)}
-            </div>
-
-            {/* Navigation buttons */}
-            <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
-              <button
-                onClick={() => setCurrentSection("home")}
-                className="flex items-center gap-2 text-va-blue dark:text-va-gold hover:underline"
-              >
-                {t("userManual", "backToHome")}
-              </button>
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                {t("userManual", "closeManual")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <UserManualContentArea
+          s={{
+            t,
+            currentSection,
+            currentContent,
+            getNavTitle,
+            setCurrentSection,
+            onClose,
+          }}
+        />
       </div>
     </div>
   );

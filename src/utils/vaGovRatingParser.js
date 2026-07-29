@@ -24,6 +24,97 @@
  * @param {string} text - Raw text pasted from VA.gov (full page or partial)
  * @returns {Object} Object with combinedRating, serviceConnected, notServiceConnected arrays
  */
+function _parseServiceConnectedSection(text) {
+  const serviceConnectedMatch = text.match(
+    // eslint-disable-next-line sonarjs/regex-complexity -- input is text the user pasted from their own VA.gov page (bounded, not attacker-controlled); a rewrite of this section-boundary matcher risks silently changing what counts as the "service-connected" block
+    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is,
+  );
+
+  const serviceConnected = [];
+  if (!serviceConnectedMatch || !serviceConnectedMatch[1])
+    return serviceConnected;
+
+  const serviceConnectedText = serviceConnectedMatch[1];
+
+  // Find all rating patterns: "X% rating for [condition]"
+  // Improved regex to handle newlines and effective dates better
+  // eslint-disable-next-line sonarjs/slow-regex -- input is user-pasted VA.gov text (bounded), and the lookahead prevents runaway matches
+  const ratingPattern = /(\d+)%\s+rating\s+for\s+([^\n\r]+?)(?=\s*\n|$)/gi;
+  let match;
+
+  while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
+    const rating = parseInt(match[1], 10);
+    let condition = match[2].trim();
+
+    // Clean up condition name - remove any trailing punctuation or dates
+    condition = condition
+      // eslint-disable-next-line sonarjs/slow-regex -- input is a single already-extracted condition line (a few dozen chars), not attacker-controlled length
+      .replace(/\s*Effective\s+date:.*$/i, "") // Remove effective date if captured
+      .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
+      .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
+      .trim();
+
+    // Skip if condition name is empty or too short
+    if (!condition || condition.length < 2) {
+      continue;
+    }
+
+    // Try to find effective date on the next line
+    const effectiveDateMatch = serviceConnectedText
+      .substring(
+        match.index + match[0].length,
+        match.index + match[0].length + 200,
+      )
+      .match(/Effective\s+date:\s*([^\n]+)/i);
+    const effectiveDate = effectiveDateMatch
+      ? parseDate(effectiveDateMatch[1].trim())
+      : null;
+
+    serviceConnected.push({
+      rating,
+      condition,
+      effectiveDate,
+      rawLine: match[0],
+    });
+  }
+
+  return serviceConnected;
+}
+
+function _parseNotServiceConnectedSection(text) {
+  const notServiceConnectedMatch = text.match(
+    /Conditions?\s+VA\s+determined\s+aren't\s+service-connected(.*?)(?:Learn\s+about\s+VA\s+disability|Need\s+help\?|Feedback|Veteran\s+programs|$)/is,
+  );
+
+  const notServiceConnected = [];
+  if (!notServiceConnectedMatch || !notServiceConnectedMatch[1])
+    return notServiceConnected;
+
+  const lines = notServiceConnectedMatch[1]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      // Filter out empty lines and navigation/chrome
+      if (line.length < 3 || line.length > 200) return false;
+      if (isNavigationOrChrome(line)) return false;
+      return true;
+    });
+
+  lines.forEach((line) => {
+    if (line) {
+      notServiceConnected.push({
+        rating: null,
+        condition: line,
+        effectiveDate: null,
+        serviceConnected: false,
+        rawLine: line,
+      });
+    }
+  });
+
+  return notServiceConnected;
+}
+
 export function parseVAGovRatings(text) {
   if (!text || typeof text !== "string") {
     return {
@@ -35,89 +126,8 @@ export function parseVAGovRatings(text) {
 
   // Extract combined rating directly from text
   const combinedRating = extractCombinedRating(text);
-
-  // Find the service-connected section
-  const serviceConnectedMatch = text.match(
-    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is,
-  );
-
-  const serviceConnected = [];
-
-  if (serviceConnectedMatch && serviceConnectedMatch[1]) {
-    const serviceConnectedText = serviceConnectedMatch[1];
-
-    // Find all rating patterns: "X% rating for [condition]"
-    // Improved regex to handle newlines and effective dates better
-    const ratingPattern = /(\d+)%\s+rating\s+for\s+([^\n\r]+?)(?=\s*\n|$)/gi;
-    let match;
-
-    while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
-      const rating = parseInt(match[1], 10);
-      let condition = match[2].trim();
-
-      // Clean up condition name - remove any trailing punctuation or dates
-      condition = condition
-        .replace(/\s*Effective\s+date:.*$/i, "") // Remove effective date if captured
-        .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
-        .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
-        .trim();
-
-      // Skip if condition name is empty or too short
-      if (!condition || condition.length < 2) {
-        continue;
-      }
-
-      // Try to find effective date on the next line
-      const effectiveDateMatch = serviceConnectedText
-        .substring(
-          match.index + match[0].length,
-          match.index + match[0].length + 200,
-        )
-        .match(/Effective\s+date:\s*([^\n]+)/i);
-      const effectiveDate = effectiveDateMatch
-        ? parseDate(effectiveDateMatch[1].trim())
-        : null;
-
-      serviceConnected.push({
-        rating,
-        condition,
-        effectiveDate,
-        rawLine: match[0],
-      });
-    }
-  }
-
-  // Find the non-service-connected section
-  const notServiceConnectedMatch = text.match(
-    /Conditions?\s+VA\s+determined\s+aren't\s+service-connected(.*?)(?:Learn\s+about\s+VA\s+disability|Need\s+help\?|Feedback|Veteran\s+programs|$)/is,
-  );
-
-  const notServiceConnected = [];
-
-  if (notServiceConnectedMatch && notServiceConnectedMatch[1]) {
-    const notServiceConnectedText = notServiceConnectedMatch[1];
-    const lines = notServiceConnectedText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => {
-        // Filter out empty lines and navigation/chrome
-        if (line.length < 3 || line.length > 200) return false;
-        if (isNavigationOrChrome(line)) return false;
-        return true;
-      });
-
-    lines.forEach((line) => {
-      if (line) {
-        notServiceConnected.push({
-          rating: null,
-          condition: line,
-          effectiveDate: null,
-          serviceConnected: false,
-          rawLine: line,
-        });
-      }
-    });
-  }
+  const serviceConnected = _parseServiceConnectedSection(text);
+  const notServiceConnected = _parseNotServiceConnectedSection(text);
 
   // eslint-disable-next-line no-console
   console.log("Parser: Combined rating:", combinedRating);
@@ -192,7 +202,7 @@ function isNavigationOrChrome(line) {
     /^Call\s+us$/i,
     /^Visit\s+a\s+medical\s+center/i,
     /^Language\s+assistance/i,
-    /^Español|Tagalog|Other\s+languages/i,
+    /^(?:Español|Tagalog|Other\s+languages)/i,
     /^508\s+compliance/i,
     /^Civil\s+Rights/i,
     /^Freedom\s+of\s+Information/i,
@@ -244,6 +254,7 @@ function parseDate(dateStr) {
     }
     return date.toISOString().split("T")[0]; // Return YYYY-MM-DD format
   } catch (e) {
+    console.warn("[vaGovRatingParser] Failed to parse date:", dateStr, e);
     return null;
   }
 }

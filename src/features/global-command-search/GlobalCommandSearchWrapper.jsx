@@ -61,6 +61,7 @@ const TOOL_EVENT_MAP = {
   "record-search": "openRecordSearch",
   "dd214-analyzer": "openDD214Analyzer",
   "bdd-builder": "openBDDBuilder",
+  "ask-the-regs": "openAskTheRegs",
 };
 
 export default function GlobalCommandSearchWrapper() {

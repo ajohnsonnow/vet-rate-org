@@ -1,9 +1,59 @@
 import { useState, useEffect, useCallback } from "react";
+import { validateSearchTerm } from "../../utils/searchUtils";
 import {
-  searchDisabilityData,
-  validateSearchTerm,
-} from "../../utils/searchUtils";
-import disabilityData from "../../data/disabilityData.json";
+  searchConditions,
+  getAllConditions,
+} from "../../services/knowledgeQuery";
+
+function runDisabilitySearch(
+  searchTerm,
+  { setResults, setError, setIsLoading, setHasSearched },
+) {
+  if (!searchTerm.trim()) {
+    setResults([]);
+    setError(null);
+    return;
+  }
+
+  if (!validateSearchTerm(searchTerm)) {
+    setError(
+      "Invalid search term. Please use only letters, numbers, spaces, hyphens, or slashes.",
+    );
+    setResults([]);
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const foundResults = searchConditions(searchTerm);
+    setResults(foundResults);
+    setHasSearched(true);
+
+    if (foundResults.length === 0) {
+      setError(
+        `No disabilities found for "${searchTerm}". Try searching by condition name (e.g., "PTSD", "arthritis") or diagnostic code (e.g., "9411", "5002").`,
+      );
+    }
+  } catch (err) {
+    console.error("Search error:", err);
+    setError("An error occurred while searching. Please try again.");
+    setResults([]);
+  } finally {
+    setIsLoading(false);
+  }
+}
+
+function scrollToDiagnosticHeader() {
+  const headerElement = document.getElementById("diagnostic-header");
+  if (headerElement) {
+    headerElement.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}
 
 /**
  * Disability search subsystem — owns every piece of state, every
@@ -46,40 +96,12 @@ export function useDisabilitySearch() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!searchTerm.trim()) {
-        setResults([]);
-        setError(null);
-        return;
-      }
-
-      if (!validateSearchTerm(searchTerm)) {
-        setError(
-          "Invalid search term. Please use only letters, numbers, spaces, hyphens, or slashes.",
-        );
-        setResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const foundResults = searchDisabilityData(searchTerm, disabilityData);
-        setResults(foundResults);
-        setHasSearched(true);
-
-        if (foundResults.length === 0) {
-          setError(
-            `No disabilities found for "${searchTerm}". Try searching by condition name (e.g., "PTSD", "arthritis") or diagnostic code (e.g., "9411", "5002").`,
-          );
-        }
-      } catch (err) {
-        console.error("Search error:", err);
-        setError("An error occurred while searching. Please try again.");
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
+      runDisabilitySearch(searchTerm, {
+        setResults,
+        setError,
+        setIsLoading,
+        setHasSearched,
+      });
     }, 300);
 
     return () => clearTimeout(timer);
@@ -107,21 +129,13 @@ export function useDisabilitySearch() {
 
   const handleSecondaryConditionClick = useCallback(
     (diagnosticCode, conditionName) => {
-      const foundCondition = disabilityData.disabilities.find(
+      const foundCondition = getAllConditions().find(
         (d) => d.diagnosticCode === diagnosticCode,
       );
 
       if (foundCondition) {
         setSelectedResult(foundCondition);
-        setTimeout(() => {
-          const headerElement = document.getElementById("diagnostic-header");
-          if (headerElement) {
-            headerElement.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }, 100);
+        setTimeout(scrollToDiagnosticHeader, 100);
       } else {
         setSearchTerm(conditionName);
         setSelectedResult(null);

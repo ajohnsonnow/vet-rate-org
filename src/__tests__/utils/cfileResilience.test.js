@@ -81,6 +81,8 @@ import {
   analyzeCFile,
   deduplicateTimeline,
   enforceValidDiagnosticCodes,
+  surfaceDocumentedConditions,
+  enrichClaimsWithDiagnosticCodes,
 } from "../../utils/cfileAnalyzer";
 
 const GEMINI_KEY = "vetrate_gemini_key";
@@ -465,5 +467,87 @@ describe("enforceValidDiagnosticCodes", () => {
   it("handles missing/empty analysis without throwing", () => {
     expect(enforceValidDiagnosticCodes(null)).toEqual([]);
     expect(enforceValidDiagnosticCodes({})).toEqual([]);
+  });
+});
+
+describe("surfaceDocumentedConditions — grounded recall floor", () => {
+  const withPesPlanus =
+    "--- PAGE 42 ---\n35. FEET (Continued)\nMild Moderate\nPes Planus\nDD FORM 2808, JAN 2003\n";
+
+  it("surfaces a literally-documented condition the model missed, with its canonical DC and page evidence", () => {
+    const merged = { potential_claims: [{ condition: "Tinnitus" }] };
+    const added = surfaceDocumentedConditions(merged, withPesPlanus);
+
+    expect(added).toContain("Pes Planus");
+    const pes = merged.potential_claims.find(
+      (c) => c.condition === "Pes Planus",
+    );
+    expect(pes).toBeTruthy();
+    // Canonical 38 CFR §4.71a flatfoot code — must survive the hallucination
+    // gate so the DC badge actually renders (spec:173 requires ≥1 DC badge).
+    expect(pes.diagnosticCode).toBe("5276");
+    expect(enforceValidDiagnosticCodes(merged)).toEqual([]);
+    expect(pes.diagnosticCode).toBe("5276"); // unchanged after the gate
+    expect(pes.evidence_pages).toEqual([42]);
+  });
+
+  it("never fabricates a condition absent from the text", () => {
+    const merged = { potential_claims: [] };
+    const added = surfaceDocumentedConditions(
+      merged,
+      "--- PAGE 1 ---\nRight knee pain, service-connected.\n",
+    );
+    expect(added).toEqual([]);
+    expect(merged.potential_claims).toHaveLength(0);
+  });
+
+  it("does not duplicate a condition the model already reported (even in a list)", () => {
+    const merged = {
+      potential_claims: [
+        { condition: "Bilateral pes planus, plantar fasciitis" },
+      ],
+    };
+    const added = surfaceDocumentedConditions(merged, withPesPlanus);
+    expect(added).not.toContain("Pes Planus");
+    expect(merged.potential_claims).toHaveLength(1);
+  });
+});
+
+describe("enrichClaimsWithDiagnosticCodes — grounded name→DC", () => {
+  it("enriches a code-less claim whose name exactly matches the schedule", () => {
+    // "Tinnitus" (6260) is an exact single-word schedule conditionName.
+    const analysis = { potential_claims: [{ condition: "Tinnitus" }] };
+    const count = enrichClaimsWithDiagnosticCodes(analysis);
+
+    expect(count).toBe(1);
+    expect(analysis.potential_claims[0].diagnosticCode).toBe("6260");
+    // The enriched code must survive the hallucination gate.
+    expect(enforceValidDiagnosticCodes(analysis)).toEqual([]);
+  });
+
+  it("leaves a claim with no confident schedule match at null", () => {
+    const analysis = {
+      potential_claims: [{ condition: "Vague unspecified complaint" }],
+    };
+    const count = enrichClaimsWithDiagnosticCodes(analysis);
+
+    expect(count).toBe(0);
+    expect(analysis.potential_claims[0].diagnosticCode).toBeUndefined();
+  });
+
+  it("never force-maps a multi-condition free-text list", () => {
+    const analysis = {
+      potential_claims: [{ condition: "Dermatologic, GI, Neurologic" }],
+    };
+    expect(enrichClaimsWithDiagnosticCodes(analysis)).toBe(0);
+    expect(analysis.potential_claims[0].diagnosticCode).toBeUndefined();
+  });
+
+  it("does not overwrite a code the model/safety-net already assigned", () => {
+    const analysis = {
+      potential_claims: [{ condition: "Tinnitus", diagnosticCode: "6260" }],
+    };
+    expect(enrichClaimsWithDiagnosticCodes(analysis)).toBe(0);
+    expect(analysis.potential_claims[0].diagnosticCode).toBe("6260");
   });
 });

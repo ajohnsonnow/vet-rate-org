@@ -29,10 +29,35 @@ export function findSecondaryClaims(userDisabilities) {
   }
 
   const suggestions = [];
-  const normalizedDisabilities = [];
   const alreadySuggested = new Set();
+  const normalizedDisabilities = normalizeUserDisabilities(userDisabilities);
 
-  // Step 1: Normalize user input
+  addDirectLookupSuggestions(
+    userDisabilities,
+    normalizedDisabilities,
+    suggestions,
+    alreadySuggested,
+  );
+  addNSAIDBridgeSuggestions(userDisabilities, suggestions, alreadySuggested);
+  addOrthopedicCascadeSuggestions(
+    normalizedDisabilities,
+    suggestions,
+    alreadySuggested,
+  );
+  addMentalHealthTinnitusSuggestions(
+    userDisabilities,
+    normalizedDisabilities,
+    suggestions,
+    alreadySuggested,
+  );
+
+  sortSuggestionsByPriority(suggestions);
+
+  return suggestions;
+}
+
+function normalizeUserDisabilities(userDisabilities) {
+  const normalizedDisabilities = [];
   userDisabilities.forEach((disability) => {
     const normalized = normalizeCondition(disability);
     if (normalized) {
@@ -42,8 +67,15 @@ export function findSecondaryClaims(userDisabilities) {
       });
     }
   });
+  return normalizedDisabilities;
+}
 
-  // Step 2: Direct lookup in database
+function addDirectLookupSuggestions(
+  userDisabilities,
+  normalizedDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
   normalizedDisabilities.forEach(({ original, slug }) => {
     if (secondaryConditionsDB[slug]) {
       const primaryData = secondaryConditionsDB[slug];
@@ -76,131 +108,192 @@ export function findSecondaryClaims(userDisabilities) {
       });
     }
   });
+}
 
-  // Step 3: Cluster Logic - Medication Bridge (NSAID)
+function getNSAIDSecondaryDiagnosticCode(conditionName) {
+  if (conditionName.includes("GERD")) {
+    return "DC 7206";
+  }
+  if (conditionName.includes("Ulcer")) {
+    return "DC 7304";
+  }
+  if (conditionName.includes("Kidney")) {
+    return "DC 7530";
+  }
+  return null;
+}
+
+function addNSAIDBridgeSuggestions(
+  userDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
   const hasNSAIDCondition = userDisabilities.some((d) => requiresNSAIDuse(d));
 
-  if (hasNSAIDCondition) {
-    const nsaidSecondaries = [
-      {
-        condition: "Gastroesophageal Reflux Disease (GERD)",
-        mechanism: "Medication",
-        nexusTheory:
-          "Chronic use of nonsteroidal anti-inflammatory drugs (NSAIDs) to manage service-connected pain disrupts the gastric mucosal barrier by inhibiting prostaglandin synthesis. This permits gastric acid to damage the esophageal lining and reduces lower esophageal sphincter pressure, directly causing GERD. The medically necessary NSAID therapy for service-connected pain management proximately causes this secondary gastrointestinal condition.",
-        probability: "High",
-      },
-      {
-        condition: "Peptic Ulcer Disease",
-        mechanism: "Medication",
-        nexusTheory:
-          "Chronic NSAID use required for managing service-connected pain directly causes peptic ulcer disease through disruption of gastric mucosal defenses. NSAIDs inhibit prostaglandin synthesis, reducing mucus production and mucosal blood flow, permitting gastric acid to damage the gastric and duodenal mucosa.",
-        probability: "High",
-      },
-      {
-        condition: "Chronic Kidney Disease (CKD)",
-        mechanism: "Medication",
-        nexusTheory:
-          "Long-term NSAID use for service-connected pain management causes chronic kidney disease through multiple mechanisms: reduced renal blood flow by inhibiting vasodilatory prostaglandins, acute tubular necrosis, and chronic tubulointerstitial damage. The cumulative renal toxicity from medically necessary NSAID therapy proximately causes progressive kidney disease.",
-        probability: "Medium",
-      },
-    ];
-
-    nsaidSecondaries.forEach((secondary) => {
-      const hasCondition = userDisabilities.some((d) =>
-        d.toLowerCase().includes(secondary.condition.toLowerCase()),
-      );
-
-      if (!hasCondition && !alreadySuggested.has(secondary.condition)) {
-        suggestions.push({
-          primaryCondition: "Chronic Pain Requiring NSAIDs",
-          primarySlug: "chronic_pain_nsaid",
-          secondaryCondition: secondary.condition,
-          ecfrDiagnosticCode: secondary.condition.includes("GERD")
-            ? "DC 7206"
-            : secondary.condition.includes("Ulcer")
-              ? "DC 7304"
-              : secondary.condition.includes("Kidney")
-                ? "DC 7530"
-                : null,
-          probability: secondary.probability,
-          mechanism: secondary.mechanism,
-          nexusTheory: secondary.nexusTheory,
-          medicalEvidence: [
-            'Lanza et al., "Guidelines for prevention of NSAID-related ulcer complications," Am J Gastroenterol 2009',
-            'Sostres et al., "Adverse effects of NSAIDs on the gastrointestinal tract," Gastroenterol Res Pract 2010',
-          ],
-          evidenceType: "Medical Literature (for IMO/Nexus purposes)",
-          source: "medication_bridge",
-          warning:
-            "If you take NSAIDs (ibuprofen, naproxen, aspirin) daily or frequently for pain",
-        });
-        alreadySuggested.add(secondary.condition);
-      }
-    });
+  if (!hasNSAIDCondition) {
+    return;
   }
 
-  // Step 4: Cluster Logic - Orthopedic Cascade (Altered Gait)
-  normalizedDisabilities.forEach(({ original, slug }) => {
-    if (isLowerBodyJoint(slug)) {
-      const contralateral = getContralateralJoint(slug);
+  const nsaidSecondaries = [
+    {
+      condition: "Gastroesophageal Reflux Disease (GERD)",
+      mechanism: "Medication",
+      nexusTheory:
+        "Chronic use of nonsteroidal anti-inflammatory drugs (NSAIDs) to manage service-connected pain disrupts the gastric mucosal barrier by inhibiting prostaglandin synthesis. This permits gastric acid to damage the esophageal lining and reduces lower esophageal sphincter pressure, directly causing GERD. The medically necessary NSAID therapy for service-connected pain management proximately causes this secondary gastrointestinal condition.",
+      probability: "High",
+    },
+    {
+      condition: "Peptic Ulcer Disease",
+      mechanism: "Medication",
+      nexusTheory:
+        "Chronic NSAID use required for managing service-connected pain directly causes peptic ulcer disease through disruption of gastric mucosal defenses. NSAIDs inhibit prostaglandin synthesis, reducing mucus production and mucosal blood flow, permitting gastric acid to damage the gastric and duodenal mucosa.",
+      probability: "High",
+    },
+    {
+      condition: "Chronic Kidney Disease (CKD)",
+      mechanism: "Medication",
+      nexusTheory:
+        "Long-term NSAID use for service-connected pain management causes chronic kidney disease through multiple mechanisms: reduced renal blood flow by inhibiting vasodilatory prostaglandins, acute tubular necrosis, and chronic tubulointerstitial damage. The cumulative renal toxicity from medically necessary NSAID therapy proximately causes progressive kidney disease.",
+      probability: "Medium",
+    },
+  ];
 
-      // Suggest contralateral joint
-      if (contralateral) {
-        const contralateralDisplay = getDisplayName(contralateral);
-        const hasContralateral = normalizedDisabilities.some(
-          (d) => d.slug === contralateral,
-        );
+  nsaidSecondaries.forEach((secondary) => {
+    const hasCondition = userDisabilities.some((d) =>
+      d.toLowerCase().includes(secondary.condition.toLowerCase()),
+    );
 
-        if (!hasContralateral && !alreadySuggested.has(contralateralDisplay)) {
-          suggestions.push({
-            primaryCondition: original,
-            primarySlug: slug,
-            secondaryCondition: contralateralDisplay,
-            ecfrDiagnosticCode: "DC 5260/5261 or DC 5270/5271",
-            probability: "High",
-            mechanism: "Altered Gait",
-            nexusTheory: `The veteran's service-connected ${original} necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral joint. The asymmetric loading pattern creates abnormal contact pressures on the articular cartilage, accelerating degenerative changes. This chronic mechanical overload proximately causes or aggravates the contralateral condition.`,
-            medicalEvidence: [
-              'Shakoor et al., "Asymmetric loading and contralateral joint OA," Arthritis Rheum 2011',
-              'Thorp et al., "Biomechanical gait alterations and OA," Clin Biomech 2007',
-            ],
-            evidenceType: "Medical Literature (for IMO/Nexus purposes)",
-            source: "orthopedic_cascade",
-          });
-          alreadySuggested.add(contralateralDisplay);
-        }
-      }
-
-      // Suggest lumbar spine if not already present
-      if (slug !== "lumbar_spine") {
-        const hasLumbar = normalizedDisabilities.some(
-          (d) => d.slug === "lumbar_spine",
-        );
-        const lumbarDisplay = "Lumbar Spine Degenerative Disc Disease";
-
-        if (!hasLumbar && !alreadySuggested.has(lumbarDisplay)) {
-          suggestions.push({
-            primaryCondition: original,
-            primarySlug: slug,
-            secondaryCondition: lumbarDisplay,
-            ecfrDiagnosticCode: "DC 5237/5242/5243",
-            probability: "High",
-            mechanism: "Altered Gait",
-            nexusTheory: `The veteran's service-connected ${original} requires biomechanical compensation through altered gait mechanics, pelvic tilt, and postural adjustments. This asymmetric loading pattern creates abnormal stress distribution on the lumbar spine, particularly affecting the L4-L5 and L5-S1 segments. The altered kinetic chain proximately causes accelerated degenerative disc disease and facet arthropathy in the lumbar spine.`,
-            medicalEvidence: [
-              'Lewek et al., "OA and trunk kinematics during gait," Gait Posture 2006',
-              'Hunt et al., "Biomechanical changes at spine due to lower limb OA," Arthritis Care Res 2011',
-            ],
-            evidenceType: "Medical Literature (for IMO/Nexus purposes)",
-            source: "orthopedic_cascade",
-          });
-          alreadySuggested.add(lumbarDisplay);
-        }
-      }
+    if (!hasCondition && !alreadySuggested.has(secondary.condition)) {
+      suggestions.push({
+        primaryCondition: "Chronic Pain Requiring NSAIDs",
+        primarySlug: "chronic_pain_nsaid",
+        secondaryCondition: secondary.condition,
+        ecfrDiagnosticCode: getNSAIDSecondaryDiagnosticCode(
+          secondary.condition,
+        ),
+        probability: secondary.probability,
+        mechanism: secondary.mechanism,
+        nexusTheory: secondary.nexusTheory,
+        medicalEvidence: [
+          'Lanza et al., "Guidelines for prevention of NSAID-related ulcer complications," Am J Gastroenterol 2009',
+          'Sostres et al., "Adverse effects of NSAIDs on the gastrointestinal tract," Gastroenterol Res Pract 2010',
+        ],
+        evidenceType: "Medical Literature (for IMO/Nexus purposes)",
+        source: "medication_bridge",
+        warning:
+          "If you take NSAIDs (ibuprofen, naproxen, aspirin) daily or frequently for pain",
+      });
+      alreadySuggested.add(secondary.condition);
     }
   });
+}
 
-  // Step 5: Cluster Logic - Mental Health & Tinnitus Combinations
+function addContralateralJointSuggestion(
+  original,
+  slug,
+  normalizedDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
+  const contralateral = getContralateralJoint(slug);
+  if (!contralateral) {
+    return;
+  }
+
+  const contralateralDisplay = getDisplayName(contralateral);
+  const hasContralateral = normalizedDisabilities.some(
+    (d) => d.slug === contralateral,
+  );
+
+  if (!hasContralateral && !alreadySuggested.has(contralateralDisplay)) {
+    suggestions.push({
+      primaryCondition: original,
+      primarySlug: slug,
+      secondaryCondition: contralateralDisplay,
+      ecfrDiagnosticCode: "DC 5260/5261 or DC 5270/5271",
+      probability: "High",
+      mechanism: "Altered Gait",
+      nexusTheory: `The veteran's service-connected ${original} necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral joint. The asymmetric loading pattern creates abnormal contact pressures on the articular cartilage, accelerating degenerative changes. This chronic mechanical overload proximately causes or aggravates the contralateral condition.`,
+      medicalEvidence: [
+        'Shakoor et al., "Asymmetric loading and contralateral joint OA," Arthritis Rheum 2011',
+        'Thorp et al., "Biomechanical gait alterations and OA," Clin Biomech 2007',
+      ],
+      evidenceType: "Medical Literature (for IMO/Nexus purposes)",
+      source: "orthopedic_cascade",
+    });
+    alreadySuggested.add(contralateralDisplay);
+  }
+}
+
+function addLumbarSpineCascadeSuggestion(
+  original,
+  slug,
+  normalizedDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
+  if (slug === "lumbar_spine") {
+    return;
+  }
+
+  const hasLumbar = normalizedDisabilities.some(
+    (d) => d.slug === "lumbar_spine",
+  );
+  const lumbarDisplay = "Lumbar Spine Degenerative Disc Disease";
+
+  if (!hasLumbar && !alreadySuggested.has(lumbarDisplay)) {
+    suggestions.push({
+      primaryCondition: original,
+      primarySlug: slug,
+      secondaryCondition: lumbarDisplay,
+      ecfrDiagnosticCode: "DC 5237/5242/5243",
+      probability: "High",
+      mechanism: "Altered Gait",
+      nexusTheory: `The veteran's service-connected ${original} requires biomechanical compensation through altered gait mechanics, pelvic tilt, and postural adjustments. This asymmetric loading pattern creates abnormal stress distribution on the lumbar spine, particularly affecting the L4-L5 and L5-S1 segments. The altered kinetic chain proximately causes accelerated degenerative disc disease and facet arthropathy in the lumbar spine.`,
+      medicalEvidence: [
+        'Lewek et al., "OA and trunk kinematics during gait," Gait Posture 2006',
+        'Hunt et al., "Biomechanical changes at spine due to lower limb OA," Arthritis Care Res 2011',
+      ],
+      evidenceType: "Medical Literature (for IMO/Nexus purposes)",
+      source: "orthopedic_cascade",
+    });
+    alreadySuggested.add(lumbarDisplay);
+  }
+}
+
+function addOrthopedicCascadeSuggestions(
+  normalizedDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
+  normalizedDisabilities.forEach(({ original, slug }) => {
+    if (!isLowerBodyJoint(slug)) {
+      return;
+    }
+
+    addContralateralJointSuggestion(
+      original,
+      slug,
+      normalizedDisabilities,
+      suggestions,
+      alreadySuggested,
+    );
+    addLumbarSpineCascadeSuggestion(
+      original,
+      slug,
+      normalizedDisabilities,
+      suggestions,
+      alreadySuggested,
+    );
+  });
+}
+
+function addMentalHealthTinnitusSuggestions(
+  userDisabilities,
+  normalizedDisabilities,
+  suggestions,
+  alreadySuggested,
+) {
   const _hasPTSD = normalizedDisabilities.some((d) => d.slug === "ptsd");
   const hasTinnitus = normalizedDisabilities.some((d) => d.slug === "tinnitus");
   const hasMigraines = userDisabilities.some(
@@ -230,8 +323,9 @@ export function findSecondaryClaims(userDisabilities) {
     });
     alreadySuggested.add("Migraine Headaches");
   }
+}
 
-  // Step 6: Sort by probability (High first, then Medium)
+function sortSuggestionsByPriority(suggestions) {
   const priorityMap = { High: 3, Medium: 2, Low: 1 };
 
   suggestions.sort((a, b) => {
@@ -245,8 +339,6 @@ export function findSecondaryClaims(userDisabilities) {
       (mechanismPriority[a.mechanism] || 0)
     );
   });
-
-  return suggestions;
 }
 
 /**

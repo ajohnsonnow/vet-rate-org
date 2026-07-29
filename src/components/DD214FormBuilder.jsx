@@ -205,330 +205,321 @@ const DD214_FIELDS = {
   },
 };
 
-/**
- * DD214 Form Builder Component
- */
-const DD214FormBuilder = ({ onClose, onSave }) => {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
+function computeServiceDuration(entryDate, separationDate) {
+  const entry = new Date(entryDate);
+  const sep = new Date(separationDate);
+  const diffTime = Math.abs(sep - entry);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const years = Math.floor(diffDays / 365);
+  const months = Math.floor((diffDays % 365) / 30);
+  return { years, months, totalActiveDutyDays: diffDays };
+}
 
-  const [formData, setFormData] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [currentSection, setCurrentSection] = useState("personal");
-  const [savedDD214s, setSavedDD214s] = useState([]);
-
-  // Load existing DD214s from service history
-  useEffect(() => {
-    const history = getServiceHistory();
-    const dd214s = history.dd214s || [];
-    setSavedDD214s(dd214s);
-  }, []);
-
-  // Auto-calculate service time when dates change
-  useEffect(() => {
-    if (formData.entryDate && formData.separationDate) {
-      const entry = new Date(formData.entryDate);
-      const sep = new Date(formData.separationDate);
-      const diffTime = Math.abs(sep - entry);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      const years = Math.floor(diffDays / 365);
-      const months = Math.floor((diffDays % 365) / 30);
-
-      setFormData((prev) => ({
-        ...prev,
-        yearsService: years,
-        monthsService: months,
-        totalActiveDutyDays: diffDays,
-      }));
-    }
-  }, [formData.entryDate, formData.separationDate]);
-
-  const handleInputChange = (fieldId, value) => {
-    setFormData((prev) => ({ ...prev, [fieldId]: value }));
-  };
-
-  const handleSave = async () => {
-    // Validate required fields
-    const requiredFields = [];
-    Object.values(DD214_FIELDS).forEach((section) => {
-      section.fields.forEach((field) => {
-        if (field.required && !formData[field.id]) {
-          requiredFields.push(field.label);
-        }
-      });
+function getMissingRequiredFieldLabels(formData) {
+  const requiredFields = [];
+  Object.values(DD214_FIELDS).forEach((section) => {
+    section.fields.forEach((field) => {
+      if (field.required && !formData[field.id]) {
+        requiredFields.push(field.label);
+      }
     });
+  });
+  return requiredFields;
+}
 
-    if (requiredFields.length > 0) {
-      alert(
-        `Please fill in required fields:\n- ${requiredFields.join("\n- ")}`,
-      );
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      // Save to service history
-      const history = getServiceHistory();
-
-      // Initialize dd214s array if it doesn't exist
-      if (!history.dd214s) {
-        history.dd214s = [];
-      }
-
-      // Create DD214 entry with timestamp
-      const dd214Entry = {
-        ...formData,
-        id: `dd214_${Date.now()}`,
-        dateAdded: new Date().toISOString(),
-        source: "manual-entry",
-        formName: `DD214 - ${formData.fullName || "Untitled"} (${formData.separationDate || "No date"})`,
-      };
-
-      // Add to array
-      history.dd214s.push(dd214Entry);
-
-      // Also save the most recent one as the primary dd214Data (for backwards compatibility)
-      if (
-        !history.dd214Data ||
-        new Date(formData.separationDate) >
-          new Date(history.dd214Data.separationDate)
-      ) {
-        history.dd214Data = dd214Entry;
-      }
-
-      // Save to localStorage
-      localStorage.setItem(
-        "veteranProfile",
-        JSON.stringify({ serviceHistory: history }),
-      );
-
-      setSaveSuccess(true);
-      setSavedDD214s(history.dd214s);
-
-      if (onSave) {
-        onSave(dd214Entry);
-      }
-
-      // Reset form after 2 seconds
-      setTimeout(() => {
-        setFormData({});
-        setSaveSuccess(false);
-        setCurrentSection("personal");
-      }, 2000);
-    } catch (error) {
-      console.error("Error saving DD214:", error);
-      alert("Error saving DD214. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+function buildDD214Entry(formData) {
+  return {
+    ...formData,
+    id: `dd214_${Date.now()}`,
+    dateAdded: new Date().toISOString(),
+    source: "manual-entry",
+    formName: `DD214 - ${formData.fullName || "Untitled"} (${formData.separationDate || "No date"})`,
   };
+}
 
-  const renderField = (field) => {
-    const value = formData[field.id] || "";
+async function saveDD214Form(formData, deps) {
+  const {
+    setIsSaving,
+    setSaveSuccess,
+    setSavedDD214s,
+    setFormData,
+    setCurrentSection,
+    onSave,
+  } = deps;
 
-    if (field.type === "select") {
-      return (
-        <select
-          value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select {field.label}</option>
-          {field.options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      );
+  // Validate required fields
+  const requiredFields = getMissingRequiredFieldLabels(formData);
+  if (requiredFields.length > 0) {
+    alert(`Please fill in required fields:\n- ${requiredFields.join("\n- ")}`);
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    // Save to service history
+    const history = getServiceHistory();
+
+    // Initialize dd214s array if it doesn't exist
+    if (!history.dd214s) {
+      history.dd214s = [];
     }
 
-    if (field.type === "checkbox") {
-      return (
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={!!value}
-            onChange={(e) => handleInputChange(field.id, e.target.checked)}
-            className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">Yes</span>
-        </label>
-      );
+    // Create DD214 entry with timestamp
+    const dd214Entry = buildDD214Entry(formData);
+
+    // Add to array
+    history.dd214s.push(dd214Entry);
+
+    // Also save the most recent one as the primary dd214Data (for backwards compatibility)
+    if (
+      !history.dd214Data ||
+      new Date(formData.separationDate) >
+        new Date(history.dd214Data.separationDate)
+    ) {
+      history.dd214Data = dd214Entry;
     }
 
-    if (field.type === "textarea") {
-      return (
-        <textarea
-          value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
-          placeholder={field.placeholder}
-          rows={field.rows || 3}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
-        />
-      );
+    // Save to localStorage
+    localStorage.setItem(
+      "veteranProfile",
+      JSON.stringify({ serviceHistory: history }),
+    );
+
+    setSaveSuccess(true);
+    setSavedDD214s(history.dd214s);
+
+    if (onSave) {
+      onSave(dd214Entry);
     }
 
-    // Default: text/date/number input
+    // Reset form after 2 seconds
+    setTimeout(() => {
+      setFormData({});
+      setSaveSuccess(false);
+      setCurrentSection("personal");
+    }, 2000);
+  } catch (error) {
+    console.error("Error saving DD214:", error);
+    alert("Error saving DD214. Please try again.");
+  } finally {
+    setIsSaving(false);
+  }
+}
+
+function renderDD214Field(field, value, onChange) {
+  if (field.type === "select") {
     return (
-      <input
-        type={field.type || "text"}
+      <select
         value={value}
-        onChange={(e) => handleInputChange(field.id, e.target.value)}
-        placeholder={field.placeholder}
-        maxLength={field.maxLength}
+        onChange={(e) => onChange(e.target.value)}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">Select {field.label}</option>
+        {field.options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (field.type === "checkbox") {
+    return (
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={!!value}
+          onChange={(e) => onChange(e.target.checked)}
+          className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+        />
+        <span className="text-sm text-gray-700 dark:text-gray-300">Yes</span>
+      </label>
+    );
+  }
+
+  if (field.type === "textarea") {
+    return (
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={field.placeholder}
+        rows={field.rows || 3}
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
       />
     );
-  };
+  }
 
-  const sections = Object.keys(DD214_FIELDS);
-  const currentSectionIndex = sections.indexOf(currentSection);
-
+  // Default: text/date/number input
   return (
-    <ResponsiveModal
-      isOpen
-      onClose={onClose}
-      size="xl"
-      zIndex={9999}
-      labelledBy="dd214-form-builder-title"
-      header={
-        <>
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <div>
-              <h2
-                id="dd214-form-builder-title"
-                className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
-              >
-                📋 Build My DD214
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Manually enter your DD214 information • {savedDD214s.length}{" "}
-                DD214
-                {savedDD214s.length !== 1 ? "s" : ""} saved
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg
-                className="w-6 h-6 text-gray-500 dark:text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+    <input
+      type={field.type || "text"}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={field.placeholder}
+      maxLength={field.maxLength}
+      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+    />
+  );
+}
 
-          {/* Progress Bar */}
-          <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              {sections.map((section, index) => (
-                <React.Fragment key={section}>
-                  <button
-                    onClick={() => setCurrentSection(section)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
-                      currentSection === section
-                        ? "bg-blue-600 text-white"
-                        : index < currentSectionIndex
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {DD214_FIELDS[section].title.split(" ")[0]}
-                  </button>
-                  {index < sections.length - 1 && (
-                    <svg
-                      className="w-4 h-4 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </>
-      }
-      footer={
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            {currentSectionIndex > 0 && (
-              <button
-                onClick={() =>
-                  setCurrentSection(sections[currentSectionIndex - 1])
-                }
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
-              >
-                ← Previous
-              </button>
-            )}
-          </div>
+function getSectionStepClass(isCurrent, isCompleted) {
+  if (isCurrent) return "bg-blue-600 text-white";
+  if (isCompleted) {
+    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
+  }
+  return "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600";
+}
 
-          <div className="flex gap-2">
-            {currentSectionIndex < sections.length - 1 ? (
-              <button
-                onClick={() =>
-                  setCurrentSection(sections[currentSectionIndex + 1])
-                }
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaving ? "Saving..." : "💾 Save to My Packet"}
-              </button>
-            )}
-          </div>
+function DD214FormBuilderHeader({
+  onClose,
+  savedDD214sCount,
+  sections,
+  currentSection,
+  currentSectionIndex,
+  onSelectSection,
+}) {
+  return (
+    <>
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div>
+          <h2
+            id="dd214-form-builder-title"
+            className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+          >
+            📋 Build My DD214
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Manually enter your DD214 information • {savedDD214sCount} DD214
+            {savedDD214sCount !== 1 ? "s" : ""} saved
+          </p>
         </div>
-      }
-    >
-      {/* Success Message */}
-      {saveSuccess && (
-        <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-          <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="font-semibold">DD214 saved to My Packet!</span>
-          </div>
-        </div>
-      )}
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6 text-gray-500 dark:text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
 
-      {/* Form Content */}
+      {/* Progress Bar */}
+      <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          {sections.map((section, index) => (
+            <React.Fragment key={section}>
+              <button
+                onClick={() => onSelectSection(section)}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${getSectionStepClass(
+                  currentSection === section,
+                  index < currentSectionIndex,
+                )}`}
+              >
+                {DD214_FIELDS[section].title.split(" ")[0]}
+              </button>
+              {index < sections.length - 1 && (
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DD214FormBuilderFooter({
+  sections,
+  currentSectionIndex,
+  onSelectSection,
+  onSave,
+  isSaving,
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex gap-2">
+        {currentSectionIndex > 0 && (
+          <button
+            onClick={() => onSelectSection(sections[currentSectionIndex - 1])}
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
+          >
+            ← Previous
+          </button>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        {currentSectionIndex < sections.length - 1 ? (
+          <button
+            onClick={() => onSelectSection(sections[currentSectionIndex + 1])}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+          >
+            Next →
+          </button>
+        ) : (
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? "Saving..." : "💾 Save to My Packet"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DD214SaveSuccessBanner() {
+  return (
+    <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+      <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        <span className="font-semibold">DD214 saved to My Packet!</span>
+      </div>
+    </div>
+  );
+}
+
+function DD214FormSection({ currentSection, formData, onFieldChange }) {
+  return (
+    <>
       <div className="mb-4">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
           {DD214_FIELDS[currentSection].title}
@@ -551,10 +542,104 @@ const DD214FormBuilder = ({ onClose, onSave }) => {
                 </span>
               )}
             </label>
-            {renderField(field)}
+            {renderDD214Field(field, formData[field.id] || "", (value) =>
+              onFieldChange(field.id, value),
+            )}
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+/**
+ * DD214 Form Builder Component
+ */
+const DD214FormBuilder = ({ onClose, onSave }) => {
+  const { _t } = useLanguage();
+
+  const [formData, setFormData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [currentSection, setCurrentSection] = useState("personal");
+  const [savedDD214s, setSavedDD214s] = useState([]);
+
+  // Load existing DD214s from service history
+  useEffect(() => {
+    const history = getServiceHistory();
+    const dd214s = history.dd214s || [];
+    setSavedDD214s(dd214s);
+  }, []);
+
+  // Auto-calculate service time when dates change
+  useEffect(() => {
+    if (formData.entryDate && formData.separationDate) {
+      const { years, months, totalActiveDutyDays } = computeServiceDuration(
+        formData.entryDate,
+        formData.separationDate,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        yearsService: years,
+        monthsService: months,
+        totalActiveDutyDays,
+      }));
+    }
+  }, [formData.entryDate, formData.separationDate]);
+
+  const handleInputChange = (fieldId, value) => {
+    setFormData((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
+  const handleSave = () =>
+    saveDD214Form(formData, {
+      setIsSaving,
+      setSaveSuccess,
+      setSavedDD214s,
+      setFormData,
+      setCurrentSection,
+      onSave,
+    });
+
+  const sections = Object.keys(DD214_FIELDS);
+  const currentSectionIndex = sections.indexOf(currentSection);
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      zIndex={9999}
+      labelledBy="dd214-form-builder-title"
+      header={
+        <DD214FormBuilderHeader
+          onClose={onClose}
+          savedDD214sCount={savedDD214s.length}
+          sections={sections}
+          currentSection={currentSection}
+          currentSectionIndex={currentSectionIndex}
+          onSelectSection={setCurrentSection}
+        />
+      }
+      footer={
+        <DD214FormBuilderFooter
+          sections={sections}
+          currentSectionIndex={currentSectionIndex}
+          onSelectSection={setCurrentSection}
+          onSave={handleSave}
+          isSaving={isSaving}
+        />
+      }
+    >
+      {/* Success Message */}
+      {saveSuccess && <DD214SaveSuccessBanner />}
+
+      {/* Form Content */}
+      <DD214FormSection
+        currentSection={currentSection}
+        formData={formData}
+        onFieldChange={handleInputChange}
+      />
     </ResponsiveModal>
   );
 };

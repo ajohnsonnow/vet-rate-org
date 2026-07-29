@@ -34,12 +34,11 @@ function emit(name, value, rating) {
     typeof console !== "undefined" &&
     (import.meta.env.DEV || import.meta.env.VITE_WEB_VITALS_LOG === "true")
   ) {
-    const color =
-      rating === "good"
-        ? "color:green"
-        : rating === "needs-improvement"
-          ? "color:orange"
-          : "color:red";
+    const RATING_COLORS = {
+      good: "color:green",
+      "needs-improvement": "color:orange",
+    };
+    const color = RATING_COLORS[rating] || "color:red";
     // eslint-disable-next-line no-console
     console.log(`%c[web-vital] ${name} = ${entry.value} (${rating})`, color);
   }

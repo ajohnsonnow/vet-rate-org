@@ -479,13 +479,111 @@ function resolveTranslationCalls(source) {
   return out;
 }
 
+// Finds the index of the character matching `text[openIndex]` (an opening
+// bracket) by depth-counting, honoring nesting. Returns -1 if unbalanced.
+// Manual scan instead of a lazy-dot-all regex, which would backtrack
+// ambiguously against JSX bodies that contain their own braces/parens.
+function findMatchingBracket(text, openIndex, openChar, closeChar) {
+  let depth = 0;
+  for (let i = openIndex; i < text.length; i++) {
+    if (text[i] === openChar) depth++;
+    else if (text[i] === closeChar) {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function extractReturnParenBody(fnBody) {
+  const returnIdx = fnBody.indexOf('return');
+  if (returnIdx === -1) return null;
+  const parenIdx = fnBody.indexOf('(', returnIdx);
+  if (parenIdx === -1) return null;
+  const parenEnd = findMatchingBracket(fnBody, parenIdx, '(', ')');
+  return parenEnd === -1 ? null : fnBody.slice(parenIdx + 1, parenEnd).trim();
+}
+
 /**
- * Convert Tailwind classes to semantic CSS classes for alerts/sections
+ * Sections are increasingly built from small named sub-components —
+ * `function Name(...) { return (...); }` or `const Name = (...) => (...);` —
+ * instead of inline JSX. extractSections() only understands literal
+ * <section> tags, so a bare `<Name ... />` call site would otherwise
+ * survive as a literal (and therefore invisible) custom HTML element.
+ * This inlines every such sub-component at its call site, repeating so
+ * nested sub-components (a component that itself renders another one)
+ * resolve too.
  */
-function mapTailwindClasses(classString) {
-  if (!classString) return '';
-  
-  // Map background + border combinations to alert classes
+function collectFunctionDeclBodies(source, bodies) {
+  const functionDecl = /function ([A-Z]\w*)\(/g;
+  let match;
+  while ((match = functionDecl.exec(source)) !== null) {
+    const parenIdx = match.index + match[0].length - 1;
+    const parenEnd = findMatchingBracket(source, parenIdx, '(', ')');
+    if (parenEnd === -1) continue;
+    const braceIdx = source.indexOf('{', parenEnd);
+    const braceEnd = findMatchingBracket(source, braceIdx, '{', '}');
+    if (braceEnd === -1) continue;
+    const body = extractReturnParenBody(source.slice(braceIdx + 1, braceEnd));
+    if (body !== null) bodies.set(match[1], body);
+  }
+}
+
+function collectArrowDeclBodies(source, bodies) {
+  const arrowDecl = /const ([A-Z]\w*) = \(/g;
+  let match;
+  while ((match = arrowDecl.exec(source)) !== null) {
+    const parenIdx = match.index + match[0].length - 1;
+    const parenEnd = findMatchingBracket(source, parenIdx, '(', ')');
+    if (parenEnd === -1) continue;
+    const arrowBodyIdx = source.indexOf('(', parenEnd + 1);
+    if (arrowBodyIdx === -1 || arrowBodyIdx > parenEnd + 10) continue;
+    const arrowBodyEnd = findMatchingBracket(source, arrowBodyIdx, '(', ')');
+    if (arrowBodyEnd === -1) continue;
+    bodies.set(match[1], source.slice(arrowBodyIdx + 1, arrowBodyEnd).trim());
+  }
+}
+
+function extractComponentBodies(source) {
+  const bodies = new Map();
+  collectFunctionDeclBodies(source, bodies);
+  collectArrowDeclBodies(source, bodies);
+
+  // Components that wrap their own content in a <section> tag are already
+  // picked up directly by extractSections() from their own definition.
+  // Their call site (in the page's top-level render) is a second reference
+  // to the same content — inlining it there would duplicate the section.
+  // Only "leaf" helper components (div-wrapped, no <section> of their own)
+  // need inlining at their call site.
+  for (const [name, body] of bodies) {
+    if (/<section[\s>]/i.test(body)) bodies.delete(name);
+  }
+
+  return bodies;
+}
+
+function inlineSubComponents(source) {
+  const bodies = extractComponentBodies(source);
+  let expanded = source;
+
+  for (let pass = 0; pass < 5; pass++) {
+    let changed = false;
+    for (const [name, body] of bodies) {
+      const callRegex = new RegExp(String.raw`<${name}(?:\s[^/]*)?/>`, 'g');
+      const next = expanded.replace(callRegex, body);
+      if (next !== expanded) changed = true;
+      expanded = next;
+    }
+    if (!changed) break;
+  }
+
+  return expanded;
+}
+
+/**
+ * Map background + border combinations to alert classes
+ */
+function mapAlertClass(classString) {
   if (classString.includes('bg-yellow-50') || classString.includes('border-yellow')) {
     return 'alert alert-yellow';
   }
@@ -501,40 +599,28 @@ function mapTailwindClasses(classString) {
   if (classString.includes('bg-purple-50') || classString.includes('border-purple')) {
     return 'alert alert-purple';
   }
-  
-  // Section borders
-  if (classString.includes('border-l-4') && classString.includes('border-blue')) {
-    return 'section-border section-border-blue';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-green')) {
-    return 'section-border section-border-green';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-purple')) {
-    return 'section-border section-border-purple';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-orange')) {
-    return 'section-border section-border-orange';
-  }
-  if (classString.includes('border-l-4') && classString.includes('border-red')) {
-    return 'section-border section-border-red';
-  }
-  
   return '';
 }
 
 /**
- * Extract the main content JSX from a React component
+ * Map left-border section combinations to section-border classes
  */
-function extractJSXContent(componentSource) {
-  // Find the return statement with JSX
-  const returnMatch = componentSource.match(/return\s*\(\s*([\s\S]*?)\s*\);\s*\};\s*$/m);
-  if (!returnMatch) {
-    // Try alternate pattern
-    const altMatch = componentSource.match(/return\s*\(\s*([\s\S]*)\);\s*\};\s*(?:export|$)/m);
-    if (altMatch) return altMatch[1];
-    throw new Error('Could not find return statement in component');
-  }
-  return returnMatch[1];
+function mapSectionBorderClass(classString) {
+  if (!classString.includes('border-l-4')) return '';
+  if (classString.includes('border-blue')) return 'section-border section-border-blue';
+  if (classString.includes('border-green')) return 'section-border section-border-green';
+  if (classString.includes('border-purple')) return 'section-border section-border-purple';
+  if (classString.includes('border-orange')) return 'section-border section-border-orange';
+  if (classString.includes('border-red')) return 'section-border section-border-red';
+  return '';
+}
+
+/**
+ * Convert Tailwind classes to semantic CSS classes for alerts/sections
+ */
+function mapTailwindClasses(classString) {
+  if (!classString) return '';
+  return mapAlertClass(classString) || mapSectionBorderClass(classString);
 }
 
 /**
@@ -577,7 +663,11 @@ function convertSectionToHTML(jsxSection) {
   
   // Remove JSX comments
   html = html.replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
-  
+
+  // Strip React Fragment shorthand (<>...</>) — not valid HTML, and some
+  // inlined sub-components (see inlineSubComponents) wrap their content in one.
+  html = html.replaceAll('<>', '').replaceAll('</>', '');
+
   // Convert self-closing JSX tags
   html = html.replace(/<(\w+)([^>]*)\s*\/>/g, '<$1$2></$1>');
   
@@ -648,19 +738,16 @@ function extractMetadata(componentSource) {
  */
 function processTermsOfService(componentSource) {
   const metadata = extractMetadata(componentSource);
-  
-  // Extract the main content div (between header and footer)
-  const contentMatch = componentSource.match(/{\/\* Content \*\/}([\s\S]*?){\/\* Footer \*\/}/);
-  if (!contentMatch) {
-    // Try to extract everything between header close and footer
-    const altMatch = componentSource.match(/<\/div>\s*<\/div>\s*<\/div>\s*([\s\S]*?)\s*{\/\* Footer/);
-  }
-  
+
   // Build HTML content section by section
   let htmlContent = '';
 
+  // Inline named sub-components (e.g. AIWarningBanner) at their call sites
+  // before resolving i18n, so their own {t(...)} calls get picked up too.
+  const inlinedSource = inlineSubComponents(componentSource);
+
   // Resolve i18n calls to English before extraction so no {t(...)} leaks (A-H10).
-  const resolvedSource = resolveTranslationCalls(componentSource);
+  const resolvedSource = resolveTranslationCalls(inlinedSource);
 
   // Extract and convert each section
   const sections = extractSections(resolvedSource);
@@ -782,8 +869,12 @@ ${htmlContent}
 function generatePrivacyHTML(componentSource) {
   const metadata = extractMetadata(componentSource);
 
+  // Inline named sub-components (e.g. AnalyticsDisclosureBox) at their call
+  // sites before resolving i18n, so their own {t(...)} calls get picked up too.
+  const inlinedSource = inlineSubComponents(componentSource);
+
   // Resolve i18n calls to English before extraction so no {t(...)} leaks (A-H10).
-  const resolvedSource = resolveTranslationCalls(componentSource);
+  const resolvedSource = resolveTranslationCalls(inlinedSource);
 
   // Extract sections
   const sections = extractSections(resolvedSource);

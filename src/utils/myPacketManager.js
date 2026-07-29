@@ -818,6 +818,142 @@ export const clearPacket = async () => {
  * @param {string[]} options.types - Filter to specific doc types
  * @returns {Promise<string>} AI-ready context string
  */
+function _groupDocsByType(allDocs, types) {
+  const grouped = {};
+  for (const doc of allDocs) {
+    if (types && !types.includes(doc.classification)) continue;
+    if (!grouped[doc.classification]) grouped[doc.classification] = [];
+    grouped[doc.classification].push(doc);
+  }
+  return grouped;
+}
+
+function _formatDeployment(d) {
+  const place = d.location || d.operation || "";
+  const dates = `${d.startDate || ""}-${d.endDate || ""}`;
+  return `${place} ${dates}`;
+}
+
+function _formatServiceRecordDoc(doc, options) {
+  const data = doc.extractedData || {};
+  if (Object.keys(data).length === 0) {
+    if (options.includeRawText && doc.rawText) {
+      return `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
+    }
+    return "";
+  }
+
+  let out = `File: ${doc.fileName}\n`;
+  if (data.fullName) out += `  Name: ${data.fullName}\n`;
+  if (data.branch) out += `  Branch: ${data.branch}\n`;
+  if (data.component) out += `  Component: ${data.component}\n`;
+  if (data.rank) out += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
+  if (data.mos) out += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
+  if (data.entryDate) out += `  Entry: ${data.entryDate}\n`;
+  if (data.separationDate) out += `  Separation: ${data.separationDate}\n`;
+  if (data.characterOfService)
+    out += `  Character: ${data.characterOfService}\n`;
+  if (data.awards?.length) {
+    out += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
+  }
+  if (data.combatService?.hasVerifiedCombat) {
+    out += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
+  }
+  if (data.deployments?.length) {
+    out += `  Deployments: ${data.deployments.map(_formatDeployment).join("; ")}\n`;
+  }
+  if (data.specialQualifications?.length) {
+    out += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
+  }
+  out += "\n";
+  return out;
+}
+
+function _formatServiceRecordSection(grouped, options) {
+  const serviceRecordTypes = [
+    PACKET_DOC_TYPES.DD214,
+    PACKET_DOC_TYPES.NGB22,
+    PACKET_DOC_TYPES.DD256,
+  ];
+
+  let out = "";
+  for (const type of serviceRecordTypes) {
+    if (!grouped[type]) continue;
+    out += `--- ${PACKET_DOC_LABELS[type]} ---\n`;
+    for (const doc of grouped[type]) {
+      out += _formatServiceRecordDoc(doc, options);
+    }
+    delete grouped[type];
+  }
+  return out;
+}
+
+// Structured C-File formatter — replaces the 500-char JSON blob for C-Files.
+// The extractedData is the C-File analysis object (potential_claims, timeline,
+// summary, exposures), so emit readable condition/evidence lines an AI tool can
+// actually use. Conditions are AI SUGGESTIONS (not filed claims) — labelled so.
+function _formatCFileDoc(doc) {
+  const data = doc.extractedData || {};
+  let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
+  if (data.summary) {
+    out += `  Summary: ${String(data.summary).slice(0, 400)}\n`;
+  }
+  const claims = Array.isArray(data.potential_claims)
+    ? data.potential_claims
+    : [];
+  if (claims.length > 0) {
+    out += "  Identified conditions (AI suggestions, not yet filed):\n";
+    claims.slice(0, 25).forEach((c) => {
+      const name = c.condition || c.name || "Unknown";
+      const dc = c.diagnosticCode ? ` [DC ${c.diagnosticCode}]` : "";
+      out += `    • ${name}${dc}`;
+      if (c.missing_element) out += ` — missing: ${c.missing_element}`;
+      out += "\n";
+    });
+    if (claims.length > 25) {
+      out += `    ... and ${claims.length - 25} more\n`;
+    }
+  }
+  const exposures = Array.isArray(data.exposures) ? data.exposures : [];
+  const exposureNames = exposures
+    .map((e) => (typeof e === "string" ? e : e?.type))
+    .filter(Boolean);
+  if (exposureNames.length > 0) {
+    out += `  Exposures: ${exposureNames.join(", ")}\n`;
+  }
+  out += "\n";
+  return out;
+}
+
+function _formatCFileSection(grouped) {
+  const cFiles = grouped[PACKET_DOC_TYPES.C_FILE];
+  if (!cFiles || cFiles.length === 0) return "";
+  let out = `--- ${PACKET_DOC_LABELS[PACKET_DOC_TYPES.C_FILE]} ---\n`;
+  for (const doc of cFiles) {
+    out += _formatCFileDoc(doc);
+  }
+  // Remove so it does NOT also fall through to the truncated JSON blob below.
+  delete grouped[PACKET_DOC_TYPES.C_FILE];
+  return out;
+}
+
+function _formatOtherDocsSection(grouped) {
+  let out = "";
+  for (const [type, docs] of Object.entries(grouped)) {
+    const label = PACKET_DOC_LABELS[type] || type;
+    out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
+    for (const doc of docs) {
+      out += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
+      if (doc.extractedData && Object.keys(doc.extractedData).length > 0) {
+        const summary = JSON.stringify(doc.extractedData).substring(0, 500);
+        out += `  Data: ${summary}\n`;
+      }
+    }
+    out += "\n";
+  }
+  return out;
+}
+
 export const generatePacketContext = async (options = {}) => {
   try {
     const allDocs = await getAllPacketDocuments();
@@ -827,75 +963,17 @@ export const generatePacketContext = async (options = {}) => {
     let context = "=== MY PACKET: VETERAN DOCUMENT SUMMARY ===\n\n";
     context += `Documents on file: ${allDocs.length}\n\n`;
 
-    // Group by type
-    const grouped = {};
-    for (const doc of allDocs) {
-      if (options.types && !options.types.includes(doc.classification))
-        continue;
-      if (!grouped[doc.classification]) grouped[doc.classification] = [];
-      grouped[doc.classification].push(doc);
-    }
+    const grouped = _groupDocsByType(allDocs, options.types);
 
     // DD214s first (most important for claims)
-    const serviceRecordTypes = [
-      PACKET_DOC_TYPES.DD214,
-      PACKET_DOC_TYPES.NGB22,
-      PACKET_DOC_TYPES.DD256,
-    ];
-    for (const type of serviceRecordTypes) {
-      if (!grouped[type]) continue;
-      const label = PACKET_DOC_LABELS[type];
-      context += `--- ${label} ---\n`;
-      for (const doc of grouped[type]) {
-        const data = doc.extractedData || {};
-        if (Object.keys(data).length > 0) {
-          // Output key fields
-          context += `File: ${doc.fileName}\n`;
-          if (data.fullName) context += `  Name: ${data.fullName}\n`;
-          if (data.branch) context += `  Branch: ${data.branch}\n`;
-          if (data.component) context += `  Component: ${data.component}\n`;
-          if (data.rank)
-            context += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
-          if (data.mos)
-            context += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
-          if (data.entryDate) context += `  Entry: ${data.entryDate}\n`;
-          if (data.separationDate)
-            context += `  Separation: ${data.separationDate}\n`;
-          if (data.characterOfService)
-            context += `  Character: ${data.characterOfService}\n`;
-          if (data.awards?.length) {
-            context += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
-          }
-          if (data.combatService?.hasVerifiedCombat) {
-            context += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
-          }
-          if (data.deployments?.length) {
-            context += `  Deployments: ${data.deployments.map((d) => `${d.location || d.operation || ""} ${d.startDate || ""}-${d.endDate || ""}`).join("; ")}\n`;
-          }
-          if (data.specialQualifications?.length) {
-            context += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
-          }
-          context += "\n";
-        } else if (options.includeRawText && doc.rawText) {
-          context += `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
-        }
-      }
-      delete grouped[type];
-    }
+    context += _formatServiceRecordSection(grouped, options);
+
+    // C-Files get a structured formatter (conditions + missing evidence +
+    // summary) instead of the truncated JSON blob used for other types.
+    context += _formatCFileSection(grouped);
 
     // Other document types
-    for (const [type, docs] of Object.entries(grouped)) {
-      const label = PACKET_DOC_LABELS[type] || type;
-      context += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
-      for (const doc of docs) {
-        context += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
-        if (doc.extractedData && Object.keys(doc.extractedData).length > 0) {
-          const summary = JSON.stringify(doc.extractedData).substring(0, 500);
-          context += `  Data: ${summary}\n`;
-        }
-      }
-      context += "\n";
-    }
+    context += _formatOtherDocsSection(grouped);
 
     // Trim to max size
     if (context.length > maxChars) {

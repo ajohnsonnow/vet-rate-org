@@ -26,14 +26,14 @@ export default function AffiliationPickerPrompt({ onDone }) {
       size="md"
       labelledBy="affiliation-prompt-title"
       header={
-        <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 px-6 py-5">
+        <div className="bg-va-blue dark:bg-gray-800 px-6 py-5">
           <h2
             id="affiliation-prompt-title"
             className="text-xl font-bold text-white mb-1"
           >
             Make it yours 🎖️
           </h2>
-          <p className="text-green-100 dark:text-gray-300 text-sm">
+          <p className="text-blue-100 dark:text-gray-300 text-sm">
             Choose an affiliation palette — or skip and stick with the default.
           </p>
         </div>
