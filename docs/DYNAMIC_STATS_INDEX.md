@@ -2,11 +2,11 @@
 
 ## Quick Links
 
-- **🚀 [Get Started](../DYNAMIC_STATS_CHECKLIST.md)** - Implementation checklist
+- **🚀 [Get Started](../archive/DYNAMIC_STATS_CHECKLIST.md)** - Implementation checklist
 - **📖 [Complete Guide](DYNAMIC_STATS_GUIDE.md)** - Full API documentation
-- **🎨 [Examples](../MIGRATION_EXAMPLE.md)** - Real component examples
-- **📊 [Visual Flow](../VISUAL_FLOW.md)** - System architecture diagram
-- **📋 [Summary](../DYNAMIC_STATS_SUMMARY.md)** - Executive overview
+- **🎨 [Examples](../archive/MIGRATION_EXAMPLE.md)** - Real component examples
+- **📊 [Visual Flow](../archive/VISUAL_FLOW.md)** - System architecture diagram
+- **📋 [Summary](../archive/DYNAMIC_STATS_SUMMARY.md)** - Executive overview
 
 ---
 
@@ -34,10 +34,10 @@ src/
   data/
     projectStats.json       # Generated stats (26 metrics)
     dynamicCopy.json        # Template content with {{placeholders}}
-  
+
   hooks/
     useDynamicCopy.js       # React hook for components
-  
+
   components/
     examples/
       DynamicCopyExamples.jsx  # 5 working examples
@@ -64,11 +64,11 @@ npm run update-stats
 ### 2. Use in Components
 
 ```jsx
-import { useDynamicCopy } from '../hooks/useDynamicCopy';
+import { useDynamicCopy } from "../hooks/useDynamicCopy";
 
 function MyComponent() {
   const { replace, stats } = useDynamicCopy();
-  
+
   return (
     <div>
       <p>{replace("Built with {{total_hours}} hours")}</p>
@@ -91,45 +91,48 @@ npm run update-stats
 ## Available Documentation
 
 ### For New Users
+
 Start here if you're just learning about the system:
 
-1. **[DYNAMIC_STATS_SUMMARY.md](../DYNAMIC_STATS_SUMMARY.md)**
+1. **[DYNAMIC_STATS_SUMMARY.md](../archive/DYNAMIC_STATS_SUMMARY.md)**
    - Executive overview
    - What problem it solves
    - Quick examples
    - 5-minute read
 
-2. **[VISUAL_FLOW.md](../VISUAL_FLOW.md)**
+2. **[VISUAL_FLOW.md](../archive/VISUAL_FLOW.md)**
    - Visual architecture
    - Data flow diagrams
    - Before/after comparisons
    - Usage patterns
 
 ### For Implementation
+
 Read these when you're ready to integrate:
 
-3. **[DYNAMIC_STATS_CHECKLIST.md](../DYNAMIC_STATS_CHECKLIST.md)**
+1. **[DYNAMIC_STATS_CHECKLIST.md](../archive/DYNAMIC_STATS_CHECKLIST.md)**
    - Step-by-step setup
    - Testing instructions
    - Quick wins
    - Troubleshooting
 
-4. **[MIGRATION_EXAMPLE.md](../MIGRATION_EXAMPLE.md)**
+2. **[MIGRATION_EXAMPLE.md](../archive/MIGRATION_EXAMPLE.md)**
    - Real code from your project
    - DisclaimerSplash.jsx example
    - AboutUs.jsx example
    - Before/after diffs
 
 ### For Advanced Usage
+
 Reference these for deep knowledge:
 
-5. **[DYNAMIC_STATS_GUIDE.md](DYNAMIC_STATS_GUIDE.md)**
+1. **[DYNAMIC_STATS_GUIDE.md](DYNAMIC_STATS_GUIDE.md)**
    - Complete API reference
    - All 26 available stats
    - Advanced patterns
    - Customization guide
 
-6. **[Working Examples](../src/components/examples/DynamicCopyExamples.jsx)**
+2. **[Working Examples](../src/components/examples/DynamicCopyExamples.jsx)**
    - 5 complete components
    - Copy-paste ready
    - Best practices
@@ -157,7 +160,7 @@ Edit `scripts/update-stats.js`:
 ```javascript
 const stats = {
   // ... existing stats
-  my_new_stat: extractFirstNumber(/Your Pattern.*?(\d+)/i, 'default')
+  my_new_stat: extractFirstNumber(/Your Pattern.*?(\d+)/i, "default"),
 };
 ```
 
@@ -181,21 +184,21 @@ Edit `src/data/dynamicCopy.json`:
 
 ```jsx
 const { stats } = useDynamicCopy();
-<p>{stats.total_hours} hours</p>
+<p>{stats.total_hours} hours</p>;
 ```
 
 ### Replace Function (Flexible)
 
 ```jsx
 const { replace } = useDynamicCopy();
-<p>{replace("Built with {{total_hours}} hours")}</p>
+<p>{replace("Built with {{total_hours}} hours")}</p>;
 ```
 
 ### Pre-Made Copy (Ready-to-Use)
 
 ```jsx
 const { copy } = useDynamicCopy();
-<p>{copy.aboutUs.theCodebase.paragraphs[0]}</p>
+<p>{copy.aboutUs.theCodebase.paragraphs[0]}</p>;
 ```
 
 ### Specialized Hooks (Organized)
@@ -211,6 +214,7 @@ const ui = useUIMessages();
 ## Available Stats (26 Total)
 
 ### Core Metrics
+
 - `total_hours` - "7,200"
 - `years_dev` - "3.5"
 - `loc_count` - "111,440"
@@ -224,15 +228,18 @@ const ui = useUIMessages();
 ## Pre-Written Content
 
 ### About Us
+
 - The Codebase (4 paragraphs)
 - Why It's Free
 - The Real Cost
 
 ### Buy Me a Coffee
+
 - 10 punchy captions
 - Long-form donation pitch
 
 ### UI Messages
+
 - 10 loading screen variations
 - Welcome modal content
 - 5 footer variations
@@ -240,6 +247,7 @@ const ui = useUIMessages();
 - Error/success messages
 
 ### Social Proof
+
 - 6 stat callouts
 - 4 competitive comparisons
 
@@ -250,7 +258,7 @@ const ui = useUIMessages();
 ### Loading Screen
 
 ```jsx
-import { useUIMessages } from '../hooks/useDynamicCopy';
+import { useUIMessages } from "../hooks/useDynamicCopy";
 
 function LoadingScreen() {
   const ui = useUIMessages();
@@ -263,7 +271,7 @@ Result: "Parsing 111,440 lines of code to find your answer..."
 ### About Section
 
 ```jsx
-import { useAboutUsContent } from '../hooks/useDynamicCopy';
+import { useAboutUsContent } from "../hooks/useDynamicCopy";
 
 function AboutUs() {
   const aboutUs = useAboutUsContent();
@@ -281,7 +289,7 @@ function AboutUs() {
 ### Footer
 
 ```jsx
-import { useDynamicCopy } from '../hooks/useDynamicCopy';
+import { useDynamicCopy } from "../hooks/useDynamicCopy";
 
 function Footer() {
   const { stats, copy } = useDynamicCopy();
@@ -357,9 +365,10 @@ grep -r "7,200\|111,440\|751" src/
 ### Documentation Issues
 
 If something's unclear:
+
 1. Check [DYNAMIC_STATS_GUIDE.md](DYNAMIC_STATS_GUIDE.md) for details
 2. Review [Working Examples](../src/components/examples/DynamicCopyExamples.jsx)
-3. See [MIGRATION_EXAMPLE.md](../MIGRATION_EXAMPLE.md) for real code
+3. See [MIGRATION_EXAMPLE.md](../archive/MIGRATION_EXAMPLE.md) for real code
 
 ---
 
@@ -369,7 +378,7 @@ If something's unclear:
 README.md → update-stats.js → projectStats.json → useDynamicCopy() → Components
 ```
 
-See [VISUAL_FLOW.md](../VISUAL_FLOW.md) for detailed diagrams.
+See [VISUAL_FLOW.md](../archive/VISUAL_FLOW.md) for detailed diagrams.
 
 ---
 
@@ -401,13 +410,13 @@ import { useDynamicCopy } from '../hooks/useDynamicCopy';
 // In your component
 function MyComponent() {
   const { stats, replace, copy } = useDynamicCopy();
-  
+
   // Direct access
   <p>{stats.total_hours} hours</p>
-  
+
   // Replace function
   <p>{replace("Built with {{total_hours}} hours")}</p>
-  
+
   // Pre-made copy
   <p>{copy.aboutUs.theCodebase.paragraphs[0]}</p>
 }
@@ -415,4 +424,4 @@ function MyComponent() {
 
 ---
 
-🎉 **You're all set!** Start with [DYNAMIC_STATS_CHECKLIST.md](../DYNAMIC_STATS_CHECKLIST.md)
+🎉 **You're all set!** Start with [DYNAMIC_STATS_CHECKLIST.md](../archive/DYNAMIC_STATS_CHECKLIST.md)

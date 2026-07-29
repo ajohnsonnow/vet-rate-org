@@ -38,39 +38,44 @@ through a complete loop and leave them with running software.
 Each of these answers a single "I want to X" question. They assume you
 already have the app running.
 
-| Doc                                                                          | Job it gets done                                                  |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [LEGAL_PAGES_SYNC.md](./LEGAL_PAGES_SYNC.md)                                 | Re-sync the legal pages against eCFR                              |
-| [COMPILE_CUSTOM_VISION_MODEL.md](./COMPILE_CUSTOM_VISION_MODEL.md)           | Compile a custom vision model for OCR                             |
-| [CUSTOM_VISION_MODEL_BUILD.md](./CUSTOM_VISION_MODEL_BUILD.md)               | Build + ship a custom vision model                                |
-| [REDDIT_API_SETUP.md](./REDDIT_API_SETUP.md)                                 | Wire the Reddit API for the bug-aware feedback channel            |
-| [STATE_BENEFIT_HUNTER_QUICK_START.md](./STATE_BENEFIT_HUNTER_QUICK_START.md) | Add a new state-benefit feed                                      |
-| [STATE_BENEFIT_HUNTER_CHECKLIST.md](./STATE_BENEFIT_HUNTER_CHECKLIST.md)     | Verify a state-benefit ingestion before shipping                  |
-| [WEBGPU_EXPERIMENTAL_SETUP.md](./WEBGPU_EXPERIMENTAL_SETUP.md)               | Enable WebGPU for local-LLM acceleration                          |
-| [PREFLIGHT_EXTRAS.md](./PREFLIGHT_EXTRAS.md)                                 | Run the opt-in preflight (markdownlint / knip / license-checker)  |
-| [POST_MORTEM_TEMPLATE.md](./POST_MORTEM_TEMPLATE.md)                         | Write a post-mortem after an incident (template, fill-the-blanks) |
+| Doc                                                                | Job it gets done                                                  |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| [LEGAL_PAGES_SYNC.md](./LEGAL_PAGES_SYNC.md)                       | Re-sync the legal pages against eCFR                              |
+| [COMPILE_CUSTOM_VISION_MODEL.md](./COMPILE_CUSTOM_VISION_MODEL.md) | Compile a custom vision model for OCR                             |
+| [CUSTOM_VISION_MODEL_BUILD.md](./CUSTOM_VISION_MODEL_BUILD.md)     | Build + ship a custom vision model                                |
+| [REDDIT_API_SETUP.md](./REDDIT_API_SETUP.md)                       | Wire the Reddit API for the bug-aware feedback channel            |
+| [STATE_BENEFITS_SCHEMA.md](./STATE_BENEFITS_SCHEMA.md)             | Add or refresh a state-benefit feed (current pipeline, S36)       |
+| [WEBGPU_EXPERIMENTAL_SETUP.md](./WEBGPU_EXPERIMENTAL_SETUP.md)     | Enable WebGPU for local-LLM acceleration                          |
+| [PREFLIGHT_EXTRAS.md](./PREFLIGHT_EXTRAS.md)                       | Run the opt-in preflight (markdownlint / knip / license-checker)  |
+| [POST_MORTEM_TEMPLATE.md](./POST_MORTEM_TEMPLATE.md)               | Write a post-mortem after an incident (template, fill-the-blanks) |
 
 ## 3. Reference — facts you look up
 
 Information-oriented. Tables, scoreboards, baselines, configuration
 matrices. Read by skimming, not by following start-to-end.
 
-| Doc                                                                                | What's in it                                                            |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md)                                           | The 41-row best-practices scoreboard, evidence, severity, target sprint |
-| [SPRINT_PLAN.md](./SPRINT_PLAN.md)                                                 | Sprint-by-sprint plan + close dates                                     |
-| [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md)                                   | Mobile + quality-audit remediation cycle (S9–S17, closed)               |
-| [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md)       | Ingestion/chunking/KB cycle: 9 sprints with executing-model assignments |
-| [DESIGN_TOKENS_REFERENCE.md](./DESIGN_TOKENS_REFERENCE.md)                         | Generated token table — colors / sizing / aliases                       |
-| [RAG_EVAL.md](./RAG_EVAL.md)                                                       | Recall@k / MRR / NDCG@k baseline + known misses                         |
-| [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)                                               | Web Crypto call-site inventory (PBKDF2 / AES-GCM / SHA-256)             |
-| [RISK_REGISTER.md](./RISK_REGISTER.md)                                             | Open + closed accepted-risk entries                                     |
-| [TOKEN_LIMIT_CONFIGURATION.md](./TOKEN_LIMIT_CONFIGURATION.md)                     | Per-task token presets + user-override matrix                           |
-| [VETRATE_LLM_MODELS.md](./VETRATE_LLM_MODELS.md)                                   | Which local + cloud models are supported, with quirks                   |
-| [CHANGELOG_SYSTEM.md](./CHANGELOG_SYSTEM.md)                                       | How the changelog feed is generated + consumed                          |
-| [DYNAMIC_STATS_INDEX.md](./DYNAMIC_STATS_INDEX.md)                                 | All dynamic stats with their data sources                               |
-| [STATE_BENEFIT_HUNTER_IMPLEMENTATION.md](./STATE_BENEFIT_HUNTER_IMPLEMENTATION.md) | State-by-state implementation status                                    |
-| [LEGAL_PAGES_README.md](./LEGAL_PAGES_README.md)                                   | Which CFR Parts + Subparts are mirrored locally                         |
+| Doc                                                                                    | What's in it                                                                                                                                                          |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md)                                               | The 41-row best-practices scoreboard, evidence, severity, target sprint                                                                                               |
+| [RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md)                               | 58-agent red-team audit findings (2026-06-20)                                                                                                                         |
+| [RED-TEAM-AUDIT-2026-06-21.md](./RED-TEAM-AUDIT-2026-06-21.md)                         | Ultra re-verify pass over the 2026-06-20 audit                                                                                                                        |
+| [RED-TEAM-SPRINT-QUEUE.md](./RED-TEAM-SPRINT-QUEUE.md)                                 | Live machine-doable remediation queue from the red-team audits                                                                                                        |
+| [RED-TEAM-HUMAN-TODOS.md](./RED-TEAM-HUMAN-TODOS.md)                                   | Live human-blocked remediation tracker from the red-team audits                                                                                                       |
+| [SPRINT_PLAN.md](./SPRINT_PLAN.md)                                                     | Sprint-by-sprint plan + close dates                                                                                                                                   |
+| [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md)                                       | Mobile + quality-audit remediation cycle (S9–S17, closed)                                                                                                             |
+| [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md)           | Ingestion/chunking/KB cycle: 9 sprints with executing-model assignments                                                                                               |
+| [SPRINT_PLAN_S27-S40_DKB_FULL_COVERAGE.md](./SPRINT_PLAN_S27-S40_DKB_FULL_COVERAGE.md) | DKB full-coverage cycle: 14 sprints, sharding + unified access layer (closed; see [DIAMOND_KNOWLEDGE_BASE.md](./DIAMOND_KNOWLEDGE_BASE.md) for current shipped state) |
+| [STATE_BENEFITS_SCHEMA.md](./STATE_BENEFITS_SCHEMA.md)                                 | Canonical per-state benefit schema + ingestion pattern (S36)                                                                                                          |
+| [MULTINATIONAL_SCHEMA.md](./MULTINATIONAL_SCHEMA.md)                                   | Canonical multinational/OCONUS-service schema + ingestion pattern (S38)                                                                                               |
+| [DESIGN_TOKENS_REFERENCE.md](./DESIGN_TOKENS_REFERENCE.md)                             | Generated token table — colors / sizing / aliases                                                                                                                     |
+| [RAG_EVAL.md](./RAG_EVAL.md)                                                           | Recall@k / MRR / NDCG@k baseline + known misses                                                                                                                       |
+| [CRYPTO_AUDIT.md](./CRYPTO_AUDIT.md)                                                   | Web Crypto call-site inventory (PBKDF2 / AES-GCM / SHA-256)                                                                                                           |
+| [RISK_REGISTER.md](./RISK_REGISTER.md)                                                 | Open + closed accepted-risk entries                                                                                                                                   |
+| [TOKEN_LIMIT_CONFIGURATION.md](./TOKEN_LIMIT_CONFIGURATION.md)                         | Per-task token presets + user-override matrix                                                                                                                         |
+| [VETRATE_LLM_MODELS.md](./VETRATE_LLM_MODELS.md)                                       | Which local + cloud models are supported, with quirks                                                                                                                 |
+| [CHANGELOG_SYSTEM.md](./CHANGELOG_SYSTEM.md)                                           | How the changelog feed is generated + consumed                                                                                                                        |
+| [DYNAMIC_STATS_INDEX.md](./DYNAMIC_STATS_INDEX.md)                                     | All dynamic stats with their data sources                                                                                                                             |
+| [LEGAL_PAGES_README.md](./LEGAL_PAGES_README.md)                                       | Which CFR Parts + Subparts are mirrored locally                                                                                                                       |
 
 ## 4. Explanation — why things are this way
 

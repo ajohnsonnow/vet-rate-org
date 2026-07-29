@@ -229,6 +229,7 @@ export const DATA_STATUS = {
 #### 3.1 Update searchStateBenefits()
 
 **Current Implementation** (AI-based):
+
 ```javascript
 // src/utils/aiStatementHelper.js
 export const searchStateBenefits = async (state, rating) => {
@@ -239,6 +240,7 @@ export const searchStateBenefits = async (state, rating) => {
 ```
 
 **New Implementation** (Database-based):
+
 ```javascript
 // src/utils/stateBenefitQuery.js
 import { STATE_BENEFITS_DB } from '../data/stateBenefits';
@@ -433,6 +435,7 @@ Track corrections in admin dashboard for review.
 **Timeframe**: 4-6 weeks
 
 **States to prioritize**:
+
 1. Texas (most veterans)
 2. California
 3. Florida
@@ -445,6 +448,7 @@ Track corrections in admin dashboard for review.
 10. Ohio
 
 **Deliverables**:
+
 - Scraping scripts for 10 states
 - Validated benefit data for each
 - Updated searchStateBenefits() function
@@ -457,6 +461,7 @@ Track corrections in admin dashboard for review.
 **Timeframe**: 3-4 months
 
 **Milestones**:
+
 - Week 1-2: Build scraping infrastructure
 - Week 3-8: Scrape and validate all states
 - Week 9-10: Legal review
@@ -587,7 +592,8 @@ When implementing the migration:
 ### State VA Office Directory
 
 Find all state veteran affairs offices:
-- https://www.va.gov/statedva.htm
+
+- <https://www.va.gov/statedva.htm>
 
 ### Legal Research
 
@@ -621,6 +627,7 @@ Before starting implementation:
 The State Benefit Hunter is a valuable tool for veterans, but it requires **verified, scraped data** to be production-ready. The current AI-generated approach is suitable for **beta/discovery** but not for **official guidance**.
 
 Migrating to a database of scraped state benefits will provide:
+
 - ✅ Accurate dollar amounts
 - ✅ Legal citations
 - ✅ Application instructions
