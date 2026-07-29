@@ -31,12 +31,18 @@ import { untrustedSection } from "./aiSystemPrompts";
 import {
   classifyDocument,
   classifyDocumentBatch,
+  getDocumentTypeLabel,
   DOCUMENT_TYPES,
 } from "./documentClassifier";
 import { parseDD214Text } from "./ribbonRackData";
-import { updateVeteranProfile, getVeteranProfile } from "./veteranProfile";
+import {
+  updateVeteranProfile,
+  getVeteranProfile,
+  getServiceHistory,
+  saveDD214Data,
+} from "./veteranProfile";
 import { generateAI, isAnyAIAvailable } from "./unifiedAIService";
-import { addDocumentToVKB } from "./veteranKnowledgeBase";
+import { addDocumentToVKB, loadVKB, saveVKB } from "./veteranKnowledgeBase";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
@@ -745,6 +751,173 @@ const archiveDocumentInPacket = async (file, result) => {
   }
 };
 
+// Box 12b (NET ACTIVE SERVICE THIS PERIOD) is stored as a formatted string by
+// parseServiceRecord (e.g. "4 years, 2 months, 15 days"). DD214DataGridB in
+// MyPacket.jsx renders numeric yearsService/monthsService, so reconstitute
+// them here instead of dropping the already-extracted value.
+const _parseServiceTimeString = (str) => {
+  if (!str) return { years: null, months: null, days: null };
+  const match = /(\d+)\s*years?,\s*(\d+)\s*months?(?:,\s*(\d+)\s*days?)?/i.exec(
+    str,
+  );
+  if (!match) return { years: null, months: null, days: null };
+  return {
+    years: parseInt(match[1], 10),
+    months: parseInt(match[2], 10),
+    days: match[3] ? parseInt(match[3], 10) : null,
+  };
+};
+
+// Maps parseServiceRecord()/buildVisionParsedServiceRecord() field names
+// (musterCallProcessor's own DD214 extraction) onto the field names
+// saveDD214Data() (veteranProfile.js) expects. The two never agreed on names
+// because saveDD214Data's other two callers (MyPacket.jsx, DD214Analyzer.jsx)
+// feed it AI/regex output from a separate extractor (dd214FieldExtractor.js)
+// that already uses saveDD214Data's names. Fields with no corresponding
+// saveDD214Data target (placeOfEntry, remarks, deployments) are intentionally
+// left unmapped rather than invented.
+const buildDD214ProfileUpdate = (result) => {
+  const d = result.extractedData || {};
+  const serviceTime = _parseServiceTimeString(d.totalActiveService);
+  return {
+    fullName: d.veteranName || null,
+    lastName: d.lastName || null,
+    firstName: d.firstName || null,
+    middleName: d.middleName || null,
+    dateOfBirth: d.dateOfBirth || null,
+    branch: d.branch || null,
+    component: d.component || null,
+    rank: d.rank || null,
+    payGrade: d.payGrade || null,
+    mos: d.mos || null,
+    mosTitle: d.mosTitle || null,
+    entryDate: d.serviceStartDate || null,
+    separationDate: d.serviceEndDate || null,
+    netActiveService: d.totalActiveService || null,
+    totalPriorActiveService: d.totalPriorActiveService || null,
+    totalPriorInactiveService: d.totalPriorInactiveService || null,
+    yearsService: serviceTime.years,
+    monthsService: serviceTime.months,
+    daysService: serviceTime.days,
+    militaryEducation: d.militaryEducation ? [d.militaryEducation] : [],
+    separationType: d.separationType || null,
+    characterOfService: d.dischargeType || null,
+    separationAuthority: d.separationAuthority || null,
+    separationCode: d.spdCode || null,
+    reentryCode: d.reentryCode || null,
+    narrativeReason: d.narrativeReason || null,
+    foreignService: !!d.foreignService,
+    combatService: d.combatService || null,
+    extractedText: (result.text || "").substring(0, 10000),
+    confidence: result.classification?.confidence ?? 0,
+  };
+};
+
+const _isEmptyDD214Value = (value) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value === "";
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+};
+
+// Merges a newly-extracted DD214 record onto whatever is already stored in
+// the Service tab. Confidence is tracked at the record level (a single
+// high-water mark via Math.max below, not per field): a field is only
+// overwritten when the incoming extraction's confidence is >= the stored
+// record's overall confidence, or when the existing field is empty — so a
+// low-confidence re-scan can fill gaps but can't blank out or replace data
+// from a higher-confidence scan. A field gap-filled by a low-confidence scan
+// is thereafter protected by the record's higher watermark. `existing`/
+// `candidate` field names always match: both flow through the same
+// _sanitizeDd214Data() whitelist (veteranProfile.js) that saveDD214Data uses.
+const _mergeDD214Record = (existing, candidate) => {
+  if (!existing) return candidate;
+  const existingConfidence = existing.confidence || 0;
+  const candidateConfidence = candidate.confidence || 0;
+  const keys = new Set([...Object.keys(existing), ...Object.keys(candidate)]);
+  const merged = {};
+  keys.forEach((key) => {
+    const newVal = candidate[key];
+    const oldVal = existing[key];
+    if (_isEmptyDD214Value(oldVal)) {
+      merged[key] = newVal;
+    } else if (_isEmptyDD214Value(newVal)) {
+      merged[key] = oldVal;
+    } else {
+      merged[key] = candidateConfidence >= existingConfidence ? newVal : oldVal;
+    }
+  });
+  merged.confidence = Math.max(existingConfidence, candidateConfidence);
+  return merged;
+};
+
+// Writes extracted DD214 fields to the Service tab's storage key
+// (SERVICE_HISTORY_KEY via saveDD214Data).
+const saveServiceRecordToProfile = (file, result) => {
+  if (result.extractedData?.type !== "service_record") return;
+  try {
+    const candidate = buildDD214ProfileUpdate(result);
+    const existing = getServiceHistory().dd214Data;
+    saveDD214Data(_mergeDD214Record(existing, candidate));
+    // eslint-disable-next-line no-console
+    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
+  } catch (dd214Err) {
+    console.warn(
+      `Service history save failed for ${file.name} (non-fatal):`,
+      dd214Err.message,
+    );
+  }
+};
+
+// Picks the most relevant date already surfaced by this document's own
+// extraction/classification for its timeline entry; falls back to the
+// processing date only if nothing usable was extracted.
+const _resolveTimelineDate = (result) => {
+  const d = result.extractedData || {};
+  return (
+    d.serviceEndDate ||
+    d.serviceStartDate ||
+    d.decisionDate ||
+    d.effectiveDate ||
+    d.examDate ||
+    d.claimDate ||
+    d.dateOfService ||
+    new Date().toISOString().split("T")[0]
+  );
+};
+
+// Appends one minimal read-only timeline entry per successfully processed
+// document, for the Timeline tab's VkbTimelineSection (which reads
+// vkb.evidenceTimeline). Uses the same loadVKB()/saveVKB() read-modify-write
+// pair addDocumentToVKB already uses. Batch processing (processMusterCallBatch)
+// runs up to maxConcurrent documents in parallel, and loadVKB() returns a
+// deep copy per call, so concurrent calls to this function race on the same
+// lost-update pattern addDocumentToVKB already has — this doesn't add a new
+// kind of race, just a second call site exposed to the pre-existing one.
+const appendMusterCallTimelineEntry = async (file, result) => {
+  try {
+    const vkb = await loadVKB();
+    if (!Array.isArray(vkb.evidenceTimeline)) {
+      vkb.evidenceTimeline = [];
+    }
+    const label =
+      getDocumentTypeLabel(result.classification?.type) ||
+      result.classification?.type ||
+      "Document";
+    vkb.evidenceTimeline.push({
+      date: _resolveTimelineDate(result),
+      description: `${label} imported: ${file.name}`,
+      source: "Muster Call",
+    });
+    await saveVKB(vkb);
+  } catch (timelineErr) {
+    console.warn(
+      `Evidence timeline update failed for ${file.name} (non-fatal):`,
+      timelineErr.message,
+    );
+  }
+};
+
 const classifyAndParseDocument = async (
   file,
   onProgress,
@@ -831,6 +1004,11 @@ const processSingleDocument = async (file, onProgress) => {
 
     // Step 5: Also save to My Packet (permanent document archive)
     await archiveDocumentInPacket(file, result);
+
+    // Step 6: Populate the Service tab (DD214s only) and Timeline tab (all
+    // documents) — additive to the VKB/My Packet archiving above.
+    saveServiceRecordToProfile(file, result);
+    await appendMusterCallTimelineEntry(file, result);
 
     result.status = "complete";
     onProgress?.({

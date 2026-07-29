@@ -833,6 +833,8 @@ function _sanitizeDd214Data(dd214Data) {
     foreignService: !!dd214Data.foreignService,
     extractedText: sanitizeString(dd214Data.extractedText || "", 10000),
     dateProcessed: dd214Data.dateProcessed || new Date().toISOString(),
+    confidence:
+      typeof dd214Data.confidence === "number" ? dd214Data.confidence : 0,
   };
 }
 
@@ -1092,6 +1094,7 @@ function _dd214MiscFields(d) {
     dd214Count: d.dd214Count || 1,
     dateProcessed: new Date().toISOString(),
     sensitiveDataStored: !!(d.ssnFull || d.serviceNumber), // Flag if PII present
+    confidence: typeof d.confidence === "number" ? d.confidence : 0,
   };
 }
 
